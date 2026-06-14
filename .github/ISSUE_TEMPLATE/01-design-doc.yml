@@ -1,0 +1,87 @@
+name: "📐 Tech Note — Design Doc 스타일"
+description: "설계 의사결정 중심. '왜 이 구조인가'를 풀어쓰는 포맷."
+title: "[Design Doc] 키워드 (N주차 · K팀 · 이름)"
+labels: ["tech-note", "format:design-doc"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **언제 고르나** — 새 시스템·모듈을 설계했고, 구조와 의사결정을 면접관/시니어 리뷰어에게 설명하고 싶을 때.
+        > **AI 채점 PR과 별개** — 본 이슈는 피드백용입니다.
+        >
+        > 제목의 `키워드`, `N`, `K`, `이름` 부분을 본인 내용으로 바꿔주세요.
+        > 제목 예시: `[Design Doc] 분산 락 기반 랭킹 시스템 (3주차 · B팀 · 김루퍼)`
+        > 본문 골격은 가이드입니다. **안 쓰는 섹션은 통째로 지워도 됩니다.**
+
+  - type: input
+    id: tldr
+    attributes:
+      label: "TL;DR"
+      description: "5초 안에 핵심을 전하는 1~2줄."
+      placeholder: "예) Redis Sorted Set + 분산 락으로 동시성 안전한 실시간 랭킹을 구현했고, p99 80ms → 25ms로 개선."
+    validations:
+      required: true
+
+  - type: textarea
+    id: body
+    attributes:
+      label: "본문"
+      description: |
+        아래 골격은 가이드입니다. 본인의 강조점에 맞춰 자유롭게 변형하세요.
+
+        **작성 팁**
+        - 수치로 증명하라 — "잘 됐다"가 아니라 "p99 200ms → 25ms".
+        - 왜 그 선택을 했는가를 함께 적으라 — 기술 나열은 약하다.
+        - 솔직한 한계도 적으라 — "이건 못 풀었다"가 시니어 시그널이다.
+      value: |
+        ## Introduction & Goals
+
+        - **Context / Background**:
+        - **Goals**:
+
+        ## Detailed Design
+
+        ### System Architecture
+
+        ### Data Models
+
+        ### API Design
+
+        ### Constraints
+
+        ## Alternatives Considered
+
+        | 옵션 | Pros | Cons |
+        |------|------|------|
+        | A    |      |      |
+        | B    |      |      |
+        | **선택: C** |      |      |
+
+        **선택 근거:**
+    validations:
+      required: true
+
+  - type: textarea
+    id: cross-cutting
+    attributes:
+      label: "Cross-cutting Concerns"
+      description: "비기능적 요구사항. 해당되는 항목만 적으면 됩니다. 비워둬도 OK."
+      placeholder: |
+        - Scalability: 트래픽 증가 시 어떻게 대응할 것인가?
+        - Latency: 응답 속도에 미치는 영향은?
+        - Security & Privacy: PII, 권한 제어, 암호화
+        - Observability: 로깅·메트릭·알람 계획
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: "Reference"
+      description: "참고한 공식 문서, 인용한 글, 영상, 본인 코드 블록 링크 등을 자유롭게 정리하세요."
+      placeholder: |
+        - Redis 공식 문서: ...
+        - 참고 블로그: ...
+        - 본인 코드: https://github.com/.../blob/...
+    validations:
+      required: false

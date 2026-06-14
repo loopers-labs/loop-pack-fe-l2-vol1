@@ -1,0 +1,84 @@
+name: "📊 Tech Note — Benchmark Report 스타일"
+description: "두 구현/기술의 직접 측정 비교. 수치 기반으로 선택 근거를 증명하고 싶을 때."
+title: "[Benchmark] 키워드 (N주차 · K팀 · 이름)"
+labels: ["tech-note", "format:benchmark"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **언제 고르나** — 후보 기술 A vs B(vs C)를 본인이 직접 측정해 선택한 경우. 가장 강력한 자기 증명 자료.
+        > **AI 채점 PR과 별개** — 본 이슈는 피드백용입니다.
+        >
+        > 제목의 `키워드`, `N`, `K`, `이름` 부분을 본인 내용으로 바꿔주세요.
+        > 제목 예시: `[Benchmark] Redisson vs Lettuce 분산 락 측정 (4주차 · A팀 · 정개발)`
+        > 본문 골격은 가이드입니다. **안 쓰는 섹션은 통째로 지워도 됩니다.**
+
+  - type: input
+    id: tldr
+    attributes:
+      label: "TL;DR"
+      description: "1~2줄로 핵심을 전한다."
+      placeholder: "예) Redisson과 Lettuce 분산 락을 직접 측정한 결과 Redisson이 p99 3배 빠름. 운영 복잡도까지 고려해 Redisson 채택."
+    validations:
+      required: true
+
+  - type: textarea
+    id: body
+    attributes:
+      label: "본문"
+      description: |
+        아래 골격은 가이드입니다. 본인의 강조점에 맞춰 자유롭게 변형하세요.
+
+        **작성 팁**
+        - Setup이 약하면 결과 신뢰도가 떨어진다. 재현 가능하게 적으라.
+        - 선택 이유엔 성능 외 요소(운영 복잡도·의존성·학습 곡선)도 함께 적으라.
+      value: |
+        ## Question (무엇을 비교하는가)
+
+        - **결정해야 했던 것**:
+        - **후보**: A vs B (vs C)
+
+        ## Setup (측정 환경)
+
+        - **환경**: (CPU/메모리/컨테이너 구성)
+        - **부하 도구**: (k6 / JMeter / Locust / 자체 스크립트)
+        - **시나리오**: RPS, 동시 사용자 수, 데이터 규모
+
+        ## Results (측정 결과)
+
+        | 항목 | A | B |
+        |------|---|---|
+        | p99 레이턴시 |  |  |
+        | Throughput (RPS) |  |  |
+        | 에러율 |  |  |
+
+        ## Decision
+
+        - **선택**:
+        - **선택 이유**: (수치 해석 + 운영 복잡도·의존성·학습 곡선 종합)
+        - **포기한 것**:
+    validations:
+      required: true
+
+  - type: textarea
+    id: future-work
+    attributes:
+      label: "Future Work"
+      description: "운영 도입 시 고려사항, 추가 측정 계획, 재평가 시점 등. 비워둬도 OK."
+      placeholder: |
+        - 운영 도입 시: 모니터링/롤백 전략은 어떻게 설계할 것인가
+        - 추가 측정: 부하 패턴이 X로 바뀌면 재측정 필요
+        - 재평가 시점: RPS가 10배 증가하면 다시 비교
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: "Reference"
+      description: "참고한 공식 문서, 인용한 글, 영상, 벤치마크 코드 등을 자유롭게 정리하세요."
+      placeholder: |
+        - 벤치마크 코드: https://github.com/.../...
+        - 참고 자료: ...
+    validations:
+      required: false

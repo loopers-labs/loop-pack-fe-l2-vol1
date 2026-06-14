@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 과제 PR (AI 채점용)
+    url: https://github.com/loopers-labs/loop-pack-fe-l2-vol1/pulls
+    about: "AI 채점 대상 PR은 일반 PR 흐름으로 제출하세요. 본 이슈 템플릿은 피드백용 테크 노트 전용입니다."
+  - name: Tech Note 작성 가이드
+    url: https://github.com/loopers-labs/loop-pack-fe-l2-vol1/blob/main/.github/ISSUE_TEMPLATE/README.md
+    about: "어떤 포맷을 골라야 할지 모르겠다면 가이드를 먼저 읽어보세요."

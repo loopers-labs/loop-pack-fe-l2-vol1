@@ -1,0 +1,79 @@
+name: "⚔️ Tech Note — Challenge Story 스타일"
+description: "'도전 → 해결 → 통찰' 압축 서사. 짧고 강력하게 본인 역량을 보여주고 싶을 때."
+title: "[Challenge Story] 키워드 (N주차 · K팀 · 이름)"
+labels: ["tech-note", "format:challenge-story"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **언제 고르나** — 과제의 가장 어려웠던 도전 하나에 집중해 서사로 풀고 싶을 때. 짧고 임팩트 있게.
+        > **AI 채점 PR과 별개** — 본 이슈는 피드백용입니다.
+        >
+        > 제목의 `키워드`, `N`, `K`, `이름` 부분을 본인 내용으로 바꿔주세요.
+        > 제목 예시: `[Challenge Story] Kafka 이벤트 유실 추적 (7주차 · C팀 · 이학습)`
+        > 본문 골격은 가이드입니다. **안 쓰는 섹션은 통째로 지워도 됩니다.**
+
+  - type: input
+    id: tldr
+    attributes:
+      label: "TL;DR"
+      description: "5초 안에 핵심을 전하는 1~2줄."
+      placeholder: "예) Kafka 이벤트 유실의 원인을 컨슈머 리밸런싱으로 추적, idempotent producer로 해결."
+    validations:
+      required: true
+
+  - type: textarea
+    id: body
+    attributes:
+      label: "본문"
+      description: |
+        아래 골격은 가이드입니다. 본인의 강조점에 맞춰 자유롭게 변형하세요.
+
+        **작성 팁**
+        - 기술을 나열하지 말고, *도전 과제와 묶어* 서술하라.
+        - 결과는 숫자로. "잘 됐다"가 아니라 "p99 200ms → 25ms".
+      value: |
+        ## Context (배경 및 목표)
+
+        - **어떤 시스템을 만드는가?**:
+        - **가장 큰 기술적 도전 과제는?**:
+
+        ## Design & Implementation (설계 및 구현)
+
+        ### 핵심 기술 선택
+
+        ### Logic Flow
+
+        ## Engineering Challenges (트러블슈팅 및 최적화)
+
+        - **예상치 못한 현상**:
+        - **추론 및 검증**:
+        - **최종 해결**:
+
+        ## Verification & Insight (검증)
+
+        - 결과 지표 (예: p99 200ms → 25ms, 에러율 3% → 0.01%):
+    validations:
+      required: true
+
+  - type: textarea
+    id: lessons-learned
+    attributes:
+      label: "Lessons Learned"
+      description: "이 과정에서 얻은 아키텍처적 교훈 1~3가지. 비워둬도 OK."
+      placeholder: |
+        1. 이벤트 기반 시스템에선 idempotency가 기본 가정이어야 한다.
+        2. 컨슈머 리밸런싱 동작을 모르면 유실의 원인을 디버깅 못한다.
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: "Reference"
+      description: "참고한 공식 문서, 인용한 글, 영상, 본인 코드 블록 링크 등을 자유롭게 정리하세요."
+      placeholder: |
+        - Kafka 공식 문서: ...
+        - 본인 코드: https://github.com/.../blob/...
+    validations:
+      required: false
