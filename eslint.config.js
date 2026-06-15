@@ -24,10 +24,7 @@ export default defineConfig(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "error",
-        { allowConstantExport: true },
-      ],
+      "react-refresh/only-export-components": ["error", { allowConstantExport: true }],
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/ban-ts-comment": "error",
       "no-empty": "error",
@@ -44,6 +41,6 @@ export default defineConfig(
       "no-implicit-coercion": "error",
       "no-unneeded-ternary": "error",
     },
-    eslintConfigPrettier,
-  }
+  },
+  eslintConfigPrettier,
 );
