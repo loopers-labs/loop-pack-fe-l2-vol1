@@ -1,3 +1,10 @@
+## 기술 스택
+- **프레임워크 / 라이브러리**: React 19
+- **빌드 도구**: Vite 8
+- **언어**: TypeScript
+- **패키지 매니저**: pnpm
+- **코드 품질 관리**: ESLint, Prettier, Husky
+
 ## 컴포넌트 작성 규칙
 - Props interface는 컴포넌트 파일 최상단에 정의
 - 이벤트 핸들러 네이밍: Props는 `on{Event}`, 내부 함수는 `handle{Event}`
