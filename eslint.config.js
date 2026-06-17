@@ -1,15 +1,20 @@
 import comments from '@eslint-community/eslint-plugin-eslint-comments';
 import js from '@eslint/js';
+import eslintConfigPrettier from 'eslint-config-prettier';
 import importX from 'eslint-plugin-import-x';
-import {createTypeScriptImportResolver} from 'eslint-import-resolver-typescript';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  {ignores: ['dist']},
+  { ignores: ['dist'] },
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [js.configs.recommended, tseslint.configs.recommended],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      eslintConfigPrettier,
+    ],
     linterOptions: {
       reportUnusedDisableDirectives: 'error',
     },
@@ -52,16 +57,16 @@ export default tseslint.config(
       'no-var': 'error',
 
       // 로거가 따로 없어 최소 로깅을 위해 error, warn은 허용
-      'no-console': ['error', {allow: ['warn', 'error']}],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
 
       'import-x/order': [
         'error',
-        {'newlines-between': 'always', alphabetize: {order: 'asc'}},
+        { 'newlines-between': 'always', alphabetize: { order: 'asc' } },
       ],
       'import-x/no-cycle': 'error',
       'import-x/no-extraneous-dependencies': [
         'error',
-        {devDependencies: ['vite.config.ts']},
+        { devDependencies: ['vite.config.ts'] },
       ],
 
       '@eslint-community/eslint-comments/no-unlimited-disable': 'error',

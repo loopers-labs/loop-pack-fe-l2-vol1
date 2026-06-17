@@ -1,0 +1,9 @@
+dist
+pnpm-lock.yaml
+
+# 문서
+docs
+
+# 에이전트 설정
+.claude
+.agents
