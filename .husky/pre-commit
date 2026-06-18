@@ -1,0 +1,15 @@
+echo "🔍 린트 검사를 시작합니다..."
+if pnpm lint-staged; then
+  echo "✅ 린트 검사 통과"
+else
+  echo "❌ 린트 오류가 있습니다. 커밋이 중단됩니다."
+  exit 1
+fi
+
+echo "🔍 타입 검사를 시작합니다..."
+if pnpm tsc --noEmit; then
+  echo "✅ 타입 검사 통과"
+else
+  echo "❌ 타입 오류가 있습니다. 커밋이 중단됩니다."
+  exit 1
+fi
