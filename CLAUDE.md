@@ -31,6 +31,27 @@ pnpm preview       # 빌드 결과물 미리보기
 `pnpm exec lint-staged` 실행 — lint/prettier 미통과 시 커밋 차단.
 `--no-verify` 우회 금지.
 
+## 컴포넌트 규칙
+
+- 파일 하나에 하나의 export
+- Props interface는 컴포넌트 파일 상단에 정의
+- 이벤트 핸들러: `on{Event}` (Props), `handle{Event}` (내부)
+- 조건부 렌더링은 early return 우선 (모든 hook 호출 뒤에서)
+- React Query(useQuery/useMutation)는 ViewModel(훅)에 둔다
+
+```tsx
+// ❌ React.FC 사용 금지
+const Component: React.FC<Props> = ({ name }) => ...
+
+// ✅ Props 타입 직접 정의
+const Component = ({ name }: Props) => ...
+```
+
+## 코드 리뷰 규칙
+
+- AI가 생성한 코드는 "왜 이렇게 짰는가"를 설명할 수 있어야 함
+- 설명할 수 없는 코드는 직접 재작성
+
 ## 코드 품질 기준
 
 - **파생 가능한 값은 계산한다** — `useState` + `useEffect` 동기화 대신 파생값으로 처리
@@ -40,16 +61,6 @@ pnpm preview       # 빌드 결과물 미리보기
 - `catch(e) {}` 빈 catch 금지 — 에러를 명시적으로 처리
 - 기존 유틸 재사용 — 유사한 코드 중복 생성 금지
 - any 타입 사용 금지 — 명시적 타입 정의
-
-## React 컴포넌트 타입 규칙
-
-```tsx
-// ❌ React.FC 사용 금지
-const Component: React.FC<Props> = ({ name }) => ...
-
-// ✅ Props 타입 직접 정의
-const Component = ({ name }: Props) => ...
-```
 
 ## Never Do
 
