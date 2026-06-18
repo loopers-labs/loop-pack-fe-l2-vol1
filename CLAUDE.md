@@ -37,15 +37,9 @@ pnpm preview       # 빌드 결과물 미리보기
 - Props interface는 컴포넌트 파일 상단에 정의
 - 이벤트 핸들러: `on{Event}` (Props), `handle{Event}` (내부)
 - 조건부 렌더링은 early return 우선 (모든 hook 호출 뒤에서)
-- React Query(useQuery/useMutation)는 ViewModel(훅)에 둔다
-
-```tsx
-// ❌ React.FC 사용 금지
-const Component: React.FC<Props> = ({ name }) => ...
-
-// ✅ Props 타입 직접 정의
-const Component = ({ name }: Props) => ...
-```
+- `React.FC` 사용 금지 — Props 타입 직접 정의
+  - ❌ `const Component: React.FC<Props> = ({ name }) => ...`
+  - ✅ `const Component = ({ name }: Props) => ...`
 
 ## 코드 리뷰 규칙
 
