@@ -64,6 +64,8 @@ ESLint는 inline config를 허용하지 않습니다.
 - React recommended rules를 사용한다.
 - JSX runtime 설정을 사용한다.
 - React Hooks recommended latest rules를 사용한다.
+- React Compiler는 `babel-plugin-react-compiler`와 `@rolldown/plugin-babel`을 통해 Vite 빌드에 연결한다. 설정의 source of truth는 `vite.config.ts`다.
+- React Compiler lint 규칙을 포함하기 위해 `eslint-plugin-react-hooks`의 `recommended-latest` 구성을 사용한다.
 - `react-hooks/exhaustive-deps`는 error다.
 - Vite React Refresh 규칙을 따른다.
 - JSX boolean prop은 `disabled={true}`가 아니라 `disabled`처럼 작성한다.

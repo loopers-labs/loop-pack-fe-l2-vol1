@@ -16,6 +16,7 @@
 - TypeScript 규칙은 `tsconfig*.json`을 우선한다.
 - ESLint 규칙은 `eslint.config.mjs`를 우선한다.
 - Prettier 규칙은 `.prettierrc`를 우선한다.
+- React Compiler 설치와 Vite 연결은 `package.json`, `pnpm-lock.yaml`, `vite.config.ts`를 우선한다.
 - `.omo/*` 문서는 설정 파일로 표현하기 어려운 의도, 아키텍처, 리뷰 기준을 설명한다.
 - `.opencode/*` 문서는 OpenCode 전용 커맨드와 감사 에이전트 지침이다.
 
@@ -28,6 +29,7 @@
 - 빈 `catch` 블록을 두지 않는다. 에러는 처리하거나 명시적으로 전파한다.
 - 새 기능은 FSD 경계를 따라 배치하고, `App.tsx`나 라우트 파일에 비즈니스 로직을 누적하지 않는다.
 - UI 변경은 접근성 요구사항을 함께 만족해야 한다.
+- React 컴포넌트 최적화는 React Compiler가 기본 전제다. `useMemo`, `useCallback`, `React.memo`는 측정된 병목이나 참조 안정성이 실제 API 계약인 경우에만 사용한다.
 
 ## 작업 완료 전 검증
 
