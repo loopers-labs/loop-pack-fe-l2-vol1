@@ -61,6 +61,8 @@ ESLint는 inline config를 허용하지 않습니다.
 - `@typescript-eslint/no-unnecessary-type-assertion`: 불필요한 type assertion 금지
 - unused import는 error
 - unused variable은 error. 단, 의도적으로 미사용인 값은 `_` prefix를 사용한다.
+- Zod schema에서 파생되는 타입은 `z.infer<typeof Schema>`를 사용하고, schema와 같은 형태의 수동 타입을 중복 선언하지 않는다.
+- 런타임 검증이 필요한 경계에서는 `any`나 type assertion으로 외부 데이터를 믿지 않고 Zod `parse`/`safeParse`로 좁힌다.
 
 ### React
 
