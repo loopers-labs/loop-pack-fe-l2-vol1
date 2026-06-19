@@ -11,6 +11,7 @@ pnpm format
 pnpm format:check
 pnpm typecheck
 pnpm build
+pnpm commitlint --edit <commit-msg-file>
 ```
 
 ## Prettier
@@ -111,4 +112,10 @@ ESLint는 inline config를 허용하지 않습니다.
 - `*.{ts,tsx}`: ESLint 자동 수정 후 Prettier 적용
 - `*.{js,cjs,mjs,json,css,md}`: Prettier 적용
 
-`--no-verify`로 우회하지 않습니다. hook 실패는 코드나 설정을 고쳐 해결합니다.
+커밋 메시지는 commitlint가 검증합니다.
+
+- 실제 규칙은 `commitlint.config.cjs`를 우선한다.
+- commit-msg hook은 `.husky/commit-msg`를 우선한다.
+- 메시지는 Conventional Commits 형식을 따른다.
+
+`--no-verify`로 우회하지 않습니다. hook 실패는 코드, 설정, 커밋 메시지를 고쳐 해결합니다.

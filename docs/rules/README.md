@@ -6,6 +6,7 @@
 
 - `conventions.md`: 코드 작성 원칙, React/TypeScript 컨벤션, 스타일 작성 기준
 - `lint-and-format.md`: ESLint, Prettier, TypeScript 설정 요약과 금지 패턴
+- `commit-and-pr.md`: commitlint, Git hook, PR 설명 기준
 - `fsd-architecture.md`: FSD 레이어, 슬라이스, 세그먼트, import 경계
 - `accessibility.md`: UI 변경 시 접근성 체크리스트
 - `testing.md`: 작업 완료 전 검증 명령과 수동 확인 기준
