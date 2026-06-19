@@ -22,9 +22,11 @@ export default defineConfig([
             "react/react-in-jsx-scope": "off", // React 17+ 에서는 불필요
             "react-hooks/rules-of-hooks": "error",
             "react-hooks/exhaustive-deps": "error",
-            "react/jsx-no-target-blank": "error",
-            "react/no-danger": "error",
             "@typescript-eslint/consistent-type-imports": "error",
+            "react/jsx-no-target-blank": "error", //target="_blank" 보안
+            "react/no-danger": "error", //dangerouslySetInnerHTML
+            "no-eval": "error", //eval() 금지
+            "no-console": "warn", //console.log 잔재 확인
         }
     }
 ]);
