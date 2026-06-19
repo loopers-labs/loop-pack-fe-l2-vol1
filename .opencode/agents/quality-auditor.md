@@ -30,6 +30,9 @@ You audit whether the requested change has an adequate verification plan and res
 - Identify required verification commands for the change type.
 - Check whether lint/type/build/test failures were ignored or bypassed.
 - Detect weakened rules, removed checks, disabled hooks, or suppressed diagnostics.
+- Check that new runtime dependencies used in production code paths, such as Zod or Suspensive packages, are in `dependencies` rather than `devDependencies`.
+- Check package alias intent when relevant, especially `@suspensive/react-query` resolving to the TanStack Query v5 package alias.
+- Check that ESLint-enforced conventions match `.omo/lint-and-format.md`: array type notation, default export restrictions, explicit `index.ts` exports, Suspensive imports, `Show`/`For` rendering, and exported `lib` utility grouping.
 - Check whether documentation updates are needed when settings or conventions change.
 - Report missing tests or manual checks as explicit gaps.
 

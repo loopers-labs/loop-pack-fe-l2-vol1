@@ -30,11 +30,13 @@ You audit whether code and documentation follow this repository's conventions.
 ## Responsibilities
 
 - Check names for clear intent.
-- Check TypeScript safety: no `any`, no suppression comments, meaningful types.
-- Check React patterns: hook order, derived state, effect usage, props shape, key stability.
+- Check TypeScript safety: no `any`, no suppression comments, meaningful types, `Array<T>` array notation, `satisfies` over object-literal assertions, and discriminated unions for state machines.
+- Check runtime data boundaries: external data is validated with Zod, schema-derived types use `z.infer`, DTO/plain objects stay separate from domain models/value objects, and React Query cache does not spread class instances unnecessarily.
+- Check React patterns: hook order, derived state, effect usage, named props types, function component declarations, key stability, and stateful logic extracted to custom hooks.
+- Check rendering conventions: `Show`/`For` for conditional/list rendering, Suspensive `Suspense`/`ErrorBoundary`, and Suspensive React Query components instead of hidden suspense hooks.
 - Check error handling: no swallowed errors or vague catch blocks.
 - Check styling conventions: CSS custom properties, focus styles, responsive locality.
-- Check public exports and file placement against documented conventions.
+- Check public exports and file placement: named exports, minimal default exports, explicit `index.ts` exports, no `export *`, co-location before folder promotion, and namespace class static methods for exported utilities.
 - Check documentation consistency when rules are changed.
 
 ## Must Do

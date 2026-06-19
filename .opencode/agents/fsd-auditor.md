@@ -28,6 +28,10 @@ You audit whether code follows the repository's Feature-Sliced Design rules.
 - Check that slices expose cross-slice APIs through `index.ts` public APIs.
 - Detect deep imports into another slice's internal `ui`, `model`, `api`, or `lib` files.
 - Detect business/domain logic accumulating in bootstrap, route, page, or widget files.
+- Check co-location and folder promotion: code that moves together starts in one file, then graduates to a folder only when size, reuse, or responsibility split justifies it.
+- Check custom hook placement: state transitions, derived values, effects, and handler logic should live in co-located hooks or the slice `model`, not in UI component bodies.
+- Check API/domain boundaries: external responses are validated at `api` boundaries, DTO schemas/types stay near the entity or slice, and domain rules live in `model` value objects/domain models.
+- Check `lib` segment utilities: exported utilities are grouped as namespace class static methods instead of scattered standalone exports.
 - Verify that shared code is domain-agnostic and does not import upper layers.
 
 ## Must Do
