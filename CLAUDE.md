@@ -12,17 +12,15 @@ React 19 + Vite + TypeScript 기반 학습용 프론트엔드 과제 레포
 
 ## 디렉토리 구조
 
-- `src/`: 애플리케이션 코드 (FSD 아키텍처)
+- `src/`: 애플리케이션 코드
 - `docs/assignments/`: 주차별 과제 지시
 - `docs/conventions/`: 코드 컨벤션 및 워크플로우 규칙
-- `.claude/skills/`: 기술별 스킬 가이드 (React 19, Tailwind CSS v4, FSD, TanStack Query)
+- `.claude/skills/`: 기술별 스킬 가이드 (React 19)
 
 ## 컨벤션
 
 - 코드: [docs/conventions/code-conventions.md](docs/conventions/code-conventions.md)
 - 컴포넌트: arrow function 사용, `React.FC` 금지, named export 권장
-- 스타일: Tailwind CSS v4 유틸리티 클래스 우선, 동적 클래스는 `clsx`
-- 데이터 페칭: TanStack Query v5 + `queryOptions` 팩토리 패턴
 - 커밋: Conventional Commits 한글 작성 — [docs/conventions/commit-conventions.md](docs/conventions/commit-conventions.md)
 
 ## Gotchas

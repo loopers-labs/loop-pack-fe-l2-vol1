@@ -8,8 +8,5 @@
 - 린트/포맷 예외 시 PR 본문에 이유 명시
 - 입력 검증, XSS, 민감정보 노출 점검
 - React 19 컴포넌트 컨벤션: [component-conventions.md](component-conventions.md)
-- 프로젝트 구조 (FSD): [project-structure.md](project-structure.md)
-- 스타일 컨벤션 (Tailwind CSS v4): [style-conventions.md](style-conventions.md)
-- 데이터 페칭 (TanStack Query v5): [data-fetching-conventions.md](data-fetching-conventions.md)
 - 커밋 메시지: [commit-conventions.md](commit-conventions.md)
 - PR 전 `pnpm format`, lint, 타입 검사 수행

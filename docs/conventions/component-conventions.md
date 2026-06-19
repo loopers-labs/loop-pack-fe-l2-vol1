@@ -50,10 +50,6 @@ const count = items.length;
 - 컴포넌트 내부 함수는 `handleSubmit`, `handleClick` 등으로 명명
 - 필요한 경우 destructuring으로 props를 명확히 전달
 
-## 스타일
-
-- 스타일 규칙은 [style-conventions.md](style-conventions.md) 참고
-
 ## React 19 특화
 
 - React 19의 새로운 렌더링 기능을 고려해 컴포넌트는 선언형으로 작성
