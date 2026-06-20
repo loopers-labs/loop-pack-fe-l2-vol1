@@ -13,6 +13,7 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
+import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 
 export default defineConfig(
   // 린트 대상 제외: 빌드 산출물·의존성
@@ -30,8 +31,13 @@ export default defineConfig(
     },
     plugins: {
       "react-hooks": reactHooks,
+      "@eslint-community/eslint-comments": eslintComments,
     },
     rules: {
+      // ── 게이트 차단: 타입 단언 및 eslint-disable 주석 ──
+      "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }], // `as Foo` 단언 금지(타입 에러 우회 통로). `as const`는 자동 예외.
+      "@eslint-community/eslint-comments/no-use": "error", // eslint-disable 류 주석 전면 금지(룰을 끄는 행위 자체를 차단)
+
       // ── React: 훅/렌더 정확성 ──
       // (recommended를 통으로 켜지 않고, 과제 "좋은 코드 기준"에 직결되는 것만 선별)
       "react-hooks/rules-of-hooks": "error", // 훅 호출 순서 규칙 — 조건/반복 안에서 훅 호출 금지
