@@ -1,0 +1,13 @@
+COMMIT_MESSAGE=$(cat "$1")
+
+echo "❤️‍🩹 커밋 메시지: $COMMIT_MESSAGE"
+
+pnpm commitlint --edit $1
+
+if [ $? -eq 0 ]; then
+  echo "✅ 커밋 메시지 컨벤션 통과"
+  exit 0
+else
+  echo "❌ 커밋 메시지가 컨벤션에 맞지 않습니다. (예: feat: 로그인 기능 추가)"
+  exit 1
+fi
