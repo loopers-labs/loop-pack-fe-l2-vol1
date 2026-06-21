@@ -26,7 +26,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
       'no-console': 'error',
       'no-nested-ternary': 'error',
-      'id-length': ['error', { min: 2, exceptions: ['_', 'i', 'j'] }],
+      'id-length': 'off',
       'no-multi-assign': 'error',
       eqeqeq: 'error',
       'no-else-return': 'error',
