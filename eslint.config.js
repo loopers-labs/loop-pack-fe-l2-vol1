@@ -52,6 +52,7 @@ export default tseslint.config(
       'no-empty': ['error', { allowEmptyCatch: false }],
       '@typescript-eslint/no-floating-promises': 'error',
       'import/no-unresolved': 'error',
+      'no-magic-numbers': ['error', { ignore: [0, 1, -1] }],
     },
   },
 );
