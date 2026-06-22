@@ -3,13 +3,18 @@ import './market.css'
 import { For, Show } from '@ilokesto/utilinent'
 import { useState } from 'react'
 
-import { Button, Modal, SectionCard } from '../shared/ui'
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
+import {
+  type Address,
+  type Coupon,
+  MarketPricingPolicy,
+  MarketService,
+  type PaymentMethod,
+} from '../entities/market'
+import { Button, Heading, Modal, SectionCard } from '../shared/ui'
 import { DeliveryMemo } from './DeliveryMemo'
 import { OrderLineRow } from './OrderLineRow'
 import { OrderStatusTag } from './OrderStatusTag'
 import { Price } from './Price'
-import type { Address, Coupon, PaymentMethod } from './types'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
@@ -42,7 +47,7 @@ function DeliverySection({
   return (
     <SectionCard>
       <div className="row between">
-        <h2>배송지</h2>
+        <Heading.H2>배송지</Heading.H2>
         <Button
           type="button"
           variant="link"
@@ -139,10 +144,12 @@ function AddressField({
 }
 
 export function CheckoutPage() {
-  const member = MEMBER
-  const cart = CART
+  const { addresses, cartItems, coupons, member, pastOrders } =
+    MarketService.getMarketSnapshot()
 
-  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id)
+  const [selectedAddressId, setSelectedAddressId] = useState(
+    addresses[0]?.id ?? '',
+  )
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
   const [usePoint, setUsePoint] = useState(false)
@@ -153,30 +160,34 @@ export function CheckoutPage() {
   const [placed, setPlaced] = useState(false)
 
   const address =
-    ADDRESSES.find((item) => item.id === selectedAddressId) ?? ADDRESSES.at(0)
+    addresses.find((item) => item.id === selectedAddressId) ?? addresses.at(0)
 
   if (!address) {
     throw new Error('No delivery address configured')
   }
 
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0)
-  let shippingFee = 3000
-  if (itemTotal >= 50000) shippingFee = 0
-  if (address.isRemote) shippingFee += 3000
-
-  // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
-
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint
-    ? Math.min(pointInput, member.point, itemTotal)
-    : 0
-
-  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount
+  const itemTotal = MarketPricingPolicy.calculateItemTotal(cartItems)
+  const shippingFee = MarketPricingPolicy.calculateShippingFee(
+    itemTotal,
+    address,
+  )
+  const couponDiscount =
+    MarketPricingPolicy.calculateCouponDiscount(appliedCoupon)
+  const pointDiscount = MarketPricingPolicy.calculatePointDiscount({
+    enabled: usePoint,
+    pointInput,
+    member,
+    itemTotal,
+  })
+  const finalPrice = MarketPricingPolicy.calculateFinalPrice({
+    itemTotal,
+    shippingFee,
+    couponDiscount,
+    pointDiscount,
+  })
 
   const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim())
+    const found = coupons.find((coupon) => coupon.code === couponCode.trim())
     setAppliedCoupon(found ?? null)
     if (!found) alert('존재하지 않는 쿠폰이에요')
   }
@@ -184,7 +195,7 @@ export function CheckoutPage() {
   if (placed) {
     return (
       <div className="checkout">
-        <h1>주문 완료</h1>
+        <Heading.H1>주문 완료</Heading.H1>
         <SectionCard>
           <p style={{ color: 'var(--text-h)' }}>
             주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
@@ -206,22 +217,22 @@ export function CheckoutPage() {
 
   return (
     <div className="checkout">
-      <h1>주문/결제</h1>
+      <Heading.H1>주문/결제</Heading.H1>
 
       <DeliverySection
-        addresses={ADDRESSES}
+        addresses={addresses}
         selectedAddressId={selectedAddressId}
         onSelectAddress={setSelectedAddressId}
       />
 
       <SectionCard>
-        <h2>배송 요청사항</h2>
+        <Heading.H2>배송 요청사항</Heading.H2>
         <DeliveryMemo />
       </SectionCard>
 
       <SectionCard>
-        <h2>주문 상품</h2>
-        <For each={cart}>
+        <Heading.H2>주문 상품</Heading.H2>
+        <For each={cartItems}>
           {(item) => (
             <OrderLineRow
               key={item.id}
@@ -237,7 +248,7 @@ export function CheckoutPage() {
       </SectionCard>
 
       <SectionCard>
-        <h2>쿠폰</h2>
+        <Heading.H2>쿠폰</Heading.H2>
         <div className="row">
           <input
             type="text"
@@ -257,7 +268,7 @@ export function CheckoutPage() {
       </SectionCard>
 
       <SectionCard>
-        <h2>적립금</h2>
+        <Heading.H2>적립금</Heading.H2>
         <label>
           <input
             type="checkbox"
@@ -280,7 +291,7 @@ export function CheckoutPage() {
       </SectionCard>
 
       <SectionCard>
-        <h2>결제수단</h2>
+        <Heading.H2>결제수단</Heading.H2>
         <For each={PAYMENT_METHODS}>
           {(method) => (
             <label key={method}>
@@ -298,7 +309,7 @@ export function CheckoutPage() {
       </SectionCard>
 
       <SectionCard>
-        <h2>결제 금액</h2>
+        <Heading.H2>결제 금액</Heading.H2>
         <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
         <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
         <Show when={appliedCoupon}>
@@ -383,18 +394,12 @@ export function CheckoutPage() {
       </Show>
 
       <SectionCard>
-        <h2>최근 주문</h2>
-        <For each={PAST_ORDERS}>
+        <Heading.H2>최근 주문</Heading.H2>
+        <For each={pastOrders}>
           {(order) => (
             <div key={order.id} className="line">
               <div className="grow">{order.summary}</div>
-              <OrderStatusTag
-                isPaid={order.status === 'paid'}
-                isPreparing={order.status === 'preparing'}
-                isShipped={order.status === 'shipped'}
-                isDelivered={order.status === 'delivered'}
-                isCancelled={order.status === 'cancelled'}
-              />
+              <OrderStatusTag status={order.status} />
             </div>
           )}
         </For>
