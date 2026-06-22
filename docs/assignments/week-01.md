@@ -52,7 +52,7 @@
 
 ## 좋은 코드 기준 (10주 내내 쓰는 기준표)
 
-- 의도가 이름에 드러난다 (`data`/`temp`/`flag` ✗)
+- 의도가 이름에 드러난다 — 구현(how) 말고 호출자가 보는 것(what)으로 (`data`/`temp`/`flag` ✗, `sortAndFilterUsers`→`activeUsers`)
 - 한 함수/컴포넌트가 한 가지 일을 한다
 - **파생 가능한 값은 계산한다** — `useState` + `useEffect`로 동기화하지 않는다 *(최중요 패턴)*
 - 타입이 코드를 설명한다 (`any`로 회피 ✗)
