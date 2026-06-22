@@ -3,6 +3,7 @@ import './market.css'
 import { For, Show } from '@ilokesto/utilinent'
 import { useState } from 'react'
 
+import { Button, Modal, SectionCard } from '../shared/ui'
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
 import { DeliveryMemo } from './DeliveryMemo'
 import { OrderLineRow } from './OrderLineRow'
@@ -39,12 +40,12 @@ function DeliverySection({
   }
 
   return (
-    <div className="section">
+    <SectionCard>
       <div className="row between">
         <h2>배송지</h2>
-        <button
+        <Button
           type="button"
-          className="link"
+          variant="link"
           onClick={() => {
             setExpanded((v) => !v)
           }}
@@ -52,7 +53,7 @@ function DeliverySection({
           <Show when={expanded} fallback="변경">
             접기
           </Show>
-        </button>
+        </Button>
       </div>
       <Show
         when={expanded}
@@ -68,7 +69,7 @@ function DeliverySection({
           onSelectAddress={onSelectAddress}
         />
       </Show>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -184,20 +185,21 @@ export function CheckoutPage() {
     return (
       <div className="checkout">
         <h1>주문 완료</h1>
-        <div className="section">
+        <SectionCard>
           <p style={{ color: 'var(--text-h)' }}>
             주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
           </p>
-        </div>
-        <button
+        </SectionCard>
+        <Button
           type="button"
-          className="pay"
+          className="checkout-primary-action"
+          variant="primary"
           onClick={() => {
             setPlaced(false)
           }}
         >
           주문서로 돌아가기
-        </button>
+        </Button>
       </div>
     )
   }
@@ -212,12 +214,12 @@ export function CheckoutPage() {
         onSelectAddress={setSelectedAddressId}
       />
 
-      <div className="section">
+      <SectionCard>
         <h2>배송 요청사항</h2>
         <DeliveryMemo />
-      </div>
+      </SectionCard>
 
-      <div className="section">
+      <SectionCard>
         <h2>주문 상품</h2>
         <For each={cart}>
           {(item) => (
@@ -232,9 +234,9 @@ export function CheckoutPage() {
             />
           )}
         </For>
-      </div>
+      </SectionCard>
 
-      <div className="section">
+      <SectionCard>
         <h2>쿠폰</h2>
         <div className="row">
           <input
@@ -245,16 +247,16 @@ export function CheckoutPage() {
             }}
             placeholder="쿠폰 코드 (예: WELCOME5000)"
           />
-          <button type="button" onClick={applyCoupon}>
+          <Button type="button" onClick={applyCoupon}>
             적용
-          </button>
+          </Button>
         </div>
         <Show when={appliedCoupon}>
           {(coupon) => <small>{coupon.label} 적용됨</small>}
         </Show>
-      </div>
+      </SectionCard>
 
-      <div className="section">
+      <SectionCard>
         <h2>적립금</h2>
         <label>
           <input
@@ -275,9 +277,9 @@ export function CheckoutPage() {
             }}
           />
         </Show>
-      </div>
+      </SectionCard>
 
-      <div className="section">
+      <SectionCard>
         <h2>결제수단</h2>
         <For each={PAYMENT_METHODS}>
           {(method) => (
@@ -293,9 +295,9 @@ export function CheckoutPage() {
             </label>
           )}
         </For>
-      </div>
+      </SectionCard>
 
-      <div className="section">
+      <SectionCard>
         <h2>결제 금액</h2>
         <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
         <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
@@ -322,9 +324,9 @@ export function CheckoutPage() {
           <span>최종 결제 금액</span>
           <Price amount={finalPrice} member={member} />
         </div>
-      </div>
+      </SectionCard>
 
-      <div className="section">
+      <SectionCard>
         <label>
           <input
             type="checkbox"
@@ -335,54 +337,52 @@ export function CheckoutPage() {
           />
           주문 내용 및 약관에 동의합니다
         </label>
-        <button
+        <Button
           type="button"
-          className="link"
+          variant="link"
           onClick={() => {
             setIsTermsOpen(true)
           }}
         >
           약관 보기
-        </button>
-      </div>
+        </Button>
+      </SectionCard>
 
-      <button
+      <Button
         type="button"
-        className="pay"
+        className="checkout-primary-action"
         disabled={!agreed}
+        variant="primary"
         onClick={() => {
           setPlaced(true)
         }}
       >
         {finalPrice.toLocaleString()}원 결제하기
-      </button>
+      </Button>
 
       <Show when={isTermsOpen}>
-        <div
-          className="modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="terms-title"
-        >
-          <div className="modal-body">
-            <h3 id="terms-title">이용 약관</h3>
-            <p>
-              주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
-              추가됩니다.
-            </p>
-            <button
+        <Modal
+          heading="이용 약관"
+          headingId="terms-title"
+          footer={
+            <Button
               type="button"
               onClick={() => {
                 setIsTermsOpen(false)
               }}
             >
               닫기
-            </button>
-          </div>
-        </div>
+            </Button>
+          }
+        >
+          <p>
+            주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
+            추가됩니다.
+          </p>
+        </Modal>
       </Show>
 
-      <div className="section">
+      <SectionCard>
         <h2>최근 주문</h2>
         <For each={PAST_ORDERS}>
           {(order) => (
@@ -398,7 +398,7 @@ export function CheckoutPage() {
             </div>
           )}
         </For>
-      </div>
+      </SectionCard>
     </div>
   )
 }
