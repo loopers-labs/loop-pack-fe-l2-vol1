@@ -1,16 +1,3 @@
-// ESLint v10 Flat Config
-//
-// 이 설정의 원칙(1주차 과제 — docs/assignments/week-01.md):
-//   "룰을 통째로 복붙하지 않는다. 각 룰을 '1차 하네스' 관점에서 보고
-//    — 이 룰이 그럴듯하게 틀린 코드를 잡는가? error로 강제할 가치가 있는가? —
-//    수용/거부를 스스로 판단하고, 그 근거를 설명할 수 있어야 한다."
-//
-// 그래서 recommended 프리셋을 그대로 펼치기보다, '왜 켜는지'를 아는 룰만
-// 명시적으로 골라 켜고 각 룰 옆에 근거를 남긴다. 정확성에 직결되는 룰은 error로,
-// false positive 여지가 있거나 DX 힌트인 룰은 warn으로 — 레벨 선택의 근거도 함께 적는다.
-//
-// 레벨 결정 근거는 docs/week1/setup-retrospective.md 단계 2에 회고로 남겨둔다.
-
 import js from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
