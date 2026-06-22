@@ -29,7 +29,7 @@
 
 ## React 19 특화
 
-- `use()`, `useActionState`, `useOptimistic`, `useTransition(async)`, ref 콜백 클린업 — 상세 예시는 [skills/react19.md](../../.claude/skills/react19.md) 참조
+- `use()`, `useActionState`, `useOptimistic`, `useTransition(async)`, ref 콜백 클린업
 - Vite SPA — Server Actions 미사용
 
 ## Error Boundary + Suspense

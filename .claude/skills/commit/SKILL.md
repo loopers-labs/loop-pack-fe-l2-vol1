@@ -1,5 +1,7 @@
 # 커밋 컨벤션
 
+TRIGGER — 커밋 작성, 커밋 메시지 작성 요청 시 이 스킬을 먼저 로드.
+
 Conventional Commits 기반, 한글 작성.
 
 ## 형식
