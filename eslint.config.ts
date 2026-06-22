@@ -5,7 +5,7 @@ import pluginReact from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import css from "@eslint/css";
 import { defineConfig } from "eslint/config";
-import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 import customLint from "./customLint.ts";
 
 export default defineConfig([
@@ -37,6 +37,7 @@ export default defineConfig([
     settings: { react: { version: "19.2" } },
     rules: {
       "react-hooks/exhaustive-deps": "error",
+      "react/no-danger": "error",
     },
   },
   {
@@ -48,5 +49,5 @@ export default defineConfig([
       "css/no-invalid-properties": ["error", { allowUnknownVariables: true }],
     },
   },
-  eslintPluginPrettierRecommended,
+  eslintConfigPrettier,
 ]);

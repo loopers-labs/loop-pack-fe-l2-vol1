@@ -5,8 +5,7 @@ paths:
 
 # React 규칙
 
-React 19 + Vite + TS 환경의 React 코드 규칙. `.ts/.tsx` 작업 시에만 로드된다.
-Next 전용 구문은 금지 — `CLAUDE.md` 의 **스택** 참조.
+React 코드 규칙. `.ts/.tsx` 작업 시에만 로드된다.
 
 ## Escape Hatch 대원칙
 
@@ -59,14 +58,15 @@ Props 로 받는 콜백은 `on + Event`, 컴포넌트 내부에서 정의하는 
 
 ```tsx
 interface ButtonProps {
-  onClick: () => void       // Props: on~
-  onHover?: () => void
+  onClick: () => void; // Props: on~
+  onHover?: () => void;
 }
 
 function SearchBar({ onSearch }: { onSearch: (query: string) => void }) {
-  const handleSubmit = () => {     // 내부: handle~
-    onSearch(query)                // Props 콜백 호출
-  }
+  const handleSubmit = () => {
+    // 내부: handle~
+    onSearch(query); // Props 콜백 호출
+  };
 }
 ```
 
