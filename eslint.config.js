@@ -37,6 +37,8 @@ export default tseslint.config(
       'no-var': 'error',
       'prefer-const': 'error',
       'prefer-template': 'error',
+      '@typescript-eslint/ban-ts-comment': 'error',
+      'no-empty': ['error', { allowEmptyCatch: false }],
     },
   },
 );
