@@ -15,6 +15,55 @@ pnpm dev
 
 - [1주차 — 코드 리뷰 & AI 협업 환경 구축](docs/assignments/week-01.md)
 
+## 코드 품질 하네스
+
+이 프로젝트는 AI가 생성한 코드도 동일한 기준으로 검증하기 위해 ESLint,
+Prettier, Husky, lint-staged를 사용합니다.
+
+### ESLint
+
+ESLint는 포맷보다 코드 품질과 버그 가능성 검출에 집중합니다.
+
+주요 설정은 다음과 같습니다.
+
+- TypeScript strict type-aware rules로 타입 회피와 불명확한 코드를 줄입니다.
+- React Hooks / React Compiler rules로 Hook 호출 순서, dependency 누락, 렌더 중 state 변경, effect 내 동기 state 변경을 감지합니다.
+- React JSX rules로 JSX 보안 및 React 작성 관습을 점검합니다.
+- jsx-a11y로 접근성 문제를 정적으로 점검합니다.
+- unused-imports / simple-import-sort로 사용하지 않는 import를 제거하고 import 순서를 일관되게 유지합니다.
+
+### Prettier
+
+Prettier는 코드 포맷팅만 담당합니다. ESLint와 포맷 책임이 겹치지 않도록
+`eslint-config-prettier`를 사용합니다.
+
+### Git Hook
+
+커밋 전 `lint-staged`를 실행합니다.
+
+- 변경된 TS/TSX 파일: ESLint 자동 수정 후 Prettier 적용
+- 변경된 JS/JSON/CSS/MD 파일: Prettier 적용
+
+검사를 통과하지 못하면 커밋되지 않습니다.
+
+### Scripts
+
+```bash
+pnpm lint
+pnpm lint:fix
+pnpm format
+pnpm format:check
+pnpm typecheck
+pnpm build
+```
+
+- `pnpm lint`: 전체 소스 ESLint 검사
+- `pnpm lint:fix`: 자동 수정 가능한 ESLint 문제 수정
+- `pnpm format`: Prettier로 포맷 적용
+- `pnpm format:check`: 포맷 위반 여부 확인
+- `pnpm typecheck`: TypeScript 타입 검사
+- `pnpm build`: 타입 검사 후 Vite 빌드
+
 ## 새 주차 과제 받기
 
 각 주차 과제는 이 메인 레포에 업데이트됩니다. 새 과제가 올라오면 **본인 포크의 `main`을 이 레포(upstream)와 동기화**해 받으세요.
