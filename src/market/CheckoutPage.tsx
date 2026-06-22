@@ -3,21 +3,24 @@ import type { Dispatch } from 'react';
 
 import { CouponSection } from './CouponSection';
 import { DeliveryAddress } from './DeliveryAddress';
-import { DeliveryMemo } from './DeliveryMemo';
 import { OrderComplete } from './OrderComplete';
-import { OrderItemList } from './OrderItemList';
-import { PayButton } from './PayButton';
-import { PaymentMethodSection } from './PaymentMethodSection';
-import { PointSection } from './PointSection';
+import { OrderLineRow } from './OrderLineRow';
+import { OrderStatusTag } from './OrderStatusTag';
 import { PriceSummary } from './PriceSummary';
-import { RecentOrders } from './RecentOrders';
+import { SectionCard } from './SectionCard';
 import { TermsAgreement } from './TermsAgreement';
 import { checkoutReducer, initialCheckoutState } from './checkoutReducer';
 import type { CheckoutAction, CheckoutState } from './checkoutReducer';
-import { ADDRESSES, CART, COUPONS, MEMBER } from './data';
+import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
 import type { PaymentMethod } from './types';
 import { useOrderAmount } from './useOrderAmount';
 import './market.css';
+
+const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  card: '신용/체크카드',
+  transfer: '계좌이체',
+  kakao: '카카오페이',
+};
 
 export function CheckoutPage() {
   const [state, dispatch] = useReducer(
@@ -84,36 +87,96 @@ function CheckoutForm({ state, dispatch, amount, onPlace }: FormProps) {
         addressId={state.addressId}
         onChangeAddress={setAddress}
       />
-      <DeliveryMemo memo={state.deliveryMemo} onChangeMemo={setMemo} />
-      <OrderItemList items={CART} />
-      <CouponSection
-        appliedCoupon={state.appliedCoupon}
-        onApplyCoupon={handleApplyCoupon}
-      />
-      <PointSection
-        usePoint={state.usePoint}
-        pointInput={state.pointInput}
-        availablePoint={member.point}
-        onToggleUse={setUsePoint}
-        onChangePointInput={setPointInput}
-      />
-      <PaymentMethodSection
-        paymentMethod={state.paymentMethod}
-        onChangePaymentMethod={setPaymentMethod}
-      />
-      <PriceSummary
-        amount={amount}
-        appliedCoupon={state.appliedCoupon}
-        usePoint={state.usePoint}
-        member={member}
-      />
+
+      <SectionCard title="배송 요청사항">
+        <textarea
+          value={state.deliveryMemo}
+          onChange={(e) => setMemo(e.target.value)}
+          placeholder="배송 시 요청사항 (예: 부재 시 문 앞에 두세요)"
+        />
+      </SectionCard>
+
+      <SectionCard title="주문 상품">
+        {CART.map((it) => (
+          <OrderLineRow
+            key={it.id}
+            type="product"
+            label={it.name}
+            amount={it.price * it.quantity}
+            thumbnail={it.thumbnail}
+            option={it.option}
+            quantity={it.quantity}
+          />
+        ))}
+      </SectionCard>
+
+      <SectionCard title="쿠폰">
+        <CouponSection
+          appliedCoupon={state.appliedCoupon}
+          onApplyCoupon={handleApplyCoupon}
+        />
+      </SectionCard>
+
+      <SectionCard title="적립금">
+        <label>
+          <input
+            type="checkbox"
+            checked={state.usePoint}
+            onChange={(e) => setUsePoint(e.target.checked)}
+          />
+          적립금 사용 (보유 {member.point.toLocaleString()}P)
+        </label>
+        {state.usePoint ? (
+          <input
+            type="number"
+            value={state.pointInput}
+            onChange={(e) => setPointInput(Number(e.target.value))}
+          />
+        ) : null}
+      </SectionCard>
+
+      <SectionCard title="결제수단">
+        {(['card', 'transfer', 'kakao'] as PaymentMethod[]).map((m) => (
+          <label key={m}>
+            <input
+              type="radio"
+              checked={state.paymentMethod === m}
+              onChange={() => setPaymentMethod(m)}
+            />
+            {PAYMENT_LABEL[m]}
+          </label>
+        ))}
+      </SectionCard>
+
+      <SectionCard title="결제 금액">
+        <PriceSummary
+          amount={amount}
+          appliedCoupon={state.appliedCoupon}
+          usePoint={state.usePoint}
+          member={member}
+        />
+      </SectionCard>
+
       <TermsAgreement agreed={state.agreed} onChangeAgreed={setAgreed} />
-      <PayButton
-        finalPrice={amount.finalPrice}
-        disabled={!state.agreed}
-        onClick={onPlace}
-      />
-      <RecentOrders />
+
+      <button className="pay" disabled={!state.agreed} onClick={onPlace}>
+        {amount.finalPrice.toLocaleString()}원 결제하기
+      </button>
+
+      <SectionCard title="최근 주문">
+        {PAST_ORDERS.map((o) => (
+          <div key={o.id} className="line">
+            <div className="grow">{o.summary}</div>
+            <OrderStatusTag
+              isPaid={o.status === 'paid'}
+              isPreparing={o.status === 'preparing'}
+              isShipped={o.status === 'shipped'}
+              isDelivered={o.status === 'delivered'}
+              isCancelled={o.status === 'cancelled'}
+            />
+          </div>
+        ))}
+      </SectionCard>
     </div>
   );
 }

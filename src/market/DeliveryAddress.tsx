@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { SectionCard } from './SectionCard';
 import { ADDRESSES } from './data';
 import type { Address } from './types';
 
@@ -12,13 +13,14 @@ export function DeliveryAddress({ addressId, onChangeAddress }: Props) {
   const [expanded, setExpanded] = useState(false);
   const selected = ADDRESSES.find((a) => a.id === addressId) ?? ADDRESSES[0];
   return (
-    <div className="section">
-      <div className="row between">
-        <h2>배송지</h2>
+    <SectionCard
+      title="배송지"
+      action={
         <button className="link" onClick={() => setExpanded((v) => !v)}>
           {expanded ? '접기' : '변경'}
         </button>
-      </div>
+      }
+    >
       {expanded ? (
         <AddressForm addressId={addressId} onChangeAddress={onChangeAddress} />
       ) : (
@@ -26,7 +28,7 @@ export function DeliveryAddress({ addressId, onChangeAddress }: Props) {
           {selected.label} · {selected.recipient} ({selected.detail})
         </p>
       )}
-    </div>
+    </SectionCard>
   );
 }
 

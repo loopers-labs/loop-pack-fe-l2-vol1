@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { SectionCard } from './SectionCard';
+
 type Props = {
   agreed: boolean;
   onChangeAgreed: (agreed: boolean) => void;
@@ -9,7 +11,7 @@ export function TermsAgreement({ agreed, onChangeAgreed }: Props) {
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   return (
     <>
-      <div className="section">
+      <SectionCard>
         <label>
           <input
             type="checkbox"
@@ -21,7 +23,7 @@ export function TermsAgreement({ agreed, onChangeAgreed }: Props) {
         <button className="link" onClick={() => setIsTermsOpen(true)}>
           약관 보기
         </button>
-      </div>
+      </SectionCard>
       {isTermsOpen ? (
         <div className="modal" onClick={() => setIsTermsOpen(false)}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>

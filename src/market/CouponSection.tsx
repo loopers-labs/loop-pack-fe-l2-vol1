@@ -10,8 +10,7 @@ type Props = {
 export function CouponSection({ appliedCoupon, onApplyCoupon }: Props) {
   const [couponCode, setCouponCode] = useState('');
   return (
-    <div className="section">
-      <h2>쿠폰</h2>
+    <>
       <div className="row">
         <input
           type="text"
@@ -22,6 +21,6 @@ export function CouponSection({ appliedCoupon, onApplyCoupon }: Props) {
         <button onClick={() => onApplyCoupon(couponCode)}>적용</button>
       </div>
       {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
-    </div>
+    </>
   );
 }

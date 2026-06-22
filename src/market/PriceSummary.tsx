@@ -24,8 +24,7 @@ export function PriceSummary({
   member,
 }: Props) {
   return (
-    <div className="section">
-      <h2>결제 금액</h2>
+    <>
       <OrderLineRow
         type="subtotal"
         label="상품 금액"
@@ -57,6 +56,6 @@ export function PriceSummary({
         <span>최종 결제 금액</span>
         <Price amount={amount.finalPrice} member={member} />
       </div>
-    </div>
+    </>
   );
 }
