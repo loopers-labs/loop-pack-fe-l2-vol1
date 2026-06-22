@@ -1,21 +1,20 @@
-export default [
+import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
+import eslintConfigPrettier from 'eslint-config-prettier';
+
+export default tseslint.config(
   {
     files: ['**/*.{ts,tsx}'],
+    extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {
-      parser: '@typescript-eslint/parser',
       parserOptions: {
-        ecmaVersion: 2021,
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
-      'react-hooks': {},
-      'prettier': {},
+      'react-hooks': reactHooks,
     },
-    extends: ['plugin:prettier/recommended'],
     rules: {
       'react-hooks/rules-of-hooks': 'error',
       /**
@@ -41,4 +40,5 @@ export default [
       'no-duplicate-imports': 'error',
     },
   },
-];
+  eslintConfigPrettier,
+);
