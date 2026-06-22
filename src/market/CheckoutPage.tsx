@@ -1,17 +1,22 @@
+import './market.css'
+
+import { For, Show } from '@ilokesto/utilinent'
 import { useState } from 'react'
-import type { Address, Coupon, PaymentMethod } from './types'
+
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
-import { Price } from './Price'
+import { DeliveryMemo } from './DeliveryMemo'
 import { OrderLineRow } from './OrderLineRow'
 import { OrderStatusTag } from './OrderStatusTag'
-import { DeliveryMemo } from './DeliveryMemo'
-import './market.css'
+import { Price } from './Price'
+import type { Address, Coupon, PaymentMethod } from './types'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
   transfer: '계좌이체',
   kakao: '카카오페이',
 }
+
+const PAYMENT_METHODS: Array<PaymentMethod> = ['card', 'transfer', 'kakao']
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -20,31 +25,49 @@ function DeliverySection({
   selectedAddressId,
   onSelectAddress,
 }: {
-  addresses: Address[]
+  addresses: Array<Address>
   selectedAddressId: string
   onSelectAddress: (id: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
-  const selected = addresses.find((a) => a.id === selectedAddressId)!
+  const selected =
+    addresses.find((address) => address.id === selectedAddressId) ??
+    addresses.at(0)
+
+  if (!selected) {
+    return null
+  }
+
   return (
     <div className="section">
       <div className="row between">
         <h2>배송지</h2>
-        <button className="link" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? '접기' : '변경'}
+        <button
+          type="button"
+          className="link"
+          onClick={() => {
+            setExpanded((v) => !v)
+          }}
+        >
+          <Show when={expanded} fallback="변경">
+            접기
+          </Show>
         </button>
       </div>
-      {expanded ? (
+      <Show
+        when={expanded}
+        fallback={
+          <p className="addr-summary">
+            {selected.label} · {selected.recipient} ({selected.detail})
+          </p>
+        }
+      >
         <AddressForm
           addresses={addresses}
           selectedAddressId={selectedAddressId}
           onSelectAddress={onSelectAddress}
         />
-      ) : (
-        <p className="addr-summary">
-          {selected.label} · {selected.recipient} ({selected.detail})
-        </p>
-      )}
+      </Show>
     </div>
   )
 }
@@ -56,7 +79,7 @@ function AddressForm({
   selectedAddressId,
   onSelectAddress,
 }: {
-  addresses: Address[]
+  addresses: Array<Address>
   selectedAddressId: string
   onSelectAddress: (id: string) => void
 }) {
@@ -68,18 +91,22 @@ function AddressForm({
         <input
           type="checkbox"
           checked={onlyNear}
-          onChange={(e) => setOnlyNear(e.target.checked)}
+          onChange={(e) => {
+            setOnlyNear(e.target.checked)
+          }}
         />
         도서산간 제외
       </label>
-      {list.map((a) => (
-        <AddressField
-          key={a.id}
-          address={a}
-          selected={a.id === selectedAddressId}
-          onSelect={onSelectAddress}
-        />
-      ))}
+      <For each={list}>
+        {(address) => (
+          <AddressField
+            key={address.id}
+            address={address}
+            selected={address.id === selectedAddressId}
+            onSelect={onSelectAddress}
+          />
+        )}
+      </For>
     </>
   )
 }
@@ -95,10 +122,16 @@ function AddressField({
 }) {
   return (
     <label className="addr">
-      <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
+      <input
+        type="radio"
+        checked={selected}
+        onChange={() => {
+          onSelect(address.id)
+        }}
+      />
       <span>
         {address.label} · {address.recipient} ({address.detail})
-        {address.isRemote ? ' · 도서산간' : ''}
+        <Show when={address.isRemote}> · 도서산간</Show>
       </span>
     </label>
   )
@@ -118,7 +151,12 @@ export function CheckoutPage() {
   const [agreed, setAgreed] = useState(false)
   const [placed, setPlaced] = useState(false)
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
+  const address =
+    ADDRESSES.find((item) => item.id === selectedAddressId) ?? ADDRESSES.at(0)
+
+  if (!address) {
+    throw new Error('No delivery address configured')
+  }
 
   // ── 배송비 정책 ──────────────────────────────
   const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0)
@@ -130,10 +168,11 @@ export function CheckoutPage() {
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
 
   // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0
+  const pointDiscount = usePoint
+    ? Math.min(pointInput, member.point, itemTotal)
+    : 0
 
-  // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount)
+  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim())
@@ -150,7 +189,13 @@ export function CheckoutPage() {
             주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
           </p>
         </div>
-        <button className="pay" onClick={() => setPlaced(false)}>
+        <button
+          type="button"
+          className="pay"
+          onClick={() => {
+            setPlaced(false)
+          }}
+        >
           주문서로 돌아가기
         </button>
       </div>
@@ -174,17 +219,19 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>주문 상품</h2>
-        {cart.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
-        ))}
+        <For each={cart}>
+          {(item) => (
+            <OrderLineRow
+              key={item.id}
+              type="product"
+              label={item.name}
+              amount={item.price * item.quantity}
+              thumbnail={item.thumbnail}
+              option={item.option}
+              quantity={item.quantity}
+            />
+          )}
+        </For>
       </div>
 
       <div className="section">
@@ -193,12 +240,18 @@ export function CheckoutPage() {
           <input
             type="text"
             value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
+            onChange={(e) => {
+              setCouponCode(e.target.value)
+            }}
             placeholder="쿠폰 코드 (예: WELCOME5000)"
           />
-          <button onClick={applyCoupon}>적용</button>
+          <button type="button" onClick={applyCoupon}>
+            적용
+          </button>
         </div>
-        {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
+        <Show when={appliedCoupon}>
+          {(coupon) => <small>{coupon.label} 적용됨</small>}
+        </Show>
       </div>
 
       <div className="section">
@@ -207,45 +260,64 @@ export function CheckoutPage() {
           <input
             type="checkbox"
             checked={usePoint}
-            onChange={(e) => setUsePoint(e.target.checked)}
+            onChange={(e) => {
+              setUsePoint(e.target.checked)
+            }}
           />
           적립금 사용 (보유 {member.point.toLocaleString()}P)
         </label>
-        {usePoint ? (
+        <Show when={usePoint}>
           <input
             type="number"
             value={pointInput}
-            onChange={(e) => setPointInput(Number(e.target.value))}
+            onChange={(e) => {
+              setPointInput(Number(e.target.value))
+            }}
           />
-        ) : null}
+        </Show>
       </div>
 
       <div className="section">
         <h2>결제수단</h2>
-        {(['card', 'transfer', 'kakao'] as PaymentMethod[]).map((m) => (
-          <label key={m}>
-            <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
-            {PAYMENT_LABEL[m]}
-          </label>
-        ))}
+        <For each={PAYMENT_METHODS}>
+          {(method) => (
+            <label key={method}>
+              <input
+                type="radio"
+                checked={payment === method}
+                onChange={() => {
+                  setPayment(method)
+                }}
+              />
+              {PAYMENT_LABEL[method]}
+            </label>
+          )}
+        </For>
       </div>
 
       <div className="section">
         <h2>결제 금액</h2>
         <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
         <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
+        <Show when={appliedCoupon}>
+          {(coupon) => (
+            <OrderLineRow
+              type="coupon"
+              label="쿠폰 할인"
+              amount={couponDiscount}
+              isDiscount
+              couponCode={coupon.code}
+            />
+          )}
+        </Show>
+        <Show when={usePoint}>
           <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
+            type="point"
+            label="적립금 사용"
+            amount={pointDiscount}
             isDiscount
-            couponCode={appliedCoupon.code}
           />
-        ) : null}
-        {usePoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-        ) : null}
+        </Show>
         <div className="total">
           <span>최종 결제 금액</span>
           <Price amount={finalPrice} member={member} />
@@ -254,42 +326,78 @@ export function CheckoutPage() {
 
       <div className="section">
         <label>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => {
+              setAgreed(e.target.checked)
+            }}
+          />
           주문 내용 및 약관에 동의합니다
         </label>
-        <button className="link" onClick={() => setIsTermsOpen(true)}>
+        <button
+          type="button"
+          className="link"
+          onClick={() => {
+            setIsTermsOpen(true)
+          }}
+        >
           약관 보기
         </button>
       </div>
 
-      <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
+      <button
+        type="button"
+        className="pay"
+        disabled={!agreed}
+        onClick={() => {
+          setPlaced(true)
+        }}
+      >
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
-      {isTermsOpen ? (
-        <div className="modal" onClick={() => setIsTermsOpen(false)}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <h3>이용 약관</h3>
-            <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
-            <button onClick={() => setIsTermsOpen(false)}>닫기</button>
+      <Show when={isTermsOpen}>
+        <div
+          className="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="terms-title"
+        >
+          <div className="modal-body">
+            <h3 id="terms-title">이용 약관</h3>
+            <p>
+              주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
+              추가됩니다.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setIsTermsOpen(false)
+              }}
+            >
+              닫기
+            </button>
           </div>
         </div>
-      ) : null}
+      </Show>
 
       <div className="section">
         <h2>최근 주문</h2>
-        {PAST_ORDERS.map((o) => (
-          <div key={o.id} className="line">
-            <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === 'paid'}
-              isPreparing={o.status === 'preparing'}
-              isShipped={o.status === 'shipped'}
-              isDelivered={o.status === 'delivered'}
-              isCancelled={o.status === 'cancelled'}
-            />
-          </div>
-        ))}
+        <For each={PAST_ORDERS}>
+          {(order) => (
+            <div key={order.id} className="line">
+              <div className="grow">{order.summary}</div>
+              <OrderStatusTag
+                isPaid={order.status === 'paid'}
+                isPreparing={order.status === 'preparing'}
+                isShipped={order.status === 'shipped'}
+                isDelivered={order.status === 'delivered'}
+                isCancelled={order.status === 'cancelled'}
+              />
+            </div>
+          )}
+        </For>
       </div>
     </div>
   )

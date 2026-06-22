@@ -1,7 +1,5 @@
 import { CheckoutPage } from './market/CheckoutPage'
 
-function App() {
+export function App() {
   return <CheckoutPage />
 }
-
-export default App
