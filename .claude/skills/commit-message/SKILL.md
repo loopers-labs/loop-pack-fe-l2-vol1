@@ -1,3 +1,8 @@
+---
+name: commit-message
+description: '커밋 메시지 생성. Conventional Commits 기반 한글 작성'
+---
+
 # 커밋 컨벤션
 
 TRIGGER — 커밋 작성, 커밋 메시지 작성 요청 시 이 스킬을 먼저 로드.
@@ -25,8 +30,6 @@ Conventional Commits 기반, 한글 작성.
 | `docs`     | 문서                     |
 | `test`     | 테스트                   |
 | `chore`    | 빌드, 패키지, 설정       |
-| `perf`     | 성능 개선                |
-| `ci`       | CI/CD                    |
 
 ## scope (선택)
 

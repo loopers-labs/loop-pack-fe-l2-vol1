@@ -1,3 +1,8 @@
+---
+name: pr-description
+description: 'PR 디스크립션 작성. 템플릿 기반, 사용자 입력 4항목 수집'
+---
+
 # PR 디스크립션 작성
 
 TRIGGER — PR 디스크립션 작성, PR 본문 작성 요청 시 이 스킬을 먼저 로드.

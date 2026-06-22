@@ -1,3 +1,8 @@
+---
+name: workflow
+description: '브랜치 전략 및 머지 전 체크. git push/merge 작업 시 사용'
+---
+
 # 워크플로우 규칙
 
 TRIGGER — 브랜치 생성/관리, git push/merge 관련 작업 요청 시 이 스킬을 먼저 로드.
