@@ -14,6 +14,7 @@ import {
   calculatePointDiscount,
 } from "./checkoutPrice";
 import { CouponSection } from "./CouponSection";
+import { PointSection } from "./PointSection";
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: "신용/체크카드",
@@ -115,7 +116,7 @@ export function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [usePoint, setUsePoint] = useState(false);
+  const [isUsingPoint, setIsUsingPoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
   const [payment, setPayment] = useState<PaymentMethod>("card");
   const [isTermsOpen, setIsTermsOpen] = useState(false);
@@ -132,7 +133,7 @@ export function CheckoutPage() {
   const couponDiscount = calculateCouponDiscount(appliedCoupon);
 
   // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = calculatePointDiscount(usePoint, {
+  const pointDiscount = calculatePointDiscount(isUsingPoint, {
     pointInput,
     memberTotalPoint: member.point,
     totalItemAmount: itemTotal,
@@ -199,24 +200,13 @@ export function CheckoutPage() {
         onApplyCoupon={handleApplyCoupon}
       />
 
-      <div className="section">
-        <h2>적립금</h2>
-        <label>
-          <input
-            type="checkbox"
-            checked={usePoint}
-            onChange={(e) => setUsePoint(e.target.checked)}
-          />
-          적립금 사용 (보유 {member.point.toLocaleString()}P)
-        </label>
-        {usePoint ? (
-          <input
-            type="number"
-            value={pointInput}
-            onChange={(e) => setPointInput(Number(e.target.value))}
-          />
-        ) : null}
-      </div>
+      <PointSection
+        isUsingPoint={isUsingPoint}
+        memberPoint={member.point}
+        pointInput={pointInput}
+        onIsUsingPointChange={setIsUsingPoint}
+        onPointInputChange={setPointInput}
+      />
 
       <div className="section">
         <h2>결제수단</h2>
@@ -241,7 +231,7 @@ export function CheckoutPage() {
             couponCode={appliedCoupon.code}
           />
         ) : null}
-        {usePoint ? (
+        {isUsingPoint ? (
           <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
         ) : null}
         <div className="total">

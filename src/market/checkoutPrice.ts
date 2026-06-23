@@ -19,11 +19,11 @@ export const calculateCouponDiscount = (appliedCoupon: Coupon | null) => {
 };
 
 export const calculatePointDiscount = (
-  usePoint: boolean,
+  isUsingPoint: boolean,
   pointDetail: { pointInput: number; memberTotalPoint: number; totalItemAmount: number },
 ) => {
   const { pointInput, memberTotalPoint, totalItemAmount } = pointDetail;
-  return usePoint ? Math.min(pointInput, memberTotalPoint, totalItemAmount) : 0;
+  return isUsingPoint ? Math.min(pointInput, memberTotalPoint, totalItemAmount) : 0;
 };
 
 export const calculateFinalPrice = ({

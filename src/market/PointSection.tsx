@@ -1,0 +1,36 @@
+type PointSectionProps = {
+  isUsingPoint: boolean;
+  memberPoint: number;
+  pointInput: number;
+  onIsUsingPointChange: (isUsingPoint: boolean) => void;
+  onPointInputChange: (newInput: number) => void;
+};
+
+export function PointSection({
+  isUsingPoint,
+  memberPoint,
+  pointInput,
+  onIsUsingPointChange,
+  onPointInputChange,
+}: PointSectionProps) {
+  return (
+    <div className="section">
+      <h2>적립금</h2>
+      <label>
+        <input
+          type="checkbox"
+          checked={isUsingPoint}
+          onChange={(e) => onIsUsingPointChange(e.target.checked)}
+        />
+        적립금 사용 (보유 {memberPoint.toLocaleString()}P)
+      </label>
+      {isUsingPoint ? (
+        <input
+          type="number"
+          value={pointInput}
+          onChange={(e) => onPointInputChange(Number(e.target.value))}
+        />
+      ) : null}
+    </div>
+  );
+}
