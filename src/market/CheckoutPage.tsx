@@ -8,11 +8,11 @@ import {
   type Coupon,
   MarketPricingPolicy,
   marketService,
+  OrderLine,
   OrderStatusTag,
   type PaymentMethod,
 } from '../entities/market'
 import { Button, Heading, Modal, SectionCard, Textarea } from '../shared/ui'
-import { OrderLineRow } from './OrderLineRow'
 import { Price } from './Price'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -47,17 +47,17 @@ function DeliverySection({
     <SectionCard>
       <div className="row between">
         <Heading.H2>배송지</Heading.H2>
-        <Button
+        <Show.Button
+          when={expanded}
+          fallback="변경"
           type="button"
           variant="link"
           onClick={() => {
             setExpanded((v) => !v)
           }}
         >
-          <Show when={expanded} fallback="변경">
-            접기
-          </Show>
-        </Button>
+          접기
+        </Show.Button>
       </div>
       <Show
         when={expanded}
@@ -233,15 +233,16 @@ export function CheckoutPage() {
         <Heading.H2>주문 상품</Heading.H2>
         <For each={cartItems}>
           {(item) => (
-            <OrderLineRow
-              key={item.id}
-              type="product"
-              label={item.name}
-              amount={item.price * item.quantity}
-              thumbnail={item.thumbnail}
-              option={item.option}
-              quantity={item.quantity}
-            />
+            <OrderLine.Root key={item.id}>
+              <OrderLine.Thumbnail>{item.thumbnail}</OrderLine.Thumbnail>
+              <OrderLine.Content>
+                <OrderLine.Title>{item.name}</OrderLine.Title>
+                <OrderLine.Description>
+                  {item.option} · 수량 {item.quantity}
+                </OrderLine.Description>
+              </OrderLine.Content>
+              <OrderLine.Amount amount={item.totalPrice} />
+            </OrderLine.Root>
           )}
         </For>
       </SectionCard>
@@ -262,7 +263,11 @@ export function CheckoutPage() {
           </Button>
         </div>
         <Show when={appliedCoupon}>
-          {(coupon) => <small>{coupon.label} 적용됨</small>}
+          {(coupon) => (
+            <small className="mt-0.5 block text-[13px] text-(--text) opacity-70">
+              {coupon.label} 적용됨
+            </small>
+          )}
         </Show>
       </SectionCard>
 
@@ -309,26 +314,36 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>결제 금액</Heading.H2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
+        <OrderLine.Root>
+          <OrderLine.Content>
+            <OrderLine.Title>상품 금액</OrderLine.Title>
+          </OrderLine.Content>
+          <OrderLine.Amount amount={itemTotal} />
+        </OrderLine.Root>
+        <OrderLine.Root>
+          <OrderLine.Content>
+            <OrderLine.Title>배송비</OrderLine.Title>
+          </OrderLine.Content>
+          <OrderLine.Amount amount={shippingFee} />
+        </OrderLine.Root>
         <Show when={appliedCoupon}>
           {(coupon) => (
-            <OrderLineRow
-              type="coupon"
-              label="쿠폰 할인"
-              amount={couponDiscount}
-              isDiscount
-              couponCode={coupon.code}
-            />
+            <OrderLine.Root>
+              <OrderLine.Content>
+                <OrderLine.Title>쿠폰 할인</OrderLine.Title>
+                <OrderLine.Description>{coupon.code}</OrderLine.Description>
+              </OrderLine.Content>
+              <OrderLine.DiscountAmount amount={couponDiscount} />
+            </OrderLine.Root>
           )}
         </Show>
         <Show when={usePoint}>
-          <OrderLineRow
-            type="point"
-            label="적립금 사용"
-            amount={pointDiscount}
-            isDiscount
-          />
+          <OrderLine.Root>
+            <OrderLine.Content>
+              <OrderLine.Title>적립금 사용</OrderLine.Title>
+            </OrderLine.Content>
+            <OrderLine.DiscountAmount amount={pointDiscount} />
+          </OrderLine.Root>
         </Show>
         <div className="total">
           <span>최종 결제 금액</span>
@@ -396,8 +411,8 @@ export function CheckoutPage() {
         <Heading.H2>최근 주문</Heading.H2>
         <For each={pastOrders}>
           {(order) => (
-            <div key={order.id} className="line">
-              <div className="grow">{order.summary}</div>
+            <div key={order.id} className="flex items-center gap-2.5 py-2">
+              <div className="min-w-0 flex-1">{order.summary}</div>
               <OrderStatusTag status={order.status} />
             </div>
           )}

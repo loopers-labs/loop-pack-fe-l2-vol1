@@ -5,26 +5,6 @@
   text-align: left;
   color: var(--text);
 }
-.checkout .line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-}
-.checkout .line .grow {
-  flex: 1;
-  min-width: 0;
-}
-.checkout small {
-  color: var(--text);
-  opacity: 0.7;
-  display: block;
-  font-size: 13px;
-  margin-top: 2px;
-}
-.checkout .thumb {
-  font-size: 26px;
-}
 .checkout .row {
   display: flex;
   gap: 8px;
