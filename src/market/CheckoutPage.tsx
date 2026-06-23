@@ -13,21 +13,16 @@ import { OrderAgreement } from './OrderAgreement'
 import { RecentOrders } from './RecentOrders'
 
 export function CheckoutPage() {
-  const member = MEMBER
-  const cart = CART
-  const coupons = COUPONS
-
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id)
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
   const [usePoint, setUsePoint] = useState(false)
   const [pointInput, setPointInput] = useState(0)
-
   const [placed, setPlaced] = useState(false)
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
 
   // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0)
+  const itemTotal = CART.reduce((sum, it) => sum + it.price * it.quantity, 0)
   let shippingFee = 3000
   if (itemTotal >= 50000) shippingFee = 0
   if (address.isRemote) shippingFee += 3000
@@ -36,10 +31,12 @@ export function CheckoutPage() {
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
 
   // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0
+  const pointDiscount = usePoint ? Math.min(pointInput, MEMBER.point, itemTotal) : 0
 
   // 최종 금액을 state 에 담아둔다.
   const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount)
+
+  const summary = { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice }
 
   if (placed) {
     return (
@@ -67,9 +64,9 @@ export function CheckoutPage() {
         onSelectAddress={setSelectedAddressId}
       />
       <DeliveryMemo />
-      <DeliveryOrders cart={cart} />
+      <DeliveryOrders cart={CART} />
       <DeliveryCoupon
-        coupons={coupons}
+        coupons={COUPONS}
         appliedCoupon={appliedCoupon}
         setAppliedCoupon={setAppliedCoupon}
       />
@@ -79,16 +76,16 @@ export function CheckoutPage() {
         setUsePoint={setUsePoint}
         pointInput={pointInput}
         setPointInput={setPointInput}
-        point={member.point.toLocaleString()}
+        point={MEMBER.point.toLocaleString()}
       />
 
       <PaymentMethodSection />
 
       <PaymentSummary
-        summary={{ itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice }}
+        summary={summary}
         appliedCoupon={appliedCoupon}
         usePoint={usePoint}
-        member={member}
+        member={MEMBER}
       />
 
       <OrderAgreement finalPrice={finalPrice} onPlace={() => setPlaced(true)} />
