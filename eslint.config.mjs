@@ -245,8 +245,27 @@ const eslintConfig = defineConfig([
           'cx',
           'cnMerge',
         ],
-        parseKeyFunctions: ['classnames', 'classNames', 'clsx', 'cn', 'cx'],
+        parseKeyFunctions: ['classnames', 'classNames', 'clsx'],
       },
+    },
+    rules: {
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        {
+          whitelist: [
+            'addr',
+            'addr-summary',
+            'between',
+            'checkout',
+            'checkout-primary-action',
+            'className',
+            'line',
+            'row',
+            'thumb',
+            'total',
+          ],
+        },
+      ],
     },
   },
   {
