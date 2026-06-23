@@ -6,6 +6,7 @@ import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
+import tailwindcss from 'eslint-plugin-tailwindcss'
 import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
@@ -223,6 +224,30 @@ const eslintConfig = defineConfig([
   {
     ...reactRefresh.configs.vite,
     files: reactFiles,
+  },
+  {
+    extends: [tailwindcss.configs.recommended],
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    settings: {
+      tailwindcss: {
+        cssConfigPath: './src/index.css',
+        functions: [
+          'classnames',
+          'classNames',
+          'clsx',
+          'ctl',
+          'cva',
+          'tv',
+          'tw',
+          'twMerge',
+          'twJoin',
+          'cn',
+          'cx',
+          'cnMerge',
+        ],
+        parseKeyFunctions: ['classnames', 'classNames', 'clsx', 'cn', 'cx'],
+      },
+    },
   },
   {
     files: reactFiles,
