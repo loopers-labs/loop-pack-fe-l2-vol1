@@ -13,6 +13,7 @@ import {
   calculateItemTotal,
   calculatePointDiscount,
 } from "./checkoutPrice";
+import { CouponSection } from "./CouponSection";
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: "신용/체크카드",
@@ -112,7 +113,7 @@ export function CheckoutPage() {
   const cart = CART;
 
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
-  const [couponCode, setCouponCode] = useState("");
+  const [couponCodeInput, setCouponCodeInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [usePoint, setUsePoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
@@ -139,8 +140,8 @@ export function CheckoutPage() {
 
   const finalPrice = calculateFinalPrice({ itemTotal, shippingFee, couponDiscount, pointDiscount });
 
-  const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim());
+  const handleApplyCoupon = () => {
+    const found = COUPONS.find((c) => c.code === couponCodeInput.trim());
     setAppliedCoupon(found ?? null);
     if (!found) alert("존재하지 않는 쿠폰이에요");
   };
@@ -191,19 +192,12 @@ export function CheckoutPage() {
         ))}
       </div>
 
-      <div className="section">
-        <h2>쿠폰</h2>
-        <div className="row">
-          <input
-            type="text"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            placeholder="쿠폰 코드 (예: WELCOME5000)"
-          />
-          <button onClick={applyCoupon}>적용</button>
-        </div>
-        {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
-      </div>
+      <CouponSection
+        couponCodeInput={couponCodeInput}
+        appliedCoupon={appliedCoupon}
+        onCouponCodeInputChange={setCouponCodeInput}
+        onApplyCoupon={handleApplyCoupon}
+      />
 
       <div className="section">
         <h2>적립금</h2>

@@ -27,7 +27,9 @@ const ORDER_STATUS_DISPLAY = {
   },
 };
 
-export function OrderStatusTag({ status }: { status: OrderStatus }) {
+type OrderStatusTagProps = { status: OrderStatus };
+
+export function OrderStatusTag({ status }: OrderStatusTagProps) {
   const color = ORDER_STATUS_DISPLAY[status].color;
   const label = ORDER_STATUS_DISPLAY[status].label;
   return (
