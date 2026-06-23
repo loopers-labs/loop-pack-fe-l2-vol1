@@ -65,11 +65,7 @@ function AddressForm({
   return (
     <>
       <label className="filter">
-        <input
-          type="checkbox"
-          checked={onlyNear}
-          onChange={(e) => setOnlyNear(e.target.checked)}
-        />
+        <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
         도서산간 제외
       </label>
       {list.map((a) => (
@@ -281,13 +277,8 @@ export function CheckoutPage() {
         {PAST_ORDERS.map((o) => (
           <div key={o.id} className="line">
             <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === 'paid'}
-              isPreparing={o.status === 'preparing'}
-              isShipped={o.status === 'shipped'}
-              isDelivered={o.status === 'delivered'}
-              isCancelled={o.status === 'cancelled'}
-            />
+            {/* ⑥ boolean 폭발 → enum: 5개 boolean props 대신 status만 전달 */}
+            <OrderStatusTag status={o.status} />
           </div>
         ))}
       </div>
