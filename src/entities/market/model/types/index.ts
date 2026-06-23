@@ -1,46 +1,8 @@
-export type PaymentMethod = 'card' | 'transfer' | 'kakao'
-
-export type MemberGrade = 'VIP' | 'NORMAL'
-
-export type OrderStatus =
-  | 'paid'
-  | 'preparing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-
-export type CartItemData = {
-  id: string
-  name: string
-  option: string
-  price: number
-  quantity: number
-  thumbnail: string
-}
-
-export type CouponData = {
-  code: string
-  label: string
-  discount: number
-}
-
-export type AddressData = {
-  id: string
-  label: string
-  recipient: string
-  detail: string
-  isRemote: boolean
-}
-
-export type MemberData = {
-  name: string
-  grade: MemberGrade
-  point: number
-}
-
-export type PastOrderData = {
-  id: string
-  summary: string
-  status: OrderStatus
-  amount: number
-}
+export type { AddressData } from './address-data'
+export type { CartItemData } from './cart-item-data'
+export type { CouponData } from './coupon-data'
+export type { MemberData } from './member-data'
+export type { MemberGrade } from './member-grade'
+export type { OrderStatus } from './order-status'
+export type { PastOrderData } from './past-order-data'
+export type { PaymentMethod } from './payment-method'
