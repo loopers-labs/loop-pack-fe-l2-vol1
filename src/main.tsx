@@ -1,4 +1,5 @@
 import './index.css'
+import './app/register-utilinent'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
