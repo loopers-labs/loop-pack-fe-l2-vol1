@@ -1,2 +1,3 @@
-export { MarketRepository, type MarketSnapshotData } from './market.repository'
-export { MarketService, type MarketSnapshot } from './market.service'
+import { MarketService } from './market.service'
+
+export const marketService = new MarketService()

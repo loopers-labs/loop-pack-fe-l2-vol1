@@ -72,7 +72,7 @@ const PAST_ORDERS: Array<PastOrderData> = [
   { id: 'o3', summary: '무선 마우스', status: 'cancelled', amount: 32000 },
 ]
 
-export type MarketSnapshotData = {
+type MarketSnapshotData = {
   cartItems: Array<CartItemData>
   coupons: Array<CouponData>
   addresses: Array<AddressData>
@@ -80,14 +80,34 @@ export type MarketSnapshotData = {
   pastOrders: Array<PastOrderData>
 }
 
-export const MarketRepository = {
+export class MarketRepository {
+  getCartItems(): Array<CartItemData> {
+    return CART
+  }
+
+  getCoupons(): Array<CouponData> {
+    return COUPONS
+  }
+
+  getAddresses(): Array<AddressData> {
+    return ADDRESSES
+  }
+
+  getMember(): MemberData {
+    return MEMBER
+  }
+
+  getPastOrders(): Array<PastOrderData> {
+    return PAST_ORDERS
+  }
+
   getMarketSnapshot(): MarketSnapshotData {
     return {
-      cartItems: CART,
-      coupons: COUPONS,
-      addresses: ADDRESSES,
-      member: MEMBER,
-      pastOrders: PAST_ORDERS,
+      cartItems: this.getCartItems(),
+      coupons: this.getCoupons(),
+      addresses: this.getAddresses(),
+      member: this.getMember(),
+      pastOrders: this.getPastOrders(),
     }
-  },
+  }
 }
