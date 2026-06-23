@@ -1,21 +1,9 @@
-import type { Coupon, Member } from './types'
 import { Price } from './Price'
 import { OrderLineRow } from './OrderLineRow'
+import { useCheckout } from './context'
 
-interface PaymentSummaryProps {
-  summary: {
-    itemTotal: number
-    shippingFee: number
-    couponDiscount: number
-    pointDiscount: number
-    finalPrice: number
-  }
-  appliedCoupon: Coupon | null
-  usePoint: boolean
-  member: Member
-}
-
-export function PaymentSummary({ summary, appliedCoupon, usePoint, member }: PaymentSummaryProps) {
+export function PaymentSummary() {
+  const { summary, appliedCoupon, usePoint, member } = useCheckout()
   const { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice } = summary
 
   return (

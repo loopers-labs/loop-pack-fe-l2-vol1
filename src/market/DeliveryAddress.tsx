@@ -2,17 +2,12 @@
 
 import { useState } from 'react'
 import type { Address } from './types'
+import { useCheckout } from './context'
 
-// 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
-export function DeliveryAddress({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Address[]
-  selectedAddressId: string
-  onSelectAddress: (id: string) => void
-}) {
+// 공유 상태(배송지 선택)는 Context 에서 읽고,
+// 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
+export function DeliveryAddress() {
+  const { addresses, selectedAddressId, setSelectedAddressId: onSelectAddress } = useCheckout()
   const [expanded, setExpanded] = useState(false)
   const selected = addresses.find((a) => a.id === selectedAddressId)!
   return (

@@ -1,13 +1,8 @@
 import { useState } from 'react'
-import type { Coupon } from './types'
+import { useCheckout } from './context'
 
-interface CounponProps {
-  coupons: Coupon[]
-  appliedCoupon: Coupon | null
-  setAppliedCoupon: React.Dispatch<React.SetStateAction<Coupon | null>>
-}
-
-export function DeliveryCoupon({ coupons, appliedCoupon, setAppliedCoupon }: CounponProps) {
+export function DeliveryCoupon() {
+  const { coupons, appliedCoupon, setAppliedCoupon } = useCheckout()
   const [couponCode, setCouponCode] = useState('')
   const applyCoupon = () => {
     const found = coupons.find((c) => c.code === couponCode.trim())

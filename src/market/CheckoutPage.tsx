@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { Coupon } from './types'
 import { ADDRESSES, CART, MEMBER, PAST_ORDERS, COUPONS } from './data'
+import { CheckoutProvider, useCheckout } from './context'
 import { DeliveryMemo } from './DeliveryMemo'
 import './market.css'
 import { DeliveryOrders } from './DeliveryOrders'
@@ -13,30 +13,17 @@ import { OrderAgreement } from './OrderAgreement'
 import { RecentOrders } from './RecentOrders'
 
 export function CheckoutPage() {
-  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id)
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
-  const [usePoint, setUsePoint] = useState(false)
-  const [pointInput, setPointInput] = useState(0)
+  return (
+    <CheckoutProvider cart={CART} addresses={ADDRESSES} coupons={COUPONS} member={MEMBER}>
+      <CheckoutContent />
+    </CheckoutProvider>
+  )
+}
+
+function CheckoutContent() {
+  const { summary } = useCheckout()
+  // 주문 완료 화면 전환은 이 화면 전용 UI 상태이므로 로컬에 둔다.
   const [placed, setPlaced] = useState(false)
-
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
-
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = CART.reduce((sum, it) => sum + it.price * it.quantity, 0)
-  let shippingFee = 3000
-  if (itemTotal >= 50000) shippingFee = 0
-  if (address.isRemote) shippingFee += 3000
-
-  // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
-
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, MEMBER.point, itemTotal) : 0
-
-  // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount)
-
-  const summary = { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice }
 
   if (placed) {
     return (
@@ -44,7 +31,7 @@ export function CheckoutPage() {
         <h1>주문 완료</h1>
         <div className="section">
           <p style={{ color: 'var(--text-h)' }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
+            주문이 접수되었어요. 결제 금액 {summary.finalPrice.toLocaleString()}원
           </p>
         </div>
         <button className="pay" onClick={() => setPlaced(false)}>
@@ -58,37 +45,14 @@ export function CheckoutPage() {
     <div className="checkout">
       <h1>주문/결제</h1>
 
-      <DeliveryAddress
-        addresses={ADDRESSES}
-        selectedAddressId={selectedAddressId}
-        onSelectAddress={setSelectedAddressId}
-      />
+      <DeliveryAddress />
       <DeliveryMemo />
-      <DeliveryOrders cart={CART} />
-      <DeliveryCoupon
-        coupons={COUPONS}
-        appliedCoupon={appliedCoupon}
-        setAppliedCoupon={setAppliedCoupon}
-      />
-
-      <DeliveryPoint
-        usePoint={usePoint}
-        setUsePoint={setUsePoint}
-        pointInput={pointInput}
-        setPointInput={setPointInput}
-        point={MEMBER.point.toLocaleString()}
-      />
-
+      <DeliveryOrders />
+      <DeliveryCoupon />
+      <DeliveryPoint />
       <PaymentMethodSection />
-
-      <PaymentSummary
-        summary={summary}
-        appliedCoupon={appliedCoupon}
-        usePoint={usePoint}
-        member={MEMBER}
-      />
-
-      <OrderAgreement finalPrice={finalPrice} onPlace={() => setPlaced(true)} />
+      <PaymentSummary />
+      <OrderAgreement onPlace={() => setPlaced(true)} />
 
       <RecentOrders orders={PAST_ORDERS} />
     </div>

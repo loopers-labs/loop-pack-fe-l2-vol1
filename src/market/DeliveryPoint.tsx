@@ -1,24 +1,13 @@
-interface DeliveryPointProps {
-  usePoint: boolean
-  setUsePoint: React.Dispatch<React.SetStateAction<boolean>>
-  pointInput: number
-  setPointInput: React.Dispatch<React.SetStateAction<number>>
-  point: string
-}
+import { useCheckout } from './context'
 
-export function DeliveryPoint({
-  usePoint,
-  setUsePoint,
-  pointInput,
-  setPointInput,
-  point,
-}: DeliveryPointProps) {
+export function DeliveryPoint() {
+  const { usePoint, setUsePoint, pointInput, setPointInput, member } = useCheckout()
   return (
     <div className="section">
       <h2>적립금</h2>
       <label>
         <input type="checkbox" checked={usePoint} onChange={(e) => setUsePoint(e.target.checked)} />
-        적립금 사용 (보유 {point}P)
+        적립금 사용 (보유 {member.point.toLocaleString()}P)
       </label>
       {usePoint ? (
         <input

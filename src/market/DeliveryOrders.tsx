@@ -1,11 +1,8 @@
 import { OrderLineRow } from './OrderLineRow'
-import type { CartItem } from './types'
+import { useCheckout } from './context'
 
-interface DeliveryOrdersProps {
-  cart: CartItem[]
-}
-
-export function DeliveryOrders({ cart }: DeliveryOrdersProps) {
+export function DeliveryOrders() {
+  const { cart } = useCheckout()
   return (
     <div className="section">
       <h2>주문 상품</h2>

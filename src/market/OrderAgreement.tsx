@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useCheckout } from './context'
 
 interface OrderAgreementProps {
-  finalPrice: number
   onPlace: () => void
 }
 
-export function OrderAgreement({ finalPrice, onPlace }: OrderAgreementProps) {
+export function OrderAgreement({ onPlace }: OrderAgreementProps) {
+  const { summary } = useCheckout()
   const [agreed, setAgreed] = useState(false)
   const [isTermsOpen, setIsTermsOpen] = useState(false)
 
@@ -22,7 +23,7 @@ export function OrderAgreement({ finalPrice, onPlace }: OrderAgreementProps) {
       </div>
 
       <button className="pay" disabled={!agreed} onClick={onPlace}>
-        {finalPrice.toLocaleString()}원 결제하기
+        {summary.finalPrice.toLocaleString()}원 결제하기
       </button>
 
       {isTermsOpen ? (
