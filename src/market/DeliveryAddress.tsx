@@ -4,12 +4,14 @@ import { useState } from 'react'
 import type { Address } from './types'
 import { useCheckout } from './context'
 
-// 공유 상태(배송지 선택)는 Context 에서 읽고,
-// 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
 export function DeliveryAddress() {
-  const { addresses, selectedAddressId, setSelectedAddressId: onSelectAddress } = useCheckout()
+  const {
+    addresses,
+    selectedAddressId,
+    setSelectedAddressId: onSelectAddress,
+    selectedAddress,
+  } = useCheckout()
   const [expanded, setExpanded] = useState(false)
-  const selected = addresses.find((a) => a.id === selectedAddressId)!
   return (
     <div className="section">
       <div className="row between">
@@ -26,15 +28,13 @@ export function DeliveryAddress() {
         />
       ) : (
         <p className="addr-summary">
-          {selected.label} · {selected.recipient} ({selected.detail})
+          {selectedAddress.label} · {selectedAddress.recipient} ({selectedAddress.detail})
         </p>
       )}
     </div>
   )
 }
 
-// '도서산간 제외' 필터는 스스로 책임진다.
-// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
 function AddressForm({
   addresses,
   selectedAddressId,
