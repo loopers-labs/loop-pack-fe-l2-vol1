@@ -8,5 +8,9 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ]
+  ],
+  "tailwindCSS.classFunctions": ["tv", "cn", "cx", "cnMerge"],
+  "editor.quickSuggestions": {
+    "strings": true
+  }
 }
