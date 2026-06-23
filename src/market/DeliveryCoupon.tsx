@@ -1,16 +1,16 @@
 import { useState } from 'react'
-import { COUPONS } from './data'
 import type { Coupon } from './types'
 
 interface CounponProps {
+  coupons: Coupon[]
   appliedCoupon: Coupon | null
   setAppliedCoupon: React.Dispatch<React.SetStateAction<Coupon | null>>
 }
 
-export function DeliveryCoupon({ appliedCoupon, setAppliedCoupon }: CounponProps) {
+export function DeliveryCoupon({ coupons, appliedCoupon, setAppliedCoupon }: CounponProps) {
   const [couponCode, setCouponCode] = useState('')
   const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim())
+    const found = coupons.find((c) => c.code === couponCode.trim())
     setAppliedCoupon(found ?? null)
     if (!found) alert('존재하지 않는 쿠폰이에요')
   }

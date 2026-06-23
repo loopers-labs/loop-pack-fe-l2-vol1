@@ -1,8 +1,11 @@
-import { CART } from './data'
 import { OrderLineRow } from './OrderLineRow'
+import type { CartItem } from './types'
 
-export function DeliveryOrders() {
-  const cart = CART
+interface DeliveryOrdersProps {
+  cart: CartItem[]
+}
+
+export function DeliveryOrders({ cart }: DeliveryOrdersProps) {
   return (
     <div className="section">
       <h2>주문 상품</h2>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { Coupon, PaymentMethod } from './types'
-import { ADDRESSES, CART, MEMBER, PAST_ORDERS } from './data'
+import type { Coupon } from './types'
+import { ADDRESSES, CART, MEMBER, PAST_ORDERS, COUPONS } from './data'
 import { Price } from './Price'
 import { OrderLineRow } from './OrderLineRow'
 import { OrderStatusTag } from './OrderStatusTag'
@@ -8,24 +8,20 @@ import { DeliveryMemo } from './DeliveryMemo'
 import './market.css'
 import { DeliveryOrders } from './DeliveryOrders'
 import { DeliveryCoupon } from './DeliveryCoupon'
-import { DeliverySection } from './DeliveryAddress'
+import { DeliveryAddress } from './DeliveryAddress'
 import { DeliveryPoint } from './DeliveryPoint'
-
-const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  card: '신용/체크카드',
-  transfer: '계좌이체',
-  kakao: '카카오페이',
-}
+import { PaymentMethodSection } from './PaymentMethodSection'
 
 export function CheckoutPage() {
   const member = MEMBER
   const cart = CART
+  const coupons = COUPONS
 
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id)
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
   const [usePoint, setUsePoint] = useState(false)
   const [pointInput, setPointInput] = useState(0)
-  const [payment, setPayment] = useState<PaymentMethod>('card')
+
   const [agreed, setAgreed] = useState(false)
   const [isTermsOpen, setIsTermsOpen] = useState(false)
   const [placed, setPlaced] = useState(false)
@@ -67,14 +63,18 @@ export function CheckoutPage() {
     <div className="checkout">
       <h1>주문/결제</h1>
 
-      <DeliverySection
+      <DeliveryAddress
         addresses={ADDRESSES}
         selectedAddressId={selectedAddressId}
         onSelectAddress={setSelectedAddressId}
       />
       <DeliveryMemo />
-      <DeliveryOrders />
-      <DeliveryCoupon appliedCoupon={appliedCoupon} setAppliedCoupon={setAppliedCoupon} />
+      <DeliveryOrders cart={cart} />
+      <DeliveryCoupon
+        coupons={coupons}
+        appliedCoupon={appliedCoupon}
+        setAppliedCoupon={setAppliedCoupon}
+      />
 
       <DeliveryPoint
         usePoint={usePoint}
@@ -84,15 +84,7 @@ export function CheckoutPage() {
         point={member.point.toLocaleString()}
       />
 
-      <div className="section">
-        <h2>결제수단</h2>
-        {(['card', 'transfer', 'kakao'] as PaymentMethod[]).map((m) => (
-          <label key={m}>
-            <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
-            {PAYMENT_LABEL[m]}
-          </label>
-        ))}
-      </div>
+      <PaymentMethodSection />
 
       <div className="section">
         <h2>결제 금액</h2>

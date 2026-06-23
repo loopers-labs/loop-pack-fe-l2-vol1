@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { Address } from './types'
 
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
-export function DeliverySection({
+export function DeliveryAddress({
   addresses,
   selectedAddressId,
   onSelectAddress,
