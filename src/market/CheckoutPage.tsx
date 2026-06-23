@@ -170,16 +170,13 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>주문 상품</h2>
+        {/* ⑤ props 과다 → Composition: 필요한 서브컴포넌트만 조합 */}
         {cart.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
+          <OrderLineRow key={it.id}>
+            <OrderLineRow.Thumbnail thumbnail={it.thumbnail} />
+            <OrderLineRow.Label label={it.name} option={`${it.option} · 수량 ${it.quantity} `} />
+            <OrderLineRow.Amount amount={it.price * it.quantity} />
+          </OrderLineRow>
         ))}
       </div>
 
@@ -228,19 +225,26 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>결제 금액</h2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
+        {/* ⑤ props 과다 → Composition: type 분기 없이 서브컴포넌트 조합 */}
+        <OrderLineRow>
+          <OrderLineRow.Label label="상품 금액" />
+          <OrderLineRow.Amount amount={itemTotal} />
+        </OrderLineRow>
+        <OrderLineRow>
+          <OrderLineRow.Label label="배송비" />
+          <OrderLineRow.Amount amount={shippingFee} />
+        </OrderLineRow>
         {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
-            isDiscount
-            couponCode={appliedCoupon.code}
-          />
+          <OrderLineRow>
+            <OrderLineRow.Label label="쿠폰 할인" option={appliedCoupon.code} />
+            <OrderLineRow.Amount amount={couponDiscount} isDiscount />
+          </OrderLineRow>
         ) : null}
         {usePoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
+          <OrderLineRow>
+            <OrderLineRow.Label label="적립금 사용" />
+            <OrderLineRow.Amount amount={pointDiscount} isDiscount />
+          </OrderLineRow>
         ) : null}
         <div className="total">
           <span>최종 결제 금액</span>
