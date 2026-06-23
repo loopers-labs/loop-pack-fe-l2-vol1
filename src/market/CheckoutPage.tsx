@@ -6,6 +6,13 @@ import { OrderLineRow } from "./OrderLineRow";
 import { OrderStatusTag } from "./OrderStatusTag";
 import { DeliveryMemo } from "./DeliveryMemo";
 import "./market.css";
+import {
+  calculateCouponDiscount,
+  calculateShippingFee,
+  calculateFinalPrice,
+  calculateItemTotal,
+  calculatePointDiscount,
+} from "./checkoutPrice";
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: "신용/체크카드",
@@ -117,18 +124,20 @@ export function CheckoutPage() {
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
   // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
-  let shippingFee = 3000;
-  if (itemTotal >= 50000) shippingFee = 0;
-  if (address.isRemote) shippingFee += 3000;
+  const itemTotal = calculateItemTotal(cart);
+  const shippingFee = calculateShippingFee(itemTotal, address.isRemote);
 
   // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
+  const couponDiscount = calculateCouponDiscount(appliedCoupon);
 
   // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
+  const pointDiscount = calculatePointDiscount(usePoint, {
+    pointInput,
+    memberTotalPoint: member.point,
+    totalItemAmount: itemTotal,
+  });
 
-  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
+  const finalPrice = calculateFinalPrice({ itemTotal, shippingFee, couponDiscount, pointDiscount });
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim());
