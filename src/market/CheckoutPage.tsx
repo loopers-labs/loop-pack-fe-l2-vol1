@@ -99,6 +99,7 @@ export function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [usePoint, setUsePoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
+  const [memo, setMemo] = useState('');
 
   const paymentMethods: PaymentMethod[] = ['card', 'transfer', 'kakao'];
   const [payment, setPayment] = useState<PaymentMethod>('card');
@@ -163,7 +164,7 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>배송 요청사항</h2>
-        <DeliveryMemo />
+        <DeliveryMemo memo={memo} onChangeMemo={setMemo} />
       </div>
 
       <div className="section">
