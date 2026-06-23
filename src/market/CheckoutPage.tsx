@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import type { Coupon } from './types'
 import { ADDRESSES, CART, MEMBER, PAST_ORDERS, COUPONS } from './data'
-import { Price } from './Price'
-import { OrderLineRow } from './OrderLineRow'
-import { OrderStatusTag } from './OrderStatusTag'
 import { DeliveryMemo } from './DeliveryMemo'
 import './market.css'
 import { DeliveryOrders } from './DeliveryOrders'
@@ -11,6 +8,9 @@ import { DeliveryCoupon } from './DeliveryCoupon'
 import { DeliveryAddress } from './DeliveryAddress'
 import { DeliveryPoint } from './DeliveryPoint'
 import { PaymentMethodSection } from './PaymentMethodSection'
+import { PaymentSummary } from './PaymentSummary'
+import { OrderAgreement } from './OrderAgreement'
+import { RecentOrders } from './RecentOrders'
 
 export function CheckoutPage() {
   const member = MEMBER
@@ -22,8 +22,6 @@ export function CheckoutPage() {
   const [usePoint, setUsePoint] = useState(false)
   const [pointInput, setPointInput] = useState(0)
 
-  const [agreed, setAgreed] = useState(false)
-  const [isTermsOpen, setIsTermsOpen] = useState(false)
   const [placed, setPlaced] = useState(false)
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
@@ -86,67 +84,16 @@ export function CheckoutPage() {
 
       <PaymentMethodSection />
 
-      <div className="section">
-        <h2>결제 금액</h2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
-            isDiscount
-            couponCode={appliedCoupon.code}
-          />
-        ) : null}
-        {usePoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-        ) : null}
-        <div className="total">
-          <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
-        </div>
-      </div>
+      <PaymentSummary
+        summary={{ itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice }}
+        appliedCoupon={appliedCoupon}
+        usePoint={usePoint}
+        member={member}
+      />
 
-      <div className="section">
-        <label>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          주문 내용 및 약관에 동의합니다
-        </label>
-        <button className="link" onClick={() => setIsTermsOpen(true)}>
-          약관 보기
-        </button>
-      </div>
+      <OrderAgreement finalPrice={finalPrice} onPlace={() => setPlaced(true)} />
 
-      <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
-        {finalPrice.toLocaleString()}원 결제하기
-      </button>
-
-      {isTermsOpen ? (
-        <div className="modal" onClick={() => setIsTermsOpen(false)}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <h3>이용 약관</h3>
-            <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
-            <button onClick={() => setIsTermsOpen(false)}>닫기</button>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="section">
-        <h2>최근 주문</h2>
-        {PAST_ORDERS.map((o) => (
-          <div key={o.id} className="line">
-            <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === 'paid'}
-              isPreparing={o.status === 'preparing'}
-              isShipped={o.status === 'shipped'}
-              isDelivered={o.status === 'delivered'}
-              isCancelled={o.status === 'cancelled'}
-            />
-          </div>
-        ))}
-      </div>
+      <RecentOrders orders={PAST_ORDERS} />
     </div>
   )
 }
