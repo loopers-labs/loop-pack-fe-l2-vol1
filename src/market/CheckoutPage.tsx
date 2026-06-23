@@ -8,11 +8,17 @@ import {
   type Coupon,
   MarketPricingPolicy,
   marketService,
-  OrderLine,
   OrderStatusTag,
   type PaymentMethod,
-} from '../entities/market'
-import { Button, Heading, Modal, SectionCard, Textarea } from '../shared/ui'
+} from '@/entities/market'
+import {
+  CartItemOrderLine,
+  CheckoutAmountOrderLine,
+  CouponDiscountOrderLine,
+  PointDiscountOrderLine,
+} from '@/features/market'
+import { Button, Heading, Modal, SectionCard, Textarea } from '@/shared/ui'
+
 import { Price } from './Price'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -232,18 +238,7 @@ export function CheckoutPage() {
       <SectionCard>
         <Heading.H2>주문 상품</Heading.H2>
         <For each={cartItems}>
-          {(item) => (
-            <OrderLine.Root key={item.id}>
-              <OrderLine.Thumbnail>{item.thumbnail}</OrderLine.Thumbnail>
-              <OrderLine.Content>
-                <OrderLine.Title>{item.name}</OrderLine.Title>
-                <OrderLine.Description>
-                  {item.option} · 수량 {item.quantity}
-                </OrderLine.Description>
-              </OrderLine.Content>
-              <OrderLine.Amount amount={item.totalPrice} />
-            </OrderLine.Root>
-          )}
+          {(item) => <CartItemOrderLine key={item.id} item={item} />}
         </For>
       </SectionCard>
 
@@ -314,36 +309,15 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>결제 금액</Heading.H2>
-        <OrderLine.Root>
-          <OrderLine.Content>
-            <OrderLine.Title>상품 금액</OrderLine.Title>
-          </OrderLine.Content>
-          <OrderLine.Amount amount={itemTotal} />
-        </OrderLine.Root>
-        <OrderLine.Root>
-          <OrderLine.Content>
-            <OrderLine.Title>배송비</OrderLine.Title>
-          </OrderLine.Content>
-          <OrderLine.Amount amount={shippingFee} />
-        </OrderLine.Root>
+        <CheckoutAmountOrderLine label="상품 금액" amount={itemTotal} />
+        <CheckoutAmountOrderLine label="배송비" amount={shippingFee} />
         <Show when={appliedCoupon}>
           {(coupon) => (
-            <OrderLine.Root>
-              <OrderLine.Content>
-                <OrderLine.Title>쿠폰 할인</OrderLine.Title>
-                <OrderLine.Description>{coupon.code}</OrderLine.Description>
-              </OrderLine.Content>
-              <OrderLine.DiscountAmount amount={couponDiscount} />
-            </OrderLine.Root>
+            <CouponDiscountOrderLine coupon={coupon} amount={couponDiscount} />
           )}
         </Show>
         <Show when={usePoint}>
-          <OrderLine.Root>
-            <OrderLine.Content>
-              <OrderLine.Title>적립금 사용</OrderLine.Title>
-            </OrderLine.Content>
-            <OrderLine.DiscountAmount amount={pointDiscount} />
-          </OrderLine.Root>
+          <PointDiscountOrderLine amount={pointDiscount} />
         </Show>
         <div className="total">
           <span>최종 결제 금액</span>
