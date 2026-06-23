@@ -7,13 +7,12 @@ import {
   type Address,
   type Coupon,
   MarketPricingPolicy,
-  MarketService,
+  marketService,
+  OrderStatusTag,
   type PaymentMethod,
 } from '../entities/market'
-import { Button, Heading, Modal, SectionCard } from '../shared/ui'
-import { DeliveryMemo } from './DeliveryMemo'
+import { Button, Heading, Modal, SectionCard, Textarea } from '../shared/ui'
 import { OrderLineRow } from './OrderLineRow'
-import { OrderStatusTag } from './OrderStatusTag'
 import { Price } from './Price'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -145,7 +144,7 @@ function AddressField({
 
 export function CheckoutPage() {
   const { addresses, cartItems, coupons, member, pastOrders } =
-    MarketService.getMarketSnapshot()
+    marketService.getMarketSnapshot()
 
   const [selectedAddressId, setSelectedAddressId] = useState(
     addresses[0]?.id ?? '',
@@ -227,7 +226,7 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>배송 요청사항</Heading.H2>
-        <DeliveryMemo />
+        <Textarea placeholder="배송 시 요청사항 (예: 부재 시 문 앞에 두세요)" />
       </SectionCard>
 
       <SectionCard>

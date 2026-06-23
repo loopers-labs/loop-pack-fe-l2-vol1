@@ -1,4 +1,4 @@
-export { MarketService, type MarketSnapshot } from './api'
+export { marketService } from './api'
 export {
   Address,
   type AddressData,
@@ -15,3 +15,4 @@ export {
   type PastOrderData,
   type PaymentMethod,
 } from './model'
+export { OrderStatusTag } from './ui'
