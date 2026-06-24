@@ -4,7 +4,7 @@ import { CouponSection } from './CouponSection';
 import { DeliveryAddress } from './DeliveryAddress';
 import { OrderComplete } from './OrderComplete';
 import { OrderLineRow } from './OrderLineRow';
-import { OrderStatusTag } from './OrderStatusTag';
+import { PastOrderRow } from './PastOrderRow';
 import { PriceSummary } from './PriceSummary';
 import { SectionCard } from './SectionCard';
 import { TermsAgreement } from './TermsAgreement';
@@ -162,17 +162,8 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
       </button>
 
       <SectionCard title="최근 주문">
-        {PAST_ORDERS.map((o) => (
-          <div key={o.id} className="line">
-            <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === 'paid'}
-              isPreparing={o.status === 'preparing'}
-              isShipped={o.status === 'shipped'}
-              isDelivered={o.status === 'delivered'}
-              isCancelled={o.status === 'cancelled'}
-            />
-          </div>
+        {PAST_ORDERS.map((order) => (
+          <PastOrderRow key={order.id} order={order} />
         ))}
       </SectionCard>
     </div>
