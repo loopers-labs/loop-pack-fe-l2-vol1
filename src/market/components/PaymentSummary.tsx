@@ -16,24 +16,22 @@ export default function PaymentSummary({
   return (
     <div className="section">
       <h2>결제 금액</h2>
-      <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-      <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
+      <OrderLineRow amount={itemTotal}>
+        <span>상품 금액</span>
+      </OrderLineRow>
+      <OrderLineRow amount={shippingFee}>
+        <span>배송비</span>
+      </OrderLineRow>
       {appliedCoupon ? (
-        <OrderLineRow
-          type="coupon"
-          label="쿠폰 할인"
-          amount={couponDiscount}
-          isDiscount
-          couponCode={appliedCoupon.code}
-        />
+        <OrderLineRow amount={couponDiscount} isDiscount>
+          <span>쿠폰 할인</span>
+          <small>{appliedCoupon.code}</small>
+        </OrderLineRow>
       ) : null}
       {pointDiscount > 0 ? (
-        <OrderLineRow
-          type="point"
-          label="적립금 사용"
-          amount={pointDiscount}
-          isDiscount
-        />
+        <OrderLineRow amount={pointDiscount} isDiscount>
+          <span>적립금 사용</span>
+        </OrderLineRow>
       ) : null}
       <div className="total">
         <span>최종 결제 금액</span>

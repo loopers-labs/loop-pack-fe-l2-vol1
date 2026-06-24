@@ -8,13 +8,16 @@ export default function OrderItemList({ items }: { items: CartItem[] }) {
       {items.map((it) => (
         <OrderLineRow
           key={it.id}
-          type="product"
-          label={it.name}
-          amount={it.price * it.quantity}
           thumbnail={it.thumbnail}
-          option={it.option}
-          quantity={it.quantity}
-        />
+          amount={it.price * it.quantity}
+        >
+          <span>{it.name}</span>
+          {it.option ? (
+            <small>
+              {it.option} · 수량 {it.quantity}
+            </small>
+          ) : null}
+        </OrderLineRow>
       ))}
     </div>
   );
