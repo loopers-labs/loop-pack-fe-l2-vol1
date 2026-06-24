@@ -1,5 +1,4 @@
-import { useReducer, useState } from 'react';
-import type { Dispatch } from 'react';
+import { useState } from 'react';
 
 import { CouponSection } from './CouponSection';
 import { DeliveryAddress } from './DeliveryAddress';
@@ -9,10 +8,8 @@ import { OrderStatusTag } from './OrderStatusTag';
 import { PriceSummary } from './PriceSummary';
 import { SectionCard } from './SectionCard';
 import { TermsAgreement } from './TermsAgreement';
-import { checkoutReducer, initialCheckoutState } from './checkoutReducer';
-import type { CheckoutAction, CheckoutState } from './checkoutReducer';
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
-import type { PaymentMethod } from './types';
+import type { CheckoutState, PaymentMethod } from './types';
 import { useOrderAmount } from './useOrderAmount';
 import './market.css';
 
@@ -23,13 +20,21 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
 };
 
 export function CheckoutPage() {
-  const [state, dispatch] = useReducer(
-    checkoutReducer,
-    ADDRESSES[0].id,
-    initialCheckoutState,
-  );
+  const [checkoutForm, setCheckoutForm] = useState<CheckoutState>({
+    addressId: ADDRESSES[0].id,
+    deliveryMemo: '',
+    appliedCoupon: null,
+    usePoint: false,
+    pointInput: 0,
+    paymentMethod: 'card',
+    agreed: false,
+  });
   const [placed, setPlaced] = useState(false);
-  const amount = useOrderAmount(state);
+
+  const update = (patch: Partial<CheckoutState>) =>
+    setCheckoutForm((prev) => ({ ...prev, ...patch }));
+
+  const amount = useOrderAmount(checkoutForm);
 
   if (placed) {
     return (
@@ -42,8 +47,8 @@ export function CheckoutPage() {
 
   return (
     <CheckoutForm
-      state={state}
-      dispatch={dispatch}
+      checkoutForm={checkoutForm}
+      update={update}
       amount={amount}
       onPlace={() => setPlaced(true)}
     />
@@ -51,31 +56,27 @@ export function CheckoutPage() {
 }
 
 type FormProps = {
-  state: CheckoutState;
-  dispatch: Dispatch<CheckoutAction>;
+  checkoutForm: CheckoutState;
+  update: (patch: Partial<CheckoutState>) => void;
   amount: ReturnType<typeof useOrderAmount>;
   onPlace: () => void;
 };
 
-function CheckoutForm({ state, dispatch, amount, onPlace }: FormProps) {
+function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
   const member = MEMBER;
 
-  const setAddress = (id: string) =>
-    dispatch({ type: 'setAddress', addressId: id });
-  const setMemo = (memo: string) => dispatch({ type: 'setMemo', memo });
-  const setUsePoint = (use: boolean) =>
-    dispatch({ type: 'toggleUsePoint', use });
-  const setPointInput = (amount: number) =>
-    dispatch({ type: 'setPointInput', amount });
+  const setAddress = (id: string) => update({ addressId: id });
+  const setMemo = (memo: string) => update({ deliveryMemo: memo });
+  const setUsePoint = (use: boolean) => update({ usePoint: use });
+  const setPointInput = (amount: number) => update({ pointInput: amount });
   const setPaymentMethod = (method: PaymentMethod) =>
-    dispatch({ type: 'setPaymentMethod', method });
-  const setAgreed = (agreed: boolean) =>
-    dispatch({ type: 'setAgreed', agreed });
+    update({ paymentMethod: method });
+  const setAgreed = (agreed: boolean) => update({ agreed });
 
-  // 쿠폰 조회 + alert 는 순수 reducer 밖(호출부)에서, 결과만 dispatch.
+  // 쿠폰 조회 + alert 는 상태 업데이트 밖(호출부)에서, 결과만 반영.
   const handleApplyCoupon = (code: string) => {
     const found = COUPONS.find((c) => c.code === code.trim());
-    dispatch({ type: 'applyCoupon', coupon: found ?? null });
+    update({ appliedCoupon: found ?? null });
     if (!found) alert('존재하지 않는 쿠폰이에요');
   };
 
@@ -84,13 +85,13 @@ function CheckoutForm({ state, dispatch, amount, onPlace }: FormProps) {
       <h1>주문/결제</h1>
 
       <DeliveryAddress
-        addressId={state.addressId}
+        addressId={checkoutForm.addressId}
         onChangeAddress={setAddress}
       />
 
       <SectionCard title="배송 요청사항">
         <textarea
-          value={state.deliveryMemo}
+          value={checkoutForm.deliveryMemo}
           onChange={(e) => setMemo(e.target.value)}
           placeholder="배송 시 요청사항 (예: 부재 시 문 앞에 두세요)"
         />
@@ -112,7 +113,7 @@ function CheckoutForm({ state, dispatch, amount, onPlace }: FormProps) {
 
       <SectionCard title="쿠폰">
         <CouponSection
-          appliedCoupon={state.appliedCoupon}
+          appliedCoupon={checkoutForm.appliedCoupon}
           onApplyCoupon={handleApplyCoupon}
         />
       </SectionCard>
@@ -121,15 +122,15 @@ function CheckoutForm({ state, dispatch, amount, onPlace }: FormProps) {
         <label>
           <input
             type="checkbox"
-            checked={state.usePoint}
+            checked={checkoutForm.usePoint}
             onChange={(e) => setUsePoint(e.target.checked)}
           />
           적립금 사용 (보유 {member.point.toLocaleString()}P)
         </label>
-        {state.usePoint ? (
+        {checkoutForm.usePoint ? (
           <input
             type="number"
-            value={state.pointInput}
+            value={checkoutForm.pointInput}
             onChange={(e) => setPointInput(Number(e.target.value))}
           />
         ) : null}
@@ -140,7 +141,7 @@ function CheckoutForm({ state, dispatch, amount, onPlace }: FormProps) {
           <label key={m}>
             <input
               type="radio"
-              checked={state.paymentMethod === m}
+              checked={checkoutForm.paymentMethod === m}
               onChange={() => setPaymentMethod(m)}
             />
             {PAYMENT_LABEL[m]}
@@ -151,15 +152,15 @@ function CheckoutForm({ state, dispatch, amount, onPlace }: FormProps) {
       <SectionCard title="결제 금액">
         <PriceSummary
           amount={amount}
-          appliedCoupon={state.appliedCoupon}
-          usePoint={state.usePoint}
+          appliedCoupon={checkoutForm.appliedCoupon}
+          usePoint={checkoutForm.usePoint}
           member={member}
         />
       </SectionCard>
 
-      <TermsAgreement agreed={state.agreed} onChangeAgreed={setAgreed} />
+      <TermsAgreement agreed={checkoutForm.agreed} onChangeAgreed={setAgreed} />
 
-      <button className="pay" disabled={!state.agreed} onClick={onPlace}>
+      <button className="pay" disabled={!checkoutForm.agreed} onClick={onPlace}>
         {amount.finalPrice.toLocaleString()}원 결제하기
       </button>
 

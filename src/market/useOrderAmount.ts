@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import type { CheckoutState } from './checkoutReducer';
 import { ADDRESSES, CART, MEMBER } from './data';
+import type { CheckoutState } from './types';
 
 export function useOrderAmount(state: CheckoutState) {
   const member = MEMBER;
