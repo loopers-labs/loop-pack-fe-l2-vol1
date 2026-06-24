@@ -1,6 +1,5 @@
 import { DiscountAmountLine, SummaryAmountLine } from "./OrderLines";
-import { Price } from "./Price";
-import type { Coupon, Member } from "./types";
+import type { Coupon } from "./types";
 
 type PaymentSummarySectionProps = {
   itemTotal: number;
@@ -10,7 +9,6 @@ type PaymentSummarySectionProps = {
   pointDiscount: number;
   isUsingPoint: boolean;
   finalPrice: number;
-  member: Member;
 };
 
 export function PaymentSummarySection({
@@ -21,7 +19,6 @@ export function PaymentSummarySection({
   pointDiscount,
   isUsingPoint,
   finalPrice,
-  member,
 }: PaymentSummarySectionProps) {
   return (
     <div className="section">
@@ -38,7 +35,7 @@ export function PaymentSummarySection({
       {isUsingPoint ? <DiscountAmountLine label="적립금 사용" amount={pointDiscount} /> : null}
       <div className="total">
         <span>최종 결제 금액</span>
-        <Price amount={finalPrice} member={member} />
+        <strong>{finalPrice.toLocaleString()}원</strong>
       </div>
     </div>
   );

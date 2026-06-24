@@ -50,7 +50,13 @@ export function CheckoutPage() {
     totalItemAmount: itemTotal,
   });
 
-  const finalPrice = calculateFinalPrice({ itemTotal, shippingFee, couponDiscount, pointDiscount });
+  const finalPrice = calculateFinalPrice({
+    itemTotal,
+    shippingFee,
+    couponDiscount,
+    pointDiscount,
+    memberGrade: member.grade,
+  });
 
   const handleApplyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCodeInput.trim());
@@ -107,7 +113,6 @@ export function CheckoutPage() {
         pointDiscount={pointDiscount}
         isUsingPoint={isUsingPoint}
         finalPrice={finalPrice}
-        member={member}
       />
 
       <TermsAgreementSection

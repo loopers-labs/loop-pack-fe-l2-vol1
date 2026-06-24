@@ -1,4 +1,4 @@
-import type { CartItem, Coupon } from "./types";
+import type { CartItem, Coupon, Member } from "./types";
 
 export const calculateItemTotal = (cartItems: CartItem[]) =>
   cartItems.reduce((sum, it) => sum + it.price * it.quantity, 0);
@@ -31,11 +31,15 @@ export const calculateFinalPrice = ({
   shippingFee,
   couponDiscount,
   pointDiscount,
+  memberGrade,
 }: {
   itemTotal: number;
   shippingFee: number;
   couponDiscount: number;
   pointDiscount: number;
+  memberGrade: Member["grade"];
 }) => {
-  return itemTotal + shippingFee - couponDiscount - pointDiscount;
+  const commonPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
+  const finalPrice = memberGrade === "VIP" ? Math.round(commonPrice * 0.9) : commonPrice;
+  return finalPrice;
 };
