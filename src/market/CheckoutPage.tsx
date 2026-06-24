@@ -42,9 +42,11 @@ export function CheckoutPage() {
     itemTotal,
   );
 
-  // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(
-    calculateFinalPrice(itemTotal, shippingFee, couponDiscount, pointDiscount),
+  const finalPrice = calculateFinalPrice(
+    itemTotal,
+    shippingFee,
+    couponDiscount,
+    pointDiscount,
   );
 
   if (placed) {
