@@ -16,6 +16,7 @@ import {
 import { CouponSection } from "./CouponSection";
 import { PointSection } from "./PointSection";
 import { PaymentMethodSection } from "./PaymentMethodSection";
+import { TermsAgreementSection } from "./TermsAgreementSection";
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -114,8 +115,7 @@ export function CheckoutPage() {
   const [isUsingPoint, setIsUsingPoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("card");
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
-  const [agreed, setAgreed] = useState(false);
+  const [isTermsAgreed, setIsTermsAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
@@ -229,29 +229,14 @@ export function CheckoutPage() {
         </div>
       </div>
 
-      <div className="section">
-        <label>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          주문 내용 및 약관에 동의합니다
-        </label>
-        <button className="link" onClick={() => setIsTermsOpen(true)}>
-          약관 보기
-        </button>
-      </div>
+      <TermsAgreementSection
+        isTermsAgreed={isTermsAgreed}
+        onTermsAgreementChange={setIsTermsAgreed}
+      />
 
-      <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
+      <button className="pay" disabled={!isTermsAgreed} onClick={() => setPlaced(true)}>
         {finalPrice.toLocaleString()}원 결제하기
       </button>
-
-      {isTermsOpen ? (
-        <div className="modal" onClick={() => setIsTermsOpen(false)}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <h3>이용 약관</h3>
-            <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
-            <button onClick={() => setIsTermsOpen(false)}>닫기</button>
-          </div>
-        </div>
-      ) : null}
 
       <div className="section">
         <h2>최근 주문</h2>
