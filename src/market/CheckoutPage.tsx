@@ -1,205 +1,21 @@
 import { useState } from 'react';
-import type { Address, Coupon, PaymentMethod } from './types';
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
-import { Price } from './Price';
-import { OrderLineRow } from './OrderLineRow';
-import { OrderStatusTag } from './OrderStatusTag';
-import { DeliveryMemo } from './DeliveryMemo';
+import type { Coupon, PaymentMethod } from './types';
+import { ADDRESSES, CART, COUPONS, MEMBER } from './data';
 import './market.css';
+import { DeliverySection } from './components/DeliverySection';
+import { CheckoutContainer } from './components/container';
+import { CouponSection } from './components/CouponSection';
+import { OrderItemSection } from './components/OrderItemSection';
+import { RequestSection } from './components/RequestSection';
+import { PointSection } from './components/PointSection';
+import { CheckoutComplete } from './components/CheckoutComplete';
+import { PastOrderSection } from './components/PastOrderSection';
+import { PaymentMethodSection } from './components/PaymentMethodSection';
+import { FinalPriceSection } from './components/FinalPriceSection';
+import { TermsSection } from './components/TermsSection';
 
-// props를 상단에 정의
-interface DeliverySectionProps {
-  addresses: Address[];
-  selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
-}
-
-interface AddressFormProps {
-  addresses: Address[];
-  selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
-}
-
-interface AddressFieldProps {
-  address: Address;
-  selected: boolean;
-  onSelect: (id: string) => void;
-}
-
-interface SectionProps {
-  title?: string;
-  children: React.ReactNode;
-}
-
-const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  card: '신용/체크카드',
-  transfer: '계좌이체',
-  kakao: '카카오페이',
-};
-
-const PAYMENT_METHODS: PaymentMethod[] = ['card', 'transfer', 'kakao'];
-
-// 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
-// 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
-function DeliverySection({ addresses, selectedAddressId, onSelectAddress }: DeliverySectionProps) {
-  const [expanded, setExpanded] = useState(false);
-  const selected = addresses.find((a) => a.id === selectedAddressId)!;
-  return (
-    <div className="section">
-      <div className="row between">
-        <h2>배송지</h2>
-        <button className="link" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? '접기' : '변경'}
-        </button>
-      </div>
-      {expanded ? (
-        <AddressForm
-          addresses={addresses}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={onSelectAddress}
-        />
-      ) : (
-        <p className="addr-summary">
-          {selected.label} · {selected.recipient} ({selected.detail})
-        </p>
-      )}
-    </div>
-  );
-}
-
-// '도서산간 제외' 필터는 스스로 책임진다.
-// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
-function AddressForm({ addresses, selectedAddressId, onSelectAddress }: AddressFormProps) {
-  const [onlyNear, setOnlyNear] = useState(false);
-  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
-  return (
-    <>
-      <label className="filter">
-        <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
-        도서산간 제외
-      </label>
-      {list.map((a) => (
-        <AddressField
-          key={a.id}
-          address={a}
-          selected={a.id === selectedAddressId}
-          onSelect={onSelectAddress}
-        />
-      ))}
-    </>
-  );
-}
-
-function AddressField({ address, selected, onSelect }: AddressFieldProps) {
-  return (
-    <label className="addr">
-      <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
-      <span>
-        {address.label} · {address.recipient} ({address.detail})
-        {address.isRemote ? ' · 도서산간' : ''}
-      </span>
-    </label>
-  );
-}
-
-// 공통 컴포넌트 구현(SectionContainer, CheckoutContainer)
-const SectionContainer = ({ title, children }: SectionProps) => {
-  return (
-    <div className="section">
-      {title && <h2>{title}</h2>}
-      {children}
-    </div>
-  );
-};
-
-const CheckoutContainer = ({ title, children }: SectionProps) => {
-  return (
-    <div className="checkout">
-      <h1>{title}</h1>
-      {children}
-    </div>
-  );
-};
-
-// 요청사항 섹션 별도로 분리(추후 기능 추가 가능)
-const RequestSection = () => {
-  return (
-    <SectionContainer title="배송 요청사항">
-      <DeliveryMemo />
-    </SectionContainer>
-  );
-};
-
-const OrderItemSection = () => {
-  const cart = CART;
-  return (
-    <SectionContainer title="주문 상품">
-      {cart.map((it) => (
-        <OrderLineRow
-          key={it.id}
-          type="product"
-          label={it.name}
-          amount={it.price * it.quantity}
-          thumbnail={it.thumbnail}
-          option={it.option}
-          quantity={it.quantity}
-        />
-      ))}
-    </SectionContainer>
-  );
-};
-
-const PastOrderSection = () => {
-  return (
-    <SectionContainer title="최근 주문">
-      {PAST_ORDERS.map((o) => (
-        <div key={o.id} className="line">
-          <div className="grow">{o.summary}</div>
-          <OrderStatusTag
-            isPaid={o.status === 'paid'}
-            isPreparing={o.status === 'preparing'}
-            isShipped={o.status === 'shipped'}
-            isDelivered={o.status === 'delivered'}
-            isCancelled={o.status === 'cancelled'}
-          />
-        </div>
-      ))}
-    </SectionContainer>
-  );
-};
-
-// TODO: props 객체화 고려
-interface CheckoutCompleteProps {
-  itemTotal: number;
-  shippingFee: number;
-  couponDiscount: number;
-  pointDiscount: number;
-  onCheckoutButtonClick: () => void;
-}
-const CheckoutComplete = ({
-  itemTotal,
-  shippingFee,
-  couponDiscount,
-  pointDiscount,
-  onCheckoutButtonClick,
-}: CheckoutCompleteProps) => {
-  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
-
-  return (
-    <CheckoutContainer title="주문 완료">
-      <div className="section">
-        <p style={{ color: 'var(--text-h)' }}>
-          주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
-        </p>
-      </div>
-      <button className="pay" onClick={onCheckoutButtonClick}>
-        주문서로 돌아가기
-      </button>
-    </CheckoutContainer>
-  );
-};
-
-// 결제 페이지 전체의 흐름과 레이아웃이라는 페이지 컴포넌트 본연의 역할에만 집중할 수 있도록
+// 결제 페이지 전체의 흐름과 레이아웃이라는 페이지 컴포넌트 본연의 역할에만 집중할 수 있도록(1, 2, 3 위배)
+// TODO: 하위 컴포넌트로 전달하는 props의 성격 확인하기
 export function CheckoutPage() {
   const member = MEMBER;
   const cart = CART;
@@ -229,7 +45,7 @@ export function CheckoutPage() {
   const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
 
   // 최종 금액은 직접 계산한다.
-  // 계산 등 로직 -> 커스텀 훅으로 빼면 좋을듯?
+  // 가격 계산 로직 -> 커스텀 훅으로 빼면 좋을듯?
   const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
 
   const handleApplyCoupon = () => {
@@ -258,87 +74,40 @@ export function CheckoutPage() {
         selectedAddressId={selectedAddressId}
         onSelectAddress={setSelectedAddressId}
       />
-
       <RequestSection />
-
       <OrderItemSection />
+      <CouponSection
+        couponCode={couponCode}
+        onInputChange={(e) => setCouponCode(e.target.value)}
+        onApplyButtonClick={handleApplyCoupon}
+        appliedCoupon={appliedCoupon}
+      />
+      <PointSection
+        usePoint={usePoint}
+        onToggleCheckbox={(e) => setUsePoint(e.target.checked)}
+        pointInput={pointInput}
+        onInputChange={(e) => setPointInput(Number(e.target.value))}
+      />
 
-      <SectionContainer title="쿠폰">
-        <div className="row">
-          <input
-            type="text"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            placeholder="쿠폰 코드 (예: WELCOME5000)"
-          />
-          <button onClick={handleApplyCoupon}>적용</button>
-        </div>
-        {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
-      </SectionContainer>
-
-      <SectionContainer title="적립금">
-        <label>
-          <input
-            type="checkbox"
-            checked={usePoint}
-            onChange={(e) => setUsePoint(e.target.checked)}
-          />
-          적립금 사용 (보유 {member.point.toLocaleString()}P)
-        </label>
-        {usePoint ? (
-          <input
-            type="number"
-            value={pointInput}
-            onChange={(e) => setPointInput(Number(e.target.value))}
-          />
-        ) : null}
-      </SectionContainer>
-
-      <SectionContainer title="결제수단">
-        {PAYMENT_METHODS.map((m) => (
-          <label key={m}>
-            <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
-            {PAYMENT_LABEL[m]}
-          </label>
-        ))}
-      </SectionContainer>
-
-      <SectionContainer title="결제 금액">
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
-            isDiscount
-            couponCode={appliedCoupon.code}
-          />
-        ) : null}
-        {usePoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-        ) : null}
-        <div className="total">
-          <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
-        </div>
-      </SectionContainer>
-
-      <SectionContainer>
-        <label>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          주문 내용 및 약관에 동의합니다
-        </label>
-        <button className="link" onClick={() => setIsTermsOpen(true)}>
-          약관 보기
-        </button>
-      </SectionContainer>
-
+      <PaymentMethodSection payment={payment} onPaymentMethodChange={(m) => setPayment(m)} />
+      <FinalPriceSection
+        itemTotal={itemTotal}
+        shippingFee={shippingFee}
+        appliedCoupon={appliedCoupon}
+        couponDiscount={couponDiscount}
+        usePoint={usePoint}
+        pointDiscount={pointDiscount}
+        finalPrice={finalPrice}
+      />
+      <TermsSection
+        agreed={agreed}
+        onToggleCheckbox={(e: React.ChangeEvent<HTMLInputElement>) => setAgreed(e.target.checked)}
+        onButtonClick={() => setIsTermsOpen(true)}
+      />
       <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
         {finalPrice.toLocaleString()}원 결제하기
       </button>
-
-      {/* 이벤트 버블링으로 인해 setIsTermsOpen은 상위에 하나만 해줘도 될거같은데? */}
+      {/* TODO: 모달은 headless ui 패턴으로 관리하고 container(shared) 위치에 함께 두기 */}
       {isTermsOpen ? (
         <div className="modal" onClick={() => setIsTermsOpen(false)}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
@@ -348,7 +117,6 @@ export function CheckoutPage() {
           </div>
         </div>
       ) : null}
-
       <PastOrderSection />
     </CheckoutContainer>
   );
