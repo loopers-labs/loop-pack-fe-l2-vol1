@@ -1,14 +1,6 @@
 import { Address, CartItem, Coupon, Member, PastOrder } from '../model'
 import { MarketRepository } from './market.repository'
 
-type MarketSnapshot = {
-  cartItems: Array<CartItem>
-  coupons: Array<Coupon>
-  addresses: Array<Address>
-  member: Member
-  pastOrders: Array<PastOrder>
-}
-
 export class MarketService {
   constructor(private readonly repository = new MarketRepository()) {}
 
@@ -30,15 +22,5 @@ export class MarketService {
 
   getPastOrders(): Array<PastOrder> {
     return this.repository.getPastOrders().map((order) => new PastOrder(order))
-  }
-
-  getMarketSnapshot(): MarketSnapshot {
-    return {
-      cartItems: this.getCartItems(),
-      coupons: this.getCoupons(),
-      addresses: this.getAddresses(),
-      member: this.getMember(),
-      pastOrders: this.getPastOrders(),
-    }
   }
 }
