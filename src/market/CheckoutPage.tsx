@@ -10,9 +10,14 @@ import {
   type PaymentMethod,
 } from '@/entities/market'
 import { OrderLineRow } from '@/features/market'
-import { Button, Heading, Modal, SectionCard, Textarea } from '@/shared/ui'
-
-import { Price } from './Price'
+import {
+  Button,
+  Heading,
+  Modal,
+  Price,
+  SectionCard,
+  Textarea,
+} from '@/shared/ui'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
@@ -183,6 +188,10 @@ export function CheckoutPage() {
     couponDiscount,
     pointDiscount,
   })
+  const memberDisplayPrice = MarketPricingPolicy.calculateMemberDisplayPrice(
+    finalPrice,
+    member,
+  )
 
   const applyCoupon = () => {
     const found = coupons.find((coupon) => coupon.code === couponCode.trim())
@@ -196,7 +205,7 @@ export function CheckoutPage() {
         <Heading.H1>주문 완료</Heading.H1>
         <SectionCard>
           <p className="text-(--text-h)">
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
+            주문이 접수되었어요. 결제 금액 <Price value={memberDisplayPrice} />
           </p>
         </SectionCard>
         <Button
@@ -325,7 +334,7 @@ export function CheckoutPage() {
         </Show>
         <div className="mt-2 flex items-center justify-between border-t border-(--border) pt-3 font-semibold text-(--text-h)">
           <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
+          <Price value={memberDisplayPrice} />
         </div>
       </SectionCard>
 
@@ -360,7 +369,7 @@ export function CheckoutPage() {
           setPlaced(true)
         }}
       >
-        {finalPrice.toLocaleString()}원 결제하기
+        {memberDisplayPrice.toLocaleString()}원 결제하기
       </Button>
 
       <Show when={isTermsOpen}>
