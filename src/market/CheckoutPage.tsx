@@ -20,6 +20,7 @@ export function CheckoutPage() {
   const member = MEMBER;
   const cart = CART;
 
+  // TODO: 객체로 관리하는 것 고려하기
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -82,11 +83,12 @@ export function CheckoutPage() {
         onApplyButtonClick={handleApplyCoupon}
         appliedCoupon={appliedCoupon}
       />
+
       <PointSection
         usePoint={usePoint}
         onToggleCheckbox={(e) => setUsePoint(e.target.checked)}
         pointInput={pointInput}
-        onInputChange={(e) => setPointInput(Number(e.target.value))}
+        onInputChange={(e) => setPointInput(Number(e.target.value.replaceAll(',', '')))}
       />
 
       <PaymentMethodSection payment={payment} onPaymentMethodChange={(m) => setPayment(m)} />
