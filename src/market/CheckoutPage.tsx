@@ -68,6 +68,10 @@ export function CheckoutPage() {
     setPlaced(false);
   };
 
+  const handlePlaceOrder = () => {
+    setPlaced(true);
+  };
+
   if (placed) {
     return <OrderCompleteView finalPrice={finalPrice} onBackToCheckout={handleBackToCheckout} />;
   }
@@ -120,7 +124,7 @@ export function CheckoutPage() {
         onTermsAgreementChange={setIsTermsAgreed}
       />
 
-      <button className="pay" disabled={!isTermsAgreed} onClick={() => setPlaced(true)}>
+      <button className="pay" disabled={!isTermsAgreed} onClick={handlePlaceOrder}>
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
