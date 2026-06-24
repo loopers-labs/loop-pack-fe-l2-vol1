@@ -1,7 +1,7 @@
 import { PAST_ORDERS } from "./data";
 import { OrderStatusTag } from "./OrderStatusTag";
 
-export function RecentOrderSection() {
+export function RecentOrdersSection() {
   return (
     <div className="section">
       <h2>최근 주문</h2>

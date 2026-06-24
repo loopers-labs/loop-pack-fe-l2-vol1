@@ -1,8 +1,7 @@
 import { useState } from "react";
-import type { Address, Coupon, PaymentMethod } from "./types";
+import type { Coupon, PaymentMethod } from "./types";
 import { ADDRESSES, CART, COUPONS, MEMBER } from "./data";
-import { OrderLineRow } from "./OrderLineRow";
-import { DeliveryMemo } from "./DeliveryMemo";
+
 import "./market.css";
 import {
   calculateCouponDiscount,
@@ -16,94 +15,11 @@ import { PointSection } from "./PointSection";
 import { PaymentMethodSection } from "./PaymentMethodSection";
 import { TermsAgreementSection } from "./TermsAgreementSection";
 import { PaymentSummarySection } from "./PaymentSummarySection";
-import { RecentOrderSection } from "./RecentOrdersSection";
-
-// 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
-// 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
-function DeliverySection({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Address[];
-  selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const selected = addresses.find((a) => a.id === selectedAddressId)!;
-  return (
-    <div className="section">
-      <div className="row between">
-        <h2>배송지</h2>
-        <button className="link" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? "접기" : "변경"}
-        </button>
-      </div>
-      {expanded ? (
-        <AddressForm
-          addresses={addresses}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={onSelectAddress}
-        />
-      ) : (
-        <p className="addr-summary">
-          {selected.label} · {selected.recipient} ({selected.detail})
-        </p>
-      )}
-    </div>
-  );
-}
-
-// '도서산간 제외' 필터는 스스로 책임진다.
-// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
-function AddressForm({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Address[];
-  selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
-}) {
-  const [onlyNear, setOnlyNear] = useState(false);
-  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
-  return (
-    <>
-      <label className="filter">
-        <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
-        도서산간 제외
-      </label>
-      {list.map((a) => (
-        <AddressField
-          key={a.id}
-          address={a}
-          selected={a.id === selectedAddressId}
-          onSelect={onSelectAddress}
-        />
-      ))}
-    </>
-  );
-}
-
-function AddressField({
-  address,
-  selected,
-  onSelect,
-}: {
-  address: Address;
-  selected: boolean;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <label className="addr">
-      <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
-      <span>
-        {address.label} · {address.recipient} ({address.detail})
-        {address.isRemote ? " · 도서산간" : ""}
-      </span>
-    </label>
-  );
-}
+import { RecentOrdersSection } from "./RecentOrdersSection";
+import { DeliverySection } from "./DeliverySection";
+import { DeliveryMemoSection } from "./DeliveryMemoSection";
+import { OrderItemsSection } from "./OrderItemsSection";
+import { OrderCompleteView } from "./OrderCompleteView";
 
 export function CheckoutPage() {
   const member = MEMBER;
@@ -142,20 +58,12 @@ export function CheckoutPage() {
     if (!found) alert("존재하지 않는 쿠폰이에요");
   };
 
+  const handleBackToCheckout = () => {
+    setPlaced(false);
+  };
+
   if (placed) {
-    return (
-      <div className="checkout">
-        <h1>주문 완료</h1>
-        <div className="section">
-          <p style={{ color: "var(--text-h)" }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
-          </p>
-        </div>
-        <button className="pay" onClick={() => setPlaced(false)}>
-          주문서로 돌아가기
-        </button>
-      </div>
-    );
+    return <OrderCompleteView finalPrice={finalPrice} onBackToCheckout={handleBackToCheckout} />;
   }
 
   return (
@@ -168,25 +76,8 @@ export function CheckoutPage() {
         onSelectAddress={setSelectedAddressId}
       />
 
-      <div className="section">
-        <h2>배송 요청사항</h2>
-        <DeliveryMemo />
-      </div>
-
-      <div className="section">
-        <h2>주문 상품</h2>
-        {cart.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
-        ))}
-      </div>
+      <DeliveryMemoSection />
+      <OrderItemsSection cart={cart} />
 
       <CouponSection
         couponCodeInput={couponCodeInput}
@@ -228,7 +119,7 @@ export function CheckoutPage() {
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
-      <RecentOrderSection />
+      <RecentOrdersSection />
     </div>
   );
 }
