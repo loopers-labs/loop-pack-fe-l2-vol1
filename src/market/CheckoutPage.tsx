@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { Address, Coupon, PaymentMethod } from "./types";
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
-import { Price } from "./Price";
 import { OrderLineRow } from "./OrderLineRow";
 import { OrderStatusTag } from "./OrderStatusTag";
 import { DeliveryMemo } from "./DeliveryMemo";
@@ -17,6 +16,7 @@ import { CouponSection } from "./CouponSection";
 import { PointSection } from "./PointSection";
 import { PaymentMethodSection } from "./PaymentMethodSection";
 import { TermsAgreementSection } from "./TermsAgreementSection";
+import { PaymentSummarySection } from "./PaymentSummarySection";
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -207,27 +207,17 @@ export function CheckoutPage() {
         selectedPaymentMethod={selectedPaymentMethod}
         onPaymentMethodChange={setSelectedPaymentMethod}
       />
-      <div className="section">
-        <h2>결제 금액</h2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
-            isDiscount
-            couponCode={appliedCoupon.code}
-          />
-        ) : null}
-        {isUsingPoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-        ) : null}
-        <div className="total">
-          <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
-        </div>
-      </div>
+
+      <PaymentSummarySection
+        itemTotal={itemTotal}
+        shippingFee={shippingFee}
+        appliedCoupon={appliedCoupon}
+        couponDiscount={couponDiscount}
+        pointDiscount={pointDiscount}
+        isUsingPoint={isUsingPoint}
+        finalPrice={finalPrice}
+        member={member}
+      />
 
       <TermsAgreementSection
         isTermsAgreed={isTermsAgreed}
