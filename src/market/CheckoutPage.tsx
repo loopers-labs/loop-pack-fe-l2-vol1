@@ -1,8 +1,7 @@
 import { useState } from "react";
 import type { Address, Coupon, PaymentMethod } from "./types";
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
+import { ADDRESSES, CART, COUPONS, MEMBER } from "./data";
 import { OrderLineRow } from "./OrderLineRow";
-import { OrderStatusTag } from "./OrderStatusTag";
 import { DeliveryMemo } from "./DeliveryMemo";
 import "./market.css";
 import {
@@ -17,6 +16,7 @@ import { PointSection } from "./PointSection";
 import { PaymentMethodSection } from "./PaymentMethodSection";
 import { TermsAgreementSection } from "./TermsAgreementSection";
 import { PaymentSummarySection } from "./PaymentSummarySection";
+import { RecentOrderSection } from "./RecentOrdersSection";
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -228,15 +228,7 @@ export function CheckoutPage() {
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
-      <div className="section">
-        <h2>최근 주문</h2>
-        {PAST_ORDERS.map((o) => (
-          <div key={o.id} className="line">
-            <div className="grow">{o.summary}</div>
-            <OrderStatusTag status={o.status} />
-          </div>
-        ))}
-      </div>
+      <RecentOrderSection />
     </div>
   );
 }
