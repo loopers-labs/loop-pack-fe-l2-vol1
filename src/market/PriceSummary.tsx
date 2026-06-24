@@ -20,32 +20,30 @@ type Props = {
 export function PriceSummary({ amount, appliedCoupon, usePoint }: Props) {
   return (
     <>
-      <OrderLineRow
-        type="subtotal"
-        label="상품 금액"
-        amount={amount.itemTotal}
-      />
-      <OrderLineRow
-        type="shipping"
-        label="배송비"
-        amount={amount.shippingFee}
-      />
+      <OrderLineRow>
+        <OrderLineRow.Label>상품 금액</OrderLineRow.Label>
+        <OrderLineRow.Amount amount={amount.itemTotal} />
+      </OrderLineRow>
+
+      <OrderLineRow>
+        <OrderLineRow.Label>배송비</OrderLineRow.Label>
+        <OrderLineRow.Amount amount={amount.shippingFee} />
+      </OrderLineRow>
+
       {appliedCoupon ? (
-        <OrderLineRow
-          type="coupon"
-          label="쿠폰 할인"
-          amount={amount.couponDiscount}
-          isDiscount
-          couponCode={appliedCoupon.code}
-        />
+        <OrderLineRow>
+          <OrderLineRow.Label caption={appliedCoupon.code}>
+            쿠폰 할인
+          </OrderLineRow.Label>
+          <OrderLineRow.Amount amount={amount.couponDiscount} isDiscount />
+        </OrderLineRow>
       ) : null}
+
       {usePoint ? (
-        <OrderLineRow
-          type="point"
-          label="적립금 사용"
-          amount={amount.pointDiscount}
-          isDiscount
-        />
+        <OrderLineRow>
+          <OrderLineRow.Label>적립금 사용</OrderLineRow.Label>
+          <OrderLineRow.Amount amount={amount.pointDiscount} isDiscount />
+        </OrderLineRow>
       ) : null}
       <div className="total">
         <span>최종 결제 금액</span>

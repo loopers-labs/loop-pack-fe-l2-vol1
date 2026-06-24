@@ -96,16 +96,11 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
       </SectionCard>
 
       <SectionCard title="주문 상품">
-        {CART.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
+        {CART.map((item) => (
+          <OrderLineRow key={item.id}>
+            <OrderLineRow.Product item={item} />
+            <OrderLineRow.Amount amount={item.price * item.quantity} />
+          </OrderLineRow>
         ))}
       </SectionCard>
 
