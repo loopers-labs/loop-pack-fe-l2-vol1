@@ -1,16 +1,23 @@
+import { useState } from "react";
 import type { Coupon } from "../types";
+import { COUPONS } from "../data";
 
 export default function CouponSection({
-  couponCode,
-  onChangeCouponCode,
-  onApplyCoupon,
   appliedCoupon,
+  onApply,
 }: {
-  couponCode: string;
-  onChangeCouponCode: (code: string) => void;
-  onApplyCoupon: () => void;
   appliedCoupon: Coupon | null;
+  onApply: (coupon: Coupon | null) => void;
 }) {
+  const [couponCode, setCouponCode] = useState("");
+
+  const handleApply = () => {
+    const found = COUPONS.find((c) => c.code === couponCode.trim());
+    onApply(found ?? null);
+
+    if (!found) alert("존재하지 않는 쿠폰이에요");
+  };
+
   return (
     <div className="section">
       <h2>쿠폰</h2>
@@ -18,10 +25,10 @@ export default function CouponSection({
         <input
           type="text"
           value={couponCode}
-          onChange={(e) => onChangeCouponCode(e.target.value)}
+          onChange={(e) => setCouponCode(e.target.value)}
           placeholder="쿠폰 코드 (예: WELCOME5000)"
         />
-        <button onClick={onApplyCoupon}>적용</button>
+        <button onClick={handleApply}>적용</button>
       </div>
       {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
     </div>

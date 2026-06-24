@@ -1,16 +1,25 @@
+import { useState } from "react";
+
 export default function PointSection({
-  usePoint,
-  onToggleUsePoint,
+  memberPoint,
   pointInput,
   onChangePointInput,
-  memberPoint,
 }: {
-  usePoint: boolean;
-  onToggleUsePoint: (use: boolean) => void;
-  pointInput: number;
-  onChangePointInput: (input: number) => void;
   memberPoint: number;
+  pointInput: number;
+  onChangePointInput: (points: number) => void;
 }) {
+  const [usePoint, setUsePoint] = useState(false);
+
+  const handleToggleUsePoint = (use: boolean) => {
+    setUsePoint(use);
+    onChangePointInput(use ? pointInput : 0);
+  };
+
+  const handleChangePointInput = (points: number) => {
+    onChangePointInput(usePoint ? points : 0);
+  };
+
   return (
     <div className="section">
       <h2>적립금</h2>
@@ -18,7 +27,7 @@ export default function PointSection({
         <input
           type="checkbox"
           checked={usePoint}
-          onChange={(e) => onToggleUsePoint(e.target.checked)}
+          onChange={(e) => handleToggleUsePoint(e.target.checked)}
         />
         적립금 사용 (보유 {memberPoint.toLocaleString()}P)
       </label>
@@ -26,7 +35,7 @@ export default function PointSection({
         <input
           type="number"
           value={pointInput}
-          onChange={(e) => onChangePointInput(Number(e.target.value))}
+          onChange={(e) => handleChangePointInput(Number(e.target.value))}
         />
       ) : null}
     </div>

@@ -14,6 +14,7 @@ export default function DeliverySection({
 }) {
   const [expanded, setExpanded] = useState(false);
   const selected = addresses.find((a) => a.id === selectedAddressId)!;
+
   return (
     <div className="section">
       <div className="row between">

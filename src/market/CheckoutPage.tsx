@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Coupon, PaymentMethod } from "./types";
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
+import { ADDRESSES, CART, MEMBER, PAST_ORDERS } from "./data";
 import {
   calculateItemTotal,
   calculateShippingFee,
@@ -18,7 +18,6 @@ import PointSection from "./components/PointSection";
 import PaymentMethodSection from "./components/PaymentMethodSection";
 import PaymentSummary from "./components/PaymentSummary";
 import TermsAgreement from "./components/TermsAgreement";
-import CheckoutTerms from "./components/CheckoutTerms";
 import RecentOrders from "./components/RecentOrders";
 
 export function CheckoutPage() {
@@ -26,12 +25,9 @@ export function CheckoutPage() {
   const cart = CART;
 
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
-  const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [usePoint, setUsePoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
   const [payment, setPayment] = useState<PaymentMethod>("card");
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
 
@@ -41,7 +37,6 @@ export function CheckoutPage() {
   const shippingFee = calculateShippingFee(itemTotal, address.isRemote);
   const couponDiscount = calculateCouponDiscount(appliedCoupon);
   const pointDiscount = calculatePointDiscount(
-    usePoint,
     pointInput,
     member.point,
     itemTotal,
@@ -51,12 +46,6 @@ export function CheckoutPage() {
   const [finalPrice] = useState(
     calculateFinalPrice(itemTotal, shippingFee, couponDiscount, pointDiscount),
   );
-
-  const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim());
-    setAppliedCoupon(found ?? null);
-    if (!found) alert("존재하지 않는 쿠폰이에요");
-  };
 
   if (placed) {
     return (
@@ -81,19 +70,12 @@ export function CheckoutPage() {
 
       <OrderItemList items={cart} />
 
-      <CouponSection
-        couponCode={couponCode}
-        onChangeCouponCode={setCouponCode}
-        onApplyCoupon={applyCoupon}
-        appliedCoupon={appliedCoupon}
-      />
+      <CouponSection appliedCoupon={appliedCoupon} onApply={setAppliedCoupon} />
 
       <PointSection
-        usePoint={usePoint}
-        onToggleUsePoint={setUsePoint}
+        memberPoint={member.point}
         pointInput={pointInput}
         onChangePointInput={setPointInput}
-        memberPoint={member.point}
       />
 
       <PaymentMethodSection payment={payment} onChangePayment={setPayment} />
@@ -105,15 +87,10 @@ export function CheckoutPage() {
         pointDiscount={pointDiscount}
         finalPrice={finalPrice}
         appliedCoupon={appliedCoupon}
-        usePoint={usePoint}
         member={member}
       />
 
-      <TermsAgreement
-        agreed={agreed}
-        onChangeAgreed={setAgreed}
-        onOpenTerms={() => setIsTermsOpen(true)}
-      />
+      <TermsAgreement agreed={agreed} onChangeAgreed={setAgreed} />
 
       <button
         className="pay"
@@ -122,10 +99,6 @@ export function CheckoutPage() {
       >
         {finalPrice.toLocaleString()}원 결제하기
       </button>
-
-      {isTermsOpen ? (
-        <CheckoutTerms onClose={() => setIsTermsOpen(false)} />
-      ) : null}
 
       <RecentOrders orders={PAST_ORDERS} />
     </div>

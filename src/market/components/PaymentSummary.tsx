@@ -9,7 +9,6 @@ export default function PaymentSummary({
   pointDiscount,
   finalPrice,
   appliedCoupon,
-  usePoint,
   member,
 }: {
   itemTotal: number;
@@ -18,7 +17,6 @@ export default function PaymentSummary({
   pointDiscount: number;
   finalPrice: number;
   appliedCoupon: Coupon | null;
-  usePoint: boolean;
   member: Member;
 }) {
   return (
@@ -35,7 +33,7 @@ export default function PaymentSummary({
           couponCode={appliedCoupon.code}
         />
       ) : null}
-      {usePoint ? (
+      {pointDiscount > 0 ? (
         <OrderLineRow
           type="point"
           label="적립금 사용"

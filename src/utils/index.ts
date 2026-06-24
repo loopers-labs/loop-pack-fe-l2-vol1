@@ -22,12 +22,11 @@ export function calculateCouponDiscount(coupon: Coupon | null): number {
 }
 
 export function calculatePointDiscount(
-  usePoint: boolean,
   pointInput: number,
   memberPoint: number,
   itemTotal: number,
 ): number {
-  return usePoint ? Math.min(pointInput, memberPoint, itemTotal) : 0;
+  return Math.min(pointInput, memberPoint, itemTotal);
 }
 
 export function calculateFinalPrice(
