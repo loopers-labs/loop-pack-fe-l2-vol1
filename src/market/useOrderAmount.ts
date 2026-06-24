@@ -4,6 +4,7 @@ import type { CheckoutState } from './types';
 const SHIPPING_FEE = 3000;
 const FREE_SHIPPING_THRESHOLD = 50000;
 const REMOTE_AREA_SURCHARGE = 3000;
+const VIP_DISCOUNT_RATE = 0.1;
 
 export function useOrderAmount(state: CheckoutState) {
   const address =
@@ -21,8 +22,13 @@ export function useOrderAmount(state: CheckoutState) {
     ? Math.min(state.pointInput, MEMBER.point, itemTotal)
     : 0;
 
-  // 최종 금액은 파생값
-  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
+  // ── 최종 금액 ────────────────────
+  const calculatedPrice =
+    itemTotal + shippingFee - couponDiscount - pointDiscount;
+  const finalPrice =
+    MEMBER.grade === 'VIP'
+      ? Math.round(calculatedPrice * (1 - VIP_DISCOUNT_RATE))
+      : calculatedPrice;
 
   return { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice };
 }

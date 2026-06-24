@@ -1,6 +1,5 @@
 import { OrderLineRow } from './OrderLineRow';
 import { Price } from './Price';
-import { MEMBER } from './data';
 import type { Coupon } from './types';
 
 type Amount = {
@@ -47,7 +46,7 @@ export function PriceSummary({ amount, appliedCoupon, usePoint }: Props) {
       ) : null}
       <div className="total">
         <span>최종 결제 금액</span>
-        <Price amount={amount.finalPrice} member={MEMBER} />
+        <Price amount={amount.finalPrice} />
       </div>
     </>
   );
