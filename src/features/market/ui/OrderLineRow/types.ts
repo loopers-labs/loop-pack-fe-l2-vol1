@@ -27,3 +27,4 @@ export type OrderLineRowProps =
   | ({ kind: 'amount' } & CheckoutAmountOrderLineProps)
   | ({ kind: 'coupon-discount' } & CouponDiscountOrderLineProps)
   | ({ kind: 'point-discount' } & PointDiscountOrderLineProps)
+  | ({ kind: 'past-order' } & PastOrderLineProps)
