@@ -9,7 +9,7 @@ import {
   OrderStatusTag,
   type PaymentMethod,
 } from '@/entities/market'
-import { OrderLineRow } from '@/features/market'
+import { AddressForm, OrderLineRow } from '@/features/market'
 import {
   Button,
   Heading,
@@ -78,71 +78,6 @@ function DeliverySection({
         />
       </Show>
     </SectionCard>
-  )
-}
-
-// '도서산간 제외' 필터는 스스로 책임진다.
-// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
-function AddressForm({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Array<Address>
-  selectedAddressId: string
-  onSelectAddress: (id: string) => void
-}) {
-  const [onlyNear, setOnlyNear] = useState(false)
-  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses
-  return (
-    <>
-      <label className="mb-1 flex items-center gap-2 py-1 text-[13px] opacity-80">
-        <input
-          type="checkbox"
-          checked={onlyNear}
-          onChange={(e) => {
-            setOnlyNear(e.target.checked)
-          }}
-        />
-        도서산간 제외
-      </label>
-      <For each={list}>
-        {(address) => (
-          <AddressField
-            key={address.id}
-            address={address}
-            selected={address.id === selectedAddressId}
-            onSelect={onSelectAddress}
-          />
-        )}
-      </For>
-    </>
-  )
-}
-
-function AddressField({
-  address,
-  selected,
-  onSelect,
-}: {
-  address: Address
-  selected: boolean
-  onSelect: (id: string) => void
-}) {
-  return (
-    <label className="flex items-start gap-2 py-1 text-sm">
-      <input
-        type="radio"
-        checked={selected}
-        onChange={() => {
-          onSelect(address.id)
-        }}
-      />
-      <span>
-        {address.label} · {address.recipient} ({address.detail})
-        <Show when={address.isRemote}> · 도서산간</Show>
-      </span>
-    </label>
   )
 }
 
