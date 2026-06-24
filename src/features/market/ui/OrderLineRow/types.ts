@@ -1,4 +1,4 @@
-import type { CartItem, Coupon } from '@/entities/market'
+import type { CartItem, Coupon, PastOrder } from '@/entities/market'
 
 export type CartItemOrderLineProps = {
   item: CartItem
@@ -16,6 +16,10 @@ export type CouponDiscountOrderLineProps = {
 
 export type PointDiscountOrderLineProps = {
   amount: number
+}
+
+export type PastOrderLineProps = {
+  order: PastOrder
 }
 
 export type OrderLineRowProps =
