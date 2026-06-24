@@ -63,8 +63,6 @@ type FormProps = {
 };
 
 function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
-  const member = MEMBER;
-
   const setAddress = (id: string) => update({ addressId: id });
   const setMemo = (memo: string) => update({ deliveryMemo: memo });
   const setUsePoint = (use: boolean) => update({ usePoint: use });
@@ -125,7 +123,7 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
             checked={checkoutForm.usePoint}
             onChange={(e) => setUsePoint(e.target.checked)}
           />
-          적립금 사용 (보유 {member.point.toLocaleString()}P)
+          적립금 사용 (보유 {MEMBER.point.toLocaleString()}P)
         </label>
         {checkoutForm.usePoint ? (
           <input
@@ -154,7 +152,6 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
           amount={amount}
           appliedCoupon={checkoutForm.appliedCoupon}
           usePoint={checkoutForm.usePoint}
-          member={member}
         />
       </SectionCard>
 

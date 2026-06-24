@@ -1,6 +1,7 @@
 import { OrderLineRow } from './OrderLineRow';
 import { Price } from './Price';
-import type { Coupon, Member } from './types';
+import { MEMBER } from './data';
+import type { Coupon } from './types';
 
 type Amount = {
   itemTotal: number;
@@ -14,15 +15,9 @@ type Props = {
   amount: Amount;
   appliedCoupon: Coupon | null;
   usePoint: boolean;
-  member: Member;
 };
 
-export function PriceSummary({
-  amount,
-  appliedCoupon,
-  usePoint,
-  member,
-}: Props) {
+export function PriceSummary({ amount, appliedCoupon, usePoint }: Props) {
   return (
     <>
       <OrderLineRow
@@ -54,7 +49,7 @@ export function PriceSummary({
       ) : null}
       <div className="total">
         <span>최종 결제 금액</span>
-        <Price amount={amount.finalPrice} member={member} />
+        <Price amount={amount.finalPrice} member={MEMBER} />
       </div>
     </>
   );
