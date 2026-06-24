@@ -1,4 +1,4 @@
-import type { Coupon, Member } from "../types";
+import type { Coupon } from "../types";
 import { Price } from "./Price";
 import { OrderLineRow } from "./OrderLineRow";
 
@@ -9,7 +9,6 @@ export default function PaymentSummary({
   pointDiscount,
   finalPrice,
   appliedCoupon,
-  member,
 }: {
   itemTotal: number;
   shippingFee: number;
@@ -17,7 +16,6 @@ export default function PaymentSummary({
   pointDiscount: number;
   finalPrice: number;
   appliedCoupon: Coupon | null;
-  member: Member;
 }) {
   return (
     <div className="section">
@@ -43,7 +41,7 @@ export default function PaymentSummary({
       ) : null}
       <div className="total">
         <span>최종 결제 금액</span>
-        <Price amount={finalPrice} member={member} />
+        <Price amount={finalPrice} />
       </div>
     </div>
   );

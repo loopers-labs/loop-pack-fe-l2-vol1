@@ -14,6 +14,7 @@ export function calculateShippingFee(
   isRemote: boolean,
 ): number {
   const baseFee = itemTotal >= FREE_SHIPPING_THRESHOLD ? 0 : BASE_SHIPPING_FEE;
+
   return isRemote ? baseFee + REMOTE_SHIPPING_SURCHARGE : baseFee;
 }
 
@@ -29,17 +30,21 @@ export function calculatePointDiscount(
   return Math.min(pointInput, memberPoint, itemTotal);
 }
 
+export function calculateMemberPrice(amount: number, member?: Member): number {
+  return member?.grade === "VIP"
+    ? Math.round(amount * VIP_PRICE_MULTIPLIER)
+    : amount;
+}
+
 export function calculateFinalPrice(
   itemTotal: number,
   shippingFee: number,
   couponDiscount: number,
   pointDiscount: number,
+  member?: Member,
 ): number {
-  return itemTotal + shippingFee - couponDiscount - pointDiscount;
-}
+  const priceBeforeMembership =
+    itemTotal + shippingFee - couponDiscount - pointDiscount;
 
-export function calculateMemberPrice(amount: number, member?: Member): number {
-  return member?.grade === "VIP"
-    ? Math.round(amount * VIP_PRICE_MULTIPLIER)
-    : amount;
+  return calculateMemberPrice(priceBeforeMembership, member);
 }

@@ -48,6 +48,7 @@ export function CheckoutPage() {
     shippingFee,
     couponDiscount,
     pointDiscount,
+    member,
   );
 
   if (placed) {
@@ -90,7 +91,6 @@ export function CheckoutPage() {
         pointDiscount={pointDiscount}
         finalPrice={finalPrice}
         appliedCoupon={appliedCoupon}
-        member={member}
       />
 
       <TermsAgreement agreed={agreed} onChangeAgreed={setAgreed} />
