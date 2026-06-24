@@ -15,12 +15,7 @@ import {
 } from "./checkoutPrice";
 import { CouponSection } from "./CouponSection";
 import { PointSection } from "./PointSection";
-
-const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  card: "신용/체크카드",
-  transfer: "계좌이체",
-  kakao: "카카오페이",
-};
+import { PaymentMethodSection } from "./PaymentMethodSection";
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -118,7 +113,7 @@ export function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [isUsingPoint, setIsUsingPoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
-  const [payment, setPayment] = useState<PaymentMethod>("card");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("card");
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
@@ -208,16 +203,10 @@ export function CheckoutPage() {
         onPointInputChange={setPointInput}
       />
 
-      <div className="section">
-        <h2>결제수단</h2>
-        {(["card", "transfer", "kakao"] as PaymentMethod[]).map((m) => (
-          <label key={m}>
-            <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
-            {PAYMENT_LABEL[m]}
-          </label>
-        ))}
-      </div>
-
+      <PaymentMethodSection
+        selectedPaymentMethod={selectedPaymentMethod}
+        onPaymentMethodChange={setSelectedPaymentMethod}
+      />
       <div className="section">
         <h2>결제 금액</h2>
         <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
