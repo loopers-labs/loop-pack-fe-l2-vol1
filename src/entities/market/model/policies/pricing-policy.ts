@@ -6,8 +6,6 @@ const REMOTE_AREA_EXTRA_SHIPPING_FEE = 3000
 const VIP_DISPLAY_DISCOUNT_RATE = 0.1
 
 export class MarketPricingPolicy {
-  private constructor() {}
-
   static calculateItemTotal(cartItems: ReadonlyArray<CartItem>) {
     return cartItems.reduce((sum, item) => sum + item.totalPrice, 0)
   }
