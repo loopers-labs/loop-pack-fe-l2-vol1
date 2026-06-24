@@ -18,6 +18,7 @@ import PointSection from "./components/PointSection";
 import PaymentMethodSection from "./components/PaymentMethodSection";
 import PaymentSummary from "./components/PaymentSummary";
 import TermsAgreement from "./components/TermsAgreement";
+import PlaceOrderButton from "./components/PlaceOrderButton";
 import RecentOrders from "./components/RecentOrders";
 
 export function CheckoutPage() {
@@ -94,13 +95,11 @@ export function CheckoutPage() {
 
       <TermsAgreement agreed={agreed} onChangeAgreed={setAgreed} />
 
-      <button
-        className="pay"
+      <PlaceOrderButton
+        finalPrice={finalPrice}
         disabled={!agreed}
-        onClick={() => setPlaced(true)}
-      >
-        {finalPrice.toLocaleString()}원 결제하기
-      </button>
+        onPlaceOrder={() => setPlaced(true)}
+      />
 
       <RecentOrders orders={PAST_ORDERS} />
     </div>
