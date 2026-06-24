@@ -1,4 +1,4 @@
-import { OrderLineRow } from "./OrderLineRow";
+import { ProductOrderLine } from "./OrderLines";
 import type { CartItem } from "./types";
 
 type OrderItemSectionProps = {
@@ -10,9 +10,8 @@ export function OrderItemsSection({ cart }: OrderItemSectionProps) {
     <div className="section">
       <h2>주문 상품</h2>
       {cart.map((it) => (
-        <OrderLineRow
+        <ProductOrderLine
           key={it.id}
-          type="product"
           label={it.name}
           amount={it.price * it.quantity}
           thumbnail={it.thumbnail}

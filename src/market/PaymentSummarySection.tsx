@@ -1,4 +1,4 @@
-import { OrderLineRow } from "./OrderLineRow";
+import { DiscountAmountLine, SummaryAmountLine } from "./OrderLines";
 import { Price } from "./Price";
 import type { Coupon, Member } from "./types";
 
@@ -26,20 +26,16 @@ export function PaymentSummarySection({
   return (
     <div className="section">
       <h2>결제 금액</h2>
-      <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-      <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
+      <SummaryAmountLine label="상품 금액" amount={itemTotal} />
+      <SummaryAmountLine label="배송비" amount={shippingFee} />
       {appliedCoupon ? (
-        <OrderLineRow
-          type="coupon"
+        <DiscountAmountLine
           label="쿠폰 할인"
           amount={couponDiscount}
-          isDiscount
-          couponCode={appliedCoupon.code}
+          description={appliedCoupon.code}
         />
       ) : null}
-      {isUsingPoint ? (
-        <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-      ) : null}
+      {isUsingPoint ? <DiscountAmountLine label="적립금 사용" amount={pointDiscount} /> : null}
       <div className="total">
         <span>최종 결제 금액</span>
         <Price amount={finalPrice} member={member} />
