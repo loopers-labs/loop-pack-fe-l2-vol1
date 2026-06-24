@@ -9,12 +9,7 @@ import {
   OrderStatusTag,
   type PaymentMethod,
 } from '@/entities/market'
-import {
-  CartItemOrderLine,
-  CheckoutAmountOrderLine,
-  CouponDiscountOrderLine,
-  PointDiscountOrderLine,
-} from '@/features/market'
+import { OrderLineRow } from '@/features/market'
 import { Button, Heading, Modal, SectionCard, Textarea } from '@/shared/ui'
 
 import { Price } from './Price'
@@ -236,7 +231,9 @@ export function CheckoutPage() {
       <SectionCard>
         <Heading.H2>주문 상품</Heading.H2>
         <For each={cartItems}>
-          {(item) => <CartItemOrderLine key={item.id} item={item} />}
+          {(item) => (
+            <OrderLineRow key={item.id} kind="cart-item" item={item} />
+          )}
         </For>
       </SectionCard>
 
@@ -312,15 +309,19 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>결제 금액</Heading.H2>
-        <CheckoutAmountOrderLine label="상품 금액" amount={itemTotal} />
-        <CheckoutAmountOrderLine label="배송비" amount={shippingFee} />
+        <OrderLineRow kind="amount" label="상품 금액" amount={itemTotal} />
+        <OrderLineRow kind="amount" label="배송비" amount={shippingFee} />
         <Show when={appliedCoupon}>
           {(coupon) => (
-            <CouponDiscountOrderLine coupon={coupon} amount={couponDiscount} />
+            <OrderLineRow
+              kind="coupon-discount"
+              coupon={coupon}
+              amount={couponDiscount}
+            />
           )}
         </Show>
         <Show when={usePoint}>
-          <PointDiscountOrderLine amount={pointDiscount} />
+          <OrderLineRow kind="point-discount" amount={pointDiscount} />
         </Show>
         <div className="mt-2 flex items-center justify-between border-t border-(--border) pt-3 font-semibold text-(--text-h)">
           <span>최종 결제 금액</span>

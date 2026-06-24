@@ -1,9 +1,6 @@
 import { OrderLine } from '@/entities/market'
 
-type CheckoutAmountOrderLineProps = {
-  label: string
-  amount: number
-}
+import type { CheckoutAmountOrderLineProps } from './types'
 
 export function CheckoutAmountOrderLine({
   label,

@@ -1,9 +1,6 @@
-import { type Coupon, OrderLine } from '@/entities/market'
+import { OrderLine } from '@/entities/market'
 
-type CouponDiscountOrderLineProps = {
-  coupon: Coupon
-  amount: number
-}
+import type { CouponDiscountOrderLineProps } from './types'
 
 export function CouponDiscountOrderLine({
   coupon,

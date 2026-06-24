@@ -1,6 +1,1 @@
-export {
-  CartItemOrderLine,
-  CheckoutAmountOrderLine,
-  CouponDiscountOrderLine,
-  PointDiscountOrderLine,
-} from './ui'
+export { OrderLineRow } from './ui'

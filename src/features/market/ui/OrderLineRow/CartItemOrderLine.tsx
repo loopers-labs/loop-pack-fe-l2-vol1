@@ -1,8 +1,6 @@
-import { type CartItem, OrderLine } from '@/entities/market'
+import { OrderLine } from '@/entities/market'
 
-type CartItemOrderLineProps = {
-  item: CartItem
-}
+import type { CartItemOrderLineProps } from './types'
 
 export function CartItemOrderLine({ item }: CartItemOrderLineProps) {
   return (

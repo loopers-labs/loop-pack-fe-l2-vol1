@@ -1,8 +1,6 @@
 import { OrderLine } from '@/entities/market'
 
-type PointDiscountOrderLineProps = {
-  amount: number
-}
+import type { PointDiscountOrderLineProps } from './types'
 
 export function PointDiscountOrderLine({
   amount,
