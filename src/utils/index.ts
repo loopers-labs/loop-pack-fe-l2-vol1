@@ -1,4 +1,4 @@
-import type { CartItem, Coupon, Member } from "../market/types";
+import type { CartItem, Coupon, Member, PaymentAmounts } from "../market/types";
 
 const FREE_SHIPPING_THRESHOLD = 50000;
 const BASE_SHIPPING_FEE = 3000;
@@ -37,12 +37,10 @@ export function calculateMemberPrice(amount: number, member?: Member): number {
 }
 
 export function calculateFinalPrice(
-  itemTotal: number,
-  shippingFee: number,
-  couponDiscount: number,
-  pointDiscount: number,
+  amounts: PaymentAmounts,
   member?: Member,
 ): number {
+  const { itemTotal, shippingFee, couponDiscount, pointDiscount } = amounts;
   const priceBeforeMembership =
     itemTotal + shippingFee - couponDiscount - pointDiscount;
 

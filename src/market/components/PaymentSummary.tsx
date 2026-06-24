@@ -1,22 +1,18 @@
-import type { Coupon } from "../types";
+import type { Coupon, PaymentAmounts } from "../types";
 import { Price } from "./Price";
 import { OrderLineRow } from "./OrderLineRow";
 
 export default function PaymentSummary({
-  itemTotal,
-  shippingFee,
-  couponDiscount,
-  pointDiscount,
+  amounts,
   finalPrice,
   appliedCoupon,
 }: {
-  itemTotal: number;
-  shippingFee: number;
-  couponDiscount: number;
-  pointDiscount: number;
+  amounts: PaymentAmounts;
   finalPrice: number;
   appliedCoupon: Coupon | null;
 }) {
+  const { itemTotal, shippingFee, couponDiscount, pointDiscount } = amounts;
+
   return (
     <div className="section">
       <h2>결제 금액</h2>

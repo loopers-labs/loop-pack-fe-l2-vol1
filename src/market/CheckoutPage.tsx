@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Coupon, PaymentMethod } from "./types";
+import type { Coupon, PaymentMethod, PaymentAmounts } from "./types";
 import { ADDRESSES, CART, MEMBER, PAST_ORDERS } from "./data";
 import {
   calculateItemTotal,
@@ -35,21 +35,14 @@ export function CheckoutPage() {
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
   const itemTotal = calculateItemTotal(cart);
-  const shippingFee = calculateShippingFee(itemTotal, address.isRemote);
-  const couponDiscount = calculateCouponDiscount(appliedCoupon);
-  const pointDiscount = calculatePointDiscount(
-    pointInput,
-    member.point,
+  const amounts: PaymentAmounts = {
     itemTotal,
-  );
+    shippingFee: calculateShippingFee(itemTotal, address.isRemote),
+    couponDiscount: calculateCouponDiscount(appliedCoupon),
+    pointDiscount: calculatePointDiscount(pointInput, member.point, itemTotal),
+  };
 
-  const finalPrice = calculateFinalPrice(
-    itemTotal,
-    shippingFee,
-    couponDiscount,
-    pointDiscount,
-    member,
-  );
+  const finalPrice = calculateFinalPrice(amounts, member);
 
   if (placed) {
     return (
@@ -85,10 +78,7 @@ export function CheckoutPage() {
       <PaymentMethodSection payment={payment} onChangePayment={setPayment} />
 
       <PaymentSummary
-        itemTotal={itemTotal}
-        shippingFee={shippingFee}
-        couponDiscount={couponDiscount}
-        pointDiscount={pointDiscount}
+        amounts={amounts}
         finalPrice={finalPrice}
         appliedCoupon={appliedCoupon}
       />
