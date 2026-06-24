@@ -102,6 +102,7 @@ function AddressField({ address, selected, onSelect }: AddressFieldProps) {
   );
 }
 
+// 공통 컴포넌트 구현(SectionContainer, CheckoutContainer)
 const SectionContainer = ({ title, children }: SectionProps) => {
   return (
     <div className="section">
@@ -120,6 +121,85 @@ const CheckoutContainer = ({ title, children }: SectionProps) => {
   );
 };
 
+// 요청사항 섹션 별도로 분리(추후 기능 추가 가능)
+const RequestSection = () => {
+  return (
+    <SectionContainer title="배송 요청사항">
+      <DeliveryMemo />
+    </SectionContainer>
+  );
+};
+
+const OrderItemSection = () => {
+  const cart = CART;
+  return (
+    <SectionContainer title="주문 상품">
+      {cart.map((it) => (
+        <OrderLineRow
+          key={it.id}
+          type="product"
+          label={it.name}
+          amount={it.price * it.quantity}
+          thumbnail={it.thumbnail}
+          option={it.option}
+          quantity={it.quantity}
+        />
+      ))}
+    </SectionContainer>
+  );
+};
+
+const PastOrderSection = () => {
+  return (
+    <SectionContainer title="최근 주문">
+      {PAST_ORDERS.map((o) => (
+        <div key={o.id} className="line">
+          <div className="grow">{o.summary}</div>
+          <OrderStatusTag
+            isPaid={o.status === 'paid'}
+            isPreparing={o.status === 'preparing'}
+            isShipped={o.status === 'shipped'}
+            isDelivered={o.status === 'delivered'}
+            isCancelled={o.status === 'cancelled'}
+          />
+        </div>
+      ))}
+    </SectionContainer>
+  );
+};
+
+// TODO: props 객체화 고려
+interface CheckoutCompleteProps {
+  itemTotal: number;
+  shippingFee: number;
+  couponDiscount: number;
+  pointDiscount: number;
+  onCheckoutButtonClick: () => void;
+}
+const CheckoutComplete = ({
+  itemTotal,
+  shippingFee,
+  couponDiscount,
+  pointDiscount,
+  onCheckoutButtonClick,
+}: CheckoutCompleteProps) => {
+  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
+
+  return (
+    <CheckoutContainer title="주문 완료">
+      <div className="section">
+        <p style={{ color: 'var(--text-h)' }}>
+          주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
+        </p>
+      </div>
+      <button className="pay" onClick={onCheckoutButtonClick}>
+        주문서로 돌아가기
+      </button>
+    </CheckoutContainer>
+  );
+};
+
+// 결제 페이지 전체의 흐름과 레이아웃이라는 페이지 컴포넌트 본연의 역할에만 집중할 수 있도록
 export function CheckoutPage() {
   const member = MEMBER;
   const cart = CART;
@@ -149,6 +229,7 @@ export function CheckoutPage() {
   const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
 
   // 최종 금액은 직접 계산한다.
+  // 계산 등 로직 -> 커스텀 훅으로 빼면 좋을듯?
   const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
 
   const handleApplyCoupon = () => {
@@ -157,18 +238,16 @@ export function CheckoutPage() {
     if (!found) alert('존재하지 않는 쿠폰이에요');
   };
 
+  // 연관 상태: 최종 금액, placed 상태
   if (placed) {
     return (
-      <CheckoutContainer title="주문 완료">
-        <div className="section">
-          <p style={{ color: 'var(--text-h)' }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
-          </p>
-        </div>
-        <button className="pay" onClick={() => setPlaced(false)}>
-          주문서로 돌아가기
-        </button>
-      </CheckoutContainer>
+      <CheckoutComplete
+        itemTotal={itemTotal}
+        shippingFee={shippingFee}
+        couponDiscount={couponDiscount}
+        pointDiscount={pointDiscount}
+        onCheckoutButtonClick={() => setPlaced(false)}
+      />
     );
   }
 
@@ -180,23 +259,9 @@ export function CheckoutPage() {
         onSelectAddress={setSelectedAddressId}
       />
 
-      <SectionContainer title="배송 요청사항">
-        <DeliveryMemo />
-      </SectionContainer>
+      <RequestSection />
 
-      <SectionContainer title="주문 상품">
-        {cart.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
-        ))}
-      </SectionContainer>
+      <OrderItemSection />
 
       <SectionContainer title="쿠폰">
         <div className="row">
@@ -273,6 +338,7 @@ export function CheckoutPage() {
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
+      {/* 이벤트 버블링으로 인해 setIsTermsOpen은 상위에 하나만 해줘도 될거같은데? */}
       {isTermsOpen ? (
         <div className="modal" onClick={() => setIsTermsOpen(false)}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
@@ -283,20 +349,7 @@ export function CheckoutPage() {
         </div>
       ) : null}
 
-      <SectionContainer title="최근 주문">
-        {PAST_ORDERS.map((o) => (
-          <div key={o.id} className="line">
-            <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === 'paid'}
-              isPreparing={o.status === 'preparing'}
-              isShipped={o.status === 'shipped'}
-              isDelivered={o.status === 'delivered'}
-              isCancelled={o.status === 'cancelled'}
-            />
-          </div>
-        ))}
-      </SectionContainer>
+      <PastOrderSection />
     </CheckoutContainer>
   );
 }
