@@ -9,7 +9,7 @@ import {
   OrderLine,
   type PaymentMethod,
 } from '@/entities/market'
-import { AddressForm, OrderLineRow } from '@/features/market'
+import { AddressForm, OrderLineRow, SelectedAddress } from '@/features/market'
 import {
   Button,
   Heading,
@@ -18,6 +18,7 @@ import {
   SectionCard,
   Textarea,
 } from '@/shared/ui'
+import { OrderItemsSection } from '@/widgets/market'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
@@ -51,6 +52,7 @@ function DeliverySection({
     <SectionCard>
       <div className="flex items-center justify-between gap-2">
         <Heading.H2>배송지</Heading.H2>
+
         <Show.Button
           when={expanded}
           fallback="변경"
@@ -63,14 +65,8 @@ function DeliverySection({
           접기
         </Show.Button>
       </div>
-      <Show
-        when={expanded}
-        fallback={
-          <p className="m-0 text-sm text-(--text-h)">
-            {selected.label} · {selected.recipient} ({selected.detail})
-          </p>
-        }
-      >
+
+      <Show when={expanded} fallback={<SelectedAddress selected={selected} />}>
         <AddressForm
           addresses={addresses}
           selectedAddressId={selectedAddressId}
@@ -175,14 +171,7 @@ export function CheckoutPage() {
         <Textarea placeholder="배송 시 요청사항 (예: 부재 시 문 앞에 두세요)" />
       </SectionCard>
 
-      <SectionCard>
-        <Heading.H2>주문 상품</Heading.H2>
-        <For each={cartItems}>
-          {(item) => (
-            <OrderLineRow key={item.id} kind="cart-item" item={item} />
-          )}
-        </For>
-      </SectionCard>
+      <OrderItemsSection items={cartItems} />
 
       <SectionCard>
         <Heading.H2>쿠폰</Heading.H2>
