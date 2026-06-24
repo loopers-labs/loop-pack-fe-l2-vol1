@@ -13,6 +13,11 @@ export function PointSection({
   onIsUsingPointChange,
   onPointInputChange,
 }: PointSectionProps) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = Number(e.target.value);
+    const finalValue = Math.min(memberPoint, Math.max(inputValue, 0));
+    onPointInputChange(finalValue);
+  };
   return (
     <div className="section">
       <h2>적립금</h2>
@@ -27,8 +32,10 @@ export function PointSection({
       {isUsingPoint ? (
         <input
           type="number"
-          value={pointInput}
-          onChange={(e) => onPointInputChange(Number(e.target.value))}
+          min={0}
+          max={memberPoint}
+          value={pointInput.toString()}
+          onChange={handleInputChange}
         />
       ) : null}
     </div>

@@ -23,7 +23,8 @@ export const calculatePointDiscount = (
   pointDetail: { pointInput: number; memberTotalPoint: number; totalItemAmount: number },
 ) => {
   const { pointInput, memberTotalPoint, totalItemAmount } = pointDetail;
-  return isUsingPoint ? Math.min(pointInput, memberTotalPoint, totalItemAmount) : 0;
+  const availablePointInput = Math.max(pointInput, 0);
+  return isUsingPoint ? Math.min(availablePointInput, memberTotalPoint, totalItemAmount) : 0;
 };
 
 export const calculateFinalPrice = ({
