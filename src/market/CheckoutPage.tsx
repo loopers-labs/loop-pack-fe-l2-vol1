@@ -8,8 +8,8 @@ import { PastOrderRow } from './PastOrderRow';
 import { PriceSummary } from './PriceSummary';
 import { SectionCard } from './SectionCard';
 import { TermsAgreement } from './TermsAgreement';
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
-import type { CheckoutState, PaymentMethod } from './types';
+import { ADDRESSES, CART, MEMBER, PAST_ORDERS } from './data';
+import type { CheckoutState, Coupon, PaymentMethod } from './types';
 import { useOrderAmount } from './useOrderAmount';
 import './market.css';
 
@@ -70,13 +70,8 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
   const setPaymentMethod = (method: PaymentMethod) =>
     update({ paymentMethod: method });
   const setAgreed = (agreed: boolean) => update({ agreed });
-
-  // 쿠폰 조회 + alert 는 상태 업데이트 밖(호출부)에서, 결과만 반영.
-  const handleApplyCoupon = (code: string) => {
-    const found = COUPONS.find((c) => c.code === code.trim());
-    update({ appliedCoupon: found ?? null });
-    if (!found) alert('존재하지 않는 쿠폰이에요');
-  };
+  const setAppliedCoupon = (coupon: Coupon | null) =>
+    update({ appliedCoupon: coupon });
 
   return (
     <div className="checkout">
@@ -107,7 +102,7 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
       <SectionCard title="쿠폰">
         <CouponSection
           appliedCoupon={checkoutForm.appliedCoupon}
-          onApplyCoupon={handleApplyCoupon}
+          onApplyCoupon={setAppliedCoupon}
         />
       </SectionCard>
 
