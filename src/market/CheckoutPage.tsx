@@ -1,5 +1,3 @@
-import './market.css'
-
 import { For, Show } from '@ilokesto/utilinent'
 import { useState } from 'react'
 
@@ -51,7 +49,7 @@ function DeliverySection({
 
   return (
     <SectionCard>
-      <div className="row between">
+      <div className="flex items-center justify-between gap-2">
         <Heading.H2>배송지</Heading.H2>
         <Show.Button
           when={expanded}
@@ -68,7 +66,7 @@ function DeliverySection({
       <Show
         when={expanded}
         fallback={
-          <p className="addr-summary">
+          <p className="m-0 text-sm text-(--text-h)">
             {selected.label} · {selected.recipient} ({selected.detail})
           </p>
         }
@@ -98,7 +96,7 @@ function AddressForm({
   const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses
   return (
     <>
-      <label className="filter">
+      <label className="mb-1 flex items-center gap-2 py-1 text-[13px] opacity-80">
         <input
           type="checkbox"
           checked={onlyNear}
@@ -132,7 +130,7 @@ function AddressField({
   onSelect: (id: string) => void
 }) {
   return (
-    <label className="addr">
+    <label className="flex items-start gap-2 py-1 text-sm">
       <input
         type="radio"
         checked={selected}
@@ -199,16 +197,16 @@ export function CheckoutPage() {
 
   if (placed) {
     return (
-      <div className="checkout">
+      <div className="mx-auto max-w-120 px-4 pt-6 pb-24 text-left text-(--text)">
         <Heading.H1>주문 완료</Heading.H1>
         <SectionCard>
-          <p style={{ color: 'var(--text-h)' }}>
+          <p className="text-(--text-h)">
             주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
           </p>
         </SectionCard>
         <Button
           type="button"
-          className="checkout-primary-action"
+          className="sticky bottom-4 mt-2 w-full rounded-xl p-3.75 text-base font-semibold"
           variant="primary"
           onClick={() => {
             setPlaced(false)
@@ -221,7 +219,7 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="checkout">
+    <div className="mx-auto max-w-120 px-4 pt-6 pb-24 text-left text-(--text)">
       <Heading.H1>주문/결제</Heading.H1>
 
       <DeliverySection
@@ -244,8 +242,9 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>쿠폰</Heading.H2>
-        <div className="row">
+        <div className="flex gap-2">
           <input
+            className="box-border w-full flex-1 rounded-lg border border-(--border) bg-(--bg) px-2.5 py-2.25 font-[inherit] text-sm text-(--text-h)"
             type="text"
             value={couponCode}
             onChange={(e) => {
@@ -268,7 +267,7 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>적립금</Heading.H2>
-        <label>
+        <label className="flex items-center gap-2 py-1 text-sm">
           <input
             type="checkbox"
             checked={usePoint}
@@ -280,6 +279,7 @@ export function CheckoutPage() {
         </label>
         <Show when={usePoint}>
           <input
+            className="box-border w-full flex-1 rounded-lg border border-(--border) bg-(--bg) px-2.5 py-2.25 font-[inherit] text-sm text-(--text-h)"
             type="number"
             value={pointInput}
             onChange={(e) => {
@@ -293,7 +293,10 @@ export function CheckoutPage() {
         <Heading.H2>결제수단</Heading.H2>
         <For each={PAYMENT_METHODS}>
           {(method) => (
-            <label key={method}>
+            <label
+              key={method}
+              className="flex items-center gap-2 py-1 text-sm"
+            >
               <input
                 type="radio"
                 checked={payment === method}
@@ -319,14 +322,14 @@ export function CheckoutPage() {
         <Show when={usePoint}>
           <PointDiscountOrderLine amount={pointDiscount} />
         </Show>
-        <div className="total">
+        <div className="mt-2 flex items-center justify-between border-t border-(--border) pt-3 font-semibold text-(--text-h)">
           <span>최종 결제 금액</span>
           <Price amount={finalPrice} member={member} />
         </div>
       </SectionCard>
 
       <SectionCard>
-        <label>
+        <label className="flex items-center gap-2 py-1 text-sm">
           <input
             type="checkbox"
             checked={agreed}
@@ -349,7 +352,7 @@ export function CheckoutPage() {
 
       <Button
         type="button"
-        className="checkout-primary-action"
+        className="sticky bottom-4 mt-2 w-full rounded-xl p-3.75 text-base font-semibold"
         disabled={!agreed}
         variant="primary"
         onClick={() => {
