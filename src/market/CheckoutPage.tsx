@@ -3,7 +3,6 @@ import type { Coupon } from './types/coupon.types';
 import type { PaymentMethod } from './types/payment.types';
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
 import { DeliveryMemo } from './components/DeliveryMemo';
-import { AddressSection } from './sections/AddressSection';
 import { CartSection } from './sections/CartSection';
 import { CouponSection } from './sections/CouponSection';
 import { PointSection } from './sections/PointSection';
@@ -12,6 +11,8 @@ import { OrderSummarySection } from './sections/OrderSummarySection';
 import { TermsSection } from './sections/TermsSection';
 import { RecentOrdersSection } from './sections/RecentOrdersSection';
 import './market.css';
+import { AddressSection } from './sections/AddressSection';
+import { AddressForm } from './sections/AddressSection/AddressForm.tsx';
 
 const BASE_SHIPPING_FEE = 3000;
 const FREE_SHIPPING_THRESHOLD = 50000;
@@ -72,11 +73,13 @@ export function CheckoutPage() {
     <div className="checkout">
       <h1>주문/결제</h1>
 
-      <AddressSection
-        addresses={ADDRESSES}
-        selectedAddressId={selectedAddressId}
-        onSelectAddress={setSelectedAddressId}
-      />
+      <AddressSection selectedAddress={address}>
+        <AddressForm
+          addresses={ADDRESSES}
+          selectedAddressId={selectedAddressId}
+          onSelectAddress={setSelectedAddressId}
+        />
+      </AddressSection>
 
       <div className="section">
         <h2>배송 요청사항</h2>
