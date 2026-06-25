@@ -11,6 +11,7 @@ export function CheckoutPage() {
     addressId: ADDRESSES[0].id,
     deliveryMemo: '',
     appliedCoupon: null,
+    usePoint: false,
     pointInput: 0,
     paymentMethod: 'card',
     agreed: false,

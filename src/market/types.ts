@@ -53,6 +53,7 @@ export type CheckoutState = {
   addressId: string;
   deliveryMemo: string;
   appliedCoupon: Coupon | null;
+  usePoint: boolean;
   pointInput: number;
   paymentMethod: PaymentMethod;
   agreed: boolean;

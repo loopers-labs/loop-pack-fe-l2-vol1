@@ -29,6 +29,7 @@ export function CheckoutForm({
 
   const setAddress = (id: string) => update({ addressId: id });
   const setMemo = (memo: string) => update({ deliveryMemo: memo });
+  const setUsePoint = (use: boolean) => update({ usePoint: use });
   const setPointInput = (point: number) => update({ pointInput: point });
   const setPaymentMethod = (method: PaymentMethod) =>
     update({ paymentMethod: method });
@@ -67,7 +68,9 @@ export function CheckoutForm({
 
       <SectionCard title="적립금">
         <PointSection
+          usePoint={checkoutForm.usePoint}
           pointInput={checkoutForm.pointInput}
+          onChangeUsePoint={setUsePoint}
           onChangePointInput={setPointInput}
         />
       </SectionCard>
