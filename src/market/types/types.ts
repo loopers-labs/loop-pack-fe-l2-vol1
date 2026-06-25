@@ -23,9 +23,12 @@ export type Address = {
 
 export type PaymentMethod = 'card' | 'transfer' | 'kakao';
 
+// Grade 타입 추가
+export type Grade = 'VIP' | 'NORMAL';
+
 export type Member = {
   name: string;
-  grade: 'VIP' | 'NORMAL';
+  grade: Grade;
   point: number; // 보유 적립금
 };
 

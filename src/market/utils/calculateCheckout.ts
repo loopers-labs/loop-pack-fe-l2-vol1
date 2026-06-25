@@ -1,6 +1,6 @@
 import type { CartItem, Address, Coupon, Member } from '../types/types';
 
-export const useCheckout = (
+export const calculateCheckout = (
   cart: CartItem[],
   address: Address,
   appliedCoupon: Coupon | null,

@@ -13,9 +13,10 @@ import { PastOrder } from './ui/PastOrder';
 import { PaymentMethod } from './ui/PaymentMethod';
 import { FinalPrice } from './ui/FinalPrice';
 import { Terms } from './ui/Terms';
-import { useCheckout } from './utils/calculateCheckout';
+import { calculateCheckout } from './utils/calculateCheckout';
 import { ModalProvider } from '../shared/ui/modal/ModalProvider';
 import { TermsModal } from './ui/TermsModal';
+import { Price } from './ui/Price';
 
 // 결제 페이지 전체의 흐름과 레이아웃이라는 페이지 컴포넌트 본연의 역할에만 집중할 수 있도록(1, 2, 3 위배)
 export function CheckoutPage() {
@@ -34,7 +35,7 @@ export function CheckoutPage() {
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
   // 결제 금액을 구하는 비즈니스 로직은 별도 함수로 분리
-  const { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice } = useCheckout(
+  const { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice } = calculateCheckout(
     cart,
     address,
     appliedCoupon,
@@ -96,7 +97,8 @@ export function CheckoutPage() {
           onToggleCheckbox={(e: React.ChangeEvent<HTMLInputElement>) => setAgreed(e.target.checked)}
         />
         <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
-          {finalPrice.toLocaleString()}원 결제하기
+          {/* 공통 가격 컴포넌트를 결제 버튼에도 반영 */}
+          <Price amount={finalPrice} member={member} /> 결제하기
         </button>
         <TermsModal />
         <PastOrder />
