@@ -2,13 +2,14 @@ import { useState } from "react";
 
 import { Card } from "./card";
 import { CouponCard } from "./CouponCard";
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
+import { ADDRESSES, CART, COUPONS, MEMBER } from "./data";
 import { DeliveryMemo } from "./DeliveryMemo";
+import { OrderItemsCard } from "./OrderItemsCard";
 import { OrderLineRow } from "./OrderLineRow";
-import { OrderStatusTag } from "./OrderStatusTag";
 import { PaymentMethodCard } from "./PaymentMethodCard";
 import { PointsCard } from "./PointsCard";
 import { Price } from "./Price";
+import { RecentOrdersCard } from "./RecentOrdersCard";
 import type { Address, Coupon } from "./types";
 
 import "./market.css";
@@ -185,22 +186,7 @@ export function CheckoutPage() {
         </Card.Body>
       </Card>
 
-      <Card>
-        <Card.Title>주문 상품</Card.Title>
-        <Card.Body>
-          {cart.map((it) => (
-            <OrderLineRow
-              key={it.id}
-              type="product"
-              label={it.name}
-              amount={it.price * it.quantity}
-              thumbnail={it.thumbnail}
-              option={it.option}
-              quantity={it.quantity}
-            />
-          ))}
-        </Card.Body>
-      </Card>
+      <OrderItemsCard items={cart} />
 
       <CouponCard appliedCoupon={appliedCoupon} onApply={handleApplyCoupon} />
 
@@ -264,7 +250,7 @@ export function CheckoutPage() {
         </div>
       ) : null}
 
-      <Card>
+      {/* <Card>
         <Card.Title>최근 주문</Card.Title>
         <Card.Body>
           {PAST_ORDERS.map((o) => (
@@ -280,7 +266,8 @@ export function CheckoutPage() {
             </div>
           ))}
         </Card.Body>
-      </Card>
+      </Card> */}
+      <RecentOrdersCard />
     </div>
   );
 }
