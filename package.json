@@ -26,6 +26,7 @@
     ]
   },
   "dependencies": {
+    "@ilokesto/modal": "^1.0.3",
     "@ilokesto/utilinent": "^1.1.4",
     "@suspensive/react": "^3.21.2",
     "@suspensive/react-query": "npm:@suspensive/react-query-5@^3.21.2",

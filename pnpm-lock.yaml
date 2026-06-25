@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ilokesto/modal':
+        specifier: ^1.0.3
+        version: 1.0.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@ilokesto/utilinent':
         specifier: ^1.1.4
         version: 1.1.4(react@19.2.7)
@@ -400,6 +403,20 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
+
+  '@ilokesto/modal@1.0.3':
+    resolution: {integrity: sha512-JVC2t5TQGFoVeJQn752rFobArleRpkpmcmEcgjM2cBMSu9iBmJVBi/eLLjsWjOFhYSLan3Wt/mcB+brstIDkuQ==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
+  '@ilokesto/overlay@1.0.2':
+    resolution: {integrity: sha512-P4TW24LtSBucSy1B2pivJQua6Z2y9pxz7l56cG2gH/2g6slhRMwL9Snn8zr2Q436WGoCf7mjGPo/tq3zjJWBMg==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+
+  '@ilokesto/store@1.1.1':
+    resolution: {integrity: sha512-fcotz5vU2TLzAywMsNRu7P6hmdVy6aBdhfrvx6NBjWKPIYwaLhaLANj7lLaxJEzujTB1zMPoDAp14t8E0frHfg==}
 
   '@ilokesto/utilinent@1.1.4':
     resolution: {integrity: sha512-9hQ/xhnxI52VK1CtFmz/HO0eL+m7PVjOZ7G4j+EnN51qwaPQaZ6kExW5GqQMHIORtDV0rgBF7nloJXONHLbPzg==}
@@ -2627,6 +2644,19 @@ snapshots:
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/retry@0.4.3': {}
+
+  '@ilokesto/modal@1.0.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@ilokesto/overlay': 1.0.2(react@19.2.7)
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@ilokesto/overlay@1.0.2(react@19.2.7)':
+    dependencies:
+      '@ilokesto/store': 1.1.1
+      react: 19.2.7
+
+  '@ilokesto/store@1.1.1': {}
 
   '@ilokesto/utilinent@1.1.4(react@19.2.7)':
     dependencies:
