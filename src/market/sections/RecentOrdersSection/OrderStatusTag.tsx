@@ -13,7 +13,7 @@ const ORDER_STATUS_DISPLAY = {
     label: "상품 준비중",
     color: "#f59e0b",
   },
-  shipping: {
+  shipped: {
     label: "배송중",
     color: "#8b5cf6",
   },

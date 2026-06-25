@@ -45,7 +45,7 @@ export const ADDRESSES: Address[] = [
 export const MEMBER: Member = { name: "김루퍼", grade: "VIP", point: 4200 };
 
 export const PAST_ORDERS: PastOrder[] = [
-  { id: "o1", summary: "나이키 에어포스 외 1건", status: "shipping", amount: 138000 },
+  { id: "o1", summary: "나이키 에어포스 외 1건", status: "shipped", amount: 138000 },
   { id: "o2", summary: "아메리카노 원두 1kg", status: "delivered", amount: 21000 },
   { id: "o3", summary: "무선 마우스", status: "cancelled", amount: 32000 },
 ];
