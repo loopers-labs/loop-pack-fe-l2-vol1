@@ -17,7 +17,7 @@
       "eslint --max-warnings=0"
     ],
     "*.{ts,tsx,json,css,md}": [
-      "prettier --check"
+      "prettier --write"
     ]
   },
   "dependencies": {
