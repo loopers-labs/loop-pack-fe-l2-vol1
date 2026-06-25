@@ -1,4 +1,5 @@
 import { ProductOrderLine } from "./OrderLines";
+import { Section } from "./Section";
 import type { CartItem } from "./types";
 
 type OrderItemSectionProps = {
@@ -7,8 +8,7 @@ type OrderItemSectionProps = {
 
 export function OrderItemsSection({ cart }: OrderItemSectionProps) {
   return (
-    <div className="section">
-      <h2>주문 상품</h2>
+    <Section title="주문 상품">
       {cart.map((it) => (
         <ProductOrderLine
           key={it.id}
@@ -19,6 +19,6 @@ export function OrderItemsSection({ cart }: OrderItemSectionProps) {
           quantity={it.quantity}
         />
       ))}
-    </div>
+    </Section>
   );
 }

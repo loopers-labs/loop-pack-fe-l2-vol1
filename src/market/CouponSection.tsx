@@ -1,3 +1,4 @@
+import { Section } from "./Section";
 import type { Coupon } from "./types";
 
 type CouponSectionProps = {
@@ -14,8 +15,7 @@ export function CouponSection({
   onApplyCoupon,
 }: CouponSectionProps) {
   return (
-    <div className="section">
-      <h2>쿠폰</h2>
+    <Section title="쿠폰">
       <div className="row">
         <input
           type="text"
@@ -26,6 +26,6 @@ export function CouponSection({
         <button onClick={onApplyCoupon}>적용</button>
       </div>
       {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
-    </div>
+    </Section>
   );
 }

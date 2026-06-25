@@ -32,18 +32,15 @@ export function CheckoutPage() {
   const [pointInput, setPointInput] = useState(0);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("card");
   const [isTermsAgreed, setIsTermsAgreed] = useState(false);
-  const [placed, setPlaced] = useState(false);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
-  // ── 배송비 정책 ──────────────────────────────
   const itemTotal = calculateItemTotal(cart);
   const shippingFee = calculateShippingFee(itemTotal, address.isRemote);
 
-  // ── 쿠폰 정책 ────────────────────────────────
   const couponDiscount = calculateCouponDiscount(appliedCoupon);
 
-  // ── 적립금 정책 ──────────────────────────────
   const pointDiscount = calculatePointDiscount(isUsingPoint, {
     pointInput,
     memberTotalPoint: member.point,
@@ -65,14 +62,14 @@ export function CheckoutPage() {
   };
 
   const handleBackToCheckout = () => {
-    setPlaced(false);
+    setIsOrderPlaced(false);
   };
 
   const handlePlaceOrder = () => {
-    setPlaced(true);
+    setIsOrderPlaced(true);
   };
 
-  if (placed) {
+  if (isOrderPlaced) {
     return <OrderCompleteView finalPrice={finalPrice} onBackToCheckout={handleBackToCheckout} />;
   }
 

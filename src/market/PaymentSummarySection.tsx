@@ -1,4 +1,5 @@
 import { DiscountAmountLine, SummaryAmountLine } from "./OrderLines";
+import { Section } from "./Section";
 import type { Coupon } from "./types";
 
 type PaymentSummarySectionProps = {
@@ -21,8 +22,7 @@ export function PaymentSummarySection({
   finalPrice,
 }: PaymentSummarySectionProps) {
   return (
-    <div className="section">
-      <h2>결제 금액</h2>
+    <Section title="결제 금액">
       <SummaryAmountLine label="상품 금액" amount={itemTotal} />
       <SummaryAmountLine label="배송비" amount={shippingFee} />
       {appliedCoupon ? (
@@ -37,6 +37,6 @@ export function PaymentSummarySection({
         <span>최종 결제 금액</span>
         <strong>{finalPrice.toLocaleString()}원</strong>
       </div>
-    </div>
+    </Section>
   );
 }

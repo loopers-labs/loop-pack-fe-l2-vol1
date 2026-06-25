@@ -1,3 +1,5 @@
+import { Section } from "./Section";
+
 type PointSectionProps = {
   isUsingPoint: boolean;
   memberPoint: number;
@@ -19,8 +21,7 @@ export function PointSection({
     onPointInputChange(finalValue);
   };
   return (
-    <div className="section">
-      <h2>적립금</h2>
+    <Section title="적립금">
       <label>
         <input
           type="checkbox"
@@ -38,6 +39,6 @@ export function PointSection({
           onChange={handleInputChange}
         />
       ) : null}
-    </div>
+    </Section>
   );
 }

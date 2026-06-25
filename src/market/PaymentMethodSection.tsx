@@ -1,4 +1,5 @@
 import type { PaymentMethod } from "./types";
+import { Section } from "./Section";
 
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   card: "신용/체크카드",
@@ -18,8 +19,7 @@ export function PaymentMethodSection({
   onPaymentMethodChange,
 }: PaymentMethodSectionProps) {
   return (
-    <div className="section">
-      <h2>결제수단</h2>
+    <Section title="결제수단">
       {PAYMENT_METHODS.map((m) => (
         <label key={m}>
           <input
@@ -30,6 +30,6 @@ export function PaymentMethodSection({
           {PAYMENT_METHOD_LABELS[m]}
         </label>
       ))}
-    </div>
+    </Section>
   );
 }

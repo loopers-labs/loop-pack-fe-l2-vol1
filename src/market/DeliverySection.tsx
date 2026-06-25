@@ -13,17 +13,17 @@ export function DeliverySection({
   selectedAddressId: string;
   onSelectAddress: (id: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [isAddressListOpen, setIsAddressListOpen] = useState(false);
   const selected = addresses.find((a) => a.id === selectedAddressId)!;
   return (
     <div className="section">
       <div className="row between">
         <h2>배송지</h2>
-        <button className="link" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? "접기" : "변경"}
+        <button className="link" onClick={() => setIsAddressListOpen((v) => !v)}>
+          {isAddressListOpen ? "접기" : "변경"}
         </button>
       </div>
-      {expanded ? (
+      {isAddressListOpen ? (
         <AddressForm
           addresses={addresses}
           selectedAddressId={selectedAddressId}
