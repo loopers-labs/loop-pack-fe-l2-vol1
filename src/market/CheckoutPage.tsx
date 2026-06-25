@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Card } from "./card";
+import { CouponCard } from "./CouponCard";
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
 import { DeliveryMemo } from "./DeliveryMemo";
 import { OrderLineRow } from "./OrderLineRow";
@@ -110,7 +111,7 @@ export function CheckoutPage() {
   const cart = CART;
 
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
-  const [couponCode, setCouponCode] = useState("");
+
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [usePoint, setUsePoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
@@ -136,10 +137,22 @@ export function CheckoutPage() {
   // 최종 금액을 state 에 담아둔다.
   const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount);
 
-  const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim());
-    setAppliedCoupon(found ?? null);
-    if (!found) alert("존재하지 않는 쿠폰이에요");
+  /**
+   * appliedCoupon은 쿠폰 카드뿐 아니라 결제 금액 계산(couponDiscount → finalPrice)도 읽는 공유 상태라 공통 부모인 CheckoutPage에서 관리
+   * 따라서, 그 값을 바꾸는 이 핸들러도 페이지에 둠. CouponCard는 onApply로 "적용" 요청만 실행하도록 분리
+   */
+  const handleApplyCoupon = (code: string) => {
+    const found = COUPONS.find((c) => c.code === code.trim());
+    /**
+     * 못 찾은 경우를 먼저 처리(early return). 성공 케이스를 아래에 두어 "검증 먼저, 처리 나중"
+     * 단일 적용 방식이라, 새 코드가 틀리면 기존에 적용된 쿠폰도 무효화
+     */
+    if (!found) {
+      alert("존재하지 않는 쿠폰이에요");
+      setAppliedCoupon(null);
+      return;
+    }
+    setAppliedCoupon(found);
   };
 
   if (placed) {
@@ -194,21 +207,7 @@ export function CheckoutPage() {
         </Card.Body>
       </Card>
 
-      <Card>
-        <Card.Title>쿠폰</Card.Title>
-        <Card.Body>
-          <div className="row">
-            <input
-              type="text"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
-              placeholder="쿠폰 코드 (예: WELCOME5000)"
-            />
-            <button onClick={applyCoupon}>적용</button>
-          </div>
-          {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
-        </Card.Body>
-      </Card>
+      <CouponCard appliedCoupon={appliedCoupon} onApply={handleApplyCoupon} />
 
       <Card>
         <Card.Title>적립금</Card.Title>
