@@ -1,74 +1,43 @@
 # CONVENTIONS.md
 
-## 1. 언어 & 타입
+## 1. 타입
 
-- TypeScript strict 모드 필수 (`"strict": true`)
-- `any` 타입 사용 금지 — 모르면 `unknown` 사용
-- Non-null assertion(`!`) 사용 금지 — 옵셔널 체이닝(`?.`)·타입가드 사용
 - 모든 함수·컴포넌트에 명시적 반환 타입 작성
-- type vs interface: 객체 형태는 `interface`, 유니언·인터섹션은 `type`
+- 객체 형태는 `interface`, 유니언·인터섹션은 `type`
+- `any` · `!` 사용이 불가피하면 반드시 사유 주석 작성
+
+```ts
+// ⚠️ 서버 API 응답 타입 미확정 — 3주차에 교체 예정
+const data = res as any
+```
 
 ## 2. 컴포넌트
 
 - 컴포넌트는 named export (default export 금지)
 - 파일당 컴포넌트 1개, 파일명과 컴포넌트명 일치
 - Props 타입은 `interface ComponentNameProps` 형식
-- 훅은 컴포넌트 최상단에 선언, 조건부 호출 금지
+- 파생값은 state/effect 동기화 말고 렌더 중 계산
 
 ```tsx
-// Good
-interface ButtonProps {
-  label: string
-  onClick: () => void
-}
+// Good — 렌더 중 계산
+const total = items.reduce((sum, item) => sum + item.price, 0)
 
-export function Button({ label, onClick }: ButtonProps) {
-  return <button onClick={onClick}>{label}</button>
-}
+// Bad — 불필요한 state
+const [total, setTotal] = useState(0)
+useEffect(() => setTotal(items.reduce(...)), [items])
 ```
 
-## 3. 파일 구조
+## 3. 네이밍
 
-```
-src/
-  components/   # 재사용 UI 컴포넌트
-  hooks/        # 커스텀 훅 (use 접두사)
-  pages/        # 라우트별 페이지 컴포넌트
-  types/        # 공유 타입 정의
-  utils/        # 순수 함수 유틸리티
-```
+| 대상              | 규칙                   | 예시              |
+| ----------------- | ---------------------- | ----------------- |
+| 컴포넌트          | PascalCase             | `ProductCard`     |
+| 훅                | camelCase + use 접두사 | `useCartTotal`    |
+| 유틸 함수         | camelCase              | `formatPrice`     |
+| 타입 / 인터페이스 | PascalCase             | `OrderItem`       |
+| 상수              | UPPER_SNAKE_CASE       | `MAX_RETRY_COUNT` |
 
-## 4. 네이밍
+## 4. 기타
 
-| 대상              | 규칙                   | 예시               |
-| ----------------- | ---------------------- | ------------------ |
-| 컴포넌트          | PascalCase             | `ProductCard`      |
-| 훅                | camelCase + use 접두사 | `useCartTotal`     |
-| 유틸 함수         | camelCase              | `formatPrice`      |
-| 타입 / 인터페이스 | PascalCase             | `OrderItem`        |
-| 상수              | UPPER_SNAKE_CASE       | `MAX_RETRY_COUNT`  |
-| CSS 파일          | kebab-case             | `product-card.css` |
-
-## 5. 스타일
-
-- Prettier 설정을 따름 (`semi: false`, `singleQuote: true`, `tabWidth: 2`)
-- CSS는 컴포넌트와 같은 폴더에 위치
-- 인라인 스타일 사용 금지 — CSS 파일 또는 CSS Modules 사용
-
-## 6. 금지 패턴
-
-```tsx
-// ❌ any
-const data: any = fetchData()
-
-// ❌ Non-null assertion
-const el = document.getElementById('root')!
-
-// ❌ console.log (warn/error만 허용)
-console.log('debug')
-
-// ❌ == 대신 ===
-if (value == null)
-  // ❌ default export
-  export default function MyComponent() {}
-```
+- 조건부 얼리리턴은 모든 분기에서 통일
+- 의미없는 숫자 리터럴 금지 — 상수로 추출

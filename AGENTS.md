@@ -21,7 +21,7 @@ React 19 + Vite + TypeScript 프론트엔드. 1차 하네스(ESLint · Prettier 
   - tsconfig, vite 등 환경설정 변경
 - 🚫 **Never**:
   - `.env` · API 키 등 시크릿 커밋, 환경별 값 하드코딩
-  - `any` · `!` · `@ts-ignore` · `eslint-disable`로 타입 침묵
+  - `@ts-ignore` · `eslint-disable`로 린터·타입 검사 침묵
   - 존재하지 않는 패키지 · API import (환각 금지)
 
 ## 1차 하네스
