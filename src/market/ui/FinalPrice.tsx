@@ -1,10 +1,11 @@
 import { MEMBER } from '../data';
-import { OrderLineRow } from './OrderLineRow';
+import { PriceLineRow } from './PriceLineRow';
 import { Price } from './Price';
 import type { Coupon } from '../types/types';
 import { SectionContainer } from '../../shared/ui/container';
 
 // TODO: 전달받는 props에 파생값이 포함되어 있지 않은지 확인하기
+// 적립금 적용 시 최종 금액 확인하기
 export const FinalPrice = ({
   itemTotal,
   shippingFee,
@@ -25,20 +26,19 @@ export const FinalPrice = ({
   const member = MEMBER;
   return (
     <SectionContainer title="결제 금액">
-      <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-      <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
+      {/* TODO: label prop 없이도 표시 가능*/}
+      <PriceLineRow type="subtotal" amount={itemTotal} />
+      <PriceLineRow type="shipping" amount={shippingFee} />
       {appliedCoupon ? (
-        <OrderLineRow
+        // TODO: isDiscount는 couponDiscount로 판단 가능
+        <PriceLineRow
           type="coupon"
-          label="쿠폰 할인"
           amount={couponDiscount}
           isDiscount
           couponCode={appliedCoupon.code}
         />
       ) : null}
-      {usePoint ? (
-        <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-      ) : null}
+      {usePoint ? <PriceLineRow type="point" amount={pointDiscount} isDiscount /> : null}
       <div className="total">
         <span>최종 결제 금액</span>
         <Price amount={finalPrice} member={member} />

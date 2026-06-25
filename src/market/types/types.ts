@@ -37,3 +37,5 @@ export type PastOrder = {
   status: OrderStatus;
   amount: number;
 };
+
+export type PriceType = 'subtotal' | 'shipping' | 'coupon' | 'point';

@@ -18,7 +18,6 @@ import { ModalProvider } from '../shared/ui/modal/ModalProvider';
 import { TermsModal } from './ui/TermsModal';
 
 // 결제 페이지 전체의 흐름과 레이아웃이라는 페이지 컴포넌트 본연의 역할에만 집중할 수 있도록(1, 2, 3 위배)
-// TODO: 하위 컴포넌트로 전달하는 props의 성격 확인하기
 export function CheckoutPage() {
   const member = MEMBER;
   const cart = CART;
