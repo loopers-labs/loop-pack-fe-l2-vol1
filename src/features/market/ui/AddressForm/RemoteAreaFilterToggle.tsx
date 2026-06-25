@@ -1,4 +1,4 @@
-import { Label } from '@/shared/ui'
+import { Checkbox, Label } from '@/shared/ui'
 
 export function RemoteAreaFilterToggle({
   onlyNear,
@@ -9,8 +9,7 @@ export function RemoteAreaFilterToggle({
 }) {
   return (
     <Label className="mb-1 text-[13px] opacity-80">
-      <input
-        type="checkbox"
+      <Checkbox
         checked={onlyNear}
         onChange={(e) => {
           setOnlyNear(e.target.checked)

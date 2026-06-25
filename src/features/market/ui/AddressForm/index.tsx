@@ -2,6 +2,7 @@ import { For } from '@ilokesto/utilinent'
 import { useState } from 'react'
 
 import type { Address } from '@/entities/market'
+import { RadioGroup } from '@/shared/ui'
 
 import { AddressField } from './AddressField'
 import { RemoteAreaFilterToggle } from './RemoteAreaFilterToggle'
@@ -22,16 +23,18 @@ export function AddressForm({
   return (
     <>
       <RemoteAreaFilterToggle onlyNear={onlyNear} setOnlyNear={setOnlyNear} />
-      <For each={list}>
-        {(address) => (
-          <AddressField
-            key={address.id}
-            address={address}
-            selected={address.id === selectedAddressId}
-            onSelect={onSelectAddress}
-          />
-        )}
-      </For>
+      <RadioGroup legend="배송지 선택" legendClassName="sr-only">
+        <For each={list}>
+          {(address) => (
+            <AddressField
+              key={address.id}
+              address={address}
+              selected={address.id === selectedAddressId}
+              onSelect={onSelectAddress}
+            />
+          )}
+        </For>
+      </RadioGroup>
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { Show } from '@ilokesto/utilinent'
 
 import type { Address } from '@/entities/market'
-import { Label } from '@/shared/ui'
+import { Label, Radio } from '@/shared/ui'
 
 type AddressFieldProps = {
   address: Address
@@ -16,8 +16,9 @@ export function AddressField({
 }: AddressFieldProps) {
   return (
     <Label>
-      <input
-        type="radio"
+      <Radio
+        name="delivery-address"
+        value={address.id}
         checked={selected}
         onChange={() => {
           onSelect(address.id)
