@@ -33,9 +33,7 @@ const PAYMENT_OPTIONS = [
 export function CheckoutPage() {
   const addresses = marketService.getAddresses()
   const cartItems = marketService.getCartItems()
-  const coupons = marketService.getCoupons()
   const member = marketService.getMember()
-  const pastOrders = marketService.getPastOrders()
 
   const [selectedAddressId, setSelectedAddressId] = useState(
     addresses[0]?.id ?? '',
@@ -89,7 +87,6 @@ export function CheckoutPage() {
       <OrderItemsSection items={cartItems} />
 
       <CouponCodeSection
-        coupons={coupons}
         appliedCoupon={appliedCoupon}
         onAppliedCoupon={setAppliedCoupon}
       />
@@ -124,7 +121,7 @@ export function CheckoutPage() {
         {priceQuote.memberDisplayPrice.toLocaleString()}원 결제하기
       </Button>
 
-      <RecentOrderSection orders={pastOrders} />
+      <RecentOrderSection />
     </Show.div>
   )
 }
