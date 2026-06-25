@@ -23,6 +23,7 @@
 - 이벤트 핸들러 네이밍: **Props는 `on{Event}`, 내부 함수는 `handle{Event}`**
 - 조건부 렌더링은 **early return** 우선 (단, **모든 hook 호출 뒤에서**)
 - **파생 가능한 값은 `useState`+`useEffect`로 동기화하지 말고 렌더 중에 계산한다** (최중요 패턴)
+- 동시에 성립할 수 없는 상태는 boolean 여러 개나 optional props 묶음이 아니라 union 모델로 표현한다
 - 이름에 의도를 담는다 — `data`/`temp`/`flag`/`doStuff` 금지
 
 ## 코드 리뷰 규칙
