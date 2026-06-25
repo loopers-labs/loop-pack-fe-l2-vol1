@@ -33,10 +33,14 @@ export default defineConfig(
       "react-hooks": reactHooks,
       "@eslint-community/eslint-comments": eslintComments,
     },
+    linterOptions: {
+      reportUnusedDisableDirectives: "error", // 더 이상 필요 없는 disable은 게이트가 차단(부채 청소)
+    },
     rules: {
-      // ── 게이트 차단: 타입 단언 및 eslint-disable 주석 ──
+      // ── 게이트 차단: 타입 단언 금지 + disable은 룰명·사유 필수(죽은 disable도 차단) ──
       "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }], // `as Foo` 단언 금지(타입 에러 우회 통로). `as const`는 자동 예외.
-      "@eslint-community/eslint-comments/no-use": "error", // eslint-disable 류 주석 전면 금지(룰을 끄는 행위 자체를 차단)
+      "@eslint-community/eslint-comments/require-description": ["error", { ignore: [] }], // disable엔 `-- 사유` 필수(맹목적 비활성화 차단)
+      "@eslint-community/eslint-comments/no-unlimited-disable": "error", // 룰명 없는 광역 disable 금지(반드시 룰 지정)
 
       // ── React: 훅/렌더 정확성 ──
       // (recommended를 통으로 켜지 않고, 과제 "좋은 코드 기준"에 직결되는 것만 선별)
