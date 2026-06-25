@@ -128,12 +128,13 @@
   font-weight: 600;
 }
 .checkout .pay:disabled {
-  opacity: 0.45;
+  background: #9ca3af;
+  color: #fff;
   cursor: not-allowed;
 }
 .checkout .addr {
   font-size: 14px;
-  align-items: flex-start;
+  align-items: center;
 }
 .checkout .modal {
   position: fixed;
@@ -157,4 +158,9 @@
   padding: 3px 9px;
   border-radius: 999px;
   white-space: nowrap;
+  color: #fff;
+}
+.checkout .addr-remote {
+  color: #f59e0b;
+  display: inline;
 }
