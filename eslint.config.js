@@ -32,7 +32,7 @@ export default defineConfig([
             "no-eval": "error", //eval() 금지 : 악성 스크립트 실행 방지 (XSS 공격 방지)
             "no-console": "warn", //console.log 잔재 확인 : 개발 중 디버깅 용으로 사용할 수 있어 warn으로 처리. (CI/CD 도입 시 error로 분기처리 필요)
             "@typescript-eslint/no-explicit-any": "error", //any 사용 막기 :  any사용시 타입 검사가 없어 ts확인 불가능. 타입 확인 강제하기 위해서 사용
-            "@typescript-eslint/ban-ts-comment": "error", //@ts-ignore, @ts-nocheck 같은 주석으로 TypeScript 에러를 숨기는거 방지
+            "@typescript-eslint/ban-ts-comment": "error", //ts-ignore, ts-nocheck 같은 주석으로 TypeScript 에러를 숨기는거 방지
             "no-magic-numbers": [
                 "error",
                 {"ignore": [0, 1, -1]}
