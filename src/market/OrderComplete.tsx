@@ -1,11 +1,15 @@
 import { SectionCard } from './SectionCard';
+import { getOrderAmount } from './getOrderAmount';
+import type { CheckoutState } from './types';
 
-type Props = {
-  finalPrice: number;
+type OrderCompleteProps = {
+  checkoutForm: CheckoutState;
   onBack: () => void;
 };
 
-export function OrderComplete({ finalPrice, onBack }: Props) {
+export function OrderComplete({ checkoutForm, onBack }: OrderCompleteProps) {
+  const { finalPrice } = getOrderAmount(checkoutForm);
+
   return (
     <div className="checkout">
       <h1>주문 완료</h1>

@@ -6,7 +6,7 @@ const FREE_SHIPPING_THRESHOLD = 50000;
 const REMOTE_AREA_SURCHARGE = 3000;
 const VIP_DISCOUNT_RATE = 0.1;
 
-export function useOrderAmount(state: CheckoutState) {
+export function getOrderAmount(state: CheckoutState) {
   const address =
     ADDRESSES.find((a) => a.id === state.addressId) ?? ADDRESSES[0];
 
