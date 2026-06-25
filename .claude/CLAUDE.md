@@ -13,29 +13,6 @@
 
 ---
 
-## 프로젝트 디렉토리 구조
-
-> 모든 디렉토리는 기능 단위로 레이어가 나뉘어있으며, 하위로 {Domain} 디렉토리가 존재합니다.
-> 예: `src/api/` 디렉토리는 `api` 기능 단위로 레이어가 나뉘어있으며, 하위로 `auth` 디렉토리가 존재합니다.
-
-```
-src/
-  api/          ← SRP 를 준수한 api 함수
-  services/     ← React Query 훅 과 도메인에 맞는 쿼리키
-  components/   ← 공통 UI 컴포넌트
-  hooks/        ← 공통 커스텀 hook
-  utils/        ← 공통 util 함수
-  constants/    ← 공통 상수
-  types/        ← 도메인 별 공통 타입
-  lib/          ← 외부 모듈
-  store/        ← zustand store
-  routes/       ← SPA Route 담당
-.claude/
-  CLAUDE.md     ← 현재 파일
-```
-
----
-
 ## 빌드 & 테스트 명령어
 
 ```bash
@@ -73,7 +50,6 @@ pnpm type
      - TODO 삭제"
     ```
 
-> 상세 컨벤션 → [skills/conventions/SKILL.md](skills/conventions/SKILL.md)
 > 커밋 컨벤션 → [skills/commit/SKILL.md](skills/commit/SKILL.md)
 
 ---
