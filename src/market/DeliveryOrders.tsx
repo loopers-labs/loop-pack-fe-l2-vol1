@@ -1,4 +1,4 @@
-import { OrderLineRow } from './OrderLineRow'
+import { ProductLine } from './OrderLines'
 import { useCheckout } from './context'
 
 export function DeliveryOrders() {
@@ -7,15 +7,7 @@ export function DeliveryOrders() {
     <div className="section">
       <h2>주문 상품</h2>
       {cart.map((it) => (
-        <OrderLineRow
-          key={it.id}
-          type="product"
-          label={it.name}
-          amount={it.price * it.quantity}
-          thumbnail={it.thumbnail}
-          option={it.option}
-          quantity={it.quantity}
-        />
+        <ProductLine key={it.id} item={it} />
       ))}
     </div>
   )

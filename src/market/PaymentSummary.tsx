@@ -1,5 +1,5 @@
 import { Price } from './Price'
-import { OrderLineRow } from './OrderLineRow'
+import { SubtotalLine, ShippingLine, CouponLine, PointLine } from './OrderLines'
 import { useCheckout } from './context'
 
 export function PaymentSummary() {
@@ -9,20 +9,10 @@ export function PaymentSummary() {
   return (
     <div className="section">
       <h2>결제 금액</h2>
-      <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-      <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-      {appliedCoupon ? (
-        <OrderLineRow
-          type="coupon"
-          label="쿠폰 할인"
-          amount={couponDiscount}
-          isDiscount
-          couponCode={appliedCoupon.code}
-        />
-      ) : null}
-      {usePoint ? (
-        <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-      ) : null}
+      <SubtotalLine amount={itemTotal} />
+      <ShippingLine amount={shippingFee} />
+      {appliedCoupon ? <CouponLine amount={couponDiscount} code={appliedCoupon.code} /> : null}
+      {usePoint ? <PointLine amount={pointDiscount} /> : null}
       <div className="total">
         <span>최종 결제 금액</span>
         <Price amount={finalPrice} member={member} />
