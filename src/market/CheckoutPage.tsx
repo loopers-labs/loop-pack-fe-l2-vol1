@@ -14,10 +14,14 @@ import {
 import { OrderLineRow } from '@/features/market'
 import {
   Button,
+  Checkbox,
   Heading,
+  Input,
   Label,
   Modal,
   Price,
+  Radio,
+  RadioGroup,
   SectionCard,
   Textarea,
 } from '@/shared/ui'
@@ -130,8 +134,8 @@ export function CheckoutPage() {
       <SectionCard>
         <Heading.H2>쿠폰</Heading.H2>
         <div className="flex gap-2">
-          <input
-            className="box-border w-full flex-1 rounded-lg border border-(--border) bg-(--bg) px-2.5 py-2.25 font-[inherit] text-sm text-(--text-h)"
+          <Input
+            aria-label="쿠폰 코드"
             type="text"
             value={couponCode}
             onChange={(e) => {
@@ -153,8 +157,7 @@ export function CheckoutPage() {
       <SectionCard>
         <Heading.H2>적립금</Heading.H2>
         <Label>
-          <input
-            type="checkbox"
+          <Checkbox
             checked={usePoint}
             onChange={(e) => {
               setUsePoint(e.target.checked)
@@ -163,8 +166,8 @@ export function CheckoutPage() {
           적립금 사용 (보유 {member.point.toLocaleString()}P)
         </Label>
         <Show when={usePoint}>
-          <input
-            className="box-border w-full flex-1 rounded-lg border border-(--border) bg-(--bg) px-2.5 py-2.25 font-[inherit] text-sm text-(--text-h)"
+          <Input
+            aria-label="사용할 적립금"
             type="number"
             value={pointInput}
             onChange={(e) => {
@@ -176,20 +179,22 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>결제수단</Heading.H2>
-        <For each={PAYMENT_METHODS}>
-          {(method) => (
-            <Label key={method}>
-              <input
-                type="radio"
-                checked={payment === method}
-                onChange={() => {
-                  setPayment(method)
-                }}
-              />
-              {PAYMENT_LABEL[method]}
-            </Label>
-          )}
-        </For>
+        <RadioGroup legend="결제수단" legendClassName="sr-only">
+          <For each={PAYMENT_METHODS}>
+            {(method) => (
+              <Label key={method}>
+                <Radio
+                  name="payment"
+                  checked={payment === method}
+                  onChange={() => {
+                    setPayment(method)
+                  }}
+                />
+                {PAYMENT_LABEL[method]}
+              </Label>
+            )}
+          </For>
+        </RadioGroup>
       </SectionCard>
 
       <SectionCard>
@@ -216,8 +221,7 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Label>
-          <input
-            type="checkbox"
+          <Checkbox
             checked={agreed}
             onChange={(e) => {
               setAgreed(e.target.checked)
