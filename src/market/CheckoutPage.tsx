@@ -10,15 +10,16 @@ import {
   calculateItemTotal,
   calculatePointDiscount,
 } from "./checkoutPrice";
-import { CouponSection } from "./CouponSection";
-import { PointSection } from "./PointSection";
-import { PaymentMethodSection } from "./PaymentMethodSection";
-import { TermsAgreementSection } from "./TermsAgreementSection";
-import { PaymentSummarySection } from "./PaymentSummarySection";
-import { RecentOrdersSection } from "./RecentOrdersSection";
-import { DeliverySection } from "./DeliverySection";
-import { DeliveryMemoSection } from "./DeliveryMemoSection";
-import { OrderItemsSection } from "./OrderItemsSection";
+
+import { TermsAgreementSection } from "./sections/TermsAgreementSection";
+import { RecentOrdersSection } from "./sections/RecentOrdersSection";
+import { DeliverySection } from "./sections/DeliverySection";
+import { DeliveryMemoSection } from "./sections/DeliveryMemoSection";
+import { OrderItemsSection } from "./sections/OrderItemsSection";
+import { CouponSection } from "./sections/CouponSection";
+import { PaymentMethodSection } from "./sections/PaymentMethodSection";
+import { PaymentSummarySection } from "./sections/PaymentSummarySection";
+import { PointSection } from "./sections/PointSection";
 import { OrderCompleteView } from "./OrderCompleteView";
 
 export function CheckoutPage() {

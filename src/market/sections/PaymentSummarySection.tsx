@@ -1,6 +1,6 @@
-import { DiscountAmountLine, SummaryAmountLine } from "./OrderLines";
-import { Section } from "./Section";
-import type { Coupon } from "./types";
+import type { Coupon } from "../types";
+import { DiscountAmountLine, SummaryAmountLine } from "../ui/OrderLines";
+import { Section } from "../ui/Section";
 
 type PaymentSummarySectionProps = {
   itemTotal: number;

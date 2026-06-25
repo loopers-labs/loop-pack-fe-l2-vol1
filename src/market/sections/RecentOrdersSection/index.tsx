@@ -1,6 +1,7 @@
-import { PAST_ORDERS } from "./data";
+import { PAST_ORDERS } from "../../data";
+
 import { OrderStatusTag } from "./OrderStatusTag";
-import { Section } from "./Section";
+import { Section } from "../../ui/Section";
 
 export function RecentOrdersSection() {
   return (

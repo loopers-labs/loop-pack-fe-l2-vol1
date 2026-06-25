@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Section } from "./Section";
+import { Section } from "../ui/Section";
 
 export function DeliveryMemoSection() {
   const [memo, setMemo] = useState("");

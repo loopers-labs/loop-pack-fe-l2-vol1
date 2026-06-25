@@ -1,7 +1,6 @@
 // '도서산간 제외' 필터는 스스로 책임진다.
-
 import { useState } from "react";
-import type { Address } from "./types";
+import type { Address } from "../../types";
 import { AddressField } from "./AddressField";
 
 // 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.

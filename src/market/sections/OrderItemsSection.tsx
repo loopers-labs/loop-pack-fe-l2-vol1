@@ -1,6 +1,6 @@
-import { ProductOrderLine } from "./OrderLines";
-import { Section } from "./Section";
-import type { CartItem } from "./types";
+import type { CartItem } from "../types";
+import { ProductOrderLine } from "../ui/OrderLines";
+import { Section } from "../ui/Section";
 
 type OrderItemSectionProps = {
   cart: CartItem[];

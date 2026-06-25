@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Address } from "./types";
+import type { Address } from "../../types";
 import { AddressForm } from "./AddressForm";
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.

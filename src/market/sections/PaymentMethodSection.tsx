@@ -1,5 +1,5 @@
-import type { PaymentMethod } from "./types";
-import { Section } from "./Section";
+import type { PaymentMethod } from "../types";
+import { Section } from "../ui/Section";
 
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   card: "신용/체크카드",

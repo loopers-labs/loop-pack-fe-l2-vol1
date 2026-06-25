@@ -1,5 +1,5 @@
-import { Section } from "./Section";
-import type { Coupon } from "./types";
+import type { Coupon } from "../types";
+import { Section } from "../ui/Section";
 
 type CouponSectionProps = {
   couponCodeInput: string;
