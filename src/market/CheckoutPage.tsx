@@ -6,6 +6,10 @@ import { OrderLineRow } from './OrderLineRow';
 import { OrderStatusTag } from './OrderStatusTag';
 import { DeliveryMemo } from './DeliveryMemo';
 import './market.css';
+import {
+  AddressSelectionContext,
+  useAddressSelection,
+} from './AddressSelectionContext';
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
@@ -18,11 +22,9 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
 function DeliverySection({
   addresses,
   selectedAddressId,
-  onSelectAddress,
 }: {
   addresses: Address[];
   selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const selected =
@@ -39,7 +41,6 @@ function DeliverySection({
         <AddressForm
           addresses={addresses}
           selectedAddressId={selectedAddressId}
-          onSelectAddress={onSelectAddress}
         />
       ) : (
         <p className="addr-summary">
@@ -55,11 +56,9 @@ function DeliverySection({
 function AddressForm({
   addresses,
   selectedAddressId,
-  onSelectAddress,
 }: {
   addresses: Address[];
   selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
 }) {
   const [onlyNear, setOnlyNear] = useState(false);
   const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
@@ -78,7 +77,6 @@ function AddressForm({
           key={a.id}
           address={a}
           selected={a.id === selectedAddressId}
-          onSelect={onSelectAddress}
         />
       ))}
     </>
@@ -88,18 +86,17 @@ function AddressForm({
 function AddressField({
   address,
   selected,
-  onSelect,
 }: {
   address: Address;
   selected: boolean;
-  onSelect: (id: string) => void;
 }) {
+  const { onSelectAddress } = useAddressSelection();
   return (
     <label className="addr">
       <input
         type="radio"
         checked={selected}
-        onChange={() => onSelect(address.id)}
+        onChange={() => onSelectAddress(address.id)}
       />
       <span>
         {address.label} · {address.recipient} ({address.detail})
@@ -170,13 +167,14 @@ export function CheckoutPage() {
   return (
     <div className="checkout">
       <h1>주문/결제</h1>
-
-      <DeliverySection
-        addresses={ADDRESSES}
-        selectedAddressId={selectedAddressId}
-        onSelectAddress={setSelectedAddressId}
-      />
-
+      <AddressSelectionContext.Provider
+        value={{ onSelectAddress: setSelectedAddressId }}
+      >
+        <DeliverySection
+          addresses={ADDRESSES}
+          selectedAddressId={selectedAddressId}
+        />
+      </AddressSelectionContext.Provider>
       <div className="section">
         <h2>배송 요청사항</h2>
         <DeliveryMemo />
