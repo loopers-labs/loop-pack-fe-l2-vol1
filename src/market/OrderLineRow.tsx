@@ -1,26 +1,17 @@
-type OrderLineType = 'product' | 'subtotal' | 'shipping' | 'coupon' | 'point'
+type OrderLineType = 'product' | 'subtotal' | 'shipping' | 'coupon' | 'point';
 
 type Props = {
-  type: OrderLineType
-  label: string
-  amount: number
-  thumbnail?: string
-  option?: string
-  quantity?: number
-  isDiscount?: boolean
-  couponCode?: string
-}
+  type: OrderLineType;
+  label: string;
+  amount: number;
+  thumbnail?: string;
+  option?: string;
+  quantity?: number;
+  isDiscount?: boolean;
+  couponCode?: string;
+};
 
-export function OrderLineRow({
-  type,
-  label,
-  amount,
-  thumbnail,
-  option,
-  quantity,
-  isDiscount,
-  couponCode,
-}: Props) {
+export function OrderLineRow({ type, label, amount, thumbnail, option, quantity, isDiscount, couponCode }: Props) {
   return (
     <div className="line">
       {type === 'product' && <span className="thumb">{thumbnail}</span>}
@@ -39,5 +30,5 @@ export function OrderLineRow({
       </strong>
       {/* 새 줄 타입(부분취소, 선물포장, 결제수단별 즉시할인...)이 생길 때마다 위 분기가 늘어난다 */}
     </div>
-  )
+  );
 }
