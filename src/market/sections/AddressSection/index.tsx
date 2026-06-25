@@ -1,43 +1,39 @@
 import { useState } from 'react';
+import type { Address } from '../../types/address.types';
 import { Section } from '../../../common/components/Section.tsx';
-import { ADDRESSES } from '../../data.ts';
 import { AddressForm } from './AddressForm.tsx';
 
 type AddressSectionProps = {
   onRemoteChange: (isRemote: boolean) => void;
 };
 
+//주문/결제 페이지에서 배송지Section은 변경/접기에 대한 컨트롤만 함
 export function AddressSection({ onRemoteChange }: AddressSectionProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
-  const selectedAddress = ADDRESSES.find((a) => a.id === selectedAddressId)!;
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
-  const handleSelectAddress = (id: string) => {
-    setSelectedAddressId(id);
-    const next = ADDRESSES.find((a) => a.id === id)!;
-    onRemoteChange(next.isRemote);
+  const handleSelectAddress = (address: Address) => {
+    onRemoteChange(address.isRemote);
+    setSelectedAddress(address);
   };
 
   return (
     <Section
       title="배송지"
       rightSlot={
-        <button className="link" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? '접기' : '변경'}
+        <button className="link" onClick={() => setIsExpanded((v) => !v)}>
+          {isExpanded ? '접기' : '변경'}
         </button>
       }
     >
-      {expanded ? (
-        <AddressForm
-          addresses={ADDRESSES}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={handleSelectAddress}
-        />
-      ) : (
+      {!isExpanded && (
         <p className="addr-summary">
-          {selectedAddress.label} · {selectedAddress.recipient} ({selectedAddress.detail})
+          {selectedAddress?.label} · {selectedAddress?.recipient} ({selectedAddress?.detail})
         </p>
       )}
+      <div hidden={!isExpanded}>
+        <AddressForm onSelectAddress={handleSelectAddress} />
+      </div>
     </Section>
   );
 }

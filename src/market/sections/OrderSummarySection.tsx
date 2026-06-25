@@ -1,4 +1,3 @@
-import type { Coupon } from '../types/coupon.types';
 import { getPriceText } from '../../utils.ts';
 import { Section } from '../../common/components/Section.tsx';
 import { LineRow } from '../../common/components/LineRow.tsx';
@@ -7,18 +6,18 @@ import { PriceInfo } from '../../common/components/PriceInfo.tsx';
 type Props = {
   itemTotal: number;
   shippingFee: number;
-  appliedCoupon: Coupon | null;
+  couponDiscount: number;
   pointDiscount: number;
-  membershipDiscount: number;
+  gradeDiscount: number;
   finalPrice: number;
 };
 
 export function OrderSummarySection({
   itemTotal,
   shippingFee,
-  appliedCoupon,
+  couponDiscount,
   pointDiscount,
-  membershipDiscount,
+  gradeDiscount,
   finalPrice,
 }: Props) {
   return (
@@ -29,15 +28,14 @@ export function OrderSummarySection({
       <LineRow rightSlot={<PriceInfo amount={shippingFee} />}>
         <span>{'배송비'}</span>
       </LineRow>
-      {membershipDiscount > 0 ? (
-        <LineRow rightSlot={<PriceInfo amount={membershipDiscount} isDiscount />}>
-          <span>{'멤버십 할인'}</span>
+      {gradeDiscount > 0 ? (
+        <LineRow rightSlot={<PriceInfo amount={gradeDiscount} isDiscount />}>
+          <span>{'등급 할인'}</span>
         </LineRow>
       ) : null}
-      {appliedCoupon ? (
-        <LineRow rightSlot={<PriceInfo amount={appliedCoupon.discount} isDiscount />}>
+      {couponDiscount > 0 ? (
+        <LineRow rightSlot={<PriceInfo amount={couponDiscount} isDiscount />}>
           <span>{'쿠폰 할인'}</span>
-          <small>{appliedCoupon.code}</small>
         </LineRow>
       ) : null}
       {pointDiscount > 0 ? (
