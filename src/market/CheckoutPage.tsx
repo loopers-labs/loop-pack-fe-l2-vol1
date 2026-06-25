@@ -35,10 +35,10 @@ export function CheckoutPage() {
     shippingFee,
     gradeDiscount,
     gradeDiscountItemTotal,
-    couponDiscount,
+    selectedCoupon,
     pointDiscount,
     finalPrice,
-    setCouponDiscount,
+    setSelectedCoupon,
     setPointDiscount,
   } = useCheckout(cart, member, isRemoteAddress);
 
@@ -51,10 +51,11 @@ export function CheckoutPage() {
       finalPrice,
     };
     setPlaced(true);
+    console.log(_orderData);
   };
 
   const handleGoBack = () => {
-    setCouponDiscount(0); // 훅 상태
+    setSelectedCoupon(null);
     setPointDiscount(0);
     setAgreed(false);
     setSelectedAddress(null);
@@ -76,11 +77,11 @@ export function CheckoutPage() {
 
       <CartSection items={cart} />
 
-      <CouponSection onDiscountChange={setCouponDiscount} />
+      <CouponSection onCouponChange={setSelectedCoupon} />
 
       <PointSection
         availablePoint={member.point}
-        payableAmount={gradeDiscountItemTotal - couponDiscount}
+        payableAmount={gradeDiscountItemTotal - (selectedCoupon?.discount ?? 0)}
         onPointDiscountChange={setPointDiscount}
       />
 
@@ -89,7 +90,7 @@ export function CheckoutPage() {
       <SummarySection
         itemTotal={itemTotal}
         shippingFee={shippingFee}
-        couponDiscount={couponDiscount}
+        selectedCoupon={selectedCoupon}
         pointDiscount={pointDiscount}
         gradeDiscount={gradeDiscount}
         finalPrice={finalPrice}

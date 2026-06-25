@@ -2,11 +2,12 @@ import { getPriceText } from '@/utils.ts';
 import { Section } from '@/common/components/Section.tsx';
 import { LineRow } from '@/common/components/LineRow.tsx';
 import { PriceInfo } from '@/common/components/PriceInfo.tsx';
+import type { Coupon } from '@/market/types/coupon.types.ts';
 
 type SummarySectionProps = {
   itemTotal: number;
   shippingFee: number;
-  couponDiscount: number;
+  selectedCoupon: Coupon | null;
   pointDiscount: number;
   gradeDiscount: number;
   finalPrice: number;
@@ -15,7 +16,7 @@ type SummarySectionProps = {
 export function SummarySection({
   itemTotal,
   shippingFee,
-  couponDiscount,
+  selectedCoupon,
   pointDiscount,
   gradeDiscount,
   finalPrice,
@@ -33,9 +34,10 @@ export function SummarySection({
           <span>{'등급 할인'}</span>
         </LineRow>
       ) : null}
-      {couponDiscount > 0 ? (
-        <LineRow rightSlot={<PriceInfo amount={couponDiscount} isDiscount />}>
+      {selectedCoupon ? (
+        <LineRow rightSlot={<PriceInfo amount={selectedCoupon?.discount} isDiscount />}>
           <span>{'쿠폰 할인'}</span>
+          <small>{selectedCoupon?.label}</small>
         </LineRow>
       ) : null}
       {pointDiscount > 0 ? (

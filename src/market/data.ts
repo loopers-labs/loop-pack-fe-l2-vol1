@@ -46,7 +46,7 @@ export const ADDRESSES: Address[] = [
   { id: 'a3', label: '본가', recipient: '김부모', detail: '제주시 첨단로 200', isRemote: true },
 ];
 
-export const MEMBER: Member = { name: '김루퍼', grade: 'VIP', point: 600000 };
+export const MEMBER: Member = { name: '김루퍼', grade: 'VIP', point: 45000 };
 
 export const PAST_ORDERS: PastOrder[] = [
   { id: 'o1', summary: '나이키 에어포스 외 1건', status: 'shipped', amount: 138000 },

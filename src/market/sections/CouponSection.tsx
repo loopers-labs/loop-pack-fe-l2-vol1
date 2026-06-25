@@ -4,19 +4,19 @@ import { Section } from '@/common/components/Section.tsx';
 import { COUPONS } from '@/market/data.ts';
 
 type CouponSectionProps = {
-  onDiscountChange: (discount: number) => void;
+  onCouponChange: (coupon: Coupon | null) => void;
 };
 
 // 쿠폰의 경우 해당 섹션이 쿠폰 리스트를 직접 들고 있다가(나중에 API로 대체 가능 대비),
 // 최종 할인 금액만 CheckoutPage로 올린다.
-export function CouponSection({ onDiscountChange }: CouponSectionProps) {
+export function CouponSection({ onCouponChange }: CouponSectionProps) {
   const [couponCode, setCouponCode] = useState<string>('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim());
     setAppliedCoupon(found ?? null);
-    onDiscountChange(found ? found.discount : 0);
+    onCouponChange(found ?? null);
     if (!found) alert('존재하지 않는 쿠폰이에요');
   };
 

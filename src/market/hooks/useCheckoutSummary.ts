@@ -7,9 +7,10 @@ import {
   FREE_SHIPPING_THRESHOLD,
   REMOTE_AREA_SURCHARGE,
 } from '@/market/pricePolicy.ts';
+import type { Coupon } from '@/market/types/coupon.types.ts';
 
 export function useCheckout(cart: CartItem[], member: Member, isRemoteAddress: boolean) {
-  const [couponDiscount, setCouponDiscount] = useState<number>(0);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [pointDiscount, setPointDiscount] = useState<number>(0);
 
   //총 상품 금액
@@ -26,19 +27,20 @@ export function useCheckout(cart: CartItem[], member: Member, isRemoteAddress: b
   const gradeDiscount = itemTotal - gradeDiscountItemTotal;
 
   // 배송비는 할인 대상 제외 — 상품금액 기준으로만 포인트 한도 계산
-  const discountableAmount = Math.max(0, gradeDiscountItemTotal - couponDiscount);
+  const discountableAmount = Math.max(0, gradeDiscountItemTotal - (selectedCoupon?.discount ?? 0));
   const effectivePointDiscount = Math.min(pointDiscount, discountableAmount);
-  const finalPrice = gradeDiscountItemTotal + shippingFee - couponDiscount - effectivePointDiscount;
+  const finalPrice =
+    gradeDiscountItemTotal + shippingFee - (selectedCoupon?.discount ?? 0) - effectivePointDiscount;
 
   return {
     itemTotal,
     shippingFee,
     gradeDiscount,
     gradeDiscountItemTotal,
-    couponDiscount,
+    selectedCoupon,
     pointDiscount: effectivePointDiscount,
     finalPrice,
-    setCouponDiscount,
+    setSelectedCoupon,
     setPointDiscount,
   };
 }
