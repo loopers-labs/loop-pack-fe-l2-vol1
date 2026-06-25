@@ -128,8 +128,9 @@ export function CheckoutPage() {
   // ── 적립금 정책 ──────────────────────────────
   const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0
 
-  // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount)
+  // ⑦ 파생 상태: useState 제거 → 렌더링마다 재계산되는 일반 const로 교체
+  const totalDiscount = couponDiscount + pointDiscount
+  const finalPrice = itemTotal + shippingFee - totalDiscount
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim())
