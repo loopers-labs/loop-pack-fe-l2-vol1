@@ -1,103 +1,18 @@
 import { useState } from 'react'
-import type { Address, Coupon, PaymentMethod } from './types'
+import type { Coupon, PaymentMethod } from './types'
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
-import { Price } from './Price'
-import { OrderLineRow } from './OrderLineRow'
-import { OrderStatusTag } from './OrderStatusTag'
-import { DeliveryMemo } from './DeliveryMemo'
+import { OrderLineRow } from './_components/OrderLineRow'
+import { OrderStatusTag } from './_components/OrderStatusTag'
+import { DeliveryMemo } from './_components/DeliveryMemo'
+import { DeliverySection } from './_components/DeliverySection'
+import { OrderCompleteStep } from './_components/OrderCompleteStep'
+import { TermsModal } from './_components/TermsModal'
 import './market.css'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
   transfer: '계좌이체',
   kakao: '카카오페이',
-}
-
-// 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
-// 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
-function DeliverySection({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Address[]
-  selectedAddressId: string
-  onSelectAddress: (id: string) => void
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const selected = addresses.find((a) => a.id === selectedAddressId)!
-  return (
-    <div className="section">
-      <div className="row between">
-        <h2>배송지</h2>
-        <button className="link" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? '접기' : '변경'}
-        </button>
-      </div>
-      {expanded ? (
-        <AddressForm
-          addresses={addresses}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={onSelectAddress}
-        />
-      ) : (
-        <p className="addr-summary">
-          {selected.label} · {selected.recipient} ({selected.detail})
-        </p>
-      )}
-    </div>
-  )
-}
-
-// '도서산간 제외' 필터는 스스로 책임진다.
-// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
-function AddressForm({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Address[]
-  selectedAddressId: string
-  onSelectAddress: (id: string) => void
-}) {
-  const [onlyNear, setOnlyNear] = useState(false)
-  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses
-  return (
-    <>
-      <label className="filter">
-        <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
-        도서산간 제외
-      </label>
-      {list.map((a) => (
-        <AddressField
-          key={a.id}
-          address={a}
-          selected={a.id === selectedAddressId}
-          onSelect={onSelectAddress}
-        />
-      ))}
-    </>
-  )
-}
-
-function AddressField({
-  address,
-  selected,
-  onSelect,
-}: {
-  address: Address
-  selected: boolean
-  onSelect: (id: string) => void
-}) {
-  return (
-    <label className="addr">
-      <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
-      <span>
-        {address.label} · {address.recipient} ({address.detail})
-        {address.isRemote ? ' · 도서산간' : ''}
-      </span>
-    </label>
-  )
 }
 
 export function CheckoutPage() {
@@ -113,6 +28,8 @@ export function CheckoutPage() {
   const [isTermsOpen, setIsTermsOpen] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [placed, setPlaced] = useState(false)
+  // ② 구현 vs 조합: DeliveryMemo에서 끌어올린 상태
+  const [memo, setMemo] = useState('')
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
 
@@ -130,28 +47,20 @@ export function CheckoutPage() {
 
   // ⑦ 파생 상태: useState 제거 → 렌더링마다 재계산되는 일반 const로 교체
   const totalDiscount = couponDiscount + pointDiscount
-  const finalPrice = itemTotal + shippingFee - totalDiscount
+  // ① 변화의 경계: VIP 할인을 Price 컴포넌트에서 가격 계산 영역으로 이동
+  const subtotal = itemTotal + shippingFee - totalDiscount
+  const finalPrice = member.grade === 'VIP' ? Math.round(subtotal * 0.9) : subtotal
 
-  const applyCoupon = () => {
+  // 컨벤션: 내부 이벤트 핸들러는 handleX 네이밍 적용
+  const handleApplyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim())
     setAppliedCoupon(found ?? null)
     if (!found) alert('존재하지 않는 쿠폰이에요')
   }
 
+  // ⑨ Context 전에 composition: 주문 완료 UI를 분리하고 props로 값 전달
   if (placed) {
-    return (
-      <div className="checkout">
-        <h1>주문 완료</h1>
-        <div className="section">
-          <p style={{ color: 'var(--text-h)' }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
-          </p>
-        </div>
-        <button className="pay" onClick={() => setPlaced(false)}>
-          주문서로 돌아가기
-        </button>
-      </div>
-    )
+    return <OrderCompleteStep finalPrice={finalPrice} memo={memo} onBack={() => setPlaced(false)} />
   }
 
   return (
@@ -166,7 +75,7 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>배송 요청사항</h2>
-        <DeliveryMemo />
+        <DeliveryMemo value={memo} onChange={setMemo} />
       </div>
 
       <div className="section">
@@ -190,7 +99,7 @@ export function CheckoutPage() {
             onChange={(e) => setCouponCode(e.target.value)}
             placeholder="쿠폰 코드 (예: WELCOME5000)"
           />
-          <button onClick={applyCoupon}>적용</button>
+          <button onClick={handleApplyCoupon}>적용</button>
         </div>
         {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
       </div>
@@ -249,7 +158,8 @@ export function CheckoutPage() {
         ) : null}
         <div className="total">
           <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
+          {/* ④ 성급한 추상화: 한 줄짜리 Price 컴포넌트 제거, 인라인으로 교체 */}
+          <strong>{finalPrice.toLocaleString()}원</strong>
         </div>
       </div>
 
@@ -267,15 +177,8 @@ export function CheckoutPage() {
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
-      {isTermsOpen ? (
-        <div className="modal" onClick={() => setIsTermsOpen(false)}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <h3>이용 약관</h3>
-            <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
-            <button onClick={() => setIsTermsOpen(false)}>닫기</button>
-          </div>
-        </div>
-      ) : null}
+      {/* ⑩ children vs slot: 모달 패턴을 TermsModal로 분리 */}
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
 
       <div className="section">
         <h2>최근 주문</h2>
