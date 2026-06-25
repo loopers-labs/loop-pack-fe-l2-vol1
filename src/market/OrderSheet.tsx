@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Coupon } from './types';
 import { ADDRESSES, CART, MEMBER } from './data';
-import { getFinalPrice } from './pricing';
+import { calcFinalPrice } from './pricing';
 import { DeliveryAddressSection } from './DeliveryAddressSection';
 import { DeliveryMemoSection } from './DeliveryMemoSection';
 import { CartSection } from './CartSection';
@@ -28,7 +28,7 @@ export function OrderSheet({ onPlace }: OrderSheetProps) {
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
   const effectivePointInput = usePoint ? pointInput : 0;
 
-  const { itemTotal, shippingFee, pointDiscount, finalPrice } = getFinalPrice({
+  const { itemTotal, shippingFee, pointDiscount, finalPrice } = calcFinalPrice({
     cart: CART,
     address,
     coupon: appliedCoupon,

@@ -18,7 +18,7 @@ export type PricingResult = {
   finalPrice: number;
 };
 
-export function getFinalPrice(input: PricingInput): PricingResult {
+export function calcFinalPrice(input: PricingInput): PricingResult {
   const itemTotal = input.cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
   let shippingFee = 3000;
