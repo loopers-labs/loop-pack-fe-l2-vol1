@@ -17,6 +17,41 @@ export type CheckoutSummary = {
   finalPrice: number
 }
 
+export type ProductOrderLine = {
+  kind: 'product'
+  id: string
+  label: string
+  amount: number
+  thumbnail: string
+  option: string
+  quantity: number
+}
+
+export type BasicOrderLine = {
+  kind: 'subtotal' | 'shipping'
+  label: string
+  amount: number
+}
+
+export type CouponDiscountOrderLine = {
+  kind: 'coupon'
+  label: string
+  amount: number
+  couponCode: string
+}
+
+export type PointDiscountOrderLine = {
+  kind: 'point'
+  label: string
+  amount: number
+}
+
+export type DiscountOrderLine = CouponDiscountOrderLine | PointDiscountOrderLine
+
+export type PaymentOrderLine = BasicOrderLine | DiscountOrderLine
+
+export type OrderLine = ProductOrderLine | PaymentOrderLine
+
 export function createCheckoutSummary({
   cart,
   address,
@@ -45,4 +80,58 @@ export function createCheckoutSummary({
     pointDiscount,
     finalPrice: itemTotal + shippingFee - couponDiscount - pointDiscount,
   }
+}
+
+export function createProductOrderLines(cart: CartItem[]): ProductOrderLine[] {
+  return cart.map((item) => ({
+    kind: 'product',
+    id: item.id,
+    label: item.name,
+    amount: item.price * item.quantity,
+    thumbnail: item.thumbnail,
+    option: item.option,
+    quantity: item.quantity,
+  }))
+}
+
+export function createPaymentOrderLines({
+  summary,
+  appliedCoupon,
+  usePoint,
+}: {
+  summary: CheckoutSummary
+  appliedCoupon: Coupon | null
+  usePoint: boolean
+}): PaymentOrderLine[] {
+  const lines: PaymentOrderLine[] = [
+    {
+      kind: 'subtotal',
+      label: '상품 금액',
+      amount: summary.itemTotal,
+    },
+    {
+      kind: 'shipping',
+      label: '배송비',
+      amount: summary.shippingFee,
+    },
+  ]
+
+  if (appliedCoupon) {
+    lines.push({
+      kind: 'coupon',
+      label: '쿠폰 할인',
+      amount: summary.couponDiscount,
+      couponCode: appliedCoupon.code,
+    })
+  }
+
+  if (usePoint) {
+    lines.push({
+      kind: 'point',
+      label: '적립금 사용',
+      amount: summary.pointDiscount,
+    })
+  }
+
+  return lines
 }

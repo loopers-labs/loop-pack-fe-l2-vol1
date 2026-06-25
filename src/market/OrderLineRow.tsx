@@ -1,43 +1,44 @@
-type OrderLineType = 'product' | 'subtotal' | 'shipping' | 'coupon' | 'point'
+import type { OrderLine } from './checkoutModel'
 
-type Props = {
-  type: OrderLineType
-  label: string
-  amount: number
-  thumbnail?: string
-  option?: string
-  quantity?: number
-  isDiscount?: boolean
-  couponCode?: string
+function assertNever(value: never): never {
+  throw new Error(`Unhandled order line: ${JSON.stringify(value)}`)
 }
 
-export function OrderLineRow({
-  type,
-  label,
-  amount,
-  thumbnail,
-  option,
-  quantity,
-  isDiscount,
-  couponCode,
-}: Props) {
+export function OrderLineRow(props: OrderLine) {
+  const isDiscount = props.kind === 'coupon' || props.kind === 'point'
+
   return (
     <div className="line">
-      {type === 'product' && <span className="thumb">{thumbnail}</span>}
+      {props.kind === 'product' ? (
+        <span className="thumb">{props.thumbnail}</span>
+      ) : null}
       <div className="grow">
-        <span>{label}</span>
-        {type === 'product' && option ? (
-          <small>
-            {option} · 수량 {quantity}
-          </small>
-        ) : null}
-        {type === 'coupon' && couponCode ? <small>{couponCode}</small> : null}
+        <span>{props.label}</span>
+        <LineDescription line={props} />
       </div>
       <strong style={{ color: isDiscount ? '#ef4444' : 'var(--text-h)' }}>
         {isDiscount ? '- ' : ''}
-        {amount.toLocaleString()}원
+        {props.amount.toLocaleString()}원
       </strong>
-      {/* 새 줄 타입(부분취소, 선물포장, 결제수단별 즉시할인...)이 생길 때마다 위 분기가 늘어난다 */}
     </div>
   )
+}
+
+function LineDescription({ line }: { line: OrderLine }) {
+  switch (line.kind) {
+    case 'product':
+      return (
+        <small>
+          {line.option} · 수량 {line.quantity}
+        </small>
+      )
+    case 'coupon':
+      return line.couponCode ? <small>{line.couponCode}</small> : null
+    case 'subtotal':
+    case 'shipping':
+    case 'point':
+      return null
+    default:
+      return assertNever(line)
+  }
 }

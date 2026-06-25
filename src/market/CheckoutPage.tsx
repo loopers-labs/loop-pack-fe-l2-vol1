@@ -5,6 +5,11 @@ import { Price } from './Price'
 import { OrderLineRow } from './OrderLineRow'
 import { OrderStatusTag } from './OrderStatusTag'
 import { DeliveryMemo } from './DeliveryMemo'
+import {
+  createCheckoutSummary,
+  createPaymentOrderLines,
+  createProductOrderLines,
+} from './checkoutModel'
 import './market.css'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -123,25 +128,20 @@ export function CheckoutPage() {
   const [placed, setPlaced] = useState(false)
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
-
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0)
-  let shippingFee = 3000
-  if (itemTotal >= 50000) shippingFee = 0
-  if (address.isRemote) shippingFee += 3000
-
-  // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
-
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint
-    ? Math.min(pointInput, member.point, itemTotal)
-    : 0
-
-  // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(
-    itemTotal + shippingFee - couponDiscount - pointDiscount,
-  )
+  const summary = createCheckoutSummary({
+    cart,
+    address,
+    member,
+    appliedCoupon,
+    usePoint,
+    pointInput,
+  })
+  const productLines = createProductOrderLines(cart)
+  const paymentLines = createPaymentOrderLines({
+    summary,
+    appliedCoupon,
+    usePoint,
+  })
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim())
@@ -155,7 +155,8 @@ export function CheckoutPage() {
         <h1>주문 완료</h1>
         <div className="section">
           <p style={{ color: 'var(--text-h)' }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
+            주문이 접수되었어요. 결제 금액 {summary.finalPrice.toLocaleString()}
+            원
           </p>
         </div>
         <button className="pay" onClick={() => setPlaced(false)}>
@@ -182,16 +183,8 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>주문 상품</h2>
-        {cart.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
+        {productLines.map((line) => (
+          <OrderLineRow key={line.id} {...line} />
         ))}
       </div>
 
@@ -244,28 +237,12 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>결제 금액</h2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
-            isDiscount
-            couponCode={appliedCoupon.code}
-          />
-        ) : null}
-        {usePoint ? (
-          <OrderLineRow
-            type="point"
-            label="적립금 사용"
-            amount={pointDiscount}
-            isDiscount
-          />
-        ) : null}
+        {paymentLines.map((line) => (
+          <OrderLineRow key={line.kind} {...line} />
+        ))}
         <div className="total">
           <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
+          <Price amount={summary.finalPrice} />
         </div>
       </div>
 
@@ -288,7 +265,7 @@ export function CheckoutPage() {
         disabled={!agreed}
         onClick={() => setPlaced(true)}
       >
-        {finalPrice.toLocaleString()}원 결제하기
+        {summary.finalPrice.toLocaleString()}원 결제하기
       </button>
 
       {isTermsOpen ? (
@@ -309,13 +286,7 @@ export function CheckoutPage() {
         {PAST_ORDERS.map((o) => (
           <div key={o.id} className="line">
             <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === 'paid'}
-              isPreparing={o.status === 'preparing'}
-              isShipped={o.status === 'shipped'}
-              isDelivered={o.status === 'delivered'}
-              isCancelled={o.status === 'cancelled'}
-            />
+            <OrderStatusTag status={o.status} />
           </div>
         ))}
       </div>
