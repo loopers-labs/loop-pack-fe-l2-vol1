@@ -16,7 +16,6 @@ import {
   Heading,
   Label,
   Modal,
-  Price,
   Radio,
   RadioGroup,
   SectionCard,
@@ -25,6 +24,7 @@ import {
 import {
   CouponCodeSection,
   DeliverySection,
+  OrderCompleteSection,
   OrderItemsSection,
   PaymentSummarySection,
   PointSection,
@@ -62,140 +62,128 @@ export function CheckoutPage() {
     pointInput,
     member,
   })
-  if (placed) {
-    return (
-      <div className="mx-auto max-w-120 px-4 pt-6 pb-24 text-left text-(--text)">
-        <Heading.H1>주문 완료</Heading.H1>
+
+  return (
+    <Show.div
+      when={!placed}
+      className="mx-auto max-w-120 px-4 pt-6 pb-24 text-left text-(--text)"
+      fallback={
+        <OrderCompleteSection
+          setPlaced={setPlaced}
+          memberDisplayPrice={priceQuote.memberDisplayPrice}
+        />
+      }
+    >
+      <>
+        <Heading.H1>주문/결제</Heading.H1>
+
+        <ErrorBoundary
+          shouldCatch={NoDeliveryAddressConfiguredError}
+          fallback={null}
+        >
+          <DeliverySection
+            addresses={addresses}
+            selectedAddressId={selectedAddressId}
+            onSelectAddress={setSelectedAddressId}
+          />
+        </ErrorBoundary>
+
         <SectionCard>
-          <p className="text-(--text-h)">
-            주문이 접수되었어요. 결제 금액{' '}
-            <Price value={priceQuote.memberDisplayPrice} />
-          </p>
+          <Heading.H2>배송 요청사항</Heading.H2>
+          <Textarea placeholder="배송 시 요청사항 (예: 부재 시 문 앞에 두세요)" />
         </SectionCard>
+
+        <OrderItemsSection items={cartItems} />
+
+        <CouponCodeSection onAppliedCoupon={setAppliedCoupon} />
+
+        <PointSection
+          currentPoint={member.point}
+          onPointInputChange={setPointInput}
+        />
+
+        <SectionCard>
+          <Heading.H2>결제수단</Heading.H2>
+          <RadioGroup legend="결제수단" legendClassName="sr-only">
+            <For each={PAYMENT_METHODS}>
+              {(method) => (
+                <Label key={method}>
+                  <Radio
+                    name="payment"
+                    checked={payment === method}
+                    onChange={() => {
+                      setPayment(method)
+                    }}
+                  />
+                  {PAYMENT_LABEL[method]}
+                </Label>
+              )}
+            </For>
+          </RadioGroup>
+        </SectionCard>
+
+        <PaymentSummarySection
+          itemTotal={priceQuote.itemTotal}
+          shippingFee={priceQuote.shippingFee}
+          couponDiscount={priceQuote.couponDiscount}
+          pointDiscount={priceQuote.pointDiscount}
+          memberDisplayPrice={priceQuote.memberDisplayPrice}
+          appliedCoupon={appliedCoupon}
+        />
+
+        <SectionCard>
+          <Label>
+            <Checkbox
+              checked={agreed}
+              onChange={(e) => {
+                setAgreed(e.target.checked)
+              }}
+            />
+            주문 내용 및 약관에 동의합니다
+          </Label>
+          <Button
+            type="button"
+            variant="link"
+            onClick={() => {
+              setIsTermsOpen(true)
+            }}
+          >
+            약관 보기
+          </Button>
+        </SectionCard>
+
         <Button
           type="button"
           className="sticky bottom-4 mt-2 w-full rounded-xl p-3.75 text-base font-semibold"
+          disabled={!agreed}
           variant="primary"
           onClick={() => {
-            setPlaced(false)
+            setPlaced(true)
           }}
         >
-          주문서로 돌아가기
+          {priceQuote.memberDisplayPrice.toLocaleString()}원 결제하기
         </Button>
-      </div>
-    )
-  }
 
-  return (
-    <div className="mx-auto max-w-120 px-4 pt-6 pb-24 text-left text-(--text)">
-      <Heading.H1>주문/결제</Heading.H1>
+        <Show when={isTermsOpen}>
+          <Modal headingId="terms-title">
+            <Heading.H3 id="terms-title">이용 약관</Heading.H3>
+            <p>
+              주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
+              추가됩니다.
+            </p>
+            <Button
+              type="button"
+              onClick={() => {
+                setIsTermsOpen(false)
+              }}
+            >
+              닫기
+            </Button>
+          </Modal>
+        </Show>
 
-      <ErrorBoundary
-        shouldCatch={NoDeliveryAddressConfiguredError}
-        fallback={null}
-      >
-        <DeliverySection
-          addresses={addresses}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={setSelectedAddressId}
-        />
-      </ErrorBoundary>
-
-      <SectionCard>
-        <Heading.H2>배송 요청사항</Heading.H2>
-        <Textarea placeholder="배송 시 요청사항 (예: 부재 시 문 앞에 두세요)" />
-      </SectionCard>
-
-      <OrderItemsSection items={cartItems} />
-
-      <CouponCodeSection onAppliedCoupon={setAppliedCoupon} />
-
-      <PointSection
-        currentPoint={member.point}
-        onPointInputChange={setPointInput}
-      />
-
-      <SectionCard>
-        <Heading.H2>결제수단</Heading.H2>
-        <RadioGroup legend="결제수단" legendClassName="sr-only">
-          <For each={PAYMENT_METHODS}>
-            {(method) => (
-              <Label key={method}>
-                <Radio
-                  name="payment"
-                  checked={payment === method}
-                  onChange={() => {
-                    setPayment(method)
-                  }}
-                />
-                {PAYMENT_LABEL[method]}
-              </Label>
-            )}
-          </For>
-        </RadioGroup>
-      </SectionCard>
-
-      <PaymentSummarySection
-        itemTotal={priceQuote.itemTotal}
-        shippingFee={priceQuote.shippingFee}
-        couponDiscount={priceQuote.couponDiscount}
-        pointDiscount={priceQuote.pointDiscount}
-        memberDisplayPrice={priceQuote.memberDisplayPrice}
-        appliedCoupon={appliedCoupon}
-      />
-
-      <SectionCard>
-        <Label>
-          <Checkbox
-            checked={agreed}
-            onChange={(e) => {
-              setAgreed(e.target.checked)
-            }}
-          />
-          주문 내용 및 약관에 동의합니다
-        </Label>
-        <Button
-          type="button"
-          variant="link"
-          onClick={() => {
-            setIsTermsOpen(true)
-          }}
-        >
-          약관 보기
-        </Button>
-      </SectionCard>
-
-      <Button
-        type="button"
-        className="sticky bottom-4 mt-2 w-full rounded-xl p-3.75 text-base font-semibold"
-        disabled={!agreed}
-        variant="primary"
-        onClick={() => {
-          setPlaced(true)
-        }}
-      >
-        {priceQuote.memberDisplayPrice.toLocaleString()}원 결제하기
-      </Button>
-
-      <Show when={isTermsOpen}>
-        <Modal headingId="terms-title">
-          <Heading.H3 id="terms-title">이용 약관</Heading.H3>
-          <p>
-            주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
-            추가됩니다.
-          </p>
-          <Button
-            type="button"
-            onClick={() => {
-              setIsTermsOpen(false)
-            }}
-          >
-            닫기
-          </Button>
-        </Modal>
-      </Show>
-
-      <RecentOrderSection />
-    </div>
+        <RecentOrderSection />
+      </>
+    </Show.div>
   )
 }
