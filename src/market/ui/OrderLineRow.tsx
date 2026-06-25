@@ -11,7 +11,8 @@ type Props = {
   couponCode?: string;
 };
 
-// TODO: props 객체화
+// TODO: OrderLineRow가 너무 많은 일을 하고있음
+// 별도의 컴포넌트로 분리하기
 export function OrderLineRow({
   type,
   label,

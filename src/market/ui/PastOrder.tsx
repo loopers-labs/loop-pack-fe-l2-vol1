@@ -9,13 +9,7 @@ export const PastOrder = () => {
       {PAST_ORDERS.map((o) => (
         <div key={o.id} className="line">
           <div className="grow">{o.summary}</div>
-          <OrderStatusTag
-            isPaid={o.status === 'paid'}
-            isPreparing={o.status === 'preparing'}
-            isShipped={o.status === 'shipped'}
-            isDelivered={o.status === 'delivered'}
-            isCancelled={o.status === 'cancelled'}
-          />
+          <OrderStatusTag status={o.status} />
         </div>
       ))}
     </SectionContainer>
