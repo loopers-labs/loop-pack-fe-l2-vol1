@@ -1,19 +1,13 @@
-import type { ComponentProps, ReactNode } from 'react'
+import type { ComponentProps } from 'react'
 import { cn } from 'tailwind-variants'
 
-import { Heading } from './Heading'
-
 type ModalProps = ComponentProps<'div'> & {
-  heading: ReactNode
   headingId: string
-  footer?: ReactNode
 }
 
 export function Modal({
   children,
   className,
-  footer,
-  heading,
   headingId,
   ...modalProps
 }: ModalProps) {
@@ -29,9 +23,7 @@ export function Modal({
       role="dialog"
     >
       <div className="max-w-90 rounded-xl bg-(--bg) p-5 text-left text-(--text)">
-        <Heading.H3 id={headingId}>{heading}</Heading.H3>
         {children}
-        {footer}
       </div>
     </div>
   )
