@@ -37,7 +37,7 @@ export function SummarySection({
       {selectedCoupon ? (
         <LineRow rightSlot={<PriceInfo amount={selectedCoupon?.discount} isDiscount />}>
           <span>{'쿠폰 할인'}</span>
-          <small>{selectedCoupon?.label}</small>
+          <small>{selectedCoupon?.code}</small>
         </LineRow>
       ) : null}
       {pointDiscount > 0 ? (
