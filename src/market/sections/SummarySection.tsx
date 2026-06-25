@@ -3,7 +3,7 @@ import { Section } from '../../common/components/Section.tsx';
 import { LineRow } from '../../common/components/LineRow.tsx';
 import { PriceInfo } from '../../common/components/PriceInfo.tsx';
 
-type Props = {
+type SummarySectionProps = {
   itemTotal: number;
   shippingFee: number;
   couponDiscount: number;
@@ -12,14 +12,14 @@ type Props = {
   finalPrice: number;
 };
 
-export function OrderSummarySection({
+export function SummarySection({
   itemTotal,
   shippingFee,
   couponDiscount,
   pointDiscount,
   gradeDiscount,
   finalPrice,
-}: Props) {
+}: SummarySectionProps) {
   return (
     <Section title={'결제 금액'}>
       <LineRow rightSlot={<PriceInfo amount={itemTotal} />}>
