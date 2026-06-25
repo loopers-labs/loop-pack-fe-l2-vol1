@@ -26,6 +26,7 @@
 ## 설계 원칙
 
 - Props가 5개를 넘으면 설계를 재검토
+- 하나의 상태를 표현하는 여러 boolean props는 enum/union으로 통합한다
 - children을 적극 활용해 합성(Composition) 우선
 - Props Drilling이 3단계 이상이면 Context 또는 상태 관리 도입 검토
 - 공통 컴포넌트는 비즈니스 로직을 포함하지 않음
