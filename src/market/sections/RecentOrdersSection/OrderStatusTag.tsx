@@ -1,6 +1,6 @@
 import type { OrderStatus } from "../../types";
 
-const ORDER_STATUS_DISPLAY = {
+const ORDER_STATUS_DISPLAY: Record<OrderStatus, { label: string; color: string }> = {
   pending: {
     label: "주문 접수",
     color: "#9ca3af",
