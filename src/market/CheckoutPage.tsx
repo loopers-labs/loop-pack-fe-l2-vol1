@@ -58,13 +58,7 @@ export function CheckoutPage() {
   // 연관 상태: 최종 금액, placed 상태
   if (placed) {
     return (
-      <CheckoutComplete
-        itemTotal={itemTotal}
-        shippingFee={shippingFee}
-        couponDiscount={couponDiscount}
-        pointDiscount={pointDiscount}
-        onCheckoutButtonClick={() => setPlaced(false)}
-      />
+      <CheckoutComplete finalPrice={finalPrice} onCheckoutButtonClick={() => setPlaced(false)} />
     );
   }
 
@@ -92,6 +86,7 @@ export function CheckoutPage() {
       />
 
       <PaymentMethodSection payment={payment} onPaymentMethodChange={(m) => setPayment(m)} />
+      {/* TODO: 결제금액 구하는 로직 검토하기 */}
       <FinalPriceSection
         itemTotal={itemTotal}
         shippingFee={shippingFee}

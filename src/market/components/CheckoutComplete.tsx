@@ -1,20 +1,12 @@
 import { CheckoutContainer } from './container';
 
 export const CheckoutComplete = ({
-  itemTotal,
-  shippingFee,
-  couponDiscount,
-  pointDiscount,
+  finalPrice,
   onCheckoutButtonClick,
 }: {
-  itemTotal: number;
-  shippingFee: number;
-  couponDiscount: number;
-  pointDiscount: number;
+  finalPrice: number;
   onCheckoutButtonClick: () => void;
 }) => {
-  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
-
   return (
     <CheckoutContainer title="주문 완료">
       <div className="section">
