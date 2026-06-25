@@ -6,10 +6,10 @@ import type { Address } from './types';
 
 type Props = {
   addressId: string;
-  onChangeAddress: (id: string) => void;
+  onChangeAddressId: (id: string) => void;
 };
 
-export function DeliveryAddress({ addressId, onChangeAddress }: Props) {
+export function DeliveryAddress({ addressId, onChangeAddressId }: Props) {
   const [expanded, setExpanded] = useState(false);
   const selected = ADDRESSES.find((a) => a.id === addressId) ?? ADDRESSES[0];
 
@@ -23,7 +23,10 @@ export function DeliveryAddress({ addressId, onChangeAddress }: Props) {
       }
     >
       {expanded ? (
-        <AddressForm addressId={addressId} onChangeAddress={onChangeAddress} />
+        <AddressForm
+          addressId={addressId}
+          onChangeAddressId={onChangeAddressId}
+        />
       ) : (
         <p className="addr-summary">
           {selected.label} · {selected.recipient} ({selected.detail})
@@ -33,7 +36,7 @@ export function DeliveryAddress({ addressId, onChangeAddress }: Props) {
   );
 }
 
-function AddressForm({ addressId, onChangeAddress }: Props) {
+function AddressForm({ addressId, onChangeAddressId }: Props) {
   const [onlyNear, setOnlyNear] = useState(false);
   const list = onlyNear ? ADDRESSES.filter((a) => !a.isRemote) : ADDRESSES;
 
@@ -52,7 +55,7 @@ function AddressForm({ addressId, onChangeAddress }: Props) {
           key={a.id}
           address={a}
           selected={a.id === addressId}
-          onSelect={onChangeAddress}
+          onSelect={onChangeAddressId}
         />
       ))}
     </>

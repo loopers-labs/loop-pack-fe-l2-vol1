@@ -6,9 +6,14 @@ const FREE_SHIPPING_THRESHOLD = 50000;
 const REMOTE_AREA_SURCHARGE = 3000;
 const VIP_DISCOUNT_RATE = 0.1;
 
-export function getOrderAmount(state: CheckoutState) {
+type OrderAmountInput = Pick<
+  CheckoutState,
+  'addressId' | 'appliedCoupon' | 'usePoint' | 'pointInput'
+>;
+
+export function getOrderAmount(order: OrderAmountInput) {
   const address =
-    ADDRESSES.find((a) => a.id === state.addressId) ?? ADDRESSES[0];
+    ADDRESSES.find((a) => a.id === order.addressId) ?? ADDRESSES[0];
 
   // ── 배송비 정책 ──────────────────────────────
   const itemTotal = CART.reduce((sum, it) => sum + it.price * it.quantity, 0);
@@ -17,9 +22,9 @@ export function getOrderAmount(state: CheckoutState) {
   if (address.isRemote) shippingFee += REMOTE_AREA_SURCHARGE;
 
   // ── 쿠폰 / 적립금 정책 ───────────────────────
-  const couponDiscount = state.appliedCoupon ? state.appliedCoupon.discount : 0;
-  const pointDiscount = state.usePoint
-    ? Math.min(state.pointInput, MEMBER.point, itemTotal)
+  const couponDiscount = order.appliedCoupon ? order.appliedCoupon.discount : 0;
+  const pointDiscount = order.usePoint
+    ? Math.min(order.pointInput, MEMBER.point, itemTotal)
     : 0;
 
   // ── 최종 금액 (VIP면 분기) ────────────────────

@@ -2,16 +2,14 @@ import { OrderLineRow } from './OrderLineRow';
 import { Price } from './Price';
 import type { Coupon } from './types';
 
-type Amount = {
-  itemTotal: number;
-  shippingFee: number;
-  couponDiscount: number;
-  pointDiscount: number;
-  finalPrice: number;
-};
-
 type Props = {
-  amount: Amount;
+  amount: {
+    itemTotal: number;
+    shippingFee: number;
+    couponDiscount: number;
+    pointDiscount: number;
+    finalPrice: number;
+  };
   appliedCoupon: Coupon | null;
 };
 
@@ -43,6 +41,7 @@ export function PriceSummary({ amount, appliedCoupon }: Props) {
           <OrderLineRow.Amount amount={amount.pointDiscount} isDiscount />
         </OrderLineRow>
       ) : null}
+
       <div className="total">
         <span>최종 결제 금액</span>
         <Price amount={amount.finalPrice} />

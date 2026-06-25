@@ -43,7 +43,7 @@ export function CheckoutForm({
 
       <DeliveryAddress
         addressId={checkoutForm.addressId}
-        onChangeAddress={setAddress}
+        onChangeAddressId={setAddress}
       />
 
       <SectionCard title="배송 요청사항">

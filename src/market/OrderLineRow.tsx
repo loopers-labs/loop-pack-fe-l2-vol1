@@ -6,7 +6,11 @@ function OrderLineRow({ children }: { children: ReactNode }) {
   return <div className="line">{children}</div>;
 }
 
-function Product({ item }: { item: CartItem }) {
+function Product({
+  item,
+}: {
+  item: Pick<CartItem, 'thumbnail' | 'name' | 'option' | 'quantity'>;
+}) {
   return (
     <>
       <span className="thumb">{item.thumbnail}</span>
