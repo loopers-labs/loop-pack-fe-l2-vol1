@@ -27,7 +27,8 @@ export function PointSection({
   };
 
   const handlePointInputChange = (value: number) => {
-    const next = Math.min(value, availablePoint);
+    const maximumAvailablePoint = Math.min(availablePoint, itemTotal);
+    const next = Math.min(value, maximumAvailablePoint);
     setPointInput(next);
     reportDiscount(usePoint, next);
   };

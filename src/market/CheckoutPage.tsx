@@ -64,7 +64,7 @@ export function CheckoutPage() {
 
       <PointSection
         availablePoint={member.point}
-        itemTotal={itemTotal}
+        itemTotal={gradeDiscountItemTotal}
         onPointDiscountChange={setPointDiscount}
       />
 
