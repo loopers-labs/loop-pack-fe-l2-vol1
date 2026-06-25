@@ -15,6 +15,7 @@ import { OrderLineRow } from '@/features/market'
 import {
   Button,
   Heading,
+  Label,
   Modal,
   Price,
   SectionCard,
@@ -151,7 +152,7 @@ export function CheckoutPage() {
 
       <SectionCard>
         <Heading.H2>적립금</Heading.H2>
-        <label className="flex items-center gap-2 py-1 text-sm">
+        <Label>
           <input
             type="checkbox"
             checked={usePoint}
@@ -160,7 +161,7 @@ export function CheckoutPage() {
             }}
           />
           적립금 사용 (보유 {member.point.toLocaleString()}P)
-        </label>
+        </Label>
         <Show when={usePoint}>
           <input
             className="box-border w-full flex-1 rounded-lg border border-(--border) bg-(--bg) px-2.5 py-2.25 font-[inherit] text-sm text-(--text-h)"
@@ -177,10 +178,7 @@ export function CheckoutPage() {
         <Heading.H2>결제수단</Heading.H2>
         <For each={PAYMENT_METHODS}>
           {(method) => (
-            <label
-              key={method}
-              className="flex items-center gap-2 py-1 text-sm"
-            >
+            <Label key={method}>
               <input
                 type="radio"
                 checked={payment === method}
@@ -189,7 +187,7 @@ export function CheckoutPage() {
                 }}
               />
               {PAYMENT_LABEL[method]}
-            </label>
+            </Label>
           )}
         </For>
       </SectionCard>
@@ -217,7 +215,7 @@ export function CheckoutPage() {
       </SectionCard>
 
       <SectionCard>
-        <label className="flex items-center gap-2 py-1 text-sm">
+        <Label>
           <input
             type="checkbox"
             checked={agreed}
@@ -226,7 +224,7 @@ export function CheckoutPage() {
             }}
           />
           주문 내용 및 약관에 동의합니다
-        </label>
+        </Label>
         <Button
           type="button"
           variant="link"
@@ -251,24 +249,20 @@ export function CheckoutPage() {
       </Button>
 
       <Show when={isTermsOpen}>
-        <Modal
-          heading="이용 약관"
-          headingId="terms-title"
-          footer={
-            <Button
-              type="button"
-              onClick={() => {
-                setIsTermsOpen(false)
-              }}
-            >
-              닫기
-            </Button>
-          }
-        >
+        <Modal headingId="terms-title">
+          <Heading.H3 id="terms-title">이용 약관</Heading.H3>
           <p>
             주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
             추가됩니다.
           </p>
+          <Button
+            type="button"
+            onClick={() => {
+              setIsTermsOpen(false)
+            }}
+          >
+            닫기
+          </Button>
         </Modal>
       </Show>
 

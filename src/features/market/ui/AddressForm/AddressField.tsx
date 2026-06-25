@@ -1,6 +1,7 @@
 import { Show } from '@ilokesto/utilinent'
 
 import type { Address } from '@/entities/market'
+import { Label } from '@/shared/ui'
 
 type AddressFieldProps = {
   address: Address
@@ -14,7 +15,7 @@ export function AddressField({
   onSelect,
 }: AddressFieldProps) {
   return (
-    <label className="flex items-start gap-2 py-1 text-sm">
+    <Label>
       <input
         type="radio"
         checked={selected}
@@ -26,6 +27,6 @@ export function AddressField({
         {address.label} · {address.recipient} ({address.detail})
         <Show when={address.isRemote}> · 도서산간</Show>
       </span>
-    </label>
+    </Label>
   )
 }
