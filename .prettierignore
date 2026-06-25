@@ -1,0 +1,6 @@
+dist
+pnpm-lock.yaml
+
+# course-authored content — 우리가 reformat 하지 않는다
+docs
+

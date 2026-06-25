@@ -1,3 +1,6 @@
+# 모든 텍스트 파일은 저장소에서 LF로 정규화 (Windows 팀원 + prettier 게이트 충돌 방지)
+* text=auto eol=lf
+
 /gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
