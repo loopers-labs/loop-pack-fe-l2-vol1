@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Coupon, PaymentMethod } from './types'
+import { useOrderPrice } from './useOrderPrice'
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
 import { OrderLineRow } from './_components/OrderLineRow'
 import { OrderStatusTag } from './_components/OrderStatusTag'
@@ -33,23 +34,15 @@ export function CheckoutPage() {
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
 
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0)
-  let shippingFee = 3000
-  if (itemTotal >= 50000) shippingFee = 0
-  if (address.isRemote) shippingFee += 3000
-
-  // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
-
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0
-
-  // ⑦ 파생 상태: useState 제거 → 렌더링마다 재계산되는 일반 const로 교체
-  const totalDiscount = couponDiscount + pointDiscount
-  // ① 변화의 경계: VIP 할인을 Price 컴포넌트에서 가격 계산 영역으로 이동
-  const subtotal = itemTotal + shippingFee - totalDiscount
-  const finalPrice = member.grade === 'VIP' ? Math.round(subtotal * 0.9) : subtotal
+  const { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice } = useOrderPrice({
+    cartItems: cart,
+    isRemote: address.isRemote,
+    couponDiscount: appliedCoupon ? appliedCoupon.discount : 0,
+    usePoint,
+    pointInput,
+    memberPoint: member.point,
+    memberGrade: member.grade,
+  })
 
   // 컨벤션: 내부 이벤트 핸들러는 handleX 네이밍 적용
   const handleApplyCoupon = () => {
