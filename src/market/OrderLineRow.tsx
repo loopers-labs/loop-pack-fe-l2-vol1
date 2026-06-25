@@ -5,7 +5,10 @@ function assertNever(value: never): never {
 }
 
 export function OrderLineRow(props: OrderLine) {
-  const isDiscount = props.kind === 'coupon' || props.kind === 'point'
+  const isDiscount =
+    props.kind === 'coupon' ||
+    props.kind === 'memberDiscount' ||
+    props.kind === 'point'
 
   return (
     <div className="line">
@@ -36,6 +39,7 @@ function LineDescription({ line }: { line: OrderLine }) {
       return line.couponCode ? <small>{line.couponCode}</small> : null
     case 'subtotal':
     case 'shipping':
+    case 'memberDiscount':
     case 'point':
       return null
     default:

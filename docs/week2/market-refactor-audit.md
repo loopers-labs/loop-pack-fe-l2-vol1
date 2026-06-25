@@ -26,7 +26,7 @@
 2. 주문 금액 계산은 `checkoutModel`로 분리한다. `itemTotal`, `shippingFee`, `couponDiscount`, `pointDiscount`, `finalPrice`를 한 모델에서 계산한다.
 3. `OrderLineRow`는 교차 optional props를 discriminated union으로 바꾼다. 먼저 모델을 나누고, 렌더 분기는 exhaustiveness check로 막는다.
 4. `CheckoutPage`는 위 모델을 소비하도록 줄인다. Context는 쓰지 않는다.
-5. `Price`의 VIP 할인은 공통 표시 컴포넌트에 숨어 있는 비즈니스 로직이다. 최종 금액 모델과 중복 할인 가능성이 있으므로 표시만 하게 바꾼다.
+5. `Price`의 VIP 할인은 공통 표시 컴포넌트에 숨어 있는 비즈니스 로직이다. 할인 정책은 `checkoutModel`로 옮기고 `Price`는 표시만 하게 바꾼다.
 
 ## 화면 조작에서 확인할 증상
 

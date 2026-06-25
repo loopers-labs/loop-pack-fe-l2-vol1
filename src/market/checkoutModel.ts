@@ -13,6 +13,7 @@ export type CheckoutSummary = {
   itemTotal: number
   shippingFee: number
   couponDiscount: number
+  memberDiscount: number
   pointDiscount: number
   finalPrice: number
 }
@@ -46,7 +47,16 @@ export type PointDiscountOrderLine = {
   amount: number
 }
 
-export type DiscountOrderLine = CouponDiscountOrderLine | PointDiscountOrderLine
+export type MemberDiscountOrderLine = {
+  kind: 'memberDiscount'
+  label: string
+  amount: number
+}
+
+export type DiscountOrderLine =
+  | CouponDiscountOrderLine
+  | PointDiscountOrderLine
+  | MemberDiscountOrderLine
 
 export type PaymentOrderLine = BasicOrderLine | DiscountOrderLine
 
@@ -68,17 +78,24 @@ export function createCheckoutSummary({
   const shippingFee = address.isRemote
     ? baseShippingFee + 3000
     : baseShippingFee
-  const couponDiscount = appliedCoupon?.discount ?? 0
+  const couponDiscount = Math.min(appliedCoupon?.discount ?? 0, itemTotal)
+  const memberDiscount =
+    member.grade === 'VIP' ? Math.round((itemTotal - couponDiscount) * 0.1) : 0
+  const payableBeforePoint = Math.max(
+    0,
+    itemTotal + shippingFee - couponDiscount - memberDiscount,
+  )
   const pointDiscount = usePoint
-    ? Math.min(pointInput, member.point, itemTotal)
+    ? Math.min(Math.max(0, pointInput), member.point, payableBeforePoint)
     : 0
 
   return {
     itemTotal,
     shippingFee,
     couponDiscount,
+    memberDiscount,
     pointDiscount,
-    finalPrice: itemTotal + shippingFee - couponDiscount - pointDiscount,
+    finalPrice: payableBeforePoint - pointDiscount,
   }
 }
 
@@ -122,6 +139,14 @@ export function createPaymentOrderLines({
       label: '쿠폰 할인',
       amount: summary.couponDiscount,
       couponCode: appliedCoupon.code,
+    })
+  }
+
+  if (summary.memberDiscount > 0) {
+    lines.push({
+      kind: 'memberDiscount',
+      label: '회원 할인',
+      amount: summary.memberDiscount,
     })
   }
 

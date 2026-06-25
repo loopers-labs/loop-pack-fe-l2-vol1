@@ -14,7 +14,8 @@
 | `finalPrice` state 제거 | 파생값을 `useState` 초기값으로 고정해 사용자 조작 후 금액이 갱신되지 않는 버그를 만들 수 있었다. |
 | `OrderLine` union 모델 추가 | `OrderLineRow`의 optional props 조합을 닫고, 상품/기본 금액/할인 라인을 타입으로 구분했다. |
 | `OrderStatusTag`를 `status` prop으로 변경 | 주문 상태 하나를 boolean 5개로 표현하면 동시에 여러 상태가 참인 잘못된 조합을 막지 못한다. |
-| `Price`에서 VIP 할인 제거 | 금액 표시 컴포넌트에 비즈니스 할인이 숨어 있어 최종 금액 모델과 화면 표시가 서로 다른 말을 할 수 있었다. |
+| VIP 할인을 `checkoutModel`로 이동 | 금액 표시 컴포넌트에 비즈니스 할인이 숨어 있어 최종 금액 모델과 화면 표시가 서로 다른 말을 할 수 있었다. |
+| 결제 금액 하한 보장 | 쿠폰과 포인트가 과하게 적용되어도 최종 결제 금액이 음수가 되지 않도록 모델에서 막았다. |
 
 ## 셀프 리뷰 4단계
 
@@ -27,7 +28,7 @@
 
 | 검증 | 결과 |
 | --- | --- |
-| `node --experimental-strip-types scripts/checkoutModel.spec.ts` | 통과 |
+| `pnpm test:checkout` | 통과 |
 | `pnpm lint` | 통과 |
 | `pnpm build` | 통과 |
 | `pnpm dev --host 127.0.0.1 --port 5173` | 서버 기동 확인 |

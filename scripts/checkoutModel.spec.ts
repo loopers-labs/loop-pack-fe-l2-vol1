@@ -21,7 +21,8 @@ const baseSummary = createCheckoutSummary({
 
 assert.equal(baseSummary.itemTotal, 65000)
 assert.equal(baseSummary.shippingFee, 0)
-assert.equal(baseSummary.finalPrice, 65000)
+assert.equal(baseSummary.memberDiscount, 6500)
+assert.equal(baseSummary.finalPrice, 58500)
 assert.deepEqual(createProductOrderLines(CART)[0], {
   kind: 'product',
   id: 'p1',
@@ -43,8 +44,9 @@ const discountedRemoteSummary = createCheckoutSummary({
 
 assert.equal(discountedRemoteSummary.shippingFee, 3000)
 assert.equal(discountedRemoteSummary.couponDiscount, 5000)
+assert.equal(discountedRemoteSummary.memberDiscount, 6000)
 assert.equal(discountedRemoteSummary.pointDiscount, MEMBER.point)
-assert.equal(discountedRemoteSummary.finalPrice, 58800)
+assert.equal(discountedRemoteSummary.finalPrice, 52800)
 assert.deepEqual(
   createPaymentOrderLines({
     summary: discountedRemoteSummary,
@@ -60,6 +62,25 @@ assert.deepEqual(
       amount: 5000,
       couponCode: 'WELCOME5000',
     },
+    { kind: 'memberDiscount', label: '회원 할인', amount: 6000 },
     { kind: 'point', label: '적립금 사용', amount: 4200 },
   ],
 )
+
+const overDiscountedSummary = createCheckoutSummary({
+  cart: CART,
+  address: ADDRESSES[0],
+  member: MEMBER,
+  appliedCoupon: {
+    code: 'TOO_BIG',
+    label: '과한 쿠폰',
+    discount: 999999,
+  },
+  usePoint: true,
+  pointInput: 999999,
+})
+
+assert.equal(overDiscountedSummary.couponDiscount, 65000)
+assert.equal(overDiscountedSummary.memberDiscount, 0)
+assert.equal(overDiscountedSummary.pointDiscount, 0)
+assert.equal(overDiscountedSummary.finalPrice, 0)

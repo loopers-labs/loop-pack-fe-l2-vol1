@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings=0",
+    "test:checkout": "node --experimental-strip-types scripts/checkoutModel.spec.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"

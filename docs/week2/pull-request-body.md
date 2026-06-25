@@ -15,6 +15,7 @@
   - 컴포넌트를 바로 쪼개기 전에 모델을 먼저 나눠야 하는 경우가 있었다.
   - `OrderLineRow` 문제는 UI props 문제가 아니라 주문 금액 라인 모델이 없는 문제였다.
   - `Price`처럼 “공통 표시 컴포넌트”처럼 보여도 비즈니스 할인 로직이 숨어 있으면 계산 모델과 화면 표시가 서로 달라질 수 있다.
+  - 쿠폰, 회원 할인, 포인트처럼 서로 교차되는 할인은 union 모델과 금액 하한 정책을 같이 봐야 한다.
 
 ## 🤔 고민한 점 / 막혔던 부분
 
@@ -26,11 +27,11 @@
 
 - `OrderLine` 모델을 `checkoutModel` 안에 둔 판단이 적절한지 궁금합니다. 카드 즉시할인, 부분취소, 무료배송 쿠폰이 추가되면 같은 union을 확장하는 게 맞을까요, 아니면 계산 모델과 표시 모델을 더 분리해야 할까요?
 - `OrderLineRow`를 하나의 renderer로 유지한 판단이 적절한지 보고 싶습니다. 지금은 모델이 닫혀 있어 컴포넌트 하나로도 읽힌다고 봤는데, 언제 `OrderSummary.Item`, `OrderSummary.Discount`처럼 의미 단위 컴포넌트로 나누는 게 나은지 기준이 궁금합니다.
-- `Price`에서 VIP 할인 로직을 제거한 판단이 맞는지 봐주세요. 표시 컴포넌트가 비즈니스 규칙을 몰라야 한다는 쪽으로 정리했습니다.
+- VIP 할인을 `Price`에서 제거하고 `checkoutModel`로 올린 판단이 맞는지 봐주세요. 표시 컴포넌트는 금액을 보여주기만 하고, 할인 정책은 계산 모델이 소유하게 정리했습니다.
 
 ## 검증
 
-- `node --experimental-strip-types scripts/checkoutModel.spec.ts`
+- `pnpm test:checkout`
 - `pnpm lint`
 - `pnpm build`
 - `pnpm dev --host 127.0.0.1 --port 5173`
