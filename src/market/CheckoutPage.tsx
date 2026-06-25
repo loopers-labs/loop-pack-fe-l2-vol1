@@ -1,4 +1,4 @@
-import { For, Show } from '@ilokesto/utilinent'
+import { Show } from '@ilokesto/utilinent'
 import { ErrorBoundary } from '@suspensive/react'
 import { useState } from 'react'
 
@@ -16,8 +16,6 @@ import {
   Heading,
   Label,
   Modal,
-  Radio,
-  RadioGroup,
   SectionCard,
   Textarea,
 } from '@/shared/ui'
@@ -26,18 +24,17 @@ import {
   DeliverySection,
   OrderCompleteSection,
   OrderItemsSection,
+  PaymentMethodSection,
   PaymentSummarySection,
   PointSection,
   RecentOrderSection,
 } from '@/widgets/market'
 
-const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+const PAYMENT_DICT: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
   transfer: '계좌이체',
   kakao: '카카오페이',
 }
-
-const PAYMENT_METHODS: Array<PaymentMethod> = ['card', 'transfer', 'kakao']
 
 export function CheckoutPage() {
   const addresses = marketService.getAddresses()
@@ -102,25 +99,11 @@ export function CheckoutPage() {
           onPointInputChange={setPointInput}
         />
 
-        <SectionCard>
-          <Heading.H2>결제수단</Heading.H2>
-          <RadioGroup legend="결제수단" legendClassName="sr-only">
-            <For each={PAYMENT_METHODS}>
-              {(method) => (
-                <Label key={method}>
-                  <Radio
-                    name="payment"
-                    checked={payment === method}
-                    onChange={() => {
-                      setPayment(method)
-                    }}
-                  />
-                  {PAYMENT_LABEL[method]}
-                </Label>
-              )}
-            </For>
-          </RadioGroup>
-        </SectionCard>
+        <PaymentMethodSection
+          paymentOptions={PAYMENT_DICT}
+          defaultPayment={payment}
+          onChangePayment={setPayment}
+        />
 
         <PaymentSummarySection
           itemTotal={priceQuote.itemTotal}

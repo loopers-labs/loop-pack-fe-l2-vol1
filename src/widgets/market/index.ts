@@ -3,6 +3,7 @@ export {
   DeliverySection,
   OrderCompleteSection,
   OrderItemsSection,
+  PaymentMethodSection,
   PaymentSummarySection,
   PointSection,
   RecentOrderSection,
