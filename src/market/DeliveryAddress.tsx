@@ -12,6 +12,7 @@ type Props = {
 export function DeliveryAddress({ addressId, onChangeAddress }: Props) {
   const [expanded, setExpanded] = useState(false);
   const selected = ADDRESSES.find((a) => a.id === addressId) ?? ADDRESSES[0];
+
   return (
     <SectionCard
       title="배송지"
@@ -35,6 +36,7 @@ export function DeliveryAddress({ addressId, onChangeAddress }: Props) {
 function AddressForm({ addressId, onChangeAddress }: Props) {
   const [onlyNear, setOnlyNear] = useState(false);
   const list = onlyNear ? ADDRESSES.filter((a) => !a.isRemote) : ADDRESSES;
+
   return (
     <>
       <label className="filter">

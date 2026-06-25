@@ -51,6 +51,7 @@ function Amount({
       </strong>
     );
   }
+
   return (
     <strong style={{ color: 'var(--text-h)' }}>
       {amount.toLocaleString()}원

@@ -9,6 +9,7 @@ type Props = {
 
 export function TermsAgreement({ agreed, onChangeAgreed }: Props) {
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+
   return (
     <>
       <SectionCard>
