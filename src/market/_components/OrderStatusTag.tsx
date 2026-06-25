@@ -1,4 +1,4 @@
-import type { OrderStatus } from './types'
+import type { OrderStatus } from '../types'
 
 /**
  * ⑥ boolean 폭발 → enum
