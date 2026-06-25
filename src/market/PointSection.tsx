@@ -23,6 +23,7 @@ export function PointSection({
         />
         적립금 사용 (보유 {MEMBER.point.toLocaleString()}P)
       </label>
+
       {usePoint ? (
         <input
           type="number"

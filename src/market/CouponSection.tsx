@@ -28,6 +28,7 @@ export function CouponSection({ appliedCoupon, onApplyCoupon }: Props) {
         />
         <button onClick={handleApply}>적용</button>
       </div>
+
       {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
     </>
   );

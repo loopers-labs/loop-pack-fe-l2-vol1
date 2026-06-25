@@ -14,6 +14,7 @@ function Product({
   return (
     <>
       <span className="thumb">{item.thumbnail}</span>
+
       <div className="grow">
         <span>{item.name}</span>
         {item.option ? (
