@@ -11,7 +11,7 @@ import { SummarySection } from '@/market/sections/SummarySection';
 import { TermsSection } from '@/market/sections/TermsSection';
 import { RecentOrdersSection } from '@/market/sections/RecentOrdersSection';
 import '@/market/market.css';
-import { AddressSection } from '@/market/sections/AddressSection';
+import { AddressSection } from './sections/AddressSection';
 import { getPriceText } from '@/utils.ts';
 import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
 import { useCheckout } from '@/market/hooks/useCheckoutSummary';

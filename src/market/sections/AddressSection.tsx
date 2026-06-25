@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { Address } from '@/market/types/address.types';
+import type { Address } from '@/market/types/address.types.ts';
 import { Section } from '@/common/components/Section.tsx';
-import { AddressForm } from '@/market/sections/AddressSection/AddressForm.tsx';
+import { AddressForm } from '@/market/forms/AddressForm.tsx';
 
 type AddressSectionProps = {
   /** 현재 선택된 배송지 (표시용) */
