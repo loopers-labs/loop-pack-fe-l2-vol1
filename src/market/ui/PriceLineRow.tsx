@@ -7,16 +7,17 @@ const LABEL_MAP: Record<PriceType, string> = {
   point: '포인트 사용',
 };
 
+// 불필요한 isDiscount Props 제거(type으로 판단 가능)
 type PriceLineRowProps = {
   type: PriceType;
   amount: number;
-  isDiscount?: boolean;
   couponCode?: string;
 };
 
 // 1번, 3번 위배 -> 별도의 컴포넌트로 분리하기 -> 불필요한 props 제거
-export function PriceLineRow({ type, amount, isDiscount, couponCode }: PriceLineRowProps) {
+export function PriceLineRow({ type, amount, couponCode }: PriceLineRowProps) {
   const label = LABEL_MAP[type];
+  const isDiscount = type === 'coupon' || type === 'point';
   return (
     <div className="line">
       <div className="grow">

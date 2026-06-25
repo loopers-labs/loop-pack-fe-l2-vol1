@@ -14,7 +14,6 @@ export const Point = ({
 }) => {
   const member = MEMBER;
   // 입력 금액이 보유 포인트보다 높을 경우 자동으로 보유 포인트가 입력되도록 설정
-  // TODO: 적립금 사용이 체크되면 기본적으로 최대 적립금이 적용되도록
   const pointValue = pointInput > member.point ? member.point : pointInput;
   return (
     <SectionContainer title="적립금">

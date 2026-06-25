@@ -26,19 +26,13 @@ export const FinalPrice = ({
   const member = MEMBER;
   return (
     <SectionContainer title="결제 금액">
-      {/* TODO: label prop 없이도 표시 가능*/}
       <PriceLineRow type="subtotal" amount={itemTotal} />
       <PriceLineRow type="shipping" amount={shippingFee} />
       {appliedCoupon ? (
         // TODO: isDiscount는 couponDiscount로 판단 가능
-        <PriceLineRow
-          type="coupon"
-          amount={couponDiscount}
-          isDiscount
-          couponCode={appliedCoupon.code}
-        />
+        <PriceLineRow type="coupon" amount={couponDiscount} couponCode={appliedCoupon.code} />
       ) : null}
-      {usePoint ? <PriceLineRow type="point" amount={pointDiscount} isDiscount /> : null}
+      {usePoint ? <PriceLineRow type="point" amount={pointDiscount} /> : null}
       <div className="total">
         <span>최종 결제 금액</span>
         <Price amount={finalPrice} member={member} />

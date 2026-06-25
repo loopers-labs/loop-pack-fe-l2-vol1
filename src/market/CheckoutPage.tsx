@@ -27,7 +27,7 @@ export function CheckoutPage() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<CouponType | null>(null);
   const [usePoint, setUsePoint] = useState(false);
-  const [pointInput, setPointInput] = useState(0);
+  const [pointInput, setPointInput] = useState(member.point); // 기본적으로 최대 적립금이 적용되도록 변경
   const [payment, setPayment] = useState<PaymentMethodType>('card');
   const [agreed, setAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
