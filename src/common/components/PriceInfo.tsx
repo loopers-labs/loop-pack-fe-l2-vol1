@@ -1,4 +1,4 @@
-import { getPriceText } from '../../utils.ts';
+import { getPriceText } from '@/utils.ts';
 
 type PriceInfoProps = {
   /** 할인 금액 여부 — true면 빨간색과 '-' 접두사로 표시 */

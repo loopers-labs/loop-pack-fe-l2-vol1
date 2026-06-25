@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { Coupon } from '../types/coupon.types';
-import { Section } from '../../common/components/Section.tsx';
-import { COUPONS } from '../data.ts';
+import type { Coupon } from '@/market/types/coupon.types';
+import { Section } from '@/common/components/Section.tsx';
+import { COUPONS } from '@/market/data.ts';
 
 type CouponSectionProps = {
   onDiscountChange: (discount: number) => void;

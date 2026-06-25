@@ -1,7 +1,7 @@
-import type { CartItem } from '../types/cart.types';
-import { Section } from '../../common/components/Section.tsx';
-import { LineRow } from '../../common/components/LineRow.tsx';
-import { PriceInfo } from '../../common/components/PriceInfo.tsx';
+import type { CartItem } from '@/market/types/cart.types';
+import { Section } from '@/common/components/Section.tsx';
+import { LineRow } from '@/common/components/LineRow.tsx';
+import { PriceInfo } from '@/common/components/PriceInfo.tsx';
 
 type CartSectionProps = {
   items: CartItem[];

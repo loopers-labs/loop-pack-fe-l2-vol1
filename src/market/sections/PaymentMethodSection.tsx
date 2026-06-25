@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { PaymentMethod } from '../types/payment.types';
-import { Section } from '../../common/components/Section.tsx';
-import { Radio } from '../../common/components/Radio.tsx';
+import type { PaymentMethod } from '@/market/types/payment.types';
+import { Section } from '@/common/components/Section.tsx';
+import { Radio } from '@/common/components/Radio.tsx';
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',

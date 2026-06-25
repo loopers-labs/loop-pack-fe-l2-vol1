@@ -1,23 +1,23 @@
 import { useState } from 'react';
-import { CART, MEMBER, PAST_ORDERS } from './data';
-import { DeliveryMemoSection } from './sections/DeliveryMemoSection';
-import { CartSection } from './sections/CartSection';
-import { CouponSection } from './sections/CouponSection';
-import { PointSection } from './sections/PointSection';
-import { PaymentMethodSection } from './sections/PaymentMethodSection';
-import { SummarySection } from './sections/SummarySection';
-import { TermsSection } from './sections/TermsSection';
-import { RecentOrdersSection } from './sections/RecentOrdersSection';
-import './market.css';
-import { AddressSection } from './sections/AddressSection';
-import { getPriceText } from '../utils.ts';
+import { CART, MEMBER, PAST_ORDERS } from '@/market/data';
+import { DeliveryMemoSection } from '@/market/sections/DeliveryMemoSection';
+import { CartSection } from '@/market/sections/CartSection';
+import { CouponSection } from '@/market/sections/CouponSection';
+import { PointSection } from '@/market/sections/PointSection';
+import { PaymentMethodSection } from '@/market/sections/PaymentMethodSection';
+import { SummarySection } from '@/market/sections/SummarySection';
+import { TermsSection } from '@/market/sections/TermsSection';
+import { RecentOrdersSection } from '@/market/sections/RecentOrdersSection';
+import '@/market/market.css';
+import { AddressSection } from '@/market/sections/AddressSection';
+import { getPriceText } from '@/utils.ts';
 import {
   VIP_DISCOUNT_RATE,
   BASE_SHIPPING_FEE,
   FREE_SHIPPING_THRESHOLD,
   REMOTE_AREA_SURCHARGE,
-} from './pricePolicy.ts';
-import { CheckoutCompletePage } from './CheckoutCompletePage.tsx';
+} from '@/market/pricePolicy.ts';
+import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
 
 export function CheckoutPage() {
   const member = MEMBER;

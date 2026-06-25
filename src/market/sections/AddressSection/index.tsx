@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { Address } from '../../types/address.types';
-import { Section } from '../../../common/components/Section.tsx';
-import { AddressForm } from './AddressForm.tsx';
+import type { Address } from '@/market/types/address.types';
+import { Section } from '@/common/components/Section.tsx';
+import { AddressForm } from '@/market/sections/AddressSection/AddressForm.tsx';
 
 type AddressSectionProps = {
   onRemoteChange: (isRemote: boolean) => void;

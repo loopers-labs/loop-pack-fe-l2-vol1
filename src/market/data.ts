@@ -1,8 +1,8 @@
-import type { Address } from './types/address.types';
-import type { CartItem } from './types/cart.types';
-import type { Coupon } from './types/coupon.types';
-import type { Member } from './types/member.types';
-import type { PastOrder } from './types/order.types';
+import type { Address } from '@/market/types/address.types';
+import type { CartItem } from '@/market/types/cart.types';
+import type { Coupon } from '@/market/types/coupon.types';
+import type { Member } from '@/market/types/member.types';
+import type { PastOrder } from '@/market/types/order.types';
 
 export const CART: CartItem[] = [
   {
@@ -46,7 +46,7 @@ export const ADDRESSES: Address[] = [
   { id: 'a3', label: '본가', recipient: '김부모', detail: '제주시 첨단로 200', isRemote: true },
 ];
 
-export const MEMBER: Member = { name: '김루퍼', grade: 'VIP', point: 4200 };
+export const MEMBER: Member = { name: '김루퍼', grade: 'VIP', point: 600000 };
 
 export const PAST_ORDERS: PastOrder[] = [
   { id: 'o1', summary: '나이키 에어포스 외 1건', status: 'shipped', amount: 138000 },

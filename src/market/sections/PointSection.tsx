@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Section } from '../../common/components/Section.tsx';
-import { Checkbox } from '../../common/components/Checkbox.tsx';
-import { getPriceText } from '../../utils.ts';
+import { Section } from '@/common/components/Section.tsx';
+import { Checkbox } from '@/common/components/Checkbox.tsx';
+import { getPriceText } from '@/utils.ts';
 
 type PointSectionProps = {
   availablePoint: number;

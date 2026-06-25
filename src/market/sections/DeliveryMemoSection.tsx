@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Section } from '../../common/components/Section.tsx';
+import { Section } from '@/common/components/Section.tsx';
 
 export function DeliveryMemoSection() {
   const [memo, setMemo] = useState('');

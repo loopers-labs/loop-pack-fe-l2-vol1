@@ -1,7 +1,7 @@
-import type { OrderStatus, PastOrder } from '../types/order.types';
-import { Tag } from '../../common/components/Tag.tsx';
-import { Section } from '../../common/components/Section.tsx';
-import { LineRow } from '../../common/components/LineRow.tsx';
+import type { OrderStatus, PastOrder } from '@/market/types/order.types';
+import { Tag } from '@/common/components/Tag.tsx';
+import { Section } from '@/common/components/Section.tsx';
+import { LineRow } from '@/common/components/LineRow.tsx';
 
 const ORDER_STATUS_PRESET: Record<OrderStatus, { label: string; color: string }> = {
   paid: { label: '결제완료', color: '#3b82f6' },

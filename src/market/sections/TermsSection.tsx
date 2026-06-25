@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Modal } from '../../common/components/Modal.tsx';
-import { Checkbox } from '../../common/components/Checkbox.tsx';
+import { Modal } from '@/common/components/Modal.tsx';
+import { Checkbox } from '@/common/components/Checkbox.tsx';
 
 type Props = {
   agreed: boolean;
