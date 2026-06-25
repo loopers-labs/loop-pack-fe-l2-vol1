@@ -21,7 +21,13 @@ export type Address = {
   isRemote: boolean; // 도서산간 → 배송비 추가
 };
 
-export type PaymentMethod = 'card' | 'transfer' | 'kakao';
+export const PAYMENT_METHODS = ['card', 'transfer', 'kakao'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+export const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  card: '신용/체크카드',
+  transfer: '계좌이체',
+  kakao: '카카오페이',
+};
 
 export type Member = {
   name: string;
@@ -47,7 +53,6 @@ export type CheckoutState = {
   addressId: string;
   deliveryMemo: string;
   appliedCoupon: Coupon | null;
-  usePoint: boolean;
   pointInput: number;
   paymentMethod: PaymentMethod;
   agreed: boolean;

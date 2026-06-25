@@ -13,10 +13,9 @@ type Amount = {
 type Props = {
   amount: Amount;
   appliedCoupon: Coupon | null;
-  usePoint: boolean;
 };
 
-export function PriceSummary({ amount, appliedCoupon, usePoint }: Props) {
+export function PriceSummary({ amount, appliedCoupon }: Props) {
   return (
     <>
       <OrderLineRow>
@@ -38,7 +37,7 @@ export function PriceSummary({ amount, appliedCoupon, usePoint }: Props) {
         </OrderLineRow>
       ) : null}
 
-      {usePoint ? (
+      {amount.pointDiscount > 0 ? (
         <OrderLineRow>
           <OrderLineRow.Label>적립금 사용</OrderLineRow.Label>
           <OrderLineRow.Amount amount={amount.pointDiscount} isDiscount />

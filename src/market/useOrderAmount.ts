@@ -18,11 +18,9 @@ export function useOrderAmount(state: CheckoutState) {
 
   // ── 쿠폰 / 적립금 정책 ───────────────────────
   const couponDiscount = state.appliedCoupon ? state.appliedCoupon.discount : 0;
-  const pointDiscount = state.usePoint
-    ? Math.min(state.pointInput, MEMBER.point, itemTotal)
-    : 0;
+  const pointDiscount = Math.min(state.pointInput, MEMBER.point, itemTotal);
 
-  // ── 최종 금액 ────────────────────
+  // ── 최종 금액 (VIP면 분기) ────────────────────
   const calculatedPrice =
     itemTotal + shippingFee - couponDiscount - pointDiscount;
   const finalPrice =

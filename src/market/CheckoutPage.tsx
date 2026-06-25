@@ -2,29 +2,27 @@ import { useState } from 'react';
 
 import { CouponSection } from './CouponSection';
 import { DeliveryAddress } from './DeliveryAddress';
+import { DeliveryMemo } from './DeliveryMemo';
 import { OrderComplete } from './OrderComplete';
 import { OrderLineRow } from './OrderLineRow';
 import { PastOrderRow } from './PastOrderRow';
+import { PayButton } from './PayButton';
+import { PaymentMethodOption } from './PaymentMethodOption';
+import { PointSection } from './PointSection';
 import { PriceSummary } from './PriceSummary';
 import { SectionCard } from './SectionCard';
 import { TermsAgreement } from './TermsAgreement';
-import { ADDRESSES, CART, MEMBER, PAST_ORDERS } from './data';
+import { ADDRESSES, CART, PAST_ORDERS } from './data';
+import { PAYMENT_METHODS } from './types';
 import type { CheckoutState, Coupon, PaymentMethod } from './types';
 import { useOrderAmount } from './useOrderAmount';
 import './market.css';
-
-const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  card: '신용/체크카드',
-  transfer: '계좌이체',
-  kakao: '카카오페이',
-};
 
 export function CheckoutPage() {
   const [checkoutForm, setCheckoutForm] = useState<CheckoutState>({
     addressId: ADDRESSES[0].id,
     deliveryMemo: '',
     appliedCoupon: null,
-    usePoint: false,
     pointInput: 0,
     paymentMethod: 'card',
     agreed: false,
@@ -65,7 +63,6 @@ type FormProps = {
 function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
   const setAddress = (id: string) => update({ addressId: id });
   const setMemo = (memo: string) => update({ deliveryMemo: memo });
-  const setUsePoint = (use: boolean) => update({ usePoint: use });
   const setPointInput = (amount: number) => update({ pointInput: amount });
   const setPaymentMethod = (method: PaymentMethod) =>
     update({ paymentMethod: method });
@@ -83,11 +80,7 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
       />
 
       <SectionCard title="배송 요청사항">
-        <textarea
-          value={checkoutForm.deliveryMemo}
-          onChange={(e) => setMemo(e.target.value)}
-          placeholder="배송 시 요청사항 (예: 부재 시 문 앞에 두세요)"
-        />
+        <DeliveryMemo memo={checkoutForm.deliveryMemo} onChangeMemo={setMemo} />
       </SectionCard>
 
       <SectionCard title="주문 상품">
@@ -107,33 +100,20 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
       </SectionCard>
 
       <SectionCard title="적립금">
-        <label>
-          <input
-            type="checkbox"
-            checked={checkoutForm.usePoint}
-            onChange={(e) => setUsePoint(e.target.checked)}
-          />
-          적립금 사용 (보유 {MEMBER.point.toLocaleString()}P)
-        </label>
-        {checkoutForm.usePoint ? (
-          <input
-            type="number"
-            value={checkoutForm.pointInput}
-            onChange={(e) => setPointInput(Number(e.target.value))}
-          />
-        ) : null}
+        <PointSection
+          pointInput={checkoutForm.pointInput}
+          onChangePointInput={setPointInput}
+        />
       </SectionCard>
 
       <SectionCard title="결제수단">
-        {(['card', 'transfer', 'kakao'] as PaymentMethod[]).map((m) => (
-          <label key={m}>
-            <input
-              type="radio"
-              checked={checkoutForm.paymentMethod === m}
-              onChange={() => setPaymentMethod(m)}
-            />
-            {PAYMENT_LABEL[m]}
-          </label>
+        {PAYMENT_METHODS.map((method) => (
+          <PaymentMethodOption
+            key={method}
+            method={method}
+            checked={checkoutForm.paymentMethod === method}
+            onSelect={setPaymentMethod}
+          />
         ))}
       </SectionCard>
 
@@ -141,15 +121,16 @@ function CheckoutForm({ checkoutForm, update, amount, onPlace }: FormProps) {
         <PriceSummary
           amount={amount}
           appliedCoupon={checkoutForm.appliedCoupon}
-          usePoint={checkoutForm.usePoint}
         />
       </SectionCard>
 
       <TermsAgreement agreed={checkoutForm.agreed} onChangeAgreed={setAgreed} />
 
-      <button className="pay" disabled={!checkoutForm.agreed} onClick={onPlace}>
-        {amount.finalPrice.toLocaleString()}원 결제하기
-      </button>
+      <PayButton
+        finalPrice={amount.finalPrice}
+        disabled={!checkoutForm.agreed}
+        onClick={onPlace}
+      />
 
       <SectionCard title="최근 주문">
         {PAST_ORDERS.map((order) => (
