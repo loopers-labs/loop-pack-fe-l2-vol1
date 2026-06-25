@@ -28,6 +28,7 @@ import {
   DeliverySection,
   OrderItemsSection,
   PointSection,
+  RecentOrderSection,
 } from '@/widgets/market'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -42,7 +43,6 @@ export function CheckoutPage() {
   const addresses = marketService.getAddresses()
   const cartItems = marketService.getCartItems()
   const member = marketService.getMember()
-  const pastOrders = marketService.getPastOrders()
 
   const [selectedAddressId, setSelectedAddressId] = useState(
     addresses[0]?.id ?? '',
@@ -62,7 +62,6 @@ export function CheckoutPage() {
     pointInput,
     member,
   })
-
   if (placed) {
     return (
       <div className="mx-auto max-w-120 px-4 pt-6 pb-24 text-left text-(--text)">
@@ -220,14 +219,7 @@ export function CheckoutPage() {
         </Modal>
       </Show>
 
-      <SectionCard>
-        <Heading.H2>최근 주문</Heading.H2>
-        <For each={pastOrders}>
-          {(order) => (
-            <OrderLineRow key={order.id} kind="past-order" order={order} />
-          )}
-        </For>
-      </SectionCard>
+      <RecentOrderSection />
     </div>
   )
 }
