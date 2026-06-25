@@ -168,100 +168,116 @@ export function CheckoutPage() {
         onSelectAddress={setSelectedAddressId}
       />
 
-      <section>
-        <h2>배송 요청사항</h2>
-        <DeliveryMemo />
-      </section>
+      <Card>
+        <Card.Header>
+          <Card.Title>배송 요청사항</Card.Title>
+        </Card.Header>
+        <Card.Body>
+          <DeliveryMemo />
+        </Card.Body>
+      </Card>
 
-      <section>
-        <h2>주문 상품</h2>
-        {cart.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
-        ))}
-      </section>
+      <Card>
+        <Card.Title>주문 상품</Card.Title>
+        <Card.Body>
+          {cart.map((it) => (
+            <OrderLineRow
+              key={it.id}
+              type="product"
+              label={it.name}
+              amount={it.price * it.quantity}
+              thumbnail={it.thumbnail}
+              option={it.option}
+              quantity={it.quantity}
+            />
+          ))}
+        </Card.Body>
+      </Card>
 
-      <section>
-        <h2>쿠폰</h2>
-        <div className="row">
-          <input
-            type="text"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            placeholder="쿠폰 코드 (예: WELCOME5000)"
-          />
-          <button onClick={applyCoupon}>적용</button>
-        </div>
-        {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
-      </section>
+      <Card>
+        <Card.Title>쿠폰</Card.Title>
+        <Card.Body>
+          <div className="row">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              placeholder="쿠폰 코드 (예: WELCOME5000)"
+            />
+            <button onClick={applyCoupon}>적용</button>
+          </div>
+          {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
+        </Card.Body>
+      </Card>
 
-      <section>
-        <h2>적립금</h2>
-        <label>
-          <input
-            type="checkbox"
-            checked={usePoint}
-            onChange={(e) => setUsePoint(e.target.checked)}
-          />
-          적립금 사용 (보유 {member.point.toLocaleString()}P)
-        </label>
-        {usePoint ? (
-          <input
-            type="number"
-            value={pointInput}
-            onChange={(e) => setPointInput(Number(e.target.value))}
-          />
-        ) : null}
-      </section>
-
-      <section>
-        <h2>결제수단</h2>
-        {(["card", "transfer", "kakao"] as PaymentMethod[]).map((m) => (
-          <label key={m}>
-            <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
-            {PAYMENT_LABEL[m]}
+      <Card>
+        <Card.Title>적립금</Card.Title>
+        <Card.Body>
+          <label>
+            <input
+              type="checkbox"
+              checked={usePoint}
+              onChange={(e) => setUsePoint(e.target.checked)}
+            />
+            적립금 사용 (보유 {member.point.toLocaleString()}P)
           </label>
-        ))}
-      </section>
+          {usePoint ? (
+            <input
+              type="number"
+              value={pointInput}
+              onChange={(e) => setPointInput(Number(e.target.value))}
+            />
+          ) : null}
+        </Card.Body>
+      </Card>
 
-      <section>
-        <h2>결제 금액</h2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
-            isDiscount
-            couponCode={appliedCoupon.code}
-          />
-        ) : null}
-        {usePoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-        ) : null}
-        <div className="total">
-          <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
-        </div>
-      </section>
+      <Card>
+        <Card.Title>결제수단</Card.Title>
+        <Card.Body>
+          {(["card", "transfer", "kakao"] as PaymentMethod[]).map((m) => (
+            <label key={m}>
+              <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
+              {PAYMENT_LABEL[m]}
+            </label>
+          ))}
+        </Card.Body>
+      </Card>
 
-      <section>
-        <label>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          주문 내용 및 약관에 동의합니다
-        </label>
-        <button className="link" onClick={() => setIsTermsOpen(true)}>
-          약관 보기
-        </button>
-      </section>
+      <Card>
+        <Card.Title>결제 금액</Card.Title>
+        <Card.Body>
+          <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
+          <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
+          {appliedCoupon ? (
+            <OrderLineRow
+              type="coupon"
+              label="쿠폰 할인"
+              amount={couponDiscount}
+              isDiscount
+              couponCode={appliedCoupon.code}
+            />
+          ) : null}
+          {usePoint ? (
+            <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
+          ) : null}
+          <div className="total">
+            <span>최종 결제 금액</span>
+            <Price amount={finalPrice} member={member} />
+          </div>
+        </Card.Body>
+      </Card>
+
+      <Card>
+        <Card.Body>
+          <label>
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+            주문 내용 및 약관에 동의합니다
+          </label>
+          <button className="link" onClick={() => setIsTermsOpen(true)}>
+            약관 보기
+          </button>
+        </Card.Body>
+      </Card>
 
       <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
         {finalPrice.toLocaleString()}원 결제하기
@@ -277,21 +293,23 @@ export function CheckoutPage() {
         </div>
       ) : null}
 
-      <section>
-        <h2>최근 주문</h2>
-        {PAST_ORDERS.map((o) => (
-          <div key={o.id} className="line">
-            <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === "paid"}
-              isPreparing={o.status === "preparing"}
-              isShipped={o.status === "shipped"}
-              isDelivered={o.status === "delivered"}
-              isCancelled={o.status === "cancelled"}
-            />
-          </div>
-        ))}
-      </section>
+      <Card>
+        <Card.Title>최근 주문</Card.Title>
+        <Card.Body>
+          {PAST_ORDERS.map((o) => (
+            <div key={o.id} className="line">
+              <div className="grow">{o.summary}</div>
+              <OrderStatusTag
+                isPaid={o.status === "paid"}
+                isPreparing={o.status === "preparing"}
+                isShipped={o.status === "shipped"}
+                isDelivered={o.status === "delivered"}
+                isCancelled={o.status === "cancelled"}
+              />
+            </div>
+          ))}
+        </Card.Body>
+      </Card>
     </div>
   );
 }
