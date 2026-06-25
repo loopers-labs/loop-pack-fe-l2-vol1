@@ -5,7 +5,7 @@ import { CartSection } from './sections/CartSection';
 import { CouponSection } from './sections/CouponSection';
 import { PointSection } from './sections/PointSection';
 import { PaymentMethodSection } from './sections/PaymentMethodSection';
-import { OrderSummarySection } from './sections/OrderSummarySection';
+import { SummarySection } from './sections/SummarySection';
 import { TermsSection } from './sections/TermsSection';
 import { RecentOrdersSection } from './sections/RecentOrdersSection';
 import './market.css';
@@ -70,7 +70,7 @@ export function CheckoutPage() {
 
       <PaymentMethodSection />
 
-      <OrderSummarySection
+      <SummarySection
         itemTotal={itemTotal}
         shippingFee={shippingFee}
         couponDiscount={couponDiscount}
