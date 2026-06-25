@@ -4,33 +4,35 @@ import { Checkbox } from '@/common/components/Checkbox.tsx';
 import { getPriceText } from '@/utils.ts';
 
 type PointSectionProps = {
+  /** 보유 적립금 */
   availablePoint: number;
-  itemTotal: number;
+  /** 쿠폰·등급할인 적용 후 포인트로 차감 가능한 최대 금액 */
+  payableAmount: number;
+  /** 적립금 할인 금액 변경 시 호출 */
   onPointDiscountChange: (discount: number) => void;
 };
 
 export function PointSection({
   availablePoint,
-  itemTotal,
+  payableAmount,
   onPointDiscountChange,
 }: PointSectionProps) {
   const [usePoint, setUsePoint] = useState<boolean>(false);
   const [pointInput, setPointInput] = useState<number>(0);
 
-  const reportDiscount = (nextUsePoint: boolean, nextPointInput: number) => {
-    onPointDiscountChange(nextUsePoint ? Math.min(nextPointInput, availablePoint, itemTotal) : 0);
-  };
+  //pointInput: 사용자가 입력한 값
+  //availablePoint: 보유 적립금 초과 방지
+  //payableAmount: 쿠폰 적용 후 상품금액 초과 방지
+  const effectivePointInput = Math.min(pointInput, availablePoint, payableAmount);
 
   const handleUsePointChange = (checked: boolean) => {
     setUsePoint(checked);
-    reportDiscount(checked, pointInput);
+    onPointDiscountChange(checked ? effectivePointInput : 0);
   };
 
   const handlePointInputChange = (value: number) => {
-    const maximumAvailablePoint = Math.min(availablePoint, itemTotal);
-    const next = Math.min(value, maximumAvailablePoint);
-    setPointInput(next);
-    reportDiscount(usePoint, next);
+    setPointInput(value);
+    onPointDiscountChange(usePoint ? Math.min(value, availablePoint, payableAmount) : 0);
   };
 
   return (
@@ -40,12 +42,11 @@ export function PointSection({
         onChange={(e) => handleUsePointChange(e.target.checked)}
         caption={`적립금 사용 (보유 ${getPriceText(availablePoint, 'P')})`}
       />
-      {/* AI-generated */}
       {usePoint ? (
         <input
           type="text"
           inputMode="numeric"
-          value={pointInput}
+          value={effectivePointInput}
           onChange={(e) => {
             const digits = e.target.value.replace(/\D/g, '');
             handlePointInputChange(digits === '' ? 0 : Number(digits));
