@@ -1,15 +1,10 @@
 import { OrderLineRow } from './OrderLineRow';
 import { Price } from './Price';
+import type { OrderAmount } from './getOrderAmount';
 import type { Coupon } from './types';
 
 type Props = {
-  amount: {
-    itemTotal: number;
-    shippingFee: number;
-    couponDiscount: number;
-    pointDiscount: number;
-    finalPrice: number;
-  };
+  amount: OrderAmount;
   appliedCoupon: Coupon | null;
 };
 

@@ -37,3 +37,5 @@ export function getOrderAmount(order: OrderAmountInput) {
 
   return { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice };
 }
+
+export type OrderAmount = ReturnType<typeof getOrderAmount>;
