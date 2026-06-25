@@ -1,4 +1,4 @@
-/** ⑤ props 과다 → Composition: 8개 flat props + type 분기를 children 합성으로 교체 */
+/** ⑤ props 과다 + ⑧ 확장은 위임으로: 8개 flat props + type 분기를 children 합성으로 교체, 새 타입 추가 시 내부 수정 불필요 */
 export function OrderLineRow({ children }: { children: React.ReactNode }) {
   return <div className="line">{children}</div>
 }
