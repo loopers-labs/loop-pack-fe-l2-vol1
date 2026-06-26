@@ -68,7 +68,18 @@ function AddressForm({
   return (
     <>
       <label className="filter">
-        <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={onlyNear}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            setOnlyNear(checked);
+            if (checked && !addresses.some((a) => !a.isRemote && a.id === selectedAddressId)) {
+              const firstVisible = addresses.find((a) => !a.isRemote);
+              if (firstVisible) onSelectAddress(firstVisible.id);
+            }
+          }}
+        />
         도서산간 제외
       </label>
       {list.map((a) => (
