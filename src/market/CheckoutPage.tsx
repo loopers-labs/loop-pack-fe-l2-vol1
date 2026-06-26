@@ -7,6 +7,7 @@ import { DeliveryMemoCard } from "./DeliveryMemoCard";
 import { OrderItemsCard } from "./OrderItemsCard";
 import { PaymentMethodCard } from "./PaymentMethodCard";
 import { PointsCard } from "./PointsCard";
+import { Price } from "./Price";
 import { PriceSummaryCard } from "./PriceSummaryCard";
 import { RecentOrdersCard } from "./RecentOrdersCard";
 import { TermsCard } from "./TermsCard";
@@ -42,7 +43,9 @@ export function CheckoutPage() {
 
   // 변경 전: 최종 금액을 state 에 담아둔다.
   // 변경 후: 파생 값이라 state가 아니라 렌더 시 계산. itemTotal/할인 등이 바뀌면 자동으로 다시 계산됨.
-  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
+  // VIP 등급 할인을 최종 결제 금액에 반영하고 Price를 표시 전용으로 분리
+  const vipDiscount = member.grade === "VIP" ? Math.round(itemTotal * 0.1) : 0;
+  const finalPrice = itemTotal + shippingFee - vipDiscount - couponDiscount - pointDiscount;
 
   // 카드는 쿠폰/적립금 객체 전체가 아니라 "할인 줄 표시 여부+값"만 필요하므로,
   // appliedCoupon → couponCode, usePoint → pointApplied로 변환해 넘김.
@@ -112,12 +115,13 @@ export function CheckoutPage() {
 
       <PaymentMethodCard />
 
-      <PriceSummaryCard summary={priceSummary} member={member} />
+      <PriceSummaryCard summary={priceSummary} />
 
       <TermsCard agreed={agreed} onAgreedChange={setAgreed} />
 
       <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
-        {finalPrice.toLocaleString()}원 결제하기
+        {/* 금액 표시는 공통 Price 컴포넌트 사용으로 변경 */}
+        <Price amount={finalPrice} /> 결제하기
       </button>
 
       <RecentOrdersCard />

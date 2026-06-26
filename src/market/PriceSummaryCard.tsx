@@ -1,7 +1,6 @@
 import { Card } from "./card";
 import { OrderLineRow } from "./OrderLineRow";
 import { Price } from "./Price";
-import type { Member } from "./types";
 
 interface PriceSummary {
   itemTotal: number;
@@ -15,10 +14,9 @@ interface PriceSummary {
 
 interface PriceSummaryCardProps {
   summary: PriceSummary;
-  member?: Member; // 금액 명세가 아니라 Price의 VIP 표시 계산용이라 따로 받음
 }
 
-export function PriceSummaryCard({ summary, member }: PriceSummaryCardProps) {
+export function PriceSummaryCard({ summary }: PriceSummaryCardProps) {
   const {
     itemTotal,
     shippingFee,
@@ -49,7 +47,7 @@ export function PriceSummaryCard({ summary, member }: PriceSummaryCardProps) {
         ) : null}
         <div className="total">
           <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
+          <Price amount={finalPrice} />
         </div>
       </Card.Body>
     </Card>
