@@ -1,15 +1,13 @@
 import { useState } from "react";
 
-import { Card } from "./card";
 import { CouponCard } from "./CouponCard";
 import { ADDRESSES, CART, COUPONS, MEMBER } from "./data";
 import { DeliveryCard } from "./DeliveryCard";
 import { DeliveryMemoCard } from "./DeliveryMemoCard";
 import { OrderItemsCard } from "./OrderItemsCard";
-import { OrderLineRow } from "./OrderLineRow";
 import { PaymentMethodCard } from "./PaymentMethodCard";
 import { PointsCard } from "./PointsCard";
-import { Price } from "./Price";
+import { PriceSummaryCard } from "./PriceSummaryCard";
 import { RecentOrdersCard } from "./RecentOrdersCard";
 import { TermsCard } from "./TermsCard";
 import type { Coupon } from "./types";
@@ -45,6 +43,18 @@ export function CheckoutPage() {
   // 변경 전: 최종 금액을 state 에 담아둔다.
   // 변경 후: 파생 값이라 state가 아니라 렌더 시 계산. itemTotal/할인 등이 바뀌면 자동으로 다시 계산됨.
   const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
+
+  // 카드는 쿠폰/적립금 객체 전체가 아니라 "할인 줄 표시 여부+값"만 필요하므로,
+  // appliedCoupon → couponCode, usePoint → pointApplied로 변환해 넘김.
+  const priceSummary = {
+    itemTotal,
+    shippingFee,
+    couponDiscount,
+    pointDiscount,
+    finalPrice,
+    couponCode: appliedCoupon?.code,
+    pointApplied: usePoint,
+  };
 
   //appliedCoupon은 쿠폰 카드뿐 아니라 결제 금액 계산(couponDiscount → finalPrice)도 읽는 공유 상태라 공통 부모인 CheckoutPage에서 관리
   //따라서, 그 값을 바꾸는 이 핸들러도 페이지에 둠. CouponCard는 onApply로 "적용" 요청만 실행하도록 분리
@@ -102,29 +112,7 @@ export function CheckoutPage() {
 
       <PaymentMethodCard />
 
-      <Card>
-        <Card.Title>결제 금액</Card.Title>
-        <Card.Body>
-          <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-          <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-          {appliedCoupon ? (
-            <OrderLineRow
-              type="coupon"
-              label="쿠폰 할인"
-              amount={couponDiscount}
-              isDiscount
-              couponCode={appliedCoupon.code}
-            />
-          ) : null}
-          {usePoint ? (
-            <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-          ) : null}
-          <div className="total">
-            <span>최종 결제 금액</span>
-            <Price amount={finalPrice} member={member} />
-          </div>
-        </Card.Body>
-      </Card>
+      <PriceSummaryCard summary={priceSummary} member={member} />
 
       <TermsCard agreed={agreed} onAgreedChange={setAgreed} />
 
