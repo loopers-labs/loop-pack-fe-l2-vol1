@@ -4,6 +4,7 @@ import { CouponCard } from "./CouponCard";
 import { ADDRESSES, CART, COUPONS, MEMBER } from "./data";
 import { DeliveryCard } from "./DeliveryCard";
 import { DeliveryMemoCard } from "./DeliveryMemoCard";
+import { OrderCompletePage } from "./OrderCompletePage";
 import { OrderItemsCard } from "./OrderItemsCard";
 import { PaymentMethodCard } from "./PaymentMethodCard";
 import { PointsCard } from "./PointsCard";
@@ -74,19 +75,7 @@ export function CheckoutPage() {
   };
 
   if (placed) {
-    return (
-      <div className="checkout">
-        <h1>주문 완료</h1>
-        <div className="section">
-          <p style={{ color: "var(--text-h)" }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
-          </p>
-        </div>
-        <button className="pay" onClick={() => setPlaced(false)}>
-          주문서로 돌아가기
-        </button>
-      </div>
-    );
+    return <OrderCompletePage finalPrice={finalPrice} onBack={() => setPlaced(false)} />;
   }
 
   return (
