@@ -9,7 +9,7 @@ export const Coupon = ({
 }: {
   couponCode: string;
   appliedCoupon: CouponType | null;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // handleCouponCode라는 이름이 적절한가?
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onApplyButtonClick: () => void;
 }) => {
   return (

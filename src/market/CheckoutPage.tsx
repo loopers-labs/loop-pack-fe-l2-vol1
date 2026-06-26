@@ -83,10 +83,7 @@ export function CheckoutPage() {
         <FinalPrice
           itemTotal={itemTotal}
           shippingFee={shippingFee}
-          appliedCoupon={appliedCoupon}
           couponDiscount={couponDiscount}
-          // 포인트를 사용한다는 것은 usePoint가 아니라 pointDiscount를 내려주는 것만으로 가능?
-          usePoint={usePoint}
           pointDiscount={pointDiscount}
           finalPrice={finalPrice}
         />

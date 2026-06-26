@@ -1,4 +1,4 @@
-// 유니톤 타입 활용으로 6번 체크리스트 해결
+// 유니온 타입 활용으로 6번 체크리스트 해결
 type OrderStatus = 'paid' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
 
 // 객체를 활용하여 label과 color 매핑
