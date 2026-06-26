@@ -1,21 +1,17 @@
 import { useState } from 'react';
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
+import { ADDRESSES, PAST_ORDERS } from './data';
 import { DeliveryMemo } from './DeliveryMemo';
 import './market.css';
 import { OrderLineRow } from './OrderLineRow';
 import { OrderStatusTag } from './OrderStatusTag';
-import type { Address, Coupon, PaymentMethod } from './types';
+import type { Address, PaymentMethod } from './types';
+import { useCheckout } from './useCheckout';
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
   transfer: '계좌이체',
   kakao: '카카오페이',
 };
-
-const FREE_SHIPPING_THRESHOLD = 50000;
-const BASE_SHIPPING_FEE = 3000;
-const REMOTE_AREA_SURCHARGE = 3000;
-const VIP_DISCOUNT_RATE = 0.9;
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -30,6 +26,7 @@ function DeliverySection({
 }) {
   const [expanded, setExpanded] = useState(false);
   const selected = addresses.find((a) => a.id === selectedAddressId)!;
+
   return (
     <div className="section">
       <div className="row between">
@@ -113,63 +110,37 @@ function AddressField({
 }
 
 export function CheckoutPage() {
-  const member = MEMBER;
-  const cart = CART;
-
-  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [usePoint, setUsePoint] = useState(false);
-  const [pointInput, setPointInput] = useState(0);
-  const [payment, setPayment] = useState<PaymentMethod>('card');
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
-  const [agreed, setAgreed] = useState(false);
-  const [placed, setPlaced] = useState(false);
-  const [memo, setMemo] = useState('');
-
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
-
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
-  let shippingFee = BASE_SHIPPING_FEE;
-  if (itemTotal >= FREE_SHIPPING_THRESHOLD) shippingFee = 0;
-  if (address.isRemote) shippingFee += REMOTE_AREA_SURCHARGE;
-
-  // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
-
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint
-    ? Math.min(pointInput, member.point, itemTotal)
-    : 0;
-
-  // 최종 결제 금액 , VIP 할인 적용
-  const basePrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
-  const finalPrice =
-    member.grade === 'VIP'
-      ? Math.round(basePrice * VIP_DISCOUNT_RATE)
-      : basePrice;
-
-  const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim());
-    setAppliedCoupon(found ?? null);
-    if (!found) alert('존재하지 않는 쿠폰이에요');
-  };
-
-  const handleSubmit = () => {
-    // TODO: API 연결 시 여기서 주문 데이터 수집 후 전송
-    // const orderData = {
-    //   addressId: selectedAddressId,
-    //   memo,
-    //   coupon: appliedCoupon,
-    //   pointDiscount,
-    //   payment,
-    //   cart,
-    //   finalPrice,
-    // };
-    setPlaced(true);
-  };
-
+  const {
+    member,
+    cart,
+    selectedAddressId,
+    couponCode,
+    appliedCoupon,
+    usePoint,
+    pointInput,
+    payment,
+    isTermsOpen,
+    agreed,
+    placed,
+    memo,
+    setSelectedAddressId,
+    setCouponCode,
+    setUsePoint,
+    setPointInput,
+    setPayment,
+    setIsTermsOpen,
+    setAgreed,
+    setMemo,
+    setPlaced,
+    itemTotal,
+    shippingFee,
+    couponDiscount,
+    pointDiscount,
+    basePrice,
+    finalPrice,
+    applyCoupon,
+    handleSubmit,
+  } = useCheckout();
   if (placed) {
     return (
       <div className="checkout">
