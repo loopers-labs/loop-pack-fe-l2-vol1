@@ -11,6 +11,7 @@ import { PaymentMethodCard } from "./PaymentMethodCard";
 import { PointsCard } from "./PointsCard";
 import { Price } from "./Price";
 import { RecentOrdersCard } from "./RecentOrdersCard";
+import { TermsCard } from "./TermsCard";
 import type { Coupon } from "./types";
 
 import "./market.css";
@@ -24,7 +25,6 @@ export function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [usePoint, setUsePoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
 
@@ -124,29 +124,13 @@ export function CheckoutPage() {
           </div>
         </Card.Body>
       </Card>
-      <Card>
-        <Card.Body>
-          <label>
-            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-            주문 내용 및 약관에 동의합니다
-          </label>
-          <button className="link" onClick={() => setIsTermsOpen(true)}>
-            약관 보기
-          </button>
-        </Card.Body>
-      </Card>
+
+      <TermsCard agreed={agreed} onAgreedChange={setAgreed} />
+
       <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
         {finalPrice.toLocaleString()}원 결제하기
       </button>
-      {isTermsOpen ? (
-        <div className="modal" onClick={() => setIsTermsOpen(false)}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <h3>이용 약관</h3>
-            <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
-            <button onClick={() => setIsTermsOpen(false)}>닫기</button>
-          </div>
-        </div>
-      ) : null}
+
       <RecentOrdersCard />
     </div>
   );
