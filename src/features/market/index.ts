@@ -1,8 +1,10 @@
-export { AgreeCheckoutTermsControl } from './agreeCheckoutTerms'
-export { ApplyCouponForm } from './applyCoupon'
 export {
+  AddressForm,
+  AgreeCheckoutTermsControl,
+  ApplyCouponForm,
+  OrderLineRow,
   type PaymentMethodOption,
   PaymentMethodRadioGroup,
-} from './selectPaymentMethod'
-export { AddressForm, OrderLineRow, SelectedAddress } from './ui'
-export { UsePointsControl } from './usePoints'
+  SelectedAddress,
+  UsePointsControl,
+} from './ui'
