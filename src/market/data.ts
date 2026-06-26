@@ -24,7 +24,7 @@ export const COUPONS: Coupon[] = [
   { code: "SUMMER3000", label: "여름맞이 3,000원 할인", discount: 3000 },
 ];
 
-export const ADDRESSES: Address[] = [
+export const ADDRESSES: [Address, ...Address[]] = [
   {
     id: "a1",
     label: "집",
