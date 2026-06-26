@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { SectionContainer } from '../shared/ui/container';
-import { handlePriceInputChange, handleNumericKeyDown } from '../utils/handlePriceInput';
+import { PriceInput } from './PriceInput';
 
 export const Point = ({
   usePoint,
@@ -24,19 +24,7 @@ export const Point = ({
         <input type="checkbox" checked={usePoint} onChange={onToggleCheckbox} />
         적립금 사용 (보유 {availablePoint.toLocaleString()}P)
       </label>
-      {usePoint ? (
-        <input
-          id="point"
-          // type을 text로 변경하여 가격앞에 0이오는 경우를 방지
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          // value에도 toLocaleString()을 적용하여 가독성 향상
-          value={pointValue.toLocaleString()}
-          onChange={(e) => handlePriceInputChange(e, onInputChange)}
-          onKeyDown={handleNumericKeyDown}
-        />
-      ) : null}
+      {usePoint ? <PriceInput price={pointValue} callback={onInputChange} /> : null}
     </SectionContainer>
   );
 };
