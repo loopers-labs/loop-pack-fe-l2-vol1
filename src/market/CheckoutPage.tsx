@@ -42,8 +42,9 @@ export function CheckoutPage() {
   // ── 적립금 정책 ──────────────────────────────
   const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
 
-  // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount);
+  // 변경 전: 최종 금액을 state 에 담아둔다.
+  // 변경 후: 파생 값이라 state가 아니라 렌더 시 계산. itemTotal/할인 등이 바뀌면 자동으로 다시 계산됨.
+  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
 
   //appliedCoupon은 쿠폰 카드뿐 아니라 결제 금액 계산(couponDiscount → finalPrice)도 읽는 공유 상태라 공통 부모인 CheckoutPage에서 관리
   //따라서, 그 값을 바꾸는 이 핸들러도 페이지에 둠. CouponCard는 onApply로 "적용" 요청만 실행하도록 분리
