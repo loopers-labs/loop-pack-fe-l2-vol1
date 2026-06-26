@@ -80,7 +80,7 @@ export function CheckoutPage() {
           pointInput={pointInput}
           availablePoint={member.point}
           onToggleCheckbox={(e) => setUsePoint(e.target.checked)}
-          onInputChange={(e) => setPointInput(Number(e.target.value.replaceAll(',', '')))}
+          onInputChange={setPointInput}
         />
 
         <PaymentMethod payment={payment} onPaymentMethodChange={(m) => setPayment(m)} />
