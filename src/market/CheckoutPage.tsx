@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import type { Coupon, PaymentMethod } from './types';
 import { calculateCheckoutPrice } from './calculateCheckoutPrice';
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
+import { ADDRESSES, CART, MEMBER, PAST_ORDERS } from './data';
 import { Price } from './_components/Price';
 import { OrderLineRow } from './_components/OrderLineRow';
 import { OrderStatusTag } from './_components/OrderStatusTag';
 import { DeliveryMemo } from './_components/DeliveryMemo';
 import { DeliverySection } from './_components/DeliverySection';
+import { CouponSection } from './_components/CouponSection';
+import { TermsAgreement } from './_components/TermsAgreement';
 import './market.css';
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -20,12 +22,10 @@ export function CheckoutPage() {
   const cart = CART;
 
   const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
-  const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [isUsingPoint, setIsUsingPoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
   const [payment, setPayment] = useState<PaymentMethod>('card');
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [memo, setMemo] = useState('');
   const [isAgreed, setIsAgreed] = useState(false);
   const [isPlaced, setIsPlaced] = useState(false);
@@ -42,12 +42,6 @@ export function CheckoutPage() {
       pointInput,
       member,
     });
-
-  const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim());
-    setAppliedCoupon(found ?? null);
-    if (!found) alert('존재하지 않는 쿠폰이에요');
-  };
 
   if (!address) return null;
 
@@ -97,19 +91,7 @@ export function CheckoutPage() {
         ))}
       </div>
 
-      <div className="section">
-        <h2>쿠폰</h2>
-        <div className="row">
-          <input
-            type="text"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            placeholder="쿠폰 코드 (예: WELCOME5000)"
-          />
-          <button onClick={applyCoupon}>적용</button>
-        </div>
-        {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
-      </div>
+      <CouponSection appliedCoupon={appliedCoupon} onApply={setAppliedCoupon} />
 
       <div className="section">
         <h2>적립금</h2>
@@ -181,19 +163,7 @@ export function CheckoutPage() {
         </div>
       </div>
 
-      <div className="section">
-        <label>
-          <input
-            type="checkbox"
-            checked={isAgreed}
-            onChange={(e) => setIsAgreed(e.target.checked)}
-          />
-          주문 내용 및 약관에 동의합니다.
-        </label>
-        <button className="link" onClick={() => setIsTermsOpen(true)}>
-          약관 보기
-        </button>
-      </div>
+      <TermsAgreement isAgreed={isAgreed} onAgreeChange={setIsAgreed} />
 
       <button
         className="pay"
@@ -202,19 +172,6 @@ export function CheckoutPage() {
       >
         {finalPrice.toLocaleString()}원 결제하기
       </button>
-
-      {isTermsOpen && (
-        <div className="modal" onClick={() => setIsTermsOpen(false)}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-            <h3>이용 약관</h3>
-            <p>
-              주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
-              추가됩니다.
-            </p>
-            <button onClick={() => setIsTermsOpen(false)}>닫기</button>
-          </div>
-        </div>
-      )}
 
       <div className="section">
         <h2>최근 주문</h2>
