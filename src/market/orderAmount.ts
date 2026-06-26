@@ -38,7 +38,9 @@ export function calculateOrderAmount({
   if (address.isRemote) shippingFee += 3000;
 
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
+  const pointDiscount = usePoint
+    ? Math.min(Math.max(Math.floor(pointInput) || 0, 0), member.point, itemTotal)
+    : 0;
 
   // 쿠폰·적립금을 모두 적용한 net 에 등급 할인을 건다(최종 단계 할인).
   const net = itemTotal + shippingFee - couponDiscount - pointDiscount;
