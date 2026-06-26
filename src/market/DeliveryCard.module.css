@@ -1,0 +1,14 @@
+.addr {
+  font-size: 14px;
+  align-items: flex-start;
+}
+.addrSummary {
+  font-size: 14px;
+  color: var(--text-h);
+  margin: 0;
+}
+.filter {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}

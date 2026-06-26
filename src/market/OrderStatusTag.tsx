@@ -1,3 +1,4 @@
+import styles from "./OrderStatusTag.module.css";
 import type { OrderStatus } from "./types";
 
 interface OrderStatusTagProps {
@@ -21,7 +22,7 @@ export function OrderStatusTag({ orderStatus }: OrderStatusTagProps) {
   const { label, color } = STATUS_DISPLAY[orderStatus];
 
   return (
-    <span className="tag" style={{ color, border: `1px solid ${color}` }}>
+    <span className={styles.tag} style={{ color, border: `1px solid ${color}` }}>
       {label}
     </span>
   );

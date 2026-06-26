@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Card } from "./card";
+import styles from "./DeliveryCard.module.css";
 import type { Address } from "./types";
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
@@ -38,7 +39,7 @@ export function DeliveryCard({
             onSelectAddress={onSelectAddress}
           />
         ) : (
-          <p className="addr-summary">
+          <p className={styles.addrSummary}>
             {selected.label} · {selected.recipient} ({selected.detail})
           </p>
         )}
@@ -65,7 +66,7 @@ function AddressForm({
   const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
   return (
     <>
-      <label className="filter">
+      <label className={styles.filter}>
         <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
         도서산간 제외
       </label>
@@ -91,7 +92,7 @@ function AddressField({
   onSelect: (id: string) => void;
 }) {
   return (
-    <label className="addr">
+    <label className={styles.addr}>
       <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
       <span>
         {address.label} · {address.recipient} ({address.detail})

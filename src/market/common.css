@@ -1,0 +1,114 @@
+/* common.css
+  공용 base 스타일 — 특정 컴포넌트가 아니라 앱 전반의 기본 요소 생김새라 전역으로 둠.
+  카드 고유 스타일(.row, .total 등)만 CSS Modules로 스코프하고,
+  input/button/label 같은 폼 요소 기본형은 디자인 토큰처럼 전역에서 일관되게 관리.
+  (각 컴포넌트마다 모듈로 쪼개면 같은 폼 스타일이 중복되므로) */
+
+/* 페이지 레이아웃 */
+.checkout {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 96px;
+  text-align: left;
+  color: var(--text);
+}
+.checkout h1 {
+  font-size: 26px;
+  letter-spacing: -0.5px;
+  margin: 8px 0 20px;
+}
+
+/* 공용 행 레이아웃 — OrderLineRow와 최근 주문 카드 등 여러 곳이 공유하므로 common에 둠 */
+.checkout .line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.checkout .line .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout .thumb {
+  font-size: 26px;
+}
+
+/* 공용 폼 요소 — 여러 카드가 공유 */
+.checkout input[type="text"],
+.checkout input[type="number"],
+.checkout textarea {
+  flex: 1;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.checkout textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+.checkout button {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.checkout button.link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  padding: 4px;
+}
+.checkout label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 4px 0;
+}
+.checkout small {
+  color: var(--text);
+  opacity: 0.7;
+  display: block;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+/* 공용 레이아웃 유틸 */
+.checkout .row {
+  display: flex;
+  gap: 8px;
+}
+.checkout .row.between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 결제 버튼 — CheckoutPage + OrderCompletePage 공용 */
+.checkout .pay {
+  position: sticky;
+  bottom: 16px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+.checkout .pay:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

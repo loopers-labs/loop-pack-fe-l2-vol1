@@ -1,6 +1,7 @@
 import { Card } from "./card";
 import { OrderLineRow } from "./OrderLineRow";
 import { Price } from "./Price";
+import styles from "./PriceSummaryCard.module.css";
 
 interface PriceSummary {
   itemTotal: number;
@@ -45,7 +46,7 @@ export function PriceSummaryCard({ summary }: PriceSummaryCardProps) {
         {pointApplied ? (
           <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
         ) : null}
-        <div className="total">
+        <div className={styles.total}>
           <span>최종 결제 금액</span>
           <Price amount={finalPrice} />
         </div>

@@ -14,7 +14,7 @@ import { RecentOrdersCard } from "./RecentOrdersCard";
 import { TermsCard } from "./TermsCard";
 import type { Coupon } from "./types";
 
-import "./market.css";
+import "./common.css"; // 공용 스타일 분리
 
 export function CheckoutPage() {
   const member = MEMBER;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Card } from "./card";
+import styles from "./TermsCard.module.css";
 
 interface TermsCardProps {
   agreed: boolean;
@@ -34,8 +35,8 @@ export function TermsCard({ agreed, onAgreedChange }: TermsCardProps) {
       {/* 약관 모달은 isTermsOpen과 한 몸이라 이 카드 안에 같이 둠.
         지금은 약관에서만 쓰여 공통 Modal로 추상화하지 않음(반복되면 그때 분리). */}
       {isTermsOpen ? (
-        <div className="modal" onClick={() => setIsTermsOpen(false)}>
-          <div className="modal-body" onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modal} onClick={() => setIsTermsOpen(false)}>
+          <div className={styles.modalBody} onClick={(e) => e.stopPropagation()}>
             <h3>이용 약관</h3>
             <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
             <button onClick={() => setIsTermsOpen(false)}>닫기</button>
