@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Address, Coupon, PaymentMethod } from "./types";
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
+import { calculateOrderAmount } from "./orderAmount";
 import { OrderLineRow } from "./OrderLineRow";
 import { OrderStatusTag } from "./OrderStatusTag";
 import { DeliveryMemo } from "./DeliveryMemo";
@@ -13,10 +14,6 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
 };
 
 const PAYMENT_METHODS: PaymentMethod[] = ["card", "transfer", "kakao"];
-
-// 등급 할인율 — VIP 는 최종 net 의 10%.
-// (명세 부재로 이 과제에서 정한 정책: 쿠폰·적립금 적용 후 최종 단계에서 등급 할인)
-const VIP_DISCOUNT_RATE = 0.1;
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -121,23 +118,8 @@ export function CheckoutPage() {
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
-  let shippingFee = 3000;
-  if (itemTotal >= 50000) shippingFee = 0;
-  if (address.isRemote) shippingFee += 3000;
-
-  // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
-
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
-
-  // ── 등급 할인 정책 ──────────────────────────
-  // 쿠폰·적립금을 모두 적용한 net 에 등급 할인을 건다(파생값이므로 렌더 중 계산).
-  const net = itemTotal + shippingFee - couponDiscount - pointDiscount;
-  const gradeDiscount = member.grade === "VIP" ? Math.round(net * VIP_DISCOUNT_RATE) : 0;
-  const finalPrice = net - gradeDiscount;
+  const { itemTotal, shippingFee, couponDiscount, pointDiscount, gradeDiscount, finalPrice } =
+    calculateOrderAmount({ cart, address, appliedCoupon, usePoint, pointInput, member });
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim());
