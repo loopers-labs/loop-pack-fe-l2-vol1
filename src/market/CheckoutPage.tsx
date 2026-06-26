@@ -4,6 +4,7 @@ import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
 import { calculateOrderAmount } from "./orderAmount";
 import { OrderLineRow } from "./OrderLineRow";
 import { OrderStatusTag } from "./OrderStatusTag";
+import { AmountSummary } from "./AmountSummary";
 import { DeliveryMemo } from "./DeliveryMemo";
 import "./market.css";
 
@@ -118,8 +119,14 @@ export function CheckoutPage() {
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
-  const { itemTotal, shippingFee, couponDiscount, pointDiscount, gradeDiscount, finalPrice } =
-    calculateOrderAmount({ cart, address, appliedCoupon, usePoint, pointInput, member });
+  const amount = calculateOrderAmount({
+    cart,
+    address,
+    appliedCoupon,
+    usePoint,
+    pointInput,
+    member,
+  });
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim());
@@ -133,7 +140,7 @@ export function CheckoutPage() {
         <h1>주문 완료</h1>
         <div className="section">
           <p style={{ color: "var(--text-h)" }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
+            주문이 접수되었어요. 결제 금액 {amount.finalPrice.toLocaleString()}원
           </p>
         </div>
         <button className="pay" onClick={() => setPlaced(false)}>
@@ -213,36 +220,12 @@ export function CheckoutPage() {
         ))}
       </div>
 
-      <div className="section">
-        <h2>결제 금액</h2>
-        <OrderLineRow amount={itemTotal}>
-          <span>상품 금액</span>
-        </OrderLineRow>
-        <OrderLineRow amount={shippingFee}>
-          <span>배송비</span>
-        </OrderLineRow>
-        {appliedCoupon ? (
-          <OrderLineRow amount={couponDiscount} isDiscount>
-            <span>쿠폰 할인</span>
-            <small>{appliedCoupon.code}</small>
-          </OrderLineRow>
-        ) : null}
-        {usePoint ? (
-          <OrderLineRow amount={pointDiscount} isDiscount>
-            <span>적립금 사용</span>
-          </OrderLineRow>
-        ) : null}
-        {gradeDiscount > 0 ? (
-          <OrderLineRow amount={gradeDiscount} isDiscount>
-            <span>등급 할인</span>
-            <small>{member.grade}</small>
-          </OrderLineRow>
-        ) : null}
-        <div className="total">
-          <span>최종 결제 금액</span>
-          <strong>{finalPrice.toLocaleString()}원</strong>
-        </div>
-      </div>
+      <AmountSummary
+        amount={amount}
+        appliedCoupon={appliedCoupon}
+        usePoint={usePoint}
+        memberGrade={member.grade}
+      />
 
       <div className="section">
         <label>
@@ -255,7 +238,7 @@ export function CheckoutPage() {
       </div>
 
       <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
-        {finalPrice.toLocaleString()}원 결제하기
+        {amount.finalPrice.toLocaleString()}원 결제하기
       </button>
 
       {isTermsOpen ? (
