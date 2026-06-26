@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { formatWon } from "./format";
 
 type Props = {
   amount: number;
@@ -14,7 +15,7 @@ export function OrderLineRow({ amount, isDiscount, thumbnail, children }: Props)
       <div className="grow">{children}</div>
       <strong style={{ color: isDiscount ? "#ef4444" : "var(--text-h)" }}>
         {isDiscount ? "- " : ""}
-        {amount.toLocaleString()}원
+        {formatWon(amount)}
       </strong>
     </div>
   );

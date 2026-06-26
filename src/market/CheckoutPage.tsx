@@ -6,6 +6,7 @@ import { OrderLineRow } from "./OrderLineRow";
 import { OrderStatusTag } from "./OrderStatusTag";
 import { AmountSummary } from "./AmountSummary";
 import { DeliveryMemo } from "./DeliveryMemo";
+import { formatWon } from "./format";
 import "./market.css";
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -151,7 +152,7 @@ export function CheckoutPage() {
         <h1>주문 완료</h1>
         <div className="section">
           <p style={{ color: "var(--text-h)" }}>
-            주문이 접수되었어요. 결제 금액 {amount.finalPrice.toLocaleString()}원
+            주문이 접수되었어요. 결제 금액 {formatWon(amount.finalPrice)}
           </p>
         </div>
         <button className="pay" onClick={() => setPlaced(false)}>
@@ -249,7 +250,7 @@ export function CheckoutPage() {
       </div>
 
       <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
-        {amount.finalPrice.toLocaleString()}원 결제하기
+        {formatWon(amount.finalPrice)} 결제하기
       </button>
 
       {isTermsOpen ? (

@@ -1,6 +1,7 @@
 import type { Coupon, Member } from "./types";
 import type { OrderAmount } from "./orderAmount";
 import { OrderLineRow } from "./OrderLineRow";
+import { formatWon } from "./format";
 
 type Props = {
   amount: OrderAmount;
@@ -39,7 +40,7 @@ export function AmountSummary({ amount, appliedCoupon, usePoint, memberGrade }: 
       ) : null}
       <div className="total">
         <span>최종 결제 금액</span>
-        <strong>{amount.finalPrice.toLocaleString()}원</strong>
+        <strong>{formatWon(amount.finalPrice)}</strong>
       </div>
     </div>
   );
