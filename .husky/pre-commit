@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+if [ -n "$PNPM_HOME" ]; then
+  export PATH="$PNPM_HOME:$PATH"
+fi
+
+export PATH="$HOME/Library/pnpm:$HOME/.local/share/pnpm:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+if command -v pnpm >/dev/null 2>&1; then
+  pnpm lint-staged
+elif command -v corepack >/dev/null 2>&1; then
+  corepack pnpm lint-staged
+else
+  echo "husky - pnpm or corepack is required to run lint-staged" >&2
+  echo "husky - install pnpm or enable Corepack, then retry the commit" >&2
+  exit 127
+fi
