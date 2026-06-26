@@ -125,6 +125,7 @@ export function CheckoutPage() {
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
+  const [memo, setMemo] = useState('');
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
@@ -155,6 +156,20 @@ export function CheckoutPage() {
     if (!found) alert('존재하지 않는 쿠폰이에요');
   };
 
+  const handleSubmit = () => {
+    // TODO: API 연결 시 여기서 주문 데이터 수집 후 전송
+    // const orderData = {
+    //   addressId: selectedAddressId,
+    //   memo,
+    //   coupon: appliedCoupon,
+    //   pointDiscount,
+    //   payment,
+    //   cart,
+    //   finalPrice,
+    // };
+    setPlaced(true);
+  };
+
   if (placed) {
     return (
       <div className="checkout">
@@ -183,7 +198,7 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>배송 요청사항</h2>
-        <DeliveryMemo />
+        <DeliveryMemo value={memo} onChange={setMemo} />
       </div>
 
       <div className="section">
@@ -297,11 +312,7 @@ export function CheckoutPage() {
         </button>
       </div>
 
-      <button
-        className="pay"
-        disabled={!agreed}
-        onClick={() => setPlaced(true)}
-      >
+      <button className="pay" disabled={!agreed} onClick={handleSubmit}>
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
