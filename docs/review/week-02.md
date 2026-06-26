@@ -103,8 +103,53 @@
 
 ## 스킬 판별 결과 (`/component-review`)
 
+검토 파일: 5개 / 냄새 발견: 9건 / 해당 없음: 7건
+
+### ① 변화의 경계
+- **위치**: `CheckoutPage.tsx` — 배송지·쿠폰·적립금·결제수단·약관 등 바뀌는 이유 다수 ✓
+- **위치**: `OrderLineRow.tsx` — 새 type이 추가되면 내부 분기도 함께 수정해야 함 ✓
+- `Price.tsx` — 금액 표시 + VIP 할인 계산 두 가지 책임 — 보류
+
+### ② 구현 vs 조합
+- **위치**: `OrderLineRow.tsx` vs `Price.tsx` — 같은 금액 표시인데 다른 구현 ✓
+
+### ③ God Component
+- **위치**: `CheckoutPage.tsx` — `useState` 10개 ✓
+
+### ④ 성급한 추상화
+- **해당 없음** — 모든 컴포넌트 분리 이유 명확
+
+### ⑤ props는 적게
+- **위치**: `OrderStatusTag.tsx` — boolean props 5개 ✓
+- **위치**: `OrderLineRow.tsx` — props 8개 ✓
+- **위치**: `DeliveryMemo.tsx` — props 없음 → Uncontrolled ✓
+
+### ⑥ boolean 폭발
+- **위치**: `OrderStatusTag.tsx` — boolean 5개, 동시에 true 불가 ✓
+
+### ⑦ 파생 상태
+- **위치**: `CheckoutPage.tsx` — `finalPrice` 계산 가능한 값을 `useState`에 담음 ✓
+
+### ⑧ 확장은 위임으로
+- **위치**: `OrderStatusTag.tsx` — if문 5개, 새 상태 생기면 내부 수정 ✓
+- **위치**: `OrderLineRow.tsx` — type별 분기, 새 type 생기면 내부 수정 ✓
+
+### ⑨ Context 전에 composition
+- **해당 없음** — `DeliverySection`, `AddressForm`이 각각 자신의 state를 가져 합성으로 풀기 어려움
+
+### ⑩ children vs slot
+- **해당 없음** — 각 컴포넌트가 한 곳에서만 쓰이거나 UI가 동일
+
+### ⑪ Drilling vs Context
+- **위치**: `CheckoutPage.tsx` — `onSelectAddress`가 `DeliverySection`(통과) → `AddressForm`(통과) → `AddressField`(사용) ✓
+
 ---
 
 ## 비교 및 재검토
 
--
+### 일치
+9건 중 8건 일치. 전략 분류와 위치 모두 동일.
+
+### 내가 놓친 것
+- **① `OrderLineRow`** — 새 type이 생길 때 내부를 고쳐야 하는 구조라 ①에도 해당됨. ⑧로만 잡았는데 ①도 맞음.
+- **⑤ `DeliveryMemo` Uncontrolled** — ⑤(props 없음) 항목으로 분류되는 케이스인데 추가 발견으로 따로 뺐음.
