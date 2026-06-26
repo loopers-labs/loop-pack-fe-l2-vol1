@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import { Card } from "../../card";
+import { Card } from "@/market/card";
+
 import styles from "./TermsCard.module.css";
 
 interface TermsCardProps {

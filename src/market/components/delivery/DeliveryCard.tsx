@@ -1,7 +1,8 @@
 import { useState } from "react";
 
-import { Card } from "../../card";
-import type { Address } from "../../types";
+import { Card } from "@/market/card";
+import type { Address } from "@/market/types";
+
 import styles from "./DeliveryCard.module.css";
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.

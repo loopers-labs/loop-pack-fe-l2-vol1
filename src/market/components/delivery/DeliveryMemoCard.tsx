@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Card } from "../../card";
+import { Card } from "@/market/card";
 
 // DeliveryMemo(textarea)는 배송 요청사항 카드에서만 쓰이고 다른 화면에서 재사용되지 않아,
 // 제목+메모를 하나의 의미 단위로 묶어 분리. 동시에 다른 카드 컴포넌트들과 형식도 통일됨.

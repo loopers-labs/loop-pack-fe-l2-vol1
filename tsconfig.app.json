@@ -15,6 +15,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* 절대경로 alias: @/* → src/* (TS6+는 baseUrl 없이 paths만으로 동작, tsconfig 위치 기준) */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

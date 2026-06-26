@@ -1,5 +1,6 @@
-import { Card } from "../../card";
-import { PAST_ORDERS } from "../../data";
+import { Card } from "@/market/card";
+import { PAST_ORDERS } from "@/market/data";
+
 import { OrderStatusTag } from "./OrderStatusTag";
 
 export function RecentOrdersCard() {

@@ -1,6 +1,7 @@
-import { Card } from "../../card";
-import { Price } from "../../Price";
-import { OrderLineRow } from "../order/OrderLineRow";
+import { Card } from "@/market/card";
+import { OrderLineRow } from "@/market/components/order/OrderLineRow";
+import { Price } from "@/market/Price";
+
 import styles from "./PriceSummaryCard.module.css";
 
 interface PriceSummary {
