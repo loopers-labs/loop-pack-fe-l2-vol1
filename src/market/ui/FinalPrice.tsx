@@ -1,4 +1,3 @@
-import { MEMBER } from '../data';
 import { PriceLineRow } from './PriceLineRow';
 import { Price } from './Price';
 import type { Coupon } from '../types/types';
@@ -23,7 +22,6 @@ export const FinalPrice = ({
   pointDiscount: number;
   finalPrice: number;
 }) => {
-  const member = MEMBER;
   return (
     <SectionContainer title="결제 금액">
       <PriceLineRow type="subtotal" amount={itemTotal} />
@@ -35,7 +33,7 @@ export const FinalPrice = ({
       {usePoint ? <PriceLineRow type="point" amount={pointDiscount} /> : null}
       <div className="total">
         <span>최종 결제 금액</span>
-        <Price amount={finalPrice} member={member} />
+        <Price value={finalPrice} />
       </div>
     </SectionContainer>
   );
