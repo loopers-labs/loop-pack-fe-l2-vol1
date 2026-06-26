@@ -83,6 +83,7 @@ export function CheckoutPage() {
         <FinalPrice
           itemTotal={itemTotal}
           shippingFee={shippingFee}
+          appliedCoupon={appliedCoupon}
           couponDiscount={couponDiscount}
           pointDiscount={pointDiscount}
           finalPrice={finalPrice}
