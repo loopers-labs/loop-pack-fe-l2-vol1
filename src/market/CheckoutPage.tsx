@@ -95,7 +95,11 @@ function AddressField({
 }) {
   return (
     <label className="addr">
-      <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
+      <input
+        type="radio"
+        checked={selected}
+        onChange={() => onSelect(address.id)}
+      />
       <span>
         {address.label} · {address.recipient} ({address.detail})
         {address.isRemote ? ' · 도서산간' : ''}
@@ -130,10 +134,14 @@ export function CheckoutPage() {
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
 
   // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0
+  const pointDiscount = usePoint
+    ? Math.min(pointInput, member.point, itemTotal)
+    : 0
 
   // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount)
+  const [finalPrice] = useState(
+    itemTotal + shippingFee - couponDiscount - pointDiscount,
+  )
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim())
@@ -224,7 +232,11 @@ export function CheckoutPage() {
         <h2>결제수단</h2>
         {(['card', 'transfer', 'kakao'] as PaymentMethod[]).map((m) => (
           <label key={m}>
-            <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
+            <input
+              type="radio"
+              checked={payment === m}
+              onChange={() => setPayment(m)}
+            />
             {PAYMENT_LABEL[m]}
           </label>
         ))}
@@ -244,7 +256,12 @@ export function CheckoutPage() {
           />
         ) : null}
         {usePoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
+          <OrderLineRow
+            type="point"
+            label="적립금 사용"
+            amount={pointDiscount}
+            isDiscount
+          />
         ) : null}
         <div className="total">
           <span>최종 결제 금액</span>
@@ -254,7 +271,11 @@ export function CheckoutPage() {
 
       <div className="section">
         <label>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+          />
           주문 내용 및 약관에 동의합니다
         </label>
         <button className="link" onClick={() => setIsTermsOpen(true)}>
@@ -262,7 +283,11 @@ export function CheckoutPage() {
         </button>
       </div>
 
-      <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
+      <button
+        className="pay"
+        disabled={!agreed}
+        onClick={() => setPlaced(true)}
+      >
         {finalPrice.toLocaleString()}원 결제하기
       </button>
 
@@ -270,7 +295,10 @@ export function CheckoutPage() {
         <div className="modal" onClick={() => setIsTermsOpen(false)}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <h3>이용 약관</h3>
-            <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
+            <p>
+              주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
+              추가됩니다.
+            </p>
             <button onClick={() => setIsTermsOpen(false)}>닫기</button>
           </div>
         </div>
