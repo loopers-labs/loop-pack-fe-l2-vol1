@@ -79,6 +79,7 @@ export function createCheckoutSummary({
     ? baseShippingFee + 3000
     : baseShippingFee
   const couponDiscount = Math.min(appliedCoupon?.discount ?? 0, itemTotal)
+  // VIP 할인: 배송비는 제외하고 (상품금액 - 쿠폰할인)의 10%. 적용 순서는 쿠폰 → 회원 → 포인트.
   const memberDiscount =
     member.grade === 'VIP' ? Math.round((itemTotal - couponDiscount) * 0.1) : 0
   const payableBeforePoint = Math.max(

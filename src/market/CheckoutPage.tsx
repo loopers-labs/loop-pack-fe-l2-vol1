@@ -18,6 +18,8 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   kakao: '카카오페이',
 }
 
+const PAYMENT_METHODS: PaymentMethod[] = ['card', 'transfer', 'kakao']
+
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
 function DeliverySection({
@@ -102,6 +104,7 @@ function AddressField({
     <label className="addr">
       <input
         type="radio"
+        name="address"
         checked={selected}
         onChange={() => onSelect(address.id)}
       />
@@ -155,8 +158,8 @@ export function CheckoutPage() {
         <h1>주문 완료</h1>
         <div className="section">
           <p style={{ color: 'var(--text-h)' }}>
-            주문이 접수되었어요. 결제 금액 {summary.finalPrice.toLocaleString()}
-            원
+            주문이 접수되었어요. 결제 금액{' '}
+            {summary.finalPrice.toLocaleString('ko-KR')}원
           </p>
         </div>
         <button className="pay" onClick={() => setPlaced(false)}>
@@ -210,7 +213,7 @@ export function CheckoutPage() {
             checked={usePoint}
             onChange={(e) => setUsePoint(e.target.checked)}
           />
-          적립금 사용 (보유 {member.point.toLocaleString()}P)
+          적립금 사용 (보유 {member.point.toLocaleString('ko-KR')}P)
         </label>
         {usePoint ? (
           <input
@@ -223,10 +226,11 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>결제수단</h2>
-        {(['card', 'transfer', 'kakao'] as PaymentMethod[]).map((m) => (
+        {PAYMENT_METHODS.map((m) => (
           <label key={m}>
             <input
               type="radio"
+              name="payment"
               checked={payment === m}
               onChange={() => setPayment(m)}
             />
@@ -265,7 +269,7 @@ export function CheckoutPage() {
         disabled={!agreed}
         onClick={() => setPlaced(true)}
       >
-        {summary.finalPrice.toLocaleString()}원 결제하기
+        {summary.finalPrice.toLocaleString('ko-KR')}원 결제하기
       </button>
 
       {isTermsOpen ? (

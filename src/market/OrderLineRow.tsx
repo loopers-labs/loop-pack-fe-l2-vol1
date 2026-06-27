@@ -21,7 +21,7 @@ export function OrderLineRow(props: OrderLine) {
       </div>
       <strong style={{ color: isDiscount ? '#ef4444' : 'var(--text-h)' }}>
         {isDiscount ? '- ' : ''}
-        {props.amount.toLocaleString()}원
+        {props.amount.toLocaleString('ko-KR')}원
       </strong>
     </div>
   )
