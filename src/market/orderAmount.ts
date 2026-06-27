@@ -39,13 +39,17 @@ export function calculateOrderAmount({
 
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
   const pointDiscount = usePoint
-    ? Math.min(Math.max(Math.floor(pointInput) || 0, 0), member.point, itemTotal)
+    ? Math.min(
+        Math.max(Math.floor(pointInput) || 0, 0),
+        member.point,
+        Math.max(itemTotal + shippingFee - couponDiscount, 0),
+      )
     : 0;
 
   // 쿠폰·적립금을 모두 적용한 net 에 등급 할인을 건다(최종 단계 할인).
-  const net = itemTotal + shippingFee - couponDiscount - pointDiscount;
+  const net = Math.max(itemTotal + shippingFee - couponDiscount - pointDiscount, 0);
   const gradeDiscount = member.grade === "VIP" ? Math.round(net * VIP_DISCOUNT_RATE) : 0;
-  const finalPrice = net - gradeDiscount;
+  const finalPrice = Math.max(net - gradeDiscount, 0);
 
   return { itemTotal, shippingFee, couponDiscount, pointDiscount, gradeDiscount, finalPrice };
 }
