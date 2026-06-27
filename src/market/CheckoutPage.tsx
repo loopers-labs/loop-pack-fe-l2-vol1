@@ -2,10 +2,11 @@ import { useState } from "react";
 import type { Address, Coupon, PaymentMethod } from "./types";
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from "./data";
 import { calculateOrderAmount } from "./orderAmount";
-import { OrderLineRow } from "./OrderLineRow";
+import { LineRow } from "./LineRow";
 import { OrderStatusTag } from "./OrderStatusTag";
 import { AmountSummary } from "./AmountSummary";
 import { DeliveryMemo } from "./DeliveryMemo";
+import { OrderComplete } from "./OrderComplete";
 import { formatWon } from "./format";
 import "./market.css";
 
@@ -17,19 +18,19 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
 
 const PAYMENT_METHODS: PaymentMethod[] = ["card", "transfer", "kakao"];
 
-// 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
-// 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
+// 배송지 — 접기/펼치기, 도서산간 필터, 선택 동작을 모두 책임진다.
 function DeliverySection({
   addresses,
-  selectedAddressId,
+  selected,
   onSelectAddress,
 }: {
   addresses: Address[];
-  selectedAddressId: string;
+  selected: Address;
   onSelectAddress: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const selected = addresses.find((a) => a.id === selectedAddressId)!;
+  const [onlyNear, setOnlyNear] = useState(false);
+  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
   return (
     <div className="section">
       <div className="row between">
@@ -39,59 +40,42 @@ function DeliverySection({
         </button>
       </div>
       {expanded ? (
-        <AddressForm
-          addresses={addresses}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={onSelectAddress}
-        />
+        <>
+          <label className="filter">
+            <input
+              type="checkbox"
+              checked={onlyNear}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                if (checked) {
+                  const firstVisible = addresses.find((a) => !a.isRemote);
+                  if (!firstVisible) return; // 모든 주소가 도서산간 — 필터 켜지 않음
+                  setOnlyNear(true);
+                  if (!addresses.some((a) => !a.isRemote && a.id === selected.id)) {
+                    onSelectAddress(firstVisible.id);
+                  }
+                } else {
+                  setOnlyNear(false);
+                }
+              }}
+            />
+            도서산간 제외
+          </label>
+          {list.map((a) => (
+            <AddressField
+              key={a.id}
+              address={a}
+              selected={a.id === selected.id}
+              onSelect={onSelectAddress}
+            />
+          ))}
+        </>
       ) : (
         <p className="addr-summary">
           {selected.label} · {selected.recipient} ({selected.detail})
         </p>
       )}
     </div>
-  );
-}
-
-// '도서산간 제외' 필터는 스스로 책임진다.
-// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
-function AddressForm({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Address[];
-  selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
-}) {
-  const [onlyNear, setOnlyNear] = useState(false);
-  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
-  return (
-    <>
-      <label className="filter">
-        <input
-          type="checkbox"
-          checked={onlyNear}
-          onChange={(e) => {
-            const checked = e.target.checked;
-            setOnlyNear(checked);
-            if (checked && !addresses.some((a) => !a.isRemote && a.id === selectedAddressId)) {
-              const firstVisible = addresses.find((a) => !a.isRemote);
-              if (firstVisible) onSelectAddress(firstVisible.id);
-            }
-          }}
-        />
-        도서산간 제외
-      </label>
-      {list.map((a) => (
-        <AddressField
-          key={a.id}
-          address={a}
-          selected={a.id === selectedAddressId}
-          onSelect={onSelectAddress}
-        />
-      ))}
-    </>
   );
 }
 
@@ -129,7 +113,7 @@ export function CheckoutPage() {
   const [agreed, setAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
+  const address = ADDRESSES.find((a) => a.id === selectedAddressId) ?? ADDRESSES[0];
 
   const amount = calculateOrderAmount({
     cart,
@@ -147,19 +131,7 @@ export function CheckoutPage() {
   };
 
   if (placed) {
-    return (
-      <div className="checkout">
-        <h1>주문 완료</h1>
-        <div className="section">
-          <p style={{ color: "var(--text-h)" }}>
-            주문이 접수되었어요. 결제 금액 {formatWon(amount.finalPrice)}
-          </p>
-        </div>
-        <button className="pay" onClick={() => setPlaced(false)}>
-          주문서로 돌아가기
-        </button>
-      </div>
-    );
+    return <OrderComplete finalPrice={amount.finalPrice} onBack={() => setPlaced(false)} />;
   }
 
   return (
@@ -168,7 +140,7 @@ export function CheckoutPage() {
 
       <DeliverySection
         addresses={ADDRESSES}
-        selectedAddressId={selectedAddressId}
+        selected={address}
         onSelectAddress={setSelectedAddressId}
       />
 
@@ -180,12 +152,12 @@ export function CheckoutPage() {
       <div className="section">
         <h2>주문 상품</h2>
         {cart.map((it) => (
-          <OrderLineRow key={it.id} amount={it.price * it.quantity} thumbnail={it.thumbnail}>
+          <LineRow key={it.id} amount={it.price * it.quantity} thumbnail={it.thumbnail}>
             <span>{it.name}</span>
             <small>
               {it.option} · 수량 {it.quantity}
             </small>
-          </OrderLineRow>
+          </LineRow>
         ))}
       </div>
 
@@ -217,7 +189,11 @@ export function CheckoutPage() {
           <input
             type="number"
             value={pointInput}
-            onChange={(e) => setPointInput(Number(e.target.value))}
+            onChange={(e) =>
+              setPointInput(
+                Math.min(Math.max(Math.floor(Number(e.target.value)) || 0, 0), member.point),
+              )
+            }
           />
         ) : null}
       </div>
@@ -232,12 +208,7 @@ export function CheckoutPage() {
         ))}
       </div>
 
-      <AmountSummary
-        amount={amount}
-        appliedCoupon={appliedCoupon}
-        usePoint={usePoint}
-        memberGrade={member.grade}
-      />
+      <AmountSummary amount={amount} appliedCoupon={appliedCoupon} memberGrade={member.grade} />
 
       <div className="section">
         <label>
