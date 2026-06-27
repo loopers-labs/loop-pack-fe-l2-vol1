@@ -8,7 +8,7 @@ type Props = {
   children: ReactNode;
 };
 
-export function OrderLineRow({ amount, isDiscount, thumbnail, children }: Props) {
+export function LineRow({ amount, isDiscount, thumbnail, children }: Props) {
   return (
     <div className="line">
       {thumbnail ? <span className="thumb">{thumbnail}</span> : null}
