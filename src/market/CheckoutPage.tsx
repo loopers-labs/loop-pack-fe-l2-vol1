@@ -3,13 +3,7 @@ import type { Coupon, PaymentMethod } from "./types";
 import { ADDRESSES, CART, COUPONS, MEMBER } from "./data";
 
 import "./market.css";
-import {
-  calculateCouponDiscount,
-  calculateShippingFee,
-  calculateFinalPrice,
-  calculateItemTotal,
-  calculatePointDiscount,
-} from "./checkoutPrice";
+import { calculateShippingFee, calculateFinalPrice, calculatePointDiscount } from "./checkoutPrice";
 
 import { TermsAgreementSection } from "./sections/TermsAgreementSection";
 import { RecentOrdersSection } from "./sections/RecentOrdersSection";
@@ -48,10 +42,10 @@ export function CheckoutPage() {
     );
   }
 
-  const itemTotal = calculateItemTotal(cart);
+  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
   const shippingFee = calculateShippingFee(itemTotal, address.isRemote);
 
-  const couponDiscount = calculateCouponDiscount(appliedCoupon);
+  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
 
   const pointDiscount = calculatePointDiscount(isUsingPoint, {
     pointInput,
