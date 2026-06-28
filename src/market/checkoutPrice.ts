@@ -40,7 +40,6 @@ export const calculateFinalPrice = ({
   pointDiscount: number;
   memberGrade: Member["grade"];
 }) => {
-  const commonPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
-  const finalPrice = memberGrade === "VIP" ? Math.round(commonPrice * 0.9) : commonPrice;
-  return finalPrice;
+  const membershipDiscount = memberGrade === "VIP" ? Math.round(itemTotal * 0.1) : 0;
+  return itemTotal - membershipDiscount + shippingFee - couponDiscount - pointDiscount;
 };
