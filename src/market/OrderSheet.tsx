@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Coupon } from './types';
+import type { Coupon, PaymentMethod } from './types';
 import { ADDRESSES, CART, MEMBER } from './data';
 import { calcFinalPrice } from './pricing';
 import { DeliveryAddressSection } from './DeliveryAddressSection';
@@ -23,6 +23,8 @@ export function OrderSheet({ onPlace }: OrderSheetProps) {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [usePoint, setUsePoint] = useState(false);
   const [pointInput, setPointInput] = useState(0);
+  const [memo, setMemo] = useState('');
+  const [payment, setPayment] = useState<PaymentMethod>('card');
   const [agreed, setAgreed] = useState(false);
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId);
@@ -40,11 +42,11 @@ export function OrderSheet({ onPlace }: OrderSheetProps) {
     <div className="checkout">
       <h1>주문/결제</h1>
       <DeliveryAddressSection selectedAddressId={selectedAddressId} onSelectAddress={setSelectedAddressId} />
-      <DeliveryMemoSection />
+      <DeliveryMemoSection memo={memo} onChangeMemo={setMemo} />
       <CartSection />
       <CouponSection appliedCoupon={appliedCoupon} onApply={setAppliedCoupon} />
       <PointSection usePoint={usePoint} pointInput={pointInput} onChangeUsePoint={setUsePoint} onChangePointInput={setPointInput} />
-      <PaymentMethodSection />
+      <PaymentMethodSection payment={payment} onChangePayment={setPayment} />
       <OrderSummarySection itemTotal={itemTotal} shippingFee={shippingFee} appliedCoupon={appliedCoupon} pointDiscount={pointDiscount} finalPrice={finalPrice} />
       <TermsSection agreed={agreed} onChangeAgreed={setAgreed} />
       <button className="pay" disabled={!agreed} onClick={() => onPlace(finalPrice)}>

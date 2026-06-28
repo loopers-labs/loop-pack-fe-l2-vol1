@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { PaymentMethod } from './types';
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -9,14 +8,18 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
 
 const PAYMENT_METHODS: PaymentMethod[] = ['card', 'transfer', 'kakao'];
 
-export function PaymentMethodSection() {
-  const [payment, setPayment] = useState<PaymentMethod>('card');
+interface PaymentMethodSectionProps {
+  payment: PaymentMethod;
+  onChangePayment: (next: PaymentMethod) => void;
+}
+
+export function PaymentMethodSection({ payment, onChangePayment }: PaymentMethodSectionProps) {
   return (
     <div className="section">
       <h2>결제수단</h2>
       {PAYMENT_METHODS.map((m) => (
         <label key={m}>
-          <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
+          <input type="radio" checked={payment === m} onChange={() => onChangePayment(m)} />
           {PAYMENT_LABEL[m]}
         </label>
       ))}
