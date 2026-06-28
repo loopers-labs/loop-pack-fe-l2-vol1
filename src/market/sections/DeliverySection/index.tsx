@@ -14,7 +14,8 @@ export function DeliverySection({
   onSelectAddress: (id: string) => void;
 }) {
   const [isAddressListOpen, setIsAddressListOpen] = useState(false);
-  const selected = addresses.find((a) => a.id === selectedAddressId)!;
+  const selected = addresses.find((a) => a.id === selectedAddressId);
+
   return (
     <div className="section">
       <div className="row between">
@@ -31,7 +32,9 @@ export function DeliverySection({
         />
       ) : (
         <p className="addr-summary">
-          {selected.label} · {selected.recipient} ({selected.detail})
+          {selected
+            ? `${selected.label} · ${selected.recipient} (${selected.detail})`
+            : "선택된 배송지를 찾을 수 없습니다."}
         </p>
       )}
     </div>

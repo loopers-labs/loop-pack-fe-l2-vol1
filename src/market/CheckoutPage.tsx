@@ -35,7 +35,18 @@ export function CheckoutPage() {
   const [isTermsAgreed, setIsTermsAgreed] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
+  const address = ADDRESSES.find((a) => a.id === selectedAddressId);
+
+  if (!address) {
+    return (
+      <div className="checkout">
+        <h1>주문/결제</h1>
+        <div className="section">
+          <p>선택된 배송지를 찾을 수 없습니다.</p>
+        </div>
+      </div>
+    );
+  }
 
   const itemTotal = calculateItemTotal(cart);
   const shippingFee = calculateShippingFee(itemTotal, address.isRemote);
