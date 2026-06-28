@@ -114,6 +114,15 @@
   font-weight: 600;
   color: var(--text-h);
 }
+.price {
+  color: var(--text-h);
+}
+.price--discount {
+  color: #ef4444;
+}
+.price--total {
+  font-size: 18px;
+}
 .checkout .pay {
   position: sticky;
   bottom: 16px;

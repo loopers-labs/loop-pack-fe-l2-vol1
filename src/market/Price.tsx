@@ -1,12 +1,15 @@
-import type { Member } from './types'
+type PriceVariant = 'default' | 'discount' | 'total'; // original (원가) 등 금액 표시 타입 추가 가능
 
 type Props = {
-  amount: number
-  member?: Member
-}
+  amount: number;
+  variant?: PriceVariant;
+};
 
-// 여기저기서 쓰는 '공통' 금액 표시 컴포넌트.
-export function Price({ amount, member }: Props) {
-  const value = member?.grade === 'VIP' ? Math.round(amount * 0.9) : amount
-  return <strong>{value.toLocaleString()}원</strong>
+export function Price({ amount, variant = 'default' }: Props) {
+  return (
+    <strong className={`price price--${variant}`}>
+      {variant === 'discount' ? '- ' : ''}
+      {amount.toLocaleString()}원
+    </strong>
+  );
 }

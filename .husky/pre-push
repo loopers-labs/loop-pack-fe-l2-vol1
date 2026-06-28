@@ -1,0 +1,1 @@
+pnpm tsc -b && echo '컴파일 성공🥳' || (echo '컴파일 실패😞' && exit 1)
