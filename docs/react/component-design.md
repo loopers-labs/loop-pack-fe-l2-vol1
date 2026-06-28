@@ -101,7 +101,8 @@ function SimpleLoginForm() {
   const emailRef = useRef<HTMLInputElement>(null);
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    login(emailRef.current!.value /* ... */);
+    if (!emailRef.current) return;
+    login(emailRef.current.value /* ... */);
   };
   return (
     <form onSubmit={handleSubmit}>

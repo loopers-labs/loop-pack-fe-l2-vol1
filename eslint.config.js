@@ -39,6 +39,7 @@ export default defineConfig(
     rules: {
       // ── 게이트 차단: 타입 단언 금지 + disable은 룰명·사유 필수(죽은 disable도 차단) ──
       "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }], // `as Foo` 단언 금지(타입 에러 우회 통로). `as const`는 자동 예외.
+      "@typescript-eslint/no-non-null-assertion": "error", // `x!` non-null 단언 금지(strictNullChecks 우회 통로). as와 같은 "믿어줘" 탈출구.
       "@eslint-community/eslint-comments/require-description": ["error", { ignore: [] }], // disable엔 `-- 사유` 필수(맹목적 비활성화 차단)
       "@eslint-community/eslint-comments/no-unlimited-disable": "error", // 룰명 없는 광역 disable 금지(반드시 룰 지정)
 
