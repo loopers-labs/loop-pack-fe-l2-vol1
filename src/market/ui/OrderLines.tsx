@@ -6,6 +6,20 @@ type ProductOrderLineProps = {
   quantity: number;
 };
 
+type LineAmountProps = {
+  amount: number;
+  isDiscount?: boolean;
+};
+
+function LineAmount({ amount, isDiscount = false }: LineAmountProps) {
+  return (
+    <strong style={{ color: isDiscount ? "#ef4444" : "var(--text-h)" }}>
+      {isDiscount ? "- " : ""}
+      {amount.toLocaleString()}원
+    </strong>
+  );
+}
+
 export function ProductOrderLine({
   label,
   amount,
@@ -24,7 +38,7 @@ export function ProductOrderLine({
           </small>
         ) : null}
       </div>
-      <strong style={{ color: "var(--text-h)" }}>{amount.toLocaleString()}원</strong>
+      <LineAmount amount={amount} />
     </div>
   );
 }
@@ -42,7 +56,7 @@ export function DiscountAmountLine({ label, amount, description }: DiscountAmoun
         <span>{label}</span>
         {description ? <small>{description}</small> : null}
       </div>
-      <strong style={{ color: "#ef4444" }}>- {amount.toLocaleString()}원</strong>
+      <LineAmount amount={amount} isDiscount />
     </div>
   );
 }
@@ -58,7 +72,7 @@ export function SummaryAmountLine({ label, amount }: SummaryAmountLineProps) {
       <div className="grow">
         <span>{label}</span>
       </div>
-      <strong style={{ color: "var(--text-h)" }}>{amount.toLocaleString()}원</strong>
+      <LineAmount amount={amount} />
     </div>
   );
 }
