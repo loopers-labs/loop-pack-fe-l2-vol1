@@ -7,7 +7,7 @@ React 19 + Vite + TypeScript 프론트엔드 프로젝트.
 
 ## 코드
 
-- 타입 침묵 금지: `any` / `as` / `!`(non-null) / `@ts-ignore` / `eslint-disable` 쓰지 말 것. 타입으로 설명하라.
+- 타입 침묵 금지: `as` / `eslint-disable` 쓰지 말 것. 타입으로 설명하라.
 - 파생 가능한 값은 계산한다. `useState` + `useEffect`로 동기화하지 말 것.
 - 기존 유틸·컴포넌트를 재사용한다. 비슷한 것을 새로 만들지 말 것.
 - 에러는 명시적으로 처리한다. 빈 `catch {}` 금지.
@@ -34,3 +34,17 @@ React 19 + Vite + TypeScript 프론트엔드 프로젝트.
 - 패키지 매니저: **pnpm** (npm/yarn 쓰지 말 것).
 - Lint: ESLint flat config — typescript-eslint `recommended-type-checked` + `react-hooks` (핵심 규칙 `error`). TypeScript는 `strict`.
 - Format: **Prettier 전담** (`semi: true`, `singleQuote`). ESLint에 포맷 룰을 넣지 말 것.
+
+## 컴포넌트 설계 원칙
+
+- 컴포넌트의 Props가 5개를 넘으면 설계를 재검토
+- children을 적극 활용해 합성(Composition) 우선
+- Props Drilling이 3단계 이상이면 Context 또는 상태 관리 도입 검토
+- 공통 컴포넌트는 비즈니스 로직을 포함하지 않음
+
+## 상태 분류 기준
+
+- 서버에서 오는 데이터 → 서버 상태 (추후 TanStack Query)
+- UI 전용 (모달 열림, 탭 선택) → 로컬 상태 (useState)
+- URL에 반영되어야 하는 것 (필터, 페이지, 검색어) → URL 상태
+- 여러 컴포넌트가 공유해야 하는 것 → Context 또는 전역 상태
