@@ -29,6 +29,7 @@ export default defineConfig(
       "react-refresh/only-export-components": ["error", { allowConstantExport: true }],
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/ban-ts-comment": "error",
+      "@typescript-eslint/no-non-null-assertion": "error",
       "no-empty": "error",
       "no-console": ["error", { allow: ["warn", "error"] }],
       "no-unused-vars": "off",
