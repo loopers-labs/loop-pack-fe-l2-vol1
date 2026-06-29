@@ -103,7 +103,7 @@ ESLint는 inline config를 허용하지 않습니다.
 - import/export 순서는 `simple-import-sort`를 따른다.
 - `src` 내부 default export는 금지한다. 도구 설정 파일처럼 외부 도구가 요구하는 entry point만 예외로 한다.
 - FSD public API인 `index.ts`에서는 `export *`를 금지한다.
-- FSD `lib` segment에서 export되는 유틸리티는 namespace class의 static method로 묶는다. lint는 `lib` segment의 exported standalone function/arrow function을 제한하고, 세부 그룹명과 책임은 리뷰에서 확인한다.
+- FSD `lib` segment에서 export되는 유틸리티는 namespace class의 static method로 묶는다. lint는 `lib` segment의 exported standalone function/arrow function을 제한하고, 세부 그룹명과 책임은 리뷰에서 확인한다. 단, React custom hook은 React 규약상 `use[A-Z0-9]...` 형태의 standalone function API가 필요하므로 이 제한에서 예외로 둔다.
 
 ## lint-staged와 Git hook
 

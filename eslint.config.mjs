@@ -6,6 +6,7 @@ import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
+import tailwindcss from 'eslint-plugin-tailwindcss'
 import unusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
@@ -96,20 +97,21 @@ const restrictedSyntaxLibUtilities = [
   },
   {
     message:
-      'Group exported utilities as namespace class static methods instead of exporting standalone functions from lib files.',
-    selector: 'ExportNamedDeclaration > FunctionDeclaration',
+      'Group exported utilities as namespace class static methods instead of exporting standalone functions from lib files. React hooks named useX are exempt.',
+    selector:
+      'ExportNamedDeclaration > FunctionDeclaration:not([id.name=/^use[A-Z0-9]/])',
   },
   {
     message:
-      'Group exported utilities as namespace class static methods instead of exporting standalone arrow functions from lib files.',
+      'Group exported utilities as namespace class static methods instead of exporting standalone arrow functions from lib files. React hooks named useX are exempt.',
     selector:
-      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[init.type='ArrowFunctionExpression']",
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[init.type='ArrowFunctionExpression']:not([id.name=/^use[A-Z0-9]/])",
   },
   {
     message:
-      'Group exported utilities as namespace class static methods instead of exporting standalone function expressions from lib files.',
+      'Group exported utilities as namespace class static methods instead of exporting standalone function expressions from lib files. React hooks named useX are exempt.',
     selector:
-      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[init.type='FunctionExpression']",
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[init.type='FunctionExpression']:not([id.name=/^use[A-Z0-9]/])",
   },
 ]
 
@@ -168,6 +170,7 @@ const eslintConfig = defineConfig([
         },
       ],
       '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'error',
       '@typescript-eslint/no-unused-vars': 'off',
 
@@ -224,6 +227,49 @@ const eslintConfig = defineConfig([
     files: reactFiles,
   },
   {
+    extends: [tailwindcss.configs.recommended],
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    settings: {
+      tailwindcss: {
+        cssConfigPath: './src/index.css',
+        functions: [
+          'classnames',
+          'classNames',
+          'clsx',
+          'ctl',
+          'cva',
+          'tv',
+          'tw',
+          'twMerge',
+          'twJoin',
+          'cn',
+          'cx',
+          'cnMerge',
+        ],
+        parseKeyFunctions: ['classnames', 'classNames', 'clsx'],
+      },
+    },
+    rules: {
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        {
+          whitelist: [
+            'addr',
+            'addr-summary',
+            'between',
+            'checkout',
+            'checkout-primary-action',
+            'className',
+            'line',
+            'row',
+            'thumb',
+            'total',
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: reactFiles,
     rules: {
       'react/jsx-boolean-value': ['error', 'never'],
@@ -240,6 +286,7 @@ const eslintConfig = defineConfig([
         },
       ],
       'react/self-closing-comp': 'error',
+      'react-refresh/only-export-components': 'off',
     },
   },
   {
@@ -321,7 +368,6 @@ const eslintConfig = defineConfig([
       'no-restricted-syntax': ['error', ...restrictedSyntaxLibUtilities],
     },
   },
-
   prettier,
 ])
 

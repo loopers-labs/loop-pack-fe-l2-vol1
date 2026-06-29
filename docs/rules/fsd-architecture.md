@@ -146,7 +146,7 @@ export class MoneyUtils {
 }
 ```
 
-단일 컴포넌트/함수에만 쓰이는 private helper는 해당 파일 안에 둘 수 있다. slice 밖으로 공개되는 공용 유틸리티는 top-level standalone 함수로 export하지 않고 namespace class의 static method로 공개한다.
+단일 컴포넌트/함수에만 쓰이는 private helper는 해당 파일 안에 둘 수 있다. slice 밖으로 공개되는 공용 유틸리티는 top-level standalone 함수로 export하지 않고 namespace class의 static method로 공개한다. 단, React custom hook은 hook 규약을 따르기 위해 `use[A-Z0-9]...` 이름의 standalone function으로 공개할 수 있다.
 
 ## API boundary와 domain model
 
