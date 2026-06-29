@@ -1,29 +1,7 @@
 import { useState, useEffect } from "react";
 import "./ProductListPage.css";
-
-// ─────────────────────────────────────────────────────────
-// 타입도 한 파일에 (실무에서 흔히 보는 모습)
-// ─────────────────────────────────────────────────────────
-
-type Product = {
-  id: number;
-  name: string;
-  category: "electronics" | "fashion" | "home" | "beauty";
-  price: number;
-  originalPrice?: number;
-  stock: number;
-  imageUrl: string;
-  createdAt: string;
-  rating: number;
-  reviewCount: number;
-};
-
-type ProductListResponse = {
-  products: Product[];
-  totalCount: number;
-};
-
-type SortBy = "latest" | "popular" | "price-asc" | "price-desc";
+import type { Product, SortBy } from "./types";
+import { getProducts } from "./services/productService";
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -97,29 +75,31 @@ export function ProductListPage() {
     const fetchProducts = async () => {
       setIsLoading(true);
       setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== "") params.set("minPrice", String(minPrice));
-      if (maxPrice !== "") params.set("maxPrice", String(maxPrice));
+
       try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
-        // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
-        const filtered = inStockOnly ? data.products.filter((p) => p.stock > 0) : data.products;
+        const data = await getProducts({
+          category,
+          sort: sortBy,
+          q: searchQuery,
+          page,
+          size: PAGE_SIZE,
+          minPrice,
+          maxPrice,
+        });
+
+        const filtered = inStockOnly
+          ? data.products.filter((product) => product.stock > 0)
+          : data.products;
+
         setProducts(filtered);
         setTotalCount(data.totalCount);
       } catch (err) {
-        setError(err as Error);
+        setError(err instanceof Error ? err : new Error("상품 목록을 불러오지 못했습니다."));
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchProducts();
   }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
 
