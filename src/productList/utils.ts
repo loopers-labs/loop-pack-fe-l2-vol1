@@ -84,19 +84,29 @@ export function getPageNumbers(
   return pages;
 }
 
+const REGEXP_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
+
+/** 정규식 특수문자를 이스케이프해 검색어를 안전하게 패턴으로 쓸 수 있게 한다. */
+function escapeRegExp(value: string): string {
+  return value.replace(REGEXP_SPECIAL_CHARS, "\\$&");
+}
+
 export type HighlightPart = {
   text: string;
   isMatch: boolean;
 };
 
-/** 텍스트를 검색어 일치/비일치 조각으로 쪼갠다. */
+/**
+ * 텍스트를 검색어 일치/비일치 조각으로 쪼갠다.
+ * 검색어를 escape 하므로 "(" 같은 정규식 특수문자도 안전하다.
+ */
 export function splitHighlightParts(
   text: string,
   query: string,
 ): HighlightPart[] {
   if (!query) return [{ text, isMatch: false }];
 
-  const pattern = new RegExp(`(${query})`, "gi");
+  const pattern = new RegExp(`(${escapeRegExp(query)})`, "gi");
   return text
     .split(pattern)
     .filter((part) => part !== "")
