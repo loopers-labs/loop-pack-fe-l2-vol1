@@ -1,43 +1,71 @@
-type OrderLineType = 'product' | 'subtotal' | 'shipping' | 'coupon' | 'point'
+import type { ReactNode } from 'react';
 
-type Props = {
-  type: OrderLineType
-  label: string
-  amount: number
-  thumbnail?: string
-  option?: string
-  quantity?: number
-  isDiscount?: boolean
-  couponCode?: string
+import type { CartItem } from './types';
+
+function OrderLineRow({ children }: { children: ReactNode }) {
+  return <div className="line">{children}</div>;
 }
 
-export function OrderLineRow({
-  type,
-  label,
-  amount,
-  thumbnail,
-  option,
-  quantity,
-  isDiscount,
-  couponCode,
-}: Props) {
+function Product({
+  item,
+}: {
+  item: Pick<CartItem, 'thumbnail' | 'name' | 'option' | 'quantity'>;
+}) {
   return (
-    <div className="line">
-      {type === 'product' && <span className="thumb">{thumbnail}</span>}
+    <>
+      <span className="thumb">{item.thumbnail}</span>
+
       <div className="grow">
-        <span>{label}</span>
-        {type === 'product' && option ? (
+        <span>{item.name}</span>
+        {item.option ? (
           <small>
-            {option} · 수량 {quantity}
+            {item.option} · 수량 {item.quantity}
           </small>
         ) : null}
-        {type === 'coupon' && couponCode ? <small>{couponCode}</small> : null}
       </div>
-      <strong style={{ color: isDiscount ? '#ef4444' : 'var(--text-h)' }}>
-        {isDiscount ? '- ' : ''}
-        {amount.toLocaleString()}원
-      </strong>
-      {/* 새 줄 타입(부분취소, 선물포장, 결제수단별 즉시할인...)이 생길 때마다 위 분기가 늘어난다 */}
-    </div>
-  )
+    </>
+  );
 }
+
+function Label({
+  children,
+  caption,
+}: {
+  children: ReactNode;
+  caption?: string;
+}) {
+  return (
+    <div className="grow">
+      <span>{children}</span>
+      {caption ? <small>{caption}</small> : null}
+    </div>
+  );
+}
+
+function Amount({
+  amount,
+  isDiscount = false,
+}: {
+  amount: number;
+  isDiscount?: boolean;
+}) {
+  if (isDiscount) {
+    return (
+      <strong style={{ color: '#ef4444' }}>
+        - {amount.toLocaleString()}원
+      </strong>
+    );
+  }
+
+  return (
+    <strong style={{ color: 'var(--text-h)' }}>
+      {amount.toLocaleString()}원
+    </strong>
+  );
+}
+
+OrderLineRow.Product = Product;
+OrderLineRow.Label = Label;
+OrderLineRow.Amount = Amount;
+
+export { OrderLineRow };

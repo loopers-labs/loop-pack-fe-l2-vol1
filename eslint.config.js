@@ -1,5 +1,6 @@
 import comments from '@eslint-community/eslint-plugin-eslint-comments';
 import js from '@eslint/js';
+import stylistic from '@stylistic/eslint-plugin';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import importX from 'eslint-plugin-import-x';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
@@ -28,6 +29,7 @@ export default tseslint.config(
       'react-hooks': reactHooks,
       'import-x': importX,
       '@eslint-community/eslint-comments': comments,
+      '@stylistic': stylistic,
     },
     settings: {
       'import-x/resolver-next': [createTypeScriptImportResolver()],
@@ -71,6 +73,11 @@ export default tseslint.config(
 
       '@eslint-community/eslint-comments/no-unlimited-disable': 'error',
       '@eslint-community/eslint-comments/require-description': 'error',
+
+      '@stylistic/padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: 'return' },
+      ],
     },
   },
 );
