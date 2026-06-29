@@ -60,8 +60,6 @@ export type DiscountOrderLine =
 
 export type PaymentOrderLine = BasicOrderLine | DiscountOrderLine
 
-export type OrderLine = ProductOrderLine | PaymentOrderLine
-
 export function createCheckoutSummary({
   cart,
   address,

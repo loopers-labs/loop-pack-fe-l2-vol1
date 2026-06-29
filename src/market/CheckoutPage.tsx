@@ -2,7 +2,8 @@ import { useState } from 'react'
 import type { Address, Coupon, PaymentMethod } from './types'
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
 import { Price } from './Price'
-import { OrderLineRow } from './OrderLineRow'
+import { ProductLineRow } from './ProductLineRow'
+import { PaymentLineRow } from './PaymentLineRow'
 import { OrderStatusTag } from './OrderStatusTag'
 import { DeliveryMemo } from './DeliveryMemo'
 import {
@@ -187,7 +188,7 @@ export function CheckoutPage() {
       <div className="section">
         <h2>주문 상품</h2>
         {productLines.map((line) => (
-          <OrderLineRow key={line.id} {...line} />
+          <ProductLineRow key={line.id} {...line} />
         ))}
       </div>
 
@@ -242,7 +243,7 @@ export function CheckoutPage() {
       <div className="section">
         <h2>결제 금액</h2>
         {paymentLines.map((line) => (
-          <OrderLineRow key={line.kind} {...line} />
+          <PaymentLineRow key={line.kind} {...line} />
         ))}
         <div className="total">
           <span>최종 결제 금액</span>
