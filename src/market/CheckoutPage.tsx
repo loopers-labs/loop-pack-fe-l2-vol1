@@ -14,7 +14,7 @@ import { Point } from './ui/Point';
 import { CheckoutComplete } from './ui/CheckoutComplete';
 import { PastOrder } from './ui/PastOrder';
 import { PaymentMethod } from './ui/PaymentMethod';
-import { FinalPrice } from './ui/FinalPrice';
+import { PriceSummary } from './ui/PriceSummary';
 import { Terms } from './ui/Terms';
 import { ModalProvider } from '../shared/ui/modal/ModalProvider';
 import { TermsModal } from './ui/TermsModal';
@@ -75,8 +75,11 @@ export function CheckoutPage() {
           selectedAddressId={selectedAddressId}
           onSelectAddress={setSelectedAddressId}
         />
+
         <Request />
+
         <OrderItem />
+
         <Coupon
           couponCode={couponCode}
           appliedCoupon={appliedCoupon}
@@ -91,11 +94,14 @@ export function CheckoutPage() {
         />
 
         <PaymentMethod payment={payment} onPaymentMethodChange={(m) => setPayment(m)} />
-        <FinalPrice appliedCoupon={appliedCoupon} amount={amount} finalPrice={finalPrice} />
+
+        <PriceSummary appliedCoupon={appliedCoupon} amount={amount} finalPrice={finalPrice} />
+
         <Terms
           agreed={agreed}
           onToggleCheckbox={(e: React.ChangeEvent<HTMLInputElement>) => setAgreed(e.target.checked)}
         />
+
         <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
           {/* 공통 가격 컴포넌트를 결제 버튼에도 반영 */}
           <Price value={finalPrice} /> 결제하기

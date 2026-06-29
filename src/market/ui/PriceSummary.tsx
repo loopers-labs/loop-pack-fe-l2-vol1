@@ -3,7 +3,7 @@ import { Price } from './Price';
 import { SectionContainer } from '../shared/ui/container';
 import type { Coupon, PaymentAmounts } from '../shared/types/types';
 
-export const FinalPrice = ({
+export const PriceSummary = ({
   appliedCoupon,
   amount,
   finalPrice,
