@@ -117,7 +117,7 @@ export function ProductListPage() {
         setProducts(data.products);
         setTotalCount(data.totalCount);
       } catch (err) {
-        setError(err as Error);
+        setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setIsLoading(false);
       }
@@ -179,7 +179,7 @@ export function ProductListPage() {
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as SortBy);
+    if (isSortBy(e.target.value)) setSortBy(e.target.value);
     setPage(1);
   };
 
@@ -336,7 +336,9 @@ export function ProductListPage() {
         </select>
         <select
           value={viewMode}
-          onChange={(e) => setViewMode(e.target.value as "grid" | "list")}
+          onChange={(e) => {
+            if (isViewMode(e.target.value)) setViewMode(e.target.value);
+          }}
         >
           <option value="grid">그리드</option>
           <option value="list">리스트</option>
