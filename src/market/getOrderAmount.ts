@@ -27,13 +27,13 @@ export function getOrderAmount(order: OrderAmountInput) {
     ? Math.min(order.pointInput, MEMBER.point, itemTotal)
     : 0;
 
-  // ── 최종 금액 (VIP면 분기) ────────────────────
-  const calculatedPrice =
-    itemTotal + shippingFee - couponDiscount - pointDiscount;
+  // ── 등급 할인 (쿠폰·배송비와 독립, 상품가에만) ─
+  const vipDiscount =
+    MEMBER.grade === 'VIP' ? Math.round(itemTotal * VIP_DISCOUNT_RATE) : 0;
+
+  // ── 최종 금액 ────────────────────────────────
   const finalPrice =
-    MEMBER.grade === 'VIP'
-      ? Math.round(calculatedPrice * (1 - VIP_DISCOUNT_RATE))
-      : calculatedPrice;
+    itemTotal + shippingFee - couponDiscount - pointDiscount - vipDiscount;
 
   return { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice };
 }
