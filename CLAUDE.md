@@ -3,17 +3,11 @@
 > Loopers FE L2 — AI 협업 규칙서. Claude Code가 매 세션 따르는 팀 규칙이다.
 > 작성 원칙: **한 줄을 지웠을 때 AI가 실수하면 남기고, 아니면 지운다.** (장황 금지)
 
-## 제1원칙
-
-**본인이 설명할 수 없는 코드는 커밋하지 않는다.** AI가 쓴 코드도 머지하는 순간 내 코드다.
-"AI가 짜줬는데요"는 변명이 안 된다. 아래 규칙은 전부 이 원칙을 지키기 위한 수단이다.
-
 ## 기술 스택
 
 - React 19, TypeScript 6.x, Vite 8.x (패키지 매니저: pnpm 10)
-- ESLint v9 **Flat Config** + Prettier — 결정적 1차 하네스
+- ESLint v10 **Flat Config** + Prettier — 결정적 1차 하네스
 - husky + lint-staged — 커밋 게이트 (lint 미통과 = 커밋 불가)
-- 로드맵: 1~3주차 React, **4주차(R4)부터 Next.js App Router** 전환 예정
 
 ## 개발 워크플로우 — 증강 코딩 (가장 중요)
 
@@ -29,6 +23,7 @@
 - 이벤트 핸들러 네이밍: **Props는 `on{Event}`, 내부 함수는 `handle{Event}`**
 - 조건부 렌더링은 **early return** 우선 (단, **모든 hook 호출 뒤에서**)
 - **파생 가능한 값은 `useState`+`useEffect`로 동기화하지 말고 렌더 중에 계산한다** (최중요 패턴)
+- 동시에 성립할 수 없는 상태는 boolean 여러 개나 optional props 묶음이 아니라 union 모델로 표현한다
 - 이름에 의도를 담는다 — `data`/`temp`/`flag`/`doStuff` 금지
 
 ## 코드 리뷰 규칙
@@ -54,7 +49,6 @@
 - **1 커밋 = 1 논리적 변경** (atomic). 섞지 않는다.
 - **커밋에 `Co-Authored-By: Claude` 등 AI 서명을 넣지 않는다.**
 - 훅을 `--no-verify`로 우회하지 않는다.
-- 상세 규칙: [docs/commit-convention.md](docs/commit-convention.md)
 
 ## Never Do
 

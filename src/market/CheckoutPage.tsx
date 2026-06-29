@@ -2,9 +2,15 @@ import { useState } from 'react'
 import type { Address, Coupon, PaymentMethod } from './types'
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
 import { Price } from './Price'
-import { OrderLineRow } from './OrderLineRow'
+import { ProductLineRow } from './ProductLineRow'
+import { PaymentLineRow } from './PaymentLineRow'
 import { OrderStatusTag } from './OrderStatusTag'
 import { DeliveryMemo } from './DeliveryMemo'
+import {
+  createCheckoutSummary,
+  createPaymentOrderLines,
+  createProductOrderLines,
+} from './checkoutModel'
 import './market.css'
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -12,6 +18,8 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   transfer: '계좌이체',
   kakao: '카카오페이',
 }
+
+const PAYMENT_METHODS: PaymentMethod[] = ['card', 'transfer', 'kakao']
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -95,7 +103,12 @@ function AddressField({
 }) {
   return (
     <label className="addr">
-      <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
+      <input
+        type="radio"
+        name="address"
+        checked={selected}
+        onChange={() => onSelect(address.id)}
+      />
       <span>
         {address.label} · {address.recipient} ({address.detail})
         {address.isRemote ? ' · 도서산간' : ''}
@@ -119,21 +132,20 @@ export function CheckoutPage() {
   const [placed, setPlaced] = useState(false)
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
-
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0)
-  let shippingFee = 3000
-  if (itemTotal >= 50000) shippingFee = 0
-  if (address.isRemote) shippingFee += 3000
-
-  // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
-
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0
-
-  // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount)
+  const summary = createCheckoutSummary({
+    cart,
+    address,
+    member,
+    appliedCoupon,
+    usePoint,
+    pointInput,
+  })
+  const productLines = createProductOrderLines(cart)
+  const paymentLines = createPaymentOrderLines({
+    summary,
+    appliedCoupon,
+    usePoint,
+  })
 
   const applyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCode.trim())
@@ -147,7 +159,8 @@ export function CheckoutPage() {
         <h1>주문 완료</h1>
         <div className="section">
           <p style={{ color: 'var(--text-h)' }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
+            주문이 접수되었어요. 결제 금액{' '}
+            {summary.finalPrice.toLocaleString('ko-KR')}원
           </p>
         </div>
         <button className="pay" onClick={() => setPlaced(false)}>
@@ -174,16 +187,8 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>주문 상품</h2>
-        {cart.map((it) => (
-          <OrderLineRow
-            key={it.id}
-            type="product"
-            label={it.name}
-            amount={it.price * it.quantity}
-            thumbnail={it.thumbnail}
-            option={it.option}
-            quantity={it.quantity}
-          />
+        {productLines.map((line) => (
+          <ProductLineRow key={line.id} {...line} />
         ))}
       </div>
 
@@ -209,7 +214,7 @@ export function CheckoutPage() {
             checked={usePoint}
             onChange={(e) => setUsePoint(e.target.checked)}
           />
-          적립금 사용 (보유 {member.point.toLocaleString()}P)
+          적립금 사용 (보유 {member.point.toLocaleString('ko-KR')}P)
         </label>
         {usePoint ? (
           <input
@@ -222,9 +227,14 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>결제수단</h2>
-        {(['card', 'transfer', 'kakao'] as PaymentMethod[]).map((m) => (
+        {PAYMENT_METHODS.map((m) => (
           <label key={m}>
-            <input type="radio" checked={payment === m} onChange={() => setPayment(m)} />
+            <input
+              type="radio"
+              name="payment"
+              checked={payment === m}
+              onChange={() => setPayment(m)}
+            />
             {PAYMENT_LABEL[m]}
           </label>
         ))}
@@ -232,29 +242,22 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>결제 금액</h2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
-            label="쿠폰 할인"
-            amount={couponDiscount}
-            isDiscount
-            couponCode={appliedCoupon.code}
-          />
-        ) : null}
-        {usePoint ? (
-          <OrderLineRow type="point" label="적립금 사용" amount={pointDiscount} isDiscount />
-        ) : null}
+        {paymentLines.map((line) => (
+          <PaymentLineRow key={line.kind} {...line} />
+        ))}
         <div className="total">
           <span>최종 결제 금액</span>
-          <Price amount={finalPrice} member={member} />
+          <Price amount={summary.finalPrice} />
         </div>
       </div>
 
       <div className="section">
         <label>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+          />
           주문 내용 및 약관에 동의합니다
         </label>
         <button className="link" onClick={() => setIsTermsOpen(true)}>
@@ -262,15 +265,22 @@ export function CheckoutPage() {
         </button>
       </div>
 
-      <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
-        {finalPrice.toLocaleString()}원 결제하기
+      <button
+        className="pay"
+        disabled={!agreed}
+        onClick={() => setPlaced(true)}
+      >
+        {summary.finalPrice.toLocaleString('ko-KR')}원 결제하기
       </button>
 
       {isTermsOpen ? (
         <div className="modal" onClick={() => setIsTermsOpen(false)}>
           <div className="modal-body" onClick={(e) => e.stopPropagation()}>
             <h3>이용 약관</h3>
-            <p>주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가 추가됩니다.</p>
+            <p>
+              주문 후 7일 이내 단순 변심 반품이 가능하며, 도서산간은 배송비가
+              추가됩니다.
+            </p>
             <button onClick={() => setIsTermsOpen(false)}>닫기</button>
           </div>
         </div>
@@ -281,13 +291,7 @@ export function CheckoutPage() {
         {PAST_ORDERS.map((o) => (
           <div key={o.id} className="line">
             <div className="grow">{o.summary}</div>
-            <OrderStatusTag
-              isPaid={o.status === 'paid'}
-              isPreparing={o.status === 'preparing'}
-              isShipped={o.status === 'shipped'}
-              isDelivered={o.status === 'delivered'}
-              isCancelled={o.status === 'cancelled'}
-            />
+            <OrderStatusTag status={o.status} />
           </div>
         ))}
       </div>

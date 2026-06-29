@@ -34,4 +34,5 @@ pnpm-debug.log*
 .DS_Store
 
 # tooling state — 개인 에이전트 도구(oh-my-claudecode) 상태, 커밋 대상 아님
+.codex/
 .omc/
