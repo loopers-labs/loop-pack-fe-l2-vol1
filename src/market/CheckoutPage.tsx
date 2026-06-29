@@ -2,7 +2,8 @@ import { useState } from 'react'
 import type { Coupon, PaymentMethod } from './types'
 import { useOrderPrice } from './useOrderPrice'
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
-import { OrderLineRow } from './_components/OrderLineRow'
+import { OrderItemRow } from './_components/OrderItemRow'
+import { OrderPriceRow } from './_components/OrderPriceRow'
 import { OrderStatusTag } from './_components/OrderStatusTag'
 import { DeliveryMemo } from './_components/DeliveryMemo'
 import { DeliverySection } from './_components/DeliverySection'
@@ -34,15 +35,16 @@ export const CheckoutPage = () => {
 
   const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
 
-  const { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice } = useOrderPrice({
-    cartItems: cart,
-    isRemote: address.isRemote,
-    couponDiscount: appliedCoupon ? appliedCoupon.discount : 0,
-    usePoint,
-    pointInput,
-    memberPoint: member.point,
-    memberGrade: member.grade,
-  })
+  const { itemTotal, shippingFee, couponDiscount, pointDiscount, vipDiscount, finalPrice } =
+    useOrderPrice({
+      cartItems: cart,
+      isRemote: address.isRemote,
+      couponDiscount: appliedCoupon ? appliedCoupon.discount : 0,
+      usePoint,
+      pointInput,
+      memberPoint: member.point,
+      memberGrade: member.grade,
+    })
 
   // 컨벤션: 내부 이벤트 핸들러는 handleX 네이밍 적용
   const handleApplyCoupon = () => {
@@ -75,11 +77,11 @@ export const CheckoutPage = () => {
         <h2>주문 상품</h2>
         {/* ⑤ props 과다 → Composition: 필요한 서브컴포넌트만 조합 */}
         {cart.map((it) => (
-          <OrderLineRow key={it.id}>
-            <OrderLineRow.Thumbnail thumbnail={it.thumbnail} />
-            <OrderLineRow.Label label={it.name} option={`${it.option} · 수량 ${it.quantity} `} />
-            <OrderLineRow.Amount amount={it.price * it.quantity} />
-          </OrderLineRow>
+          <OrderItemRow key={it.id}>
+            <OrderItemRow.Thumbnail thumbnail={it.thumbnail} />
+            <OrderItemRow.Label label={it.name} option={`${it.option} · 수량 ${it.quantity} `} />
+            <OrderItemRow.Amount amount={it.price * it.quantity} />
+          </OrderItemRow>
         ))}
       </div>
 
@@ -129,25 +131,31 @@ export const CheckoutPage = () => {
       <div className="section">
         <h2>결제 금액</h2>
         {/* ⑤ props 과다 → Composition: type 분기 없이 서브컴포넌트 조합 */}
-        <OrderLineRow>
-          <OrderLineRow.Label label="상품 금액" />
-          <OrderLineRow.Amount amount={itemTotal} />
-        </OrderLineRow>
-        <OrderLineRow>
-          <OrderLineRow.Label label="배송비" />
-          <OrderLineRow.Amount amount={shippingFee} />
-        </OrderLineRow>
+        <OrderPriceRow>
+          <OrderPriceRow.Label label="상품 금액" />
+          <OrderPriceRow.Amount amount={itemTotal} />
+        </OrderPriceRow>
+        <OrderPriceRow>
+          <OrderPriceRow.Label label="배송비" />
+          <OrderPriceRow.Amount amount={shippingFee} />
+        </OrderPriceRow>
         {appliedCoupon ? (
-          <OrderLineRow>
-            <OrderLineRow.Label label="쿠폰 할인" option={appliedCoupon.code} />
-            <OrderLineRow.Amount amount={couponDiscount} isDiscount />
-          </OrderLineRow>
+          <OrderPriceRow>
+            <OrderPriceRow.Label label="쿠폰 할인" option={appliedCoupon.code} />
+            <OrderPriceRow.Amount amount={couponDiscount} isDiscount />
+          </OrderPriceRow>
         ) : null}
         {usePoint ? (
-          <OrderLineRow>
-            <OrderLineRow.Label label="적립금 사용" />
-            <OrderLineRow.Amount amount={pointDiscount} isDiscount />
-          </OrderLineRow>
+          <OrderPriceRow>
+            <OrderPriceRow.Label label="적립금 사용" />
+            <OrderPriceRow.Amount amount={pointDiscount} isDiscount />
+          </OrderPriceRow>
+        ) : null}
+        {vipDiscount > 0 ? (
+          <OrderPriceRow>
+            <OrderPriceRow.Label label="VIP 할인" />
+            <OrderPriceRow.Amount amount={vipDiscount} isDiscount />
+          </OrderPriceRow>
         ) : null}
         <div className="total">
           <span>최종 결제 금액</span>
