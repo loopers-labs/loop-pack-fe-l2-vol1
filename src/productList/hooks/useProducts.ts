@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchProducts } from "../api/productApi";
+import { fetchProducts } from "../services/productApi";
 import type { Product, ProductQuery } from "../types";
 
 /**

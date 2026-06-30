@@ -1,4 +1,4 @@
-import type { Product, ProductBadges } from "./types";
+import type { Product, ProductBadges } from "../types";
 
 // ─── 도메인 규칙 임계값 ──────────────────────────────────
 const HOT_DEAL_MIN_DISCOUNT_RATE = 30;

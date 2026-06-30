@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { splitHighlightParts } from "./utils";
+import { splitHighlightParts } from ".";
 
 // 결함 증명: 검색어를 그대로 `new RegExp("(" + q + ")")` 에 넣던 옛 코드는
 // "(" 같은 정규식 특수문자 입력 시 "Invalid regular expression" 으로 throw 했다.
