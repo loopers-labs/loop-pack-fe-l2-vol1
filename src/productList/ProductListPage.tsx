@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./ProductListPage.css";
 import type { Product, SortBy } from "./types";
-import { getProducts } from "./services/productService";
+import { useProductList } from "./hooks/useProductList";
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -29,12 +29,6 @@ const PAGE_SIZE = 12;
 // ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
-  // ─── 서버 상태 (직접 관리) ──────────────────────────────
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
   // ─── 필터 상태 ──────────────────────────────────────────
   const [category, setCategory] = useState<"all" | Product["category"]>("all");
   const [minPrice, setMinPrice] = useState<number | "">("");
@@ -50,6 +44,17 @@ export function ProductListPage() {
   // ─── 옵션 토글 ──────────────────────────────────────────
   const [inStockOnly, setInStockOnly] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const { products, totalCount, isLoading, error } = useProductList({
+    category,
+    q: searchQuery,
+    page,
+    sort: sortBy,
+    minPrice,
+    maxPrice,
+    size: PAGE_SIZE,
+    inStockOnly,
+  });
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
   const [wishlist, setWishlist] = useState<number[]>(() => {
@@ -70,38 +75,6 @@ export function ProductListPage() {
       return [];
     }
   });
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await getProducts({
-          category,
-          sort: sortBy,
-          q: searchQuery,
-          page,
-          size: PAGE_SIZE,
-          minPrice,
-          maxPrice,
-        });
-
-        const filtered = inStockOnly
-          ? data.products.filter((product) => product.stock > 0)
-          : data.products;
-
-        setProducts(filtered);
-        setTotalCount(data.totalCount);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("상품 목록을 불러오지 못했습니다."));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
 
   // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
   useEffect(() => {

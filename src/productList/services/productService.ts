@@ -10,7 +10,10 @@ export type GetProductsParams = {
   size: number;
 };
 
-export async function getProducts(params: GetProductsParams): Promise<ProductListResponse> {
+export async function getProducts(
+  params: GetProductsParams,
+  options?: { signal?: AbortSignal },
+): Promise<ProductListResponse> {
   const searchParams = new URLSearchParams();
 
   if (params.category !== "all") {
@@ -33,7 +36,9 @@ export async function getProducts(params: GetProductsParams): Promise<ProductLis
     searchParams.set("maxPrice", String(params.maxPrice));
   }
 
-  const response = await fetch(`/api/products?${searchParams.toString()}`);
+  const response = await fetch(`/api/products?${searchParams.toString()}`, {
+    signal: options?.signal,
+  });
 
   if (!response.ok) {
     throw new Error("상품 목록을 불러오지 못했습니다.");
