@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import type {
-  Coupon as CouponType,
-  PaymentMethod as PaymentMethodType,
+import {
+  type Address,
+  type Coupon as CouponType,
+  type PaymentMethod as PaymentMethodType,
 } from './shared/types/types';
 import { ADDRESSES, CART, COUPONS, MEMBER } from './data';
 import './market.css';
@@ -33,7 +34,7 @@ export function CheckoutPage() {
   const member = MEMBER;
   const cart = CART;
 
-  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
+  const [selectedAddress, setSelectedAddress] = useState<Address>(ADDRESSES[0]);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<CouponType | null>(null);
   const [pointInput, setPointInput] = useState(member.point); // 기본적으로 최대 적립금이 적용되도록 변경
@@ -41,12 +42,10 @@ export function CheckoutPage() {
   const [agreed, setAgreed] = useState(false);
   const [placed, setPlaced] = useState(false);
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
-
   const itemTotal = calculateTotal(cart);
   const amount = {
     itemTotal,
-    shippingFee: calculateShippingFee(itemTotal, address.isRemote),
+    shippingFee: calculateShippingFee(itemTotal, selectedAddress.isRemote),
     couponDiscount: calulateCouponDiscount(appliedCoupon),
     memberDiscount: calculateMemberDiscount(itemTotal, member),
     pointDiscount: calculatePointDiscount(pointInput, member.point, itemTotal),
@@ -72,8 +71,8 @@ export function CheckoutPage() {
       <ModalProvider>
         <Delivery
           addresses={ADDRESSES}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={setSelectedAddressId}
+          selectedAddress={selectedAddress}
+          onSelectAddress={setSelectedAddress}
         />
 
         <Request />

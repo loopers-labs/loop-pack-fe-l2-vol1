@@ -1,68 +1,16 @@
 import { useState } from 'react';
 import type { Address } from '../shared/types/types';
 
-function AddressField({
-  address,
-  selected,
-  onSelect,
-}: {
-  address: Address;
-  selected: boolean;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <label className="addr">
-      <input type="radio" checked={selected} onChange={() => onSelect(address.id)} />
-      <span>
-        {address.label} · {address.recipient} ({address.detail})
-        {address.isRemote ? ' · 도서산간' : ''}
-      </span>
-    </label>
-  );
-}
-
-// '도서산간 제외' 필터는 스스로 책임진다.
-// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
-function AddressForm({
-  addresses,
-  selectedAddressId,
-  onSelectAddress,
-}: {
-  addresses: Address[];
-  selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
-}) {
-  const [onlyNear, setOnlyNear] = useState(false);
-  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
-  return (
-    <>
-      <label className="filter">
-        <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
-        도서산간 제외
-      </label>
-      {list.map((a) => (
-        <AddressField
-          key={a.id}
-          address={a}
-          selected={a.id === selectedAddressId}
-          onSelect={onSelectAddress}
-        />
-      ))}
-    </>
-  );
-}
-
 export const Delivery = ({
   addresses,
-  selectedAddressId,
+  selectedAddress,
   onSelectAddress,
 }: {
   addresses: Address[];
-  selectedAddressId: string;
-  onSelectAddress: (id: string) => void;
+  selectedAddress: Address;
+  onSelectAddress: (address: Address) => void;
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const selected = addresses.find((a) => a.id === selectedAddressId)!;
   return (
     <div className="section">
       <div className="row between">
@@ -74,14 +22,87 @@ export const Delivery = ({
       {expanded ? (
         <AddressForm
           addresses={addresses}
-          selectedAddressId={selectedAddressId}
+          selectedAddress={selectedAddress}
           onSelectAddress={onSelectAddress}
         />
       ) : (
         <p className="addr-summary">
-          {selected.label} · {selected.recipient} ({selected.detail})
+          {selectedAddress.label} · {selectedAddress.recipient} ({selectedAddress.detail})
         </p>
       )}
     </div>
   );
 };
+
+// '도서산간 제외' 필터는 스스로 책임진다.
+// 선택 동작(onSelectAddress)은 그대로 AddressField 로 통과시킨다.
+function AddressForm({
+  addresses,
+  selectedAddress,
+  onSelectAddress,
+}: {
+  addresses: Address[];
+  selectedAddress: Address;
+  onSelectAddress: (address: Address) => void;
+}) {
+  const [remoteExcludechecked, setRemoteExcludechecked] = useState(false); // 도서산간 제외 체크
+  const list = remoteExcludechecked ? addresses.filter((a) => !a.isRemote) : addresses;
+
+  const handleIsRemoteCheckboxToggle = (checked: boolean) => {
+    setRemoteExcludechecked(checked);
+    // 도서산간 제외를 체크하지 않은 경우
+    if (!checked) return;
+
+    // 도서산간 제외를 체크한 경우
+    // 체크되었던 주소가 일반 지역인 경우 유지
+    if (!selectedAddress.isRemote) return;
+
+    // 체크되었던 주소가 도서산간인 경우 체크를 첫 번째 일반 지역으로 옮김
+    const firstNormalAddress = addresses.find((a) => !a.isRemote);
+
+    if (firstNormalAddress) {
+      onSelectAddress(firstNormalAddress);
+    }
+  };
+
+  return (
+    <>
+      <label className="filter">
+        <input
+          type="checkbox"
+          checked={remoteExcludechecked}
+          onChange={(e) => handleIsRemoteCheckboxToggle(e.target.checked)}
+        />
+        도서산간 제외
+      </label>
+      {list.map((a) => (
+        <AddressField
+          key={a.id}
+          address={a}
+          selected={a.id === selectedAddress.id}
+          onSelect={onSelectAddress}
+        />
+      ))}
+    </>
+  );
+}
+
+function AddressField({
+  address,
+  selected,
+  onSelect,
+}: {
+  address: Address;
+  selected: boolean;
+  onSelect: (address: Address) => void;
+}) {
+  return (
+    <label className="addr">
+      <input type="radio" checked={selected} onChange={() => onSelect(address)} />
+      <span>
+        {address.label} · {address.recipient} ({address.detail})
+        {address.isRemote ? ' · 도서산간' : ''}
+      </span>
+    </label>
+  );
+}
