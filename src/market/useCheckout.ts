@@ -65,25 +65,29 @@ export function useCheckout() {
     setPlaced(true);
   };
 
+  const coupon = {
+    code: couponCode,
+    setCode: setCouponCode,
+    applied: appliedCoupon,
+    discount: couponDiscount,
+    apply: applyCoupon,
+  };
+
+  const point = {
+    use: usePoint,
+    setUse: setUsePoint,
+    input: pointInput,
+    setInput: setPointInput,
+    discount: pointDiscount,
+  };
+
   return {
     member,
     cart,
     selectedAddressId,
     setSelectedAddressId,
-    coupon: {
-      code: couponCode,
-      setCode: setCouponCode,
-      applied: appliedCoupon,
-      discount: couponDiscount,
-      apply: applyCoupon,
-    },
-    point: {
-      use: usePoint,
-      setUse: setUsePoint,
-      input: pointInput,
-      setInput: setPointInput,
-      discount: pointDiscount,
-    },
+    coupon,
+    point,
     payment,
     setPayment,
     agreed,
