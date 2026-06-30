@@ -1,6 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
-import { fetchProducts } from './services/productApi';
+import { productListQueryOptions } from './services/productQueries';
 import type { Product, SortBy } from './types';
 import './ProductListPage.css';
 
@@ -30,12 +31,6 @@ const PAGE_SIZE = 12;
 // ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
-  // ─── 서버 상태 (직접 관리) ──────────────────────────────
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
   // ─── 필터 상태 ──────────────────────────────────────────
   const [category, setCategory] = useState<'all' | Product['category']>('all');
   const [minPrice, setMinPrice] = useState<number | ''>('');
@@ -74,35 +69,32 @@ export function ProductListPage() {
     }
   });
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await fetchProducts({
-          category,
-          sortBy,
-          searchQuery,
-          page,
-          size: PAGE_SIZE,
-          minPrice,
-          maxPrice,
-        });
-        // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
-        const filtered = inStockOnly
-          ? data.products.filter((p) => p.stock > 0)
-          : data.products;
-        setProducts(filtered);
-        setTotalCount(data.totalCount);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // ─── 서버 상태 (TanStack Query) ─────────────────────────
+  const {
+    data: productListResponse,
+    isFetching: isFetchingProducts,
+    isError: hasProductsError,
+    error: productsError,
+  } = useQuery(
+    productListQueryOptions({
+      category,
+      sortBy,
+      searchQuery,
+      page,
+      size: PAGE_SIZE,
+      minPrice,
+      maxPrice,
+    }),
+  );
 
-    void loadProducts();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
+  const allProducts = productListResponse?.products ?? [];
+
+  // "재고 있는 것만"은 서버 관심사가 아니므로 응답에서 파생
+  const products = inStockOnly
+    ? allProducts.filter((p) => p.stock > 0)
+    : allProducts;
+
+  const totalCount = productListResponse?.totalCount ?? 0;
 
   // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
   useEffect(() => {
@@ -210,14 +202,14 @@ export function ProductListPage() {
   for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
 
   // ─── 로딩/에러는 early return ───────────────────────────
-  if (isLoading && products.length === 0) {
+  if (isFetchingProducts && products.length === 0) {
     return <div className="loading">로딩 중...</div>;
   }
 
-  if (error) {
+  if (hasProductsError) {
     return (
       <div className="error">
-        <p>오류가 발생했습니다: {error.message}</p>
+        <p>오류가 발생했습니다: {productsError?.message}</p>
         <button onClick={() => window.location.reload()}>다시 시도</button>
       </div>
     );
@@ -507,7 +499,7 @@ export function ProductListPage() {
       )}
 
       {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
-      {isLoading && products.length > 0 && (
+      {isFetchingProducts && products.length > 0 && (
         <div className="background-loading">데이터 갱신 중...</div>
       )}
     </div>
