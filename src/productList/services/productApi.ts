@@ -1,7 +1,7 @@
-import type { Product, SortBy } from '../types';
+import type { CategoryFilter, Product, SortBy } from '../types';
 
 export type FetchProductsParams = {
-  category: 'all' | Product['category'];
+  category: CategoryFilter;
   sortBy: SortBy;
   searchQuery: string;
   page: number;

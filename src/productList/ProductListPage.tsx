@@ -2,14 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
 import { productListQueryOptions } from './services/productQueries';
-import type { Product, SortBy } from './types';
+import type { CategoryFilter, SortBy } from './types';
 import './ProductListPage.css';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
 // ─────────────────────────────────────────────────────────
 
-const CATEGORIES: { value: 'all' | Product['category']; label: string }[] = [
+const CATEGORIES: { value: CategoryFilter; label: string }[] = [
   { value: 'all', label: '전체' },
   { value: 'electronics', label: '전자제품' },
   { value: 'fashion', label: '패션' },
@@ -32,7 +32,7 @@ const PAGE_SIZE = 12;
 
 export function ProductListPage() {
   // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<'all' | Product['category']>('all');
+  const [category, setCategory] = useState<CategoryFilter>('all');
   const [minPrice, setMinPrice] = useState<number | ''>('');
   const [maxPrice, setMaxPrice] = useState<number | ''>('');
   const [sortBy, setSortBy] = useState<SortBy>('latest');
@@ -132,7 +132,7 @@ export function ProductListPage() {
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
-  const handleCategoryChange = (cat: 'all' | Product['category']) => {
+  const handleCategoryChange = (cat: CategoryFilter) => {
     setCategory(cat);
     setPage(1);
   };
