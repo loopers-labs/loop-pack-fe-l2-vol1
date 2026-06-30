@@ -32,3 +32,6 @@ pnpm-debug.log*
 
 # misc
 .DS_Store
+
+*storybook.log
+storybook-static
