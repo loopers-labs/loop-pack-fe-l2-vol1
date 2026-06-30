@@ -1,29 +1,8 @@
 import { useState, useEffect } from 'react';
+
+import { fetchProducts } from './services/productApi';
+import type { Product, SortBy } from './types';
 import './ProductListPage.css';
-
-// ─────────────────────────────────────────────────────────
-// 타입도 한 파일에 (실무에서 흔히 보는 모습)
-// ─────────────────────────────────────────────────────────
-
-type Product = {
-  id: number;
-  name: string;
-  category: 'electronics' | 'fashion' | 'home' | 'beauty';
-  price: number;
-  originalPrice?: number;
-  stock: number;
-  imageUrl: string;
-  createdAt: string;
-  rating: number;
-  reviewCount: number;
-};
-
-type ProductListResponse = {
-  products: Product[];
-  totalCount: number;
-};
-
-type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -96,22 +75,19 @@ export function ProductListPage() {
   });
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const loadProducts = async () => {
       setIsLoading(true);
       setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== '') params.set('minPrice', String(minPrice));
-      if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
       try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
+        const data = await fetchProducts({
+          category,
+          sortBy,
+          searchQuery,
+          page,
+          size: PAGE_SIZE,
+          minPrice,
+          maxPrice,
+        });
         // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
         const filtered = inStockOnly
           ? data.products.filter((p) => p.stock > 0)
@@ -125,7 +101,7 @@ export function ProductListPage() {
       }
     };
 
-    void fetchProducts();
+    void loadProducts();
   }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
 
   // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
