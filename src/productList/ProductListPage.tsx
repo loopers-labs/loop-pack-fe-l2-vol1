@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 
 import { CATEGORY_LABELS, PAGE_SIZE, SORT_LABELS } from './constants';
 import { useProductFilters } from './hooks/useProductFilters';
+import { useRecentlyViewed } from './hooks/useRecentlyViewed';
+import { useWishlist } from './hooks/useWishlist';
 import { productListQueryOptions } from './services/productQueries';
 import { CATEGORY_FILTER_VALUES, SORT_VALUES, type SortBy } from './types';
 import './ProductListPage.css';
@@ -29,27 +31,9 @@ export function ProductListPage() {
   // ─── 보기 모드 (표시 전용 — 데이터 필터 아님) ───────────
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // ─── 위시리스트 (localStorage 동기화) ───────────────────
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('wishlist');
-
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('recentlyViewed');
-
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  // ─── 위시리스트 / 최근 본 상품 (localStorage 동기화) ──────
+  const wishlist = useWishlist();
+  const recentlyViewed = useRecentlyViewed();
 
   // ─── 서버 상태 (TanStack Query) ─────────────────────────
   const {
@@ -78,44 +62,10 @@ export function ProductListPage() {
 
   const totalCount = productListResponse?.totalCount ?? 0;
 
-  // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
-  useEffect(() => {
-    try {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist]);
-
-  // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [recentlyViewed]);
-
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
-
-  const handleWishlistToggle = (productId: number) => {
-    setWishlist((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId],
-    );
-  };
-
-  const handleProductClick = (productId: number) => {
-    setRecentlyViewed((prev) => {
-      const without = prev.filter((id) => id !== productId);
-
-      return [productId, ...without].slice(0, 10);
-    });
-  };
 
   // ─── 페이지네이션 계산 (인라인) ─────────────────────────
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -144,9 +94,7 @@ export function ProductListPage() {
         <h1>상품 목록</h1>
         <p className="total-count">
           총 {totalCount.toLocaleString()}개의 상품
-          {wishlist.length > 0 && (
-            <span> · 위시리스트 {wishlist.length}개</span>
-          )}
+          {wishlist.count > 0 && <span> · 위시리스트 {wishlist.count}개</span>}
         </p>
       </header>
 
@@ -307,13 +255,13 @@ export function ProductListPage() {
             const isNew = daysSinceCreated <= 7;
 
             // ─── 위시리스트 여부 ────────────────────────
-            const isWished = wishlist.includes(product.id);
+            const isWished = wishlist.isWished(product.id);
 
             return (
               <article
                 key={product.id}
                 className="product-card"
-                onClick={() => handleProductClick(product.id)}
+                onClick={() => recentlyViewed.markViewed(product.id)}
               >
                 <div className="image-wrap">
                   <img
@@ -378,7 +326,7 @@ export function ProductListPage() {
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleWishlistToggle(product.id);
+                        wishlist.toggleWish(product.id);
                       }}
                       aria-label="위시리스트 토글"
                     >
