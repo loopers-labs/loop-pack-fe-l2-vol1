@@ -46,6 +46,9 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 
 const PAGE_SIZE = 12;
 
+// 검색어를 정규식에 안전하게 넣기 위한 escape (특수문자로 인한 RegExp 크래시 방지)
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // ─────────────────────────────────────────────────────────
 // 500줄+ 컴포넌트 — UI, 비즈니스 로직, API, 포맷, 도메인 규칙이 한 파일에
 // ─────────────────────────────────────────────────────────
@@ -106,15 +109,12 @@ export function ProductListPage() {
       });
       if (minPrice !== "") params.set("minPrice", String(minPrice));
       if (maxPrice !== "") params.set("maxPrice", String(maxPrice));
+      if (inStockOnly) params.set("inStock", "true");
       try {
         const res = await fetch(`/api/products?${params.toString()}`);
         if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
         const data: ProductListResponse = await res.json();
-        // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
-        const filtered = inStockOnly
-          ? data.products.filter((p) => p.stock > 0)
-          : data.products;
-        setProducts(filtered);
+        setProducts(data.products);
         setTotalCount(data.totalCount);
       } catch (err) {
         setError(err as Error);
@@ -355,7 +355,9 @@ export function ProductListPage() {
             // ─── 검색어 하이라이팅 로직 인라인 ──────────
             const highlightMatch = (text: string) => {
               if (!searchQuery) return <>{text}</>;
-              const parts = text.split(new RegExp(`(${searchQuery})`, "gi"));
+              const parts = text.split(
+                new RegExp(`(${escapeRegExp(searchQuery)})`, "gi"),
+              );
               return (
                 <>
                   {parts.map((part, i) =>
@@ -385,8 +387,7 @@ export function ProductListPage() {
             const isAlmostSoldOut = product.stock > 0 && product.stock <= 5;
             const isSoldOut = product.stock === 0;
             const isHot = discountRate >= 30;
-            const isBest =
-              product.rating >= 4.5 && product.reviewCount >= 100;
+            const isBest = product.rating >= 4.5 && product.reviewCount >= 100;
             const isFreeShipping = product.price >= 50000;
 
             // ─── 날짜 포맷팅 인라인 ─────────────────────
