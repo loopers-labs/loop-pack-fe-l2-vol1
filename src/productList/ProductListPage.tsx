@@ -1,237 +1,222 @@
-import { useState, useEffect } from "react";
-import "./ProductListPage.css";
-
-// ─────────────────────────────────────────────────────────
-// 타입도 한 파일에 (실무에서 흔히 보는 모습)
-// ─────────────────────────────────────────────────────────
-
-type Product = {
-  id: number;
-  name: string;
-  category: "electronics" | "fashion" | "home" | "beauty";
-  price: number;
-  originalPrice?: number;
-  stock: number;
-  imageUrl: string;
-  createdAt: string;
-  rating: number;
-  reviewCount: number;
-};
-
-type ProductListResponse = {
-  products: Product[];
-  totalCount: number;
-};
-
-type SortBy = "latest" | "popular" | "price-asc" | "price-desc";
+import { useState, useEffect } from 'react'
+import './ProductListPage.css'
+import { productService } from './services/productService'
+import type { Product, ProductCategoryFilter, SortBy } from './types'
+import {
+  formatPrice,
+  getDiscountRate,
+  isAlmostSoldOut,
+  isBestSeller,
+  isFreeShipping,
+  isHotDeal,
+  isNewProduct,
+  isSoldOut,
+} from './utils/productRules'
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
 // ─────────────────────────────────────────────────────────
 
-const CATEGORIES: { value: "all" | Product["category"]; label: string }[] = [
-  { value: "all", label: "전체" },
-  { value: "electronics", label: "전자제품" },
-  { value: "fashion", label: "패션" },
-  { value: "home", label: "홈" },
-  { value: "beauty", label: "뷰티" },
-];
+const CATEGORIES: { value: ProductCategoryFilter; label: string }[] = [
+  { value: 'all', label: '전체' },
+  { value: 'electronics', label: '전자제품' },
+  { value: 'fashion', label: '패션' },
+  { value: 'home', label: '홈' },
+  { value: 'beauty', label: '뷰티' },
+]
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
-  { value: "latest", label: "최신순" },
-  { value: "popular", label: "인기순" },
-  { value: "price-asc", label: "가격 낮은순" },
-  { value: "price-desc", label: "가격 높은순" },
-];
+  { value: 'latest', label: '최신순' },
+  { value: 'popular', label: '인기순' },
+  { value: 'price-asc', label: '가격 낮은순' },
+  { value: 'price-desc', label: '가격 높은순' },
+]
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 12
 
 // ─────────────────────────────────────────────────────────
-// 500줄+ 컴포넌트 — UI, 비즈니스 로직, API, 포맷, 도메인 규칙이 한 파일에
+// 500줄+ 컴포넌트 — 아직 UI, 상태, 저장소 동기화가 한 파일에 남아 있다
 // ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
   // ─── 서버 상태 (직접 관리) ──────────────────────────────
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [products, setProducts] = useState<Product[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
   // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<"all" | Product["category"]>("all");
-  const [minPrice, setMinPrice] = useState<number | "">("");
-  const [maxPrice, setMaxPrice] = useState<number | "">("");
-  const [sortBy, setSortBy] = useState<SortBy>("latest");
+  const [category, setCategory] = useState<ProductCategoryFilter>('all')
+  const [minPrice, setMinPrice] = useState<number | ''>('')
+  const [maxPrice, setMaxPrice] = useState<number | ''>('')
+  const [sortBy, setSortBy] = useState<SortBy>('latest')
 
   // ─── 검색 상태 ──────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('')
 
   // ─── 페이지네이션 상태 ──────────────────────────────────
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1)
 
   // ─── 옵션 토글 ──────────────────────────────────────────
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [inStockOnly, setInStockOnly] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
   const [wishlist, setWishlist] = useState<number[]>(() => {
     try {
-      const stored = localStorage.getItem("wishlist");
-      return stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem('wishlist')
+      return stored ? JSON.parse(stored) : []
     } catch {
-      return [];
+      return []
     }
-  });
+  })
 
   // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
     try {
-      const stored = localStorage.getItem("recentlyViewed");
-      return stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem('recentlyViewed')
+      return stored ? JSON.parse(stored) : []
     } catch {
-      return [];
+      return []
     }
-  });
+  })
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== "") params.set("minPrice", String(minPrice));
-      if (maxPrice !== "") params.set("maxPrice", String(maxPrice));
+      setIsLoading(true)
+      setError(null)
       try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
+        const data = await productService.getProducts({
+          category,
+          sortBy,
+          searchQuery,
+          page,
+          pageSize: PAGE_SIZE,
+          minPrice,
+          maxPrice,
+        })
         // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
         const filtered = inStockOnly
           ? data.products.filter((p) => p.stock > 0)
-          : data.products;
-        setProducts(filtered);
-        setTotalCount(data.totalCount);
+          : data.products
+        setProducts(filtered)
+        setTotalCount(data.totalCount)
       } catch (err) {
-        setError(err as Error);
+        setError(err as Error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    fetchProducts();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
+    }
+    fetchProducts()
+  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly])
 
   // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
   useEffect(() => {
     try {
-      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      localStorage.setItem('wishlist', JSON.stringify(wishlist))
     } catch {
       // localStorage 사용 불가 시 무시
     }
-  }, [wishlist]);
+  }, [wishlist])
 
   // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
   useEffect(() => {
     try {
-      localStorage.setItem("recentlyViewed", JSON.stringify(recentlyViewed));
+      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed))
     } catch {
       // localStorage 사용 불가 시 무시
     }
-  }, [recentlyViewed]);
+  }, [recentlyViewed])
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [page])
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (category !== "all") params.set("category", category);
-    if (searchQuery) params.set("q", searchQuery);
-    if (page > 1) params.set("page", String(page));
-    if (sortBy !== "latest") params.set("sort", sortBy);
-    if (minPrice !== "") params.set("minPrice", String(minPrice));
-    if (maxPrice !== "") params.set("maxPrice", String(maxPrice));
-    if (inStockOnly) params.set("inStock", "true");
-    window.history.replaceState(null, "", `?${params.toString()}`);
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
+    const params = new URLSearchParams()
+    if (category !== 'all') params.set('category', category)
+    if (searchQuery) params.set('q', searchQuery)
+    if (page > 1) params.set('page', String(page))
+    if (sortBy !== 'latest') params.set('sort', sortBy)
+    if (minPrice !== '') params.set('minPrice', String(minPrice))
+    if (maxPrice !== '') params.set('maxPrice', String(maxPrice))
+    if (inStockOnly) params.set('inStock', 'true')
+    window.history.replaceState(null, '', `?${params.toString()}`)
+  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly])
 
-  const handleCategoryChange = (cat: "all" | Product["category"]) => {
-    setCategory(cat);
-    setPage(1);
-  };
+  const handleCategoryChange = (cat: ProductCategoryFilter) => {
+    setCategory(cat)
+    setPage(1)
+  }
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMinPrice(v === "" ? "" : Number(v));
-    setPage(1);
-  };
+    const v = e.target.value
+    setMinPrice(v === '' ? '' : Number(v))
+    setPage(1)
+  }
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMaxPrice(v === "" ? "" : Number(v));
-    setPage(1);
-  };
+    const v = e.target.value
+    setMaxPrice(v === '' ? '' : Number(v))
+    setPage(1)
+  }
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as SortBy);
-    setPage(1);
-  };
+    setSortBy(e.target.value as SortBy)
+    setPage(1)
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
+    setSearchQuery(e.target.value)
+    setPage(1)
+  }
 
   const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInStockOnly(e.target.checked);
-    setPage(1);
-  };
+    setInStockOnly(e.target.checked)
+    setPage(1)
+  }
 
   const handlePageChange = (next: number) => {
-    setPage(next);
-  };
+    setPage(next)
+  }
 
   const handleResetFilters = () => {
-    setCategory("all");
-    setMinPrice("");
-    setMaxPrice("");
-    setSortBy("latest");
-    setSearchQuery("");
-    setInStockOnly(false);
-    setPage(1);
-  };
+    setCategory('all')
+    setMinPrice('')
+    setMaxPrice('')
+    setSortBy('latest')
+    setSearchQuery('')
+    setInStockOnly(false)
+    setPage(1)
+  }
 
   const handleWishlistToggle = (productId: number) => {
     setWishlist((prev) =>
       prev.includes(productId)
         ? prev.filter((id) => id !== productId)
         : [...prev, productId],
-    );
-  };
+    )
+  }
 
   const handleProductClick = (productId: number) => {
     setRecentlyViewed((prev) => {
-      const without = prev.filter((id) => id !== productId);
-      return [productId, ...without].slice(0, 10);
-    });
-  };
+      const without = prev.filter((id) => id !== productId)
+      return [productId, ...without].slice(0, 10)
+    })
+  }
 
   // ─── 페이지네이션 계산 (인라인) ─────────────────────────
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const pageNumbers: number[] = [];
-  const startPage = Math.max(1, page - 2);
-  const endPage = Math.min(totalPages, page + 2);
-  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const pageNumbers: number[] = []
+  const startPage = Math.max(1, page - 2)
+  const endPage = Math.min(totalPages, page + 2)
+  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i)
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && products.length === 0) {
-    return <div className="loading">로딩 중...</div>;
+    return <div className="loading">로딩 중...</div>
   }
 
   if (error) {
@@ -240,7 +225,7 @@ export function ProductListPage() {
         <p>오류가 발생했습니다: {error.message}</p>
         <button onClick={() => window.location.reload()}>다시 시도</button>
       </div>
-    );
+    )
   }
 
   return (
@@ -263,7 +248,7 @@ export function ProductListPage() {
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.value}
-                className={category === cat.value ? "active" : ""}
+                className={category === cat.value ? 'active' : ''}
                 onClick={() => handleCategoryChange(cat.value)}
               >
                 {cat.label}
@@ -297,8 +282,8 @@ export function ProductListPage() {
           <label>옵션</label>
           <label
             style={{
-              display: "flex",
-              alignItems: "center",
+              display: 'flex',
+              alignItems: 'center',
               gap: 6,
               fontWeight: 400,
               fontSize: 13,
@@ -336,7 +321,7 @@ export function ProductListPage() {
         </select>
         <select
           value={viewMode}
-          onChange={(e) => setViewMode(e.target.value as "grid" | "list")}
+          onChange={(e) => setViewMode(e.target.value as 'grid' | 'list')}
         >
           <option value="grid">그리드</option>
           <option value="list">리스트</option>
@@ -346,7 +331,7 @@ export function ProductListPage() {
       {/* ─── 상품 그리드 ────────────────────────────────── */}
       <section
         className="product-grid"
-        style={viewMode === "list" ? { gridTemplateColumns: "1fr" } : undefined}
+        style={viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined}
       >
         {products.length === 0 ? (
           <div className="empty">조건에 맞는 상품이 없습니다.</div>
@@ -354,51 +339,47 @@ export function ProductListPage() {
           products.map((product) => {
             // ─── 검색어 하이라이팅 로직 인라인 ──────────
             const highlightMatch = (text: string) => {
-              if (!searchQuery) return <>{text}</>;
-              const parts = text.split(new RegExp(`(${searchQuery})`, "gi"));
+              if (!searchQuery) return <>{text}</>
+              const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'))
+              let offset = 0
+
               return (
                 <>
-                  {parts.map((part, i) =>
-                    part.toLowerCase() === searchQuery.toLowerCase() ? (
+                  {parts.map((part) => {
+                    const key = `${part}-${offset}`
+                    offset += part.length
+
+                    return part.toLowerCase() === searchQuery.toLowerCase() ? (
                       <mark
-                        key={i}
-                        style={{ background: "#fff176", padding: 0 }}
+                        key={key}
+                        style={{ background: '#fff176', padding: 0 }}
                       >
                         {part}
                       </mark>
                     ) : (
-                      part
-                    ),
-                  )}
+                      <span key={key}>{part}</span>
+                    )
+                  })}
                 </>
-              );
-            };
+              )
+            }
 
-            // ─── 도메인 규칙 인라인 계산 ─────────────────
-            const discountRate = product.originalPrice
-              ? Math.round((1 - product.price / product.originalPrice) * 100)
-              : 0;
-            const formattedPrice = product.price.toLocaleString() + "원";
-            const formattedOriginal = product.originalPrice
-              ? product.originalPrice.toLocaleString() + "원"
-              : null;
-            const isAlmostSoldOut = product.stock > 0 && product.stock <= 5;
-            const isSoldOut = product.stock === 0;
-            const isHot = discountRate >= 30;
-            const isBest =
-              product.rating >= 4.5 && product.reviewCount >= 100;
-            const isFreeShipping = product.price >= 50000;
-
-            // ─── 날짜 포맷팅 인라인 ─────────────────────
-            const createdDate = new Date(product.createdAt);
-            const now = new Date();
-            const daysSinceCreated = Math.floor(
-              (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
-            );
-            const isNew = daysSinceCreated <= 7;
+            // ─── 도메인 규칙 계산 ────────────────────────
+            const discountRate = getDiscountRate(product)
+            const formattedPrice = formatPrice(product.price)
+            const formattedOriginal =
+              product.originalPrice !== undefined
+                ? formatPrice(product.originalPrice)
+                : null
+            const productIsAlmostSoldOut = isAlmostSoldOut(product)
+            const productIsSoldOut = isSoldOut(product)
+            const isHot = isHotDeal({ discountRate })
+            const isBest = isBestSeller(product)
+            const productIsFreeShipping = isFreeShipping(product)
+            const isNew = isNewProduct(product)
 
             // ─── 위시리스트 여부 ────────────────────────
-            const isWished = wishlist.includes(product.id);
+            const isWished = wishlist.includes(product.id)
 
             return (
               <article
@@ -420,10 +401,10 @@ export function ProductListPage() {
                   {isNew && <span className="badge badge-new">NEW</span>}
                   {isHot && <span className="badge badge-hot">특가</span>}
                   {isBest && <span className="badge badge-best">BEST</span>}
-                  {isSoldOut && (
+                  {productIsSoldOut && (
                     <span className="badge badge-soldout">품절</span>
                   )}
-                  {!isSoldOut && isAlmostSoldOut && (
+                  {!productIsSoldOut && productIsAlmostSoldOut && (
                     <span className="badge badge-warning">품절 임박</span>
                   )}
                 </div>
@@ -439,12 +420,12 @@ export function ProductListPage() {
                       </span>
                     )}
                     <span className="price">{formattedPrice}</span>
-                    {isFreeShipping && (
+                    {productIsFreeShipping && (
                       <span
                         style={{
                           marginLeft: 6,
                           fontSize: 11,
-                          color: "#2e7d32",
+                          color: '#2e7d32',
                           fontWeight: 600,
                         }}
                       >
@@ -461,24 +442,24 @@ export function ProductListPage() {
                     </span>
                     <button
                       style={{
-                        marginLeft: "auto",
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
+                        marginLeft: 'auto',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
                         fontSize: 16,
                       }}
                       onClick={(e) => {
-                        e.stopPropagation();
-                        handleWishlistToggle(product.id);
+                        e.stopPropagation()
+                        handleWishlistToggle(product.id)
                       }}
                       aria-label="위시리스트 토글"
                     >
-                      {isWished ? "♥" : "♡"}
+                      {isWished ? '♥' : '♡'}
                     </button>
                   </div>
                 </div>
               </article>
-            );
+            )
           })
         )}
       </section>
@@ -503,7 +484,7 @@ export function ProductListPage() {
           {pageNumbers.map((p) => (
             <button
               key={p}
-              className={p === page ? "active" : ""}
+              className={p === page ? 'active' : ''}
               onClick={() => handlePageChange(p)}
             >
               {p}
@@ -531,5 +512,5 @@ export function ProductListPage() {
         <div className="background-loading">데이터 갱신 중...</div>
       )}
     </div>
-  );
+  )
 }
