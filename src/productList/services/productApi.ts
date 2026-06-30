@@ -6,8 +6,8 @@ export type FetchProductsParams = {
   searchQuery: string;
   page: number;
   size: number;
-  minPrice: number | '';
-  maxPrice: number | '';
+  minPrice: number | null;
+  maxPrice: number | null;
 };
 
 export type ProductListResponse = {
@@ -26,9 +26,9 @@ export async function fetchProducts(
     size: String(params.size),
   });
 
-  if (params.minPrice !== '')
+  if (params.minPrice !== null)
     searchParams.set('minPrice', String(params.minPrice));
-  if (params.maxPrice !== '')
+  if (params.maxPrice !== null)
     searchParams.set('maxPrice', String(params.maxPrice));
 
   const res = await fetch(`/api/products?${searchParams.toString()}`);

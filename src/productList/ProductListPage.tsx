@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
+import { useProductFilters } from './hooks/useProductFilters';
 import { productListQueryOptions } from './services/productQueries';
 import type { CategoryFilter, SortBy } from './types';
 import './ProductListPage.css';
@@ -31,20 +32,21 @@ const PAGE_SIZE = 12;
 // ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
-  // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<CategoryFilter>('all');
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [sortBy, setSortBy] = useState<SortBy>('latest');
+  // ─── 필터·검색·페이지 상태 ────────────
+  const {
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    inStockOnly,
+    page,
+    setFilter,
+    setPage,
+    resetFilter,
+  } = useProductFilters();
 
-  // ─── 검색 상태 ──────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // ─── 페이지네이션 상태 ──────────────────────────────────
-  const [page, setPage] = useState(1);
-
-  // ─── 옵션 토글 ──────────────────────────────────────────
-  const [inStockOnly, setInStockOnly] = useState(false);
+  // ─── 보기 모드 (표시 전용 — 데이터 필터 아님) ───────────
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
@@ -119,65 +121,6 @@ export function ProductListPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (category !== 'all') params.set('category', category);
-    if (searchQuery) params.set('q', searchQuery);
-    if (page > 1) params.set('page', String(page));
-    if (sortBy !== 'latest') params.set('sort', sortBy);
-    if (minPrice !== '') params.set('minPrice', String(minPrice));
-    if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-    if (inStockOnly) params.set('inStock', 'true');
-    window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
-
-  const handleCategoryChange = (cat: CategoryFilter) => {
-    setCategory(cat);
-    setPage(1);
-  };
-
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMinPrice(v === '' ? '' : Number(v));
-    setPage(1);
-  };
-
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMaxPrice(v === '' ? '' : Number(v));
-    setPage(1);
-  };
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as SortBy);
-    setPage(1);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
-
-  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInStockOnly(e.target.checked);
-    setPage(1);
-  };
-
-  const handlePageChange = (next: number) => {
-    setPage(next);
-  };
-
-  const handleResetFilters = () => {
-    setCategory('all');
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('latest');
-    setSearchQuery('');
-    setInStockOnly(false);
-    setPage(1);
-  };
-
   const handleWishlistToggle = (productId: number) => {
     setWishlist((prev) =>
       prev.includes(productId)
@@ -236,7 +179,7 @@ export function ProductListPage() {
               <button
                 key={cat.value}
                 className={category === cat.value ? 'active' : ''}
-                onClick={() => handleCategoryChange(cat.value)}
+                onClick={() => setFilter({ category: cat.value })}
               >
                 {cat.label}
               </button>
@@ -250,16 +193,26 @@ export function ProductListPage() {
             <input
               type="number"
               placeholder="최소"
-              value={minPrice}
-              onChange={handleMinPriceChange}
+              value={minPrice ?? ''}
+              onChange={(e) =>
+                setFilter({
+                  minPrice:
+                    e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
               min={0}
             />
             <span>~</span>
             <input
               type="number"
               placeholder="최대"
-              value={maxPrice}
-              onChange={handleMaxPriceChange}
+              value={maxPrice ?? ''}
+              onChange={(e) =>
+                setFilter({
+                  maxPrice:
+                    e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
               min={0}
             />
           </div>
@@ -279,13 +232,13 @@ export function ProductListPage() {
             <input
               type="checkbox"
               checked={inStockOnly}
-              onChange={handleInStockToggle}
+              onChange={(e) => setFilter({ inStockOnly: e.target.checked })}
             />
             재고 있는 것만
           </label>
         </div>
 
-        <button className="reset-button" onClick={handleResetFilters}>
+        <button className="reset-button" onClick={resetFilter}>
           필터 초기화
         </button>
       </section>
@@ -296,10 +249,14 @@ export function ProductListPage() {
           type="search"
           placeholder="상품 검색..."
           value={searchQuery}
-          onChange={handleSearchChange}
+          onChange={(e) => setFilter({ searchQuery: e.target.value })}
           className="search-input"
         />
-        <select value={sortBy} onChange={handleSortChange}>
+        <select
+          value={sortBy}
+          // TODO: as 제거
+          onChange={(e) => setFilter({ sortBy: e.target.value as SortBy })}
+        >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -459,14 +416,14 @@ export function ProductListPage() {
       {totalPages > 1 && (
         <nav className="pagination">
           <button
-            onClick={() => handlePageChange(1)}
+            onClick={() => setPage(1)}
             disabled={page === 1}
             aria-label="첫 페이지"
           >
             «
           </button>
           <button
-            onClick={() => handlePageChange(page - 1)}
+            onClick={() => setPage(page - 1)}
             disabled={page === 1}
             aria-label="이전 페이지"
           >
@@ -476,20 +433,20 @@ export function ProductListPage() {
             <button
               key={p}
               className={p === page ? 'active' : ''}
-              onClick={() => handlePageChange(p)}
+              onClick={() => setPage(p)}
             >
               {p}
             </button>
           ))}
           <button
-            onClick={() => handlePageChange(page + 1)}
+            onClick={() => setPage(page + 1)}
             disabled={page === totalPages}
             aria-label="다음 페이지"
           >
             ›
           </button>
           <button
-            onClick={() => handlePageChange(totalPages)}
+            onClick={() => setPage(totalPages)}
             disabled={page === totalPages}
             aria-label="마지막 페이지"
           >
