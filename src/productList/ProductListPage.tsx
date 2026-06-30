@@ -8,7 +8,7 @@ import { useWishlist } from "./hooks/useWishlist";
 import { useRecentlyViewed } from "./hooks/useRecentlyViewed";
 import { useSyncFiltersToUrl } from "./hooks/useSyncFiltersToUrl";
 import ProductListHeader from "./components/ProductListHeader";
-import FilterPanel from "./components/FilterPanel";
+import FilterPanel from "./components/filter/FilterPanel";
 import SearchSortBar from "./components/SearchSortBar";
 import ProductGrid from "./components/ProductGrid";
 import Pagination from "./components/Pagination";
