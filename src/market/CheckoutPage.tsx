@@ -26,7 +26,8 @@ function DeliverySection({
   onSelectAddress: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const selected = addresses.find((a) => a.id === selectedAddressId)!;
+  const selected =
+    addresses.find((a) => a.id === selectedAddressId) ?? addresses[0];
 
   return (
     <div className="section">

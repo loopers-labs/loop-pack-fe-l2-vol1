@@ -21,7 +21,8 @@ export function useCheckout() {
   const [placed, setPlaced] = useState(false);
   const [memo, setMemo] = useState('');
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
+  const address =
+    ADDRESSES.find((a) => a.id === selectedAddressId) ?? ADDRESSES[0];
 
   // ── 배송비 정책 ──────────────────────────────
   const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
