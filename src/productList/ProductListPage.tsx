@@ -13,6 +13,9 @@ import CategoryFilter from "./components/filter/CategoryFilter";
 import PriceRangeFilter from "./components/filter/PriceRangeFilter";
 import InStockToggle from "./components/filter/InStockToggle";
 import SearchSortBar from "./components/searchSort/SearchSortBar";
+import SearchInput from "./components/searchSort/SearchInput";
+import SortSelect from "./components/searchSort/SortSelect";
+import ViewModeSelect from "./components/searchSort/ViewModeSelect";
 import ProductGrid from "./components/ProductGrid";
 import Pagination from "./components/Pagination";
 import ProductListError from "./components/ProductListError";
@@ -185,14 +188,17 @@ export function ProductListPage() {
         />
       </FilterPanel>
 
-      <SearchSortBar
-        searchQuery={filters.searchQuery}
-        sortBy={filters.sortBy}
-        viewMode={filters.viewMode}
-        onSearchChange={handleSearchChange}
-        onSortChange={handleSortChange}
-        onViewModeChange={handleViewModeChange}
-      />
+      <SearchSortBar>
+        <SearchInput
+          searchQuery={filters.searchQuery}
+          onSearchChange={handleSearchChange}
+        />
+        <SortSelect sortBy={filters.sortBy} onSortChange={handleSortChange} />
+        <ViewModeSelect
+          viewMode={filters.viewMode}
+          onViewModeChange={handleViewModeChange}
+        />
+      </SearchSortBar>
 
       <ProductGrid
         products={visibleProducts}
