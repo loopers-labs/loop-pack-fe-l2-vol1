@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import './ProductListPage.css'
+import { useProductFilters } from './hooks/useProductFilters'
+import { useProductPagination } from './hooks/useProductPagination'
+import { useRecentlyViewed } from './hooks/useRecentlyViewed'
+import { useWishlist } from './hooks/useWishlist'
 import { productService } from './services/productService'
 import type { Product, ProductCategoryFilter, SortBy } from './types'
 import {
@@ -45,41 +49,18 @@ export function ProductListPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
-  // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<ProductCategoryFilter>('all')
-  const [minPrice, setMinPrice] = useState<number | ''>('')
-  const [maxPrice, setMaxPrice] = useState<number | ''>('')
-  const [sortBy, setSortBy] = useState<SortBy>('latest')
-
-  // ─── 검색 상태 ──────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('')
-
-  // ─── 페이지네이션 상태 ──────────────────────────────────
-  const [page, setPage] = useState(1)
-
   // ─── 옵션 토글 ──────────────────────────────────────────
-  const [inStockOnly, setInStockOnly] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
-  // ─── 위시리스트 (localStorage 동기화) ───────────────────
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('wishlist')
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
+  const pagination = useProductPagination({
+    totalCount,
+    pageSize: PAGE_SIZE,
   })
-
-  // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('recentlyViewed')
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
-  })
+  const filters = useProductFilters({ onFilterChange: pagination.resetPage })
+  const { wishlist, toggleWishlist } = useWishlist()
+  const { rememberProduct } = useRecentlyViewed()
+  const { category, minPrice, maxPrice, sortBy, searchQuery, inStockOnly } =
+    filters
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -90,7 +71,7 @@ export function ProductListPage() {
           category,
           sortBy,
           searchQuery,
-          page,
+          page: pagination.page,
           pageSize: PAGE_SIZE,
           minPrice,
           maxPrice,
@@ -108,111 +89,77 @@ export function ProductListPage() {
       }
     }
     fetchProducts()
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly])
-
-  // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
-  useEffect(() => {
-    try {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist))
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist])
-
-  // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed))
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [recentlyViewed])
+  }, [
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    pagination.page,
+    inStockOnly,
+  ])
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [page])
+  }, [pagination.page])
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   useEffect(() => {
     const params = new URLSearchParams()
     if (category !== 'all') params.set('category', category)
     if (searchQuery) params.set('q', searchQuery)
-    if (page > 1) params.set('page', String(page))
+    if (pagination.page > 1) params.set('page', String(pagination.page))
     if (sortBy !== 'latest') params.set('sort', sortBy)
     if (minPrice !== '') params.set('minPrice', String(minPrice))
     if (maxPrice !== '') params.set('maxPrice', String(maxPrice))
     if (inStockOnly) params.set('inStock', 'true')
     window.history.replaceState(null, '', `?${params.toString()}`)
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly])
+  }, [
+    category,
+    searchQuery,
+    pagination.page,
+    sortBy,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+  ])
 
   const handleCategoryChange = (cat: ProductCategoryFilter) => {
-    setCategory(cat)
-    setPage(1)
+    filters.changeCategory(cat)
   }
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value
-    setMinPrice(v === '' ? '' : Number(v))
-    setPage(1)
+    filters.changeMinPrice(e.target.value)
   }
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value
-    setMaxPrice(v === '' ? '' : Number(v))
-    setPage(1)
+    filters.changeMaxPrice(e.target.value)
   }
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as SortBy)
-    setPage(1)
+    filters.changeSortBy(e.target.value as SortBy)
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-    setPage(1)
+    filters.changeSearchQuery(e.target.value)
   }
 
   const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInStockOnly(e.target.checked)
-    setPage(1)
+    filters.changeInStockOnly(e.target.checked)
   }
 
   const handlePageChange = (next: number) => {
-    setPage(next)
+    pagination.changePage(next)
   }
 
   const handleResetFilters = () => {
-    setCategory('all')
-    setMinPrice('')
-    setMaxPrice('')
-    setSortBy('latest')
-    setSearchQuery('')
-    setInStockOnly(false)
-    setPage(1)
-  }
-
-  const handleWishlistToggle = (productId: number) => {
-    setWishlist((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId],
-    )
+    filters.resetFilters()
   }
 
   const handleProductClick = (productId: number) => {
-    setRecentlyViewed((prev) => {
-      const without = prev.filter((id) => id !== productId)
-      return [productId, ...without].slice(0, 10)
-    })
+    rememberProduct(productId)
   }
-
-  // ─── 페이지네이션 계산 (인라인) ─────────────────────────
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
-  const pageNumbers: number[] = []
-  const startPage = Math.max(1, page - 2)
-  const endPage = Math.min(totalPages, page + 2)
-  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i)
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && products.length === 0) {
@@ -450,7 +397,7 @@ export function ProductListPage() {
                       }}
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleWishlistToggle(product.id)
+                        toggleWishlist(product.id)
                       }}
                       aria-label="위시리스트 토글"
                     >
@@ -465,41 +412,41 @@ export function ProductListPage() {
       </section>
 
       {/* ─── 페이지네이션 ───────────────────────────────── */}
-      {totalPages > 1 && (
+      {pagination.totalPages > 1 && (
         <nav className="pagination">
           <button
             onClick={() => handlePageChange(1)}
-            disabled={page === 1}
+            disabled={pagination.page === 1}
             aria-label="첫 페이지"
           >
             «
           </button>
           <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
             aria-label="이전 페이지"
           >
             ‹
           </button>
-          {pageNumbers.map((p) => (
+          {pagination.pageNumbers.map((p) => (
             <button
               key={p}
-              className={p === page ? 'active' : ''}
+              className={p === pagination.page ? 'active' : ''}
               onClick={() => handlePageChange(p)}
             >
               {p}
             </button>
           ))}
           <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page === pagination.totalPages}
             aria-label="다음 페이지"
           >
             ›
           </button>
           <button
-            onClick={() => handlePageChange(totalPages)}
-            disabled={page === totalPages}
+            onClick={() => handlePageChange(pagination.totalPages)}
+            disabled={pagination.page === pagination.totalPages}
             aria-label="마지막 페이지"
           >
             »
