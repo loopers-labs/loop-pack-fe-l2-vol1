@@ -3,6 +3,7 @@ import "./ProductListPage.css";
 import type { Product, SortBy } from "./types";
 import { useProductList } from "./hooks/useProductList";
 import { useProductListQueryParams } from "./hooks/useProductListQueryParams";
+import { useWishlist } from "./hooks/useWishlist";
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -61,15 +62,7 @@ export function ProductListPage() {
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // ─── 위시리스트 (localStorage 동기화) ───────────────────
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem("wishlist");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { wishlistCount, toggleWishlist, isWishlisted } = useWishlist();
 
   // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
@@ -80,15 +73,6 @@ export function ProductListPage() {
       return [];
     }
   });
-
-  // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
-  useEffect(() => {
-    try {
-      localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist]);
 
   // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
   useEffect(() => {
@@ -139,9 +123,7 @@ export function ProductListPage() {
   };
 
   const handleWishlistToggle = (productId: number) => {
-    setWishlist((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId],
-    );
+    toggleWishlist(productId);
   };
 
   const handleProductClick = (productId: number) => {
@@ -178,7 +160,7 @@ export function ProductListPage() {
         <h1>상품 목록</h1>
         <p className="total-count">
           총 {totalCount.toLocaleString()}개의 상품
-          {wishlist.length > 0 && <span> · 위시리스트 {wishlist.length}개</span>}
+          {wishlistCount > 0 && <span> · 위시리스트 {wishlistCount}개</span>}
         </p>
       </header>
 
@@ -314,7 +296,7 @@ export function ProductListPage() {
             const isNew = daysSinceCreated <= 7;
 
             // ─── 위시리스트 여부 ────────────────────────
-            const isWished = wishlist.includes(product.id);
+            const isWished = isWishlisted(product.id);
 
             return (
               <article
