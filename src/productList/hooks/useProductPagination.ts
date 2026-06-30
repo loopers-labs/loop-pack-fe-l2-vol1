@@ -1,15 +1,20 @@
 import { useState } from 'react'
 
 type UseProductPaginationParams = {
-  totalCount: number
+  totalCount?: number
   pageSize: number
+  initialPage?: number
 }
 
-export function useProductPagination({
+function getProductPageInfo({
+  page,
   totalCount,
   pageSize,
-}: UseProductPaginationParams) {
-  const [page, setPage] = useState(1)
+}: {
+  page: number
+  totalCount: number
+  pageSize: number
+}) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const pageNumbers: number[] = []
   const startPage = Math.max(1, page - 2)
@@ -20,9 +25,24 @@ export function useProductPagination({
   }
 
   return {
-    page,
     totalPages,
     pageNumbers,
+  }
+}
+
+export function useProductPagination({
+  totalCount = 0,
+  pageSize,
+  initialPage = 1,
+}: UseProductPaginationParams) {
+  const [page, setPage] = useState(initialPage)
+  const pageInfo = getProductPageInfo({ page, totalCount, pageSize })
+
+  return {
+    page,
+    ...pageInfo,
+    getPageInfo: (nextTotalCount: number) =>
+      getProductPageInfo({ page, totalCount: nextTotalCount, pageSize }),
     changePage: setPage,
     resetPage: () => setPage(1),
   }

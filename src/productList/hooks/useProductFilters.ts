@@ -1,19 +1,34 @@
 import { useState } from 'react'
 import type { ProductCategoryFilter, SortBy } from '../types'
+import type { ProductListFiltersState } from '../utils/productListUrl'
 
 type UseProductFiltersParams = {
+  initialFilters?: ProductListFiltersState
   onFilterChange?: () => void
 }
 
 export function useProductFilters({
+  initialFilters,
   onFilterChange,
 }: UseProductFiltersParams = {}) {
-  const [category, setCategory] = useState<ProductCategoryFilter>('all')
-  const [minPrice, setMinPrice] = useState<number | ''>('')
-  const [maxPrice, setMaxPrice] = useState<number | ''>('')
-  const [sortBy, setSortBy] = useState<SortBy>('latest')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [inStockOnly, setInStockOnly] = useState(false)
+  const [category, setCategory] = useState<ProductCategoryFilter>(
+    initialFilters?.category ?? 'all',
+  )
+  const [minPrice, setMinPrice] = useState<number | ''>(
+    initialFilters?.minPrice ?? '',
+  )
+  const [maxPrice, setMaxPrice] = useState<number | ''>(
+    initialFilters?.maxPrice ?? '',
+  )
+  const [sortBy, setSortBy] = useState<SortBy>(
+    initialFilters?.sortBy ?? 'latest',
+  )
+  const [searchQuery, setSearchQuery] = useState(
+    initialFilters?.searchQuery ?? '',
+  )
+  const [inStockOnly, setInStockOnly] = useState(
+    initialFilters?.inStockOnly ?? false,
+  )
 
   const notifyFilterChange = () => {
     onFilterChange?.()

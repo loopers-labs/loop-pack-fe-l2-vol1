@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './ProductListPage.css'
 import { useProductFilters } from './hooks/useProductFilters'
 import { useProductPagination } from './hooks/useProductPagination'
+import { useProducts } from './hooks/useProducts'
 import { useRecentlyViewed } from './hooks/useRecentlyViewed'
 import { useWishlist } from './hooks/useWishlist'
-import { productService } from './services/productService'
-import type { Product, ProductCategoryFilter, SortBy } from './types'
+import type { ProductCategoryFilter, SortBy } from './types'
 import {
   formatPrice,
   getDiscountRate,
@@ -16,6 +16,11 @@ import {
   isNewProduct,
   isSoldOut,
 } from './utils/productRules'
+import {
+  buildProductListSearchParams,
+  readProductListSearchParams,
+} from './utils/productListUrl'
+import { splitHighlightedText } from './utils/textHighlight'
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -43,61 +48,37 @@ const PAGE_SIZE = 12
 // ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
-  // ─── 서버 상태 (직접 관리) ──────────────────────────────
-  const [products, setProducts] = useState<Product[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-
   // ─── 옵션 토글 ──────────────────────────────────────────
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
+  const initialState = useMemo(
+    () =>
+      readProductListSearchParams(new URLSearchParams(window.location.search)),
+    [],
+  )
   const pagination = useProductPagination({
-    totalCount,
     pageSize: PAGE_SIZE,
+    initialPage: initialState.page,
   })
-  const filters = useProductFilters({ onFilterChange: pagination.resetPage })
+  const filters = useProductFilters({
+    initialFilters: initialState.filters,
+    onFilterChange: pagination.resetPage,
+  })
   const { wishlist, toggleWishlist } = useWishlist()
   const { rememberProduct } = useRecentlyViewed()
   const { category, minPrice, maxPrice, sortBy, searchQuery, inStockOnly } =
     filters
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const data = await productService.getProducts({
-          category,
-          sortBy,
-          searchQuery,
-          page: pagination.page,
-          pageSize: PAGE_SIZE,
-          minPrice,
-          maxPrice,
-        })
-        // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
-        const filtered = inStockOnly
-          ? data.products.filter((p) => p.stock > 0)
-          : data.products
-        setProducts(filtered)
-        setTotalCount(data.totalCount)
-      } catch (err) {
-        setError(err as Error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchProducts()
-  }, [
+  const productsQuery = useProducts({
     category,
-    minPrice,
-    maxPrice,
     sortBy,
     searchQuery,
-    pagination.page,
+    page: pagination.page,
+    pageSize: PAGE_SIZE,
+    minPrice,
+    maxPrice,
     inStockOnly,
-  ])
+  })
+  const pageInfo = pagination.getPageInfo(productsQuery.totalCount)
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
@@ -106,14 +87,18 @@ export function ProductListPage() {
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   useEffect(() => {
-    const params = new URLSearchParams()
-    if (category !== 'all') params.set('category', category)
-    if (searchQuery) params.set('q', searchQuery)
-    if (pagination.page > 1) params.set('page', String(pagination.page))
-    if (sortBy !== 'latest') params.set('sort', sortBy)
-    if (minPrice !== '') params.set('minPrice', String(minPrice))
-    if (maxPrice !== '') params.set('maxPrice', String(maxPrice))
-    if (inStockOnly) params.set('inStock', 'true')
+    const params = buildProductListSearchParams({
+      filters: {
+        category,
+        searchQuery,
+        sortBy,
+        minPrice,
+        maxPrice,
+        inStockOnly,
+      },
+      page: pagination.page,
+    })
+
     window.history.replaceState(null, '', `?${params.toString()}`)
   }, [
     category,
@@ -162,14 +147,14 @@ export function ProductListPage() {
   }
 
   // ─── 로딩/에러는 early return ───────────────────────────
-  if (isLoading && products.length === 0) {
+  if (productsQuery.isLoading && productsQuery.products.length === 0) {
     return <div className="loading">로딩 중...</div>
   }
 
-  if (error) {
+  if (productsQuery.error) {
     return (
       <div className="error">
-        <p>오류가 발생했습니다: {error.message}</p>
+        <p>오류가 발생했습니다: {productsQuery.error.message}</p>
         <button onClick={() => window.location.reload()}>다시 시도</button>
       </div>
     )
@@ -180,7 +165,7 @@ export function ProductListPage() {
       <header className="page-header">
         <h1>상품 목록</h1>
         <p className="total-count">
-          총 {totalCount.toLocaleString()}개의 상품
+          총 {productsQuery.totalCount.toLocaleString()}개의 상품
           {wishlist.length > 0 && (
             <span> · 위시리스트 {wishlist.length}개</span>
           )}
@@ -280,31 +265,30 @@ export function ProductListPage() {
         className="product-grid"
         style={viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined}
       >
-        {products.length === 0 ? (
+        {productsQuery.products.length === 0 ? (
           <div className="empty">조건에 맞는 상품이 없습니다.</div>
         ) : (
-          products.map((product) => {
+          productsQuery.products.map((product) => {
             // ─── 검색어 하이라이팅 로직 인라인 ──────────
             const highlightMatch = (text: string) => {
-              if (!searchQuery) return <>{text}</>
-              const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'))
+              const parts = splitHighlightedText(text, searchQuery)
               let offset = 0
 
               return (
                 <>
                   {parts.map((part) => {
-                    const key = `${part}-${offset}`
-                    offset += part.length
+                    const key = `${part.text}-${offset}`
+                    offset += part.text.length
 
-                    return part.toLowerCase() === searchQuery.toLowerCase() ? (
+                    return part.isMatch ? (
                       <mark
                         key={key}
                         style={{ background: '#fff176', padding: 0 }}
                       >
-                        {part}
+                        {part.text}
                       </mark>
                     ) : (
-                      <span key={key}>{part}</span>
+                      <span key={key}>{part.text}</span>
                     )
                   })}
                 </>
@@ -412,7 +396,7 @@ export function ProductListPage() {
       </section>
 
       {/* ─── 페이지네이션 ───────────────────────────────── */}
-      {pagination.totalPages > 1 && (
+      {pageInfo.totalPages > 1 && (
         <nav className="pagination">
           <button
             onClick={() => handlePageChange(1)}
@@ -428,7 +412,7 @@ export function ProductListPage() {
           >
             ‹
           </button>
-          {pagination.pageNumbers.map((p) => (
+          {pageInfo.pageNumbers.map((p) => (
             <button
               key={p}
               className={p === pagination.page ? 'active' : ''}
@@ -439,14 +423,14 @@ export function ProductListPage() {
           ))}
           <button
             onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === pagination.totalPages}
+            disabled={pagination.page === pageInfo.totalPages}
             aria-label="다음 페이지"
           >
             ›
           </button>
           <button
-            onClick={() => handlePageChange(pagination.totalPages)}
-            disabled={pagination.page === pagination.totalPages}
+            onClick={() => handlePageChange(pageInfo.totalPages)}
+            disabled={pagination.page === pageInfo.totalPages}
             aria-label="마지막 페이지"
           >
             »
@@ -455,7 +439,7 @@ export function ProductListPage() {
       )}
 
       {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
-      {isLoading && products.length > 0 && (
+      {productsQuery.isLoading && productsQuery.products.length > 0 && (
         <div className="background-loading">데이터 갱신 중...</div>
       )}
     </div>
