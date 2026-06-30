@@ -1,31 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
+import { CATEGORY_LABELS, PAGE_SIZE, SORT_LABELS } from './constants';
 import { useProductFilters } from './hooks/useProductFilters';
 import { productListQueryOptions } from './services/productQueries';
-import type { CategoryFilter, SortBy } from './types';
+import { CATEGORY_FILTER_VALUES, SORT_VALUES, type SortBy } from './types';
 import './ProductListPage.css';
-
-// ─────────────────────────────────────────────────────────
-// 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
-// ─────────────────────────────────────────────────────────
-
-const CATEGORIES: { value: CategoryFilter; label: string }[] = [
-  { value: 'all', label: '전체' },
-  { value: 'electronics', label: '전자제품' },
-  { value: 'fashion', label: '패션' },
-  { value: 'home', label: '홈' },
-  { value: 'beauty', label: '뷰티' },
-];
-
-const SORT_OPTIONS: { value: SortBy; label: string }[] = [
-  { value: 'latest', label: '최신순' },
-  { value: 'popular', label: '인기순' },
-  { value: 'price-asc', label: '가격 낮은순' },
-  { value: 'price-desc', label: '가격 높은순' },
-];
-
-const PAGE_SIZE = 12;
 
 // ─────────────────────────────────────────────────────────
 // 500줄+ 컴포넌트 — UI, 비즈니스 로직, API, 포맷, 도메인 규칙이 한 파일에
@@ -175,13 +155,13 @@ export function ProductListPage() {
         <div className="filter-group">
           <label>카테고리</label>
           <div className="category-list">
-            {CATEGORIES.map((cat) => (
+            {CATEGORY_FILTER_VALUES.map((value) => (
               <button
-                key={cat.value}
-                className={category === cat.value ? 'active' : ''}
-                onClick={() => setFilter({ category: cat.value })}
+                key={value}
+                className={category === value ? 'active' : ''}
+                onClick={() => setFilter({ category: value })}
               >
-                {cat.label}
+                {CATEGORY_LABELS[value]}
               </button>
             ))}
           </div>
@@ -257,9 +237,9 @@ export function ProductListPage() {
           // TODO: as 제거
           onChange={(e) => setFilter({ sortBy: e.target.value as SortBy })}
         >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {SORT_VALUES.map((value) => (
+            <option key={value} value={value}>
+              {SORT_LABELS[value]}
             </option>
           ))}
         </select>
