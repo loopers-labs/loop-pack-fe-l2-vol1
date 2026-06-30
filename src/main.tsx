@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NuqsAdapter } from 'nuqs/adapters/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
 
 import './index.css';
 import App from './App.tsx';
@@ -17,10 +17,10 @@ if (!rootElement) throw new Error('root 엘리먼트를 찾을 수 없습니다.
 
 createRoot(rootElement).render(
   <StrictMode>
-    <BrowserRouter>
+    <NuqsAdapter>
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>
-    </BrowserRouter>
+    </NuqsAdapter>
   </StrictMode>,
 );
