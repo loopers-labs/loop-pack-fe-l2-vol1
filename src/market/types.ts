@@ -29,7 +29,8 @@ export type Member = {
   point: number // 보유 적립금
 }
 
-export type OrderStatus = 'paid' | 'preparing' | 'shipped' | 'delivered' | 'cancelled'
+export type OrderStatus =
+  'paid' | 'preparing' | 'shipped' | 'delivered' | 'cancelled'
 
 export type PastOrder = {
   id: string
