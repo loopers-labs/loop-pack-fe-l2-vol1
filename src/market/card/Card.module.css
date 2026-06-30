@@ -1,0 +1,23 @@
+.card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 15px;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+.body {
+  /* 본문은 children이 알아서 채우므로 기본은 비워둠 */
+}
