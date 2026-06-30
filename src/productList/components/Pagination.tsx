@@ -11,19 +11,21 @@ export default function Pagination({
   onPageChange: (next: number) => void;
 }) {
   const pageNumbers = getPageNumbers(page, totalPages);
+  const isFirstPage = page === 1;
+  const isLastPage = page === totalPages;
 
   return (
     <nav className="pagination">
       <button
         onClick={() => onPageChange(1)}
-        disabled={page === 1}
+        disabled={isFirstPage}
         aria-label="첫 페이지"
       >
         «
       </button>
       <button
         onClick={() => onPageChange(page - 1)}
-        disabled={page === 1}
+        disabled={isFirstPage}
         aria-label="이전 페이지"
       >
         ‹
@@ -39,14 +41,14 @@ export default function Pagination({
       ))}
       <button
         onClick={() => onPageChange(page + 1)}
-        disabled={page === totalPages}
+        disabled={isLastPage}
         aria-label="다음 페이지"
       >
         ›
       </button>
       <button
         onClick={() => onPageChange(totalPages)}
-        disabled={page === totalPages}
+        disabled={isLastPage}
         aria-label="마지막 페이지"
       >
         »
