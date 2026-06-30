@@ -1,4 +1,5 @@
 import { CATEGORIES } from "../constants";
+import { parsePrice } from "../utils";
 import type { CategoryFilter } from "../types";
 
 /** 카테고리·가격 범위·재고 옵션 필터와 초기화 버튼을 담은 패널. */
@@ -23,9 +24,6 @@ export default function FilterPanel({
   onInStockToggle: (next: boolean) => void;
   onReset: () => void;
 }) {
-  const parsePrice = (raw: string): number | "" =>
-    raw === "" ? "" : Number(raw);
-
   return (
     <section className="filter-panel">
       <div className="filter-group">

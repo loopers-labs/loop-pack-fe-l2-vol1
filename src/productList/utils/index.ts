@@ -14,6 +14,16 @@ export function formatPrice(price: number): string {
   return `${price.toLocaleString()}원`;
 }
 
+/**
+ * 가격 입력 문자열을 숫자 또는 "" 로 변환한다.
+ * 빈 값과 숫자로 못 읽는 값(NaN)은 "미입력"을 뜻하는 "" 로 통일한다.
+ */
+export function parsePrice(raw: string): number | "" {
+  if (raw === "") return "";
+  const parsed = Number(raw);
+  return Number.isNaN(parsed) ? "" : parsed;
+}
+
 /** 정가 대비 할인율(%)을 반올림해 반환한다. 정가가 없으면 0. */
 export function calculateDiscountRate(
   price: number,
