@@ -46,6 +46,20 @@
 
 따라서 `FilterPanel`·`SearchSortBar` 를 섹션/컨트롤 단위로 분리했다. 각 자식은 자기 슬라이스 props 만 받아 변경 이유가 1개로 좁혀진다.
 
+### 3-1. 분리 후 남은 prop drilling → children 합성으로 마저 해소
+
+섹션 분리 직후의 `FilterPanel`(9개)·`SearchSortBar`(6개)는 받은 props 를 자식에게 **그대로 전달만** 하는 중간 레이어였다. react.dev 의 지침대로 처리했다.
+
+> "Just because you need to pass some props several levels deep doesn't mean you should put that information into context."
+
+즉 **props 를 늘리거나 Context 로 가기 전에 `children` 합성부터.** 두 조합 루트를 레이아웃 셸로 축소하고, 상태를 가진 `ProductListPage`(`useProductFilters`)가 리프(`CategoryFilter`·`PriceRangeFilter`·`InStockToggle` / `SearchInput`·`SortSelect`·`ViewModeSelect`)에 **직접** props 를 넘긴다. 결과: `FilterPanel` 9→2(`children`+`onReset`), `SearchSortBar` 6→1(`children`). 리프 파일은 변경 없음 — 바뀐 건 드릴링 경로뿐.
+
+판단 기준(사용자 노트 반영):
+
+- **children vs slot** — slot 은 이름·위치가 고정된 props(예: Modal `header`/`footer`). 필터 섹션·검색 컨트롤은 그런 명명 슬롯 의미가 없고 JSX 순서로 배치가 드러나면 충분 → `children`.
+- **drilling vs Context** — 경로가 `ProductListPage → 리프` **1단계**이고 값은 **로컬 필터 상태**(테마·인증·언어 같은 전역 값 아님) → Context 도입 안 함.
+- `onReset` 은 `FilterPanel` 이 자기 초기화 버튼에 직접 쓰는 값("중간 컴포넌트도 그 값을 쓴다") → children 으로 빼지 않고 prop 으로 유지.
+
 ---
 
 ## 4. 결함 처리 — 테스트로 고정
@@ -78,10 +92,10 @@ src/productList/
   constants.ts                     # CATEGORIES, SORT_OPTIONS, PAGE_SIZE, isSortBy, isViewMode (flat 유지)
   components/
     filter/
-      FilterPanel.tsx              # 섹션 배치 + 초기화 버튼 (조합 루트)
+      FilterPanel.tsx              # children 셸 + 초기화 버튼 (props 2개)
       CategoryFilter.tsx / PriceRangeFilter.tsx / InStockToggle.tsx
     searchSort/
-      SearchSortBar.tsx            # 바 배치 (조합 루트)
+      SearchSortBar.tsx            # children 셸 (props 1개)
       SearchInput.tsx / SortSelect.tsx / ViewModeSelect.tsx
     ProductGrid.tsx / ProductCard.tsx / ProductBadges.tsx / HighlightedText.tsx
     Pagination.tsx / ProductListHeader.tsx / ProductListError.tsx
