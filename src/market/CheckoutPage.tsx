@@ -117,29 +117,21 @@ export function CheckoutPage() {
     member,
     cart,
     selectedAddressId,
-    couponCode,
-    appliedCoupon,
-    usePoint,
-    pointInput,
-    payment,
-    agreed,
-    placed,
-    memo,
     setSelectedAddressId,
-    setCouponCode,
-    setUsePoint,
-    setPointInput,
+    coupon,
+    point,
+    payment,
     setPayment,
+    agreed,
     setAgreed,
-    setMemo,
+    placed,
     setPlaced,
+    memo,
+    setMemo,
     itemTotal,
     shippingFee,
-    couponDiscount,
-    pointDiscount,
     basePrice,
     finalPrice,
-    applyCoupon,
     handleSubmit,
   } = useCheckout();
   if (placed) {
@@ -192,13 +184,13 @@ export function CheckoutPage() {
         <div className="row">
           <input
             type="text"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
+            value={coupon.code}
+            onChange={(e) => coupon.setCode(e.target.value)}
             placeholder="쿠폰 코드 (예: WELCOME5000)"
           />
-          <button onClick={applyCoupon}>적용</button>
+          <button onClick={coupon.apply}>적용</button>
         </div>
-        {appliedCoupon ? <small>{appliedCoupon.label} 적용됨</small> : null}
+        {coupon.applied ? <small>{coupon.applied.label} 적용됨</small> : null}
       </div>
 
       <div className="section">
@@ -206,16 +198,16 @@ export function CheckoutPage() {
         <label>
           <input
             type="checkbox"
-            checked={usePoint}
-            onChange={(e) => setUsePoint(e.target.checked)}
+            checked={point.use}
+            onChange={(e) => point.setUse(e.target.checked)}
           />
           적립금 사용 (보유 {member.point.toLocaleString()}P)
         </label>
-        {usePoint ? (
+        {point.use ? (
           <input
             type="number"
-            value={pointInput}
-            onChange={(e) => setPointInput(Number(e.target.value))}
+            value={point.input}
+            onChange={(e) => point.setInput(Number(e.target.value))}
           />
         ) : null}
       </div>
@@ -238,16 +230,16 @@ export function CheckoutPage() {
         <h2>결제 금액</h2>
         <PriceRow label="상품 금액" amount={itemTotal} />
         <PriceRow label="배송비" amount={shippingFee} />
-        {appliedCoupon ? (
+        {coupon.applied ? (
           <PriceRow
             label="쿠폰 할인"
-            amount={couponDiscount}
-            subText={appliedCoupon.label}
+            amount={coupon.discount}
+            subText={coupon.applied.label}
             isDiscount
           />
         ) : null}
-        {usePoint ? (
-          <PriceRow label="적립금 사용" amount={pointDiscount} isDiscount />
+        {point.use ? (
+          <PriceRow label="적립금 사용" amount={point.discount} isDiscount />
         ) : null}
         {member.grade === 'VIP' ? (
           <PriceRow
