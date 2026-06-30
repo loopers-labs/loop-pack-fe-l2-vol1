@@ -4,6 +4,7 @@ import type { Product, SortBy } from "./types";
 import { useProductList } from "./hooks/useProductList";
 import { useProductListQueryParams } from "./hooks/useProductListQueryParams";
 import { useWishlist } from "./hooks/useWishlist";
+import { useRecentlyViewedProducts } from "./hooks/useRecentlyViewedProducts";
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -64,24 +65,7 @@ export function ProductListPage() {
 
   const { wishlistCount, toggleWishlist, isWishlisted } = useWishlist();
 
-  // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem("recentlyViewed");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem("recentlyViewed", JSON.stringify(recentlyViewed));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [recentlyViewed]);
+  const { addRecentlyViewedProduct } = useRecentlyViewedProducts();
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
@@ -127,10 +111,7 @@ export function ProductListPage() {
   };
 
   const handleProductClick = (productId: number) => {
-    setRecentlyViewed((prev) => {
-      const without = prev.filter((id) => id !== productId);
-      return [productId, ...without].slice(0, 10);
-    });
+    addRecentlyViewedProduct(productId);
   };
 
   // ─── 페이지네이션 계산 (인라인) ─────────────────────────
