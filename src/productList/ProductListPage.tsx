@@ -5,6 +5,7 @@ import { useProductList } from "./hooks/useProductList";
 import { useProductListQueryParams } from "./hooks/useProductListQueryParams";
 import { useWishlist } from "./hooks/useWishlist";
 import { useRecentlyViewedProducts } from "./hooks/useRecentlyViewedProducts";
+import { Pagination } from "./components/Pagination";
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -113,13 +114,6 @@ export function ProductListPage() {
   const handleProductClick = (productId: number) => {
     addRecentlyViewedProduct(productId);
   };
-
-  // ─── 페이지네이션 계산 (인라인) ─────────────────────────
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const pageNumbers: number[] = [];
-  const startPage = Math.max(1, page - 2);
-  const endPage = Math.min(totalPages, page + 2);
-  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && products.length === 0) {
@@ -346,44 +340,12 @@ export function ProductListPage() {
         )}
       </section>
 
-      {/* ─── 페이지네이션 ───────────────────────────────── */}
-      {totalPages > 1 && (
-        <nav className="pagination">
-          <button onClick={() => handlePageChange(1)} disabled={page === 1} aria-label="첫 페이지">
-            «
-          </button>
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            aria-label="이전 페이지"
-          >
-            ‹
-          </button>
-          {pageNumbers.map((p) => (
-            <button
-              key={p}
-              className={p === page ? "active" : ""}
-              onClick={() => handlePageChange(p)}
-            >
-              {p}
-            </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            aria-label="다음 페이지"
-          >
-            ›
-          </button>
-          <button
-            onClick={() => handlePageChange(totalPages)}
-            disabled={page === totalPages}
-            aria-label="마지막 페이지"
-          >
-            »
-          </button>
-        </nav>
-      )}
+      <Pagination
+        currentPage={page}
+        pageSize={PAGE_SIZE}
+        totalCount={totalCount}
+        onPageChange={handlePageChange}
+      />
 
       {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
       {isLoading && products.length > 0 && (
