@@ -9,6 +9,9 @@ import { useRecentlyViewed } from "./hooks/useRecentlyViewed";
 import { useSyncFiltersToUrl } from "./hooks/useSyncFiltersToUrl";
 import ProductListHeader from "./components/ProductListHeader";
 import FilterPanel from "./components/filter/FilterPanel";
+import CategoryFilter from "./components/filter/CategoryFilter";
+import PriceRangeFilter from "./components/filter/PriceRangeFilter";
+import InStockToggle from "./components/filter/InStockToggle";
 import SearchSortBar from "./components/searchSort/SearchSortBar";
 import ProductGrid from "./components/ProductGrid";
 import Pagination from "./components/Pagination";
@@ -165,17 +168,22 @@ export function ProductListPage() {
         wishlistCount={wishlist.length}
       />
 
-      <FilterPanel
-        category={filters.category}
-        minPrice={filters.minPrice}
-        maxPrice={filters.maxPrice}
-        inStockOnly={filters.inStockOnly}
-        onCategoryChange={handleCategoryChange}
-        onMinPriceChange={handleMinPriceChange}
-        onMaxPriceChange={handleMaxPriceChange}
-        onInStockToggle={handleInStockToggle}
-        onReset={handleResetFilters}
-      />
+      <FilterPanel onReset={handleResetFilters}>
+        <CategoryFilter
+          category={filters.category}
+          onCategoryChange={handleCategoryChange}
+        />
+        <PriceRangeFilter
+          minPrice={filters.minPrice}
+          maxPrice={filters.maxPrice}
+          onMinPriceChange={handleMinPriceChange}
+          onMaxPriceChange={handleMaxPriceChange}
+        />
+        <InStockToggle
+          inStockOnly={filters.inStockOnly}
+          onInStockToggle={handleInStockToggle}
+        />
+      </FilterPanel>
 
       <SearchSortBar
         searchQuery={filters.searchQuery}
