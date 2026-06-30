@@ -1,4 +1,4 @@
-import type { Product, ProductBadges } from "../types";
+import type { HighlightPart, Product, ProductBadges } from "../types";
 
 // ─── 도메인 규칙 임계값 ──────────────────────────────────
 const HOT_DEAL_MIN_DISCOUNT_RATE = 30;
@@ -100,11 +100,6 @@ const REGEXP_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
 function escapeRegExp(value: string): string {
   return value.replace(REGEXP_SPECIAL_CHARS, "\\$&");
 }
-
-export type HighlightPart = {
-  text: string;
-  isMatch: boolean;
-};
 
 /**
  * 텍스트를 검색어 일치/비일치 조각으로 쪼갠다.
