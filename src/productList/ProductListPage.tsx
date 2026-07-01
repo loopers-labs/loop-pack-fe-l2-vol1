@@ -33,7 +33,7 @@ export function ProductListPage() {
     resetQueryParams,
   } = useProductListQueryParams();
 
-  const { products, totalCount, isLoading, error } = useProductList({
+  const { products, totalCount, isLoading, error, refetch } = useProductList({
     category,
     q: searchQuery,
     page,
@@ -63,7 +63,7 @@ export function ProductListPage() {
   };
 
   const handleRetry = () => {
-    window.location.reload();
+    void refetch();
   };
 
   useEffect(() => {

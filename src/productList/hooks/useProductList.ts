@@ -1,10 +1,50 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { getProducts, type GetProductsParams } from "../services/productService";
 import type { ProductListResponse } from "../types";
 
 type UseProductListParams = GetProductsParams & {
   inStockOnly: boolean;
 };
+
+type ProductListState = {
+  data: ProductListResponse | null;
+  isLoading: boolean;
+  error: Error | null;
+};
+
+type ProductListAction =
+  | { type: "request" }
+  | { type: "success"; payload: ProductListResponse }
+  | { type: "failure"; payload: Error };
+
+const initialState: ProductListState = {
+  data: null,
+  isLoading: false,
+  error: null,
+};
+
+function productListReducer(state: ProductListState, action: ProductListAction): ProductListState {
+  switch (action.type) {
+    case "request":
+      return {
+        ...state,
+        isLoading: true,
+        error: null,
+      };
+    case "success":
+      return {
+        data: action.payload,
+        isLoading: false,
+        error: null,
+      };
+    case "failure":
+      return {
+        ...state,
+        isLoading: false,
+        error: action.payload,
+      };
+  }
+}
 
 export function useProductList({
   category,
@@ -16,75 +56,78 @@ export function useProductList({
   size,
   inStockOnly,
 }: UseProductListParams) {
-  const [data, setData] = useState<ProductListResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [{ data, isLoading, error }, dispatch] = useReducer(productListReducer, initialState);
 
-  useEffect(() => {
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
+
+  const fetchProducts = useCallback(async () => {
+    abortControllerRef.current?.abort();
+
     const controller = new AbortController();
-    let ignore = false;
+    abortControllerRef.current = controller;
 
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
 
-      try {
-        const response = await getProducts(
-          {
-            category,
-            q,
-            page,
-            sort,
-            minPrice,
-            maxPrice,
-            size,
-          },
-          {
-            signal: controller.signal,
-          },
-        );
+    dispatch({ type: "request" });
 
-        if (ignore) {
-          return;
-        }
+    try {
+      const response = await getProducts(
+        {
+          category,
+          q,
+          page,
+          sort,
+          minPrice,
+          maxPrice,
+          size,
+        },
+        {
+          signal: controller.signal,
+        },
+      );
 
-        const products = inStockOnly
-          ? response.products.filter((product) => product.stock > 0)
-          : response.products;
+      if (controller.signal.aborted || requestId !== requestIdRef.current) {
+        return;
+      }
 
-        setData({
+      const products = inStockOnly
+        ? response.products.filter((product) => product.stock > 0)
+        : response.products;
+
+      dispatch({
+        type: "success",
+        payload: {
           ...response,
           products,
-        });
-      } catch (err) {
-        if (ignore) {
-          return;
-        }
-
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return;
-        }
-
-        setError(err instanceof Error ? err : new Error("상품 목록을 불러오지 못했습니다."));
-      } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
+        },
+      });
+    } catch (err) {
+      if (controller.signal.aborted || requestId !== requestIdRef.current) {
+        return;
       }
-    };
 
+      dispatch({
+        type: "failure",
+        payload: err instanceof Error ? err : new Error("상품 목록을 불러오지 못했습니다."),
+      });
+    }
+  }, [category, q, page, sort, minPrice, maxPrice, size, inStockOnly]);
+
+  useEffect(() => {
     fetchProducts();
 
     return () => {
-      ignore = true;
-      controller.abort();
+      abortControllerRef.current?.abort();
     };
-  }, [category, q, page, sort, minPrice, maxPrice, size, inStockOnly]);
+  }, [fetchProducts]);
 
   return {
     products: data?.products ?? [],
     totalCount: data?.totalCount ?? 0,
     isLoading,
     error,
+    refetch: fetchProducts,
   };
 }
