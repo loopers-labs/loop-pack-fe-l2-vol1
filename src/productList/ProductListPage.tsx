@@ -8,7 +8,7 @@ import { useRecentlyViewedProducts } from "./hooks/useRecentlyViewedProducts";
 import { Pagination } from "./components/Pagination";
 import { ProductFilters } from "./components/ProductFilters";
 import { ProductListToolbar } from "./components/ProductListToolbar";
-import { ProductCard } from "./components/ProductCard";
+import { ProductGrid } from "./components/ProductGrid";
 
 const PAGE_SIZE = 12;
 
@@ -110,28 +110,14 @@ export function ProductListPage() {
         onViewModeChange={setViewMode}
       />
 
-      {/* ─── 상품 그리드 ────────────────────────────────── */}
-      <section
-        className="product-grid"
-        style={viewMode === "list" ? { gridTemplateColumns: "1fr" } : undefined}
-      >
-        {products.length === 0 ? (
-          <div className="empty">조건에 맞는 상품이 없습니다.</div>
-        ) : (
-          products.map((product) => {
-            return (
-              <ProductCard
-                key={product.id}
-                product={product}
-                searchQuery={searchQuery}
-                isWishlisted={isWishlisted(product.id)}
-                onProductClick={handleProductClick}
-                onWishlistToggle={handleWishlistToggle}
-              />
-            );
-          })
-        )}
-      </section>
+      <ProductGrid
+        products={products}
+        searchQuery={searchQuery}
+        viewMode={viewMode}
+        isWishlisted={isWishlisted}
+        onProductClick={handleProductClick}
+        onWishlistToggle={handleWishlistToggle}
+      />
 
       <Pagination
         currentPage={page}
