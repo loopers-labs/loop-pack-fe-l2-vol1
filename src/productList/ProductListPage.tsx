@@ -6,6 +6,7 @@ import { useProducts } from './services/useProducts';
 import { setUrlSearchParams } from './utils/setUrlSearchParams';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useScrollZero } from './hooks/useScrollZero';
+import { calculatePages } from './utils/calculatePages';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -104,12 +105,7 @@ export function ProductListPage() {
     });
   };
 
-  // ─── 페이지네이션 계산 (인라인) ─────────────────────────
-  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
-  const pageNumbers: number[] = [];
-  const startPage = Math.max(1, page - 2);
-  const endPage = Math.min(totalPages, page + 2);
-  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+  const { totalPages, pageNumbers } = calculatePages(page, totalCount, ITEMS_PER_PAGE);
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && products.length === 0) {
