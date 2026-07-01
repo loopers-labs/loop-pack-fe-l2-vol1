@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
-import { Pagination } from './Pagination';
+import { Pagination } from './components/Pagination';
 import { ProductCard } from './components/ProductCard';
 import { CATEGORY_LABELS, PAGE_SIZE, SORT_LABELS } from './constants';
 import { useDebounce } from './hooks/useDebounce';
