@@ -9,14 +9,8 @@ type Props =
       quantity: number;
     }
   | { type: 'subtotal' | 'shipping'; label: string; amount: number }
-  | {
-      type: 'coupon';
-      label: string;
-      amount: number;
-      isDiscount: true;
-      couponCode: string;
-    }
-  | { type: 'point'; label: string; amount: number; isDiscount: true };
+  | { type: 'coupon'; label: string; amount: number; couponCode: string }
+  | { type: 'point'; label: string; amount: number };
 
 export function OrderLineRow(props: Props) {
   const { type, label, amount } = props;

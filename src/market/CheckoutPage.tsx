@@ -145,7 +145,6 @@ export function CheckoutPage() {
             type="coupon"
             label="쿠폰 할인"
             amount={couponDiscount}
-            isDiscount
             couponCode={appliedCoupon.code}
           />
         )}
@@ -154,7 +153,6 @@ export function CheckoutPage() {
             type="point"
             label="적립금 사용"
             amount={pointDiscount}
-            isDiscount
           />
         )}
         <div className="total">
