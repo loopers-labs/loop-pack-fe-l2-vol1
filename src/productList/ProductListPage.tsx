@@ -49,6 +49,7 @@ export function ProductListPage() {
     isFetching: isFetchingProducts,
     isError: hasProductsError,
     error: productsError,
+    refetch,
   } = useQuery(
     productListQueryOptions({
       category,
@@ -86,7 +87,9 @@ export function ProductListPage() {
     return (
       <div className="error">
         <p>오류가 발생했습니다: {productsError?.message}</p>
-        <button onClick={() => window.location.reload()}>다시 시도</button>
+        <button onClick={() => void refetch()} disabled={isFetchingProducts}>
+          {isFetchingProducts ? '재시도 중...' : '다시 시도'}
+        </button>
       </div>
     );
   }
