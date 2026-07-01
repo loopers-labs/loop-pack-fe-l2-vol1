@@ -7,7 +7,7 @@ import type { ProductQuery } from "../types";
  * 캐싱·중복 제거·재요청·취소는 TanStack Query 에 위임한다.
  */
 export function useProducts(query: ProductQuery) {
-  const { data, isLoading, isFetching, error } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["products", query],
     queryFn: ({ signal }) => fetchProducts(query, { signal }),
     // 필터를 바꿔 재요청하는 동안 이전 목록을 유지해 화면이 비지 않게 한다.
@@ -20,5 +20,6 @@ export function useProducts(query: ProductQuery) {
     isLoading,
     isFetching,
     error,
+    refetch,
   };
 }

@@ -35,7 +35,7 @@ export function ProductListPage() {
     handleResetFilters,
   } = useProductFilters();
 
-  const { products, totalCount, isLoading, isFetching, error } =
+  const { products, totalCount, isLoading, isFetching, error, refetch } =
     useProducts(query);
   const { wishlist, isWished, toggleWishlist } = useWishlist();
   const { addRecentlyViewed } = useRecentlyViewed();
@@ -56,12 +56,8 @@ export function ProductListPage() {
   }
 
   if (error) {
-    return (
-      <ProductListError
-        error={error}
-        onRetry={() => window.location.reload()}
-      />
-    );
+    // 전체 리로드(캐시·위시리스트·URL 동기화까지 초기화) 대신 해당 쿼리만 재요청한다.
+    return <ProductListError error={error} onRetry={() => refetch()} />;
   }
 
   return (

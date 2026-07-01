@@ -9,6 +9,22 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ProductListPage } from "./ProductListPage";
+import type { Product } from "./types";
+
+// 카드 렌더에 필요한 필드를 채운 상품 하나를 만든다. 테스트에서 관심 있는 값만 덮어쓴다.
+function makeProduct(overrides: Partial<Product> & { id: number }): Product {
+  return {
+    name: `상품 ${overrides.id}`,
+    category: "electronics",
+    price: 10000,
+    stock: 10,
+    imageUrl: "https://example.test/img.png",
+    createdAt: "2020-01-01T00:00:00.000Z",
+    rating: 4.5,
+    reviewCount: 100,
+    ...overrides,
+  };
+}
 
 // 매 테스트 새 QueryClient — 캐시가 다음 테스트로 새지 않게 하고,
 // retry 를 꺼 mock 응답 하나로 요청 횟수가 결정적이게 만든다.
@@ -117,5 +133,40 @@ describe("ProductListPage — URL 쿼리에서 필터·검색·페이지 상태 
     expect(input.value).toBe("coat");
     const inStockCheckbox = screen.getByRole<HTMLInputElement>("checkbox");
     expect(inStockCheckbox.checked).toBe(true);
+  });
+});
+
+describe("ProductListPage — 일시적 API 오류 후 새로고침 없이 재시도", () => {
+  it("'다시 시도' 버튼으로 전체 리로드 없이 목록을 복구한다", async () => {
+    const recovered = makeProduct({ id: 1, name: "복구된 상품" });
+    // 1차 요청은 실패, 이후 재요청은 성공 — 일시적 오류를 흉내낸다.
+    let callCount = 0;
+    const fetchMock = vi.fn<
+      (input: string, init?: RequestInit) => Promise<unknown>
+    >(async () => {
+      callCount += 1;
+      if (callCount === 1) {
+        return { ok: false, status: 500, json: async () => ({}) };
+      }
+      return {
+        ok: true,
+        json: async () => ({ products: [recovered], totalCount: 1 }),
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("scrollTo", vi.fn());
+
+    renderWithClient(<ProductListPage />);
+
+    // 1차 요청 실패 → 오류 UI 와 '다시 시도' 버튼이 나타난다.
+    const retryButton = await screen.findByRole("button", {
+      name: "다시 시도",
+    });
+
+    // 재시도 → 2차 요청 성공 → 목록이 복구되고 오류 문구는 사라진다.
+    fireEvent.click(retryButton);
+
+    expect(await screen.findByText("복구된 상품")).toBeTruthy();
+    expect(screen.queryByText(/오류가 발생했습니다/)).toBeNull();
   });
 });
