@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
-import type { SortBy, Category, ViewMode } from './shared';
+import type { SortBy, ViewMode } from './shared';
 import { useProductResult } from './hooks/useProductResult';
 import { useProducts } from './services/useProducts';
 import { setUrlSearchParams } from './utils/setUrlSearchParams';
@@ -10,18 +10,15 @@ import { calculatePages } from './utils/calculatePages';
 import { getProductPricing } from './utils/getProductPricing';
 import { getProductStockStatus } from './utils/getProductStockStatus';
 import { getProductBadges } from './utils/getProductBadges';
+import { LoadingView } from './components/skeleton/LoadingView';
+import { ErrorView } from './components/skeleton/ErrorView';
+import { Category } from './components/filter/Category';
+import { PriceRange } from './components/filter/PriceRange';
+import { Option } from './components/filter/Option';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
 // ─────────────────────────────────────────────────────────
-
-const CATEGORIES: { value: Category; label: string }[] = [
-  { value: 'all', label: '전체' },
-  { value: 'electronics', label: '전자제품' },
-  { value: 'fashion', label: '패션' },
-  { value: 'home', label: '홈' },
-  { value: 'beauty', label: '뷰티' },
-];
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'latest', label: '최신순' },
@@ -112,15 +109,15 @@ export function ProductListPage() {
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && products.length === 0) {
-    return <div className="loading">로딩 중...</div>;
+    return <LoadingView>로딩 중...</LoadingView>;
   }
 
   if (error) {
     return (
-      <div className="error">
+      <ErrorView>
         <p>오류가 발생했습니다: {error.message}</p>
         <button onClick={() => window.location.reload()}>다시 시도</button>
-      </div>
+      </ErrorView>
     );
   }
 
@@ -136,58 +133,14 @@ export function ProductListPage() {
 
       {/* ─── 필터 패널 ──────────────────────────────────── */}
       <section className="filter-panel">
-        <div className="filter-group">
-          <label>카테고리</label>
-          <div className="category-list">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                className={category === cat.value ? 'active' : ''}
-                onClick={() => handleCategoryChange(cat.value)}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="filter-group">
-          <label>가격 범위</label>
-          <div className="price-range">
-            <input
-              type="number"
-              placeholder="최소"
-              value={minPrice}
-              onChange={handleMinPriceChange}
-              min={0}
-            />
-            <span>~</span>
-            <input
-              type="number"
-              placeholder="최대"
-              value={maxPrice}
-              onChange={handleMaxPriceChange}
-              min={0}
-            />
-          </div>
-        </div>
-
-        <div className="filter-group">
-          <label>옵션</label>
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontWeight: 400,
-              fontSize: 13,
-            }}
-          >
-            <input type="checkbox" checked={inStockOnly} onChange={handleInStockToggle} />
-            재고 있는 것만
-          </label>
-        </div>
-
+        <Category selectedCategory={category} onCategoryChange={handleCategoryChange} />
+        <PriceRange
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onMinPriceChange={handleMinPriceChange}
+          onMaxPriceChange={handleMaxPriceChange}
+        />
+        <Option inStockOnly={inStockOnly} onStockCheckboxToggle={handleInStockToggle} />
         <button className="reset-button" onClick={handleResetFilters}>
           필터 초기화
         </button>

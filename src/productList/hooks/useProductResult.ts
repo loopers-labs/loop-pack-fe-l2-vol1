@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Category, Product, SortBy } from '../shared';
+import type { Category, SortBy } from '../shared';
 
 export const useProductResult = () => {
   // ─── 필터 상태 ──────────────────────────────────────────
@@ -17,7 +17,7 @@ export const useProductResult = () => {
   // ─── 옵션 토글 ──────────────────────────────────────────
   const [inStockOnly, setInStockOnly] = useState(false);
 
-  const handleCategoryChange = (cat: 'all' | Product['category']) => {
+  const handleCategoryChange = (cat: Category) => {
     setCategory(cat);
     setPage(1);
   };
