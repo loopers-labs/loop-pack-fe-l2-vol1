@@ -34,6 +34,20 @@ export type ProductFilters = {
   viewMode: ViewMode;
 };
 
+/** useProductFilters reducer 가 관리하는 상태 — URL 로 복원되는 필터 전체(viewMode 제외). */
+export type FilterState = Omit<ProductFilters, "viewMode">;
+
+/** useProductFilters reducer 가 처리하는 액션. */
+export type FilterAction =
+  | { type: "setCategory"; value: CategoryFilter }
+  | { type: "setMinPrice"; value: number | "" }
+  | { type: "setMaxPrice"; value: number | "" }
+  | { type: "setSortBy"; value: SortBy }
+  | { type: "setSearchQuery"; value: string }
+  | { type: "setInStockOnly"; value: boolean }
+  | { type: "setPage"; value: number }
+  | { type: "reset" };
+
 /** 서버로 보내는 조회 조건 — inStockOnly·viewMode 같은 클라이언트 전용 값은 제외. */
 export type ProductQuery = {
   category: CategoryFilter;
