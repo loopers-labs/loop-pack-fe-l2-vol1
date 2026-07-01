@@ -14,9 +14,12 @@ export const SORT_VALUES = [
   'price-desc',
 ] as const;
 
+export const VIEW_MODES = ['grid', 'list'] as const;
+
 export type Category = (typeof PRODUCT_CATEGORIES)[number];
 export type CategoryFilter = (typeof CATEGORY_FILTER_VALUES)[number];
 export type SortBy = (typeof SORT_VALUES)[number];
+export type ViewMode = (typeof VIEW_MODES)[number];
 
 export type Product = {
   id: number;

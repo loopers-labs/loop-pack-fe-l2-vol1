@@ -3,13 +3,24 @@ import { useState, useEffect } from 'react';
 
 import { Pagination } from './components/Pagination';
 import { ProductCard } from './components/ProductCard';
-import { CATEGORY_LABELS, PAGE_SIZE, SORT_LABELS } from './constants';
+import { Select } from './components/Select';
+import {
+  CATEGORY_LABELS,
+  PAGE_SIZE,
+  SORT_LABELS,
+  VIEW_MODE_LABELS,
+} from './constants';
 import { useDebounce } from './hooks/useDebounce';
 import { useProductFilters } from './hooks/useProductFilters';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
 import { useWishlist } from './hooks/useWishlist';
 import { productListQueryOptions } from './services/productQueries';
-import { CATEGORY_FILTER_VALUES, SORT_VALUES, type SortBy } from './types';
+import {
+  CATEGORY_FILTER_VALUES,
+  SORT_VALUES,
+  VIEW_MODES,
+  type ViewMode,
+} from './types';
 import './ProductListPage.css';
 
 // ─────────────────────────────────────────────────────────
@@ -32,7 +43,7 @@ export function ProductListPage() {
   } = useProductFilters();
 
   // ─── 보기 모드 (표시 전용 — 데이터 필터 아님) ───────────
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   // ─── 위시리스트 / 최근 본 상품 (localStorage 동기화) ──────
   const wishlist = useWishlist();
@@ -186,24 +197,18 @@ export function ProductListPage() {
           onChange={(e) => setFilter({ searchQuery: e.target.value })}
           className="search-input"
         />
-        <select
+        <Select
           value={sortBy}
-          // TODO: as 제거
-          onChange={(e) => setFilter({ sortBy: e.target.value as SortBy })}
-        >
-          {SORT_VALUES.map((value) => (
-            <option key={value} value={value}>
-              {SORT_LABELS[value]}
-            </option>
-          ))}
-        </select>
-        <select
+          options={SORT_VALUES}
+          labels={SORT_LABELS}
+          onChange={(value) => setFilter({ sortBy: value })}
+        />
+        <Select
           value={viewMode}
-          onChange={(e) => setViewMode(e.target.value as 'grid' | 'list')}
-        >
-          <option value="grid">그리드</option>
-          <option value="list">리스트</option>
-        </select>
+          options={VIEW_MODES}
+          labels={VIEW_MODE_LABELS}
+          onChange={setViewMode}
+        />
       </section>
 
       {/* ─── 상품 그리드 ────────────────────────────────── */}
