@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
 import type { Product, SortBy, ProductListResponse } from './shared';
+import { useProductResult } from './hooks/useProductResult';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -37,20 +38,25 @@ export function ProductListPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<'all' | Product['category']>('all');
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [sortBy, setSortBy] = useState<SortBy>('latest');
+  // 필터/검색 결과에 영향을 미치는 상태들을 커스텀 훅으로 분리
+  const {
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    page,
+    inStockOnly,
+    handleCategoryChange,
+    handleMinPriceChange,
+    handleMaxPriceChange,
+    handleSortChange,
+    handleSearchChange,
+    handleInStockToggle,
+    handlePageChange,
+    handleResetFilters,
+  } = useProductResult();
 
-  // ─── 검색 상태 ──────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // ─── 페이지네이션 상태 ──────────────────────────────────
-  const [page, setPage] = useState(1);
-
-  // ─── 옵션 토글 ──────────────────────────────────────────
-  const [inStockOnly, setInStockOnly] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
@@ -138,63 +144,6 @@ export function ProductListPage() {
     if (inStockOnly) params.set('inStock', 'true');
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
-
-  const handleCategoryChange = (cat: 'all' | Product['category']) => {
-    setCategory(cat);
-    setPage(1);
-  };
-
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMinPrice(v === '' ? '' : Number(v));
-    setPage(1);
-  };
-
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMaxPrice(v === '' ? '' : Number(v));
-    setPage(1);
-  };
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // AI로 as 타입 단언 해결
-    const { value } = e.target;
-    const SORT_VALUES: Record<string, SortBy> = {
-      latest: 'latest',
-      popular: 'popular',
-      'price-asc': 'price-asc',
-      'price-desc': 'price-desc',
-    };
-    const selectedSortBy = SORT_VALUES[value];
-    if (selectedSortBy) {
-      setSortBy(selectedSortBy);
-    }
-    setPage(1);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
-
-  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInStockOnly(e.target.checked);
-    setPage(1);
-  };
-
-  const handlePageChange = (next: number) => {
-    setPage(next);
-  };
-
-  const handleResetFilters = () => {
-    setCategory('all');
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('latest');
-    setSearchQuery('');
-    setInStockOnly(false);
-    setPage(1);
-  };
 
   const handleWishlistToggle = (productId: number) => {
     setWishlist((prev) =>
