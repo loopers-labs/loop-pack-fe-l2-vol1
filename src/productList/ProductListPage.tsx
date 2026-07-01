@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Pagination } from './Pagination';
 import { ProductCard } from './components/ProductCard';
 import { CATEGORY_LABELS, PAGE_SIZE, SORT_LABELS } from './constants';
+import { useDebounce } from './hooks/useDebounce';
 import { useProductFilters } from './hooks/useProductFilters';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
 import { useWishlist } from './hooks/useWishlist';
@@ -37,6 +38,11 @@ export function ProductListPage() {
   const wishlist = useWishlist();
   const recentlyViewed = useRecentlyViewed();
 
+  // ─── 타이핑 입력(검색어·가격)은 디바운스해 호출 폭주 방지 ──
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedMinPrice = useDebounce(minPrice, 300);
+  const debouncedMaxPrice = useDebounce(maxPrice, 300);
+
   // ─── 서버 상태 (TanStack Query) ─────────────────────────
   const {
     data: productListResponse,
@@ -47,11 +53,11 @@ export function ProductListPage() {
     productListQueryOptions({
       category,
       sortBy,
-      searchQuery,
+      searchQuery: debouncedSearchQuery,
       page,
       size: PAGE_SIZE,
-      minPrice,
-      maxPrice,
+      minPrice: debouncedMinPrice,
+      maxPrice: debouncedMaxPrice,
     }),
   );
 
