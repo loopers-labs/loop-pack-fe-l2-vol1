@@ -59,6 +59,12 @@ React 19 + Vite + TypeScript 프론트엔드. 1차 하네스(ESLint · Prettier 
 | `pnpm format:check` | Prettier 검사        |
 | `pnpm typecheck`    | TypeScript 타입 체크 |
 
+## React 규칙
+
+- **파생값은 state에 담지 말 것** — `useState(a + b)`는 a·b가 바뀌어도 재계산 안 됨. 렌더 중 직접 계산
+- **boolean prop이 2개 이상이면 union 타입으로** — 동시에 여러 개 true가 되는 조합을 컴파일 단계에서 막을 것
+- **모달·토스트 등 독립적 UI 상태는 해당 컴포넌트가 직접 소유** — 부모 state로 올리지 말 것
+
 ## 코드 규칙
 
 @CONVENTIONS.md
