@@ -298,3 +298,23 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.highlight {
+  background: #fff176;
+  padding: 0;
+}
+
+.free-shipping {
+  margin-left: 6px;
+  font-size: 11px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.wish-button {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}

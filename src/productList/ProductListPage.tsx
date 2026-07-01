@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
 import { Pagination } from './Pagination';
+import { ProductCard } from './components/ProductCard';
 import { CATEGORY_LABELS, PAGE_SIZE, SORT_LABELS } from './constants';
 import { useProductFilters } from './hooks/useProductFilters';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
@@ -204,125 +205,16 @@ export function ProductListPage() {
         {products.length === 0 ? (
           <div className="empty">조건에 맞는 상품이 없습니다.</div>
         ) : (
-          products.map((product) => {
-            // ─── 검색어 하이라이팅 로직 인라인 ──────────
-            const highlightMatch = (text: string) => {
-              if (!searchQuery) return <>{text}</>;
-              const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
-
-              return (
-                <>
-                  {parts.map((part, i) =>
-                    part.toLowerCase() === searchQuery.toLowerCase() ? (
-                      <mark
-                        key={i}
-                        style={{ background: '#fff176', padding: 0 }}
-                      >
-                        {part}
-                      </mark>
-                    ) : (
-                      part
-                    ),
-                  )}
-                </>
-              );
-            };
-
-            const {
-              discountRate,
-              formattedPrice,
-              formattedOriginal,
-              isSoldOut,
-              isAlmostSoldOut,
-              isHot,
-              isBest,
-              isFreeShipping,
-              isNew,
-            } = product;
-
-            // ─── 위시리스트 여부 ────────────────────────
-            const isWished = wishlist.isWished(product.id);
-
-            return (
-              <article
-                key={product.id}
-                className="product-card"
-                onClick={() => recentlyViewed.markViewed(product.id)}
-              >
-                <div className="image-wrap">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    loading="lazy"
-                  />
-                  {discountRate > 0 && (
-                    <span className="badge badge-discount">
-                      {discountRate}% 할인
-                    </span>
-                  )}
-                  {isNew && <span className="badge badge-new">NEW</span>}
-                  {isHot && <span className="badge badge-hot">특가</span>}
-                  {isBest && <span className="badge badge-best">BEST</span>}
-                  {isSoldOut && (
-                    <span className="badge badge-soldout">품절</span>
-                  )}
-                  {!isSoldOut && isAlmostSoldOut && (
-                    <span className="badge badge-warning">품절 임박</span>
-                  )}
-                </div>
-
-                <div className="card-body">
-                  <h3 className="product-name">
-                    {highlightMatch(product.name)}
-                  </h3>
-                  <div className="price-area">
-                    {formattedOriginal && (
-                      <span className="original-price">
-                        {formattedOriginal}
-                      </span>
-                    )}
-                    <span className="price">{formattedPrice}</span>
-                    {isFreeShipping && (
-                      <span
-                        style={{
-                          marginLeft: 6,
-                          fontSize: 11,
-                          color: '#2e7d32',
-                          fontWeight: 600,
-                        }}
-                      >
-                        무료배송
-                      </span>
-                    )}
-                  </div>
-                  <div className="rating-area">
-                    <span className="rating">
-                      ★ {product.rating.toFixed(1)}
-                    </span>
-                    <span className="review-count">
-                      ({product.reviewCount.toLocaleString()})
-                    </span>
-                    <button
-                      style={{
-                        marginLeft: 'auto',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: 16,
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        wishlist.toggleWish(product.id);
-                      }}
-                      aria-label="위시리스트 토글"
-                    >
-                      {isWished ? '♥' : '♡'}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            );
-          })
+          products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              searchQuery={searchQuery}
+              isWished={wishlist.isWished(product.id)}
+              onToggleWishlist={() => wishlist.toggleWish(product.id)}
+              onCardClick={() => recentlyViewed.markViewed(product.id)}
+            />
+          ))
         )}
       </section>
 

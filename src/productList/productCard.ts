@@ -21,3 +21,5 @@ export function getProductCardInfo(product: Product) {
     isNew: isWithinDays(product.createdAt, 7),
   };
 }
+
+export type ProductCardModel = Product & ReturnType<typeof getProductCardInfo>;
