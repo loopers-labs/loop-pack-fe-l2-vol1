@@ -1,7 +1,7 @@
-import type { Product, ProductListResponse, SortBy } from "../types";
+import type { ProductCategoryFilter, ProductListResponse, SortBy } from "../types";
 
 export type GetProductsParams = {
-  category: "all" | Product["category"];
+  category: ProductCategoryFilter;
   q: string;
   page: number;
   sort: SortBy;

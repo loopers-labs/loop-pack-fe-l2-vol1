@@ -1,23 +1,16 @@
 import { useState, useEffect } from "react";
 import "./ProductListPage.css";
-import type { Product, SortBy } from "./types";
+import type { SortBy } from "./types";
 import { useProductList } from "./hooks/useProductList";
 import { useProductListQueryParams } from "./hooks/useProductListQueryParams";
 import { useWishlist } from "./hooks/useWishlist";
 import { useRecentlyViewedProducts } from "./hooks/useRecentlyViewedProducts";
 import { Pagination } from "./components/Pagination";
+import { ProductFilters } from "./components/ProductFilters";
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
 // ─────────────────────────────────────────────────────────
-
-const CATEGORIES: { value: "all" | Product["category"]; label: string }[] = [
-  { value: "all", label: "전체" },
-  { value: "electronics", label: "전자제품" },
-  { value: "fashion", label: "패션" },
-  { value: "home", label: "홈" },
-  { value: "beauty", label: "뷰티" },
-];
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "latest", label: "최신순" },
@@ -76,20 +69,6 @@ export function ProductListPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  const handleCategoryChange = (cat: "all" | Product["category"]) => {
-    setCategory(cat);
-  };
-
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMinPrice(v === "" ? "" : Number(v));
-  };
-
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMaxPrice(v === "" ? "" : Number(v));
-  };
-
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortBy(e.target.value as SortBy);
   };
@@ -98,16 +77,8 @@ export function ProductListPage() {
     setSearchQuery(e.target.value);
   };
 
-  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInStockOnly(e.target.checked);
-  };
-
   const handlePageChange = (next: number) => {
     setPage(next);
-  };
-
-  const handleResetFilters = () => {
-    resetQueryParams();
   };
 
   const handleWishlistToggle = (productId: number) => {
@@ -142,64 +113,17 @@ export function ProductListPage() {
         </p>
       </header>
 
-      {/* ─── 필터 패널 ──────────────────────────────────── */}
-      <section className="filter-panel">
-        <div className="filter-group">
-          <label>카테고리</label>
-          <div className="category-list">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                className={category === cat.value ? "active" : ""}
-                onClick={() => handleCategoryChange(cat.value)}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="filter-group">
-          <label>가격 범위</label>
-          <div className="price-range">
-            <input
-              type="number"
-              placeholder="최소"
-              value={minPrice}
-              onChange={handleMinPriceChange}
-              min={0}
-            />
-            <span>~</span>
-            <input
-              type="number"
-              placeholder="최대"
-              value={maxPrice}
-              onChange={handleMaxPriceChange}
-              min={0}
-            />
-          </div>
-        </div>
-
-        <div className="filter-group">
-          <label>옵션</label>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontWeight: 400,
-              fontSize: 13,
-            }}
-          >
-            <input type="checkbox" checked={inStockOnly} onChange={handleInStockToggle} />
-            재고 있는 것만
-          </label>
-        </div>
-
-        <button className="reset-button" onClick={handleResetFilters}>
-          필터 초기화
-        </button>
-      </section>
+      <ProductFilters
+        category={category}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        inStockOnly={inStockOnly}
+        onCategoryChange={setCategory}
+        onInStockOnlyChange={setInStockOnly}
+        onMaxPriceChange={setMaxPrice}
+        onMinPriceChange={setMinPrice}
+        onReset={resetQueryParams}
+      />
 
       {/* ─── 검색 + 정렬 + 보기 모드 ───────────────────── */}
       <section className="search-sort">

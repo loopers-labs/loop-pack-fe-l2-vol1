@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Product, SortBy } from "../types";
-
-type ProductCategory = "all" | Product["category"];
+import type { Product, ProductCategoryFilter, SortBy } from "../types";
 
 const PRODUCT_CATEGORIES = ["electronics", "fashion", "home", "beauty"] as const;
 const SORT_VALUES = ["latest", "popular", "price-asc", "price-desc"] as const;
 
-const DEFAULT_CATEGORY: ProductCategory = "all";
+const DEFAULT_CATEGORY: ProductCategoryFilter = "all";
 const DEFAULT_SORT: SortBy = "latest";
 const DEFAULT_PAGE = 1;
 
@@ -18,7 +16,7 @@ function isSortBy(value: string): value is SortBy {
   return (SORT_VALUES as readonly string[]).includes(value);
 }
 
-function parseCategoryParam(value: string | null): ProductCategory {
+function parseCategoryParam(value: string | null): ProductCategoryFilter {
   if (value === null) {
     return DEFAULT_CATEGORY;
   }
@@ -81,7 +79,7 @@ export function useProductListQueryParams() {
     setSearch(window.location.search);
   };
 
-  const setCategory = (category: ProductCategory) => {
+  const setCategory = (category: ProductCategoryFilter) => {
     replaceSearch((params) => {
       if (category === DEFAULT_CATEGORY) {
         params.delete("category");

@@ -1,7 +1,11 @@
+type ProductCategory = "electronics" | "fashion" | "home" | "beauty";
+
+export type ProductCategoryFilter = "all" | ProductCategory;
+
 export type Product = {
   id: number;
   name: string;
-  category: "electronics" | "fashion" | "home" | "beauty";
+  category: ProductCategory;
   price: number;
   originalPrice?: number;
   stock: number;
