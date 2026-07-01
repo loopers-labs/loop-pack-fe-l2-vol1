@@ -6,7 +6,6 @@ import { useProducts } from './services/useProducts';
 import { setUrlSearchParams } from './utils/setUrlSearchParams';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useScrollZero } from './hooks/useScrollZero';
-import { calculatePages } from './utils/calculatePages';
 import { LoadingView } from './components/skeleton/LoadingView';
 import { ErrorView } from './components/skeleton/ErrorView';
 import { Category } from './components/filter/Category';
@@ -14,6 +13,7 @@ import { PriceRange } from './components/filter/PriceRange';
 import { Option } from './components/filter/Option';
 import { Dropdown } from './components/search-sort/Dropdown';
 import { Product } from './components/products/Product';
+import { Pagination } from './components/pagination/Pagination';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -113,7 +113,7 @@ export function ProductListPage() {
     });
   };
 
-  const { totalPages, pageNumbers } = calculatePages(page, totalCount, ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && products.length === 0) {
@@ -193,41 +193,7 @@ export function ProductListPage() {
 
       {/* ─── 페이지네이션 ───────────────────────────────── */}
       {totalPages > 1 && (
-        <nav className="pagination">
-          <button onClick={() => handlePageChange(1)} disabled={page === 1} aria-label="첫 페이지">
-            «
-          </button>
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            aria-label="이전 페이지"
-          >
-            ‹
-          </button>
-          {pageNumbers.map((p) => (
-            <button
-              key={p}
-              className={p === page ? 'active' : ''}
-              onClick={() => handlePageChange(p)}
-            >
-              {p}
-            </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            aria-label="다음 페이지"
-          >
-            ›
-          </button>
-          <button
-            onClick={() => handlePageChange(totalPages)}
-            disabled={page === totalPages}
-            aria-label="마지막 페이지"
-          >
-            »
-          </button>
-        </nav>
+        <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       )}
 
       {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
