@@ -7,14 +7,13 @@ import { setUrlSearchParams } from './utils/setUrlSearchParams';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useScrollZero } from './hooks/useScrollZero';
 import { calculatePages } from './utils/calculatePages';
-import { getProductPricing } from './utils/getProductPricing';
-import { getProductStockStatus } from './utils/getProductStockStatus';
-import { getProductBadges } from './utils/getProductBadges';
 import { LoadingView } from './components/skeleton/LoadingView';
 import { ErrorView } from './components/skeleton/ErrorView';
 import { Category } from './components/filter/Category';
 import { PriceRange } from './components/filter/PriceRange';
 import { Option } from './components/filter/Option';
+import { Dropdown } from './components/search-sort/Dropdown';
+import { Product } from './components/products/Product';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -27,11 +26,13 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'price-desc', label: '가격 높은순' },
 ];
 
+const VIEWMODE_OPTIONS: { value: ViewMode; label: string }[] = [
+  { value: 'grid', label: '그리드' },
+  { value: 'list', label: '리스트' },
+];
+
 // 직관적인 네이밍으로 수정
 const ITEMS_PER_PAGE = 12;
-
-// 검색어를 정규식에 안전하게 넣기 위한 escape (특수문자로 인한 RegExp 크래시 방지)
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // ─────────────────────────────────────────────────────────
 // 500줄+ 컴포넌트 — UI, 비즈니스 로직, API, 포맷, 도메인 규칙이 한 파일에
@@ -92,6 +93,13 @@ export function ProductListPage() {
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
+  const handleViewModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // AI로 as 타입 단언 해결
+    const value = e.target.value;
+    if (value === 'grid' || value === 'list') {
+      setViewMode(value);
+    }
+  };
   const handleWishlistToggle = (productId: number) => {
     setWishlist((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
@@ -155,26 +163,12 @@ export function ProductListPage() {
           onChange={handleSearchChange}
           className="search-input"
         />
-        <select value={sortBy} onChange={handleSortChange}>
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <select
+        <Dropdown value={sortBy} onOptionChange={handleSortChange} options={SORT_OPTIONS} />
+        <Dropdown
           value={viewMode}
-          onChange={(e) => {
-            // AI로 as 타입 단언 해결
-            const value = e.target.value;
-            if (value === 'grid' || value === 'list') {
-              setViewMode(value);
-            }
-          }}
-        >
-          <option value="grid">그리드</option>
-          <option value="list">리스트</option>
-        </select>
+          onOptionChange={handleViewModeChange}
+          options={VIEWMODE_OPTIONS}
+        />
       </section>
 
       {/* ─── 상품 그리드 ────────────────────────────────── */}
@@ -185,102 +179,15 @@ export function ProductListPage() {
         {products.length === 0 ? (
           <div className="empty">조건에 맞는 상품이 없습니다.</div>
         ) : (
-          products.map((product) => {
-            // ─── 검색어 하이라이팅 로직 인라인 ──────────
-            const highlightMatch = (text: string) => {
-              if (!searchQuery) return <>{text}</>;
-              const parts = text.split(new RegExp(`(${escapeRegExp(searchQuery)})`, 'gi'));
-              return (
-                <>
-                  {parts.map((part, i) =>
-                    part.toLowerCase() === searchQuery.toLowerCase() ? (
-                      <mark key={i} style={{ background: '#fff176', padding: 0 }}>
-                        {part}
-                      </mark>
-                    ) : (
-                      part
-                    )
-                  )}
-                </>
-              );
-            };
-
-            // ─── 도메인 규칙 인라인 계산 ─────────────────
-            // AI로 유틸 분리 방식 추천
-            const { discountRate, formattedPrice, formattedOriginal } = getProductPricing(product);
-            const { isAlmostSoldOut, isSoldOut } = getProductStockStatus(product);
-            const { isHot, isBest, isFreeShipping, isNew } = getProductBadges(
-              discountRate,
-              product
-            );
-
-            // ─── 위시리스트 여부 ────────────────────────
-            const isWished = wishlist.includes(product.id);
-
-            return (
-              <article
-                key={product.id}
-                className="product-card"
-                onClick={() => handleProductClick(product.id)}
-              >
-                <div className="image-wrap">
-                  <img src={product.imageUrl} alt={product.name} loading="lazy" />
-                  {discountRate > 0 && (
-                    <span className="badge badge-discount">{discountRate}% 할인</span>
-                  )}
-                  {isNew && <span className="badge badge-new">NEW</span>}
-                  {isHot && <span className="badge badge-hot">특가</span>}
-                  {isBest && <span className="badge badge-best">BEST</span>}
-                  {isSoldOut && <span className="badge badge-soldout">품절</span>}
-                  {!isSoldOut && isAlmostSoldOut && (
-                    <span className="badge badge-warning">품절 임박</span>
-                  )}
-                </div>
-
-                <div className="card-body">
-                  <h3 className="product-name">{highlightMatch(product.name)}</h3>
-                  <div className="price-area">
-                    {formattedOriginal && (
-                      <span className="original-price">{formattedOriginal}</span>
-                    )}
-                    <span className="price">{formattedPrice}</span>
-                    {isFreeShipping && (
-                      <span
-                        style={{
-                          marginLeft: 6,
-                          fontSize: 11,
-                          color: '#2e7d32',
-                          fontWeight: 600,
-                        }}
-                      >
-                        무료배송
-                      </span>
-                    )}
-                  </div>
-                  <div className="rating-area">
-                    <span className="rating">★ {product.rating.toFixed(1)}</span>
-                    <span className="review-count">({product.reviewCount.toLocaleString()})</span>
-                    <button
-                      style={{
-                        marginLeft: 'auto',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: 16,
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleWishlistToggle(product.id);
-                      }}
-                      aria-label="위시리스트 토글"
-                    >
-                      {isWished ? '♥' : '♡'}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            );
-          })
+          products.map((product) => (
+            <Product
+              product={product}
+              searchQuery={searchQuery}
+              isWished={wishlist.includes(product.id)}
+              onProductClick={handleProductClick}
+              onWishlistToggle={handleWishlistToggle}
+            />
+          ))
         )}
       </section>
 
