@@ -9,6 +9,7 @@ import { useScrollZero } from './hooks/useScrollZero';
 import { calculatePages } from './utils/calculatePages';
 import { getProductPricing } from './utils/getProductPricing';
 import { getProductStockStatus } from './utils/getProductStockStatus';
+import { getProductBadges } from './utils/getProductBadges';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -255,18 +256,10 @@ export function ProductListPage() {
             // AI로 유틸 분리 방식 추천
             const { discountRate, formattedPrice, formattedOriginal } = getProductPricing(product);
             const { isAlmostSoldOut, isSoldOut } = getProductStockStatus(product);
-
-            const isHot = discountRate >= 30;
-            const isBest = product.rating >= 4.5 && product.reviewCount >= 100;
-            const isFreeShipping = product.price >= 50000;
-
-            // ─── 날짜 포맷팅 인라인 ─────────────────────
-            const createdDate = new Date(product.createdAt);
-            const now = new Date();
-            const daysSinceCreated = Math.floor(
-              (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
+            const { isHot, isBest, isFreeShipping, isNew } = getProductBadges(
+              discountRate,
+              product
             );
-            const isNew = daysSinceCreated <= 7;
 
             // ─── 위시리스트 여부 ────────────────────────
             const isWished = wishlist.includes(product.id);
