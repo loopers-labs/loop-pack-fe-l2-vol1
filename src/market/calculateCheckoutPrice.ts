@@ -9,7 +9,29 @@ type Params = {
   member: Member;
 };
 
-// 결제 금액 계산 로직을 page에서 분리해 순수 함수로 모음
+function calcItemTotal(cart: CartItem[]) {
+  return cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
+}
+
+function calcShippingFee(itemTotal: number, address: Address | undefined) {
+  let fee = itemTotal >= 50000 ? 0 : 3000;
+  if (address?.isRemote) fee += 3000;
+  return fee;
+}
+
+function calcVipDiscount(itemTotal: number, grade: Member['grade']) {
+  return grade === 'VIP' ? Math.round(itemTotal * 0.1) : 0;
+}
+
+function calcPointDiscount(
+  isUsingPoint: boolean,
+  pointInput: number,
+  memberPoint: number,
+  itemTotal: number,
+) {
+  return isUsingPoint ? Math.min(pointInput, memberPoint, itemTotal) : 0;
+}
+
 export function calculateCheckoutPrice({
   cart,
   address,
@@ -18,19 +40,26 @@ export function calculateCheckoutPrice({
   pointInput,
   member,
 }: Params) {
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
+  const itemTotal = calcItemTotal(cart);
+  const shippingFee = calcShippingFee(itemTotal, address);
+  const couponDiscount = appliedCoupon?.discount ?? 0;
+  const vipDiscount = calcVipDiscount(itemTotal, member.grade);
+  const pointDiscount = calcPointDiscount(
+    isUsingPoint,
+    pointInput,
+    member.point,
+    itemTotal,
+  );
 
-  let shippingFee = 3000;
-  if (itemTotal >= 50000) shippingFee = 0;
-  if (address?.isRemote) shippingFee += 3000;
+  const finalPrice =
+    itemTotal + shippingFee - vipDiscount - couponDiscount - pointDiscount;
 
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
-  const pointDiscount = isUsingPoint
-    ? Math.min(pointInput, member.point, itemTotal)
-    : 0;
-
-  const base = itemTotal + shippingFee - couponDiscount - pointDiscount;
-  const finalPrice = member.grade === 'VIP' ? Math.round(base * 0.9) : base;
-
-  return { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice };
+  return {
+    itemTotal,
+    shippingFee,
+    couponDiscount,
+    vipDiscount,
+    pointDiscount,
+    finalPrice,
+  };
 }
