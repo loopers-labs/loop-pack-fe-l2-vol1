@@ -5,6 +5,7 @@ import { useProductResult } from './hooks/useProductResult';
 import { useProducts } from './services/useProducts';
 import { setUrlSearchParams } from './utils/setUrlSearchParams';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useScrollZero } from './hooks/useScrollZero';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -72,10 +73,7 @@ export function ProductListPage() {
 
   const { products, totalCount, isLoading, error } = useProducts(searchParamsObj);
 
-  // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [page]);
+  useScrollZero(page);
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   // TODO: 스프레드 연산자 활용하면 커스텀 훅으로 추출할 수 있지 않을까?
