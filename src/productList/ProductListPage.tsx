@@ -8,6 +8,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useScrollZero } from './hooks/useScrollZero';
 import { calculatePages } from './utils/calculatePages';
 import { getProductPricing } from './utils/getProductPricing';
+import { getProductStockStatus } from './utils/getProductStockStatus';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -253,9 +254,7 @@ export function ProductListPage() {
             // ─── 도메인 규칙 인라인 계산 ─────────────────
             // AI로 유틸 분리 방식 추천
             const { discountRate, formattedPrice, formattedOriginal } = getProductPricing(product);
-
-            const isAlmostSoldOut = product.stock > 0 && product.stock <= 5;
-            const isSoldOut = product.stock === 0;
+            const { isAlmostSoldOut, isSoldOut } = getProductStockStatus(product);
 
             const isHot = discountRate >= 30;
             const isBest = product.rating >= 4.5 && product.reviewCount >= 100;
