@@ -17,6 +17,7 @@ import SearchInput from "./components/searchSort/SearchInput";
 import SortSelect from "./components/searchSort/SortSelect";
 import ViewModeSelect from "./components/searchSort/ViewModeSelect";
 import ProductGrid from "./components/ProductGrid";
+import ProductCard from "./components/ProductCard";
 import Pagination from "./components/Pagination";
 import ProductListError from "./components/ProductListError";
 
@@ -97,13 +98,20 @@ export function ProductListPage() {
       </SearchSortBar>
 
       <ProductGrid
-        products={visibleProducts}
         viewMode={filters.viewMode}
-        searchQuery={filters.searchQuery}
-        isWished={isWished}
-        onToggleWishlist={toggleWishlist}
-        onProductClick={addRecentlyViewed}
-      />
+        isEmpty={visibleProducts.length === 0}
+      >
+        {visibleProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            searchQuery={filters.searchQuery}
+            isWished={isWished(product.id)}
+            onToggleWishlist={toggleWishlist}
+            onClick={addRecentlyViewed}
+          />
+        ))}
+      </ProductGrid>
 
       {totalPages > 1 && (
         <Pagination
