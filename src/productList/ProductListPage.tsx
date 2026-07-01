@@ -10,6 +10,7 @@ import { ProductFilters } from "./components/ProductFilters";
 import { ProductListToolbar } from "./components/ProductListToolbar";
 import { ProductGrid } from "./components/ProductGrid";
 import { ProductListHeader } from "./components/ProductListHeader";
+import { ProductListBackgroundLoading } from "./components/ProductListBackgroundLoading";
 
 const PAGE_SIZE = 12;
 
@@ -61,24 +62,13 @@ export function ProductListPage() {
     addRecentlyViewedProduct(productId);
   };
 
-  // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
-
-  // ─── 로딩/에러는 early return ───────────────────────────
-  if (isLoading && products.length === 0) {
-    return <div className="loading">로딩 중...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="error">
-        <p>오류가 발생했습니다: {error.message}</p>
-        <button onClick={() => window.location.reload()}>다시 시도</button>
-      </div>
-    );
-  }
 
   return (
     <div className="product-list-page">
@@ -109,7 +99,10 @@ export function ProductListPage() {
         products={products}
         searchQuery={searchQuery}
         viewMode={viewMode}
+        isLoading={isLoading}
+        error={error}
         isWishlisted={isWishlisted}
+        onRetry={handleRetry}
         onProductClick={handleProductClick}
         onWishlistToggle={handleWishlistToggle}
       />
@@ -121,10 +114,7 @@ export function ProductListPage() {
         onPageChange={handlePageChange}
       />
 
-      {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
-      {isLoading && products.length > 0 && (
-        <div className="background-loading">데이터 갱신 중...</div>
-      )}
+      {isLoading && products.length > 0 && <ProductListBackgroundLoading />}
     </div>
   );
 }
