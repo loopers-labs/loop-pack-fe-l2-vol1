@@ -232,27 +232,17 @@ export function ProductListPage() {
               );
             };
 
-            // ─── 도메인 규칙 인라인 계산 ─────────────────
-            const discountRate = product.originalPrice
-              ? Math.round((1 - product.price / product.originalPrice) * 100)
-              : 0;
-            const formattedPrice = product.price.toLocaleString() + '원';
-            const formattedOriginal = product.originalPrice
-              ? product.originalPrice.toLocaleString() + '원'
-              : null;
-            const isAlmostSoldOut = product.stock > 0 && product.stock <= 5;
-            const isSoldOut = product.stock === 0;
-            const isHot = discountRate >= 30;
-            const isBest = product.rating >= 4.5 && product.reviewCount >= 100;
-            const isFreeShipping = product.price >= 50000;
-
-            // ─── 날짜 포맷팅 인라인 ─────────────────────
-            const createdDate = new Date(product.createdAt);
-            const now = new Date();
-            const daysSinceCreated = Math.floor(
-              (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
-            );
-            const isNew = daysSinceCreated <= 7;
+            const {
+              discountRate,
+              formattedPrice,
+              formattedOriginal,
+              isSoldOut,
+              isAlmostSoldOut,
+              isHot,
+              isBest,
+              isFreeShipping,
+              isNew,
+            } = product;
 
             // ─── 위시리스트 여부 ────────────────────────
             const isWished = wishlist.isWished(product.id);
