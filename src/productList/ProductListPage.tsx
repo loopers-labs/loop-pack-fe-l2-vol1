@@ -71,16 +71,11 @@ export function ProductListPage() {
       size: PAGE_SIZE,
       minPrice: debouncedMinPrice,
       maxPrice: debouncedMaxPrice,
+      inStockOnly,
     }),
   );
 
-  const allProducts = productListResponse?.products ?? [];
-
-  // "재고 있는 것만"은 서버 관심사가 아니므로 응답에서 파생
-  const products = inStockOnly
-    ? allProducts.filter((p) => p.stock > 0)
-    : allProducts;
-
+  const products = productListResponse?.products ?? [];
   const totalCount = productListResponse?.totalCount ?? 0;
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
