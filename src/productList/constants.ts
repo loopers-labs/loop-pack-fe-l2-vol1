@@ -17,6 +17,9 @@ export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 
 export const PAGE_SIZE = 12;
 
+export const isCategory = (value: string): value is CategoryFilter =>
+  CATEGORIES.some((opt) => opt.value === value);
+
 export const isSortBy = (value: string): value is SortBy =>
   SORT_OPTIONS.some((opt) => opt.value === value);
 

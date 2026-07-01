@@ -22,7 +22,9 @@ function renderWithClient(ui: ReactNode) {
 }
 
 function stubFetchOk() {
-  const fetchMock = vi.fn(async () => ({
+  const fetchMock = vi.fn<
+    (input: string, init?: RequestInit) => Promise<unknown>
+  >(async () => ({
     ok: true,
     json: async () => ({ products: [], totalCount: 0 }),
   }));
@@ -38,6 +40,8 @@ afterEach(() => {
   vi.useRealTimers();
   // stubGlobal 로 바꿔치기한 전역(fetch·scrollTo 등)을 원래 구현으로 복원한다.
   vi.unstubAllGlobals();
+  // URL 을 만지는 테스트가 다음 테스트로 새지 않게 초기화한다.
+  window.history.replaceState(null, "", "/");
 });
 
 describe("ProductListPage — 검색어 디바운스로 불필요한 API 요청 방지", () => {
@@ -83,5 +87,35 @@ describe("ProductListPage — 검색어 디바운스로 불필요한 API 요청 
       expect.stringContaining("q=abc"),
       expect.anything(),
     );
+  });
+});
+
+describe("ProductListPage — URL 쿼리에서 필터·검색·페이지 상태 복원", () => {
+  it("필터가 담긴 URL 로 열면 첫 요청과 컨트롤에 그 조건이 그대로 반영된다", async () => {
+    // 새로고침/북마크/공유를 흉내내 필터가 실린 URL 로 진입한다.
+    window.history.replaceState(
+      null,
+      "",
+      "?category=fashion&sort=price-asc&q=coat&page=2&inStock=true",
+    );
+    const fetchMock = stubFetchOk();
+    vi.stubGlobal("scrollTo", vi.fn()); // page 복원 시 도는 scrollToTop 회피
+
+    renderWithClient(<ProductListPage />);
+
+    // 로딩이 끝나 컨트롤이 DOM 에 등장할 때까지 대기.
+    const input = await screen.findByRole<HTMLInputElement>("searchbox");
+
+    // (a) 서버로 가는 첫 요청부터 복원된 조건(카테고리·정렬·검색어·페이지)이 실려나간다.
+    const firstRequestUrl = fetchMock.mock.calls[0][0];
+    expect(firstRequestUrl).toContain("category=fashion");
+    expect(firstRequestUrl).toContain("sort=price-asc");
+    expect(firstRequestUrl).toContain("q=coat");
+    expect(firstRequestUrl).toContain("page=2");
+
+    // (b) 컨트롤도 복원된 상태를 보여준다 — 검색어(서버 조건)와 재고 토글(클라이언트 전용).
+    expect(input.value).toBe("coat");
+    const inStockCheckbox = screen.getByRole<HTMLInputElement>("checkbox");
+    expect(inStockCheckbox.checked).toBe(true);
   });
 });

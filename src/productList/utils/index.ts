@@ -1,4 +1,10 @@
-import type { HighlightPart, Product, ProductBadges } from "../types";
+import { isCategory, isSortBy } from "../constants";
+import type {
+  HighlightPart,
+  Product,
+  ProductBadges,
+  ProductFilters,
+} from "../types";
 
 // ─── 도메인 규칙 임계값 ──────────────────────────────────
 const HOT_DEAL_MIN_DISCOUNT_RATE = 30;
@@ -22,6 +28,31 @@ export function parsePrice(raw: string): number | "" {
   if (raw === "") return "";
   const parsed = Number(raw);
   return Number.isNaN(parsed) ? "" : parsed;
+}
+
+/**
+ * URL 쿼리스트링을 필터 상태로 복원한다(useSyncFiltersToUrl 이 쓰는 키와 1:1 대응).
+ * 값이 없거나 유효하지 않으면 각 필터의 기본값으로 떨어뜨려 안전하게 만든다.
+ * viewMode 는 URL 에 쓰지 않으므로 복원 대상이 아니다.
+ */
+export function parseFiltersFromUrl(
+  search: string,
+): Omit<ProductFilters, "viewMode"> {
+  const params = new URLSearchParams(search);
+
+  const category = params.get("category");
+  const sort = params.get("sort");
+  const page = Number(params.get("page"));
+
+  return {
+    category: category && isCategory(category) ? category : "all",
+    searchQuery: params.get("q") ?? "",
+    page: Number.isInteger(page) && page > 1 ? page : 1,
+    sortBy: sort && isSortBy(sort) ? sort : "latest",
+    minPrice: parsePrice(params.get("minPrice") ?? ""),
+    maxPrice: parsePrice(params.get("maxPrice") ?? ""),
+    inStockOnly: params.get("inStock") === "true",
+  };
 }
 
 /** 정가 대비 할인율(%)을 반올림해 반환한다. 정가가 없으면 0. */

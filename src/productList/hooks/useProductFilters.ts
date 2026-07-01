@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { isSortBy, isViewMode } from "../constants";
 import type { CategoryFilter, ProductFilters, ProductQuery } from "../types";
+import { parseFiltersFromUrl } from "../utils";
 import { useDebouncedValue } from "./useDebouncedValue";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -10,13 +11,26 @@ const SEARCH_DEBOUNCE_MS = 300;
  * 서버 조회에 필요한 부분만 추린 `query`(파생값)도 함께 제공한다.
  */
 export function useProductFilters() {
-  const [category, setCategory] = useState<CategoryFilter>("all");
-  const [minPrice, setMinPrice] = useState<number | "">("");
-  const [maxPrice, setMaxPrice] = useState<number | "">("");
-  const [sortBy, setSortBy] = useState<ProductFilters["sortBy"]>("latest");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [inStockOnly, setInStockOnly] = useState(false);
+  // 새로고침·북마크·공유로 다시 열어도 조건이 유지되도록 URL 에서 초기 상태를 복원한다.
+  // 마운트 시 한 번만 파싱해 각 상태의 초기값으로 쓴다.
+  const [initialFilters] = useState(() =>
+    parseFiltersFromUrl(window.location.search),
+  );
+  const [category, setCategory] = useState<CategoryFilter>(
+    initialFilters.category,
+  );
+  const [minPrice, setMinPrice] = useState<number | "">(
+    initialFilters.minPrice,
+  );
+  const [maxPrice, setMaxPrice] = useState<number | "">(
+    initialFilters.maxPrice,
+  );
+  const [sortBy, setSortBy] = useState<ProductFilters["sortBy"]>(
+    initialFilters.sortBy,
+  );
+  const [searchQuery, setSearchQuery] = useState(initialFilters.searchQuery);
+  const [page, setPage] = useState(initialFilters.page);
+  const [inStockOnly, setInStockOnly] = useState(initialFilters.inStockOnly);
   const [viewMode, setViewMode] = useState<ProductFilters["viewMode"]>("grid");
 
   const handleCategoryChange = (next: CategoryFilter) => {
