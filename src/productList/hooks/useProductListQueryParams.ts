@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Product, ProductCategoryFilter, SortBy } from "../types";
+import type { ProductCategory, ProductCategoryFilter, SortBy } from "../types";
 
 const PRODUCT_CATEGORIES = ["electronics", "fashion", "home", "beauty"] as const;
 const SORT_VALUES = ["latest", "popular", "price-asc", "price-desc"] as const;
@@ -8,7 +8,7 @@ const DEFAULT_CATEGORY: ProductCategoryFilter = "all";
 const DEFAULT_SORT: SortBy = "latest";
 const DEFAULT_PAGE = 1;
 
-function isProductCategory(value: string): value is Product["category"] {
+function isProductCategory(value: string): value is ProductCategory {
   return (PRODUCT_CATEGORIES as readonly string[]).includes(value);
 }
 

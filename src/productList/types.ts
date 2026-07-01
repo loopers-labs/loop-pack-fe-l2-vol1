@@ -1,4 +1,4 @@
-type ProductCategory = "electronics" | "fashion" | "home" | "beauty";
+export type ProductCategory = "electronics" | "fashion" | "home" | "beauty";
 
 export type ProductCategoryFilter = "all" | ProductCategory;
 
@@ -21,3 +21,5 @@ export type ProductListResponse = {
 };
 
 export type SortBy = "latest" | "popular" | "price-asc" | "price-desc";
+
+export type ViewMode = "grid" | "list";

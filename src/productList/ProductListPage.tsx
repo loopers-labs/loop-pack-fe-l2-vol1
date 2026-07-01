@@ -1,23 +1,13 @@
 import { useState, useEffect } from "react";
 import "./ProductListPage.css";
-import type { SortBy } from "./types";
+import type { ViewMode } from "./types";
 import { useProductList } from "./hooks/useProductList";
 import { useProductListQueryParams } from "./hooks/useProductListQueryParams";
 import { useWishlist } from "./hooks/useWishlist";
 import { useRecentlyViewedProducts } from "./hooks/useRecentlyViewedProducts";
 import { Pagination } from "./components/Pagination";
 import { ProductFilters } from "./components/ProductFilters";
-
-// ─────────────────────────────────────────────────────────
-// 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
-// ─────────────────────────────────────────────────────────
-
-const SORT_OPTIONS: { value: SortBy; label: string }[] = [
-  { value: "latest", label: "최신순" },
-  { value: "popular", label: "인기순" },
-  { value: "price-asc", label: "가격 낮은순" },
-  { value: "price-desc", label: "가격 높은순" },
-];
+import { ProductListToolbar } from "./components/ProductListToolbar";
 
 const PAGE_SIZE = 12;
 
@@ -58,7 +48,7 @@ export function ProductListPage() {
     inStockOnly,
   });
 
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const { wishlistCount, toggleWishlist, isWishlisted } = useWishlist();
 
@@ -68,14 +58,6 @@ export function ProductListPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as SortBy);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
 
   const handlePageChange = (next: number) => {
     setPage(next);
@@ -125,27 +107,14 @@ export function ProductListPage() {
         onReset={resetQueryParams}
       />
 
-      {/* ─── 검색 + 정렬 + 보기 모드 ───────────────────── */}
-      <section className="search-sort">
-        <input
-          type="search"
-          placeholder="상품 검색..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className="search-input"
-        />
-        <select value={sortBy} onChange={handleSortChange}>
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <select value={viewMode} onChange={(e) => setViewMode(e.target.value as "grid" | "list")}>
-          <option value="grid">그리드</option>
-          <option value="list">리스트</option>
-        </select>
-      </section>
+      <ProductListToolbar
+        searchQuery={searchQuery}
+        sortBy={sortBy}
+        viewMode={viewMode}
+        onSearchQueryChange={setSearchQuery}
+        onSortChange={setSortBy}
+        onViewModeChange={setViewMode}
+      />
 
       {/* ─── 상품 그리드 ────────────────────────────────── */}
       <section
