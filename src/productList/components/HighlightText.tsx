@@ -1,3 +1,5 @@
+import { escapeRegExp } from '../utils';
+
 // text에서 highlightWord와 일치하는 부분을 <mark>로 강조하는 순수 UI 컴포넌트.
 export function HighlightText({
   text,
@@ -8,7 +10,9 @@ export function HighlightText({
 }) {
   if (!highlightWord) return <>{text}</>;
 
-  const parts = text.split(new RegExp(`(${highlightWord})`, 'gi'));
+  const parts = text.split(
+    new RegExp(`(${escapeRegExp(highlightWord)})`, 'gi'),
+  );
 
   return (
     <>

@@ -5,3 +5,7 @@ const daysAgo = (iso: string): number =>
 
 export const isWithinDays = (iso: string, days: number): boolean =>
   daysAgo(iso) <= days;
+
+// 정규식 특수문자 이스케이프 — 검색어를 RegExp에 안전하게 넣기 위함
+export const escapeRegExp = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
