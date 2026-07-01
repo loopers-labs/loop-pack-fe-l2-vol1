@@ -58,6 +58,7 @@ export function ProductListPage() {
   const {
     data: productListResponse,
     isFetching: isFetchingProducts,
+    isPending: isLoadingProducts,
     isError: hasProductsError,
     error: productsError,
     refetch,
@@ -89,8 +90,8 @@ export function ProductListPage() {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  // ─── 로딩/에러는 early return ───────────────────────────
-  if (isFetchingProducts && products.length === 0) {
+  // ─── 초기 로딩·에러는 early return ──────────────────────
+  if (isLoadingProducts) {
     return <div className="loading">로딩 중...</div>;
   }
 
