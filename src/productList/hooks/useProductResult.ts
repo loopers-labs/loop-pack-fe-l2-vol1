@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { Product, SortBy } from '../shared';
+import type { Category, Product, SortBy } from '../shared';
 
 export const useProductResult = () => {
   // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<'all' | Product['category']>('all');
+  const [category, setCategory] = useState<Category>('all');
   const [minPrice, setMinPrice] = useState<number | ''>('');
   const [maxPrice, setMaxPrice] = useState<number | ''>('');
   const [sortBy, setSortBy] = useState<SortBy>('latest');

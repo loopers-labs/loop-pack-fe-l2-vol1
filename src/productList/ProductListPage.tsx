@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
-import type { Product, SortBy, ProductListResponse } from './shared';
+import type { SortBy, Category } from './shared';
 import { useProductResult } from './hooks/useProductResult';
+import { useProducts } from './services/useProducts';
+import { setUrlSearchParams } from './utils/setUrlSearchParams';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
 // ─────────────────────────────────────────────────────────
 
-const CATEGORIES: { value: 'all' | Product['category']; label: string }[] = [
+const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'all', label: '전체' },
   { value: 'electronics', label: '전자제품' },
   { value: 'fashion', label: '패션' },
@@ -22,22 +24,17 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'price-desc', label: '가격 높은순' },
 ];
 
-const PAGE_SIZE = 12;
+// 직관적인 네이밍으로 수정
+const ITEMS_PER_PAGE = 12;
 
 // 검색어를 정규식에 안전하게 넣기 위한 escape (특수문자로 인한 RegExp 크래시 방지)
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // ─────────────────────────────────────────────────────────
 // 500줄+ 컴포넌트 — UI, 비즈니스 로직, API, 포맷, 도메인 규칙이 한 파일에
-// ─────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────-
 
 export function ProductListPage() {
-  // ─── 서버 상태 (직접 관리) ──────────────────────────────
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
   // 필터/검색 결과에 영향을 미치는 상태들을 커스텀 훅으로 분리
   const {
     category,
@@ -56,6 +53,17 @@ export function ProductListPage() {
     handlePageChange,
     handleResetFilters,
   } = useProductResult();
+
+  const searchParamsObj = {
+    category,
+    sortBy,
+    searchQuery,
+    itemsPerPage: ITEMS_PER_PAGE,
+    page,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+  };
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -79,35 +87,7 @@ export function ProductListPage() {
     }
   });
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== '') params.set('minPrice', String(minPrice));
-      if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-      if (inStockOnly) params.set('inStock', 'true');
-      try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
-        setProducts(data.products);
-        setTotalCount(data.totalCount);
-      } catch (err) {
-        // AI로 as 타입 단언 해결
-        setError(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProducts();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
+  const { products, totalCount, isLoading, error } = useProducts(searchParamsObj);
 
   // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
   useEffect(() => {
@@ -134,14 +114,16 @@ export function ProductListPage() {
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (category !== 'all') params.set('category', category);
-    if (searchQuery) params.set('q', searchQuery);
-    if (page > 1) params.set('page', String(page));
-    if (sortBy !== 'latest') params.set('sort', sortBy);
-    if (minPrice !== '') params.set('minPrice', String(minPrice));
-    if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-    if (inStockOnly) params.set('inStock', 'true');
+    const params = setUrlSearchParams({
+      category,
+      searchQuery,
+      page,
+      itemsPerPage: ITEMS_PER_PAGE,
+      sortBy,
+      minPrice,
+      maxPrice,
+      inStockOnly,
+    });
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
@@ -159,7 +141,7 @@ export function ProductListPage() {
   };
 
   // ─── 페이지네이션 계산 (인라인) ─────────────────────────
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
   const pageNumbers: number[] = [];
   const startPage = Math.max(1, page - 2);
   const endPage = Math.min(totalPages, page + 2);
