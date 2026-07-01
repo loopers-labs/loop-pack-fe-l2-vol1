@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
-import type { SortBy, Category } from './shared';
+import type { SortBy, Category, ViewMode } from './shared';
 import { useProductResult } from './hooks/useProductResult';
 import { useProducts } from './services/useProducts';
 import { setUrlSearchParams } from './utils/setUrlSearchParams';
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -65,47 +66,11 @@ export function ProductListPage() {
     inStockOnly,
   };
 
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
-  // ─── 위시리스트 (localStorage 동기화) ───────────────────
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('wishlist');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('recentlyViewed');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [wishlist, setWishlist] = useLocalStorage<number[]>('wishlist', []);
+  const [, setRecentlyViewed] = useLocalStorage<number[]>('recentlyViewed', []);
 
   const { products, totalCount, isLoading, error } = useProducts(searchParamsObj);
-
-  // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
-  useEffect(() => {
-    try {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist]);
-
-  // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [recentlyViewed]);
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
@@ -113,6 +78,7 @@ export function ProductListPage() {
   }, [page]);
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
+  // TODO: 스프레드 연산자 활용하면 커스텀 훅으로 추출할 수 있지 않을까?
   useEffect(() => {
     const params = setUrlSearchParams({
       category,

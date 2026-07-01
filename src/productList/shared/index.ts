@@ -36,3 +36,5 @@ export type ProductParams = {
   itemsPerPage: number;
   inStockOnly: boolean;
 };
+
+export type ViewMode = 'grid' | 'list';
