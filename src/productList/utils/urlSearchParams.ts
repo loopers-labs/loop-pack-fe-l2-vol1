@@ -21,9 +21,7 @@ const parsePositiveInt = (value: string | null, fallback: number): number => {
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : fallback;
 };
 
-export const getUrlSearchParams = (): ProductParams => {
-  const params = new URLSearchParams(window.location.search);
-
+export const getUrlSearchParams = (params: URLSearchParams): ProductParams => {
   const categoryParam = params.get('category');
   const sortParam = params.get('sort');
 

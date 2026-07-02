@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './ProductListPage.css';
 import type { SortBy, ViewMode } from './shared';
 import { useProductResult } from './hooks/useProductResult';
 import { useProducts } from './services/useProducts';
-import { setUrlSearchParams } from './utils/urlSearchParams';
 import { useLocalStorage } from '../shared/hooks/useLocalStorage';
 import { useScrollZero } from '../shared/hooks/useScrollZero';
 import { LoadingView } from './components/skeleton/LoadingView';
@@ -46,9 +45,11 @@ export function ProductListPage() {
     maxPrice,
     sortBy,
     searchQuery,
-    debouncedSearchQuery,
     page,
     inStockOnly,
+    searchInput,
+    minPriceInput,
+    maxPriceInput,
     handleCategoryChange,
     handleMinPriceChange,
     handleMaxPriceChange,
@@ -62,7 +63,7 @@ export function ProductListPage() {
   const searchParamsObj = {
     category,
     sortBy,
-    searchQuery: debouncedSearchQuery,
+    searchQuery,
     itemsPerPage: ITEMS_PER_PAGE,
     page,
     minPrice,
@@ -77,22 +78,6 @@ export function ProductListPage() {
   const { products, totalCount, isLoading, error } = useProducts(searchParamsObj);
 
   useScrollZero(page);
-
-  // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
-  // TODO: 스프레드 연산자 활용하면 커스텀 훅으로 추출할 수 있지 않을까?
-  useEffect(() => {
-    const params = setUrlSearchParams({
-      category,
-      searchQuery: debouncedSearchQuery,
-      page,
-      itemsPerPage: ITEMS_PER_PAGE,
-      sortBy,
-      minPrice,
-      maxPrice,
-      inStockOnly,
-    });
-    window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [category, debouncedSearchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
   const handleViewModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     // AI로 as 타입 단언 해결
@@ -144,8 +129,8 @@ export function ProductListPage() {
       <section className="filter-panel">
         <Category selectedCategory={category} onCategoryChange={handleCategoryChange} />
         <PriceRange
-          minPrice={minPrice}
-          maxPrice={maxPrice}
+          minPrice={minPriceInput}
+          maxPrice={maxPriceInput}
           onMinPriceChange={handleMinPriceChange}
           onMaxPriceChange={handleMaxPriceChange}
         />
@@ -160,7 +145,7 @@ export function ProductListPage() {
         <input
           type="search"
           placeholder="상품 검색..."
-          value={searchQuery}
+          value={searchInput}
           onChange={handleSearchChange}
           className="search-input"
         />
@@ -183,7 +168,7 @@ export function ProductListPage() {
           products.map((product) => (
             <Product
               product={product}
-              searchQuery={debouncedSearchQuery}
+              searchQuery={searchQuery}
               isWished={wishlist.includes(product.id)}
               onProductClick={handleProductClick}
               onWishlistToggle={handleWishlistToggle}
