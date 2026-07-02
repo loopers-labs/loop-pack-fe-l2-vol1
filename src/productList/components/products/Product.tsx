@@ -1,7 +1,5 @@
 import type { Product as ProductType } from '../../shared';
-import { getProductBadges } from '../../utils/getProductBadges';
-import { getProductPricing } from '../../utils/getProductPricing';
-import { getProductStockStatus } from '../../utils/getProductStockStatus';
+import { getProductPricing, getProductStockStatus, getProductBadges } from '../../utils/product';
 import { HighlightMatch } from './HighlightMatch';
 
 export const Product = ({

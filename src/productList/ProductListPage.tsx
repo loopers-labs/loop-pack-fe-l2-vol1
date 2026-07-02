@@ -4,8 +4,8 @@ import type { SortBy, ViewMode } from './shared';
 import { useProductResult } from './hooks/useProductResult';
 import { useProducts } from './services/useProducts';
 import { setUrlSearchParams } from './utils/urlSearchParams';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { useScrollZero } from './hooks/useScrollZero';
+import { useLocalStorage } from '../shared/hooks/useLocalStorage';
+import { useScrollZero } from '../shared/hooks/useScrollZero';
 import { LoadingView } from './components/skeleton/LoadingView';
 import { ErrorView } from './components/skeleton/ErrorView';
 import { Category } from './components/filter/Category';
@@ -46,6 +46,7 @@ export function ProductListPage() {
     maxPrice,
     sortBy,
     searchQuery,
+    debouncedSearchQuery,
     page,
     inStockOnly,
     handleCategoryChange,
@@ -61,7 +62,7 @@ export function ProductListPage() {
   const searchParamsObj = {
     category,
     sortBy,
-    searchQuery,
+    searchQuery: debouncedSearchQuery,
     itemsPerPage: ITEMS_PER_PAGE,
     page,
     minPrice,
@@ -79,11 +80,10 @@ export function ProductListPage() {
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   // TODO: 스프레드 연산자 활용하면 커스텀 훅으로 추출할 수 있지 않을까?
-  // BUG: 새로고침을 하면 필터 state 값들이 모두 초기화되기 때문에 url도 함께 초기화된다.
   useEffect(() => {
     const params = setUrlSearchParams({
       category,
-      searchQuery,
+      searchQuery: debouncedSearchQuery,
       page,
       itemsPerPage: ITEMS_PER_PAGE,
       sortBy,
@@ -92,7 +92,7 @@ export function ProductListPage() {
       inStockOnly,
     });
     window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
+  }, [category, debouncedSearchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
   const handleViewModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     // AI로 as 타입 단언 해결
@@ -183,7 +183,7 @@ export function ProductListPage() {
           products.map((product) => (
             <Product
               product={product}
-              searchQuery={searchQuery}
+              searchQuery={debouncedSearchQuery}
               isWished={wishlist.includes(product.id)}
               onProductClick={handleProductClick}
               onWishlistToggle={handleWishlistToggle}

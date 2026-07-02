@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { Category, SortBy } from '../shared';
 import { getUrlSearchParams } from '../utils/urlSearchParams';
+import { useDebounce } from '../../shared/hooks/useDebounce';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 export const useProductResult = () => {
   const {
@@ -27,6 +30,9 @@ export const useProductResult = () => {
 
   // ─── 옵션 토글 ──────────────────────────────────────────
   const [inStockOnly, setInStockOnly] = useState(initialInStockOnly);
+
+  // 서버 요청용 검색어(지연값). input 반응성은 searchQuery가 담당.
+  const debouncedSearchQuery = useDebounce(searchQuery, SEARCH_DEBOUNCE_MS);
 
   const handleCategoryChange = (cat: Category) => {
     setCategory(cat);
@@ -63,7 +69,6 @@ export const useProductResult = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setPage(1);
   };
 
   const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,6 +96,7 @@ export const useProductResult = () => {
     maxPrice,
     sortBy,
     searchQuery,
+    debouncedSearchQuery,
     page,
     inStockOnly,
     handleCategoryChange,
