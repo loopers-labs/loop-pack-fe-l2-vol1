@@ -11,18 +11,7 @@ import {
 import { useWishlist } from './hooks/useWishlist';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
 import { Pagination } from './components/Pagination';
-const ALMOST_SOLD_OUT_THRESHOLD = 5;
-const HOT_DISCOUNT_THRESHOLD = 30;
-const BEST_RATING_THRESHOLD = 4.5;
-const BEST_REVIEW_THRESHOLD = 100;
-const FREE_SHIPPING_THRESHOLD = 50000;
-const MS_PER_DAY = 86400000;
-const PERCENT = 100;
-const NEW_PRODUCT_DAYS = 7;
-
-// 0701 - utills 넣기 일반 함수
-// 검색어를 정규식에 안전하게 넣기 위한 escape (특수문자로 인한 RegExp 크래시 방지)
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+import { ProductCard } from './components/ProductCard';
 
 // ─────────────────────────────────────────────────────────
 // 500줄+ 컴포넌트 — UI, 비즈니스 로직, API, 포맷, 도메인 규칙이 한 파일에
@@ -274,141 +263,16 @@ export function ProductListPage() {
         {products.length === 0 ? (
           <div className="empty">조건에 맞는 상품이 없습니다.</div>
         ) : (
-          products.map((product) => {
-            // ─── 검색어 하이라이팅 로직 인라인 ──────────
-            const highlightMatch = (text: string) => {
-              if (!searchQuery) return <>{text}</>;
-              const parts = text.split(
-                new RegExp(`(${escapeRegExp(searchQuery)})`, 'gi'),
-              );
-              return (
-                <>
-                  {parts.map((part, i) =>
-                    part.toLowerCase() === searchQuery.toLowerCase() ? (
-                      <mark
-                        key={i}
-                        style={{ background: '#fff176', padding: 0 }}
-                      >
-                        {part}
-                      </mark>
-                    ) : (
-                      part
-                    ),
-                  )}
-                </>
-              );
-            };
-
-            // ─── 도메인 규칙 인라인 계산 ─────────────────
-            const discountRate = product.originalPrice
-              ? Math.round(
-                  (1 - product.price / product.originalPrice) * PERCENT,
-                )
-              : 0;
-            const formattedPrice = `${product.price.toLocaleString()}원`;
-            const formattedOriginal = product.originalPrice
-              ? `${product.originalPrice.toLocaleString()}원`
-              : null;
-            const isAlmostSoldOut =
-              product.stock > 0 && product.stock <= ALMOST_SOLD_OUT_THRESHOLD;
-            const isSoldOut = product.stock === 0;
-            const isHot = discountRate >= HOT_DISCOUNT_THRESHOLD;
-            const isBest =
-              product.rating >= BEST_RATING_THRESHOLD &&
-              product.reviewCount >= BEST_REVIEW_THRESHOLD;
-            const isFreeShipping = product.price >= FREE_SHIPPING_THRESHOLD;
-
-            // ─── 날짜 포맷팅 인라인 ─────────────────────
-            const createdDate = new Date(product.createdAt);
-            const now = new Date();
-            const daysSinceCreated = Math.floor(
-              (now.getTime() - createdDate.getTime()) / MS_PER_DAY,
-            );
-            const isNew = daysSinceCreated <= NEW_PRODUCT_DAYS;
-
-            // ─── 위시리스트 여부 ────────────────────────
-            const isWished = wishlist.includes(product.id);
-
-            return (
-              <article
-                key={product.id}
-                className="product-card"
-                onClick={() => handleProductClick(product.id)}
-              >
-                <div className="image-wrap">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    loading="lazy"
-                  />
-                  {discountRate > 0 && (
-                    <span className="badge badge-discount">
-                      {discountRate}% 할인
-                    </span>
-                  )}
-                  {isNew && <span className="badge badge-new">NEW</span>}
-                  {isHot && <span className="badge badge-hot">특가</span>}
-                  {isBest && <span className="badge badge-best">BEST</span>}
-                  {isSoldOut && (
-                    <span className="badge badge-soldout">품절</span>
-                  )}
-                  {!isSoldOut && isAlmostSoldOut && (
-                    <span className="badge badge-warning">품절 임박</span>
-                  )}
-                </div>
-
-                <div className="card-body">
-                  <h3 className="product-name">
-                    {highlightMatch(product.name)}
-                  </h3>
-                  <div className="price-area">
-                    {formattedOriginal && (
-                      <span className="original-price">
-                        {formattedOriginal}
-                      </span>
-                    )}
-                    <span className="price">{formattedPrice}</span>
-                    {isFreeShipping && (
-                      <span
-                        style={{
-                          marginLeft: 6,
-                          fontSize: 11,
-                          color: '#2e7d32',
-                          fontWeight: 600,
-                        }}
-                      >
-                        무료배송
-                      </span>
-                    )}
-                  </div>
-                  <div className="rating-area">
-                    <span className="rating">
-                      ★ {product.rating.toFixed(1)}
-                    </span>
-                    <span className="review-count">
-                      ({product.reviewCount.toLocaleString()})
-                    </span>
-                    <button
-                      style={{
-                        marginLeft: 'auto',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: 16,
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleWishlist(product.id);
-                      }}
-                      aria-label="위시리스트 토글"
-                    >
-                      {isWished ? '♥' : '♡'}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            );
-          })
+          products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              searchQuery={searchQuery}
+              isWished={wishlist.includes(product.id)}
+              onWishlistToggle={toggleWishlist}
+              onClick={handleProductClick}
+            />
+          ))
         )}
       </section>
 
