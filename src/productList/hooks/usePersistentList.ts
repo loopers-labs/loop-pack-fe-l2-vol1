@@ -53,3 +53,5 @@ export const usePersistentList = () => {
 
   return { wishlist, recentlyViewed, handleWishlistToggle, handleProductClick };
 };
+
+export type PersistentListController = ReturnType<typeof usePersistentList>;

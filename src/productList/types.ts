@@ -18,4 +18,6 @@ type ProductListResponse = {
 
 type SortBy = "latest" | "popular" | "price-asc" | "price-desc";
 
-export type { Product, ProductListResponse, SortBy };
+type ViewMode = "grid" | "list";
+
+export type { Product, ProductListResponse, SortBy, ViewMode };

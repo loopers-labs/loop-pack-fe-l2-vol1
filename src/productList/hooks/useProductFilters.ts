@@ -91,3 +91,5 @@ export const useProductFilters = () => {
     handleResetFilters,
   };
 };
+
+export type ProductFiltersController = ReturnType<typeof useProductFilters>;
