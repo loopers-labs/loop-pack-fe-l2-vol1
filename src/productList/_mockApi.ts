@@ -382,6 +382,9 @@ function applyFilters(params: URLSearchParams) {
   const maxPrice = params.get('maxPrice');
   if (maxPrice) list = list.filter((p) => p.price <= Number(maxPrice));
 
+  const inStock = params.get('inStock');
+  if (inStock === 'true') list = list.filter((p) => p.stock > 0);
+
   const q = params.get('q')?.trim().toLowerCase();
   if (q) {
     list = list.filter((p) => p.name.toLowerCase().includes(q));
@@ -430,7 +433,7 @@ export function installMockApi() {
 
     if (url.startsWith('/api/products')) {
       // 네트워크 latency 흉내
-      await new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * 2000));
+      await new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * 300));
 
       const query = url.includes('?') ? url.split('?')[1] : '';
       const params = new URLSearchParams(query);
