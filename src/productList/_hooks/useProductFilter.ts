@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useDebounce } from './useDebounce';
 
 type Category = 'all' | 'electronics' | 'fashion' | 'home' | 'beauty';
 type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
+
+const DEBOUNCE_MS = 500;
 
 export function useProductFilter() {
   const [category, setCategory] = useState<Category>('all');
@@ -12,18 +15,33 @@ export function useProductFilter() {
   const [page, setPage] = useState(1);
   const [inStockOnly, setInStockOnly] = useState(false);
 
-  // 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 (브라우저 히스토리)
+  // 입력 중 불필요한 fetch를 막기 위해 debounce 적용
+  const debouncedMinPrice = useDebounce(minPrice, DEBOUNCE_MS);
+  const debouncedMaxPrice = useDebounce(maxPrice, DEBOUNCE_MS);
+  const debouncedSearchQuery = useDebounce(searchQuery, DEBOUNCE_MS);
+
+  // 필터 상태가 바뀔 때마다 URL 쿼리 동기화 (브라우저 히스토리)
   useEffect(() => {
     const params = new URLSearchParams();
     if (category !== 'all') params.set('category', category);
-    if (searchQuery) params.set('q', searchQuery);
+    if (debouncedSearchQuery) params.set('q', debouncedSearchQuery);
     if (page > 1) params.set('page', String(page));
     if (sortBy !== 'latest') params.set('sort', sortBy);
-    if (minPrice !== '') params.set('minPrice', String(minPrice));
-    if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
+    if (debouncedMinPrice !== '')
+      params.set('minPrice', String(debouncedMinPrice));
+    if (debouncedMaxPrice !== '')
+      params.set('maxPrice', String(debouncedMaxPrice));
     if (inStockOnly) params.set('inStock', 'true');
     window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
+  }, [
+    category,
+    debouncedSearchQuery,
+    page,
+    sortBy,
+    debouncedMinPrice,
+    debouncedMaxPrice,
+    inStockOnly,
+  ]);
 
   const handleCategoryChange = (cat: Category) => {
     setCategory(cat);
@@ -72,11 +90,16 @@ export function useProductFilter() {
   };
 
   return {
+    // 입력창 표시용 raw값
+    minPriceInput: minPrice,
+    maxPriceInput: maxPrice,
+    searchQueryInput: searchQuery,
+    // fetch에 쓸 debounced값
+    minPrice: debouncedMinPrice,
+    maxPrice: debouncedMaxPrice,
+    searchQuery: debouncedSearchQuery,
     category,
-    minPrice,
-    maxPrice,
     sortBy,
-    searchQuery,
     page,
     inStockOnly,
     handleCategoryChange,
