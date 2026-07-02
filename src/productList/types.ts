@@ -15,11 +15,6 @@ export type Product = {
   reviewCount: number;
 };
 
-export type ProductListResponse = {
-  products: Product[];
-  totalCount: number;
-};
-
 export type SortBy = "latest" | "popular" | "price-asc" | "price-desc";
 
 export type ViewMode = "grid" | "list";

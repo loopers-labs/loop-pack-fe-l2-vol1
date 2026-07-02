@@ -1,20 +1,23 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
-import { getProducts, type GetProductsParams } from "../services/productService";
-import type { ProductListResponse } from "../types";
+import {
+  getProducts,
+  type GetProductsParams,
+  type GetProductsResponse,
+} from "../services/productService";
 
 type UseProductListParams = GetProductsParams & {
   inStockOnly: boolean;
 };
 
 type ProductListState = {
-  data: ProductListResponse | null;
+  data: GetProductsResponse | null;
   isLoading: boolean;
   error: Error | null;
 };
 
 type ProductListAction =
   | { type: "request" }
-  | { type: "success"; payload: ProductListResponse }
+  | { type: "success"; payload: GetProductsResponse }
   | { type: "failure"; payload: Error };
 
 const initialState: ProductListState = {

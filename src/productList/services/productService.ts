@@ -1,4 +1,4 @@
-import type { ProductCategoryFilter, ProductListResponse, SortBy } from "../types";
+import type { Product, ProductCategoryFilter, SortBy } from "../types";
 
 export type GetProductsParams = {
   category: ProductCategoryFilter;
@@ -10,10 +10,15 @@ export type GetProductsParams = {
   size: number;
 };
 
+export type GetProductsResponse = {
+  products: Product[];
+  totalCount: number;
+};
+
 export async function getProducts(
   params: GetProductsParams,
   options?: { signal?: AbortSignal },
-): Promise<ProductListResponse> {
+): Promise<GetProductsResponse> {
   const searchParams = new URLSearchParams();
 
   if (params.category !== "all") {
@@ -44,5 +49,5 @@ export async function getProducts(
     throw new Error("상품 목록을 불러오지 못했습니다.");
   }
 
-  return response.json() as Promise<ProductListResponse>;
+  return response.json() as Promise<GetProductsResponse>;
 }
