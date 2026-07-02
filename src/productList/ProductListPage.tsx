@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./ProductListPage.css";
 import type { ViewMode } from "./types";
-import { useProductList } from "./hooks/useProductList";
+import { useProductListQuery } from "./hooks/useProductListQuery";
 import { useProductListQueryParams } from "./hooks/useProductListQueryParams";
 import { useWishlist } from "./hooks/useWishlist";
 import { useRecentlyViewedProducts } from "./hooks/useRecentlyViewedProducts";
@@ -11,6 +11,7 @@ import { ProductListToolbar } from "./components/ProductListToolbar";
 import { ProductGrid } from "./components/ProductGrid";
 import { ProductListHeader } from "./components/ProductListHeader";
 import { ProductListBackgroundLoading } from "./components/ProductListBackgroundLoading";
+import { ProductListContent } from "./components/ProductListContent";
 
 const PAGE_SIZE = 12;
 
@@ -33,16 +34,17 @@ export function ProductListPage() {
     resetQueryParams,
   } = useProductListQueryParams();
 
-  const { products, totalCount, isLoading, error, refetch } = useProductList({
-    category,
-    q: searchQuery,
-    page,
-    sort: sortBy,
-    minPrice,
-    maxPrice,
-    size: PAGE_SIZE,
-    inStockOnly,
-  });
+  const { products, totalCount, isInitialLoading, isBackgroundLoading, error, refetch } =
+    useProductListQuery({
+      category,
+      q: searchQuery,
+      page,
+      sort: sortBy,
+      minPrice,
+      maxPrice,
+      size: PAGE_SIZE,
+      inStockOnly,
+    });
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
@@ -95,17 +97,21 @@ export function ProductListPage() {
         onViewModeChange={setViewMode}
       />
 
-      <ProductGrid
-        products={products}
-        searchQuery={searchQuery}
-        viewMode={viewMode}
-        isLoading={isLoading}
+      <ProductListContent
+        isInitialLoading={isInitialLoading}
+        isEmpty={products.length === 0}
         error={error}
-        isWishlisted={isWishlisted}
         onRetry={handleRetry}
-        onProductClick={handleProductClick}
-        onWishlistToggle={handleWishlistToggle}
-      />
+      >
+        <ProductGrid
+          products={products}
+          searchQuery={searchQuery}
+          viewMode={viewMode}
+          isWishlisted={isWishlisted}
+          onProductClick={handleProductClick}
+          onWishlistToggle={handleWishlistToggle}
+        />
+      </ProductListContent>
 
       <Pagination
         currentPage={page}
@@ -114,7 +120,7 @@ export function ProductListPage() {
         onPageChange={handlePageChange}
       />
 
-      {isLoading && products.length > 0 && <ProductListBackgroundLoading />}
+      {isBackgroundLoading && <ProductListBackgroundLoading />}
     </div>
   );
 }

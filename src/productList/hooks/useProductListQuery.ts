@@ -49,7 +49,7 @@ function productListReducer(state: ProductListState, action: ProductListAction):
   }
 }
 
-export function useProductList({
+export function useProductListQuery({
   category,
   q,
   page,
@@ -126,10 +126,15 @@ export function useProductList({
     };
   }, [fetchProducts]);
 
+  const products = data?.products ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const hasProducts = products.length > 0;
+
   return {
-    products: data?.products ?? [],
-    totalCount: data?.totalCount ?? 0,
-    isLoading,
+    products,
+    totalCount,
+    isInitialLoading: isLoading && !hasProducts,
+    isBackgroundLoading: isLoading && hasProducts,
     error,
     refetch: fetchProducts,
   };
