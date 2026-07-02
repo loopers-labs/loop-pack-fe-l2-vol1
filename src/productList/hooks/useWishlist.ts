@@ -1,23 +1,15 @@
 import { useEffect, useState } from "react";
+import { readNumberListFromStorage, writeNumberListToStorage } from "../utils/storage";
 
 const WISHLIST_STORAGE_KEY = "wishlist";
 
 export function useWishlist() {
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem(WISHLIST_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [wishlist, setWishlist] = useState<number[]>(() =>
+    readNumberListFromStorage(WISHLIST_STORAGE_KEY),
+  );
 
   useEffect(() => {
-    try {
-      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
+    writeNumberListToStorage(WISHLIST_STORAGE_KEY, wishlist);
   }, [wishlist]);
 
   const toggleWishlist = (productId: number) => {
