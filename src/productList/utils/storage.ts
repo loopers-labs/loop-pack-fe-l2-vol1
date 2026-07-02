@@ -1,7 +1,16 @@
 export function readNumberListFromStorage(key: string): number[] {
   try {
     const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) {
+      return [];
+    }
+
+    const parsed: unknown = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter((value): value is number => Number.isFinite(value));
   } catch {
     return [];
   }
