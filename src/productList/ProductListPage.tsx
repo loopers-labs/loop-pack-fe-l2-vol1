@@ -29,7 +29,7 @@ export function ProductListPage() {
   const wishlistStore = usePersistentList();
 
   // ─── 서버 상태 (필터가 적용된 전체 목록) ────────────────
-  const { products, isLoading, error } = useProductList({
+  const { products, isLoading, error, refetch } = useProductList({
     category,
     minPrice,
     maxPrice,
@@ -47,19 +47,30 @@ export function ProductListPage() {
   // ─── 보기 모드 (UI 전용 로컬 상태) ──────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
-  // ─── 로딩/에러는 early return ───────────────────────────
-  if (isLoading && visibleProducts.length === 0) {
-    return <div className="loading">로딩 중...</div>;
-  }
+  // ─── 상품 그리드 자리에만 로딩/에러 처리 ────────────────
+  const renderProducts = () => {
+    if (isLoading && visibleProducts.length === 0) {
+      return <div className="loading">로딩 중...</div>;
+    }
 
-  if (error) {
+    if (error) {
+      return (
+        <div className="error">
+          <p>오류가 발생했습니다: {error.message}</p>
+          <button onClick={refetch}>다시 시도</button>
+        </div>
+      );
+    }
+
     return (
-      <div className="error">
-        <p>오류가 발생했습니다: {error.message}</p>
-        <button onClick={() => window.location.reload()}>다시 시도</button>
-      </div>
+      <ProductGrid
+        products={visibleProducts}
+        viewMode={viewMode}
+        searchQuery={searchQuery}
+        wishlistStore={wishlistStore}
+      />
     );
-  }
+  };
 
   return (
     <div className="product-list-page">
@@ -76,12 +87,7 @@ export function ProductListPage() {
         onViewModeChange={setViewMode}
       />
 
-      <ProductGrid
-        products={visibleProducts}
-        viewMode={viewMode}
-        searchQuery={searchQuery}
-        wishlistStore={wishlistStore}
-      />
+      {renderProducts()}
 
       <Pagination
         page={page}

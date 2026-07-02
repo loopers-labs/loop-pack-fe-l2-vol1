@@ -6,6 +6,7 @@ export const useProductList = (query: ProductQuery) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
 
   const { category, minPrice, maxPrice, sortBy, searchQuery } = query;
 
@@ -29,7 +30,9 @@ export const useProductList = (query: ProductQuery) => {
       }
     };
     load();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery]);
+  }, [category, minPrice, maxPrice, sortBy, searchQuery, retryToken]);
 
-  return { products, isLoading, error };
+  const refetch = () => setRetryToken((n) => n + 1);
+
+  return { products, isLoading, error, refetch };
 };
