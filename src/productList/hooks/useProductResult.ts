@@ -7,7 +7,9 @@ const TEXT_COMMIT_DEBOUNCE_MS = 300;
 
 type TextDraft = Pick<ProductParams, 'searchQuery' | 'minPrice' | 'maxPrice'>;
 
+// searchQuery, minPrice, maxPrice처럼 자주 바뀌는 값들과 이외의 값들을 별도의 상태로 관리
 export const useProductResult = () => {
+  // ----- 뒤로가기, 앞으로가기에 따른 상태 변화 및 디바운싱 로직은 AI로 작성 -------
   const { searchParams, update } = useSearchParams();
   const params = getUrlSearchParams(searchParams);
 
@@ -46,6 +48,7 @@ export const useProductResult = () => {
   const writeParams = (override: Partial<ProductParams>) => {
     update(setUrlSearchParams({ ...params, ...draft, ...override }));
   };
+  // ------------------------------------------------------------------
 
   const handleCategoryChange = (cat: Category) => {
     writeParams({ category: cat, page: 1 });

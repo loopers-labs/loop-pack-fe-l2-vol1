@@ -10,6 +10,7 @@ const subscribe = (onChange: () => void) => {
 const getSnapshot = () => window.location.search;
 
 export const useSearchParams = () => {
+  // 외부 환경인 URL과 동기화하기 위해 useSyncExternalStore 사용
   const search = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   const update = useCallback((next: URLSearchParams, options?: { replace?: boolean }) => {

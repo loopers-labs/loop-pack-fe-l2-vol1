@@ -1,6 +1,6 @@
 import type { Category, ProductParams, SortBy } from '../shared';
 
-// AI: 타입 가드 작성
+// -- AI로 타입 가드 작성 -----
 const CATEGORIES: ReadonlyArray<Category> = ['all', 'electronics', 'fashion', 'home', 'beauty'];
 const SORT_OPTIONS: ReadonlyArray<SortBy> = ['latest', 'popular', 'price-asc', 'price-desc'];
 
@@ -15,6 +15,7 @@ const parsePrice = (value: string | null): number | '' => {
   const n = Number(value);
   return Number.isNaN(n) ? '' : n;
 };
+// -------------------------
 
 const parsePositiveInt = (value: string | null, fallback: number): number => {
   const n = value === null ? NaN : Number(value);

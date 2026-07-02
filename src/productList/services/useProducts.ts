@@ -14,6 +14,7 @@ export const useProducts = (params: ProductParams) => {
     params;
 
   useEffect(() => {
+    let ignore = false;
     const fetchProducts = async () => {
       setIsLoading(true);
       setError(null);
@@ -31,16 +32,26 @@ export const useProducts = (params: ProductParams) => {
             inStockOnly,
           })
         );
-        setProducts(res.products);
-        setTotalCount(res.totalCount);
+        if (!ignore) {
+          setProducts(res.products);
+          setTotalCount(res.totalCount);
+        }
       } catch (err) {
-        // AI로 as 타입 단언 해결
-        setError(err instanceof Error ? err : new Error(String(err)));
+        if (!ignore) {
+          // AI로 as 타입 단언 해결
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
       } finally {
-        setIsLoading(false);
+        if (!ignore) {
+          setIsLoading(false);
+        }
       }
     };
     fetchProducts();
+
+    return () => {
+      ignore = true;
+    };
   }, [category, minPrice, maxPrice, sortBy, searchQuery, page, itemsPerPage, inStockOnly]);
 
   return { products, totalCount, isLoading, error };
