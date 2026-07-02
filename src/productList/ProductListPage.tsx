@@ -7,6 +7,7 @@ import {
   isNewProduct,
 } from './_utils/productUtils';
 import { useProductFilter } from './_hooks/useProductFilter';
+import { useProductList } from './_hooks/useProductList';
 
 // ─────────────────────────────────────────────────────────
 // 타입도 한 파일에 (실무에서 흔히 보는 모습)
@@ -23,11 +24,6 @@ type Product = {
   createdAt: string;
   rating: number;
   reviewCount: number;
-};
-
-type ProductListResponse = {
-  products: Product[];
-  totalCount: number;
 };
 
 type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
@@ -58,12 +54,6 @@ const PAGE_SIZE = 12;
 // ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
-  // ─── 서버 상태 (직접 관리) ──────────────────────────────
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
   // ─── 필터 / 검색 / 페이지 상태 ─────────────────────────
   const {
     category,
@@ -82,6 +72,17 @@ export function ProductListPage() {
     handlePageChange,
     handleResetFilters,
   } = useProductFilter();
+
+  // ─── 서버 상태 ──────────────────────────────────────────
+  const { products, totalCount, isLoading, error } = useProductList({
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    page,
+    inStockOnly,
+  });
 
   // ─── UI 전용 상태 ────────────────────────────────────────
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -106,38 +107,6 @@ export function ProductListPage() {
     }
   });
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== '') params.set('minPrice', String(minPrice));
-      if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-      try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
-        // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
-        const filtered = inStockOnly
-          ? data.products.filter((p) => p.stock > 0)
-          : data.products;
-        setProducts(filtered);
-        setTotalCount(data.totalCount);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    void fetchProducts();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
-
   // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
   useEffect(() => {
     try {
@@ -155,11 +124,6 @@ export function ProductListPage() {
       // localStorage 사용 불가 시 무시
     }
   }, [recentlyViewed]);
-
-  // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [page]);
 
   const handleWishlistToggle = (productId: number) => {
     setWishlist((prev) =>
