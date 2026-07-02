@@ -186,9 +186,19 @@ export function ProductListPage() {
               key={product.id}
               product={product}
               searchQuery={searchQuery}
-              isWished={wishlist.isWished(product.id)}
-              onToggleWishlist={() => wishlist.toggleWish(product.id)}
-              onCardClick={() => recentlyViewed.markViewed(product.id)}
+              onSelect={() => recentlyViewed.markViewed(product.id)}
+              trailingAction={
+                <button
+                  className="wish-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    wishlist.toggleWish(product.id);
+                  }}
+                  aria-label="위시리스트 토글"
+                >
+                  {wishlist.isWished(product.id) ? '♥' : '♡'}
+                </button>
+              }
             />
           ))
         )}

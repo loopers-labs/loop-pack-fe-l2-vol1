@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { ProductCardModel } from '../utils/productCard';
 
 import { HighlightText } from './HighlightText';
@@ -5,17 +7,15 @@ import { HighlightText } from './HighlightText';
 type ProductCardProps = {
   product: ProductCardModel;
   searchQuery: string;
-  isWished: boolean;
-  onToggleWishlist: () => void;
-  onCardClick: () => void;
+  onSelect: () => void;
+  trailingAction?: ReactNode;
 };
 
 export function ProductCard({
   product,
   searchQuery,
-  isWished,
-  onToggleWishlist,
-  onCardClick,
+  onSelect,
+  trailingAction,
 }: ProductCardProps) {
   const {
     discountRate,
@@ -30,7 +30,7 @@ export function ProductCard({
   } = product;
 
   return (
-    <article className="product-card" onClick={onCardClick}>
+    <article className="product-card" onClick={onSelect}>
       <div className="image-wrap">
         <img src={product.imageUrl} alt={product.name} loading="lazy" />
         {discountRate > 0 && (
@@ -61,16 +61,7 @@ export function ProductCard({
           <span className="review-count">
             ({product.reviewCount.toLocaleString()})
           </span>
-          <button
-            className="wish-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleWishlist();
-            }}
-            aria-label="위시리스트 토글"
-          >
-            {isWished ? '♥' : '♡'}
-          </button>
+          {trailingAction}
         </div>
       </div>
     </article>
