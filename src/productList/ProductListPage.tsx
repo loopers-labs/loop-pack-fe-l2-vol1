@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import './ProductListPage.css';
 import type { SortBy, ViewMode } from './shared';
-import { useProductResult } from './hooks/useProductResult';
 import { useProducts } from './services/useProducts';
 import { useLocalStorage } from '../shared/hooks/useLocalStorage';
 import { useScrollZero } from '../shared/hooks/useScrollZero';
@@ -13,6 +12,7 @@ import { Option } from './components/filter/Option';
 import { Dropdown } from './components/search-sort/Dropdown';
 import { Product } from './components/products/Product';
 import { Pagination } from './components/pagination/Pagination';
+import { useProductFilter } from './hooks/useProductFilter';
 
 // ─────────────────────────────────────────────────────────
 // 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
@@ -58,7 +58,7 @@ export function ProductListPage() {
     handleInStockToggle,
     handlePageChange,
     handleResetFilters,
-  } = useProductResult();
+  } = useProductFilter();
 
   const searchParamsObj = {
     category,
