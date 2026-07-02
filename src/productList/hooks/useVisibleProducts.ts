@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import type { Product } from "../types";
-import { PAGE_SIZE } from "../constants";
 import { paginate } from "../utils/pagination";
+
+export const PAGE_SIZE = 12;
 
 type Params = {
   products: Product[];
