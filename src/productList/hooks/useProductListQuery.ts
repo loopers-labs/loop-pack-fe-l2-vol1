@@ -27,26 +27,31 @@ const initialState: ProductListState = {
 };
 
 function productListReducer(state: ProductListState, action: ProductListAction): ProductListState {
-  switch (action.type) {
-    case "request":
-      return {
-        ...state,
-        isLoading: true,
-        error: null,
-      };
-    case "success":
-      return {
-        data: action.payload,
-        isLoading: false,
-        error: null,
-      };
-    case "failure":
-      return {
-        ...state,
-        isLoading: false,
-        error: action.payload,
-      };
+  if (action.type === "request") {
+    return {
+      ...state,
+      isLoading: true,
+      error: null,
+    };
   }
+
+  if (action.type === "success") {
+    return {
+      data: action.payload,
+      isLoading: false,
+      error: null,
+    };
+  }
+
+  if (action.type === "failure") {
+    return {
+      ...state,
+      isLoading: false,
+      error: action.payload,
+    };
+  }
+
+  return state;
 }
 
 export function useProductListQuery({

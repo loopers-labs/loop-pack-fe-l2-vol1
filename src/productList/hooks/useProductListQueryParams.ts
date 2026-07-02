@@ -8,6 +8,8 @@ const DEFAULT_CATEGORY: ProductCategoryFilter = "all";
 const DEFAULT_SORT: SortBy = "latest";
 const DEFAULT_PAGE = 1;
 
+type QueryParamValue = string | number | "";
+
 function isProductCategory(value: string): value is ProductCategory {
   return (PRODUCT_CATEGORIES as readonly string[]).includes(value);
 }
@@ -79,85 +81,58 @@ export function useProductListQueryParams() {
     setSearch(window.location.search);
   };
 
-  const setCategory = (category: ProductCategoryFilter) => {
-    replaceSearch((params) => {
-      if (category === DEFAULT_CATEGORY) {
-        params.delete("category");
-      } else {
-        params.set("category", category);
-      }
+  const setQueryParam = (
+    params: URLSearchParams,
+    key: string,
+    value: QueryParamValue,
+    defaultValue: QueryParamValue = "",
+  ) => {
+    if (value === defaultValue) {
+      params.delete(key);
+      return;
+    }
 
+    params.set(key, String(value));
+  };
+
+  const updateFilterParam = (
+    key: string,
+    value: QueryParamValue,
+    defaultValue: QueryParamValue = "",
+  ) => {
+    replaceSearch((params) => {
+      setQueryParam(params, key, value, defaultValue);
       params.delete("page");
     });
+  };
+
+  const setCategory = (category: ProductCategoryFilter) => {
+    updateFilterParam("category", category, DEFAULT_CATEGORY);
   };
 
   const setSearchQuery = (query: string) => {
-    replaceSearch((params) => {
-      if (query) {
-        params.set("q", query);
-      } else {
-        params.delete("q");
-      }
-
-      params.delete("page");
-    });
+    updateFilterParam("q", query);
   };
 
   const setSortBy = (sortBy: SortBy) => {
-    replaceSearch((params) => {
-      if (sortBy === DEFAULT_SORT) {
-        params.delete("sort");
-      } else {
-        params.set("sort", sortBy);
-      }
-
-      params.delete("page");
-    });
+    updateFilterParam("sort", sortBy, DEFAULT_SORT);
   };
 
   const setMinPrice = (minPrice: number | "") => {
-    replaceSearch((params) => {
-      if (minPrice === "") {
-        params.delete("minPrice");
-      } else {
-        params.set("minPrice", String(minPrice));
-      }
-
-      params.delete("page");
-    });
+    updateFilterParam("minPrice", minPrice);
   };
 
   const setMaxPrice = (maxPrice: number | "") => {
-    replaceSearch((params) => {
-      if (maxPrice === "") {
-        params.delete("maxPrice");
-      } else {
-        params.set("maxPrice", String(maxPrice));
-      }
-
-      params.delete("page");
-    });
+    updateFilterParam("maxPrice", maxPrice);
   };
 
   const setInStockOnly = (inStockOnly: boolean) => {
-    replaceSearch((params) => {
-      if (inStockOnly) {
-        params.set("inStock", "true");
-      } else {
-        params.delete("inStock");
-      }
-
-      params.delete("page");
-    });
+    updateFilterParam("inStock", inStockOnly ? "true" : "");
   };
 
   const setPage = (page: number) => {
     replaceSearch((params) => {
-      if (page <= DEFAULT_PAGE) {
-        params.delete("page");
-      } else {
-        params.set("page", String(page));
-      }
+      setQueryParam(params, "page", page <= DEFAULT_PAGE ? DEFAULT_PAGE : page, DEFAULT_PAGE);
     });
   };
 
