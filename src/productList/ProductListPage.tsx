@@ -3,7 +3,7 @@ import './ProductListPage.css';
 import type { SortBy, ViewMode } from './shared';
 import { useProductResult } from './hooks/useProductResult';
 import { useProducts } from './services/useProducts';
-import { setUrlSearchParams } from './utils/setUrlSearchParams';
+import { setUrlSearchParams } from './utils/urlSearchParams';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useScrollZero } from './hooks/useScrollZero';
 import { LoadingView } from './components/skeleton/LoadingView';
@@ -79,6 +79,7 @@ export function ProductListPage() {
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   // TODO: 스프레드 연산자 활용하면 커스텀 훅으로 추출할 수 있지 않을까?
+  // BUG: 새로고침을 하면 필터 state 값들이 모두 초기화되기 때문에 url도 함께 초기화된다.
   useEffect(() => {
     const params = setUrlSearchParams({
       category,

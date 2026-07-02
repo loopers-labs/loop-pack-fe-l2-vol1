@@ -1,21 +1,32 @@
 import { useState } from 'react';
 import type { Category, SortBy } from '../shared';
+import { getUrlSearchParams } from '../utils/urlSearchParams';
 
 export const useProductResult = () => {
+  const {
+    category: initialCategory,
+    minPrice: initialMinPrice,
+    maxPrice: initialMaxPrice,
+    sortBy: initialSortBy,
+    searchQuery: initialSearchQuery,
+    page: initialPage,
+    inStockOnly: initialInStockOnly,
+  } = getUrlSearchParams();
+
   // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<Category>('all');
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [sortBy, setSortBy] = useState<SortBy>('latest');
+  const [category, setCategory] = useState<Category>(initialCategory);
+  const [minPrice, setMinPrice] = useState<number | ''>(initialMinPrice);
+  const [maxPrice, setMaxPrice] = useState<number | ''>(initialMaxPrice);
+  const [sortBy, setSortBy] = useState<SortBy>(initialSortBy);
 
   // ─── 검색 상태 ──────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
 
   // ─── 페이지네이션 상태 ──────────────────────────────────
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
 
   // ─── 옵션 토글 ──────────────────────────────────────────
-  const [inStockOnly, setInStockOnly] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(initialInStockOnly);
 
   const handleCategoryChange = (cat: Category) => {
     setCategory(cat);

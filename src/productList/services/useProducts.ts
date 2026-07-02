@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Product, ProductParams } from '../shared';
 import { getProducts } from '../repository/getProducts';
-import { setUrlSearchParams } from '../utils/setUrlSearchParams';
+import { setUrlSearchParams } from '../utils/urlSearchParams';
 
 export const useProducts = (params: ProductParams) => {
   // ─── 서버 상태 (직접 관리) ──────────────────────────────
