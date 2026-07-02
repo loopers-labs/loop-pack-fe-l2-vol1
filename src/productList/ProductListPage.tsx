@@ -167,6 +167,7 @@ export function ProductListPage() {
         ) : (
           products.map((product) => (
             <Product
+              key={product.id}
               product={product}
               searchQuery={searchQuery}
               isWished={wishlist.includes(product.id)}
