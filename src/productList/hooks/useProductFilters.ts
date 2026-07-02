@@ -27,37 +27,45 @@ export const useProductFilters = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  const handleCategoryChange = (cat: "all" | Product["category"]) => {
-    setCategory(cat);
-    setPage(1);
-  };
+  // 필터가 바뀌면 항상 첫 페이지로 — 페이지 리셋을 핸들러에 주입
+  const withPageReset =
+    <Args extends unknown[]>(handler: (...args: Args) => void) =>
+    (...args: Args) => {
+      handler(...args);
+      setPage(1);
+    };
 
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMinPrice(v === "" ? "" : Number(v));
-    setPage(1);
-  };
+  const handleCategoryChange = withPageReset(
+    (cat: "all" | Product["category"]) => setCategory(cat),
+  );
 
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setMaxPrice(v === "" ? "" : Number(v));
-    setPage(1);
-  };
+  const handleMinPriceChange = withPageReset(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      setMinPrice(v === "" ? "" : Number(v));
+    },
+  );
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as SortBy);
-    setPage(1);
-  };
+  const handleMaxPriceChange = withPageReset(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      setMaxPrice(v === "" ? "" : Number(v));
+    },
+  );
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
+  const handleSortChange = withPageReset(
+    (e: React.ChangeEvent<HTMLSelectElement>) =>
+      setSortBy(e.target.value as SortBy),
+  );
 
-  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInStockOnly(e.target.checked);
-    setPage(1);
-  };
+  const handleSearchChange = withPageReset(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value),
+  );
+
+  const handleInStockToggle = withPageReset(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setInStockOnly(e.target.checked),
+  );
 
   const handlePageChange = (next: number) => {
     setPage(next);
