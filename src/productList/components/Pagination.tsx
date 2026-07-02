@@ -1,3 +1,5 @@
+import { getPageNumbers } from "../utils/pagination";
+
 interface PaginationProps {
   page: number;
   totalPages: number;
@@ -11,10 +13,7 @@ export function Pagination({
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
-  const pageNumbers: number[] = [];
-  const startPage = Math.max(1, page - 2);
-  const endPage = Math.min(totalPages, page + 2);
-  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+  const pageNumbers = getPageNumbers(page, totalPages);
 
   return (
     <nav className="pagination">
