@@ -1,4 +1,8 @@
+import { useEffect, useState } from "react";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import type { SortBy, ViewMode } from "../types";
+
+const SEARCH_DEBOUNCE_DELAY_MS = 300;
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "latest", label: "최신순" },
@@ -37,8 +41,25 @@ export function ProductListToolbar({
   onSortChange,
   onViewModeChange,
 }: ProductListToolbarProps) {
+  const [draftSearchQuery, setDraftSearchQuery] = useState(searchQuery);
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery);
+  const debouncedSearchQuery = useDebouncedValue(draftSearchQuery, SEARCH_DEBOUNCE_DELAY_MS);
+
+  if (searchQuery !== prevSearchQuery) {
+    setPrevSearchQuery(searchQuery);
+    setDraftSearchQuery(searchQuery);
+  }
+
+  useEffect(() => {
+    if (debouncedSearchQuery === searchQuery) {
+      return;
+    }
+
+    onSearchQueryChange(debouncedSearchQuery);
+  }, [debouncedSearchQuery, onSearchQueryChange, searchQuery]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearchQueryChange(e.target.value);
+    setDraftSearchQuery(e.target.value);
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -62,7 +83,7 @@ export function ProductListToolbar({
       <input
         type="search"
         placeholder="상품 검색..."
-        value={searchQuery}
+        value={draftSearchQuery}
         onChange={handleSearchChange}
         className="search-input"
       />
