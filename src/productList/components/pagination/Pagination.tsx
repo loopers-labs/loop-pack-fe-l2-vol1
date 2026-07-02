@@ -1,4 +1,4 @@
-import { getPageNumbers } from '../../utils/calculatePages';
+import { getPageNumbers } from '../../utils/getPageNumbers';
 
 export const Pagination = ({
   page,
