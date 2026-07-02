@@ -8,3 +8,6 @@ export const getPageNumbers = (page: number, totalPages: number) => {
 
   return pageNumbers;
 };
+
+export const paginate = <T>(items: T[], page: number, size: number) =>
+  items.slice((page - 1) * size, page * size);

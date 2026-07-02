@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import "./ProductListPage.css";
 import { useProductList } from "./hooks/useProductList";
 import { useProductFilters } from "./hooks/useProductFilters";
+import { useVisibleProducts } from "./hooks/useVisibleProducts";
 import { usePersistentList } from "./hooks/usePersistentList";
 import { PageHeader } from "./components/PageHeader";
 import { FilterPanel } from "./components/FilterPanel";
@@ -27,25 +28,24 @@ export function ProductListPage() {
   // ─── 위시리스트/최근 본 상품 (localStorage 동기화) ──────
   const wishlistStore = usePersistentList();
 
-  // ─── 서버 상태 ──────────────────────────────────────────
-  const { products, totalCount, totalPages, isLoading, error } = useProductList(
-    {
-      category,
-      minPrice,
-      maxPrice,
-      sortBy,
-      searchQuery,
-      page,
-    },
-  );
+  // ─── 서버 상태 (필터가 적용된 전체 목록) ────────────────
+  const { products, isLoading, error } = useProductList({
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+  });
+
+  // ─── 파생값: 재고 필터 + 클라이언트 페이지네이션 ────────
+  const { visibleProducts, totalCount, totalPages } = useVisibleProducts({
+    products,
+    inStockOnly,
+    page,
+  });
 
   // ─── 보기 모드 (UI 전용 로컬 상태) ──────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-
-  const visibleProducts = useMemo(
-    () => (inStockOnly ? products.filter((p) => p.stock > 0) : products),
-    [products, inStockOnly],
-  );
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && visibleProducts.length === 0) {

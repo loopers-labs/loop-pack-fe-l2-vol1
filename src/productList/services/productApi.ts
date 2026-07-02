@@ -1,7 +1,8 @@
 import type { Product, ProductListResponse, SortBy } from "../types";
-import { PAGE_SIZE } from "../constants";
 
 const PRODUCTS_ENDPOINT = "/api/products";
+
+const FETCH_ALL_SIZE = 10_000;
 
 export type ProductQuery = {
   category: "all" | Product["category"];
@@ -9,17 +10,15 @@ export type ProductQuery = {
   maxPrice: number | "";
   sortBy: SortBy;
   searchQuery: string;
-  page: number;
 };
 
 const buildQueryString = (query: ProductQuery) => {
-  const { category, minPrice, maxPrice, sortBy, searchQuery, page } = query;
+  const { category, minPrice, maxPrice, sortBy, searchQuery } = query;
   const params = new URLSearchParams({
     category,
     sort: sortBy,
     q: searchQuery,
-    page: String(page),
-    size: String(PAGE_SIZE),
+    size: String(FETCH_ALL_SIZE),
   });
   if (minPrice !== "") params.set("minPrice", String(minPrice));
   if (maxPrice !== "") params.set("maxPrice", String(maxPrice));

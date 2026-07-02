@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 import type { Product } from "../types";
-import { PAGE_SIZE } from "../constants";
 import { fetchProducts, type ProductQuery } from "../services/productApi";
 
 export const useProductList = (query: ProductQuery) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const { category, minPrice, maxPrice, sortBy, searchQuery, page } = query;
+  const { category, minPrice, maxPrice, sortBy, searchQuery } = query;
 
   useEffect(() => {
     const load = async () => {
@@ -22,10 +20,8 @@ export const useProductList = (query: ProductQuery) => {
           maxPrice,
           sortBy,
           searchQuery,
-          page,
         });
         setProducts(data.products);
-        setTotalCount(data.totalCount);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -33,9 +29,7 @@ export const useProductList = (query: ProductQuery) => {
       }
     };
     load();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page]);
+  }, [category, minPrice, maxPrice, sortBy, searchQuery]);
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-
-  return { products, totalCount, totalPages, isLoading, error };
+  return { products, isLoading, error };
 };
