@@ -1,5 +1,16 @@
 import type { ProductFiltersController } from "../hooks/useProductFilters";
-import { CATEGORIES } from "../contants";
+import type { Product } from "../types";
+
+const CATEGORIES: {
+  value: "all" | Product["category"];
+  label: string;
+}[] = [
+  { value: "all", label: "전체" },
+  { value: "electronics", label: "전자제품" },
+  { value: "fashion", label: "패션" },
+  { value: "home", label: "홈" },
+  { value: "beauty", label: "뷰티" },
+];
 
 interface FilterPanelProps {
   filters: ProductFiltersController;

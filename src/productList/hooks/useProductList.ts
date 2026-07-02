@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Product, ProductListResponse, SortBy } from "../types";
+import { PAGE_SIZE } from "../constants";
 
 type ProductFilters = {
   category: "all" | Product["category"];
@@ -9,8 +10,6 @@ type ProductFilters = {
   searchQuery: string;
   page: number;
 };
-
-const PAGE_SIZE = 12;
 
 export const useProductList = (filters: ProductFilters) => {
   const [products, setProducts] = useState<Product[]>([]);

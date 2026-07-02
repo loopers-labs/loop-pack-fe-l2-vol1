@@ -1,6 +1,12 @@
 import type { ProductFiltersController } from "../hooks/useProductFilters";
-import type { ViewMode } from "../types";
-import { SORT_OPTIONS } from "../contants";
+import type { SortBy, ViewMode } from "../types";
+
+const SORT_OPTIONS: { value: SortBy; label: string }[] = [
+  { value: "latest", label: "최신순" },
+  { value: "popular", label: "인기순" },
+  { value: "price-asc", label: "가격 낮은순" },
+  { value: "price-desc", label: "가격 높은순" },
+];
 
 interface SearchSortBarProps {
   filters: ProductFiltersController;

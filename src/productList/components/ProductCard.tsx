@@ -6,8 +6,8 @@ interface ProductCardProps {
   product: Product;
   searchQuery: string;
   isWished: boolean;
-  onToggle: (n: number) => void;
-  onClick: (n: number) => void;
+  onToggle: (id: number) => void;
+  onClick: (id: number) => void;
 }
 
 export function ProductCard({

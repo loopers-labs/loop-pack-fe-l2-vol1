@@ -8,7 +8,7 @@ import { FilterPanel } from "./components/FilterPanel";
 import { SearchSortBar } from "./components/SearchSortBar";
 import { ProductGrid } from "./components/ProductGrid";
 import { Pagination } from "./components/Pagination";
-import { PAGE_SIZE } from "./contants";
+import { PAGE_SIZE } from "./constants";
 import type { ViewMode } from "./types";
 
 export function ProductListPage() {
