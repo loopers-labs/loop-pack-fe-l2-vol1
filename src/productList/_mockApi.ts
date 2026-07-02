@@ -382,6 +382,9 @@ function applyFilters(params: URLSearchParams) {
   const maxPrice = params.get("maxPrice");
   if (maxPrice) list = list.filter((p) => p.price <= Number(maxPrice));
 
+  const inStock = params.get("inStock");
+  if (inStock === "true") list = list.filter((p) => p.stock > 0);
+
   const q = params.get("q")?.trim().toLowerCase();
   if (q) {
     list = list.filter((p) => p.name.toLowerCase().includes(q));
