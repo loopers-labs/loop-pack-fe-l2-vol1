@@ -10,6 +10,7 @@ import { useProductFilter } from './_hooks/useProductFilter';
 import { useProductList } from './_hooks/useProductList';
 import { useWishlist } from './_hooks/useWishlist';
 import { useRecentlyViewed } from './_hooks/useRecentlyViewed';
+import { HighlightText } from './_components/HighlightText';
 
 // ─────────────────────────────────────────────────────────
 // 타입도 한 파일에 (실무에서 흔히 보는 모습)
@@ -222,28 +223,6 @@ export function ProductListPage() {
           <div className="empty">조건에 맞는 상품이 없습니다.</div>
         ) : (
           products.map((product) => {
-            // ─── 검색어 하이라이팅 로직 인라인 ──────────
-            const highlightMatch = (text: string) => {
-              if (!searchQuery) return <>{text}</>;
-              const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
-              return (
-                <>
-                  {parts.map((part, i) =>
-                    part.toLowerCase() === searchQuery.toLowerCase() ? (
-                      <mark
-                        key={i}
-                        style={{ background: '#fff176', padding: 0 }}
-                      >
-                        {part}
-                      </mark>
-                    ) : (
-                      part
-                    ),
-                  )}
-                </>
-              );
-            };
-
             // ─── 도메인 규칙 계산 ────────────────────────
             const discountRate = calcDiscountRate(
               product.price,
@@ -293,7 +272,7 @@ export function ProductListPage() {
 
                 <div className="card-body">
                   <h3 className="product-name">
-                    {highlightMatch(product.name)}
+                    <HighlightText text={product.name} query={searchQuery} />
                   </h3>
                   <div className="price-area">
                     {formattedOriginal && (
