@@ -1,41 +1,29 @@
 import { useEffect, useState } from "react";
-import type { Product, ProductListResponse, SortBy } from "../types";
+import type { Product } from "../types";
 import { PAGE_SIZE } from "../constants";
+import { fetchProducts, type ProductQuery } from "../services/productApi";
 
-type ProductFilters = {
-  category: "all" | Product["category"];
-  minPrice: number | "";
-  maxPrice: number | "";
-  sortBy: SortBy;
-  searchQuery: string;
-  page: number;
-};
-
-export const useProductList = (filters: ProductFilters) => {
+export const useProductList = (query: ProductQuery) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const { category, minPrice, maxPrice, sortBy, searchQuery, page } = filters;
+  const { category, minPrice, maxPrice, sortBy, searchQuery, page } = query;
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const load = async () => {
       setIsLoading(true);
       setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== "") params.set("minPrice", String(minPrice));
-      if (maxPrice !== "") params.set("maxPrice", String(maxPrice));
       try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
+        const data = await fetchProducts({
+          category,
+          minPrice,
+          maxPrice,
+          sortBy,
+          searchQuery,
+          page,
+        });
         setProducts(data.products);
         setTotalCount(data.totalCount);
       } catch (err) {
@@ -44,8 +32,10 @@ export const useProductList = (filters: ProductFilters) => {
         setIsLoading(false);
       }
     };
-    fetchProducts();
+    load();
   }, [category, minPrice, maxPrice, sortBy, searchQuery, page]);
 
-  return { products, totalCount, isLoading, error };
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  return { products, totalCount, totalPages, isLoading, error };
 };

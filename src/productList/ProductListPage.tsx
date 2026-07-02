@@ -8,7 +8,6 @@ import { FilterPanel } from "./components/FilterPanel";
 import { SearchSortBar } from "./components/SearchSortBar";
 import { ProductGrid } from "./components/ProductGrid";
 import { Pagination } from "./components/Pagination";
-import { PAGE_SIZE } from "./constants";
 import type { ViewMode } from "./types";
 
 export function ProductListPage() {
@@ -29,14 +28,16 @@ export function ProductListPage() {
   const wishlistStore = usePersistentList();
 
   // ─── 서버 상태 ──────────────────────────────────────────
-  const { products, totalCount, isLoading, error } = useProductList({
-    category,
-    minPrice,
-    maxPrice,
-    sortBy,
-    searchQuery,
-    page,
-  });
+  const { products, totalCount, totalPages, isLoading, error } = useProductList(
+    {
+      category,
+      minPrice,
+      maxPrice,
+      sortBy,
+      searchQuery,
+      page,
+    },
+  );
 
   // ─── 보기 모드 (UI 전용 로컬 상태) ──────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -45,8 +46,6 @@ export function ProductListPage() {
     () => (inStockOnly ? products.filter((p) => p.stock > 0) : products),
     [products, inStockOnly],
   );
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && visibleProducts.length === 0) {
