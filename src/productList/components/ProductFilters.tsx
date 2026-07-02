@@ -1,4 +1,8 @@
+import { useEffect, useState } from "react";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import type { ProductCategoryFilter } from "../types";
+
+const PRICE_DEBOUNCE_DELAY_MS = 300;
 
 const CATEGORIES: { value: ProductCategoryFilter; label: string }[] = [
   { value: "all", label: "전체" },
@@ -31,14 +35,55 @@ export function ProductFilters({
   onInStockOnlyChange,
   onReset,
 }: ProductFiltersProps) {
+  const [draftMinPrice, setDraftMinPrice] = useState(minPrice);
+  const [draftMaxPrice, setDraftMaxPrice] = useState(maxPrice);
+  const [prevMinPrice, setPrevMinPrice] = useState(minPrice);
+  const [prevMaxPrice, setPrevMaxPrice] = useState(maxPrice);
+  const debouncedMinPrice = useDebouncedValue(draftMinPrice, PRICE_DEBOUNCE_DELAY_MS);
+  const debouncedMaxPrice = useDebouncedValue(draftMaxPrice, PRICE_DEBOUNCE_DELAY_MS);
+
+  if (minPrice !== prevMinPrice) {
+    setPrevMinPrice(minPrice);
+    setDraftMinPrice(minPrice);
+  }
+
+  if (maxPrice !== prevMaxPrice) {
+    setPrevMaxPrice(maxPrice);
+    setDraftMaxPrice(maxPrice);
+  }
+
+  useEffect(() => {
+    if (debouncedMinPrice !== draftMinPrice) {
+      return;
+    }
+
+    if (debouncedMinPrice === minPrice) {
+      return;
+    }
+
+    onMinPriceChange(debouncedMinPrice);
+  }, [debouncedMinPrice, draftMinPrice, minPrice, onMinPriceChange]);
+
+  useEffect(() => {
+    if (debouncedMaxPrice !== draftMaxPrice) {
+      return;
+    }
+
+    if (debouncedMaxPrice === maxPrice) {
+      return;
+    }
+
+    onMaxPriceChange(debouncedMaxPrice);
+  }, [debouncedMaxPrice, draftMaxPrice, maxPrice, onMaxPriceChange]);
+
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    onMinPriceChange(value === "" ? "" : Number(value));
+    setDraftMinPrice(value === "" ? "" : Math.max(Number(value), 0));
   };
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    onMaxPriceChange(value === "" ? "" : Number(value));
+    setDraftMaxPrice(value === "" ? "" : Math.max(Number(value), 0));
   };
 
   const handleInStockOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +113,7 @@ export function ProductFilters({
           <input
             type="number"
             placeholder="최소"
-            value={minPrice}
+            value={draftMinPrice}
             onChange={handleMinPriceChange}
             min={0}
           />
@@ -76,7 +121,7 @@ export function ProductFilters({
           <input
             type="number"
             placeholder="최대"
-            value={maxPrice}
+            value={draftMaxPrice}
             onChange={handleMaxPriceChange}
             min={0}
           />
