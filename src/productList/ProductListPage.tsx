@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+import { NumberRangeInput } from './components/NumberRangeInput';
 import { Pagination } from './components/Pagination';
 import { ProductCard } from './components/ProductCard';
 import { Select } from './components/Select';
@@ -112,33 +113,16 @@ export function ProductListPage() {
 
         <div className="filter-group">
           <label>가격 범위</label>
-          <div className="price-range">
-            <input
-              type="number"
-              placeholder="최소"
-              value={minPrice ?? ''}
-              onChange={(e) =>
-                setFilter({
-                  minPrice:
-                    e.target.value === '' ? null : Number(e.target.value),
-                })
-              }
-              min={0}
-            />
-            <span>~</span>
-            <input
-              type="number"
-              placeholder="최대"
-              value={maxPrice ?? ''}
-              onChange={(e) =>
-                setFilter({
-                  maxPrice:
-                    e.target.value === '' ? null : Number(e.target.value),
-                })
-              }
-              min={0}
-            />
-          </div>
+          <NumberRangeInput
+            minValue={minPrice === null ? '' : String(minPrice)}
+            maxValue={maxPrice === null ? '' : String(maxPrice)}
+            onMinValueChange={(value) =>
+              setFilter({ minPrice: value === '' ? null : Number(value) })
+            }
+            onMaxValueChange={(value) =>
+              setFilter({ maxPrice: value === '' ? null : Number(value) })
+            }
+          />
         </div>
 
         <div className="filter-group">

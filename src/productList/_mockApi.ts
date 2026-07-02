@@ -416,6 +416,7 @@ function paginate(list: MockProduct[], params: URLSearchParams) {
   const page = Number(params.get("page") ?? "1");
   const size = Number(params.get("size") ?? "12");
   const start = (page - 1) * size;
+
   return {
     products: list.slice(start, start + size),
     totalCount: list.length,
