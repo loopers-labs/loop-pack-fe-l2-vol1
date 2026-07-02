@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
-import type { Product, ProductListResponse } from './type';
+import type { Product } from './type';
 import {
   useProductFilter,
   CATEGORIES,
@@ -8,6 +8,7 @@ import {
   PAGE_SIZE,
   PAGE_WINDOW,
 } from './hooks/useProductFilter';
+import { useProductList } from './hooks/useProductList';
 import { useWishlist } from './hooks/useWishlist';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
 import { Pagination } from './components/Pagination';
@@ -18,13 +19,6 @@ import { ProductCard } from './components/ProductCard';
 // ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
-  // 0701 - useProductList.ts
-  // ─── 서버 상태 (직접 관리) ──────────────────────────────
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
   const {
     category,
     setCategory,
@@ -41,6 +35,16 @@ export function ProductListPage() {
     inStockOnly,
     setInStockOnly,
   } = useProductFilter();
+
+  const { products, totalCount, isLoading, error } = useProductList({
+    category,
+    sortBy,
+    searchQuery,
+    page,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+  });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
@@ -48,36 +52,6 @@ export function ProductListPage() {
 
   // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
   const { addRecentlyViewed } = useRecentlyViewed();
-
-  // 0701 서버 상태 조합 useProductList + API호출 - productService
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== '') params.set('minPrice', String(minPrice));
-      if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-      if (inStockOnly) params.set('inStock', 'true');
-      try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
-        setProducts(data.products);
-        setTotalCount(data.totalCount);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    void fetchProducts();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
