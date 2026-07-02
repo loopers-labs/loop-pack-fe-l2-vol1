@@ -8,6 +8,7 @@ import {
 } from './_utils/productUtils';
 import { useProductFilter } from './_hooks/useProductFilter';
 import { useProductList } from './_hooks/useProductList';
+import { useWishlist } from './_hooks/useWishlist';
 
 // ─────────────────────────────────────────────────────────
 // 타입도 한 파일에 (실무에서 흔히 보는 모습)
@@ -87,15 +88,8 @@ export function ProductListPage() {
   // ─── UI 전용 상태 ────────────────────────────────────────
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // ─── 위시리스트 (localStorage 동기화) ───────────────────
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('wishlist');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  // ─── 위시리스트 ─────────────────────────────────────────
+  const { wishlist, handleWishlistToggle } = useWishlist();
 
   // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
@@ -107,15 +101,6 @@ export function ProductListPage() {
     }
   });
 
-  // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
-  useEffect(() => {
-    try {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist]);
-
   // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
   useEffect(() => {
     try {
@@ -124,14 +109,6 @@ export function ProductListPage() {
       // localStorage 사용 불가 시 무시
     }
   }, [recentlyViewed]);
-
-  const handleWishlistToggle = (productId: number) => {
-    setWishlist((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId],
-    );
-  };
 
   const handleProductClick = (productId: number) => {
     setRecentlyViewed((prev) => {
