@@ -8,6 +8,7 @@ import {
   PAGE_SIZE,
   PAGE_WINDOW,
 } from './hooks/useProductFilter';
+import { useWishlist } from './hooks/useWishlist';
 const RECENTLY_VIEWED_MAX = 10;
 const ALMOST_SOLD_OUT_THRESHOLD = 5;
 const HOT_DISCOUNT_THRESHOLD = 30;
@@ -53,14 +54,7 @@ export function ProductListPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('wishlist');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { wishlist, toggleWishlist } = useWishlist();
 
   // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
@@ -101,15 +95,6 @@ export function ProductListPage() {
     };
     void fetchProducts();
   }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
-
-  // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
-  useEffect(() => {
-    try {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist]);
 
   // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
   useEffect(() => {
@@ -169,14 +154,6 @@ export function ProductListPage() {
     setSearchQuery('');
     setInStockOnly(false);
     setPage(1);
-  };
-
-  const handleWishlistToggle = (productId: number) => {
-    setWishlist((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId],
-    );
   };
 
   const handleProductClick = (productId: number) => {
@@ -439,7 +416,7 @@ export function ProductListPage() {
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleWishlistToggle(product.id);
+                        toggleWishlist(product.id);
                       }}
                       aria-label="위시리스트 토글"
                     >
