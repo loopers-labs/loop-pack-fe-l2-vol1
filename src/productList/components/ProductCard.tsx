@@ -1,4 +1,4 @@
-import type { ProductCardModel } from '../productCard';
+import type { ProductCardModel } from '../utils/productCard';
 
 import { HighlightText } from './HighlightText';
 

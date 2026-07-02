@@ -5,11 +5,11 @@ import {
 } from '@tanstack/react-query';
 
 import { PAGE_SIZE } from '../constants';
-import { getProductCardInfo } from '../productCard';
 import {
   fetchProducts,
   type FetchProductsParams,
 } from '../services/productApi';
+import { getProductCardInfo } from '../utils/productCard';
 
 import { useDebounce } from './useDebounce';
 

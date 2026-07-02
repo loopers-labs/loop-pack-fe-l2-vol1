@@ -1,5 +1,6 @@
-import type { Product } from './types';
-import { formatWon, isWithinDays } from './utils';
+import type { Product } from '../types';
+
+import { formatWon, isWithinDays } from '.';
 
 // 상품(서버 데이터)만으로 계산되는 카드 표시 규칙
 export function getProductCardInfo(product: Product) {
