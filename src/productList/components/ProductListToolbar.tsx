@@ -51,12 +51,16 @@ export function ProductListToolbar({
   }
 
   useEffect(() => {
+    if (debouncedSearchQuery !== draftSearchQuery) {
+      return;
+    }
+
     if (debouncedSearchQuery === searchQuery) {
       return;
     }
 
     onSearchQueryChange(debouncedSearchQuery);
-  }, [debouncedSearchQuery, onSearchQueryChange, searchQuery]);
+  }, [debouncedSearchQuery, draftSearchQuery, onSearchQueryChange, searchQuery]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDraftSearchQuery(e.target.value);
