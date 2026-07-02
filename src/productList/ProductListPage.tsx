@@ -10,6 +10,7 @@ import {
 } from './hooks/useProductFilter';
 import { useWishlist } from './hooks/useWishlist';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
+import { Pagination } from './components/Pagination';
 const ALMOST_SOLD_OUT_THRESHOLD = 5;
 const HOT_DISCOUNT_THRESHOLD = 30;
 const BEST_RATING_THRESHOLD = 4.5;
@@ -412,47 +413,12 @@ export function ProductListPage() {
       </section>
 
       {/* ─── 페이지네이션 ───────────────────────────────── */}
-      {totalPages > 1 && (
-        <nav className="pagination">
-          <button
-            onClick={() => handlePageChange(1)}
-            disabled={page === 1}
-            aria-label="첫 페이지"
-          >
-            «
-          </button>
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            aria-label="이전 페이지"
-          >
-            ‹
-          </button>
-          {pageNumbers.map((p) => (
-            <button
-              key={p}
-              className={p === page ? 'active' : ''}
-              onClick={() => handlePageChange(p)}
-            >
-              {p}
-            </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            aria-label="다음 페이지"
-          >
-            ›
-          </button>
-          <button
-            onClick={() => handlePageChange(totalPages)}
-            disabled={page === totalPages}
-            aria-label="마지막 페이지"
-          >
-            »
-          </button>
-        </nav>
-      )}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        pageNumbers={pageNumbers}
+        onPageChange={handlePageChange}
+      />
 
       {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
       {isLoading && products.length > 0 && (
