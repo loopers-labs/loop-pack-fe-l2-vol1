@@ -1,28 +1,13 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
-import type { Product, ProductListResponse, SortBy } from './type';
-
-// ─────────────────────────────────────────────────────────
-// 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
-// ─────────────────────────────────────────────────────────
-
-const CATEGORIES: { value: 'all' | Product['category']; label: string }[] = [
-  { value: 'all', label: '전체' },
-  { value: 'electronics', label: '전자제품' },
-  { value: 'fashion', label: '패션' },
-  { value: 'home', label: '홈' },
-  { value: 'beauty', label: '뷰티' },
-];
-
-const SORT_OPTIONS: { value: SortBy; label: string }[] = [
-  { value: 'latest', label: '최신순' },
-  { value: 'popular', label: '인기순' },
-  { value: 'price-asc', label: '가격 낮은순' },
-  { value: 'price-desc', label: '가격 높은순' },
-];
-
-const PAGE_SIZE = 12;
-const PAGE_WINDOW = 2;
+import type { Product, ProductListResponse } from './type';
+import {
+  useProductFilter,
+  CATEGORIES,
+  SORT_OPTIONS,
+  PAGE_SIZE,
+  PAGE_WINDOW,
+} from './hooks/useProductFilter';
 const RECENTLY_VIEWED_MAX = 10;
 const ALMOST_SOLD_OUT_THRESHOLD = 5;
 const HOT_DISCOUNT_THRESHOLD = 30;
@@ -49,20 +34,22 @@ export function ProductListPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // ─── 필터 상태 ──────────────────────────────────────────
-  const [category, setCategory] = useState<'all' | Product['category']>('all');
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [sortBy, setSortBy] = useState<SortBy>('latest');
-
-  // ─── 검색 상태 ──────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // ─── 페이지네이션 상태 ──────────────────────────────────
-  const [page, setPage] = useState(1);
-
-  // ─── 옵션 토글 ──────────────────────────────────────────
-  const [inStockOnly, setInStockOnly] = useState(false);
+  const {
+    category,
+    setCategory,
+    minPrice,
+    setMinPrice,
+    maxPrice,
+    setMaxPrice,
+    sortBy,
+    setSortBy,
+    searchQuery,
+    setSearchQuery,
+    page,
+    setPage,
+    inStockOnly,
+    setInStockOnly,
+  } = useProductFilter();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
@@ -137,19 +124,6 @@ export function ProductListPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
-
-  // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (category !== 'all') params.set('category', category);
-    if (searchQuery) params.set('q', searchQuery);
-    if (page > 1) params.set('page', String(page));
-    if (sortBy !== 'latest') params.set('sort', sortBy);
-    if (minPrice !== '') params.set('minPrice', String(minPrice));
-    if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-    if (inStockOnly) params.set('inStock', 'true');
-    window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
   const handleCategoryChange = (cat: 'all' | Product['category']) => {
     setCategory(cat);
