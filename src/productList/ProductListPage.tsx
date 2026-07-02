@@ -1,20 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
 import { Pagination } from './components/Pagination';
 import { ProductCard } from './components/ProductCard';
 import { Select } from './components/Select';
-import {
-  CATEGORY_LABELS,
-  PAGE_SIZE,
-  SORT_LABELS,
-  VIEW_MODE_LABELS,
-} from './constants';
-import { useDebounce } from './hooks/useDebounce';
+import { CATEGORY_LABELS, SORT_LABELS, VIEW_MODE_LABELS } from './constants';
 import { useProductFilters } from './hooks/useProductFilters';
+import { useProductList } from './hooks/useProductList';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
 import { useWishlist } from './hooks/useWishlist';
-import { productListQueryOptions } from './services/productQueries';
 import {
   CATEGORY_FILTER_VALUES,
   SORT_VALUES,
@@ -49,41 +42,30 @@ export function ProductListPage() {
   const wishlist = useWishlist();
   const recentlyViewed = useRecentlyViewed();
 
-  // ─── 타이핑 입력(검색어·가격)은 디바운스해 호출 폭주 방지 ──
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const debouncedMinPrice = useDebounce(minPrice, 300);
-  const debouncedMaxPrice = useDebounce(maxPrice, 300);
-
   // ─── 서버 상태 (TanStack Query) ─────────────────────────
   const {
-    data: productListResponse,
+    products,
+    totalCount,
+    totalPages,
     isFetching: isFetchingProducts,
     isPending: isLoadingProducts,
     isError: hasProductsError,
     error: productsError,
     refetch,
-  } = useQuery(
-    productListQueryOptions({
-      category,
-      sortBy,
-      searchQuery: debouncedSearchQuery,
-      page,
-      size: PAGE_SIZE,
-      minPrice: debouncedMinPrice,
-      maxPrice: debouncedMaxPrice,
-      inStockOnly,
-    }),
-  );
-
-  const products = productListResponse?.products ?? [];
-  const totalCount = productListResponse?.totalCount ?? 0;
+  } = useProductList({
+    category,
+    sortBy,
+    searchQuery,
+    page,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+  });
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   // ─── 초기 로딩·에러는 early return ──────────────────────
   if (isLoadingProducts) {
