@@ -29,3 +29,25 @@
 2. **`useEffect #5` 관심사** — 내가 "상태"로 분류했는데, 정확히는 **사이드이펙트 (URL 동기화)**. `window.history.replaceState`가 외부 시스템 동기화.
 3. **`useEffect #2·#3` 관심사** — 내가 "상태 + 도메인 로직" / "상태"로 분류했는데, localStorage `setItem`은 **사이드이펙트**가 더 정확함. 상태 초기화(`useState(() => localStorage.getItem(...))`)와 구분 필요.
 4. **백그라운드 로딩 인디케이터** — 내 표에 누락. 분리 불필요하지만 항목으로 기록.
+
+## 분리 결과
+
+### 분리한 것
+
+| 파일 | 이유 |
+|------|------|
+| `hooks/useProductFilter.ts` | 필터·검색·페이지 상태와 URL 동기화가 하나의 도메인. 관련 상수(`CATEGORIES`, `SORT_OPTIONS`, `PAGE_SIZE`)도 이 도메인에 속해 함께 이동. |
+| `hooks/useWishlist.ts` | 상태 초기화 + localStorage 동기화 + 토글 로직이 위시리스트 도메인으로 응집. |
+| `hooks/useRecentlyViewed.ts` | 상태 초기화 + localStorage 동기화 + 추가 로직이 최근 본 상품 도메인으로 응집. |
+| `hooks/useProductList.ts` | 서버 상태(products, totalCount, isLoading, error)와 fetch 로직 분리. |
+| `services/productService.ts` | API 호출과 요청 형태 변환(도메인 파라미터 → HTTP 쿼리 파라미터) 담당. |
+| `components/ProductCard.tsx` | 상품 카드 UI와 도메인 계산(`discountRate`, `isHot` 등). 관련 상수도 함께 이동. |
+| `components/Pagination.tsx` | 재사용 가능한 UI 단위. |
+
+### 분리하지 않은 것
+
+| 항목 | 이유 |
+|------|------|
+| `escapeRegExp` | `ProductCard` 한 곳에서만 사용. 재사용 가능성 없어 utils로 분리하지 않음. |
+| `handle~~~~~` (이벤트 핸들러) | hook setter를 UI 이벤트에 연결하는 역할만 함. 도메인 로직 없음. |
+| `useEffect` (`window.scrollTo`) | 페이지 전환 시 스크롤 이동은 화면 표시 역할이므로 컴포넌트에 유지. |
