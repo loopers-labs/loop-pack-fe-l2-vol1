@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './ProductListPage.css';
 import {
   calcDiscountRate,
@@ -9,6 +9,7 @@ import {
 import { useProductFilter } from './_hooks/useProductFilter';
 import { useProductList } from './_hooks/useProductList';
 import { useWishlist } from './_hooks/useWishlist';
+import { useRecentlyViewed } from './_hooks/useRecentlyViewed';
 
 // ─────────────────────────────────────────────────────────
 // 타입도 한 파일에 (실무에서 흔히 보는 모습)
@@ -91,31 +92,8 @@ export function ProductListPage() {
   // ─── 위시리스트 ─────────────────────────────────────────
   const { wishlist, handleWishlistToggle } = useWishlist();
 
-  // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('recentlyViewed');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [recentlyViewed]);
-
-  const handleProductClick = (productId: number) => {
-    setRecentlyViewed((prev) => {
-      const without = prev.filter((id) => id !== productId);
-      return [productId, ...without].slice(0, 10);
-    });
-  };
+  // ─── 최근 본 상품 ───────────────────────────────────────
+  const { handleProductClick } = useRecentlyViewed();
 
   // ─── 페이지네이션 계산 ───────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
