@@ -5,10 +5,6 @@ import {
   type GetProductsResponse,
 } from "../services/productService";
 
-type UseProductListParams = GetProductsParams & {
-  inStockOnly: boolean;
-};
-
 type ProductListState = {
   data: GetProductsResponse | null;
   isLoading: boolean;
@@ -63,7 +59,7 @@ export function useProductListQuery({
   maxPrice,
   size,
   inStockOnly,
-}: UseProductListParams) {
+}: GetProductsParams) {
   const [{ data, isLoading, error }, dispatch] = useReducer(productListReducer, initialState);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -90,6 +86,7 @@ export function useProductListQuery({
           minPrice,
           maxPrice,
           size,
+          inStockOnly,
         },
         {
           signal: controller.signal,
@@ -100,16 +97,9 @@ export function useProductListQuery({
         return;
       }
 
-      const products = inStockOnly
-        ? response.products.filter((product) => product.stock > 0)
-        : response.products;
-
       dispatch({
         type: "success",
-        payload: {
-          ...response,
-          products,
-        },
+        payload: response,
       });
     } catch (err) {
       if (controller.signal.aborted || requestId !== requestIdRef.current) {

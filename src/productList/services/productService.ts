@@ -8,6 +8,7 @@ export type GetProductsParams = {
   minPrice: number | "";
   maxPrice: number | "";
   size: number;
+  inStockOnly: boolean;
 };
 
 export type GetProductsResponse = {
@@ -39,6 +40,10 @@ export async function getProducts(
 
   if (params.maxPrice !== "") {
     searchParams.set("maxPrice", String(params.maxPrice));
+  }
+
+  if (params.inStockOnly) {
+    searchParams.set("inStock", "true");
   }
 
   const response = await fetch(`/api/products?${searchParams.toString()}`, {
