@@ -9,7 +9,7 @@ import {
   PAGE_WINDOW,
 } from './hooks/useProductFilter';
 import { useWishlist } from './hooks/useWishlist';
-const RECENTLY_VIEWED_MAX = 10;
+import { useRecentlyViewed } from './hooks/useRecentlyViewed';
 const ALMOST_SOLD_OUT_THRESHOLD = 5;
 const HOT_DISCOUNT_THRESHOLD = 30;
 const BEST_RATING_THRESHOLD = 4.5;
@@ -57,14 +57,7 @@ export function ProductListPage() {
   const { wishlist, toggleWishlist } = useWishlist();
 
   // ─── 최근 본 상품 (localStorage 동기화) ─────────────────
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('recentlyViewed');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { addRecentlyViewed } = useRecentlyViewed();
 
   // 0701 서버 상태 조합 useProductList + API호출 - productService
   useEffect(() => {
@@ -95,15 +88,6 @@ export function ProductListPage() {
     };
     void fetchProducts();
   }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
-
-  // ─── 최근 본 상품도 localStorage 동기화 ─────────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [recentlyViewed]);
 
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
@@ -157,10 +141,7 @@ export function ProductListPage() {
   };
 
   const handleProductClick = (productId: number) => {
-    setRecentlyViewed((prev) => {
-      const without = prev.filter((id) => id !== productId);
-      return [productId, ...without].slice(0, RECENTLY_VIEWED_MAX);
-    });
+    addRecentlyViewed(productId);
   };
 
   // ─── 페이지네이션 계산 (인라인) ─────────────────────────
