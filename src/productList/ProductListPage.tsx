@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
+import {
+  calcDiscountRate,
+  calcPageNumbers,
+  formatPrice,
+  isNewProduct,
+} from './utils/productUtils';
 
 // ─────────────────────────────────────────────────────────
 // 타입도 한 파일에 (실무에서 흔히 보는 모습)
@@ -222,12 +228,9 @@ export function ProductListPage() {
     });
   };
 
-  // ─── 페이지네이션 계산 (인라인) ─────────────────────────
+  // ─── 페이지네이션 계산 ───────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const pageNumbers: number[] = [];
-  const startPage = Math.max(1, page - 2);
-  const endPage = Math.min(totalPages, page + 2);
-  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+  const pageNumbers = calcPageNumbers(page, totalPages);
 
   // ─── 로딩/에러는 early return ───────────────────────────
   if (isLoading && products.length === 0) {
@@ -374,27 +377,21 @@ export function ProductListPage() {
               );
             };
 
-            // ─── 도메인 규칙 인라인 계산 ─────────────────
-            const discountRate = product.originalPrice
-              ? Math.round((1 - product.price / product.originalPrice) * 100)
-              : 0;
-            const formattedPrice = product.price.toLocaleString() + '원';
+            // ─── 도메인 규칙 계산 ────────────────────────
+            const discountRate = calcDiscountRate(
+              product.price,
+              product.originalPrice,
+            );
+            const formattedPrice = formatPrice(product.price);
             const formattedOriginal = product.originalPrice
-              ? product.originalPrice.toLocaleString() + '원'
+              ? formatPrice(product.originalPrice)
               : null;
             const isAlmostSoldOut = product.stock > 0 && product.stock <= 5;
             const isSoldOut = product.stock === 0;
             const isHot = discountRate >= 30;
             const isBest = product.rating >= 4.5 && product.reviewCount >= 100;
             const isFreeShipping = product.price >= 50000;
-
-            // ─── 날짜 포맷팅 인라인 ─────────────────────
-            const createdDate = new Date(product.createdAt);
-            const now = new Date();
-            const daysSinceCreated = Math.floor(
-              (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
-            );
-            const isNew = daysSinceCreated <= 7;
+            const isNew = isNewProduct(product.createdAt);
 
             // ─── 위시리스트 여부 ────────────────────────
             const isWished = wishlist.includes(product.id);
