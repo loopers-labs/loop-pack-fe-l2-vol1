@@ -1,40 +1,11 @@
-import { useEffect, useState } from "react";
+import { usePersistentState } from "../../hooks/usePersistentState";
 
 export const usePersistentList = () => {
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem("wishlist");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem("recentlyViewed");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // ─── 위시리스트가 바뀔 때마다 localStorage 동기화 ───────
-  useEffect(() => {
-    try {
-      localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("recentlyViewed", JSON.stringify(recentlyViewed));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [recentlyViewed]);
+  const [wishlist, setWishlist] = usePersistentState<number[]>("wishlist", []);
+  const [recentlyViewed, setRecentlyViewed] = usePersistentState<number[]>(
+    "recentlyViewed",
+    [],
+  );
 
   const handleWishlistToggle = (productId: number) => {
     setWishlist((prev) =>
