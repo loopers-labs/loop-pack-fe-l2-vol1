@@ -66,6 +66,9 @@ export function ProductListPage() {
     searchQuery,
     page,
     inStockOnly,
+    minPriceInput,
+    maxPriceInput,
+    searchQueryInput,
     handleCategoryChange,
     handleMinPriceChange,
     handleMaxPriceChange,
@@ -99,11 +102,6 @@ export function ProductListPage() {
   // ─── 페이지네이션 계산 ───────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const pageNumbers = calcPageNumbers(page, totalPages);
-
-  // ─── 로딩/에러는 early return ───────────────────────────
-  if (isLoading && products.length === 0) {
-    return <div className="loading">로딩 중...</div>;
-  }
 
   if (error) {
     return (
@@ -149,7 +147,7 @@ export function ProductListPage() {
             <input
               type="number"
               placeholder="최소"
-              value={minPrice}
+              value={minPriceInput}
               onChange={handleMinPriceChange}
               min={0}
             />
@@ -157,7 +155,7 @@ export function ProductListPage() {
             <input
               type="number"
               placeholder="최대"
-              value={maxPrice}
+              value={maxPriceInput}
               onChange={handleMaxPriceChange}
               min={0}
             />
@@ -194,7 +192,7 @@ export function ProductListPage() {
         <input
           type="search"
           placeholder="상품 검색..."
-          value={searchQuery}
+          value={searchQueryInput}
           onChange={handleSearchChange}
           className="search-input"
         />
@@ -219,7 +217,9 @@ export function ProductListPage() {
         className="product-grid"
         style={viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined}
       >
-        {products.length === 0 ? (
+        {isLoading ? (
+          <div className="loading">로딩 중...</div>
+        ) : products.length === 0 ? (
           <div className="empty">조건에 맞는 상품이 없습니다.</div>
         ) : (
           products.map((product) => {
