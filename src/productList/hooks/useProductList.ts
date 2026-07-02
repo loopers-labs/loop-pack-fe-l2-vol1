@@ -1,8 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  queryOptions,
+  useQuery,
+} from '@tanstack/react-query';
 
 import { PAGE_SIZE } from '../constants';
-import type { FetchProductsParams } from '../services/productApi';
-import { productListQueryOptions } from '../services/productQueries';
+import { getProductCardInfo } from '../productCard';
+import {
+  fetchProducts,
+  type FetchProductsParams,
+} from '../services/productApi';
 
 import { useDebounce } from './useDebounce';
 
@@ -11,6 +18,21 @@ type UseProductListParams = Omit<FetchProductsParams, 'size'> & {
 };
 
 const PRODUCT_LIST_DEBOUNCE_MS = 300;
+
+function productListQueryOptions(params: FetchProductsParams) {
+  return queryOptions({
+    queryKey: ['products', params],
+    queryFn: () => fetchProducts(params),
+    placeholderData: keepPreviousData,
+    select: (data) => ({
+      ...data,
+      products: data.products.map((product) => ({
+        ...product,
+        ...getProductCardInfo(product),
+      })),
+    }),
+  });
+}
 
 export function useProductList({
   category,
