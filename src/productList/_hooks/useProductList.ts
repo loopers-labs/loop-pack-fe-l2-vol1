@@ -1,22 +1,5 @@
 import { useState, useEffect } from 'react';
-
-type Product = {
-  id: number;
-  name: string;
-  category: 'electronics' | 'fashion' | 'home' | 'beauty';
-  price: number;
-  originalPrice?: number;
-  stock: number;
-  imageUrl: string;
-  createdAt: string;
-  rating: number;
-  reviewCount: number;
-};
-
-type ProductListResponse = {
-  products: Product[];
-  totalCount: number;
-};
+import { fetchProducts, type Product } from '../_services/productService';
 
 type Params = {
   category: string;
@@ -46,22 +29,19 @@ export function useProductList({
 
   // 필터가 바뀔 때마다 서버에서 상품 목록을 가져옴 (서버 상태 동기화)
   useEffect(() => {
-    const fetchProducts = async () => {
+    const load = async () => {
       setIsLoading(true);
       setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== '') params.set('minPrice', String(minPrice));
-      if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
       try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
+        const data = await fetchProducts({
+          category,
+          minPrice,
+          maxPrice,
+          sortBy,
+          searchQuery,
+          page,
+          pageSize: PAGE_SIZE,
+        });
         // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
         const filtered = inStockOnly
           ? data.products.filter((p) => p.stock > 0)
@@ -74,7 +54,7 @@ export function useProductList({
         setIsLoading(false);
       }
     };
-    void fetchProducts();
+    void load();
   }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
 
   // 페이지가 바뀔 때 스크롤 맨 위로 (브라우저 외부 시스템 동기화)
