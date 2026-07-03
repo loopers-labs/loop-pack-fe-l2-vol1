@@ -36,6 +36,7 @@ export function useProducts({
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [refetchKey, setRefetchKey] = useState(0)
 
   useEffect(() => {
     let ignore = false
@@ -88,6 +89,7 @@ export function useProducts({
     maxPrice,
     inStockOnly,
     getProducts,
+    refetchKey,
   ])
 
   return {
@@ -95,5 +97,6 @@ export function useProducts({
     totalCount,
     isLoading,
     error,
+    refetch: () => setRefetchKey((key) => key + 1),
   }
 }

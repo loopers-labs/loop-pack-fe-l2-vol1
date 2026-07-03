@@ -57,4 +57,32 @@ describe('ProductListPage', () => {
       )
     })
   })
+
+  it('retries a failed product request without reloading the page', async () => {
+    const user = userEvent.setup()
+    vi.mocked(globalThis.fetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ products: [], totalCount: 0 }),
+      } as Response)
+
+    render(<ProductListPage />)
+
+    const retryButton = await screen.findByRole('button', {
+      name: '다시 시도',
+    })
+
+    await user.click(retryButton)
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+    })
+    expect(
+      screen.queryByText('오류가 발생했습니다: API 호출 실패 (status: 500)'),
+    ).not.toBeInTheDocument()
+  })
 })
