@@ -69,6 +69,14 @@ export default defineConfig(
       "no-console": ["error", { allow: ["warn", "error"] }], // console.log 디버깅 잔재 차단(warn/error는 허용)
       curly: ["error", "all"], // 무중괄호 if에 줄 추가하다 생기는 제어흐름 버그 예방
       "prefer-const": "error", // 재할당 없는 let = 의도와 코드 불일치
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExportAllDeclaration",
+          message:
+            "배럴은 순수 named re-export만 — `export *` 금지. `export { A, B } from './x'`로.",
+        },
+      ],
     },
   },
 
