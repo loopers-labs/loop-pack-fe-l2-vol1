@@ -1,19 +1,20 @@
 import type { ReactNode } from 'react';
 
+import { formatNumber } from '../utils';
 import type { ProductCardModel } from '../utils/productCard';
 
 import { HighlightText } from './HighlightText';
 
 type ProductCardProps = {
   product: ProductCardModel;
-  searchQuery: string;
+  nameHighlightWord?: string;
   onSelect: () => void;
   trailingAction?: ReactNode;
 };
 
 export function ProductCard({
   product,
-  searchQuery,
+  nameHighlightWord = '',
   onSelect,
   trailingAction,
 }: ProductCardProps) {
@@ -47,7 +48,10 @@ export function ProductCard({
 
       <div className="card-body">
         <h3 className="product-name">
-          <HighlightText text={product.name} highlightWord={searchQuery} />
+          <HighlightText
+            text={product.name}
+            highlightWord={nameHighlightWord}
+          />
         </h3>
         <div className="price-area">
           {formattedOriginal && (
@@ -59,7 +63,7 @@ export function ProductCard({
         <div className="rating-area">
           <span className="rating">★ {product.rating.toFixed(1)}</span>
           <span className="review-count">
-            ({product.reviewCount.toLocaleString()})
+            ({formatNumber(product.reviewCount)})
           </span>
           {trailingAction}
         </div>

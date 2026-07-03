@@ -15,6 +15,7 @@ import {
   VIEW_MODES,
   type ViewMode,
 } from './types';
+import { formatNumber } from './utils';
 import './ProductListPage.css';
 
 export function ProductListPage() {
@@ -85,7 +86,7 @@ export function ProductListPage() {
       <header className="page-header">
         <h1>상품 목록</h1>
         <p className="total-count">
-          총 {totalCount.toLocaleString()}개의 상품
+          총 {formatNumber(totalCount)}개의 상품
           {wishlist.count > 0 && <span> · 위시리스트 {wishlist.count}개</span>}
         </p>
       </header>
@@ -181,7 +182,7 @@ export function ProductListPage() {
             <ProductCard
               key={product.id}
               product={product}
-              searchQuery={searchQuery}
+              nameHighlightWord={searchQuery}
               onSelect={() => recentlyViewed.markViewed(product.id)}
               trailingAction={
                 <button
