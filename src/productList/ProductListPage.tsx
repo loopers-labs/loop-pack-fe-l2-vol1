@@ -116,6 +116,13 @@ export function ProductListPage() {
 
   // ─── 페이지네이션 계산 (인라인) ─────────────────────────
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  // ─── URL page가 totalPages를 초과하면 마지막 페이지로 보정 ──
+  useEffect(() => {
+    if (!isLoading && page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [isLoading, page, totalPages, setPage]);
   const pageNumbers: number[] = [];
   const startPage = Math.max(1, page - PAGE_WINDOW);
   const endPage = Math.min(totalPages, page + PAGE_WINDOW);

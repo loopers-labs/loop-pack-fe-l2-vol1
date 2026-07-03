@@ -151,3 +151,33 @@ URL에 `?q=노이즈&page=3`으로 접근하면 페이지가 3이 아닌 1로 �
 
 **수정 방법**
 전체 화면 early return 제거. 로딩 중에는 그리드 영역과 페이지네이션만 숨기고 나머지 UI는 그대로 유지. `renderProducts` 함수로 로딩/빈 결과/상품 목록 조건을 분기.
+
+---
+
+### 버그 4 — URL page가 totalPages 초과 시 빈 화면
+
+**재현 방법**
+1. URL에 `?page=999` 입력 후 접근
+2. 빈 상품 목록이 표시되는지 확인
+
+**원인**
+`useProductFilter`가 URL에서 page 값을 복원할 때 유효 범위 검사를 하지 않음. `totalPages`는 API 응답 이후에만 알 수 있어 초기화 시점에 클램핑 불가.
+
+**수정 방법**
+`ProductListPage`에서 데이터 로드 완료 후 `page > totalPages`이면 `setPage(totalPages)` 호출.
+
+**방식을 선택한 이유**
+`useProductFilter`는 필터/URL 상태만 담당하고 서버 데이터를 모름. `useProductList`는 서버 데이터만 담당하고 URL을 모름. 두 훅의 결과를 모두 아는 `ProductListPage`에서 조율하는 것이 역할 분리에 맞음.
+
+---
+
+### 추가 발견 — 로딩 중 stale totalCount 표시
+
+**증상**
+검색어나 필터를 바꾸면 로딩 중에 헤더에 이전 결과의 총 개수가 잠깐 표시됨.
+
+**원인**
+`totalCount`는 API 응답이 도착해야 갱신되므로 로딩 중엔 이전 값이 유지됨.
+
+**현재 범위에서 수정하지 않는 이유**
+skeleton UI나 optimistic update로 해결하는 영역으로 이번 과제 범위를 벗어남.
