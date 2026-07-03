@@ -11,6 +11,23 @@ pnpm dev
 
 > React 19 + Vite + TypeScript 기반입니다. (1~3주차 React, 4주차부터 Next.js로 전환 예정)
 
+## 프로젝트 구조
+
+feature-first colocation — 코드는 기술 종류가 아니라 **도메인 기능**으로 묶는다.
+
+```txt
+src/
+├─ <feature>/       # 한 기능의 컴포넌트·훅·로직·타입을 함께 (예: market/)
+│  ├─ *.tsx         # 컴포넌트
+│  ├─ *.ts          # 훅·도메인 로직·순수 함수
+│  ├─ api/          # 데이터 호출 (생길 때)
+│  ├─ types.ts
+│  └─ index.ts      # 공개 표면(배럴)
+└─ shared/          # 둘 이상 피처가 공유하는 것만 (필요해질 때)
+```
+
+의존성은 단방향(`shared → 피처 → app`), 피처는 `index.ts`로만 노출한다. (4주차 Next 전환 시 `app/`은 라우팅 전용, 도메인 로직은 그대로 `src/<feature>/`에.)
+
 ## 주차별 과제
 
 - [1주차 — 코드 리뷰 & AI 협업 환경 구축](docs/assignments/week-01.md)
