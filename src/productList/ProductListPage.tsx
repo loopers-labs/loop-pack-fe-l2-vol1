@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './ProductListPage.css';
+import { PAGE_SIZE } from './types';
 import type { Category, SortBy } from './types';
 import {
   calcDiscountRate,
@@ -28,8 +29,6 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'price-desc', label: '가격 높은순' },
 ];
 
-const PAGE_SIZE = 12;
-
 export function ProductListPage() {
   // ─── 필터 / 검색 / 페이지 상태 ─────────────────────────
   const {
@@ -54,7 +53,7 @@ export function ProductListPage() {
   } = useProductFilter();
 
   // ─── 서버 상태 ──────────────────────────────────────────
-  const { products, totalCount, isLoading, error } = useProductList({
+  const { products, totalCount, isLoading, error, refetch } = useProductList({
     category,
     minPrice,
     maxPrice,
@@ -81,7 +80,7 @@ export function ProductListPage() {
     return (
       <div className="error">
         <p>오류가 발생했습니다: {error.message}</p>
-        <button onClick={() => window.location.reload()}>다시 시도</button>
+        <button onClick={() => void refetch()}>다시 시도</button>
       </div>
     );
   }

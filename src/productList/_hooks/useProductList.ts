@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchProducts } from '../_services/productService';
+import { PAGE_SIZE } from '../types';
 import type { Product } from '../types';
 
 type Params = {
@@ -11,8 +12,6 @@ type Params = {
   page: number;
   inStockOnly: boolean;
 };
-
-const PAGE_SIZE = 12;
 
 export function useProductList({
   category,
@@ -27,8 +26,9 @@ export function useProductList({
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // 필터가 바뀔 때마다 서버에서 상품 목록을 가져옴 (서버 상태 동기화)
+  // 필터가 바뀌거나 retryCount가 증가하면 서버에서 상품 목록을 가져옴
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
@@ -43,7 +43,6 @@ export function useProductList({
           page,
           pageSize: PAGE_SIZE,
         });
-        // 클라이언트에서 추가 필터링 — "재고 있는 것만" 토글
         const filtered = inStockOnly
           ? data.products.filter((p) => p.stock > 0)
           : data.products;
@@ -56,12 +55,23 @@ export function useProductList({
       }
     };
     void load();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
+  }, [
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    page,
+    inStockOnly,
+    retryCount,
+  ]);
 
   // 페이지가 바뀔 때 스크롤 맨 위로 (브라우저 외부 시스템 동기화)
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  return { products, totalCount, isLoading, error };
+  const refetch = () => setRetryCount((c) => c + 1);
+
+  return { products, totalCount, isLoading, error, refetch };
 }

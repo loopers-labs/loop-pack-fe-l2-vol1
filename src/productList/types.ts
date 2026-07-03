@@ -21,3 +21,5 @@ export type ProductListResponse = {
 export type Category = 'all' | Product['category'];
 
 export type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
+
+export const PAGE_SIZE = 12;
