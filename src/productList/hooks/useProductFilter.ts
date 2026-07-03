@@ -21,6 +21,7 @@ export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 
 export const PAGE_SIZE = 12;
 export const PAGE_WINDOW = 2;
+const SEARCH_DEBOUNCE_MS = 300;
 
 function getInitialParams() {
   return new URLSearchParams(window.location.search);
@@ -69,9 +70,21 @@ export function useProductFilter() {
     ),
   );
 
+  const [searchInput, setSearchInput] = useState(
+    () => getInitialParams().get('q') ?? '',
+  );
   const [searchQuery, setSearchQuery] = useState(
     () => getInitialParams().get('q') ?? '',
   );
+
+  // 검색어 디바운스 (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const [page, setPage] = useState(() => {
     const parsed = pickNumber(getInitialParams().get('page'), 1);
@@ -103,8 +116,9 @@ export function useProductFilter() {
     setMaxPrice,
     sortBy,
     setSortBy,
+    searchInput,
+    setSearchInput,
     searchQuery,
-    setSearchQuery,
     page,
     setPage,
     inStockOnly,

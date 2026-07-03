@@ -28,8 +28,9 @@ export function ProductListPage() {
     setMaxPrice,
     sortBy,
     setSortBy,
+    searchInput,
+    setSearchInput,
     searchQuery,
-    setSearchQuery,
     page,
     setPage,
     inStockOnly,
@@ -87,8 +88,7 @@ export function ProductListPage() {
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
+    setSearchInput(e.target.value);
   };
 
   const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,7 +105,7 @@ export function ProductListPage() {
     setMinPrice('');
     setMaxPrice('');
     setSortBy('latest');
-    setSearchQuery('');
+    setSearchInput('');
     setInStockOnly(false);
     setPage(1);
   };
@@ -215,7 +215,7 @@ export function ProductListPage() {
         <input
           type="search"
           placeholder="상품 검색..."
-          value={searchQuery}
+          value={searchInput}
           onChange={handleSearchChange}
           className="search-input"
         />

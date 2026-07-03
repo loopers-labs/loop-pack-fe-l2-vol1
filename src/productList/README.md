@@ -116,5 +116,11 @@ mock API 환경이라 네트워크 오프라인으로는 재현 불가. `product
 2. 검색창에 "apple" 타이핑
 3. 글자 수만큼 API 요청이 발생하는지 확인
 
-**예상 원인**
+**원인**
 검색어 상태가 바뀔 때마다 즉시 `useProductList`가 re-fetch함. 디바운스 없음.
+
+**수정 방법**
+`useProductFilter`에서 검색어를 `searchInput`(입력창 즉시 반영)과 `searchQuery`(300ms 디바운스 후 API에 전달)로 분리. 입력창은 `searchInput`을 사용하고, `useProductList`에는 `searchQuery`를 넘김.
+
+**방식을 선택한 이유**
+타이핑이 멈춘 뒤 한 번만 요청해 자연스럽게 검색되면서 불필요한 요청도 줄일 수 있음.
