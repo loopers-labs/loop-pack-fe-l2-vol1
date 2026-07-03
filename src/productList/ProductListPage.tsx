@@ -36,7 +36,7 @@ export function ProductListPage() {
     setInStockOnly,
   } = useProductFilter();
 
-  const { products, totalCount, isLoading, error } = useProductList({
+  const { products, totalCount, isLoading, error, retry } = useProductList({
     category,
     sortBy,
     searchQuery,
@@ -130,7 +130,7 @@ export function ProductListPage() {
     return (
       <div className="error">
         <p>오류가 발생했습니다: {error.message}</p>
-        <button onClick={() => window.location.reload()}>다시 시도</button>
+        <button onClick={retry}>다시 시도</button>
       </div>
     );
   }

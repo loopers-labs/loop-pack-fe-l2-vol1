@@ -95,8 +95,17 @@ React Router의 `useSearchParams`를 쓰면 깔끔하게 해결되지만, 최상
 2. 페이지 로드 → 에러 화면 확인
 3. "다시 시도" 버튼 클릭 → 전체 페이지가 새로고침되는지 확인
 
-**예상 원인**
+**재현 방법 (실제)**
+mock API 환경이라 네트워크 오프라인으로는 재현 불가. `productService.ts`에 `throw new Error('테스트용 에러')`를 임시로 추가해 재현.
+
+**원인**
 에러 화면의 "다시 시도" 버튼이 `window.location.reload()`를 호출해 페이지 전체를 새로고침함. 필터 상태가 초기화되고 API 재요청만 하면 되는 상황에서 불필요한 전체 리로드 발생.
+
+**수정 방법**
+`useProductList`에 `retryCount` state와 `retry` 함수 추가. `retry` 호출 시 `retryCount`가 증가해 `useEffect` deps가 바뀌면서 re-fetch가 트리거됨. 에러 버튼에서 `window.location.reload()` 대신 `retry`를 호출.
+
+**방식을 선택한 이유**
+필터 state는 그대로 유지하고 API 요청만 다시 날리는 게 목적. `useEffect`는 deps가 바뀔 때만 재실행되므로, 변경사항 없이 re-fetch를 트리거하려면 별도의 카운터 state가 필요함.
 
 ---
 

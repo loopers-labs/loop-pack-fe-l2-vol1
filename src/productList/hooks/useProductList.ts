@@ -15,6 +15,9 @@ export function useProductList({
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const retry = () => setRetryCount((c) => c + 1);
 
   useEffect(() => {
     let ignore = false;
@@ -52,7 +55,16 @@ export function useProductList({
     return () => {
       ignore = true;
     };
-  }, [category, sortBy, searchQuery, page, minPrice, maxPrice, inStockOnly]);
+  }, [
+    category,
+    sortBy,
+    searchQuery,
+    page,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+    retryCount,
+  ]);
 
-  return { products, totalCount, isLoading, error };
+  return { products, totalCount, isLoading, error, retry };
 }
