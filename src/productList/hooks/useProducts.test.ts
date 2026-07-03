@@ -74,7 +74,7 @@ describe('useProducts', () => {
     expect(result.current.products.map((product) => product.id)).toEqual([2])
   })
 
-  it('applies the in-stock-only filter after loading products', async () => {
+  it('passes the in-stock-only option to the product service', async () => {
     const getProducts = vi.fn().mockResolvedValue({
       products: [createProduct(1, 0), createProduct(2, 3)],
       totalCount: 2,
@@ -90,7 +90,14 @@ describe('useProducts', () => {
     )
 
     await waitFor(() => {
-      expect(result.current.products.map((product) => product.id)).toEqual([2])
+      expect(result.current.products.map((product) => product.id)).toEqual([
+        1, 2,
+      ])
+    })
+    expect(getProducts).toHaveBeenCalledWith({
+      ...baseParams,
+      page: 1,
+      inStockOnly: true,
     })
     expect(result.current.totalCount).toBe(2)
     expect(result.current.isLoading).toBe(false)

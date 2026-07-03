@@ -27,10 +27,11 @@ describe('productService', () => {
       pageSize: 12,
       minPrice: 10000,
       maxPrice: '',
+      inStockOnly: true,
     })
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      '/api/products?category=electronics&sort=price-asc&q=keyboard&page=2&size=12&minPrice=10000',
+      '/api/products?category=electronics&sort=price-asc&q=keyboard&page=2&size=12&minPrice=10000&inStock=true',
     )
   })
 
@@ -49,6 +50,7 @@ describe('productService', () => {
         pageSize: 12,
         minPrice: '',
         maxPrice: '',
+        inStockOnly: false,
       }),
     ).rejects.toThrow('API 호출 실패 (status: 500)')
   })

@@ -12,6 +12,7 @@ type GetProductsParams = {
   pageSize: number
   minPrice: number | ''
   maxPrice: number | ''
+  inStockOnly: boolean
 }
 
 export const productService = {
@@ -30,6 +31,10 @@ export const productService = {
 
     if (params.maxPrice !== '') {
       searchParams.set('maxPrice', String(params.maxPrice))
+    }
+
+    if (params.inStockOnly) {
+      searchParams.set('inStock', 'true')
     }
 
     const response = await fetch(`/api/products?${searchParams.toString()}`)

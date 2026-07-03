@@ -53,17 +53,14 @@ export function useProducts({
           pageSize,
           minPrice,
           maxPrice,
+          inStockOnly,
         })
 
         if (ignore) {
           return
         }
 
-        const filtered = inStockOnly
-          ? data.products.filter((product) => product.stock > 0)
-          : data.products
-
-        setProducts(filtered)
+        setProducts(data.products)
         setTotalCount(data.totalCount)
       } catch (err) {
         if (!ignore) {
