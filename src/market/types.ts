@@ -30,7 +30,11 @@ export type Member = {
 }
 
 export type OrderStatus =
-  'paid' | 'preparing' | 'shipped' | 'delivered' | 'cancelled'
+  | 'paid'
+  | 'preparing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
 
 export type PastOrder = {
   id: string
