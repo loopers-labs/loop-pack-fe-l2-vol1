@@ -78,10 +78,13 @@ export function useProductFilter() {
   );
 
   // 검색어 디바운스 (300ms)
+  // setSearchQuery 함수형 업데이트로 이전 값과 비교해 실제 변경 시에만 페이지 리셋
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearchQuery(searchInput);
-      setPage(1);
+      setSearchQuery((prev) => {
+        if (prev !== searchInput) setPage(1);
+        return searchInput;
+      });
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [searchInput]);
