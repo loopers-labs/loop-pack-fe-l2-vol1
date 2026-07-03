@@ -121,11 +121,6 @@ export function ProductListPage() {
   const endPage = Math.min(totalPages, page + PAGE_WINDOW);
   for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
 
-  // ─── 로딩/에러는 early return ───────────────────────────
-  if (isLoading && products.length === 0) {
-    return <div className="loading">로딩 중...</div>;
-  }
-
   if (error) {
     return (
       <div className="error">
@@ -134,6 +129,21 @@ export function ProductListPage() {
       </div>
     );
   }
+
+  const renderProducts = () => {
+    if (products.length === 0)
+      return <div className="empty">조건에 맞는 상품이 없습니다.</div>;
+    return products.map((product) => (
+      <ProductCard
+        key={product.id}
+        product={product}
+        searchQuery={searchQuery}
+        isWished={wishlist.includes(product.id)}
+        onWishlistToggle={toggleWishlist}
+        onClick={handleProductClick}
+      />
+    ));
+  };
 
   return (
     <div className="product-list-page">
@@ -236,37 +246,27 @@ export function ProductListPage() {
       </section>
 
       {/* ─── 상품 그리드 ────────────────────────────────── */}
-      <section
-        className="product-grid"
-        style={viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined}
-      >
-        {products.length === 0 ? (
-          <div className="empty">조건에 맞는 상품이 없습니다.</div>
-        ) : (
-          products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              searchQuery={searchQuery}
-              isWished={wishlist.includes(product.id)}
-              onWishlistToggle={toggleWishlist}
-              onClick={handleProductClick}
-            />
-          ))
-        )}
-      </section>
+      {isLoading ? (
+        <div className="loading">로딩 중...</div>
+      ) : (
+        <section
+          className="product-grid"
+          style={
+            viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined
+          }
+        >
+          {renderProducts()}
+        </section>
+      )}
 
       {/* ─── 페이지네이션 ───────────────────────────────── */}
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        pageNumbers={pageNumbers}
-        onPageChange={handlePageChange}
-      />
-
-      {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
-      {isLoading && products.length > 0 && (
-        <div className="background-loading">데이터 갱신 중...</div>
+      {!isLoading && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          pageNumbers={pageNumbers}
+          onPageChange={handlePageChange}
+        />
       )}
     </div>
   );
