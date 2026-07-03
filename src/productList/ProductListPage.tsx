@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
-import type { Product } from './type';
+import type { Product, SortBy } from './type';
 import {
   useProductFilter,
   CATEGORIES,
@@ -45,7 +45,13 @@ export function ProductListPage() {
     maxPrice,
     inStockOnly,
   });
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(
+    () => (localStorage.getItem('viewMode') as 'grid' | 'list') ?? 'grid',
+  );
+
+  useEffect(() => {
+    localStorage.setItem('viewMode', viewMode);
+  }, [viewMode]);
 
   // ─── 위시리스트 (localStorage 동기화) ───────────────────
   const { wishlist, toggleWishlist } = useWishlist();

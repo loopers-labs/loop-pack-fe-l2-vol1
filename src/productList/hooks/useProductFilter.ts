@@ -22,14 +22,65 @@ export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 export const PAGE_SIZE = 12;
 export const PAGE_WINDOW = 2;
 
+function getInitialParams() {
+  return new URLSearchParams(window.location.search);
+}
+
+// 화이트리스트(validValues) 안에 있는 값만 통과시키고, 아니면 fallback 반환
+function pickFromList<T extends string>(
+  value: string | null,
+  validValues: readonly T[],
+  fallback: T,
+): T {
+  return value !== null && (validValues as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback;
+}
+
+// 문자열을 숫자로 안전하게 변환, 실패하면 fallback 반환
+function pickNumber(value: string | null, fallback: number | ''): number | '' {
+  if (value === null) return fallback;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
 export function useProductFilter() {
-  const [category, setCategory] = useState<'all' | Product['category']>('all');
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [sortBy, setSortBy] = useState<SortBy>('latest');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [inStockOnly, setInStockOnly] = useState(false);
+  const [category, setCategory] = useState<'all' | Product['category']>(() =>
+    pickFromList(
+      getInitialParams().get('category'),
+      CATEGORIES.map((c) => c.value),
+      'all',
+    ),
+  );
+
+  const [minPrice, setMinPrice] = useState<number | ''>(() =>
+    pickNumber(getInitialParams().get('minPrice'), ''),
+  );
+
+  const [maxPrice, setMaxPrice] = useState<number | ''>(() =>
+    pickNumber(getInitialParams().get('maxPrice'), ''),
+  );
+
+  const [sortBy, setSortBy] = useState<SortBy>(() =>
+    pickFromList(
+      getInitialParams().get('sort'),
+      SORT_OPTIONS.map((o) => o.value),
+      'latest',
+    ),
+  );
+
+  const [searchQuery, setSearchQuery] = useState(
+    () => getInitialParams().get('q') ?? '',
+  );
+
+  const [page, setPage] = useState(() => {
+    const parsed = pickNumber(getInitialParams().get('page'), 1);
+    return parsed === '' || parsed < 1 ? 1 : parsed;
+  });
+
+  const [inStockOnly, setInStockOnly] = useState(
+    () => getInitialParams().get('inStock') === 'true',
+  );
 
   useEffect(() => {
     const params = new URLSearchParams();
