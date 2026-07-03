@@ -4,8 +4,6 @@ paths: ["**/*.tsx", "**/*.jsx", "**/use*.ts"]
 
 # React 판단 규칙
 
-훅 순서·exhaustive-deps·useEffect 상태동기화·렌더 순수성은 **ESLint(react-hooks)가 강제**한다. 여기엔 기계가 못 잡는 판단만.
-
 - **상태 구조**: 동시에 참이면 안 되는 boolean들 대신 `status` 유니온(`'idle' | 'loading' | 'error' | 'success'`). 파생값은 state가 아니라 렌더 중 계산. 컬렉션의 선택은 객체 복사 말고 **id 저장** 후 find. props를 state로 미러링 금지(첫 값만 쓰면 `initialX`로 명명).
 - **상태 위치**: 쓰는 컴포넌트에 가깝게 둔다. "나중에 공유할지도"는 끌어올릴 이유가 아니다.
 - **상태 분류**: 서버 데이터 → 서버 상태 · UI 전용(모달 열림·탭 선택) → 로컬 `useState` · URL에 남아야 하는 것(필터·페이지·검색어) → URL 상태 · 여러 컴포넌트 공유 → Context/전역.
