@@ -48,4 +48,16 @@ describe('useProductFilters', () => {
     expect(result.current.searchQuery).toBe('')
     expect(result.current.inStockOnly).toBe(false)
   })
+
+  it('normalizes invalid price input to an empty filter value', () => {
+    const { result } = renderHook(() => useProductFilters())
+
+    act(() => {
+      result.current.changeMinPrice('abc')
+      result.current.changeMaxPrice('NaN')
+    })
+
+    expect(result.current.minPrice).toBe('')
+    expect(result.current.maxPrice).toBe('')
+  })
 })

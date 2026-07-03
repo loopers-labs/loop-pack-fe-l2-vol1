@@ -48,9 +48,10 @@ export function ProductListPage() {
     pageSize: PAGE_SIZE,
     initialPage: initialState.page,
   })
+  const { page, changePage, resetPage } = pagination
   const filters = useProductFilters({
     initialFilters: initialState.filters,
-    onFilterChange: pagination.resetPage,
+    onFilterChange: resetPage,
   })
   const { wishlist, toggleWishlist } = useWishlist()
   const { rememberProduct } = useRecentlyViewed()
@@ -60,7 +61,7 @@ export function ProductListPage() {
     category,
     sortBy,
     searchQuery,
-    page: pagination.page,
+    page,
     pageSize: PAGE_SIZE,
     minPrice,
     maxPrice,
@@ -71,7 +72,13 @@ export function ProductListPage() {
   // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [pagination.page])
+  }, [page])
+
+  useEffect(() => {
+    if (productsQuery.hasLoaded && page > pageInfo.totalPages) {
+      changePage(pageInfo.totalPages)
+    }
+  }, [changePage, page, pageInfo.totalPages, productsQuery.hasLoaded])
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   useEffect(() => {
@@ -84,26 +91,18 @@ export function ProductListPage() {
         maxPrice,
         inStockOnly,
       },
-      page: pagination.page,
+      page,
     })
 
     window.history.replaceState(null, '', `?${params.toString()}`)
-  }, [
-    category,
-    searchQuery,
-    pagination.page,
-    sortBy,
-    minPrice,
-    maxPrice,
-    inStockOnly,
-  ])
+  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly])
 
   const handleCategoryChange = (cat: ProductCategoryFilter) => {
     filters.changeCategory(cat)
   }
 
   const handlePageChange = (next: number) => {
-    pagination.changePage(next)
+    changePage(next)
   }
 
   const handleResetFilters = () => {

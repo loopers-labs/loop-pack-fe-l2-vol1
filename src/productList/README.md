@@ -35,6 +35,8 @@
 | 새로고침/공유 링크에서 필터, 검색어, 페이지가 초기화됨 | `productListUrl.ts`에서 URL query를 읽고 쓰는 규칙을 분리했습니다. | `ProductListPage.test.tsx`, `productListUrl.test.ts` |
 | API 에러 후 전체 페이지 새로고침 없이는 재시도할 수 없음 | `useProducts`가 `refetch`를 반환하고, 에러 화면의 다시 시도 버튼이 같은 조건으로 재요청합니다. | `ProductListPage.test.tsx` |
 | 재고 필터가 클라이언트에서만 적용되어 totalCount와 요청 계약이 어긋남 | `productService`가 `inStock=true`를 API query에 포함하고, `useProducts`는 서버 응답을 그대로 사용합니다. | `productService.test.ts`, `useProducts.test.ts` |
+| URL에 결과 범위를 벗어난 page가 들어오면 빈 페이지가 유지됨 | 성공 응답으로 totalCount를 받은 뒤 현재 page가 totalPages보다 크면 마지막 페이지로 보정합니다. | `ProductListPage.test.tsx` |
+| 가격 입력에 비정상 문자열이 들어오면 `NaN`이 API query로 전파됨 | 필터 훅에서 finite/non-negative 숫자만 가격 상태로 인정하고, 나머지는 빈 필터로 정규화합니다. | `useProductFilters.test.ts` |
 | 검색어에 `.` 같은 정규식 특수문자가 들어오면 하이라이트가 깨질 수 있음 | `textHighlight.ts`에서 사용자 입력을 문자열 기준으로 분리합니다. | `textHighlight.test.ts`, `ProductListPage.test.tsx` |
 
 ## 검증한 동작

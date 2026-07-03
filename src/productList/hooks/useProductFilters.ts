@@ -7,6 +7,16 @@ type UseProductFiltersParams = {
   onFilterChange?: () => void
 }
 
+function parsePriceFilter(value: string): number | '' {
+  if (value === '') {
+    return ''
+  }
+
+  const parsed = Number(value)
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : ''
+}
+
 export function useProductFilters({
   initialFilters,
   onFilterChange,
@@ -40,12 +50,12 @@ export function useProductFilters({
   }
 
   const changeMinPrice = (value: string) => {
-    setMinPrice(value === '' ? '' : Number(value))
+    setMinPrice(parsePriceFilter(value))
     notifyFilterChange()
   }
 
   const changeMaxPrice = (value: string) => {
-    setMaxPrice(value === '' ? '' : Number(value))
+    setMaxPrice(parsePriceFilter(value))
     notifyFilterChange()
   }
 

@@ -60,6 +60,11 @@ describe('ProductListPage', () => {
 
   it('retries a failed product request without reloading the page', async () => {
     const user = userEvent.setup()
+    window.history.replaceState(
+      null,
+      '',
+      '?category=fashion&q=coat&sort=price-desc&minPrice=10000&inStock=true',
+    )
     vi.mocked(globalThis.fetch)
       .mockResolvedValueOnce({
         ok: false,
@@ -84,5 +89,19 @@ describe('ProductListPage', () => {
     expect(
       screen.queryByText('오류가 발생했습니다: API 호출 실패 (status: 500)'),
     ).not.toBeInTheDocument()
+  })
+
+  it('clamps an out-of-range URL page after total count is known', async () => {
+    window.history.replaceState(null, '', '?page=999')
+    vi.mocked(globalThis.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ products: [], totalCount: 24 }),
+    } as Response)
+
+    render(<ProductListPage />)
+
+    await waitFor(() => {
+      expect(window.location.search).toBe('?page=2')
+    })
   })
 })

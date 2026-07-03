@@ -36,6 +36,7 @@ export function useProducts({
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [hasLoaded, setHasLoaded] = useState(false)
   const [refetchKey, setRefetchKey] = useState(0)
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export function useProducts({
     const fetchProducts = async () => {
       setIsLoading(true)
       setError(null)
+      setHasLoaded(false)
 
       try {
         const data: ProductListResponse = await getProducts({
@@ -63,6 +65,7 @@ export function useProducts({
 
         setProducts(data.products)
         setTotalCount(data.totalCount)
+        setHasLoaded(true)
       } catch (err) {
         if (!ignore) {
           setError(err as Error)
@@ -97,6 +100,7 @@ export function useProducts({
     totalCount,
     isLoading,
     error,
+    hasLoaded,
     refetch: () => setRefetchKey((key) => key + 1),
   }
 }
