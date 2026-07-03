@@ -115,18 +115,20 @@ mock API 환경이라 네트워크 오프라인으로는 재현 불가. `product
 
 ---
 
-### 버그 3 — 검색어 입력마다 API 과다 요청
+### 버그 3 — 검색어/가격 입력마다 API 과다 요청
 
 **재현 방법**
 1. 브라우저 개발자도구 → Network 탭 열기
-2. 검색창에 "apple" 타이핑
-3. 글자 수만큼 API 요청이 발생하는지 확인
+2. 검색창에 "apple" 타이핑 또는 가격 입력
+3. 글자/숫자 수만큼 API 요청이 발생하는지 확인
 
 **원인**
-검색어 상태가 바뀔 때마다 즉시 `useProductList`가 re-fetch함. 디바운스 없음.
+검색어/가격 상태가 바뀔 때마다 즉시 `useProductList`가 re-fetch함. 디바운스 없음.
 
 **수정 방법**
-`useProductFilter`에서 검색어를 `searchInput`(입력창 즉시 반영)과 `searchQuery`(300ms 디바운스 후 API에 전달)로 분리. 입력창은 `searchInput`을 사용하고, `useProductList`에는 `searchQuery`를 넘김.
+`useProductFilter`에서 입력값과 API 전달값을 분리.
+- 검색어: `searchInput`(입력창 즉시 반영) / `searchQuery`(300ms 디바운스 후 API 전달)
+- 가격: `minPriceInput`/`maxPriceInput`(입력창 즉시 반영) / `minPrice`/`maxPrice`(300ms 디바운스 후 API 전달). 하나의 `useEffect`로 두 값을 함께 처리.
 
 **방식을 선택한 이유**
 타이핑이 멈춘 뒤 한 번만 요청해 자연스럽게 검색되면서 불필요한 요청도 줄일 수 있음.
@@ -134,13 +136,13 @@ mock API 환경이라 네트워크 오프라인으로는 재현 불가. `product
 #### 추가 발견 — 초기 마운트 시 페이지 리셋
 
 **증상**
-URL에 `?q=노이즈&page=3`으로 접근하면 페이지가 3이 아닌 1로 초기화됨.
+URL에 `?q=노이즈&page=3`으로 접근하면 페이지가 3이 아닌 1로 초기화됨. 가격 디바운스도 동일한 문제가 발생.
 
 **원인**
-디바운스 `useEffect`는 `searchInput`이 바뀔 때마다 실행되는데, 초기 마운트 시에도 한 번 실행됨. 이때 `setPage(1)`이 호출되어 URL에서 복원한 페이지 값을 덮어씀.
+디바운스 `useEffect`는 초기 마운트 시에도 한 번 실행됨. 이때 `setPage(1)`이 호출되어 URL에서 복원한 페이지 값을 덮어씀. 검색어와 가격 모두 해당.
 
 **수정 방법**
-`setSearchQuery`를 함수형 업데이트로 바꿔 이전 값(`prev`)과 현재 값(`searchInput`)을 비교. 실제로 달라졌을 때만 `setPage(1)`을 호출.
+`setSearchQuery`, `setMinPrice`, `setMaxPrice`를 함수형 업데이트로 바꿔 이전 값(`prev`)과 현재 값을 비교. 실제로 달라졌을 때만 `setPage(1)`을 호출.
 
 **방식을 선택한 이유**
 `setSearchQuery` 함수형 업데이트로 이전 값과 비교해, 쿼리가 실제로 바뀔 때만 `setPage(1)`을 호출하도록 수정.

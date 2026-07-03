@@ -54,10 +54,16 @@ export function useProductFilter() {
     ),
   );
 
+  const [minPriceInput, setMinPriceInput] = useState<number | ''>(() =>
+    pickNumber(getInitialParams().get('minPrice'), ''),
+  );
   const [minPrice, setMinPrice] = useState<number | ''>(() =>
     pickNumber(getInitialParams().get('minPrice'), ''),
   );
 
+  const [maxPriceInput, setMaxPriceInput] = useState<number | ''>(() =>
+    pickNumber(getInitialParams().get('maxPrice'), ''),
+  );
   const [maxPrice, setMaxPrice] = useState<number | ''>(() =>
     pickNumber(getInitialParams().get('maxPrice'), ''),
   );
@@ -76,6 +82,21 @@ export function useProductFilter() {
   const [searchQuery, setSearchQuery] = useState(
     () => getInitialParams().get('q') ?? '',
   );
+
+  // 가격 디바운스 (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinPrice((prev) => {
+        if (prev !== minPriceInput) setPage(1);
+        return minPriceInput;
+      });
+      setMaxPrice((prev) => {
+        if (prev !== maxPriceInput) setPage(1);
+        return maxPriceInput;
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [minPriceInput, maxPriceInput]);
 
   // 검색어 디바운스 (300ms)
   // setSearchQuery 함수형 업데이트로 이전 값과 비교해 실제 변경 시에만 페이지 리셋
@@ -113,10 +134,12 @@ export function useProductFilter() {
   return {
     category,
     setCategory,
+    minPriceInput,
+    setMinPriceInput,
+    maxPriceInput,
+    setMaxPriceInput,
     minPrice,
-    setMinPrice,
     maxPrice,
-    setMaxPrice,
     sortBy,
     setSortBy,
     searchInput,

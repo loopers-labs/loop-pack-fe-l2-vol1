@@ -22,10 +22,12 @@ export function ProductListPage() {
   const {
     category,
     setCategory,
+    minPriceInput,
+    setMinPriceInput,
+    maxPriceInput,
+    setMaxPriceInput,
     minPrice,
-    setMinPrice,
     maxPrice,
-    setMaxPrice,
     sortBy,
     setSortBy,
     searchInput,
@@ -72,14 +74,12 @@ export function ProductListPage() {
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
-    setMinPrice(v === '' ? '' : Number(v));
-    setPage(1);
+    setMinPriceInput(v === '' ? '' : Number(v));
   };
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
-    setMaxPrice(v === '' ? '' : Number(v));
-    setPage(1);
+    setMaxPriceInput(v === '' ? '' : Number(v));
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -102,8 +102,8 @@ export function ProductListPage() {
 
   const handleResetFilters = () => {
     setCategory('all');
-    setMinPrice('');
-    setMaxPrice('');
+    setMinPriceInput('');
+    setMaxPriceInput('');
     setSortBy('latest');
     setSearchInput('');
     setInStockOnly(false);
@@ -187,7 +187,7 @@ export function ProductListPage() {
             <input
               type="number"
               placeholder="최소"
-              value={minPrice}
+              value={minPriceInput}
               onChange={handleMinPriceChange}
               min={0}
             />
@@ -195,7 +195,7 @@ export function ProductListPage() {
             <input
               type="number"
               placeholder="최대"
-              value={maxPrice}
+              value={maxPriceInput}
               onChange={handleMaxPriceChange}
               min={0}
             />
