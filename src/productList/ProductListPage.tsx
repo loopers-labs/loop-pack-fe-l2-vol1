@@ -7,6 +7,7 @@ import { usePersistentList } from "./hooks/usePersistentList";
 import { PageHeader } from "./components/PageHeader";
 import { FilterPanel } from "./components/FilterPanel";
 import { SearchSortBar } from "./components/SearchSortBar";
+import { AsyncBoundary } from "./components/AsyncBoundary";
 import { ProductGrid } from "./components/ProductGrid";
 import { Pagination } from "./components/Pagination";
 import type { ViewMode } from "./types";
@@ -47,31 +48,6 @@ export function ProductListPage() {
   // ─── 보기 모드 (UI 전용 로컬 상태) ──────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
-  // ─── 상품 그리드 자리에만 로딩/에러 처리 ────────────────
-  const renderProducts = () => {
-    if (isLoading && visibleProducts.length === 0) {
-      return <div className="loading">로딩 중...</div>;
-    }
-
-    if (error) {
-      return (
-        <div className="error">
-          <p>오류가 발생했습니다: {error.message}</p>
-          <button onClick={refetch}>다시 시도</button>
-        </div>
-      );
-    }
-
-    return (
-      <ProductGrid
-        products={visibleProducts}
-        viewMode={viewMode}
-        searchQuery={searchQuery}
-        wishlistStore={wishlistStore}
-      />
-    );
-  };
-
   return (
     <div className="product-list-page">
       <PageHeader
@@ -87,7 +63,19 @@ export function ProductListPage() {
         onViewModeChange={setViewMode}
       />
 
-      {renderProducts()}
+      {/* ─── 상품 그리드 자리에만 로딩/에러 처리 ────────── */}
+      <AsyncBoundary
+        isLoading={isLoading && visibleProducts.length === 0}
+        error={error}
+        onRetry={refetch}
+      >
+        <ProductGrid
+          products={visibleProducts}
+          viewMode={viewMode}
+          searchQuery={searchQuery}
+          wishlistStore={wishlistStore}
+        />
+      </AsyncBoundary>
 
       <Pagination
         page={page}
