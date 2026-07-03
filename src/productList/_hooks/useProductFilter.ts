@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from './useDebounce';
-
-type Category = 'all' | 'electronics' | 'fashion' | 'home' | 'beauty';
-type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
+import type { Category, SortBy } from '../types';
 
 const DEBOUNCE_MS = 500;
 

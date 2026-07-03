@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './ProductListPage.css';
+import type { Category, SortBy } from './types';
 import {
   calcDiscountRate,
   calcPageNumbers,
@@ -12,30 +13,7 @@ import { useWishlist } from './_hooks/useWishlist';
 import { useRecentlyViewed } from './_hooks/useRecentlyViewed';
 import { HighlightText } from './_components/HighlightText';
 
-// ─────────────────────────────────────────────────────────
-// 타입도 한 파일에 (실무에서 흔히 보는 모습)
-// ─────────────────────────────────────────────────────────
-
-type Product = {
-  id: number;
-  name: string;
-  category: 'electronics' | 'fashion' | 'home' | 'beauty';
-  price: number;
-  originalPrice?: number;
-  stock: number;
-  imageUrl: string;
-  createdAt: string;
-  rating: number;
-  reviewCount: number;
-};
-
-type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
-
-// ─────────────────────────────────────────────────────────
-// 카테고리 / 정렬 옵션 — 컴포넌트 안에 들고 다닌다
-// ─────────────────────────────────────────────────────────
-
-const CATEGORIES: { value: 'all' | Product['category']; label: string }[] = [
+const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'all', label: '전체' },
   { value: 'electronics', label: '전자제품' },
   { value: 'fashion', label: '패션' },
@@ -51,10 +29,6 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 ];
 
 const PAGE_SIZE = 12;
-
-// ─────────────────────────────────────────────────────────
-// 500줄+ 컴포넌트 — UI, 비즈니스 로직, API, 포맷, 도메인 규칙이 한 파일에
-// ─────────────────────────────────────────────────────────
 
 export function ProductListPage() {
   // ─── 필터 / 검색 / 페이지 상태 ─────────────────────────

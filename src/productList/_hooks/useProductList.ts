@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { fetchProducts, type Product } from '../_services/productService';
+import { fetchProducts } from '../_services/productService';
+import type { Product } from '../types';
 
 type Params = {
   category: string;
