@@ -4,3 +4,7 @@ coverage
 pnpm-lock.yaml
 .husky/_
 docs/assignments/
+
+# 과제 제공 스타터(수정 금지 · 바이트 보존) — docs/assignments/와 같은 범주
+src/productList/_mockApi.ts
+src/productList/ProductListPage.css
