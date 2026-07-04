@@ -9,25 +9,14 @@ import type { Filters } from "./types.ts";
  * - page를 제외한 필터가 바뀌면 page를 1로 리셋한다.
  */
 export function useProductFilters() {
-  const [category, setCategoryState] = useState<Filters["category"]>(
-    () => parseQueryToFilters(window.location.search).category,
-  );
-  const [minPrice, setMinPriceState] = useState<Filters["minPrice"]>(
-    () => parseQueryToFilters(window.location.search).minPrice,
-  );
-  const [maxPrice, setMaxPriceState] = useState<Filters["maxPrice"]>(
-    () => parseQueryToFilters(window.location.search).maxPrice,
-  );
-  const [sortBy, setSortByState] = useState<Filters["sortBy"]>(
-    () => parseQueryToFilters(window.location.search).sortBy,
-  );
-  const [searchQuery, setSearchQueryState] = useState<Filters["searchQuery"]>(
-    () => parseQueryToFilters(window.location.search).searchQuery,
-  );
-  const [inStockOnly, setInStockOnlyState] = useState<Filters["inStockOnly"]>(
-    () => parseQueryToFilters(window.location.search).inStockOnly,
-  );
-  const [page, setPage] = useState<number>(() => parseQueryToFilters(window.location.search).page);
+  const [initial] = useState(() => parseQueryToFilters(window.location.search));
+  const [category, setCategoryState] = useState<Filters["category"]>(initial.category);
+  const [minPrice, setMinPriceState] = useState<Filters["minPrice"]>(initial.minPrice);
+  const [maxPrice, setMaxPriceState] = useState<Filters["maxPrice"]>(initial.maxPrice);
+  const [sortBy, setSortByState] = useState<Filters["sortBy"]>(initial.sortBy);
+  const [searchQuery, setSearchQueryState] = useState<Filters["searchQuery"]>(initial.searchQuery);
+  const [inStockOnly, setInStockOnlyState] = useState<Filters["inStockOnly"]>(initial.inStockOnly);
+  const [page, setPage] = useState<number>(initial.page);
 
   useEffect(() => {
     const query = serializeFiltersToQuery({

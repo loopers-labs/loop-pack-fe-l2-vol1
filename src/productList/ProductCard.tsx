@@ -20,11 +20,8 @@ export function ProductCard({
   onToggleWishlist,
   onClick,
 }: ProductCardProps) {
-  const { discountRate, isNew, isHot, isBest, isSoldOut, isAlmostSoldOut } = computeBadges(
-    product,
-    new Date(),
-  );
-  const isFreeShipping = product.price >= 50000;
+  const { discountRate, isNew, isHot, isBest, isSoldOut, isAlmostSoldOut, isFreeShipping } =
+    computeBadges(product, new Date());
 
   return (
     <article className="product-card" onClick={() => onClick(product.id)}>
