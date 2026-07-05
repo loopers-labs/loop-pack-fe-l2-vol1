@@ -32,6 +32,7 @@ describe('ProductListPage', () => {
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/products?category=fashion&sort=price-desc&q=coat&page=2&size=12&minPrice=10000&inStock=true',
+        { signal: expect.any(AbortSignal) },
       )
     })
 
@@ -54,6 +55,7 @@ describe('ProductListPage', () => {
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenLastCalledWith(
         '/api/products?category=fashion&sort=price-desc&q=.&page=1&size=12&minPrice=10000&inStock=true',
+        { signal: expect.any(AbortSignal) },
       )
     })
   })

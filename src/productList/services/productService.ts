@@ -16,7 +16,10 @@ type GetProductsParams = {
 }
 
 export const productService = {
-  async getProducts(params: GetProductsParams): Promise<ProductListResponse> {
+  async getProducts(
+    params: GetProductsParams,
+    signal?: AbortSignal,
+  ): Promise<ProductListResponse> {
     const searchParams = new URLSearchParams({
       category: params.category,
       sort: params.sortBy,
@@ -37,7 +40,9 @@ export const productService = {
       searchParams.set('inStock', 'true')
     }
 
-    const response = await fetch(`/api/products?${searchParams.toString()}`)
+    const response = await fetch(`/api/products?${searchParams.toString()}`, {
+      signal,
+    })
 
     if (!response.ok) {
       throw new Error(`API 호출 실패 (status: ${response.status})`)

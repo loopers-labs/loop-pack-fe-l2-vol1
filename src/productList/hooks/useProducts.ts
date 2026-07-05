@@ -40,7 +40,7 @@ export function useProducts({
   const [refetchKey, setRefetchKey] = useState(0)
 
   useEffect(() => {
-    let ignore = false
+    const controller = new AbortController()
 
     const fetchProducts = async () => {
       setIsLoading(true)
@@ -48,18 +48,23 @@ export function useProducts({
       setHasLoaded(false)
 
       try {
-        const data: ProductListResponse = await getProducts({
-          category,
-          sortBy,
-          searchQuery,
-          page,
-          pageSize,
-          minPrice,
-          maxPrice,
-          inStockOnly,
-        })
+        const data: ProductListResponse = await getProducts(
+          {
+            category,
+            sortBy,
+            searchQuery,
+            page,
+            pageSize,
+            minPrice,
+            maxPrice,
+            inStockOnly,
+          },
+          controller.signal,
+        )
 
-        if (ignore) {
+        // 실제 fetch는 abort로 끊기지만, 주입된 getProducts가 signal을 무시할 수도
+        // 있으므로 늦게 도착한 응답도 여기서 한 번 더 버린다.
+        if (controller.signal.aborted) {
           return
         }
 
@@ -67,11 +72,11 @@ export function useProducts({
         setTotalCount(data.totalCount)
         setHasLoaded(true)
       } catch (err) {
-        if (!ignore) {
+        if (!controller.signal.aborted) {
           setError(err as Error)
         }
       } finally {
-        if (!ignore) {
+        if (!controller.signal.aborted) {
           setIsLoading(false)
         }
       }
@@ -79,9 +84,8 @@ export function useProducts({
 
     fetchProducts()
 
-    return () => {
-      ignore = true
-    }
+    // 이전 요청을 실제로 취소한다(ignore 플래그는 응답만 버릴 뿐 요청은 계속 나간다).
+    return () => controller.abort()
   }, [
     category,
     sortBy,

@@ -94,11 +94,14 @@ describe('useProducts', () => {
         1, 2,
       ])
     })
-    expect(getProducts).toHaveBeenCalledWith({
-      ...baseParams,
-      page: 1,
-      inStockOnly: true,
-    })
+    expect(getProducts).toHaveBeenCalledWith(
+      {
+        ...baseParams,
+        page: 1,
+        inStockOnly: true,
+      },
+      expect.any(AbortSignal),
+    )
     expect(result.current.totalCount).toBe(2)
     expect(result.current.isLoading).toBe(false)
     expect(result.current.error).toBeNull()

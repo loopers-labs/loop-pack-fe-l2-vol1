@@ -32,6 +32,7 @@ describe('productService', () => {
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
       '/api/products?category=electronics&sort=price-asc&q=keyboard&page=2&size=12&minPrice=10000&inStock=true',
+      { signal: undefined },
     )
   })
 
