@@ -1,4 +1,5 @@
 export { Checkbox } from './Checkbox'
+export { DebouncedInput } from './DebouncedInput'
 export { Field } from './Field'
 export { FieldDescription } from './FieldDescription'
 export { FieldError } from './FieldError'

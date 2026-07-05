@@ -1,0 +1,1 @@
+export { useProductInteraction } from './useProductInteraction'

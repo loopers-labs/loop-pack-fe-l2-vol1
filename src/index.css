@@ -86,3 +86,7 @@ code {
   font-size: 15px;
   line-height: 135%;
 }
+
+@theme {
+  --spacing: 4px;
+}

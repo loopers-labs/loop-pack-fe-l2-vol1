@@ -1,11 +1,11 @@
 import { ModalProvider } from '@ilokesto/modal'
 
-import { CheckoutPage } from '@/pages/market'
+import { ProductListPage } from './pages/product-list'
 
 export function App() {
   return (
     <ModalProvider>
-      <CheckoutPage />
+      <ProductListPage />
     </ModalProvider>
   )
 }
