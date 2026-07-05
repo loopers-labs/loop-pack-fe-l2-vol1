@@ -84,29 +84,21 @@ export function useProductFilter() {
   // 가격 디바운스 (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
-      setMinPrice((prev) => {
-        if (prev !== minPriceInput) setPage(1);
-        return minPriceInput;
-      });
-      setMaxPrice((prev) => {
-        if (prev !== maxPriceInput) setPage(1);
-        return maxPriceInput;
-      });
+      if (minPriceInput !== minPrice || maxPriceInput !== maxPrice) setPage(1);
+      setMinPrice(minPriceInput);
+      setMaxPrice(maxPriceInput);
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [minPriceInput, maxPriceInput]);
+  }, [minPriceInput, maxPriceInput, minPrice, maxPrice]);
 
   // 검색어 디바운스 (300ms)
-  // setSearchQuery 함수형 업데이트로 이전 값과 비교해 실제 변경 시에만 페이지 리셋
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearchQuery((prev) => {
-        if (prev !== searchInput) setPage(1);
-        return searchInput;
-      });
+      if (searchInput !== searchQuery) setPage(1);
+      setSearchQuery(searchInput);
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, searchQuery]);
 
   const [page, setPage] = useState(() => {
     const parsed = pickNumber(getInitialParams().get('page'), 1);
