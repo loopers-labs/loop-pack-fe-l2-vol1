@@ -98,6 +98,13 @@ export function ProductListPage() {
 
   // ─── 필터·검색·페이지 상태가 바뀔 때마다 URL 쿼리 동기화 ──
   useEffect(() => {
+    // 디바운스 진행 중(입력값 != 요청값)에는 URL 동기화를 보류한다.
+    // 이걸 안 하면 뒤로가기 직후 지연된 디바운스가 replace 플래그를 지나
+    // pushState로 실행되어 히스토리에 잘못된 항목을 쌓는다.
+    if (searchQuery !== debouncedSearchQuery) {
+      return
+    }
+
     const params = buildProductListSearchParams({
       filters: {
         category,
@@ -119,6 +126,7 @@ export function ProductListPage() {
     }
   }, [
     category,
+    searchQuery,
     debouncedSearchQuery,
     page,
     sortBy,
