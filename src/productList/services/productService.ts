@@ -1,5 +1,5 @@
 import type { ProductListResponse, ProductListParams } from '../type';
-import { PAGE_SIZE } from '../hooks/useProductFilter';
+import { PAGE_SIZE } from '../constants';
 
 export async function fetchProducts(
   params: ProductListParams,

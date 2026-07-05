@@ -5,9 +5,8 @@ import {
   useProductFilter,
   CATEGORIES,
   SORT_OPTIONS,
-  PAGE_SIZE,
-  PAGE_WINDOW,
 } from './hooks/useProductFilter';
+import { PAGE_SIZE, PAGE_WINDOW } from './constants';
 import { useProductList } from './hooks/useProductList';
 import { useWishlist } from './hooks/useWishlist';
 import { useRecentlyViewed } from './hooks/useRecentlyViewed';
