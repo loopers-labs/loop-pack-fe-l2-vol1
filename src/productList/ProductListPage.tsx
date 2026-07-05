@@ -4,6 +4,7 @@ import { ProductFilterPanel } from './components/ProductFilterPanel'
 import { ProductGrid } from './components/ProductGrid'
 import { ProductPagination } from './components/ProductPagination'
 import { ProductToolbar } from './components/ProductToolbar'
+import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { useProductFilters } from './hooks/useProductFilters'
 import { useProductPagination } from './hooks/useProductPagination'
 import { useProducts } from './hooks/useProducts'
@@ -57,10 +58,13 @@ export function ProductListPage() {
   const { rememberProduct } = useRecentlyViewed()
   const { category, minPrice, maxPrice, sortBy, searchQuery, inStockOnly } =
     filters
+  // 타이핑마다 요청하지 않도록 검색어를 디바운스한다.
+  // 입력값(searchQuery)은 즉시 표시하고, 요청·URL·하이라이트는 debouncedSearchQuery를 쓴다.
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300)
   const productsQuery = useProducts({
     category,
     sortBy,
-    searchQuery,
+    searchQuery: debouncedSearchQuery,
     page,
     pageSize: PAGE_SIZE,
     minPrice,
@@ -85,7 +89,7 @@ export function ProductListPage() {
     const params = buildProductListSearchParams({
       filters: {
         category,
-        searchQuery,
+        searchQuery: debouncedSearchQuery,
         sortBy,
         minPrice,
         maxPrice,
@@ -95,7 +99,15 @@ export function ProductListPage() {
     })
 
     window.history.replaceState(null, '', `?${params.toString()}`)
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly])
+  }, [
+    category,
+    debouncedSearchQuery,
+    page,
+    sortBy,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+  ])
 
   const handleCategoryChange = (cat: ProductCategoryFilter) => {
     filters.changeCategory(cat)
@@ -165,7 +177,7 @@ export function ProductListPage() {
       <ProductGrid
         products={productsQuery.products}
         viewMode={viewMode}
-        searchQuery={searchQuery}
+        searchQuery={debouncedSearchQuery}
         wishlist={wishlist}
         onProductClick={handleProductClick}
         onToggleWishlist={toggleWishlist}
