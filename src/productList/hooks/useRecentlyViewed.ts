@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react'
+import { readStoredIds, writeStoredIds } from '../utils/localStorage'
 
 const RECENTLY_VIEWED_STORAGE_KEY = 'recentlyViewed'
 const RECENTLY_VIEWED_LIMIT = 10
-
-function readStoredIds(storageKey: string) {
-  try {
-    const stored = localStorage.getItem(storageKey)
-    return stored ? (JSON.parse(stored) as number[]) : []
-  } catch {
-    return []
-  }
-}
 
 export function useRecentlyViewed() {
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() =>
@@ -18,14 +10,7 @@ export function useRecentlyViewed() {
   )
 
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        RECENTLY_VIEWED_STORAGE_KEY,
-        JSON.stringify(recentlyViewed),
-      )
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
+    writeStoredIds(RECENTLY_VIEWED_STORAGE_KEY, recentlyViewed)
   }, [recentlyViewed])
 
   const rememberProduct = (productId: number) => {
