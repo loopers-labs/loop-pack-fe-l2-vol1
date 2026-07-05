@@ -1,7 +1,6 @@
 import { useState } from 'react'
 
 type UseProductPaginationParams = {
-  totalCount?: number
   pageSize: number
   initialPage?: number
 }
@@ -31,18 +30,16 @@ function getProductPageInfo({
 }
 
 export function useProductPagination({
-  totalCount = 0,
   pageSize,
   initialPage = 1,
 }: UseProductPaginationParams) {
   const [page, setPage] = useState(initialPage)
-  const pageInfo = getProductPageInfo({ page, totalCount, pageSize })
 
   return {
     page,
-    ...pageInfo,
-    getPageInfo: (nextTotalCount: number) =>
-      getProductPageInfo({ page, totalCount: nextTotalCount, pageSize }),
+    // totalCount는 서버 응답에서 오므로 계산 시점에 주입받는다(상태로 들지 않는다).
+    getPageInfo: (totalCount: number) =>
+      getProductPageInfo({ page, totalCount, pageSize }),
     changePage: setPage,
     resetPage: () => setPage(1),
   }
