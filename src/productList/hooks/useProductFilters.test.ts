@@ -60,4 +60,29 @@ describe('useProductFilters', () => {
     expect(result.current.minPrice).toBe('')
     expect(result.current.maxPrice).toBe('')
   })
+
+  it('applyFilters replaces every filter at once without notifying (popstate 복원용)', () => {
+    const onFilterChange = vi.fn()
+    const { result } = renderHook(() => useProductFilters({ onFilterChange }))
+
+    act(() => {
+      result.current.applyFilters({
+        category: 'home',
+        searchQuery: 'lamp',
+        sortBy: 'popular',
+        minPrice: 20000,
+        maxPrice: 80000,
+        inStockOnly: true,
+      })
+    })
+
+    expect(result.current.category).toBe('home')
+    expect(result.current.searchQuery).toBe('lamp')
+    expect(result.current.sortBy).toBe('popular')
+    expect(result.current.minPrice).toBe(20000)
+    expect(result.current.maxPrice).toBe(80000)
+    expect(result.current.inStockOnly).toBe(true)
+    // popstate 복원은 page도 URL에서 함께 오므로 필터 변경 알림을 트리거하지 않는다
+    expect(onFilterChange).not.toHaveBeenCalled()
+  })
 })

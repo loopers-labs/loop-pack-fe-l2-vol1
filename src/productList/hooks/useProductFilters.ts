@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { ProductCategoryFilter, SortBy } from '../types'
 import type { ProductListFiltersState } from '../utils/productListUrl'
 
@@ -84,6 +84,17 @@ export function useProductFilters({
     notifyFilterChange()
   }
 
+  // URL 복원(popstate)용 — 전체 필터를 한 번에 교체한다. page 리셋은 트리거하지 않는다.
+  // (popstate 때는 page도 URL에서 함께 복원하므로 onFilterChange를 부르면 안 된다.)
+  const applyFilters = useCallback((next: ProductListFiltersState) => {
+    setCategory(next.category)
+    setMinPrice(next.minPrice)
+    setMaxPrice(next.maxPrice)
+    setSortBy(next.sortBy)
+    setSearchQuery(next.searchQuery)
+    setInStockOnly(next.inStockOnly)
+  }, [])
+
   return {
     category,
     minPrice,
@@ -98,5 +109,6 @@ export function useProductFilters({
     changeSearchQuery,
     changeInStockOnly,
     resetFilters,
+    applyFilters,
   }
 }

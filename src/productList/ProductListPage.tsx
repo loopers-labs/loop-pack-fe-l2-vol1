@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './ProductListPage.css'
 import { ProductFilterPanel } from './components/ProductFilterPanel'
 import { ProductGrid } from './components/ProductGrid'
@@ -40,6 +40,10 @@ const PAGE_SIZE = 12
 export function ProductListPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
+  // 첫 렌더·page 보정·popstate 복원은 히스토리에 새 항목을 만들지 않는다(replace).
+  // 사용자의 필터·페이지 변경만 push해서 뒤로가기가 이전 상태로 돌아가게 한다.
+  const replaceNextRef = useRef(true)
+
   const initialState = useMemo(
     () =>
       readProductListSearchParams(new URLSearchParams(window.location.search)),
@@ -56,8 +60,15 @@ export function ProductListPage() {
   })
   const { wishlist, toggleWishlist } = useWishlist()
   const { rememberProduct } = useRecentlyViewed()
-  const { category, minPrice, maxPrice, sortBy, searchQuery, inStockOnly } =
-    filters
+  const {
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    inStockOnly,
+    applyFilters,
+  } = filters
   // 타이핑마다 요청하지 않도록 검색어를 디바운스한다.
   // 입력값(searchQuery)은 즉시 표시하고, 요청·URL·하이라이트는 debouncedSearchQuery를 쓴다.
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300)
@@ -80,6 +91,7 @@ export function ProductListPage() {
 
   useEffect(() => {
     if (productsQuery.hasLoaded && page > pageInfo.totalPages) {
+      replaceNextRef.current = true
       changePage(pageInfo.totalPages)
     }
   }, [changePage, page, pageInfo.totalPages, productsQuery.hasLoaded])
@@ -98,7 +110,13 @@ export function ProductListPage() {
       page,
     })
 
-    window.history.replaceState(null, '', `?${params.toString()}`)
+    const url = `?${params.toString()}`
+    if (replaceNextRef.current) {
+      window.history.replaceState(null, '', url)
+      replaceNextRef.current = false
+    } else {
+      window.history.pushState(null, '', url)
+    }
   }, [
     category,
     debouncedSearchQuery,
@@ -108,6 +126,21 @@ export function ProductListPage() {
     maxPrice,
     inStockOnly,
   ])
+
+  // 뒤로/앞으로 가기 시 URL을 읽어 필터·페이지 상태를 복원한다.
+  useEffect(() => {
+    const handlePopState = () => {
+      const next = readProductListSearchParams(
+        new URLSearchParams(window.location.search),
+      )
+      replaceNextRef.current = true
+      applyFilters(next.filters)
+      changePage(next.page)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [applyFilters, changePage])
 
   const handleCategoryChange = (cat: ProductCategoryFilter) => {
     filters.changeCategory(cat)
