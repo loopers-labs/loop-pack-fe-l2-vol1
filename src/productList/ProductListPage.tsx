@@ -52,6 +52,8 @@ export function ProductListPage() {
 
   const { addRecentlyViewedProduct } = useRecentlyViewedProducts();
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
   const handlePageChange = (next: number) => {
     setPage(next);
   };
@@ -71,6 +73,14 @@ export function ProductListPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
+
+  useEffect(() => {
+    if (isInitialLoading || error || page <= totalPages) {
+      return;
+    }
+
+    setPage(totalPages, "replace");
+  }, [error, isInitialLoading, page, setPage, totalPages]);
 
   return (
     <div className="product-list-page">

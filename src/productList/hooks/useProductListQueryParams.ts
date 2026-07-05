@@ -9,6 +9,7 @@ const DEFAULT_SORT: SortBy = "latest";
 const DEFAULT_PAGE = 1;
 
 type QueryParamValue = string | number | "";
+type HistoryMode = "push" | "replace";
 
 function isProductCategory(value: string): value is ProductCategory {
   return (PRODUCT_CATEGORIES as readonly string[]).includes(value);
@@ -70,14 +71,24 @@ export function useProductListQueryParams() {
     };
   }, [search]);
 
-  const replaceSearch = (updater: (params: URLSearchParams) => void) => {
+  const updateSearch = (updater: (params: URLSearchParams) => void, mode: HistoryMode = "push") => {
     const params = new URLSearchParams(search);
     updater(params);
 
     const nextSearch = params.toString();
-    const nextUrl = nextSearch ? `?${nextSearch}` : window.location.pathname;
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
 
-    window.history.replaceState(null, "", nextUrl);
+    if (nextUrl === currentUrl) {
+      return;
+    }
+
+    if (mode === "replace") {
+      window.history.replaceState(null, "", nextUrl);
+    } else {
+      window.history.pushState(null, "", nextUrl);
+    }
+
     setSearch(window.location.search);
   };
 
@@ -100,7 +111,7 @@ export function useProductListQueryParams() {
     value: QueryParamValue,
     defaultValue: QueryParamValue = "",
   ) => {
-    replaceSearch((params) => {
+    updateSearch((params) => {
       setQueryParam(params, key, value, defaultValue);
       params.delete("page");
     });
@@ -130,14 +141,21 @@ export function useProductListQueryParams() {
     updateFilterParam("inStock", inStockOnly ? "true" : "");
   };
 
-  const setPage = (page: number) => {
-    replaceSearch((params) => {
+  const setPage = (page: number, mode: HistoryMode = "push") => {
+    updateSearch((params) => {
       setQueryParam(params, "page", page <= DEFAULT_PAGE ? DEFAULT_PAGE : page, DEFAULT_PAGE);
-    });
+    }, mode);
   };
 
   const resetQueryParams = () => {
-    window.history.replaceState(null, "", window.location.pathname);
+    const nextUrl = window.location.pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (nextUrl === currentUrl) {
+      return;
+    }
+
+    window.history.pushState(null, "", nextUrl);
     setSearch(window.location.search);
   };
 
