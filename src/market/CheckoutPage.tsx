@@ -2,15 +2,12 @@ import { useState } from 'react';
 import type { Address, Coupon, PaymentMethod } from './types';
 import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
 import { Price } from './Price';
-import { OrderLineRow } from './OrderLineRow';
+import { ProductLine } from './ProductLine';
+import { AmountLine } from './AmountLine';
 import { OrderStatusTag } from './OrderStatusTag';
 import { DeliveryMemo } from './DeliveryMemo';
 import { calculateOrderPrice } from './calculateOrderPrice';
 import './market.css';
-import {
-  AddressSelectionContext,
-  useAddressSelection,
-} from './AddressSelectionContext';
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
@@ -25,9 +22,11 @@ const PAYMENT_METHODS: PaymentMethod[] = ['card', 'transfer', 'kakao'];
 function DeliverySection({
   addresses,
   selectedAddressId,
+  onSelectAddress,
 }: {
   addresses: Address[];
   selectedAddressId: string;
+  onSelectAddress: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const selected =
@@ -44,6 +43,7 @@ function DeliverySection({
         <AddressForm
           addresses={addresses}
           selectedAddressId={selectedAddressId}
+          onSelectAddress={onSelectAddress}
         />
       ) : (
         <p className="addr-summary">
@@ -59,9 +59,11 @@ function DeliverySection({
 function AddressForm({
   addresses,
   selectedAddressId,
+  onSelectAddress,
 }: {
   addresses: Address[];
   selectedAddressId: string;
+  onSelectAddress: (id: string) => void;
 }) {
   const [onlyNear, setOnlyNear] = useState(false);
   const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
@@ -80,6 +82,7 @@ function AddressForm({
           key={a.id}
           address={a}
           selected={a.id === selectedAddressId}
+          onSelectAddress={onSelectAddress}
         />
       ))}
     </>
@@ -89,11 +92,12 @@ function AddressForm({
 function AddressField({
   address,
   selected,
+  onSelectAddress,
 }: {
   address: Address;
   selected: boolean;
+  onSelectAddress: (id: string) => void;
 }) {
-  const { onSelectAddress } = useAddressSelection();
   return (
     <label className="addr">
       <input
@@ -161,14 +165,11 @@ export function CheckoutPage() {
   return (
     <div className="checkout">
       <h1>주문/결제</h1>
-      <AddressSelectionContext.Provider
-        value={{ onSelectAddress: setSelectedAddressId }}
-      >
-        <DeliverySection
-          addresses={ADDRESSES}
-          selectedAddressId={selectedAddressId}
-        />
-      </AddressSelectionContext.Provider>
+      <DeliverySection
+        addresses={ADDRESSES}
+        selectedAddressId={selectedAddressId}
+        onSelectAddress={setSelectedAddressId}
+      />
       <div className="section">
         <h2>배송 요청사항</h2>
         <DeliveryMemo />
@@ -177,9 +178,8 @@ export function CheckoutPage() {
       <div className="section">
         <h2>주문 상품</h2>
         {cart.map((it) => (
-          <OrderLineRow
+          <ProductLine
             key={it.id}
-            type="product"
             label={it.name}
             amount={it.price * it.quantity}
             thumbnail={it.thumbnail}
@@ -238,24 +238,18 @@ export function CheckoutPage() {
 
       <div className="section">
         <h2>결제 금액</h2>
-        <OrderLineRow type="subtotal" label="상품 금액" amount={itemTotal} />
-        <OrderLineRow type="shipping" label="배송비" amount={shippingFee} />
+        <AmountLine label="상품 금액" amount={itemTotal} />
+        <AmountLine label="배송비" amount={shippingFee} />
         {appliedCoupon ? (
-          <OrderLineRow
-            type="coupon"
+          <AmountLine
             label="쿠폰 할인"
             amount={couponDiscount}
             isDiscount
-            couponCode={appliedCoupon.code}
+            caption={appliedCoupon.code}
           />
         ) : null}
         {usePoint ? (
-          <OrderLineRow
-            type="point"
-            label="적립금 사용"
-            amount={pointDiscount}
-            isDiscount
-          />
+          <AmountLine label="적립금 사용" amount={pointDiscount} isDiscount />
         ) : null}
         <div className="total">
           <span>최종 결제 금액</span>

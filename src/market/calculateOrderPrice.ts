@@ -40,11 +40,11 @@ export function calculateOrderPrice({
     ? Math.min(pointInput, member.point, itemTotal)
     : 0;
 
-  // VIP는 위 모든 할인 후 금액에서 추가 10%
-  const priceBeforeVip =
-    itemTotal + shippingFee - couponDiscount - pointDiscount;
+  // 등급(VIP) 할인: 상품가(itemTotal) 기준 10%. 배송비·쿠폰에는 적용하지 않는다.
+  const vipDiscount = member.grade === 'VIP' ? Math.round(itemTotal * 0.1) : 0;
+
   const finalPrice =
-    member.grade === 'VIP' ? Math.round(priceBeforeVip * 0.9) : priceBeforeVip;
+    itemTotal + shippingFee - couponDiscount - pointDiscount - vipDiscount;
 
   return { itemTotal, shippingFee, couponDiscount, pointDiscount, finalPrice };
 }
