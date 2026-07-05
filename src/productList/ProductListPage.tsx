@@ -39,15 +39,16 @@ export function ProductListPage() {
     setInStockOnly,
   } = useProductFilter();
 
-  const { products, totalCount, isLoading, error, retry } = useProductList({
-    category,
-    sortBy,
-    searchQuery,
-    page,
-    minPrice,
-    maxPrice,
-    inStockOnly,
-  });
+  const { products, totalCount, isLoading, hasLoaded, error, retry } =
+    useProductList({
+      category,
+      sortBy,
+      searchQuery,
+      page,
+      minPrice,
+      maxPrice,
+      inStockOnly,
+    });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(
     () => (localStorage.getItem('viewMode') as 'grid' | 'list') ?? 'grid',
   );
@@ -119,10 +120,10 @@ export function ProductListPage() {
 
   // ─── URL page가 totalPages를 초과하면 마지막 페이지로 보정 ──
   useEffect(() => {
-    if (!isLoading && page > totalPages) {
+    if (hasLoaded && !isLoading && page > totalPages) {
       setPage(totalPages);
     }
-  }, [isLoading, page, totalPages, setPage]);
+  }, [hasLoaded, isLoading, page, totalPages, setPage]);
   const pageNumbers: number[] = [];
   const startPage = Math.max(1, page - PAGE_WINDOW);
   const endPage = Math.min(totalPages, page + PAGE_WINDOW);

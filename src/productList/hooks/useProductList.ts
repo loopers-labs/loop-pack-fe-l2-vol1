@@ -14,6 +14,7 @@ export function useProductList({
   const [products, setProducts] = useState<Product[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -38,6 +39,7 @@ export function useProductList({
         if (!ignore) {
           setProducts(data.products);
           setTotalCount(data.totalCount);
+          setHasLoaded(true);
         }
       } catch (err) {
         if (!ignore) {
@@ -66,5 +68,5 @@ export function useProductList({
     retryCount,
   ]);
 
-  return { products, totalCount, isLoading, error, retry };
+  return { products, totalCount, isLoading, hasLoaded, error, retry };
 }
