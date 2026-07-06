@@ -12,24 +12,19 @@
 //
 // 아래는 import가 깨지지 않게 둔 placeholder다. 자유롭게 갈아엎어도 된다.
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 
-export type SelectOption = {
-  id: string;
-  label: string;
-  disabled?: boolean;
-  [key: string]: unknown;
-};
+type SelectBy<Option> = keyof Option | ((left: Option, right: Option) => boolean);
 
 type SelectContextValue = {
-  value: SelectOption | null;
+  value: unknown | null;
   open: boolean;
   highlightedOptionId: string | null;
   setOpen: (open: boolean) => void;
-  onValueChange: (option: SelectOption) => void;
   registerItem: (item: SelectCollectionItem) => () => void;
-  selectOption: (option: SelectOption) => void;
+  selectOption: (option: unknown) => void;
   moveHighlight: (direction: HighlightDirection) => void;
+  isSelected: (option: unknown) => boolean;
 };
 
 const SelectContext = createContext<SelectContextValue | null>(null);
@@ -38,7 +33,7 @@ type HighlightDirection = 1 | -1;
 
 type SelectCollectionItem = {
   id: string;
-  option: SelectOption;
+  option: unknown;
   disabled: boolean;
   ref: RefObject<HTMLDivElement | null>;
 };
@@ -53,13 +48,14 @@ function useSelectContext() {
   return context;
 }
 
-type SelectRootProps = {
-  value: SelectOption | null;
-  onValueChange: (option: SelectOption) => void;
+type SelectRootProps<Option> = {
+  value: Option | null;
+  onValueChange: (option: Option) => void;
+  by?: SelectBy<Option>;
   children: ReactNode;
 };
 
-function SelectRoot({ value, onValueChange, children }: SelectRootProps) {
+function SelectRoot<Option>({ value, onValueChange, by, children }: SelectRootProps<Option>) {
   const [open, setOpen] = useState(false);
   const [highlightedOptionId, setHighlightedOptionId] = useState<string | null>(null);
   const collectionRef = useRef<SelectCollectionItem[]>([]);
@@ -74,14 +70,16 @@ function SelectRoot({ value, onValueChange, children }: SelectRootProps) {
     };
   }, []);
 
-  const selectOption = useCallback(
-    (option: SelectOption) => {
-      if (option.disabled === true) {
-        return;
-      }
+  const isSelected = useCallback(
+    (option: unknown) => {
+      return isSameOption(value ?? null, option, by);
+    },
+    [by, value],
+  );
 
-      onValueChange(option);
-      setHighlightedOptionId(option.id);
+  const selectOption = useCallback(
+    (option: unknown) => {
+      onValueChange(option as Option);
       setOpen(false);
     },
     [onValueChange],
@@ -146,10 +144,10 @@ function SelectRoot({ value, onValueChange, children }: SelectRootProps) {
         open,
         highlightedOptionId,
         setOpen,
-        onValueChange,
         registerItem,
         selectOption,
         moveHighlight,
+        isSelected,
       }}
     >
       <div className="relative" onKeyDown={handleKeyDown}>
@@ -169,10 +167,8 @@ function SelectTrigger({ children }: { children: ReactNode }) {
   );
 }
 
-function SelectValue({ placeholder }: { placeholder?: string }) {
-  const { value } = useSelectContext();
-
-  return <span>{value?.label ?? placeholder}</span>;
+function SelectValue({ children, placeholder }: { children?: ReactNode; placeholder?: string }) {
+  return <span>{children ?? placeholder}</span>;
 }
 
 function SelectContent({ children }: { children: ReactNode }) {
@@ -185,43 +181,48 @@ function SelectContent({ children }: { children: ReactNode }) {
   return <div>{children}</div>;
 }
 
-type SelectItemState = {
-  option: SelectOption;
+type SelectItemState<Option> = {
+  option: Option;
   selected: boolean;
   highlighted: boolean;
   disabled: boolean;
 };
 
-type SelectItemProps = {
-  option: SelectOption;
-  children: (state: SelectItemState) => ReactNode;
+type SelectItemProps<Option> = {
+  value: Option;
+  disabled?: boolean;
+  children: (state: SelectItemState<Option>) => ReactNode;
 };
 
-function SelectItem({ option, children }: SelectItemProps) {
-  const { value, highlightedOptionId, registerItem, selectOption } = useSelectContext();
+function SelectItem<Option>({ value, disabled = false, children }: SelectItemProps<Option>) {
+  const { highlightedOptionId, isSelected, registerItem, selectOption } = useSelectContext();
   const itemRef = useRef<HTMLDivElement | null>(null);
+  const itemId = useId();
 
-  const selected = value?.id === option.id;
-  const disabled = option.disabled === true;
-  const highlighted = highlightedOptionId === option.id;
+  const selected = isSelected(value);
+  const highlighted = highlightedOptionId === itemId;
 
   useEffect(() => {
     return registerItem({
-      id: option.id,
-      option,
+      id: itemId,
+      option: value,
       disabled,
       ref: itemRef,
     });
-  }, [disabled, option, registerItem]);
+  }, [disabled, itemId, registerItem, value]);
 
   const handleClick = () => {
-    selectOption(option);
+    if (disabled) {
+      return;
+    }
+
+    selectOption(value);
   };
 
   return (
     <div ref={itemRef} onClick={handleClick}>
       {children({
-        option,
+        option: value,
         selected,
         highlighted,
         disabled,
@@ -252,4 +253,24 @@ function getNextHighlightIndex(
   }
 
   return (currentIndex + direction + itemCount) % itemCount;
+}
+
+function isSameOption<Option>(
+  left: Option | null,
+  right: unknown,
+  by: SelectBy<Option> | undefined,
+) {
+  if (left === null || left === undefined || right === null || right === undefined) {
+    return false;
+  }
+
+  if (typeof by === "function") {
+    return by(left, right as Option);
+  }
+
+  if (by !== undefined) {
+    return left[by] === (right as Option)[by];
+  }
+
+  return Object.is(left, right);
 }
