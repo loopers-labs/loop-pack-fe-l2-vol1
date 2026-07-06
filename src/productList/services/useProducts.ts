@@ -9,6 +9,7 @@ export const useProducts = (params: ProductParams) => {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const { category, minPrice, maxPrice, sortBy, searchQuery, page, itemsPerPage, inStockOnly } =
     params;
@@ -52,7 +53,17 @@ export const useProducts = (params: ProductParams) => {
     return () => {
       ignore = true;
     };
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, itemsPerPage, inStockOnly]);
+  }, [
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    page,
+    itemsPerPage,
+    inStockOnly,
+    retryCount,
+  ]);
 
-  return { products, totalCount, isLoading, error };
+  return { products, totalCount, isLoading, error, setRetryCount };
 };

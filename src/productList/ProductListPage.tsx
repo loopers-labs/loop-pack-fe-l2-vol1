@@ -75,7 +75,7 @@ export function ProductListPage() {
   const [wishlist, setWishlist] = useLocalStorage<number[]>('wishlist', []);
   const [, setRecentlyViewed] = useLocalStorage<number[]>('recentlyViewed', []);
 
-  const { products, totalCount, isLoading, error } = useProducts(searchParamsObj);
+  const { products, totalCount, isLoading, error, setRetryCount } = useProducts(searchParamsObj);
 
   useScrollZero(page);
 
@@ -110,7 +110,7 @@ export function ProductListPage() {
     return (
       <ErrorView>
         <p>오류가 발생했습니다: {error.message}</p>
-        <button onClick={() => window.location.reload()}>다시 시도</button>
+        <button onClick={() => setRetryCount((prev) => prev + 1)}>다시 시도</button>
       </ErrorView>
     );
   }
