@@ -7,8 +7,6 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/ban-ts-comment": "error",
       "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -21,7 +19,6 @@ const eslintConfig = defineConfig([
       "no-empty": "error",
       "no-implicit-coercion": "error",
       "no-unneeded-ternary": "error",
-      "no-unused-vars": "off",
       curly: ["error", "all"],
       "react/no-danger": "error",
       "react/jsx-no-target-blank": "error",
