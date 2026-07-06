@@ -1,0 +1,350 @@
+import { useState } from 'react';
+import './ProductListPage.css';
+import { PAGE_SIZE } from './types';
+import type { Category, SortBy } from './types';
+import {
+  calcDiscountRate,
+  calcPageNumbers,
+  formatPrice,
+  isNewProduct,
+} from './_utils/productUtils';
+import { useProductFilter } from './_hooks/useProductFilter';
+import { useProductList } from './_hooks/useProductList';
+import { useWishlist } from './_hooks/useWishlist';
+import { useRecentlyViewed } from './_hooks/useRecentlyViewed';
+import { HighlightText } from './_components/HighlightText';
+
+const CATEGORIES: { value: Category; label: string }[] = [
+  { value: 'all', label: '전체' },
+  { value: 'electronics', label: '전자제품' },
+  { value: 'fashion', label: '패션' },
+  { value: 'home', label: '홈' },
+  { value: 'beauty', label: '뷰티' },
+];
+
+const SORT_OPTIONS: { value: SortBy; label: string }[] = [
+  { value: 'latest', label: '최신순' },
+  { value: 'popular', label: '인기순' },
+  { value: 'price-asc', label: '가격 낮은순' },
+  { value: 'price-desc', label: '가격 높은순' },
+];
+
+export function ProductListPage() {
+  // ─── 필터 / 검색 / 페이지 상태 ─────────────────────────
+  const {
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    page,
+    inStockOnly,
+    minPriceInput,
+    maxPriceInput,
+    searchQueryInput,
+    handleCategoryChange,
+    handleMinPriceChange,
+    handleMaxPriceChange,
+    handleSortChange,
+    handleSearchChange,
+    handleInStockToggle,
+    handlePageChange,
+    handleResetFilters,
+  } = useProductFilter();
+
+  // ─── 서버 상태 ──────────────────────────────────────────
+  const { products, totalCount, isLoading, error, refetch } = useProductList({
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+    searchQuery,
+    page,
+    inStockOnly,
+  });
+
+  // ─── UI 전용 상태 ────────────────────────────────────────
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // ─── 위시리스트 ─────────────────────────────────────────
+  const { wishlist, handleWishlistToggle } = useWishlist();
+
+  // ─── 최근 본 상품 ───────────────────────────────────────
+  const { handleProductClick } = useRecentlyViewed();
+
+  // ─── 페이지네이션 계산 ───────────────────────────────────
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const pageNumbers = calcPageNumbers(page, totalPages);
+
+  if (error) {
+    return (
+      <div className="error">
+        <p>오류가 발생했습니다: {error.message}</p>
+        <button onClick={() => void refetch()}>다시 시도</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="product-list-page">
+      <header className="page-header">
+        <h1>상품 목록</h1>
+        <p className="total-count">
+          총 {totalCount.toLocaleString()}개의 상품
+          {wishlist.length > 0 && (
+            <span> · 위시리스트 {wishlist.length}개</span>
+          )}
+        </p>
+      </header>
+
+      {/* ─── 필터 패널 ──────────────────────────────────── */}
+      <section className="filter-panel">
+        <div className="filter-group">
+          <label>카테고리</label>
+          <div className="category-list">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                className={category === cat.value ? 'active' : ''}
+                onClick={() => handleCategoryChange(cat.value)}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <label>가격 범위</label>
+          <div className="price-range">
+            <input
+              type="number"
+              placeholder="최소"
+              value={minPriceInput}
+              onChange={handleMinPriceChange}
+              min={0}
+            />
+            <span>~</span>
+            <input
+              type="number"
+              placeholder="최대"
+              value={maxPriceInput}
+              onChange={handleMaxPriceChange}
+              min={0}
+            />
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <label>옵션</label>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontWeight: 400,
+              fontSize: 13,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={inStockOnly}
+              onChange={handleInStockToggle}
+            />
+            재고 있는 것만
+          </label>
+        </div>
+
+        <button className="reset-button" onClick={handleResetFilters}>
+          필터 초기화
+        </button>
+      </section>
+
+      {/* ─── 검색 + 정렬 + 보기 모드 ───────────────────── */}
+      <section className="search-sort">
+        <input
+          type="search"
+          placeholder="상품 검색..."
+          value={searchQueryInput}
+          onChange={handleSearchChange}
+          className="search-input"
+        />
+        <select value={sortBy} onChange={handleSortChange}>
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={viewMode}
+          onChange={(e) => setViewMode(e.target.value as 'grid' | 'list')}
+        >
+          <option value="grid">그리드</option>
+          <option value="list">리스트</option>
+        </select>
+      </section>
+
+      {/* ─── 상품 그리드 ────────────────────────────────── */}
+      <section
+        className="product-grid"
+        style={viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined}
+      >
+        {isLoading ? (
+          <div className="loading">로딩 중...</div>
+        ) : products.length === 0 ? (
+          <div className="empty">조건에 맞는 상품이 없습니다.</div>
+        ) : (
+          products.map((product) => {
+            // ─── 도메인 규칙 계산 ────────────────────────
+            const discountRate = calcDiscountRate(
+              product.price,
+              product.originalPrice,
+            );
+            const formattedPrice = formatPrice(product.price);
+            const formattedOriginal = product.originalPrice
+              ? formatPrice(product.originalPrice)
+              : null;
+            const isAlmostSoldOut = product.stock > 0 && product.stock <= 5;
+            const isSoldOut = product.stock === 0;
+            const isHot = discountRate >= 30;
+            const isBest = product.rating >= 4.5 && product.reviewCount >= 100;
+            const isFreeShipping = product.price >= 50000;
+            const isNew = isNewProduct(product.createdAt);
+
+            // ─── 위시리스트 여부 ────────────────────────
+            const isWished = wishlist.includes(product.id);
+
+            return (
+              <article
+                key={product.id}
+                className="product-card"
+                onClick={() => handleProductClick(product.id)}
+              >
+                <div className="image-wrap">
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    loading="lazy"
+                  />
+                  {discountRate > 0 && (
+                    <span className="badge badge-discount">
+                      {discountRate}% 할인
+                    </span>
+                  )}
+                  {isNew && <span className="badge badge-new">NEW</span>}
+                  {isHot && <span className="badge badge-hot">특가</span>}
+                  {isBest && <span className="badge badge-best">BEST</span>}
+                  {isSoldOut && (
+                    <span className="badge badge-soldout">품절</span>
+                  )}
+                  {!isSoldOut && isAlmostSoldOut && (
+                    <span className="badge badge-warning">품절 임박</span>
+                  )}
+                </div>
+
+                <div className="card-body">
+                  <h3 className="product-name">
+                    <HighlightText text={product.name} query={searchQuery} />
+                  </h3>
+                  <div className="price-area">
+                    {formattedOriginal && (
+                      <span className="original-price">
+                        {formattedOriginal}
+                      </span>
+                    )}
+                    <span className="price">{formattedPrice}</span>
+                    {isFreeShipping && (
+                      <span
+                        style={{
+                          marginLeft: 6,
+                          fontSize: 11,
+                          color: '#2e7d32',
+                          fontWeight: 600,
+                        }}
+                      >
+                        무료배송
+                      </span>
+                    )}
+                  </div>
+                  <div className="rating-area">
+                    <span className="rating">
+                      ★ {product.rating.toFixed(1)}
+                    </span>
+                    <span className="review-count">
+                      ({product.reviewCount.toLocaleString()})
+                    </span>
+                    <button
+                      style={{
+                        marginLeft: 'auto',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        fontSize: 16,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleWishlistToggle(product.id);
+                      }}
+                      aria-label="위시리스트 토글"
+                    >
+                      {isWished ? '♥' : '♡'}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        )}
+      </section>
+
+      {/* ─── 페이지네이션 ───────────────────────────────── */}
+      {totalPages > 1 && (
+        <nav className="pagination">
+          <button
+            onClick={() => handlePageChange(1)}
+            disabled={page === 1}
+            aria-label="첫 페이지"
+          >
+            «
+          </button>
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
+            aria-label="이전 페이지"
+          >
+            ‹
+          </button>
+          {pageNumbers.map((p) => (
+            <button
+              key={p}
+              className={p === page ? 'active' : ''}
+              onClick={() => handlePageChange(p)}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page === totalPages}
+            aria-label="다음 페이지"
+          >
+            ›
+          </button>
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={page === totalPages}
+            aria-label="마지막 페이지"
+          >
+            »
+          </button>
+        </nav>
+      )}
+
+      {/* ─── 백그라운드 로딩 인디케이터 ─────────────────── */}
+      {isLoading && products.length > 0 && (
+        <div className="background-loading">데이터 갱신 중...</div>
+      )}
+    </div>
+  );
+}
