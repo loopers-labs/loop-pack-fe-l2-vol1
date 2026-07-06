@@ -1,3 +1,4 @@
+"use client";
 // Select (Headless) — 4주차 1단계
 //
 // 여기에 직접 만든다. 인터페이스(로직을 어떻게 노출할지)는 스스로 설계한다.
@@ -10,7 +11,120 @@
 //   - 각 옵션의 selected / highlighted / disabled 를 사용처가 알 수 있게 노출
 //
 // 아래는 import가 깨지지 않게 둔 placeholder다. 자유롭게 갈아엎어도 된다.
+import type { ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
 
-export function Select() {
-  return null;
+export type SelectOption = {
+  id: string;
+  label: string;
+  disabled?: boolean;
+  [key: string]: unknown;
+};
+
+type SelectContextValue = {
+  value: SelectOption | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onValueChange: (option: SelectOption) => void;
+};
+
+const SelectContext = createContext<SelectContextValue | null>(null);
+
+function useSelectContext() {
+  const context = useContext(SelectContext);
+
+  if (context === null) {
+    throw new Error("Select components must be used within Select.Root");
+  }
+
+  return context;
 }
+
+type SelectRootProps = {
+  value: SelectOption | null;
+  onValueChange: (option: SelectOption) => void;
+  children: ReactNode;
+};
+
+function SelectRoot({ value, onValueChange, children }: SelectRootProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <SelectContext.Provider value={{ value, open, setOpen, onValueChange }}>
+      <div className="relative">{children}</div>
+    </SelectContext.Provider>
+  );
+}
+
+function SelectTrigger({ children }: { children: ReactNode }) {
+  const { open, setOpen } = useSelectContext();
+
+  return (
+    <button type="button" onClick={() => setOpen(!open)}>
+      {children}
+    </button>
+  );
+}
+
+function SelectValue({ placeholder }: { placeholder?: string }) {
+  const { value } = useSelectContext();
+
+  return <span>{value?.label ?? placeholder}</span>;
+}
+
+function SelectContent({ children }: { children: ReactNode }) {
+  const { open } = useSelectContext();
+
+  if (!open) {
+    return null;
+  }
+
+  return <div>{children}</div>;
+}
+
+type SelectItemState = {
+  option: SelectOption;
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+};
+
+type SelectItemProps = {
+  option: SelectOption;
+  children: (state: SelectItemState) => ReactNode;
+};
+
+function SelectItem({ option, children }: SelectItemProps) {
+  const { value, onValueChange, setOpen } = useSelectContext();
+
+  const selected = value?.id === option.id;
+  const disabled = option.disabled === true;
+
+  const handleClick = () => {
+    if (disabled) {
+      return;
+    }
+
+    onValueChange(option);
+    setOpen(false);
+  };
+
+  return (
+    <div onClick={handleClick}>
+      {children({
+        option,
+        selected,
+        highlighted: false,
+        disabled,
+      })}
+    </div>
+  );
+}
+
+export const Select = {
+  Root: SelectRoot,
+  Trigger: SelectTrigger,
+  Value: SelectValue,
+  Content: SelectContent,
+  Item: SelectItem,
+};
