@@ -1,18 +1,44 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
+import nextPlugin from '@next/eslint-plugin-next';
+import configPrettier from 'eslint-config-prettier';
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
+export default tseslint.config(
+  {
+    ignores: [
+      'node_modules',
+      '.next',
+      'out',
+      'build',
+      'next-env.d.ts',
+      '**/*.config.{js,mjs,ts}',
+    ],
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  nextPlugin.configs.recommended,
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/ban-ts-comment': 'error',
+      eqeqeq: 'error',
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+      '@typescript-eslint/no-shadow': 'error',
+      'prefer-const': 'error',
+      'no-var': 'error',
+      'prefer-template': 'error',
+      'no-template-curly-in-string': 'error',
+      'no-nested-ternary': 'error',
+      'no-console': 'error',
+    },
+  },
+  configPrettier
+);
