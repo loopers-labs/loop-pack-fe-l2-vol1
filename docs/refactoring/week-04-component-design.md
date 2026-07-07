@@ -38,7 +38,7 @@ Select 내부는 옵션 UI를 직접 정하지 않는다. 대신 다음 동작�
 사용처는 `Select.Item`이 넘겨주는 상태를 기준으로 UI를 직접 그린다.
 
 ```tsx
-<Select.Item option={option}>
+<Select.Item value={option} disabled={option.disabled}>
   {({ option, selected, highlighted, disabled }) => (
     <div className={highlighted ? "highlighted" : ""}>
       <span>{option.label}</span>
@@ -56,14 +56,14 @@ Select 내부는 옵션 UI를 직접 정하지 않는다. 대신 다음 동작�
 Select는 하나의 컴포넌트에 모든 props를 몰아넣지 않고, 역할별 하위 컴포넌트로 조립한다.
 
 ```tsx
-<Select.Root value={selectedOption} onValueChange={setSelectedOption}>
+<Select.Root value={selectedOption} onValueChange={setSelectedOption} by="id">
   <Select.Trigger>
-    <Select.Value placeholder="옵션 선택" />
+    <Select.Value placeholder="옵션 선택">{selectedOption?.label}</Select.Value>
   </Select.Trigger>
 
   <Select.Content>
     {options.map((option) => (
-      <Select.Item key={option.id} option={option}>
+      <Select.Item key={option.id} value={option} disabled={option.disabled}>
         {({ option, selected, highlighted, disabled }) => <div>{option.label}</div>}
       </Select.Item>
     ))}
@@ -77,7 +77,7 @@ Select는 하나의 컴포넌트에 모든 props를 몰아넣지 않고, 역할�
 | ---------------- | ---------------------------------------------------------------------------- |
 | `Select.Root`    | value, open, highlighted option 상태와 context를 제공한다.                   |
 | `Select.Trigger` | 클릭과 키보드 입력으로 Select를 열고 닫는 진입점이다.                        |
-| `Select.Value`   | 현재 선택된 옵션을 표시한다.                                                 |
+| `Select.Value`   | 선택값 표시 영역을 제공한다. 실제 표시 내용은 사용처가 children으로 정한다.  |
 | `Select.Content` | 열린 상태에서 옵션 목록을 렌더한다.                                          |
 | `Select.Item`    | 옵션 하나의 selected, highlighted, disabled 상태를 계산해 사용처에 노출한다. |
 
@@ -117,6 +117,7 @@ const enabledItems = getItems().filter((item) => !item.disabled);
 
 - `Root`, `Trigger`, `Value`, `Content`, `Item`
 - controlled value: `value`, `onValueChange`
+- 객체 비교 기준: `by`
 - 내부 open 상태
 - 내부 highlighted option 상태
 - Item render prop
@@ -146,6 +147,8 @@ const enabledItems = getItems().filter((item) => !item.disabled);
 Select는 열기/닫기, 선택값, 키보드 이동, disabled skip 로직은 공통이지만 옵션 UI는 텍스트, 사이즈, 썸네일로 달라져야 한다. 따라서 Select 내부는 동작과 상태만 관리하고, 사용처가 `selected`, `highlighted`, `disabled` 상태를 받아 UI를 직접 그릴 수 있도록 Headless하게 설계한다.
 
 또한 `Trigger`, `Value`, `Content`, `Item`은 하나의 Select 상태를 공유하면서도 사용처가 구조를 조립해야 하므로 Compound 구조를 사용한다. Item이 어디에 렌더되더라도 키보드 이동 기준을 일관되게 유지하기 위해 내부에는 최소 Collection registry를 둔다.
+
+객체 value의 selected 비교는 기본적으로 참조 비교를 사용하되, 사용처가 `by="id"` 또는 비교 함수를 넘겨 기준을 명시할 수 있게 한다. Select 내부는 option의 label이나 가격, 이미지 같은 도메인 필드를 알지 않고, `Select.Value`와 `Select.Item`의 children에서 사용처가 직접 표시한다.
 
 ### 검증 기준
 
