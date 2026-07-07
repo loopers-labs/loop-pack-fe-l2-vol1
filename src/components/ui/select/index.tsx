@@ -1,25 +1,26 @@
 "use client";
-import { useState } from "react";
-
-// Select (Headless) — 4주차 1단계
-//
-// 여기에 직접 만든다. 인터페이스(로직을 어떻게 노출할지)는 스스로 설계한다.
-// 요구사항 요약 (자세한 건 docs/assignments/week-04.md):
-//   - 라이브러리/네이티브 <select> 없이 <div>/<ul> listbox로 직접 구현
-//   - value는 문자열이 아니라 옵션 "객체 전체"
-//   - 같은 로직으로 옵션 UI 3종(텍스트/썸네일/사이즈)을 렌더
-//   - 키보드로 열기·이동(↑↓)·선택(Enter)·닫기(Esc)
-//   - 품절 옵션은 키보드 이동에서 건너뛴다
-//   - 각 옵션의 selected / highlighted / disabled 를 사용처가 알 수 있게 노출
-//
-// 아래는 import가 깨지지 않게 둔 placeholder다. 자유롭게 갈아엎어도 된다.
+import {
+  ButtonHTMLAttributes,
+  HTMLAttributes,
+  LabelHTMLAttributes,
+  LiHTMLAttributes,
+  useId,
+  useState,
+} from "react";
 
 type UseSelectParams<Item> = {
   items: Item[];
   itemToString: (item: Item | null) => string;
+  isItemDisabled?: (item: Item, index: number) => boolean;
   selectedItem?: Item | null;
   defaultSelectedItem?: Item | null;
   onSelectedItemChange?: (item: Item) => void;
+};
+
+type UseSelectItemState = {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
 };
 
 type UseSelectReturn<Item> = {
@@ -30,12 +31,18 @@ type UseSelectReturn<Item> = {
   closeMenu: () => void;
   toggleMenu: () => void;
   selectItem: (item: Item) => void;
+  getToggleButtonProps: () => ButtonHTMLAttributes<HTMLButtonElement>;
+  getMenuProps: () => HTMLAttributes<HTMLUListElement>;
+  getLabelProps: () => LabelHTMLAttributes<HTMLLabelElement>;
+  getItemProps: (params: { item: Item; index: number }) => LiHTMLAttributes<HTMLLIElement>;
+  getItemState: (params: { item: Item; index: number }) => UseSelectItemState;
 };
 
 export function useSelect<Item>({
   selectedItem,
   defaultSelectedItem = null,
   onSelectedItemChange,
+  isItemDisabled = () => false,
 }: UseSelectParams<Item>): UseSelectReturn<Item> {
   const isControlled = selectedItem !== undefined;
   const [internalSelectedItem, setInternalSelectedItem] = useState<Item | null>(
@@ -43,6 +50,14 @@ export function useSelect<Item>({
   );
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex] = useState(-1);
+
+  const baseId = useId();
+  const labelId = `${baseId}-label`;
+  const toggleButtonId = `${baseId}-toggle`;
+  const menuId = `${baseId}-menu`;
+  const getItemId = (index: number) => {
+    return `${baseId}-item-${index}`;
+  };
 
   const currentSelectedItem = isControlled ? selectedItem : internalSelectedItem;
 
@@ -67,6 +82,59 @@ export function useSelect<Item>({
     closeMenu();
   };
 
+  const getItemState = ({ item, index }: { item: Item; index: number }) => {
+    return {
+      selected: Object.is(currentSelectedItem, item),
+      highlighted: highlightedIndex === index,
+      disabled: isItemDisabled(item, index),
+    };
+  };
+
+  const getToggleButtonProps = () => {
+    return {
+      id: toggleButtonId,
+      type: "button" as const,
+      "aria-haspopup": "listbox" as const,
+      "aria-expanded": isOpen,
+      "aria-controls": menuId,
+      "aria-labelledby": labelId,
+      "aria-activedescendant": highlightedIndex >= 0 ? getItemId(highlightedIndex) : undefined,
+      onClick: toggleMenu,
+    };
+  };
+
+  const getMenuProps = () => {
+    return {
+      id: menuId,
+      role: "listbox" as const,
+      "aria-labelledby": labelId,
+    };
+  };
+
+  const getLabelProps = () => {
+    return {
+      id: labelId,
+      htmlFor: toggleButtonId,
+    };
+  };
+
+  const getItemProps = ({ item, index }: { item: Item; index: number }) => {
+    const disabled = isItemDisabled(item, index);
+
+    return {
+      role: "option" as const,
+      "aria-selected": Object.is(currentSelectedItem, item),
+      "aria-disabled": disabled,
+      onClick: () => {
+        if (disabled) {
+          return;
+        }
+
+        selectItem(item);
+      },
+    };
+  };
+
   return {
     isOpen,
     selectedItem: currentSelectedItem ?? null,
@@ -75,5 +143,10 @@ export function useSelect<Item>({
     closeMenu,
     toggleMenu,
     selectItem,
+    getToggleButtonProps,
+    getLabelProps,
+    getMenuProps,
+    getItemProps,
+    getItemState,
   };
 }
