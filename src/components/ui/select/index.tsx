@@ -1,12 +1,12 @@
 "use client";
-import {
+import type {
   ButtonHTMLAttributes,
   HTMLAttributes,
+  KeyboardEvent,
   LabelHTMLAttributes,
-  LiHTMLAttributes,
-  useId,
-  useState,
+  RefCallback,
 } from "react";
+import { useId, useRef, useState } from "react";
 
 type UseSelectParams<Item> = {
   items: Item[];
@@ -23,6 +23,10 @@ type UseSelectItemState = {
   disabled: boolean;
 };
 
+type UseSelectItemProps = HTMLAttributes<HTMLElement> & {
+  ref: RefCallback<HTMLElement>;
+};
+
 type UseSelectReturn<Item> = {
   isOpen: boolean;
   selectedItem: Item | null;
@@ -34,11 +38,38 @@ type UseSelectReturn<Item> = {
   getToggleButtonProps: () => ButtonHTMLAttributes<HTMLButtonElement>;
   getMenuProps: () => HTMLAttributes<HTMLUListElement>;
   getLabelProps: () => LabelHTMLAttributes<HTMLLabelElement>;
-  getItemProps: (params: { item: Item; index: number }) => LiHTMLAttributes<HTMLLIElement>;
+  getItemProps: (params: { item: Item; index: number }) => UseSelectItemProps;
   getItemState: (params: { item: Item; index: number }) => UseSelectItemState;
 };
 
+function getNextEnabledIndex<Item>({
+  items,
+  currentIndex,
+  direction,
+  isItemDisabled,
+}: {
+  items: Item[];
+  currentIndex: number;
+  direction: -1 | 1;
+  isItemDisabled: (item: Item, index: number) => boolean;
+}) {
+  if (items.length === 0) {
+    return -1;
+  }
+
+  for (let step = 1; step <= items.length; step += 1) {
+    const nextIndex = (currentIndex + direction * step + items.length) % items.length;
+    const nextItem = items[nextIndex];
+
+    if (!isItemDisabled(nextItem, nextIndex)) {
+      return nextIndex;
+    }
+  }
+  return -1;
+}
+
 export function useSelect<Item>({
+  items,
   selectedItem,
   defaultSelectedItem = null,
   onSelectedItemChange,
@@ -49,7 +80,9 @@ export function useSelect<Item>({
     defaultSelectedItem,
   );
   const [isOpen, setIsOpen] = useState(false);
-  const [highlightedIndex] = useState(-1);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
 
   const baseId = useId();
   const labelId = `${baseId}-label`;
@@ -82,6 +115,69 @@ export function useSelect<Item>({
     closeMenu();
   };
 
+  const moveHighlight = (direction: 1 | -1) => {
+    const nextIndex = getNextEnabledIndex({
+      items,
+      currentIndex: highlightedIndex,
+      direction,
+      isItemDisabled,
+    });
+
+    if (nextIndex === -1) {
+      return;
+    }
+    itemRefs.current[nextIndex]?.scrollIntoView({ block: "nearest" });
+    setHighlightedIndex(nextIndex);
+  };
+
+  const handleToggleButtonKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setIsOpen(true);
+      moveHighlight(1);
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setIsOpen(true);
+      moveHighlight(-1);
+      return;
+    }
+
+    if (event.key === "Enter") {
+      const highlightedItem = items[highlightedIndex];
+
+      if (highlightedItem !== undefined) {
+        event.preventDefault();
+        selectItem(highlightedItem);
+      }
+
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMenu();
+    }
+  };
+
+  const handleItemMouseMove = (index: number, disabled: boolean) => {
+    if (disabled) {
+      return;
+    }
+
+    setHighlightedIndex(index);
+  };
+
+  const handleItemClick = (item: Item, disabled: boolean) => {
+    if (disabled) {
+      return;
+    }
+
+    selectItem(item);
+  };
+
   const getItemState = ({ item, index }: { item: Item; index: number }) => {
     return {
       selected: Object.is(currentSelectedItem, item),
@@ -100,6 +196,7 @@ export function useSelect<Item>({
       "aria-labelledby": labelId,
       "aria-activedescendant": highlightedIndex >= 0 ? getItemId(highlightedIndex) : undefined,
       onClick: toggleMenu,
+      onKeyDown: handleToggleButtonKeyDown,
     };
   };
 
@@ -122,17 +219,15 @@ export function useSelect<Item>({
     const disabled = isItemDisabled(item, index);
 
     return {
+      ref: (node: HTMLElement | null) => {
+        itemRefs.current[index] = node;
+      },
       id: getItemId(index),
       role: "option" as const,
       "aria-selected": Object.is(currentSelectedItem, item),
       "aria-disabled": disabled,
-      onClick: () => {
-        if (disabled) {
-          return;
-        }
-
-        selectItem(item);
-      },
+      onMouseMove: () => handleItemMouseMove(index, disabled),
+      onClick: () => handleItemClick(item, disabled),
     };
   };
 
