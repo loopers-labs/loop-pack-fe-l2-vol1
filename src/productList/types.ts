@@ -22,3 +22,14 @@ export type ProductListResponse = {
   products: Product[];
   totalCount: number;
 };
+
+// 필터·검색·정렬·페이지를 한 덩어리로. URL 쿼리스트링과 1:1로 직렬화되는 단위.
+export type FilterState = {
+  category: CategoryFilter;
+  minPrice: number | "";
+  maxPrice: number | "";
+  sortBy: SortBy;
+  searchQuery: string;
+  inStockOnly: boolean;
+  page: number;
+};

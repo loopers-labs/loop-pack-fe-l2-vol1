@@ -68,7 +68,7 @@ productList/
 | `useRecentlyViewed`      | 최근 본 상품 id를 최신순 최대 10개 보관하고 localStorage와 동기화한다.      |
 | `useLocalStorageState`   | number[] 상태를 localStorage와 동기화하는 공용 뼈대(위 둘이 사용).          |
 | `useScrollToTopOnChange` | 지정한 값이 바뀌면 창을 맨 위로 스크롤한다.                                 |
-| `useProductListUrlSync`  | 필터·페이지 상태를 URL 쿼리스트링에 반영한다.                               |
+| `useProductListUrlSync`  | 필터·페이지 상태를 URL과 양방향 동기화한다(쓰기 + popstate 되읽기).         |
 
 > 셀프 체크: 한 문장에 "그리고"가 두 번 들어가면 분리 후보. 위 훅들은 모두 한 문장으로 끝난다.
 
@@ -78,7 +78,7 @@ productList/
 
 - **`viewMode`는 훅으로 빼지 않았다** — fetch에 영향 없는 순수 UI 상태이고, 쓰는 곳이 페이지 한 곳뿐. "나중에 공유할지도"는 끌어올릴 이유가 아니다. `useState` 한 줄이 가장 정직하다.
 - **페이지네이션은 훅이 아니라 util** — `derivePagination`은 상태도 effect도 없다. `useX` 이름을 붙이면 "hook 규칙(순서·deps)"을 오해시킨다. 순수 계산은 util.
-- **`inStock`은 서버 파라미터로 옮기지 않고 클라이언트 필터로 유지** — 기존 동작은 "받아온 12개 안에서" 재고 필터. 서버 파라미터로 옮기면 페이지네이션 결과가 바뀐다(= 기능 변경). 이번 과제는 **동작 보존**이 원칙이라 그대로 뒀다. (개선 여지는 있음 — 별도 이슈)
+- **`inStock`은 클라이언트 필터로 유지 (서버 파라미터로 안 옮김)** — 서버 파라미터로 옮기면 "받아온 페이지 안에서 거르는" 페이지네이션 결과가 바뀌므로(= 기능 변경) 클라 필터를 유지한다. 단, **파생값이므로 state에 저장하지 않고 `useProducts` 반환 시 계산**한다 → `inStockOnly` 토글에 서버 재요청이 안 나가고, "파생값은 계산한다" 원칙과도 맞는다. (`filter()` 결과를 `setProducts`로 저장하던 초안을 리뷰 피드백으로 수정 — "You Might Not Need an Effect".)
 
 ---
 
@@ -87,7 +87,7 @@ productList/
 - **서버 상태**: `products / totalCount / isLoading / error` → `useProducts`.
 - **클라이언트 상태**: 필터·검색·정렬·페이지(`useProductFilters`), viewMode(페이지), 위시리스트·최근본(localStorage 훅).
 - **파생값**: `totalPages / pageNumbers`(util로 계산), 배지 플래그·포맷(util). **state로 들고 있지 않는다.**
-- **남은 useEffect는 전부 "외부 시스템 동기화"**: 서버 fetch, localStorage, window 스크롤, 주소창(`replaceState`). 상태를 상태로 "동기화"하는 effect는 없다(`react-hooks/set-state-in-effect` 게이트도 통과). (fetch effect는 원본 동작 그대로 유지 — race 방지 같은 원본에 없던 개선은 일부러 얹지 않았다.)
+- **남은 useEffect는 전부 "외부 시스템 동기화"**: 서버 fetch, localStorage, window 스크롤, 주소창(`replaceState`). 상태를 상태로 "동기화"하는 effect는 없다(`react-hooks/set-state-in-effect` 게이트도 통과). fetch effect는 **서버 조회·원본 저장만** 담당하고, `inStock` 필터는 effect가 아니라 **파생 계산**으로 뺐다(§4).
 
 ---
 
@@ -97,3 +97,14 @@ productList/
 
 - **기계적 이동·JSX 추출** (`types.ts` · `constants.ts` · `utils/formatters.ts` · 프리젠테이션 컴포넌트 6개) → 파일 상단 `// [AI 생성]`으로 표기.
 - **설계 판단이 담긴 코드** (`services/*` · `hooks/*` · `utils/productBadges.ts` · `utils/pagination.ts`(훅 vs util) · `ProductListPage.tsx`) → AI 마커를 붙이지 않고 **근거 주석만** 남겼다. 분리의 "왜"는 직접 검토·결정했기 때문.
+
+---
+
+## 7. 리뷰 반영 (2차)
+
+리뷰 피드백으로 아래를 수정했다.
+
+1. **inStock 파생값** — `filter()` 결과를 `setProducts`로 저장하던 걸 없애고 `useProducts` 반환 시 계산. `inStockOnly` 토글 시 서버 재요청도 사라짐. (§4, "You Might Not Need an Effect")
+2. **URL 양방향 동기화** — 쓰기만 있던 URL 동기화에 **초기 읽기 + 값 검증 + popstate 되읽기**를 추가. 새로고침·링크 공유·뒤로가기에도 필터가 유지된다. 파싱/직렬화는 `utils/productListUrl.ts`(순수 함수)로 빼고, 필터 상태는 URL과 1:1이라 한 덩어리(`FilterState`)로 합쳤다.
+3. **스크롤 마운트 튐** — `useScrollToTopOnChange`가 첫 렌더에 실행되던 걸, 이전 값을 `ref`로 비교해 **값이 실제로 바뀔 때만** 스크롤하도록 수정.
+4. **page 범위 초과 방어** — `?page=99`처럼 범위를 넘는 요청은 응답 후 `page > totalPages`를 감지해 마지막 페이지로 보정(빈 화면 방지). 별도 sync effect 대신 **fetch 성공 흐름 안에서** 콜백으로 처리해 `set-state-in-effect` 게이트를 피했다.

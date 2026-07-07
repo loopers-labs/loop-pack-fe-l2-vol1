@@ -15,19 +15,24 @@ import { ProductGrid } from "./components/ProductGrid";
 import { Pagination } from "./components/Pagination";
 
 export function ProductListPage() {
-  const filters = useProductFilters();
+  const {
+    filters,
+    selectCategory,
+    changeMinPrice,
+    changeMaxPrice,
+    selectSort,
+    search,
+    toggleInStock,
+    goToPage,
+    reset,
+    syncFromUrl,
+  } = useProductFilters();
+
   // 보기 모드는 fetch에 영향 없는 순수 UI 상태라 훅으로 빼지 않고 여기 둔다.
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
-  const { products, totalCount, isLoading, error } = useProducts({
-    category: filters.category,
-    minPrice: filters.minPrice,
-    maxPrice: filters.maxPrice,
-    sortBy: filters.sortBy,
-    searchQuery: filters.searchQuery,
-    page: filters.page,
-    inStockOnly: filters.inStockOnly,
-  });
+  // page가 범위를 벗어나면(예: ?page=99) 응답 후 goToPage로 보정한다.
+  const { products, totalCount, isLoading, error } = useProducts(filters, goToPage);
 
   const { wishlist, toggle: toggleWish, isWished } = useWishlist();
   const { add: recordView } = useRecentlyViewed();
@@ -35,15 +40,8 @@ export function ProductListPage() {
   const { totalPages, pageNumbers } = derivePagination(filters.page, totalCount);
 
   useScrollToTopOnChange(filters.page);
-  useProductListUrlSync({
-    category: filters.category,
-    searchQuery: filters.searchQuery,
-    page: filters.page,
-    sortBy: filters.sortBy,
-    minPrice: filters.minPrice,
-    maxPrice: filters.maxPrice,
-    inStockOnly: filters.inStockOnly,
-  });
+  // URL ↔ 상태 양방향 동기화: 쓰기(replaceState) + 뒤로/앞으로(popstate) 시 되읽기.
+  useProductListUrlSync(filters, syncFromUrl);
 
   if (isLoading && products.length === 0) {
     return <div className="loading">로딩 중...</div>;
@@ -73,19 +71,19 @@ export function ProductListPage() {
         minPrice={filters.minPrice}
         maxPrice={filters.maxPrice}
         inStockOnly={filters.inStockOnly}
-        onSelectCategory={filters.selectCategory}
-        onChangeMinPrice={filters.changeMinPrice}
-        onChangeMaxPrice={filters.changeMaxPrice}
-        onToggleInStock={filters.toggleInStock}
-        onReset={filters.reset}
+        onSelectCategory={selectCategory}
+        onChangeMinPrice={changeMinPrice}
+        onChangeMaxPrice={changeMaxPrice}
+        onToggleInStock={toggleInStock}
+        onReset={reset}
       />
 
       <SearchSortBar
         searchQuery={filters.searchQuery}
         sortBy={filters.sortBy}
         viewMode={viewMode}
-        onChangeSearch={filters.search}
-        onChangeSort={filters.selectSort}
+        onChangeSearch={search}
+        onChangeSort={selectSort}
         onChangeViewMode={setViewMode}
       />
 
@@ -102,7 +100,7 @@ export function ProductListPage() {
         page={filters.page}
         totalPages={totalPages}
         pageNumbers={pageNumbers}
-        onChange={filters.goToPage}
+        onChange={goToPage}
       />
 
       {isLoading && products.length > 0 && (

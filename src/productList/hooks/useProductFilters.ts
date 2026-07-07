@@ -1,62 +1,62 @@
-import { useState } from "react";
-import type { CategoryFilter, SortBy } from "../types";
+import { useCallback, useState } from "react";
+import type { CategoryFilter, FilterState, SortBy } from "../types";
+import { parseFiltersFromUrl } from "../utils/productListUrl";
 
-// 목록을 거르는 조건과 현재 페이지를 관리하고, 조건이 바뀌면 페이지를 1로 되돌린다.
-// (DOM 이벤트가 아니라 "값"만 받는다 — 이벤트 → 값 변환은 컴포넌트의 책임)
+// 필터·검색·정렬·페이지 상태를 관리하고, 조건이 바뀌면 페이지를 1로 되돌린다.
+// 초기값은 URL에서 읽어온다(새로고침·링크 공유 시 필터 유지). 상태는 URL과 1:1이라 한 덩어리로 둔다.
+// 액션은 useCallback으로 안정화 — useProducts/useProductListUrlSync가 이 참조를 deps로 쓴다.
 export function useProductFilters() {
-  const [category, setCategory] = useState<CategoryFilter>("all");
-  const [minPrice, setMinPrice] = useState<number | "">("");
-  const [maxPrice, setMaxPrice] = useState<number | "">("");
-  const [sortBy, setSortBy] = useState<SortBy>("latest");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<FilterState>(() =>
+    parseFiltersFromUrl(window.location.search),
+  );
 
-  const selectCategory = (next: CategoryFilter) => {
-    setCategory(next);
-    setPage(1);
-  };
-  const changeMinPrice = (next: number | "") => {
-    setMinPrice(next);
-    setPage(1);
-  };
-  const changeMaxPrice = (next: number | "") => {
-    setMaxPrice(next);
-    setPage(1);
-  };
-  const selectSort = (next: SortBy) => {
-    setSortBy(next);
-    setPage(1);
-  };
-  const search = (next: string) => {
-    setSearchQuery(next);
-    setPage(1);
-  };
-  const toggleInStock = (next: boolean) => {
-    setInStockOnly(next);
-    setPage(1);
-  };
-  const goToPage = (next: number) => {
-    setPage(next);
-  };
-  const reset = () => {
-    setCategory("all");
-    setMinPrice("");
-    setMaxPrice("");
-    setSortBy("latest");
-    setSearchQuery("");
-    setInStockOnly(false);
-    setPage(1);
-  };
+  const selectCategory = useCallback(
+    (category: CategoryFilter) => setFilters((f) => ({ ...f, category, page: 1 })),
+    [],
+  );
+  const changeMinPrice = useCallback(
+    (minPrice: number | "") => setFilters((f) => ({ ...f, minPrice, page: 1 })),
+    [],
+  );
+  const changeMaxPrice = useCallback(
+    (maxPrice: number | "") => setFilters((f) => ({ ...f, maxPrice, page: 1 })),
+    [],
+  );
+  const selectSort = useCallback(
+    (sortBy: SortBy) => setFilters((f) => ({ ...f, sortBy, page: 1 })),
+    [],
+  );
+  const search = useCallback(
+    (searchQuery: string) => setFilters((f) => ({ ...f, searchQuery, page: 1 })),
+    [],
+  );
+  const toggleInStock = useCallback(
+    (inStockOnly: boolean) => setFilters((f) => ({ ...f, inStockOnly, page: 1 })),
+    [],
+  );
+  const goToPage = useCallback((page: number) => setFilters((f) => ({ ...f, page })), []);
+  const reset = useCallback(
+    () =>
+      setFilters({
+        category: "all",
+        minPrice: "",
+        maxPrice: "",
+        sortBy: "latest",
+        searchQuery: "",
+        inStockOnly: false,
+        page: 1,
+      }),
+    [],
+  );
+
+  // popstate(뒤로/앞으로) 등 URL이 밖에서 바뀌었을 때 상태를 URL 기준으로 되읽는다.
+  const syncFromUrl = useCallback(
+    () => setFilters(parseFiltersFromUrl(window.location.search)),
+    [],
+  );
 
   return {
-    category,
-    minPrice,
-    maxPrice,
-    sortBy,
-    searchQuery,
-    inStockOnly,
-    page,
+    filters,
     selectCategory,
     changeMinPrice,
     changeMaxPrice,
@@ -65,5 +65,6 @@ export function useProductFilters() {
     toggleInStock,
     goToPage,
     reset,
+    syncFromUrl,
   };
 }
