@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+
 // Select (Headless) — 4주차 1단계
 //
 // 여기에 직접 만든다. 인터페이스(로직을 어떻게 노출할지)는 스스로 설계한다.
@@ -11,6 +14,66 @@
 //
 // 아래는 import가 깨지지 않게 둔 placeholder다. 자유롭게 갈아엎어도 된다.
 
-export function Select() {
-  return null;
+type UseSelectParams<Item> = {
+  items: Item[];
+  itemToString: (item: Item | null) => string;
+  selectedItem?: Item | null;
+  defaultSelectedItem?: Item | null;
+  onSelectedItemChange?: (item: Item) => void;
+};
+
+type UseSelectReturn<Item> = {
+  isOpen: boolean;
+  selectedItem: Item | null;
+  highlightedIndex: number;
+  openMenu: () => void;
+  closeMenu: () => void;
+  toggleMenu: () => void;
+  selectItem: (item: Item) => void;
+};
+
+export function useSelect<Item>({
+  selectedItem,
+  defaultSelectedItem = null,
+  onSelectedItemChange,
+}: UseSelectParams<Item>): UseSelectReturn<Item> {
+  const isControlled = selectedItem !== undefined;
+  const [internalSelectedItem, setInternalSelectedItem] = useState<Item | null>(
+    defaultSelectedItem,
+  );
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex] = useState(-1);
+
+  const currentSelectedItem = isControlled ? selectedItem : internalSelectedItem;
+
+  const openMenu = () => {
+    setIsOpen(true);
+  };
+
+  const closeMenu = () => {
+    setIsOpen(false);
+  };
+
+  const toggleMenu = () => {
+    setIsOpen((prev) => !prev);
+  };
+
+  const selectItem = (item: Item) => {
+    if (!isControlled) {
+      setInternalSelectedItem(item);
+    }
+
+    onSelectedItemChange?.(item);
+    closeMenu();
+  };
+
+  return {
+    isOpen,
+    selectedItem: currentSelectedItem ?? null,
+    highlightedIndex,
+    openMenu,
+    closeMenu,
+    toggleMenu,
+    selectItem,
+  };
 }
