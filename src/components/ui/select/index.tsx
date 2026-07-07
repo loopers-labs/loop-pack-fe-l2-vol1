@@ -122,6 +122,7 @@ export function useSelect<Item>({
     const disabled = isItemDisabled(item, index);
 
     return {
+      id: getItemId(index),
       role: "option" as const,
       "aria-selected": Object.is(currentSelectedItem, item),
       "aria-disabled": disabled,
