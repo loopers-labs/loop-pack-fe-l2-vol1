@@ -10,7 +10,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import prettier from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules'] },
+  // _mockApi.ts는 과제 스타터(수정 금지)라 우리 룰 적용 대상에서 제외한다.
+  { ignores: ['dist', 'node_modules', 'src/productList/_mockApi.ts'] },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
