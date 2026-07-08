@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type KeyboardEvent, useState } from 'react';
 
 type SelectKey = string | number;
 
@@ -25,6 +25,7 @@ type UseSelectReturn<T> = {
   closeMenu: () => void;
   toggleMenu: () => void;
   selectItem: (item: T | null) => void;
+  handleKeyDown: (event: KeyboardEvent) => void;
 };
 
 /**
@@ -69,6 +70,108 @@ export function useSelect<T>({
 
   const findFirstEnabledIndex = () => {
     return items.findIndex((item, index) => !getIsItemDisabled(item, index));
+  };
+
+  const findNextEnabledIndex = (startIndex: number) => {
+    for (let index = startIndex + 1; index < items.length; index += 1) {
+      if (!getIsItemDisabled(items[index], index)) {
+        return index;
+      }
+    }
+
+    return startIndex;
+  };
+
+  const findPreviousEnabledIndex = (startIndex: number) => {
+    for (let index = startIndex - 1; index >= 0; index -= 1) {
+      if (!getIsItemDisabled(items[index], index)) {
+        return index;
+      }
+    }
+
+    return startIndex;
+  };
+
+  const highlightNextItem = () => {
+    if (!isOpen) {
+      openMenu();
+
+      return;
+    }
+
+    setHighlightedIndex((currentIndex) => {
+      if (currentIndex === -1) {
+        return findFirstEnabledIndex();
+      }
+
+      return findNextEnabledIndex(currentIndex);
+    });
+  };
+
+  const highlightPreviousItem = () => {
+    if (!isOpen) {
+      openMenu();
+
+      return;
+    }
+
+    setHighlightedIndex((currentIndex) => {
+      if (currentIndex === -1) {
+        return findFirstEnabledIndex();
+      }
+
+      return findPreviousEnabledIndex(currentIndex);
+    });
+  };
+
+  // 현재 하이라이트 된 아이템을 선택
+  const selectHighlightedItem = () => {
+    if (highlightedIndex < 0) {
+      return;
+    }
+
+    const item = items[highlightedIndex];
+
+    if (item === undefined) {
+      return;
+    }
+
+    selectItem(item);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      highlightNextItem();
+
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      highlightPreviousItem();
+
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+
+      if (!isOpen) {
+        openMenu();
+
+        return;
+      }
+
+      selectHighlightedItem();
+
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeMenu();
+    }
   };
 
   // 메뉴 열 때 highlight 시작 위치: 선택값이 있고 enabled면 거기서, 없거나 disabled면 첫 enabled item에서 시작
@@ -137,5 +240,6 @@ export function useSelect<T>({
     closeMenu,
     toggleMenu,
     selectItem,
+    handleKeyDown,
   };
 }

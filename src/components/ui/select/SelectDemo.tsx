@@ -30,7 +30,7 @@ export function SelectDemo() {
   });
 
   return (
-    <div>
+    <div onKeyDown={select.handleKeyDown}>
       <button type="button" onClick={select.toggleMenu}>
         {select.selectedItem?.label ?? '색상을 선택하세요'}
       </button>
