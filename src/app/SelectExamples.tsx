@@ -1,406 +1,370 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { useSelect } from "@/components/ui/select";
 
-type ProductSize = {
-  value: number;
-  stock: number;
-};
-
-type Product = {
+type BundleOption = {
   id: string;
-  name: string;
+  title: string;
   price: number;
-  originalPrice: number | null;
-  image: string;
-  freeShipping: boolean;
-  sizes: ProductSize[];
-};
-
-type ProductsResponse = {
-  products: Product[];
-  totalCount: number;
-};
-
-type ShippingOption = {
-  id: string;
-  label: string;
-  description: string;
-  price: number;
+  unitPrice: number;
+  badge?: string;
   disabled?: boolean;
 };
 
-const shippingOptions: ShippingOption[] = [
+type SizeOption = {
+  id: string;
+  size: number;
+  deliveryText: string;
+  disabled?: boolean;
+};
+
+type ThumbnailOption = {
+  id: string;
+  name: string;
+  image: string;
+  discountRate: number;
+  price: number;
+  badge?: string;
+  disabled?: boolean;
+};
+
+type DisabledExampleOption = {
+  id: string;
+  label: string;
+  description: string;
+  disabled?: boolean;
+};
+
+const bundleOptions: BundleOption[] = [
   {
-    id: "standard",
-    label: "일반 배송",
-    description: "영업일 기준 2-3일",
-    price: 3000,
+    id: "bundle-10",
+    title: "[최대할인] 베이글 5+5개",
+    price: 21000,
+    unitPrice: 2100,
+    badge: "무료배송",
   },
   {
-    id: "express",
-    label: "빠른 배송",
-    description: "내일 도착",
-    price: 5000,
+    id: "single-1",
+    title: "베이글 1개",
+    price: 4200,
+    unitPrice: 4200,
+  },
+];
+
+const sizeOptions: SizeOption[] = [
+  {
+    id: "size-24",
+    size: 24,
+    deliveryText: "내일(토) 도착보장",
   },
   {
-    id: "pickup",
-    label: "매장 픽업",
-    description: "현재 준비 중",
-    price: 0,
+    id: "size-25",
+    size: 25,
+    deliveryText: "내일(토) 도착보장",
+  },
+  {
+    id: "size-26",
+    size: 26,
+    deliveryText: "내일(토) 도착보장",
+  },
+  {
+    id: "size-27",
+    size: 27,
+    deliveryText: "내일(토) 도착보장",
+  },
+  {
+    id: "size-28",
+    size: 28,
+    deliveryText: "품절",
     disabled: true,
   },
 ];
 
-const statusLabels = [
-  "Default: 회색 테두리",
-  "Active: 초록 테두리 + 포커스 링",
-  "Selected: 체크 아이콘",
-  "Disabled: 흐린 텍스트",
+const thumbnailOptions: ThumbnailOption[] = [
+  {
+    id: "ampoule-100",
+    name: "그로우턴 앰플 100ml기획(+100ml)",
+    image: "/next.svg",
+    discountRate: 2,
+    price: 38800,
+    badge: "오늘드림",
+  },
+  {
+    id: "ampoule-130",
+    name: "그로우턴 앰플 130ml기획(+30ml)",
+    image: "/next.svg",
+    discountRate: 2,
+    price: 33800,
+    badge: "오늘드림",
+  },
+];
+
+const disabledExampleOptions: DisabledExampleOption[] = [
+  {
+    id: "today",
+    label: "오늘 출고",
+    description: "오후 2시 전 주문 시 당일 출고",
+  },
+  {
+    id: "dawn",
+    label: "새벽 배송",
+    description: "현재 배송지에서는 지원하지 않음",
+    disabled: true,
+  },
+  {
+    id: "pickup",
+    label: "매장 픽업",
+    description: "선택한 상품은 픽업 준비 중",
+    disabled: true,
+  },
+  {
+    id: "standard",
+    label: "일반 배송",
+    description: "영업일 기준 2-3일 도착",
+  },
 ];
 
 const formatPrice = (price: number) => {
   return `${price.toLocaleString()}원`;
 };
 
-const getFirstAvailableSize = (sizes: ProductSize[]) => {
-  return sizes.find((size) => size.stock > 0) ?? null;
-};
-
 export function SelectExamples() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    async function fetchProducts() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const response = await fetch("/api/products", {
-          signal: abortController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error("상품 옵션을 불러오지 못했습니다.");
-        }
-
-        const data = (await response.json()) as ProductsResponse;
-        const firstProduct = data.products[0] ?? null;
-
-        setProducts(data.products);
-        setSelectedProduct(firstProduct);
-        setSelectedSize(firstProduct ? getFirstAvailableSize(firstProduct.sizes) : null);
-      } catch (fetchError) {
-        if (fetchError instanceof DOMException && fetchError.name === "AbortError") {
-          return;
-        }
-
-        setError(
-          fetchError instanceof Error ? fetchError.message : "알 수 없는 오류가 발생했습니다.",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchProducts();
-
-    return () => {
-      abortController.abort();
-    };
-  }, []);
-
-  if (isLoading) {
-    return <SelectExamplesMessage>옵션 로딩 중...</SelectExamplesMessage>;
-  }
-
-  if (error) {
-    return <SelectExamplesMessage variant="error">{error}</SelectExamplesMessage>;
-  }
-
   return (
     <section>
-      <ProductListHeader productCount={products.length} />
-
-      <div className="relative z-10 mb-7 flex flex-col gap-2.5 sm:flex-row">
-        <ProductSelectField
-          products={products}
-          selectedProduct={selectedProduct}
-          onProductChange={(product) => {
-            setSelectedProduct(product);
-            setSelectedSize(getFirstAvailableSize(product.sizes));
-          }}
-        />
-        <SizeSelectField
-          sizes={selectedProduct?.sizes ?? []}
-          selectedSize={selectedSize}
-          onSizeChange={setSelectedSize}
-        />
-        <ShippingSelectField />
+      <DemoHeader />
+      <div className="grid gap-6 md:grid-cols-2">
+        <TextOptionSelect />
+        <SizeOptionSelect />
+        <ThumbnailOptionSelect />
+        <DisabledOptionSelect />
       </div>
-
-      <ProductGrid products={products} />
       <SelectSpecNote />
     </section>
   );
 }
 
-function SelectExamplesMessage({
-  children,
-  variant = "default",
-}: {
-  children: React.ReactNode;
-  variant?: "default" | "error";
-}) {
-  const className =
-    variant === "error"
-      ? "rounded-[14px] border border-[#FF3D3D] bg-[#FFEDED] p-8 text-sm text-[#FF3D3D]"
-      : "rounded-[14px] border border-[#E1E1E1] bg-white p-8 text-sm text-[#767676]";
-
-  return <div className={className}>{children}</div>;
-}
-
-function ProductListHeader({ productCount }: { productCount: number }) {
+function DemoHeader() {
   return (
-    <div className="mb-5">
-      <h1 className="text-[22px] font-extrabold tracking-[-0.02em] text-[#191919]">
-        베이글 옵션 전체
+    <div className="mb-6">
+      <p className="text-[13px] font-semibold text-[#009E30]">Headless Select Demo</p>
+      <h1 className="mt-1 text-[24px] font-extrabold tracking-[-0.02em] text-[#191919]">
+        같은 로직으로 옵션 UI 3종과 비활성 상태 렌더링
       </h1>
-      <p className="mt-1 text-[13px] text-[#767676]">
-        총 <b className="font-bold text-[#009E30]">{productCount.toLocaleString()}개</b>의 상품이
-        있어요
+      <p className="mt-2 max-w-[680px] text-[13px] leading-6 text-[#767676]">
+        `useSelect`는 선택 상태와 이벤트만 제공하고, 텍스트형·사이즈형·썸네일형 옵션과 선택 불가
+        상태의 생김새는 사용처에서 직접 그립니다.
       </p>
     </div>
   );
 }
 
-function ProductSelectField({
-  products,
-  selectedProduct,
-  onProductChange,
-}: {
-  products: Product[];
-  selectedProduct: Product | null;
-  onProductChange: (product: Product) => void;
-}) {
-  const productSelect = useSelect({
-    items: products,
-    selectedItem: selectedProduct,
-    onSelectedItemChange: onProductChange,
+function TextOptionSelect() {
+  const select = useSelect({
+    items: bundleOptions,
+    defaultSelectedItem: bundleOptions[0],
+    itemToString: (item) => item?.title ?? "",
+    isItemDisabled: (item) => item.disabled === true,
+  });
+
+  return (
+    <SelectCard title="텍스트 옵션">
+      <div className="relative" {...select.getRootProps()}>
+        <button className={textTriggerClassName} {...select.getToggleButtonProps()}>
+          <span className="min-w-0 flex-1 truncate">
+            {select.selectedItem?.title ?? "옵션 선택"}
+          </span>
+          <ChevronIcon isOpen={select.isOpen} />
+        </button>
+        {select.isOpen && (
+          <ul className={textPanelClassName} {...select.getMenuProps()}>
+            {bundleOptions.map((option, index) => {
+              const state = select.getItemState({ item: option, index });
+
+              return (
+                <li
+                  key={option.id}
+                  className={getTextOptionClassName(state)}
+                  {...select.getItemProps({ item: option, index })}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[16px] font-semibold text-[#191919]">{option.title}</p>
+                    <p className="mt-2 text-[21px] font-extrabold text-[#191919]">
+                      {formatPrice(option.price)}
+                      <span className="ml-2 text-[16px] font-medium text-[#FF3D00]">
+                        (1개당 {formatPrice(option.unitPrice)})
+                      </span>
+                    </p>
+                  </div>
+                  {option.badge && (
+                    <span className="ml-4 shrink-0 rounded-full border border-[#FF3D00] px-3 py-1 text-[13px] font-bold text-[#FF3D00]">
+                      {option.badge}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </SelectCard>
+  );
+}
+
+function SizeOptionSelect() {
+  const select = useSelect({
+    items: sizeOptions,
+    defaultSelectedItem: sizeOptions[0],
+    itemToString: (item) => (item ? String(item.size) : ""),
+    isItemDisabled: (item) => item.disabled === true,
+  });
+
+  return (
+    <SelectCard title="사이즈 옵션">
+      <div className="relative" {...select.getRootProps()}>
+        <button className={sizeTriggerClassName} {...select.getToggleButtonProps()}>
+          <span className="min-w-0 flex-1 truncate">
+            {select.selectedItem ? `${select.selectedItem.size}` : "사이즈"}
+          </span>
+          <ChevronIcon isOpen={select.isOpen} muted />
+        </button>
+        {select.isOpen && (
+          <ul className={sizePanelClassName} {...select.getMenuProps()}>
+            {sizeOptions.map((option, index) => {
+              const state = select.getItemState({ item: option, index });
+
+              return (
+                <li
+                  key={option.id}
+                  className={getSizeOptionClassName(state)}
+                  {...select.getItemProps({ item: option, index })}
+                >
+                  <p className="text-[20px] font-medium text-[#191919]">{option.size}</p>
+                  <p className="mt-2 text-[17px] font-medium text-[#1E5BFF]">
+                    <DeliveryIcon />
+                    {option.deliveryText}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </SelectCard>
+  );
+}
+
+function ThumbnailOptionSelect() {
+  const select = useSelect({
+    items: thumbnailOptions,
+    defaultSelectedItem: thumbnailOptions[0],
     itemToString: (item) => item?.name ?? "",
-    isItemDisabled: (item) => item.sizes.length === 0,
+    isItemDisabled: (item) => item.disabled === true,
   });
 
   return (
-    <SelectFieldFrame
-      label="상품"
-      value={productSelect.selectedItem?.name ?? "상품 선택"}
-      isOpen={productSelect.isOpen}
-      rootProps={productSelect.getRootProps()}
-      labelProps={productSelect.getLabelProps()}
-      triggerProps={productSelect.getToggleButtonProps()}
-      menuProps={productSelect.getMenuProps()}
-    >
-      {products.map((product, index) => {
-        const state = productSelect.getItemState({ item: product, index });
+    <SelectCard title="썸네일 옵션">
+      <div className="relative" {...select.getRootProps()}>
+        <button className={thumbnailTriggerClassName} {...select.getToggleButtonProps()}>
+          <span className="min-w-0 flex-1 truncate">
+            {select.selectedItem?.name ?? "옵션을 선택해 주세요"}
+          </span>
+          <ChevronIcon isOpen={select.isOpen} />
+        </button>
+        {select.isOpen && (
+          <ul className={thumbnailPanelClassName} {...select.getMenuProps()}>
+            {thumbnailOptions.map((option, index) => {
+              const state = select.getItemState({ item: option, index });
 
-        return (
-          <li
-            key={product.id}
-            className={getOptionClassName(state)}
-            {...productSelect.getItemProps({ item: product, index })}
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[#F5F5F6]">
-                <Image src={product.image} alt="" width={24} height={24} />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate">{product.name}</span>
-                <span className="mt-0.5 block text-xs font-normal text-[#767676]">
-                  {formatPrice(product.price)}
-                </span>
-              </span>
-            </div>
-            <CheckIcon visible={state.selected} />
-          </li>
-        );
-      })}
-    </SelectFieldFrame>
+              return (
+                <li
+                  key={option.id}
+                  className={getThumbnailOptionClassName(state)}
+                  {...select.getItemProps({ item: option, index })}
+                >
+                  <span className="flex h-[86px] w-[60px] shrink-0 items-center justify-center bg-[#F5F5F6]">
+                    <Image src={option.image} alt="" width={34} height={34} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[19px] font-medium text-[#191919]">
+                      {option.name}
+                    </span>
+                    <span className="mt-2 flex items-center gap-2">
+                      <span className="text-[19px] font-extrabold text-[#FF4B4B]">
+                        {option.discountRate}%
+                      </span>
+                      <span className="text-[21px] font-extrabold text-[#191919]">
+                        {formatPrice(option.price)}
+                      </span>
+                      {option.badge && (
+                        <span className="rounded-[4px] bg-[#F5F5F6] px-2 py-1 text-[13px] font-medium text-[#FF4B8B]">
+                          {option.badge}
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </SelectCard>
   );
 }
 
-function SizeSelectField({
-  sizes,
-  selectedSize,
-  onSizeChange,
-}: {
-  sizes: ProductSize[];
-  selectedSize: ProductSize | null;
-  onSizeChange: (size: ProductSize) => void;
-}) {
-  const sizeSelect = useSelect({
-    items: sizes,
-    selectedItem: selectedSize,
-    onSelectedItemChange: onSizeChange,
-    itemToString: (item) => (item ? `${item.value}cm` : ""),
-    isItemDisabled: (item) => item.stock === 0,
-  });
-
-  return (
-    <SelectFieldFrame
-      label="사이즈"
-      value={sizeSelect.selectedItem ? `${sizeSelect.selectedItem.value}cm` : "사이즈 선택"}
-      isOpen={sizeSelect.isOpen}
-      rootProps={sizeSelect.getRootProps()}
-      labelProps={sizeSelect.getLabelProps()}
-      triggerProps={sizeSelect.getToggleButtonProps()}
-      menuProps={sizeSelect.getMenuProps()}
-    >
-      {sizes.map((size, index) => {
-        const state = sizeSelect.getItemState({ item: size, index });
-
-        return (
-          <li
-            key={size.value}
-            className={getOptionClassName(state)}
-            {...sizeSelect.getItemProps({ item: size, index })}
-          >
-            <span>{size.value}cm</span>
-            <span className="ml-auto text-xs font-normal text-[#767676]">
-              {size.stock > 0 ? `재고 ${size.stock}` : "품절"}
-            </span>
-            <CheckIcon visible={state.selected} />
-          </li>
-        );
-      })}
-    </SelectFieldFrame>
-  );
-}
-
-function ShippingSelectField() {
-  const shippingSelect = useSelect({
-    items: shippingOptions,
-    defaultSelectedItem: shippingOptions[0],
+function DisabledOptionSelect() {
+  const select = useSelect({
+    items: disabledExampleOptions,
+    defaultSelectedItem: disabledExampleOptions[0],
     itemToString: (item) => item?.label ?? "",
     isItemDisabled: (item) => item.disabled === true,
   });
 
   return (
-    <SelectFieldFrame
-      label="배송"
-      value={shippingSelect.selectedItem?.label ?? "배송 방식"}
-      isOpen={shippingSelect.isOpen}
-      rootProps={shippingSelect.getRootProps()}
-      labelProps={shippingSelect.getLabelProps()}
-      triggerProps={shippingSelect.getToggleButtonProps()}
-      menuProps={shippingSelect.getMenuProps()}
-    >
-      {shippingOptions.map((option, index) => {
-        const state = shippingSelect.getItemState({ item: option, index });
-
-        return (
-          <li
-            key={option.id}
-            className={getOptionClassName(state)}
-            {...shippingSelect.getItemProps({ item: option, index })}
-          >
-            <span>
-              <span className="block">{option.label}</span>
-              <span className="mt-0.5 block text-xs font-normal text-[#767676]">
-                {option.description}
-              </span>
-            </span>
-            <span className="ml-auto text-sm font-medium text-[#4B4B4B]">
-              {formatPrice(option.price)}
-            </span>
-            <CheckIcon visible={state.selected} />
-          </li>
-        );
-      })}
-    </SelectFieldFrame>
-  );
-}
-
-function SelectFieldFrame({
-  label,
-  value,
-  isOpen,
-  rootProps,
-  labelProps,
-  triggerProps,
-  menuProps,
-  children,
-}: {
-  label: string;
-  value: string;
-  isOpen: boolean;
-  rootProps: React.HTMLAttributes<HTMLElement> & {
-    ref: React.RefCallback<HTMLElement>;
-  };
-  labelProps: React.LabelHTMLAttributes<HTMLLabelElement>;
-  triggerProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
-  menuProps: React.HTMLAttributes<HTMLUListElement>;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="relative flex-1" {...rootProps}>
-      <label className="sr-only" {...labelProps}>
-        {label}
-      </label>
-      <button className={getSelectBoxClassName(isOpen)} {...triggerProps}>
-        <span className="min-w-0">
-          <span className={selectLabelClassName}>{label}</span>
-          <span className={selectValueClassName}>{value}</span>
-        </span>
-        <ChevronIcon isOpen={isOpen} />
-      </button>
-      {isOpen && (
-        <ul className={selectPanelClassName} {...menuProps}>
-          {children}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function ProductGrid({ products }: { products: Product[] }) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
-  );
-}
-
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <article className="overflow-hidden rounded-[12px] border border-[#E1E1E1] bg-white">
-      <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-[#EFEFF1] to-[#E4E5E8]">
-        <Image src={product.image} alt="" width={72} height={72} />
-      </div>
-      <div className="p-3.5 pb-4">
-        {product.freeShipping && (
-          <span className="mb-1.5 inline-block rounded-[5px] bg-[#E6FBEC] px-2 py-1 text-[11px] font-bold text-[#009E30]">
-            무료배송
+    <SelectCard title="비활성 옵션">
+      <div className="relative" {...select.getRootProps()}>
+        <button className={disabledTriggerClassName} {...select.getToggleButtonProps()}>
+          <span className="min-w-0 flex-1 truncate">
+            {select.selectedItem?.label ?? "배송 방식 선택"}
           </span>
+          <ChevronIcon isOpen={select.isOpen} />
+        </button>
+        {select.isOpen && (
+          <ul className={disabledPanelClassName} {...select.getMenuProps()}>
+            {disabledExampleOptions.map((option, index) => {
+              const state = select.getItemState({ item: option, index });
+
+              return (
+                <li
+                  key={option.id}
+                  className={getDisabledOptionClassName(state)}
+                  {...select.getItemProps({ item: option, index })}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-[16px] font-semibold">{option.label}</span>
+                    <span className="mt-1 block text-[13px] font-medium">{option.description}</span>
+                  </span>
+                  {state.disabled && (
+                    <span className="ml-4 shrink-0 rounded-full bg-[#EFEFEF] px-3 py-1 text-[12px] font-bold text-[#9A9A9A]">
+                      선택 불가
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
-        <h2 className="line-clamp-2 h-[2.8em] text-[13.5px] leading-[1.4] text-[#4B4B4B]">
-          {product.name}
-        </h2>
-        <p className="mt-2 text-[17px] font-extrabold text-[#191919]">
-          {product.price.toLocaleString()}
-          <span className="ml-1 text-[13px] font-medium text-[#767676]">원</span>
-        </p>
       </div>
+    </SelectCard>
+  );
+}
+
+function SelectCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <article className="rounded-[16px] border border-[#E1E1E1] bg-white p-4 shadow-[0_4px_16px_rgba(25,25,25,0.04)]">
+      <h2 className="mb-3 text-[14px] font-bold text-[#4B4B4B]">{title}</h2>
+      {children}
     </article>
   );
 }
@@ -408,87 +372,125 @@ function ProductCard({ product }: { product: Product }) {
 function SelectSpecNote() {
   return (
     <div className="mt-12 rounded-[14px] border border-[#E1E1E1] bg-white px-6 py-5">
-      <h2 className="text-[15px] font-bold text-[#191919]">Select Box 상태 참고</h2>
+      <h2 className="text-[15px] font-bold text-[#191919]">완료조건 확인</h2>
       <p className="mt-1 text-[12.5px] leading-6 text-[#767676]">
-        GDS Dropdown의 Large 56px, 좌우 16px padding, Label + Value 2 Lines 구조를 참고했습니다.
-        선택, 하이라이트, 비활성화, 체크 표시만 사용처에서 스타일링합니다.
+        세 가지 완료조건 Select는 같은 `useSelect` 훅을 사용하지만 option 렌더링만 다르게
+        구성했습니다. 비활성 예시는 disabled 옵션이 클릭과 키보드 선택에서 제외되는지 함께 확인하기
+        위해 추가했습니다.
       </p>
-      <div className="mt-4 flex flex-wrap gap-2 text-[12.5px] text-[#4B4B4B]">
-        {statusLabels.map((label) => (
-          <span key={label} className="rounded-[8px] bg-[#F5F5F6] px-3 py-2">
-            {label}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }
 
-const selectLabelClassName = "block text-[11px] font-medium leading-[14px] text-[#009E30]";
+const triggerBaseClassName =
+  "flex h-[64px] w-full items-center justify-between gap-4 rounded-[12px] border border-[#DCDCDC] bg-white px-5 text-left outline-none transition hover:border-[#C7C7C7] focus-visible:border-[#191919] focus-visible:shadow-[0_0_0_3px_rgba(25,25,25,0.08)]";
 
-const selectValueClassName =
-  "mt-0.5 block truncate pr-5 text-[15px] font-semibold leading-5 text-[#191919]";
+const panelBaseClassName =
+  "absolute left-0 right-0 top-[calc(100%+8px)] z-20 max-h-[420px] overflow-y-auto rounded-[12px] border border-[#DCDCDC] bg-white shadow-[0_12px_28px_rgba(25,25,25,0.12),0_2px_6px_rgba(25,25,25,0.06)]";
 
-const selectPanelClassName =
-  "absolute left-0 right-0 top-[calc(100%+8px)] z-20 max-h-[280px] overflow-y-auto rounded-[10px] border border-[#E1E1E1] bg-white p-1.5 shadow-[0_12px_28px_rgba(25,25,25,0.12),0_2px_6px_rgba(25,25,25,0.06)]";
+const textTriggerClassName = `${triggerBaseClassName} text-[18px] font-extrabold text-[#191919]`;
 
-function getSelectBoxClassName(isOpen: boolean) {
+const textPanelClassName = `${panelBaseClassName} overflow-hidden`;
+
+const sizeTriggerClassName = `${triggerBaseClassName} text-[20px] font-semibold text-[#191919]`;
+
+const sizePanelClassName = panelBaseClassName;
+
+const thumbnailTriggerClassName = `${triggerBaseClassName} h-[72px] text-[18px] font-semibold text-[#191919]`;
+
+const thumbnailPanelClassName = `${panelBaseClassName} px-5 py-2`;
+
+const disabledTriggerClassName = `${triggerBaseClassName} text-[18px] font-semibold text-[#191919]`;
+
+const disabledPanelClassName = `${panelBaseClassName} p-2`;
+
+function getTextOptionClassName(state: {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+}) {
   const classNames = [
-    "relative flex h-14 w-full cursor-pointer flex-col justify-center rounded-[10px] border-[1.5px] bg-white px-4 text-left font-[inherit] outline-none transition focus-visible:border-[#00C73C] focus-visible:shadow-[0_0_0_3px_#E6FBEC]",
-    isOpen
-      ? "border-[#00C73C] shadow-[0_0_0_3px_#E6FBEC]"
-      : "border-[#E1E1E1] hover:border-[#C7C7C7]",
-  ];
-
-  return classNames.join(" ");
-}
-
-function getOptionClassName(state: { selected: boolean; highlighted: boolean; disabled: boolean }) {
-  const classNames = [
-    "flex cursor-pointer items-center gap-2 rounded-[7px] px-3 py-3 text-sm font-medium text-[#4B4B4B] outline-none transition",
-    state.highlighted ? "bg-[#F5F5F6]" : "",
-    state.selected ? "bg-[#E6FBEC] font-bold text-[#009E30]" : "",
-    state.disabled ? "cursor-not-allowed opacity-35" : "",
+    "flex min-h-[108px] cursor-pointer items-center justify-between border-t border-[#EFEFEF] px-5 py-5 outline-none transition first:border-t-0",
+    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
+    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] text-[#B8B8B8]" : "",
   ];
 
   return classNames.filter(Boolean).join(" ");
 }
 
-function ChevronIcon({ isOpen }: { isOpen: boolean }) {
+function getSizeOptionClassName(state: {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+}) {
+  const classNames = [
+    "min-h-[104px] cursor-pointer border-t border-[#EFEFEF] px-5 py-5 outline-none transition first:border-t-0",
+    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
+    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] opacity-45" : "",
+  ];
+
+  return classNames.filter(Boolean).join(" ");
+}
+
+function getThumbnailOptionClassName(state: {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+}) {
+  const classNames = [
+    "flex cursor-pointer items-center gap-5 border-t border-[#EFEFEF] py-5 outline-none transition first:border-t-0",
+    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
+    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] opacity-45" : "",
+  ];
+
+  return classNames.filter(Boolean).join(" ");
+}
+
+function getDisabledOptionClassName(state: {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+}) {
+  const classNames = [
+    "flex min-h-[76px] cursor-pointer items-center justify-between rounded-[8px] px-4 py-3 outline-none transition",
+    state.selected ? "bg-[#E6FBEC] text-[#009E30]" : "text-[#191919]",
+    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
+    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] text-[#A0A0A0]" : "",
+  ];
+
+  return classNames.filter(Boolean).join(" ");
+}
+
+function ChevronIcon({ isOpen, muted = false }: { isOpen: boolean; muted?: boolean }) {
   return (
     <svg
-      className={`absolute right-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#767676] transition ${
-        isOpen ? "rotate-180 text-[#009E30]" : ""
+      className={`h-6 w-6 shrink-0 transition ${isOpen ? "rotate-180" : ""} ${
+        muted ? "text-[#8A8A8A]" : "text-[#191919]"
       }`}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden
     >
       <path
-        d="M6 9l6 6 6-6"
+        d="M6 15l6-6 6 6"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth="2.2"
       />
     </svg>
   );
 }
 
-function CheckIcon({ visible }: { visible: boolean }) {
+function DeliveryIcon() {
   return (
-    <svg
-      className={`h-4 w-4 shrink-0 text-[#00C73C] ${visible ? "visible" : "invisible"}`}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden
-    >
+    <svg className="mr-1 inline h-5 w-5 align-[-3px]" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M5 13l4 4L19 7"
+        d="M4 15V7h10v8M14 10h3l3 3v2h-2M7 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM17 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM9 15h6"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="2.4"
+        strokeWidth="1.9"
       />
     </svg>
   );
