@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root {
+/* :root {
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -10,9 +10,9 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
-html {
+/* html {
   height: 100%;
 }
 
@@ -42,10 +42,10 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-}
+} */
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
   }
-}
+} */
