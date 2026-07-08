@@ -27,8 +27,11 @@ const buildQueryString = (query: ProductQuery) => {
 
 export const fetchProducts = async (
   query: ProductQuery,
+  signal?: AbortSignal,
 ): Promise<ProductListResponse> => {
-  const res = await fetch(`${PRODUCTS_ENDPOINT}?${buildQueryString(query)}`);
+  const res = await fetch(`${PRODUCTS_ENDPOINT}?${buildQueryString(query)}`, {
+    signal,
+  });
   if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
   return res.json();
 };

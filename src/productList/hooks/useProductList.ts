@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { Product } from "../types";
 import { fetchProducts, type ProductQuery } from "../services/productApi";
+import type { Product } from "../types";
 
 export const useProductList = (query: ProductQuery) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -11,25 +11,37 @@ export const useProductList = (query: ProductQuery) => {
   const { category, minPrice, maxPrice, sortBy, searchQuery } = query;
 
   useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+
     const load = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await fetchProducts({
-          category,
-          minPrice,
-          maxPrice,
-          sortBy,
-          searchQuery,
-        });
+        const data = await fetchProducts(
+          {
+            category,
+            minPrice,
+            maxPrice,
+            sortBy,
+            searchQuery,
+          },
+          controller.signal,
+        );
+        if (ignore) return;
         setProducts(data.products);
       } catch (err) {
+        if (ignore || (err as Error).name === "AbortError") return;
         setError(err as Error);
       } finally {
-        setIsLoading(false);
+        if (!ignore) setIsLoading(false);
       }
     };
     load();
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
   }, [category, minPrice, maxPrice, sortBy, searchQuery, retryToken]);
 
   const refetch = () => setRetryToken((n) => n + 1);
