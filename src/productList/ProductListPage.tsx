@@ -17,10 +17,10 @@ export function ProductListPage() {
   const filters = useProductFilters();
   const {
     category,
-    minPrice,
-    maxPrice,
+    debouncedMinPrice,
+    debouncedMaxPrice,
     sortBy,
-    searchQuery,
+    debouncedSearchQuery,
     page,
     inStockOnly,
     handlePageChange,
@@ -32,10 +32,10 @@ export function ProductListPage() {
   // ─── 서버 상태 (필터가 적용된 전체 목록) ────────────────
   const { products, isLoading, error, refetch } = useProductList({
     category,
-    minPrice,
-    maxPrice,
+    minPrice: debouncedMinPrice,
+    maxPrice: debouncedMaxPrice,
     sortBy,
-    searchQuery,
+    searchQuery: debouncedSearchQuery,
   });
 
   // ─── 파생값: 재고 필터 + 클라이언트 페이지네이션 ────────
@@ -72,7 +72,7 @@ export function ProductListPage() {
         <ProductGrid
           products={visibleProducts}
           viewMode={viewMode}
-          searchQuery={searchQuery}
+          searchQuery={debouncedSearchQuery}
           wishlistStore={wishlistStore}
         />
       </AsyncBoundary>

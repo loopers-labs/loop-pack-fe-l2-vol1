@@ -5,6 +5,7 @@ import {
   syncFiltersToUrl,
   type CategoryValue,
 } from "../utils/filterParams";
+import { useDebounced } from "./useDebounced";
 
 export const useProductFilters = () => {
   const initial = readFiltersFromUrl();
@@ -15,18 +16,29 @@ export const useProductFilters = () => {
   const [searchQuery, setSearchQuery] = useState(initial.searchQuery);
   const [page, setPage] = useState(initial.page);
   const [inStockOnly, setInStockOnly] = useState(initial.inStockOnly);
+  const debouncedMinPrice = useDebounced(minPrice);
+  const debouncedMaxPrice = useDebounced(maxPrice);
+  const debouncedSearchQuery = useDebounced(searchQuery);
 
   useEffect(() => {
     syncFiltersToUrl({
       category,
-      minPrice,
-      maxPrice,
+      minPrice: debouncedMinPrice,
+      maxPrice: debouncedMaxPrice,
       sortBy,
-      searchQuery,
+      searchQuery: debouncedSearchQuery,
       page,
       inStockOnly,
     });
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
+  }, [
+    category,
+    debouncedSearchQuery,
+    page,
+    sortBy,
+    debouncedMinPrice,
+    debouncedMaxPrice,
+    inStockOnly,
+  ]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -89,8 +101,11 @@ export const useProductFilters = () => {
     category,
     minPrice,
     maxPrice,
+    debouncedMinPrice,
+    debouncedMaxPrice,
     sortBy,
     searchQuery,
+    debouncedSearchQuery,
     page,
     inStockOnly,
     handleCategoryChange,
