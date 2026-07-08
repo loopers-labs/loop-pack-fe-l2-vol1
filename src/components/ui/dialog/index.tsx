@@ -22,6 +22,8 @@ type DialogPortalProps = {
   children: ReactNode;
 };
 type DialogDivProps = HTMLAttributes<HTMLDivElement>;
+type DialogTitleProps = HTMLAttributes<HTMLHeadingElement>;
+type DialogDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
 const DialogContext = createContext<DialogContextValue | null>(null);
 
@@ -168,11 +170,25 @@ function DialogContent({ onClick, ...props }: DialogDivProps) {
   return <div onClick={handleClick} {...props} />;
 }
 
+function DialogTitle(props: DialogTitleProps) {
+  useDialogContext("Dialog.Title");
+
+  return <h2 {...props} />;
+}
+
+function DialogDescription(props: DialogDescriptionProps) {
+  useDialogContext("Dialog.Description");
+
+  return <p {...props} />;
+}
+
 export const Dialog = {
   Root: DialogRoot,
   Trigger: DialogTrigger,
   Portal: DialogPortal,
   Overlay: DialogOverlay,
   Content: DialogContent,
+  Title: DialogTitle,
+  Description: DialogDescription,
   Close: DialogClose,
 };
