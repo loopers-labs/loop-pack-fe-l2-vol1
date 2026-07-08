@@ -427,7 +427,7 @@ const selectPanelClassName =
 
 function getSelectBoxClassName(isOpen: boolean) {
   const classNames = [
-    "relative flex h-14 w-full cursor-pointer flex-col justify-center rounded-[10px] border-[1.5px] bg-white px-4 text-left font-[inherit] outline-none transition",
+    "relative flex h-14 w-full cursor-pointer flex-col justify-center rounded-[10px] border-[1.5px] bg-white px-4 text-left font-[inherit] outline-none transition focus-visible:border-[#00C73C] focus-visible:shadow-[0_0_0_3px_#E6FBEC]",
     isOpen
       ? "border-[#00C73C] shadow-[0_0_0_3px_#E6FBEC]"
       : "border-[#E1E1E1] hover:border-[#C7C7C7]",

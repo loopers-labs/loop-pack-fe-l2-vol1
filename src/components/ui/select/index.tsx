@@ -68,6 +68,46 @@ function getNextEnabledIndex<Item>({
   return -1;
 }
 
+function getFirstEnabledIndex<Item>(
+  items: Item[],
+  isItemDisabled: (item: Item, index: number) => boolean,
+) {
+  return items.findIndex((item, index) => {
+    return !isItemDisabled(item, index);
+  });
+}
+
+function getLastEnabledIndex<Item>(
+  items: Item[],
+  isItemDisabled: (item: Item, index: number) => boolean,
+) {
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (!isItemDisabled(items[index], index)) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+function getSelectedItemIndex<Item>({
+  items,
+  selectedItem,
+  isItemDisabled,
+}: {
+  items: Item[];
+  selectedItem: Item | null | undefined;
+  isItemDisabled: (item: Item, index: number) => boolean;
+}) {
+  if (selectedItem == null) {
+    return -1;
+  }
+
+  return items.findIndex((item, index) => {
+    return Object.is(item, selectedItem) && !isItemDisabled(item, index);
+  });
+}
+
 export function useSelect<Item>({
   items,
   selectedItem,
@@ -94,16 +134,46 @@ export function useSelect<Item>({
 
   const currentSelectedItem = isControlled ? selectedItem : internalSelectedItem;
 
+  const highlightItem = (index: number) => {
+    setHighlightedIndex(index);
+    itemRefs.current[index]?.scrollIntoView({ block: "nearest" });
+  };
+
+  const getInitialHighlightedIndex = () => {
+    const selectedIndex = getSelectedItemIndex({
+      items,
+      selectedItem: currentSelectedItem,
+      isItemDisabled,
+    });
+
+    if (selectedIndex !== -1) {
+      return selectedIndex;
+    }
+
+    return getFirstEnabledIndex(items, isItemDisabled);
+  };
+
   const openMenu = () => {
+    if (isOpen) {
+      return;
+    }
+
     setIsOpen(true);
+    highlightItem(getInitialHighlightedIndex());
   };
 
   const closeMenu = () => {
     setIsOpen(false);
+    setHighlightedIndex(-1);
   };
 
   const toggleMenu = () => {
-    setIsOpen((prev) => !prev);
+    if (isOpen) {
+      closeMenu();
+      return;
+    }
+
+    openMenu();
   };
 
   const selectItem = (item: Item) => {
@@ -126,31 +196,81 @@ export function useSelect<Item>({
     if (nextIndex === -1) {
       return;
     }
-    itemRefs.current[nextIndex]?.scrollIntoView({ block: "nearest" });
-    setHighlightedIndex(nextIndex);
+
+    highlightItem(nextIndex);
   };
 
   const handleToggleButtonKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setIsOpen(true);
+
+      if (!isOpen) {
+        openMenu();
+        return;
+      }
+
       moveHighlight(1);
       return;
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      setIsOpen(true);
+
+      if (!isOpen) {
+        openMenu();
+        return;
+      }
+
       moveHighlight(-1);
       return;
     }
 
-    if (event.key === "Enter") {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+
+      if (!isOpen) {
+        openMenu();
+        return;
+      }
+
       const highlightedItem = items[highlightedIndex];
 
-      if (highlightedItem !== undefined) {
-        event.preventDefault();
+      if (highlightedItem !== undefined && !isItemDisabled(highlightedItem, highlightedIndex)) {
         selectItem(highlightedItem);
+      }
+
+      return;
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+
+      if (!isOpen) {
+        openMenu();
+        return;
+      }
+
+      const firstEnabledIndex = getFirstEnabledIndex(items, isItemDisabled);
+
+      if (firstEnabledIndex !== -1) {
+        highlightItem(firstEnabledIndex);
+      }
+
+      return;
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+
+      if (!isOpen) {
+        openMenu();
+        return;
+      }
+
+      const lastEnabledIndex = getLastEnabledIndex(items, isItemDisabled);
+
+      if (lastEnabledIndex !== -1) {
+        highlightItem(lastEnabledIndex);
       }
 
       return;
@@ -158,6 +278,11 @@ export function useSelect<Item>({
 
     if (event.key === "Escape") {
       event.preventDefault();
+      closeMenu();
+      return;
+    }
+
+    if (event.key === "Tab") {
       closeMenu();
     }
   };
