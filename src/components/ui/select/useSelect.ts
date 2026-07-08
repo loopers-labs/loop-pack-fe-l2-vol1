@@ -1,6 +1,11 @@
 'use client';
 
-import { type KeyboardEvent, useState } from 'react';
+import {
+  type HTMLAttributes,
+  type KeyboardEvent,
+  type LiHTMLAttributes,
+  useState,
+} from 'react';
 
 type SelectKey = string | number;
 
@@ -25,7 +30,12 @@ type UseSelectReturn<T> = {
   closeMenu: () => void;
   toggleMenu: () => void;
   selectItem: (item: T | null) => void;
-  handleKeyDown: (event: KeyboardEvent) => void;
+
+  getToggleButtonProps: () => HTMLAttributes<HTMLElement>;
+  getItemProps: (params: {
+    item: T;
+    index: number;
+  }) => LiHTMLAttributes<HTMLLIElement>;
 };
 
 /**
@@ -174,6 +184,28 @@ export function useSelect<T>({
     }
   };
 
+  const getToggleButtonProps = () => {
+    return {
+      onClick: toggleMenu,
+      onKeyDown: handleKeyDown,
+    };
+  };
+
+  const getItemProps = ({ item, index }: { item: T; index: number }) => {
+    const disabled = getIsItemDisabled(item, index);
+
+    return {
+      onMouseEnter: () => {
+        if (disabled) return;
+
+        setHighlightedIndex(index);
+      },
+      onClick: () => {
+        selectItem(item);
+      },
+    };
+  };
+
   // 메뉴 열 때 highlight 시작 위치: 선택값이 있고 enabled면 거기서, 없거나 disabled면 첫 enabled item에서 시작
   const getInitialHighlightedIndex = () => {
     const selectedIndex = findSelectedIndex();
@@ -240,6 +272,8 @@ export function useSelect<T>({
     closeMenu,
     toggleMenu,
     selectItem,
-    handleKeyDown,
+
+    getToggleButtonProps,
+    getItemProps,
   };
 }

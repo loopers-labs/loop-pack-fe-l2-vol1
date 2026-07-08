@@ -30,8 +30,8 @@ export function SelectDemo() {
   });
 
   return (
-    <div onKeyDown={select.handleKeyDown}>
-      <button type="button" onClick={select.toggleMenu}>
+    <div>
+      <button type="button" {...select.getToggleButtonProps()}>
         {select.selectedItem?.label ?? '색상을 선택하세요'}
       </button>
 
@@ -48,7 +48,7 @@ export function SelectDemo() {
             return (
               <li
                 key={item.id}
-                onClick={() => select.selectItem(item)}
+                {...select.getItemProps({ item, index })}
                 style={{
                   cursor: isDisabled ? 'not-allowed' : 'pointer',
                   opacity: isDisabled ? 0.4 : 1,
