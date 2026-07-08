@@ -1,7 +1,8 @@
 "use client";
 
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, MouseEvent, ReactNode } from "react";
 import { createContext, useContext, useState } from "react";
+import { createPortal } from "react-dom";
 
 type DialogContextValue = {
   open: boolean;
@@ -17,6 +18,10 @@ type DialogRootProps = {
 };
 
 type DialogButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+type DialogPortalProps = {
+  children: ReactNode;
+};
+type DialogDivProps = HTMLAttributes<HTMLDivElement>;
 
 const DialogContext = createContext<DialogContextValue | null>(null);
 
@@ -94,8 +99,34 @@ function DialogClose({ onClick, type = "button", ...props }: DialogButtonProps) 
   );
 }
 
+function DialogPortal({ children }: DialogPortalProps) {
+  const { open } = useDialogContext("Dialog.Portal");
+
+  if (!open) {
+    return null;
+  }
+
+  return createPortal(children, document.body);
+}
+
+function DialogOverlay(props: DialogDivProps) {
+  return <div {...props} />;
+}
+
+function DialogContent({ onClick, ...props }: DialogDivProps) {
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    onClick?.(event);
+  };
+
+  return <div onClick={handleClick} {...props} />;
+}
+
 export const Dialog = {
   Root: DialogRoot,
   Trigger: DialogTrigger,
+  Portal: DialogPortal,
+  Overlay: DialogOverlay,
+  Content: DialogContent,
   Close: DialogClose,
 };
