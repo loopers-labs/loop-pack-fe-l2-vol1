@@ -41,8 +41,8 @@ const readPageParam = (params: URLSearchParams): number => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 };
 
-export const readFiltersFromUrl = (): ProductFilterState => {
-  const params = new URLSearchParams(window.location.search);
+export const parseFilterSearch = (search: string): ProductFilterState => {
+  const params = new URLSearchParams(search);
   const category = params.get("category");
   const sortBy = params.get("sort");
 
@@ -56,6 +56,9 @@ export const readFiltersFromUrl = (): ProductFilterState => {
     inStockOnly: params.get("inStock") === "true",
   };
 };
+
+export const readFiltersFromUrl = (): ProductFilterState =>
+  parseFilterSearch(window.location.search);
 
 export const buildFilterSearchParams = (
   filters: ProductFilterState,
@@ -81,10 +84,17 @@ export const buildFilterSearchParams = (
   return params.toString();
 };
 
-export const syncFiltersToUrl = (filters: ProductFilterState): void => {
-  window.history.replaceState(null, "", `?${buildFilterSearchParams(filters)}`);
-};
+export const URL_FILTERS_CHANGED_EVENT = "productfilterschange";
 
-export const pushFiltersToUrl = (filters: ProductFilterState): void => {
-  window.history.pushState(null, "", `?${buildFilterSearchParams(filters)}`);
+export const commitFiltersToUrl = (
+  filters: ProductFilterState,
+  mode: "push" | "replace",
+): void => {
+  const search = `?${buildFilterSearchParams(filters)}`;
+  if (mode === "push") {
+    window.history.pushState(null, "", search);
+  } else {
+    window.history.replaceState(null, "", search);
+  }
+  window.dispatchEvent(new Event(URL_FILTERS_CHANGED_EVENT));
 };

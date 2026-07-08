@@ -1,129 +1,108 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SortBy } from "../types";
 import {
-  buildFilterSearchParams,
-  pushFiltersToUrl,
-  readFiltersFromUrl,
+  commitFiltersToUrl,
   type CategoryValue,
   type ProductFilterState,
 } from "../utils/filterParams";
+import { useUrlFilters } from "./useUrlFilters";
 import { useDebounced } from "./useDebounced";
 
 export const useProductFilters = () => {
-  const initial = readFiltersFromUrl();
-  const [category, setCategory] = useState<CategoryValue>(initial.category);
-  const [minPrice, setMinPrice] = useState(initial.minPrice);
-  const [maxPrice, setMaxPrice] = useState(initial.maxPrice);
-  const [sortBy, setSortBy] = useState<SortBy>(initial.sortBy);
-  const [searchQuery, setSearchQuery] = useState(initial.searchQuery);
-  const [page, setPage] = useState(initial.page);
-  const [inStockOnly, setInStockOnly] = useState(initial.inStockOnly);
+  const urlFilters = useUrlFilters();
+  const { category, sortBy, page, inStockOnly } = urlFilters;
+
+  const [searchQuery, setSearchQuery] = useState(urlFilters.searchQuery);
+  const [minPrice, setMinPrice] = useState(urlFilters.minPrice);
+  const [maxPrice, setMaxPrice] = useState(urlFilters.maxPrice);
+  const debouncedSearchQuery = useDebounced(searchQuery);
   const debouncedMinPrice = useDebounced(minPrice);
   const debouncedMaxPrice = useDebounced(maxPrice);
-  const debouncedSearchQuery = useDebounced(searchQuery);
+
+  const urlFiltersRef = useRef(urlFilters);
+  urlFiltersRef.current = urlFilters;
 
   useEffect(() => {
-    const settled =
-      debouncedMinPrice === minPrice &&
-      debouncedMaxPrice === maxPrice &&
-      debouncedSearchQuery === searchQuery;
-    if (!settled) return;
-
-    const filters: ProductFilterState = {
-      category,
-      minPrice: debouncedMinPrice,
-      maxPrice: debouncedMaxPrice,
-      sortBy,
-      searchQuery: debouncedSearchQuery,
-      page,
-      inStockOnly,
-    };
-    const next = buildFilterSearchParams(filters);
-    if (next === buildFilterSearchParams(readFiltersFromUrl())) return;
-    pushFiltersToUrl(filters);
-  }, [
-    category,
-    sortBy,
-    page,
-    inStockOnly,
-    minPrice,
-    maxPrice,
-    searchQuery,
-    debouncedMinPrice,
-    debouncedMaxPrice,
-    debouncedSearchQuery,
-  ]);
+    setSearchQuery(urlFilters.searchQuery);
+    setMinPrice(urlFilters.minPrice);
+    setMaxPrice(urlFilters.maxPrice);
+  }, [urlFilters.searchQuery, urlFilters.minPrice, urlFilters.maxPrice]);
 
   useEffect(() => {
-    const handlePopState = (): void => {
-      const parsed = readFiltersFromUrl();
-      setCategory(parsed.category);
-      setMinPrice(parsed.minPrice);
-      setMaxPrice(parsed.maxPrice);
-      setSortBy(parsed.sortBy);
-      setSearchQuery(parsed.searchQuery);
-      setInStockOnly(parsed.inStockOnly);
-      setPage(parsed.page);
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+    const current = urlFiltersRef.current;
+    if (
+      debouncedSearchQuery === current.searchQuery &&
+      debouncedMinPrice === current.minPrice &&
+      debouncedMaxPrice === current.maxPrice
+    ) {
+      return;
+    }
+    commitFiltersToUrl(
+      {
+        ...current,
+        searchQuery: debouncedSearchQuery,
+        minPrice: debouncedMinPrice,
+        maxPrice: debouncedMaxPrice,
+        page: 1,
+      },
+      "replace",
+    );
+  }, [debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  const withPageReset =
-    <Args extends unknown[]>(handler: (...args: Args) => void) =>
-    (...args: Args) => {
-      handler(...args);
-      setPage(1);
-    };
-
-  const handleCategoryChange = withPageReset((cat: CategoryValue) =>
-    setCategory(cat),
-  );
-
-  const handleMinPriceChange = withPageReset(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const v = e.target.value;
-      setMinPrice(v === "" ? "" : Number(v));
-    },
-  );
-
-  const handleMaxPriceChange = withPageReset(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const v = e.target.value;
-      setMaxPrice(v === "" ? "" : Number(v));
-    },
-  );
-
-  const handleSortChange = withPageReset(
-    (e: React.ChangeEvent<HTMLSelectElement>) =>
-      setSortBy(e.target.value as SortBy),
-  );
-
-  const handleSearchChange = withPageReset(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value),
-  );
-
-  const handleInStockToggle = withPageReset(
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setInStockOnly(e.target.checked),
-  );
-
-  const handlePageChange = (next: number) => {
-    setPage(next);
+  const commitPatch = (patch: Partial<ProductFilterState>): void => {
+    commitFiltersToUrl({ ...urlFilters, page: 1, ...patch }, "push");
   };
 
-  const handleResetFilters = () => {
-    setCategory("all");
+  const handleCategoryChange = (cat: CategoryValue): void =>
+    commitPatch({ category: cat });
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>): void =>
+    commitPatch({ sortBy: e.target.value as SortBy });
+
+  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>): void =>
+    commitPatch({ inStockOnly: e.target.checked });
+
+  const handleMinPriceChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    const v = e.target.value;
+    setMinPrice(v === "" ? "" : Number(v));
+  };
+
+  const handleMaxPriceChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    const v = e.target.value;
+    setMaxPrice(v === "" ? "" : Number(v));
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void =>
+    setSearchQuery(e.target.value);
+
+  const handlePageChange = (next: number): void => {
+    commitFiltersToUrl({ ...urlFilters, page: next }, "push");
+  };
+
+  const handleResetFilters = (): void => {
+    setSearchQuery("");
     setMinPrice("");
     setMaxPrice("");
-    setSortBy("latest");
-    setSearchQuery("");
-    setInStockOnly(false);
-    setPage(1);
+    commitFiltersToUrl(
+      {
+        category: "all",
+        minPrice: "",
+        maxPrice: "",
+        sortBy: "latest",
+        searchQuery: "",
+        page: 1,
+        inStockOnly: false,
+      },
+      "push",
+    );
   };
 
   return {
