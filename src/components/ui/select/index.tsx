@@ -1,9 +1,11 @@
 "use client";
 import type {
   ButtonHTMLAttributes,
+  FocusEvent,
   HTMLAttributes,
   KeyboardEvent,
   LabelHTMLAttributes,
+  MouseEvent,
   RefCallback,
 } from "react";
 import { useId, useRef, useState } from "react";
@@ -35,11 +37,16 @@ type UseSelectReturn<Item> = {
   closeMenu: () => void;
   toggleMenu: () => void;
   selectItem: (item: Item) => void;
+  getRootProps: () => UseSelectRootProps;
   getToggleButtonProps: () => ButtonHTMLAttributes<HTMLButtonElement>;
   getMenuProps: () => HTMLAttributes<HTMLUListElement>;
   getLabelProps: () => LabelHTMLAttributes<HTMLLabelElement>;
   getItemProps: (params: { item: Item; index: number }) => UseSelectItemProps;
   getItemState: (params: { item: Item; index: number }) => UseSelectItemState;
+};
+
+type UseSelectRootProps = HTMLAttributes<HTMLElement> & {
+  ref: RefCallback<HTMLElement>;
 };
 
 function getNextEnabledIndex<Item>({
@@ -123,6 +130,7 @@ export function useSelect<Item>({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
+  const rootRef = useRef<HTMLElement | null>(null);
 
   const baseId = useId();
   const labelId = `${baseId}-label`;
@@ -303,11 +311,34 @@ export function useSelect<Item>({
     selectItem(item);
   };
 
+  const handleItemMouseDown = (event: MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+  };
+
+  const handleRootBlur = (event: FocusEvent<HTMLElement>) => {
+    const nextFocusedElement = event.relatedTarget;
+
+    if (nextFocusedElement instanceof Node && rootRef.current?.contains(nextFocusedElement)) {
+      return;
+    }
+
+    closeMenu();
+  };
+
   const getItemState = ({ item, index }: { item: Item; index: number }) => {
     return {
       selected: Object.is(currentSelectedItem, item),
       highlighted: highlightedIndex === index,
       disabled: isItemDisabled(item, index),
+    };
+  };
+
+  const getRootProps = () => {
+    return {
+      ref: (node: HTMLElement | null) => {
+        rootRef.current = node;
+      },
+      onBlur: handleRootBlur,
     };
   };
 
@@ -352,6 +383,7 @@ export function useSelect<Item>({
       "aria-selected": Object.is(currentSelectedItem, item),
       "aria-disabled": disabled,
       onMouseMove: () => handleItemMouseMove(index, disabled),
+      onMouseDown: handleItemMouseDown,
       onClick: () => handleItemClick(item, disabled),
     };
   };
@@ -364,6 +396,7 @@ export function useSelect<Item>({
     closeMenu,
     toggleMenu,
     selectItem,
+    getRootProps,
     getToggleButtonProps,
     getLabelProps,
     getMenuProps,

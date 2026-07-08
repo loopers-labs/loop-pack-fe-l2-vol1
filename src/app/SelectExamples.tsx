@@ -204,6 +204,7 @@ function ProductSelectField({
       label="상품"
       value={productSelect.selectedItem?.name ?? "상품 선택"}
       isOpen={productSelect.isOpen}
+      rootProps={productSelect.getRootProps()}
       labelProps={productSelect.getLabelProps()}
       triggerProps={productSelect.getToggleButtonProps()}
       menuProps={productSelect.getMenuProps()}
@@ -258,6 +259,7 @@ function SizeSelectField({
       label="사이즈"
       value={sizeSelect.selectedItem ? `${sizeSelect.selectedItem.value}cm` : "사이즈 선택"}
       isOpen={sizeSelect.isOpen}
+      rootProps={sizeSelect.getRootProps()}
       labelProps={sizeSelect.getLabelProps()}
       triggerProps={sizeSelect.getToggleButtonProps()}
       menuProps={sizeSelect.getMenuProps()}
@@ -296,6 +298,7 @@ function ShippingSelectField() {
       label="배송"
       value={shippingSelect.selectedItem?.label ?? "배송 방식"}
       isOpen={shippingSelect.isOpen}
+      rootProps={shippingSelect.getRootProps()}
       labelProps={shippingSelect.getLabelProps()}
       triggerProps={shippingSelect.getToggleButtonProps()}
       menuProps={shippingSelect.getMenuProps()}
@@ -330,6 +333,7 @@ function SelectFieldFrame({
   label,
   value,
   isOpen,
+  rootProps,
   labelProps,
   triggerProps,
   menuProps,
@@ -338,13 +342,16 @@ function SelectFieldFrame({
   label: string;
   value: string;
   isOpen: boolean;
+  rootProps: React.HTMLAttributes<HTMLElement> & {
+    ref: React.RefCallback<HTMLElement>;
+  };
   labelProps: React.LabelHTMLAttributes<HTMLLabelElement>;
   triggerProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
   menuProps: React.HTMLAttributes<HTMLUListElement>;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex-1">
+    <div className="relative flex-1" {...rootProps}>
       <label className="sr-only" {...labelProps}>
         {label}
       </label>
