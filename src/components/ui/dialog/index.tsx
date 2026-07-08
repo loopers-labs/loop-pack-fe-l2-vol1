@@ -1,7 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes, HTMLAttributes, MouseEvent, ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 type DialogContextValue = {
@@ -40,17 +40,51 @@ function DialogRoot({ children, open, defaultOpen = false, onOpenChange }: Dialo
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const currentOpen = isControlled ? open : internalOpen;
 
-  const setOpen = (nextOpen: boolean) => {
-    if (!isControlled) {
-      setInternalOpen(nextOpen);
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) {
+        setInternalOpen(nextOpen);
+      }
+
+      onOpenChange?.(nextOpen);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  const toggleOpen = useCallback(() => {
+    setOpen(!currentOpen);
+  }, [currentOpen, setOpen]);
+
+  useEffect(() => {
+    if (!currentOpen) {
+      return;
     }
 
-    onOpenChange?.(nextOpen);
-  };
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const computedBodyPaddingRight = window.getComputedStyle(document.body).paddingRight;
+    const bodyPaddingRightValue = Number.parseFloat(computedBodyPaddingRight) || 0;
 
-  const toggleOpen = () => {
-    setOpen(!currentOpen);
-  };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${bodyPaddingRightValue + scrollbarWidth}px`;
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.paddingRight = previousBodyPaddingRight;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentOpen, setOpen]);
 
   return (
     <DialogContext.Provider value={{ open: currentOpen, setOpen, toggleOpen }}>
@@ -109,8 +143,20 @@ function DialogPortal({ children }: DialogPortalProps) {
   return createPortal(children, document.body);
 }
 
-function DialogOverlay(props: DialogDivProps) {
-  return <div {...props} />;
+function DialogOverlay({ onClick, ...props }: DialogDivProps) {
+  const { setOpen } = useDialogContext("Dialog.Overlay");
+
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    onClick?.(event);
+
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    setOpen(false);
+  };
+
+  return <div onClick={handleClick} {...props} />;
 }
 
 function DialogContent({ onClick, ...props }: DialogDivProps) {
