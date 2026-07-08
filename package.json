@@ -2,14 +2,13 @@
   "name": "loop-pack-fe-l2-vol1",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "packageManager": "pnpm@10.15.1",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "prepare": "husky",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -23,16 +22,17 @@
     "*.{json,css,md,html}": "prettier --write"
   },
   "dependencies": {
+    "next": "16.2.10",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@eslint/js": "^10.0.1",
+    "@next/eslint-plugin-next": "^16.2.10",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -41,7 +41,6 @@
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.4",
     "typescript": "~6.0.2",
-    "typescript-eslint": "^8.61.1",
-    "vite": "^8.0.12"
+    "typescript-eslint": "^8.61.1"
   }
 }
