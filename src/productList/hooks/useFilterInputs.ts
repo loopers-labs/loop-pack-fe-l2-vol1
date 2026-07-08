@@ -26,6 +26,7 @@ export const useFilterInputs = () => {
   // draft가 안정되면 URL로 커밋. 외부 변경 직후엔 draft===URL이라 커밋하지 않는다.
   useEffect(() => {
     if (
+      // 뒤로가기나 초기화를 통해 url이 바뀐 경우는 draft와 url의 값이 동일하므로 불필요한 커밋을 제외시킨다.
       draft.searchQuery === searchQuery &&
       draft.minPrice === minPrice &&
       draft.maxPrice === maxPrice
