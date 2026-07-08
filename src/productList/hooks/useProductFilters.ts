@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import type { SortBy } from "../types";
 import {
+  buildFilterSearchParams,
+  pushFiltersToUrl,
   readFiltersFromUrl,
-  syncFiltersToUrl,
   type CategoryValue,
+  type ProductFilterState,
 } from "../utils/filterParams";
 import { useDebounced } from "./useDebounced";
 
@@ -21,7 +23,13 @@ export const useProductFilters = () => {
   const debouncedSearchQuery = useDebounced(searchQuery);
 
   useEffect(() => {
-    syncFiltersToUrl({
+    const settled =
+      debouncedMinPrice === minPrice &&
+      debouncedMaxPrice === maxPrice &&
+      debouncedSearchQuery === searchQuery;
+    if (!settled) return;
+
+    const filters: ProductFilterState = {
       category,
       minPrice: debouncedMinPrice,
       maxPrice: debouncedMaxPrice,
@@ -29,16 +37,37 @@ export const useProductFilters = () => {
       searchQuery: debouncedSearchQuery,
       page,
       inStockOnly,
-    });
+    };
+    const next = buildFilterSearchParams(filters);
+    if (next === buildFilterSearchParams(readFiltersFromUrl())) return;
+    pushFiltersToUrl(filters);
   }, [
     category,
-    debouncedSearchQuery,
-    page,
     sortBy,
+    page,
+    inStockOnly,
+    minPrice,
+    maxPrice,
+    searchQuery,
     debouncedMinPrice,
     debouncedMaxPrice,
-    inStockOnly,
+    debouncedSearchQuery,
   ]);
+
+  useEffect(() => {
+    const handlePopState = (): void => {
+      const parsed = readFiltersFromUrl();
+      setCategory(parsed.category);
+      setMinPrice(parsed.minPrice);
+      setMaxPrice(parsed.maxPrice);
+      setSortBy(parsed.sortBy);
+      setSearchQuery(parsed.searchQuery);
+      setInStockOnly(parsed.inStockOnly);
+      setPage(parsed.page);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });

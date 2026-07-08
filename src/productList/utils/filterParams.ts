@@ -84,3 +84,7 @@ export const buildFilterSearchParams = (
 export const syncFiltersToUrl = (filters: ProductFilterState): void => {
   window.history.replaceState(null, "", `?${buildFilterSearchParams(filters)}`);
 };
+
+export const pushFiltersToUrl = (filters: ProductFilterState): void => {
+  window.history.pushState(null, "", `?${buildFilterSearchParams(filters)}`);
+};
