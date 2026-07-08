@@ -7,9 +7,10 @@ export function DialogExamples() {
   return (
     <section className="mt-16">
       <DialogDemoHeader />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-3">
         <UncontrolledOrderDialog />
         <ControlledAddressDialog />
+        <AsChildCouponDialog />
       </div>
       <DialogSpecNote />
     </section>
@@ -127,6 +128,65 @@ function ControlledAddressDialog() {
   );
 }
 
+function AsChildCouponDialog() {
+  return (
+    <DialogCard
+      title="asChild"
+      description="Radix처럼 Dialog 조각이 직접 DOM을 만들지 않고 child에 동작 props를 주입합니다."
+    >
+      <div className="rounded-[14px] bg-[#F7F7F8] p-4">
+        <p className="text-[12px] font-semibold text-[#767676]">적용 가능한 쿠폰</p>
+        <p className="mt-1 text-[18px] font-extrabold text-[#191919]">첫 구매 3,000원 할인</p>
+        <p className="mt-1 text-[12px] text-[#767676]">30,000원 이상 구매 시 사용 가능</p>
+      </div>
+
+      <Dialog.Root>
+        <Dialog.Trigger asChild>
+          <button type="button" className={primaryButtonClassName}>
+            asChild 쿠폰 Dialog
+          </button>
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Overlay asChild>
+            <div className={overlayClassName} />
+          </Dialog.Overlay>
+          <Dialog.Content asChild>
+            <section className={contentClassName}>
+              <Dialog.Title asChild>
+                <h3 className={titleClassName}>쿠폰을 적용할까요?</h3>
+              </Dialog.Title>
+              <Dialog.Description asChild>
+                <p className={descriptionClassName}>
+                  Trigger, Overlay, Content, Title, Description, Close가 child element를 실제
+                  DOM으로 사용합니다.
+                </p>
+              </Dialog.Description>
+
+              <div className="mt-6 rounded-[14px] border border-[#00C73C] bg-[#E6FBEC] p-4">
+                <p className="text-[13px] font-bold text-[#009E30]">첫 구매 쿠폰</p>
+                <p className="mt-1 text-[24px] font-extrabold text-[#191919]">-3,000원</p>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Dialog.Close asChild>
+                  <button type="button" className={secondaryButtonClassName}>
+                    다음에
+                  </button>
+                </Dialog.Close>
+                <Dialog.Close asChild>
+                  <button type="button" className={primaryButtonClassName}>
+                    쿠폰 적용
+                  </button>
+                </Dialog.Close>
+              </div>
+            </section>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </DialogCard>
+  );
+}
+
 function DialogCard({
   title,
   description,
@@ -150,8 +210,9 @@ function DialogSpecNote() {
     <div className="mt-8 rounded-[14px] border border-[#E1E1E1] bg-white px-6 py-5">
       <h2 className="text-[15px] font-bold text-[#191919]">완료조건 확인</h2>
       <p className="mt-1 text-[12.5px] leading-6 text-[#767676]">
-        두 예시는 같은 compound Dialog를 사용합니다. Uncontrolled 예시는 내부 상태로 열림을
-        관리하고, Controlled 예시는 부모 상태로 open을 제어합니다. Overlay와 Content는 Portal로
+        세 예시는 같은 compound Dialog를 사용합니다. Uncontrolled 예시는 내부 상태로 열림을
+        관리하고, Controlled 예시는 부모 상태로 open을 제어합니다. asChild 예시는 Dialog 조각이
+        child element에 동작 props를 주입하는 구조를 보여줍니다. Overlay와 Content는 Portal로
         렌더되며, Close·overlay click·Escape로 닫힙니다.
       </p>
     </div>
