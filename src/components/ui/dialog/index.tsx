@@ -3,6 +3,8 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, MouseEvent, ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { Primitive } from "./primitive";
+import { composeEventHandlers } from "./slot";
 
 type DialogContextValue = {
   open: boolean;
@@ -17,13 +19,21 @@ type DialogRootProps = {
   onOpenChange?: (open: boolean) => void;
 };
 
-type DialogButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+type DialogButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  asChild?: boolean;
+};
 type DialogPortalProps = {
   children: ReactNode;
 };
-type DialogDivProps = HTMLAttributes<HTMLDivElement>;
-type DialogTitleProps = HTMLAttributes<HTMLHeadingElement>;
-type DialogDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
+type DialogDivProps = HTMLAttributes<HTMLDivElement> & {
+  asChild?: boolean;
+};
+type DialogTitleProps = HTMLAttributes<HTMLHeadingElement> & {
+  asChild?: boolean;
+};
+type DialogDescriptionProps = HTMLAttributes<HTMLParagraphElement> & {
+  asChild?: boolean;
+};
 
 const DialogContext = createContext<DialogContextValue | null>(null);
 
@@ -95,41 +105,27 @@ function DialogRoot({ children, open, defaultOpen = false, onOpenChange }: Dialo
   );
 }
 
-function DialogTrigger({ onClick, type = "button", ...props }: DialogButtonProps) {
+function DialogTrigger({ asChild, onClick, type = "button", ...props }: DialogButtonProps) {
   const { toggleOpen } = useDialogContext("Dialog.Trigger");
 
   return (
-    <button
-      type={type}
-      onClick={(event) => {
-        onClick?.(event);
-
-        if (event.defaultPrevented) {
-          return;
-        }
-
-        toggleOpen();
-      }}
+    <Primitive.button
+      asChild={asChild}
+      type={asChild ? undefined : type}
+      onClick={composeEventHandlers(onClick, toggleOpen)}
       {...props}
     />
   );
 }
 
-function DialogClose({ onClick, type = "button", ...props }: DialogButtonProps) {
+function DialogClose({ asChild, onClick, type = "button", ...props }: DialogButtonProps) {
   const { setOpen } = useDialogContext("Dialog.Close");
 
   return (
-    <button
-      type={type}
-      onClick={(event) => {
-        onClick?.(event);
-
-        if (event.defaultPrevented) {
-          return;
-        }
-
-        setOpen(false);
-      }}
+    <Primitive.button
+      asChild={asChild}
+      type={asChild ? undefined : type}
+      onClick={composeEventHandlers(onClick, () => setOpen(false))}
       {...props}
     />
   );
@@ -148,38 +144,27 @@ function DialogPortal({ children }: DialogPortalProps) {
 function DialogOverlay({ onClick, ...props }: DialogDivProps) {
   const { setOpen } = useDialogContext("Dialog.Overlay");
 
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-    onClick?.(event);
-
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    setOpen(false);
-  };
-
-  return <div onClick={handleClick} {...props} />;
+  return <Primitive.div onClick={composeEventHandlers(onClick, () => setOpen(false))} {...props} />;
 }
 
 function DialogContent({ onClick, ...props }: DialogDivProps) {
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+  const stopClickPropagation = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
-    onClick?.(event);
   };
 
-  return <div onClick={handleClick} {...props} />;
+  return <Primitive.div onClick={composeEventHandlers(stopClickPropagation, onClick)} {...props} />;
 }
 
 function DialogTitle(props: DialogTitleProps) {
   useDialogContext("Dialog.Title");
 
-  return <h2 {...props} />;
+  return <Primitive.h2 {...props} />;
 }
 
 function DialogDescription(props: DialogDescriptionProps) {
   useDialogContext("Dialog.Description");
 
-  return <p {...props} />;
+  return <Primitive.p {...props} />;
 }
 
 export const Dialog = {
