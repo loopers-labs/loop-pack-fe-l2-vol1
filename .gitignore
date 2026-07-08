@@ -43,3 +43,6 @@ next-env.d.ts
 # IDE / tools
 .idea/
 .claude/
+
+# personal docs
+docs/user/
