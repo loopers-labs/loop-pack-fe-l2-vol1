@@ -1,3 +1,4 @@
+import { DialogExamples } from "./DialogExamples";
 import { SelectExamples } from "./SelectExamples";
 
 export default function Home() {
@@ -31,6 +32,7 @@ export default function Home() {
         </div>
         <div>
           <SelectExamples />
+          <DialogExamples />
         </div>
       </div>
     </main>
