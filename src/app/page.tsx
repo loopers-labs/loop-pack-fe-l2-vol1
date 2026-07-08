@@ -89,9 +89,10 @@ export default function HomePage() {
             <Link
               key={key}
               href={key === 'all' ? '/' : `/?category=${key}`}
+              scroll={false}
               className={`shrink-0 rounded-full px-5 py-2.5 text-[13px] font-medium transition-all ${
                 selectedCategory === key
-                  ? 'bg-text text-bg-card'
+                  ? 'bg-text text-white'
                   : 'bg-bg-card text-text-secondary hover:text-text'
               }`}
             >
@@ -99,6 +100,10 @@ export default function HomePage() {
             </Link>
           ))}
         </nav>
+
+        <p className="mb-6 text-right text-[13px] text-text-caption">
+          총 {filtered.length}건
+        </p>
 
         {/* 그리드 */}
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:gap-8">
