@@ -233,3 +233,191 @@ const select = useSelect({
 - disabled option은 키보드 이동에서 건너뛴다.
 - 사용처에서 `selected`, `highlighted`, `disabled` 상태를 기준으로 옵션 UI를 다르게 그릴 수 있다.
 - 텍스트 옵션, 사이즈 옵션, 썸네일 옵션이 같은 `useSelect` 로직으로 렌더된다.
+
+## Dialog 설계
+
+### 과제 요구사항 요약
+
+4주차 Dialog 과제의 핵심은 **compound 조립**과 **controlled/uncontrolled 이중 API**다.
+
+- `Dialog.Root`, `Dialog.Trigger`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.Close` 형태로 조립한다.
+- `open`, `onOpenChange`를 넘기면 controlled로 동작한다.
+- `open`을 넘기지 않으면 uncontrolled로 동작하고 내부에서 열림 상태를 관리한다.
+- `Overlay`와 `Content`는 Portal로 렌더한다.
+- Escape 키와 overlay click으로 닫을 수 있어야 한다.
+- Dialog가 열려 있는 동안 배경 스크롤을 잠근다.
+- 이번 과제에서는 포커스 트랩, 포커스 복원, 초기 포커스, ARIA 세부 구현은 다루지 않는다.
+
+### 레퍼런스 분석: Radix Dialog
+
+Dialog 레퍼런스는 Radix UI Dialog다. Radix Dialog는 `Root`가 상태와 공통 참조값을 Context로 제공하고, 하위 compound 컴포넌트가 이 Context를 소비하는 구조다.
+
+Radix에서 참고할 핵심 구조는 다음과 같다.
+
+| Radix 요소      | 참고할 점                                                                 |
+| --------------- | ------------------------------------------------------------------------- |
+| `Dialog`        | open 상태를 controlled/uncontrolled로 관리하고 Context Provider를 감싼다. |
+| `DialogTrigger` | Context의 `onOpenToggle`을 호출해 Dialog를 연다.                          |
+| `DialogPortal`  | overlay/content를 DOM 상위 계층으로 렌더한다.                             |
+| `DialogOverlay` | 배경 클릭, 시각적 dim 영역을 담당한다.                                    |
+| `DialogContent` | 실제 Dialog 본문을 담당한다.                                              |
+| `DialogClose`   | Context의 `onOpenChange(false)`를 호출한다.                               |
+
+Radix 원본은 `FocusScope`, `DismissableLayer`, `RemoveScroll`, `aria-hidden`, focus guard 등 접근성과 DOM edge case를 위한 모듈도 함께 사용한다. 하지만 과제 문서에서 포커스 관리와 ARIA는 범위 밖이라고 명시했기 때문에, 이번 구현에서는 Radix의 전체 기능이 아니라 **상태 관리, Context 조립, Portal 렌더링 방식**만 참고한다.
+
+### 패턴 선택
+
+Dialog는 **Compound Component + Context** 방식으로 설계한다.
+
+| 판단 기준                                           | 선택한 방식        | 근거                                                                      |
+| --------------------------------------------------- | ------------------ | ------------------------------------------------------------------------- |
+| 여러 조각을 선언적으로 조립해야 한다                | Compound Component | `Trigger`, `Overlay`, `Content`, `Close`가 하나의 Dialog 상태를 공유한다. |
+| 하위 컴포넌트가 open 상태와 닫기 함수를 알아야 한다 | Context            | props drilling 없이 하위 조각이 같은 Dialog 상태에 접근한다.              |
+| 부모가 Dialog open 상태를 제어할 수 있어야 한다     | controlled 지원    | 결제 확인, 삭제 확인처럼 외부 상태와 연결할 수 있다.                      |
+| 단순 사용처에서는 내부 상태만으로 충분하다          | uncontrolled 지원  | `Dialog.Root`만 감싸도 기본 열기/닫기가 가능해야 한다.                    |
+| overlay/content가 부모 layout에 갇히면 안 된다      | Portal             | stacking context, overflow, z-index 문제를 줄인다.                        |
+
+### 예상 API
+
+기본 사용처는 uncontrolled 방식이다.
+
+```tsx
+<Dialog.Root>
+  <Dialog.Trigger>구매하기</Dialog.Trigger>
+  <Dialog.Overlay />
+  <Dialog.Content>
+    <Dialog.Title>주문을 진행할까요?</Dialog.Title>
+    <Dialog.Description>선택한 옵션으로 결제를 진행합니다.</Dialog.Description>
+    <Dialog.Close>취소</Dialog.Close>
+    <button type="button">확인</button>
+  </Dialog.Content>
+</Dialog.Root>
+```
+
+외부 상태와 연결해야 할 때는 controlled 방식으로 사용한다.
+
+```tsx
+const [open, setOpen] = useState(false);
+
+return (
+  <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Trigger>배송지 변경</Dialog.Trigger>
+    <Dialog.Overlay />
+    <Dialog.Content>
+      <Dialog.Title>배송지 변경</Dialog.Title>
+      <Dialog.Description>새 배송지를 선택해 주세요.</Dialog.Description>
+      <Dialog.Close>닫기</Dialog.Close>
+    </Dialog.Content>
+  </Dialog.Root>
+);
+```
+
+### Controlled / Uncontrolled 판별
+
+`Dialog.Root`는 `open` prop의 유무로 controlled 여부를 판별한다.
+
+| 상태           | 제어 방식                         | 근거                                                                     |
+| -------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| `open`         | controlled / uncontrolled 지원    | 외부 플로우와 연결될 수도 있고 단순 Dialog 내부 상태로 충분할 수도 있다. |
+| `onOpenChange` | controlled/uncontrolled 모두 호출 | 상태 변경 알림은 두 방식 모두에서 유용하다.                              |
+
+구현 기준은 다음과 같다.
+
+- `open !== undefined`이면 controlled로 본다.
+- controlled일 때는 내부 state를 변경하지 않고 `onOpenChange(nextOpen)`만 호출한다.
+- uncontrolled일 때는 내부 state를 변경하고, 추가로 `onOpenChange(nextOpen)`도 호출할 수 있다.
+- `defaultOpen`은 uncontrolled 초기값으로만 사용한다.
+
+### Root가 책임지는 것
+
+`Dialog.Root`는 다음 책임을 가진다.
+
+- controlled/uncontrolled open 상태 계산
+- open 상태 변경 함수 제공: `onOpenChange`
+- 열림 토글 함수 제공: `onOpenToggle`
+- 하위 compound 컴포넌트가 사용할 Context Provider 제공
+- Dialog가 열렸을 때 body scroll lock 처리
+
+### 하위 컴포넌트가 책임지는 것
+
+각 compound 컴포넌트는 Context를 읽고 자기 역할만 수행한다.
+
+| 컴포넌트             | 책임                                                                            |
+| -------------------- | ------------------------------------------------------------------------------- |
+| `Dialog.Trigger`     | 클릭 시 Dialog를 연다.                                                          |
+| `Dialog.Overlay`     | Portal로 dim 영역을 렌더하고 클릭 시 닫는다.                                    |
+| `Dialog.Content`     | Portal로 본문 영역을 렌더하고 내부 클릭이 overlay click으로 전파되지 않게 한다. |
+| `Dialog.Title`       | 제목 마크업을 제공한다.                                                         |
+| `Dialog.Description` | 설명 마크업을 제공한다.                                                         |
+| `Dialog.Close`       | 클릭 시 Dialog를 닫는다.                                                        |
+
+### Portal 구현 전략
+
+`Dialog.Overlay`와 `Dialog.Content`는 `createPortal`을 사용해 `document.body` 아래에 렌더한다.
+
+이 방식은 사용처 JSX 구조는 compound 형태를 유지하면서도, 실제 DOM은 layout/overflow/z-index 영향을 덜 받는 위치에 생성한다.
+
+```tsx
+return createPortal(<div className="dialog-content">{children}</div>, document.body);
+```
+
+Next App Router 환경이므로 Dialog 구현 파일은 client component여야 한다. `document.body` 접근은 브라우저 환경에서만 가능하므로, `open`이 아닐 때는 `null`을 반환하고 열린 상태에서 Portal을 만든다.
+
+### 닫기 동작
+
+닫기 동작은 모두 `onOpenChange(false)`로 수렴시킨다.
+
+- `Dialog.Close` click
+- `Dialog.Overlay` click
+- Escape keydown
+
+`Dialog.Content` 내부 click은 overlay click으로 전파되지 않도록 막는다. 이렇게 하면 overlay click은 닫기 동작이지만 content 내부 버튼이나 입력 조작은 닫기 동작이 아니다.
+
+### 구현 범위
+
+이번 Dialog에서 구현할 범위는 다음으로 제한한다.
+
+- `Dialog.Root`
+- `Dialog.Trigger`
+- `Dialog.Overlay`
+- `Dialog.Content`
+- `Dialog.Title`
+- `Dialog.Description`
+- `Dialog.Close`
+- controlled/uncontrolled open 상태
+- Portal 렌더링
+- Escape 닫기
+- overlay click 닫기
+- body scroll lock
+- uncontrolled 예시와 controlled 예시
+
+### 구현하지 않는 범위
+
+아래 항목은 이번 과제의 핵심이 아니므로 구현하지 않는다.
+
+- Focus trap
+- Focus restore
+- Initial focus
+- `aria-labelledby`, `aria-describedby` 자동 연결
+- `aria-hidden` 처리
+- Nested Dialog
+- Animation presence 제어
+- Non-modal Dialog
+- 오른쪽 클릭, trigger 재클릭, Safari focus edge case 등 Radix 수준의 dismissable layer 세부 처리
+
+### 설계 근거
+
+Select는 같은 선택 로직을 여러 UI에 적용해야 했으므로 hook 기반 headless API가 적절했다. 반면 Dialog는 여러 조각이 하나의 open 상태를 공유하며 조립되는 구조이므로 compound component가 더 적절하다.
+
+Radix Dialog는 production-grade 접근성과 포커스 처리를 포함하지만, 이번 과제는 compound 조립과 controlled/uncontrolled API를 직접 이해하는 것이 목적이다. 따라서 Radix의 내부 구조 중 `Root -> Context -> Trigger/Overlay/Content/Close`로 이어지는 상태 흐름만 차용하고, 포커스와 접근성 edge case 처리는 과제 범위 밖으로 둔다.
+
+### 검증 기준
+
+- `Dialog.Trigger` click으로 Dialog가 열린다.
+- `Dialog.Close` click으로 Dialog가 닫힌다.
+- overlay click으로 Dialog가 닫힌다.
+- Escape keydown으로 Dialog가 닫힌다.
+- Dialog가 열려 있는 동안 body scroll이 잠긴다.
+- `Dialog.Overlay`와 `Dialog.Content`가 Portal로 렌더된다.
+- `open`, `onOpenChange`를 넘긴 controlled 사용처가 동작한다.
+- `defaultOpen` 또는 내부 상태를 사용하는 uncontrolled 사용처가 동작한다.
