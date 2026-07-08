@@ -1,33 +1,37 @@
 import { useEffect, useState } from "react";
-import type { Product, SortBy } from "../types";
+import type { SortBy } from "../types";
+import {
+  readFiltersFromUrl,
+  syncFiltersToUrl,
+  type CategoryValue,
+} from "../utils/filterParams";
 
 export const useProductFilters = () => {
-  const [category, setCategory] = useState<"all" | Product["category"]>("all");
-  const [minPrice, setMinPrice] = useState<number | "">("");
-  const [maxPrice, setMaxPrice] = useState<number | "">("");
-  const [sortBy, setSortBy] = useState<SortBy>("latest");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [inStockOnly, setInStockOnly] = useState(false);
+  const initial = readFiltersFromUrl();
+  const [category, setCategory] = useState<CategoryValue>(initial.category);
+  const [minPrice, setMinPrice] = useState(initial.minPrice);
+  const [maxPrice, setMaxPrice] = useState(initial.maxPrice);
+  const [sortBy, setSortBy] = useState<SortBy>(initial.sortBy);
+  const [searchQuery, setSearchQuery] = useState(initial.searchQuery);
+  const [page, setPage] = useState(initial.page);
+  const [inStockOnly, setInStockOnly] = useState(initial.inStockOnly);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (category !== "all") params.set("category", category);
-    if (searchQuery) params.set("q", searchQuery);
-    if (page > 1) params.set("page", String(page));
-    if (sortBy !== "latest") params.set("sort", sortBy);
-    if (minPrice !== "") params.set("minPrice", String(minPrice));
-    if (maxPrice !== "") params.set("maxPrice", String(maxPrice));
-    if (inStockOnly) params.set("inStock", "true");
-    window.history.replaceState(null, "", `?${params.toString()}`);
+    syncFiltersToUrl({
+      category,
+      minPrice,
+      maxPrice,
+      sortBy,
+      searchQuery,
+      page,
+      inStockOnly,
+    });
   }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
-  // ─── 페이지가 바뀔 때 스크롤 맨 위로 ────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  // 필터가 바뀌면 항상 첫 페이지로 — 페이지 리셋을 핸들러에 주입
   const withPageReset =
     <Args extends unknown[]>(handler: (...args: Args) => void) =>
     (...args: Args) => {
@@ -35,8 +39,8 @@ export const useProductFilters = () => {
       setPage(1);
     };
 
-  const handleCategoryChange = withPageReset(
-    (cat: "all" | Product["category"]) => setCategory(cat),
+  const handleCategoryChange = withPageReset((cat: CategoryValue) =>
+    setCategory(cat),
   );
 
   const handleMinPriceChange = withPageReset(
