@@ -1,16 +1,101 @@
-// Dialog (Compound) — 4주차 2단계
-//
-// 여기에 직접 만든다. compound 조립과 controlled/uncontrolled 이중 API가 알맹이다.
-// 요구사항 요약 (자세한 건 docs/assignments/week-04.md):
-//   - compound: Dialog / Dialog.Trigger / Dialog.Overlay / Dialog.Content /
-//               Dialog.Title / Dialog.Description / Dialog.Close
-//   - controlled(open·onOpenChange)와 uncontrolled 둘 다 지원 (open prop 유무로 판별)
-//   - Content/Overlay는 Portal로 렌더
-//   - Esc / 오버레이 클릭으로 닫고, 열린 동안 배경 스크롤 잠금
-//   - (이번 주 범위 밖) 포커스 트랩·ARIA는 하지 않는다. compound + 이중 API에 집중.
-//
-// 아래는 import가 깨지지 않게 둔 placeholder다. 자유롭게 갈아엎어도 된다.
+"use client";
 
-export function Dialog() {
-  return null;
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
+
+type DialogContextValue = {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  toggleOpen: () => void;
+};
+
+type DialogRootProps = {
+  children: ReactNode;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+type DialogButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+
+const DialogContext = createContext<DialogContextValue | null>(null);
+
+function useDialogContext(componentName: string) {
+  const context = useContext(DialogContext);
+
+  if (context === null) {
+    throw new Error(`${componentName} must be used within Dialog.Root`);
+  }
+
+  return context;
 }
+
+function DialogRoot({ children, open, defaultOpen = false, onOpenChange }: DialogRootProps) {
+  const isControlled = open !== undefined;
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const currentOpen = isControlled ? open : internalOpen;
+
+  const setOpen = (nextOpen: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(nextOpen);
+    }
+
+    onOpenChange?.(nextOpen);
+  };
+
+  const toggleOpen = () => {
+    setOpen(!currentOpen);
+  };
+
+  return (
+    <DialogContext.Provider value={{ open: currentOpen, setOpen, toggleOpen }}>
+      {children}
+    </DialogContext.Provider>
+  );
+}
+
+function DialogTrigger({ onClick, type = "button", ...props }: DialogButtonProps) {
+  const { toggleOpen } = useDialogContext("Dialog.Trigger");
+
+  return (
+    <button
+      type={type}
+      onClick={(event) => {
+        onClick?.(event);
+
+        if (event.defaultPrevented) {
+          return;
+        }
+
+        toggleOpen();
+      }}
+      {...props}
+    />
+  );
+}
+
+function DialogClose({ onClick, type = "button", ...props }: DialogButtonProps) {
+  const { setOpen } = useDialogContext("Dialog.Close");
+
+  return (
+    <button
+      type={type}
+      onClick={(event) => {
+        onClick?.(event);
+
+        if (event.defaultPrevented) {
+          return;
+        }
+
+        setOpen(false);
+      }}
+      {...props}
+    />
+  );
+}
+
+export const Dialog = {
+  Root: DialogRoot,
+  Trigger: DialogTrigger,
+  Close: DialogClose,
+};
