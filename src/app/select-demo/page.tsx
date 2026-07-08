@@ -1,0 +1,210 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Dialog } from '@/components/ui/dialog';
+import { formatWon, calcDiscount } from '@/utils/format';
+import { TextOptionSelect } from './_components/TextOptionSelect';
+import { SizeOptionSelect } from './_components/SizeOptionSelect';
+import { ThumbnailOptionSelect } from './_components/ThumbnailOptionSelect';
+import type { Product } from '@/types/product';
+import type { SelectOption } from '@/components/ui/select';
+
+// ── 타입 ──
+
+type OptionValue = { id: string; name: string; price: number; stock: number };
+type SizeValue = { value: number; stock: number };
+
+// ── 페이지 ──
+
+export default function SelectDemoPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    void fetch('/api/products')
+      .then((r) => r.json())
+      .then((data: { products: Product[] }) => {
+        if (!ignore) setProducts(data.products);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  if (products.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 animate-spin rounded-full border-2 border-border border-t-brand" />
+          <p className="text-sm text-text-secondary">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const product = products[0];
+
+  const optionItems: SelectOption<OptionValue>[] = product.options.map((o) => ({
+    value: o,
+    isDisabled: o.stock === 0,
+  }));
+
+  const sizeSource =
+    product.sizes.length > 0
+      ? product.sizes
+      : (products.find((p) => p.sizes.length > 0)?.sizes ?? []);
+
+  const sizeItems: SelectOption<SizeValue>[] = sizeSource.map((s) => ({
+    value: s,
+    isDisabled: s.stock === 0,
+  }));
+
+  const thumbnailItems: SelectOption<Product>[] = products
+    .slice(0, 5)
+    .map((p) => ({ value: p }));
+
+  const discount = product.originalPrice
+    ? calcDiscount(product.originalPrice, product.price)
+    : 0;
+
+  return (
+    <>
+      {/* 페이지 타이틀 */}
+      <div className="bg-bg-card">
+        <div className="mx-auto max-w-xl px-6 py-6">
+          <h1 className="font-family-display text-lg font-normal text-text">
+            Select 3종 데모
+          </h1>
+          <p className="mt-1.5 text-[13px] text-text-secondary">
+            같은{' '}
+            <code className="rounded-md bg-bg px-2 py-0.5 text-[12px] font-medium text-brand">
+              useSelect
+            </code>{' '}
+            훅으로 3가지 UI를 구성합니다.
+          </p>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-xl px-6 py-8">
+        {/* 상품 미리보기 */}
+        <div className="rounded-2xl bg-bg-card p-6">
+          <div className="flex gap-5">
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="size-20 shrink-0 rounded-xl border border-border bg-bg object-contain p-1.5"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="rounded-full bg-brand-light px-2.5 py-0.5 text-[11px] font-medium text-brand">
+                  {product.deliveryType}
+                </span>
+                {product.freeShipping && (
+                  <span className="rounded-full border border-accent/40 px-2.5 py-0.5 text-[11px] font-medium text-accent">
+                    무료배송
+                  </span>
+                )}
+              </div>
+              <h2 className="mt-2 truncate text-[14px] font-medium text-text">
+                {product.name}
+              </h2>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                {discount > 0 && (
+                  <span className="text-[15px] font-bold text-discount">
+                    {discount}%
+                  </span>
+                )}
+                <span className="text-[15px] font-bold text-text">
+                  {formatWon(product.price)}
+                </span>
+                {product.originalPrice && (
+                  <span className="text-[11px] text-text-caption line-through">
+                    {formatWon(product.originalPrice)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Select 섹션들 */}
+        <section className="mt-5 rounded-2xl bg-bg-card p-6">
+          <div className="mb-5">
+            <h2 className="text-[13px] font-semibold text-text">
+              1. 텍스트 옵션
+            </h2>
+            <p className="mt-1 text-[12px] text-text-caption">
+              옵션명 + 가격 + 무료배송 뱃지
+            </p>
+          </div>
+          <TextOptionSelect
+            options={optionItems}
+            isFreeShipping={product.freeShipping}
+          />
+        </section>
+
+        <section className="mt-4 rounded-2xl bg-bg-card p-6">
+          <div className="mb-5">
+            <h2 className="text-[13px] font-semibold text-text">
+              2. 사이즈 옵션
+            </h2>
+            <p className="mt-1 text-[12px] text-text-caption">
+              사이즈 번호 + 배송 도착보장 / 품절
+            </p>
+          </div>
+          <SizeOptionSelect options={sizeItems} />
+        </section>
+
+        <section className="mt-4 rounded-2xl bg-bg-card p-6">
+          <div className="mb-5">
+            <h2 className="text-[13px] font-semibold text-text">
+              3. 썸네일 옵션
+            </h2>
+            <p className="mt-1 text-[12px] text-text-caption">
+              상품 이미지 + 할인율 + 가격 + 배송 뱃지
+            </p>
+          </div>
+          <ThumbnailOptionSelect options={thumbnailItems} />
+        </section>
+
+        {/* Dialog — uncontrolled 사용 예시 */}
+        <section className="mt-4 rounded-2xl bg-bg-card p-6">
+          <div className="mb-5">
+            <h2 className="text-[13px] font-semibold text-text">
+              Dialog (Uncontrolled)
+            </h2>
+            <p className="mt-1 text-[12px] text-text-caption">
+              open prop 없이 내부 상태로 열림/닫힘을 관리합니다.
+            </p>
+          </div>
+          <Dialog>
+            <Dialog.Trigger>
+              <span className="inline-flex h-11 items-center justify-center rounded-xl bg-text px-6 text-[14px] font-medium text-bg-card transition-colors hover:bg-text/90">
+                Dialog 열기
+              </span>
+            </Dialog.Trigger>
+            <Dialog.Overlay className="fixed inset-0 z-50 bg-text/30 backdrop-blur-[2px]" />
+            <Dialog.Content className="fixed inset-0 z-[51] flex items-center justify-center p-6">
+              <div className="w-full max-w-[340px] rounded-2xl bg-bg-card p-7 shadow-[0_16px_48px_rgba(44,36,32,0.12)]">
+                <Dialog.Title className="font-family-display text-[18px] font-normal text-text">
+                  Uncontrolled Dialog
+                </Dialog.Title>
+                <Dialog.Description className="mt-3 text-[14px] leading-relaxed text-text-secondary">
+                  이 Dialog는 open prop 없이 내부 상태만으로 동작합니다. Trigger
+                  클릭으로 열고, Close 또는 Esc/오버레이 클릭으로 닫습니다.
+                </Dialog.Description>
+                <div className="mt-7">
+                  <Dialog.Close className="flex h-12 w-full items-center justify-center rounded-xl border border-border text-[14px] font-medium text-text transition-colors hover:bg-bg">
+                    닫기
+                  </Dialog.Close>
+                </div>
+              </div>
+            </Dialog.Content>
+          </Dialog>
+        </section>
+      </div>
+    </>
+  );
+}
