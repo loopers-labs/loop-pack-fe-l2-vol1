@@ -103,6 +103,7 @@ export function DialogTrigger({ onClick, ...props }: DialogTriggerProps) {
 
   return (
     <button
+      type="button"
       {...props}
       onClick={(event) => {
         onClick?.(event);
@@ -122,6 +123,7 @@ export function DialogClose({ onClick, ...props }: DialogCloseProps) {
 
   return (
     <button
+      type="button"
       {...props}
       onClick={(event) => {
         onClick?.(event);
