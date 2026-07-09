@@ -377,13 +377,16 @@ describe('확장 지점', () => {
     expect(screen.getByText('제목')).toBeInTheDocument();
   });
 
-  it('Dialog 밖에서 하위 컴포넌트를 쓰면 에러를 던진다', () => {
+  it('Dialog 밖에서 하위 컴포넌트를 쓰면 어느 컴포넌트인지 알려주는 에러를 던진다', () => {
     const consoleError = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
     expect(() => render(<Dialog.Close>닫기</Dialog.Close>)).toThrow(
-      'Dialog 하위 컴포넌트는 <Dialog> 안에서 사용해야 합니다.',
+      'Dialog.Close는 <Dialog> 안에서 사용해야 합니다.',
+    );
+    expect(() => render(<Dialog.Content>내용</Dialog.Content>)).toThrow(
+      'Dialog.Content는 <Dialog> 안에서 사용해야 합니다.',
     );
 
     consoleError.mockRestore();

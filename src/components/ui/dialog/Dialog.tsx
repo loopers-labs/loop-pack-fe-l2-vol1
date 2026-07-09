@@ -29,10 +29,10 @@ interface DialogContextValue {
 
 const DialogContext = createContext<DialogContextValue | null>(null);
 
-export function useDialogContext() {
+export function useDialogContext(componentName: string) {
   const context = useContext(DialogContext);
   if (context === null) {
-    throw new Error('Dialog 하위 컴포넌트는 <Dialog> 안에서 사용해야 합니다.');
+    throw new Error(`${componentName}는 <Dialog> 안에서 사용해야 합니다.`);
   }
 
   return context;
@@ -114,7 +114,7 @@ function DialogRoot({
 type DialogTriggerProps = ComponentPropsWithoutRef<'button'>;
 
 export function DialogTrigger({ onClick, ...props }: DialogTriggerProps) {
-  const { requestOpenChange } = useDialogContext();
+  const { requestOpenChange } = useDialogContext('Dialog.Trigger');
 
   return (
     <button
@@ -134,7 +134,7 @@ export function DialogTrigger({ onClick, ...props }: DialogTriggerProps) {
 type DialogCloseProps = ComponentPropsWithoutRef<'button'>;
 
 export function DialogClose({ onClick, ...props }: DialogCloseProps) {
-  const { requestOpenChange } = useDialogContext();
+  const { requestOpenChange } = useDialogContext('Dialog.Close');
 
   return (
     <button
@@ -173,7 +173,7 @@ function DialogPortal({ children }: DialogPortalProps) {
 type DialogOverlayProps = ComponentPropsWithoutRef<'div'>;
 
 export function DialogOverlay({ onClick, ...props }: DialogOverlayProps) {
-  const { open, requestOpenChange } = useDialogContext();
+  const { open, requestOpenChange } = useDialogContext('Dialog.Overlay');
 
   if (!open) {
     return null;
@@ -198,7 +198,7 @@ export function DialogOverlay({ onClick, ...props }: DialogOverlayProps) {
 type DialogContentProps = ComponentPropsWithoutRef<'div'>;
 
 export function DialogContent(props: DialogContentProps) {
-  const { open } = useDialogContext();
+  const { open } = useDialogContext('Dialog.Content');
 
   if (!open) {
     return null;
