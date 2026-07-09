@@ -109,6 +109,16 @@ export function useSelect<T>({
     return items.findIndex((item, index) => !getIsItemDisabled(item, index));
   };
 
+  const findLastEnabledIndex = () => {
+    for (let index = items.length - 1; index >= 0; index -= 1) {
+      if (!getIsItemDisabled(items[index], index)) {
+        return index;
+      }
+    }
+
+    return -1;
+  };
+
   const findNextEnabledIndex = (startIndex: number) => {
     for (let index = startIndex + 1; index < items.length; index += 1) {
       if (!getIsItemDisabled(items[index], index)) {
@@ -187,6 +197,20 @@ export function useSelect<T>({
     if (event.key === 'ArrowUp') {
       event.preventDefault();
       highlightPreviousItem();
+
+      return;
+    }
+
+    if (event.key === 'Home' && isOpen) {
+      event.preventDefault();
+      setHighlightedIndex(findFirstEnabledIndex());
+
+      return;
+    }
+
+    if (event.key === 'End' && isOpen) {
+      event.preventDefault();
+      setHighlightedIndex(findLastEnabledIndex());
 
       return;
     }
