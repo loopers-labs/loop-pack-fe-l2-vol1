@@ -168,6 +168,7 @@ Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey
 - 현재 하이라이트된 index
 - trigger click
 - ArrowDown / ArrowUp 이동
+- Home / End 이동
 - Enter 선택
 - Escape 닫기
 - disabled option 클릭 방지
@@ -201,6 +202,7 @@ Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey
 - `getItemProps`
 - `getItemState`
 - `isItemDisabled` 기반 disabled skip
+- Home / End 키보드 이동
 - 텍스트 옵션, 사이즈 옵션, 썸네일 옵션 예제
 
 ### 구현하지 않는 범위
@@ -211,7 +213,7 @@ Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey
 - `@floating-ui/react` 연동
 - Portal
 - Typeahead 검색
-- PageUp / PageDown / Home / End
+- PageUp / PageDown
 - aria live message
 - Form submit 연동
 - Focus trap
@@ -230,6 +232,7 @@ Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey
 
 - 클릭으로 Select가 열리고 닫힌다.
 - ArrowDown, ArrowUp으로 옵션 하이라이트가 이동한다.
+- Home, End로 첫 번째/마지막 enabled option으로 이동한다.
 - Enter로 하이라이트된 option 객체가 선택된다.
 - Escape로 목록이 닫힌다.
 - disabled option은 클릭해도 선택되지 않는다.
