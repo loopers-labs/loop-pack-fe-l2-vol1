@@ -5,12 +5,15 @@ import {
   type HTMLAttributes,
   type KeyboardEvent,
   type LiHTMLAttributes,
+  type Ref,
   useCallback,
   useEffect,
   useId,
   useRef,
   useState,
 } from 'react';
+
+import { useScrollIntoView } from '@/components/ui/select/useScrollIntoView';
 
 type SelectKey = string | number;
 
@@ -37,6 +40,21 @@ type SelectElementProps<TElement extends HTMLElement> =
   HTMLAttributes<TElement> & {
     ref: (node: TElement | null) => void;
   };
+
+function composeRefs<TElement>(
+  consumerRef: Ref<TElement> | undefined,
+  innerRef: (node: TElement | null) => void,
+) {
+  return (node: TElement | null) => {
+    innerRef(node);
+
+    if (typeof consumerRef === 'function') {
+      consumerRef(node);
+    } else if (consumerRef) {
+      consumerRef.current = node;
+    }
+  };
+}
 
 // 사용처 핸들러를 먼저 실행하고, preventDefault로 거부하지 않았을 때만 내부 동작을 실행한다
 function composeEventHandlers<TEvent extends { defaultPrevented: boolean }>(
@@ -66,10 +84,14 @@ type UseSelectReturn<T> = {
   selectItem: (item: T | null) => void;
 
   getToggleButtonProps: (
-    props?: ButtonHTMLAttributes<HTMLButtonElement>,
+    props?: ButtonHTMLAttributes<HTMLButtonElement> & {
+      ref?: Ref<HTMLButtonElement>;
+    },
   ) => SelectElementProps<HTMLButtonElement>;
   getMenuProps: (
-    props?: HTMLAttributes<HTMLUListElement>,
+    props?: HTMLAttributes<HTMLUListElement> & {
+      ref?: Ref<HTMLUListElement>;
+    },
   ) => SelectElementProps<HTMLUListElement>;
   getItemProps: (
     params: { item: T; index: number } & LiHTMLAttributes<HTMLLIElement>,
@@ -102,9 +124,12 @@ export function useSelect<T>({
   const baseId = useId();
   const menuId = `${baseId}menu`;
 
-  const getItemId = (index: number) => {
-    return `${baseId}item-${index}`;
-  };
+  const getItemId = useCallback(
+    (index: number) => {
+      return `${baseId}item-${index}`;
+    },
+    [baseId],
+  );
 
   // selectedItem prop을 넘기면 controlled(source of truth가 사용처), 안 넘기면 uncontrolled(hook 내부 state가 source of truth)
   const isControlled = selectedItem !== undefined;
@@ -267,13 +292,16 @@ export function useSelect<T>({
   const getToggleButtonProps = ({
     onClick,
     onKeyDown,
+    ref,
     ...restProps
-  }: ButtonHTMLAttributes<HTMLButtonElement> = {}) => {
+  }: ButtonHTMLAttributes<HTMLButtonElement> & {
+    ref?: Ref<HTMLButtonElement>;
+  } = {}) => {
     return {
       ...restProps,
-      ref: (node: HTMLButtonElement | null) => {
+      ref: composeRefs(ref, (node) => {
         toggleButtonRef.current = node;
-      },
+      }),
       role: 'combobox',
       'aria-haspopup': 'listbox' as const,
       'aria-expanded': isOpen,
@@ -288,12 +316,17 @@ export function useSelect<T>({
     };
   };
 
-  const getMenuProps = (restProps: HTMLAttributes<HTMLUListElement> = {}) => {
+  const getMenuProps = ({
+    ref,
+    ...restProps
+  }: HTMLAttributes<HTMLUListElement> & {
+    ref?: Ref<HTMLUListElement>;
+  } = {}) => {
     return {
       ...restProps,
-      ref: (node: HTMLUListElement | null) => {
+      ref: composeRefs(ref, (node) => {
         menuRef.current = node;
-      },
+      }),
       id: menuId,
       role: 'listbox',
     };
@@ -407,6 +440,8 @@ export function useSelect<T>({
       );
     };
   }, [isOpen, closeMenu]);
+
+  useScrollIntoView({ isOpen, highlightedIndex, menuRef, getItemId });
 
   // 값 선택시 controlled 여부에 따라 분기, 콜백 호출 후 메뉴 닫음
   const selectItem = (item: T | null) => {

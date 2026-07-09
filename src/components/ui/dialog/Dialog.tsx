@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type ComponentPropsWithoutRef,
@@ -13,6 +12,8 @@ import { createPortal } from 'react-dom';
 
 import { isTopDialog, popDialog, pushDialog } from './dialogStack';
 import { lockScroll, unlockScroll } from './scrollLock';
+
+import { useIsomorphicLayoutEffect } from '@/components/ui/shared/useIsomorphicLayoutEffect';
 
 interface DialogProps {
   open?: boolean;
@@ -154,17 +155,10 @@ interface DialogPortalProps {
   children: ReactNode;
 }
 
-/**
- * Portal은 열릴 때마다 마운트되므로 mounted 전환이 paint 전에 끝나야
- * 빈 프레임이 안 보인다. 단 서버에서 useLayoutEffect는 경고를 내므로
- * 서버에서는 no-op으로 분기한다
- */
-const useIsomorphicLayoutEffect =
-  typeof document !== 'undefined' ? useLayoutEffect : () => {};
-
 function DialogPortal({ children }: DialogPortalProps) {
   const [mounted, setMounted] = useState(false);
 
+  // Portal은 열릴 때마다 마운트되므로 mounted 전환이 paint 전에 끝나야 빈 프레임이 안 보인다
   useIsomorphicLayoutEffect(() => {
     setMounted(true);
   }, []);
