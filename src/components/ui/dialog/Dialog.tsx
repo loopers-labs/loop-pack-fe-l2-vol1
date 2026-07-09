@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useState,
+  type ComponentPropsWithoutRef,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -95,24 +96,42 @@ function DialogRoot({
   );
 }
 
-interface DialogTriggerProps {
-  children: ReactNode;
-}
+type DialogTriggerProps = ComponentPropsWithoutRef<'button'>;
 
-export function DialogTrigger({ children }: DialogTriggerProps) {
+export function DialogTrigger({ onClick, ...props }: DialogTriggerProps) {
   const { requestOpenChange } = useDialogContext();
 
-  return <button onClick={() => requestOpenChange(true)}>{children}</button>;
+  return (
+    <button
+      {...props}
+      onClick={(event) => {
+        onClick?.(event);
+
+        if (!event.defaultPrevented) {
+          requestOpenChange(true);
+        }
+      }}
+    />
+  );
 }
 
-interface DialogCloseProps {
-  children: ReactNode;
-}
+type DialogCloseProps = ComponentPropsWithoutRef<'button'>;
 
-export function DialogClose({ children }: DialogCloseProps) {
+export function DialogClose({ onClick, ...props }: DialogCloseProps) {
   const { requestOpenChange } = useDialogContext();
 
-  return <button onClick={() => requestOpenChange(false)}>{children}</button>;
+  return (
+    <button
+      {...props}
+      onClick={(event) => {
+        onClick?.(event);
+
+        if (!event.defaultPrevented) {
+          requestOpenChange(false);
+        }
+      }}
+    />
+  );
 }
 
 interface DialogPortalProps {
@@ -133,11 +152,9 @@ function DialogPortal({ children }: DialogPortalProps) {
   return createPortal(children, document.body);
 }
 
-interface DialogOverlayProps {
-  children?: ReactNode;
-}
+type DialogOverlayProps = ComponentPropsWithoutRef<'div'>;
 
-export function DialogOverlay({ children }: DialogOverlayProps) {
+export function DialogOverlay({ onClick, ...props }: DialogOverlayProps) {
   const { open, requestOpenChange } = useDialogContext();
 
   if (!open) {
@@ -146,16 +163,23 @@ export function DialogOverlay({ children }: DialogOverlayProps) {
 
   return (
     <DialogPortal>
-      <div onClick={() => requestOpenChange(false)}>{children}</div>
+      <div
+        {...props}
+        onClick={(event) => {
+          onClick?.(event);
+
+          if (!event.defaultPrevented) {
+            requestOpenChange(false);
+          }
+        }}
+      />
     </DialogPortal>
   );
 }
 
-interface DialogContentProps {
-  children: ReactNode;
-}
+type DialogContentProps = ComponentPropsWithoutRef<'div'>;
 
-export function DialogContent({ children }: DialogContentProps) {
+export function DialogContent(props: DialogContentProps) {
   const { open } = useDialogContext();
 
   if (!open) {
@@ -164,25 +188,21 @@ export function DialogContent({ children }: DialogContentProps) {
 
   return (
     <DialogPortal>
-      <div>{children}</div>
+      <div {...props} />
     </DialogPortal>
   );
 }
 
-interface DialogTitleProps {
-  children: ReactNode;
+type DialogTitleProps = ComponentPropsWithoutRef<'h2'>;
+
+export function DialogTitle(props: DialogTitleProps) {
+  return <h2 {...props} />;
 }
 
-export function DialogTitle({ children }: DialogTitleProps) {
-  return <h2>{children}</h2>;
-}
+type DialogDescriptionProps = ComponentPropsWithoutRef<'p'>;
 
-interface DialogDescriptionProps {
-  children: ReactNode;
-}
-
-export function DialogDescription({ children }: DialogDescriptionProps) {
-  return <p>{children}</p>;
+export function DialogDescription(props: DialogDescriptionProps) {
+  return <p {...props} />;
 }
 
 export const Dialog = Object.assign(DialogRoot, {
