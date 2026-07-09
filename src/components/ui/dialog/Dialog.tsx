@@ -3,11 +3,16 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
+  useRef,
   useState,
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+
+import { isTopDialog, popDialog, pushDialog } from './dialogStack';
+import { lockScroll, unlockScroll } from './scrollLock';
 
 interface DialogProps {
   open?: boolean;
@@ -41,6 +46,8 @@ function DialogRoot({
   const isControlled = open !== undefined;
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
 
+  const dialogToken = useRef(Symbol('Dialog')).current;
+
   const currentOpen = isControlled ? open : uncontrolledOpen;
 
   const requestOpenChange = useCallback(
@@ -59,8 +66,20 @@ function DialogRoot({
       return;
     }
 
+    pushDialog(dialogToken);
+
+    return () => {
+      popDialog(dialogToken);
+    };
+  }, [currentOpen, dialogToken]);
+
+  useEffect(() => {
+    if (!currentOpen) {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && isTopDialog(dialogToken)) {
         requestOpenChange(false);
       }
     };
@@ -70,22 +89,17 @@ function DialogRoot({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentOpen, requestOpenChange]);
+  }, [currentOpen, requestOpenChange, dialogToken]);
 
   useEffect(() => {
     if (!currentOpen) {
       return;
     }
 
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalBodyOverflow = document.body.style.overflow;
-
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    lockScroll();
 
     return () => {
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      document.body.style.overflow = originalBodyOverflow;
+      unlockScroll();
     };
   }, [currentOpen]);
 
@@ -140,10 +154,18 @@ interface DialogPortalProps {
   children: ReactNode;
 }
 
+/**
+ * Portal은 열릴 때마다 마운트되므로 mounted 전환이 paint 전에 끝나야
+ * 빈 프레임이 안 보인다. 단 서버에서 useLayoutEffect는 경고를 내므로
+ * 서버에서는 no-op으로 분기한다
+ */
+const useIsomorphicLayoutEffect =
+  typeof document !== 'undefined' ? useLayoutEffect : () => {};
+
 function DialogPortal({ children }: DialogPortalProps) {
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     setMounted(true);
   }, []);
 

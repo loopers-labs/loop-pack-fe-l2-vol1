@@ -91,6 +91,61 @@ describe('열고 닫기 (uncontrolled)', () => {
     await user.click(screen.getByTestId('overlay'));
     expect(screen.queryByText('제목')).not.toBeInTheDocument();
   });
+
+  it('중첩 Dialog에서 Esc는 맨 위 자식만 닫고 부모는 유지한다', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Dialog defaultOpen>
+        <Dialog.Content>
+          <Dialog.Title>부모</Dialog.Title>
+          <Dialog>
+            <Dialog.Trigger>자식 열기</Dialog.Trigger>
+            <Dialog.Content>
+              <Dialog.Title>자식</Dialog.Title>
+            </Dialog.Content>
+          </Dialog>
+        </Dialog.Content>
+      </Dialog>,
+    );
+
+    await user.click(screen.getByRole('button', { name: '자식 열기' }));
+    expect(screen.getByText('자식')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByText('자식')).not.toBeInTheDocument();
+    expect(screen.getByText('부모')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByText('부모')).not.toBeInTheDocument();
+  });
+
+  it('부모 리렌더로 아래 Dialog의 onOpenChange 참조가 바뀌어도 Esc는 맨 위를 닫는다', async () => {
+    const user = userEvent.setup();
+    const bottomSpy = vi.fn();
+    const topSpy = vi.fn();
+
+    const renderPair = (bottomHandler: (open: boolean) => void) => (
+      <>
+        <Dialog open onOpenChange={bottomHandler}>
+          <Dialog.Content>아래</Dialog.Content>
+        </Dialog>
+        <Dialog open onOpenChange={topSpy}>
+          <Dialog.Content>위</Dialog.Content>
+        </Dialog>
+      </>
+    );
+
+    const { rerender } = render(renderPair(bottomSpy));
+    rerender(renderPair((open) => bottomSpy(open)));
+
+    await user.keyboard('{Escape}');
+
+    expect(topSpy).toHaveBeenCalledWith(false);
+    expect(bottomSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe('controlled 계약', () => {
@@ -166,9 +221,33 @@ describe('Portal과 scroll lock', () => {
     document.documentElement.style.overflow = '';
   });
 
-  // it.todo(
-  //   '여러 Dialog가 동시에 열릴 때 scroll lock은 마지막 Dialog가 닫힐 때 복구되어야 한다',
-  // );
+  it('여러 Dialog가 겹쳐 열리면 닫는 순서와 무관하게 마지막 Dialog가 닫힐 때 복구된다', () => {
+    document.body.style.overflow = 'auto';
+
+    const renderPair = (aOpen: boolean, bOpen: boolean) => (
+      <>
+        <Dialog open={aOpen}>
+          <Dialog.Content>A</Dialog.Content>
+        </Dialog>
+        <Dialog open={bOpen}>
+          <Dialog.Content>B</Dialog.Content>
+        </Dialog>
+      </>
+    );
+
+    const { rerender } = render(renderPair(true, true));
+
+    expect(document.body.style.overflow).toBe('hidden');
+
+    // 먼저 연 A부터 닫는다 — 인스턴스별 저장 방식이 깨지던 순서
+    rerender(renderPair(false, true));
+
+    expect(document.body.style.overflow).toBe('hidden');
+
+    rerender(renderPair(false, false));
+
+    expect(document.body.style.overflow).toBe('auto');
+  });
 
   it('열린 채 unmount되어도 스크롤 잠금이 해제된다', () => {
     document.body.style.overflow = 'scroll';
