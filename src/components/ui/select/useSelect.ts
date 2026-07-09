@@ -115,7 +115,10 @@ export const useSelect = <T>({
     'aria-selected': selectedItem ? keyOf(item) === keyOf(selectedItem) : false,
     'aria-disabled': isItemDisabled?.(item) ?? false,
     onClick: () => selectItem(item),
-    onMouseEnter: () => setHighlightedIndex(index),
+    onMouseEnter: () => {
+      if (isItemDisabled && isItemDisabled(item)) return;
+      setHighlightedIndex(index);
+    },
     disabled: isItemDisabled?.(item) ?? false,
   });
 
