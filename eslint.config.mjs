@@ -1,5 +1,6 @@
 import comments from '@eslint-community/eslint-plugin-eslint-comments';
 import js from '@eslint/js';
+import next from '@next/eslint-plugin-next';
 import stylistic from '@stylistic/eslint-plugin';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
@@ -14,6 +15,7 @@ export default tseslint.config(
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
+      next.configs['core-web-vitals'],
       eslintConfigPrettier,
     ],
     linterOptions: {
