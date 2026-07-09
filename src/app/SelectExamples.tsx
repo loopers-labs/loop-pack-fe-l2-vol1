@@ -411,8 +411,7 @@ function getTextOptionClassName(state: {
 }) {
   const classNames = [
     "flex min-h-[108px] cursor-pointer items-center justify-between border-t border-[#EFEFEF] px-5 py-5 outline-none transition first:border-t-0",
-    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
-    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] text-[#B8B8B8]" : "",
+    getOptionStateClassName(state),
   ];
 
   return classNames.filter(Boolean).join(" ");
@@ -425,8 +424,7 @@ function getSizeOptionClassName(state: {
 }) {
   const classNames = [
     "min-h-[104px] cursor-pointer border-t border-[#EFEFEF] px-5 py-5 outline-none transition first:border-t-0",
-    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
-    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] opacity-45" : "",
+    getOptionStateClassName(state),
   ];
 
   return classNames.filter(Boolean).join(" ");
@@ -439,8 +437,7 @@ function getThumbnailOptionClassName(state: {
 }) {
   const classNames = [
     "flex cursor-pointer items-center gap-5 border-t border-[#EFEFEF] py-5 outline-none transition first:border-t-0",
-    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
-    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] opacity-45" : "",
+    getOptionStateClassName(state),
   ];
 
   return classNames.filter(Boolean).join(" ");
@@ -453,12 +450,34 @@ function getDisabledOptionClassName(state: {
 }) {
   const classNames = [
     "flex min-h-[76px] cursor-pointer items-center justify-between rounded-[8px] px-4 py-3 outline-none transition",
-    state.selected ? "bg-[#E6FBEC] text-[#009E30]" : "text-[#191919]",
-    state.highlighted ? "bg-[#F0FFF4] shadow-[inset_3px_0_0_#00C73C]" : "",
-    state.disabled ? "cursor-not-allowed bg-[#F7F7F8] text-[#A0A0A0]" : "",
+    getOptionStateClassName(state),
   ];
 
   return classNames.filter(Boolean).join(" ");
+}
+
+function getOptionStateClassName(state: {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+}) {
+  if (state.disabled) {
+    return "cursor-not-allowed bg-[#F5F5F6] text-[#A0A0A0] opacity-55";
+  }
+
+  if (state.highlighted && state.selected) {
+    return "bg-[#F0FFF4] text-[#009E30] shadow-[inset_3px_0_0_#00C73C]";
+  }
+
+  if (state.highlighted) {
+    return "bg-[#F7F7F8] shadow-[inset_3px_0_0_#191919]";
+  }
+
+  if (state.selected) {
+    return "bg-[#E6FBEC] text-[#009E30]";
+  }
+
+  return "text-[#191919]";
 }
 
 function ChevronIcon({ isOpen, muted = false }: { isOpen: boolean; muted?: boolean }) {
