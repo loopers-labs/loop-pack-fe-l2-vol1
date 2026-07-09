@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -41,13 +42,34 @@ function DialogRoot({
 
   const currentOpen = isControlled ? open : uncontrolledOpen;
 
-  const requestOpenChange = (nextOpen: boolean) => {
-    if (!isControlled) {
-      setUncontrolledOpen(nextOpen);
+  const requestOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) {
+        setUncontrolledOpen(nextOpen);
+      }
+
+      onOpenChange?.(nextOpen);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  useEffect(() => {
+    if (!currentOpen) {
+      return;
     }
 
-    onOpenChange?.(nextOpen);
-  };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        requestOpenChange(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentOpen, requestOpenChange]);
 
   return (
     <DialogContext.Provider value={{ open: currentOpen, requestOpenChange }}>
@@ -99,13 +121,17 @@ interface DialogOverlayProps {
 }
 
 export function DialogOverlay({ children }: DialogOverlayProps) {
-  const { open } = useDialogContext();
+  const { open, requestOpenChange } = useDialogContext();
 
   if (!open) {
     return null;
   }
 
-  return <DialogPortal>{children}</DialogPortal>;
+  return (
+    <DialogPortal>
+      <div onClick={() => requestOpenChange(false)}>{children}</div>
+    </DialogPortal>
+  );
 }
 
 interface DialogContentProps {
