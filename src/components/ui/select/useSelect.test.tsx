@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { type ComponentPropsWithoutRef } from 'react';
+import { type ComponentProps, type ComponentPropsWithoutRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useSelect } from '@/components/ui/select/useSelect';
@@ -22,7 +22,8 @@ type TestSelectProps = {
   selectedItem?: Option | null;
   defaultSelectedItem?: Option | null;
   onSelectedItemChange?: (changes: { selectedItem: Option | null }) => void;
-  toggleProps?: ComponentPropsWithoutRef<'button'>;
+  toggleProps?: ComponentProps<'button'>;
+  menuProps?: ComponentProps<'ul'>;
   itemProps?: ComponentPropsWithoutRef<'li'>;
 };
 
@@ -31,6 +32,7 @@ type TestSelectProps = {
 function TestSelect({
   items = defaultItems,
   toggleProps,
+  menuProps,
   itemProps,
   ...rest
 }: TestSelectProps) {
@@ -47,7 +49,7 @@ function TestSelect({
         {select.selectedItem?.label ?? '옵션 선택'}
       </button>
       {select.isOpen && (
-        <ul {...select.getMenuProps()}>
+        <ul {...select.getMenuProps(menuProps)}>
           {items.map((item, index) => {
             const state = select.getItemState({ item, index });
 
@@ -604,6 +606,85 @@ describe('사용처 핸들러 병합', () => {
     expect(consumerOnClick).toHaveBeenCalledTimes(1);
     expect(onSelectedItemChange).not.toHaveBeenCalled();
     expect(queryMenu()).toBeInTheDocument(); // 선택이 veto되어 메뉴도 열린 채
+  });
+});
+
+describe('사용처 ref 병합', () => {
+  it('toggle getter에 넘긴 사용처 ref가 버튼 요소와 연결된다', () => {
+    const consumerRef = vi.fn();
+
+    render(<TestSelect toggleProps={{ ref: consumerRef }} />);
+
+    expect(consumerRef).toHaveBeenCalledWith(getToggle());
+  });
+
+  it('menu getter에 넘긴 사용처 ref가 연결되고, 내부 ref 기반 바깥 클릭 닫기도 유지된다', async () => {
+    const user = userEvent.setup();
+    const consumerRef = vi.fn();
+
+    render(
+      <div>
+        <TestSelect menuProps={{ ref: consumerRef }} />
+        <button type="button">바깥 버튼</button>
+      </div>,
+    );
+
+    await user.click(getToggle());
+    expect(consumerRef).toHaveBeenCalledWith(screen.getByRole('listbox'));
+
+    await user.click(screen.getByRole('button', { name: '바깥 버튼' }));
+    expect(queryMenu()).not.toBeInTheDocument();
+  });
+});
+
+describe('하이라이트 스크롤 추적', () => {
+  it('하이라이트가 메뉴 아래로 벗어나면 벗어난 만큼 menu.scrollTop이 내려간다', async () => {
+    const user = userEvent.setup();
+
+    render(<TestSelect />);
+
+    getToggle().focus();
+    await user.keyboard('{ArrowDown}'); // 열림, 24 하이라이트
+
+    const menu = screen.getByRole('listbox');
+    // jsdom엔 레이아웃이 없으므로 rect를 목킹해 "26이 메뉴 아래로 20px 벗어난" 상황을 만든다
+    vi.spyOn(menu, 'getBoundingClientRect').mockReturnValue({
+      top: 0,
+      bottom: 100,
+    } as DOMRect);
+    vi.spyOn(getOption('26'), 'getBoundingClientRect').mockReturnValue({
+      top: 100,
+      bottom: 120,
+    } as DOMRect);
+
+    await user.keyboard('{ArrowDown}'); // 26으로 이동
+
+    expect(menu.scrollTop).toBe(20);
+  });
+
+  it('하이라이트가 메뉴 위로 벗어나면 벗어난 만큼 menu.scrollTop이 올라간다', async () => {
+    const user = userEvent.setup();
+
+    render(<TestSelect />);
+
+    getToggle().focus();
+    await user.keyboard('{ArrowDown}'); // 열림, 24 하이라이트
+    await user.keyboard('{End}'); // 마지막 enabled(28)로 점프
+
+    const menu = screen.getByRole('listbox');
+    menu.scrollTop = 50;
+    vi.spyOn(menu, 'getBoundingClientRect').mockReturnValue({
+      top: 40,
+      bottom: 140,
+    } as DOMRect);
+    vi.spyOn(getOption('24'), 'getBoundingClientRect').mockReturnValue({
+      top: 10,
+      bottom: 30,
+    } as DOMRect);
+
+    await user.keyboard('{Home}'); // 첫 enabled(24)로 점프
+
+    expect(menu.scrollTop).toBe(20); // 50 - (40 - 10)
   });
 });
 
