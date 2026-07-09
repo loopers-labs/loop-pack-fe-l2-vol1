@@ -1,3 +1,4 @@
+import { DialogDemo } from '@/components/ui/dialog/DialogDemo';
 import { SelectDemo } from '@/components/ui/select/SelectDemo';
 
 export default function Home() {
@@ -7,6 +8,7 @@ export default function Home() {
         Commerce
       </h1>
       <SelectDemo />
+      <DialogDemo />
       <p style={{ color: '#5a6675', lineHeight: 1.7, marginBottom: 24 }}>
         4주차부터 여기에 커머스를 쌓아갑니다. 이번 주는 디자인 시스템의 뼈대
         <b> Select</b>와 <b>Dialog</b>를 직접 만드는 것부터 시작해요.
