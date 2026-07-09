@@ -22,7 +22,7 @@ export default function RootLayout({
               href="/"
               className="font-family-display text-2xl font-bold tracking-tight text-text"
             >
-              Maison
+              Aesthetic
             </Link>
             <nav className="hidden gap-8 text-[14px] font-medium text-text-secondary sm:flex">
               <Link href="/" className="transition-colors hover:text-text">
@@ -46,7 +46,7 @@ export default function RootLayout({
           <div className="mx-auto max-w-5xl px-8 py-10">
             <div className="flex flex-col items-center gap-2">
               <span className="font-family-display text-lg font-bold text-text">
-                Maison
+                Aesthetic
               </span>
               <p className="text-[12px] text-text-caption">
                 Curated with care, delivered with love.
