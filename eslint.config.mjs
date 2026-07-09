@@ -9,7 +9,17 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['.next', 'out', 'build', 'dist', 'next-env.d.ts', '_workspace'] },
+  {
+    ignores: [
+      '.next',
+      'out',
+      'build',
+      'dist',
+      'next-env.d.ts',
+      '_workspace',
+      '.claude',
+    ],
+  },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
