@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/ui/dialog';
-import { formatWon, calcDiscount } from '@/utils/format';
 import { TextOptionSelect } from './_components/TextOptionSelect';
 import { SizeOptionSelect } from './_components/SizeOptionSelect';
 import { ThumbnailOptionSelect } from './_components/ThumbnailOptionSelect';
@@ -65,10 +64,6 @@ export default function SelectDemoPage() {
     .slice(0, 5)
     .map((p) => ({ value: p }));
 
-  const discount = product.originalPrice
-    ? calcDiscount(product.originalPrice, product.price)
-    : 0;
-
   return (
     <>
       {/* 페이지 타이틀 */}
@@ -88,49 +83,8 @@ export default function SelectDemoPage() {
       </div>
 
       <div className="mx-auto max-w-xl px-6 py-8">
-        {/* 상품 미리보기 */}
-        <div className="rounded-2xl bg-bg-card p-6">
-          <div className="flex gap-5">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="size-20 shrink-0 rounded-xl border border-border bg-bg object-contain p-1.5"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="rounded-full bg-brand-light px-2.5 py-0.5 text-[11px] font-medium text-brand">
-                  {product.deliveryType}
-                </span>
-                {product.freeShipping && (
-                  <span className="rounded-full border border-accent/40 px-2.5 py-0.5 text-[11px] font-medium text-accent">
-                    무료배송
-                  </span>
-                )}
-              </div>
-              <h2 className="mt-2 truncate text-[14px] font-medium text-text">
-                {product.name}
-              </h2>
-              <div className="mt-1.5 flex items-baseline gap-1.5">
-                {discount > 0 && (
-                  <span className="text-[15px] font-bold text-discount">
-                    {discount}%
-                  </span>
-                )}
-                <span className="text-[15px] font-bold text-text">
-                  {formatWon(product.price)}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-[11px] text-text-caption line-through">
-                    {formatWon(product.originalPrice)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Select 섹션들 */}
-        <section className="mt-5 rounded-2xl bg-bg-card p-6">
+        <section className="rounded-2xl bg-bg-card p-6">
           <div className="mb-5">
             <h2 className="text-[13px] font-semibold text-text">
               1. 텍스트 옵션
