@@ -1,13 +1,15 @@
 "use client";
 
 import type { ButtonHTMLAttributes, HTMLAttributes, MouseEvent, ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { Primitive } from "./primitive";
 import { composeEventHandlers } from "./slot";
 
 type DialogContextValue = {
   open: boolean;
+  titleId: string;
+  descriptionId: string;
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
 };
@@ -48,9 +50,12 @@ function useDialogContext(componentName: string) {
 }
 
 function DialogRoot({ children, open, defaultOpen = false, onOpenChange }: DialogRootProps) {
+  const baseId = useId();
   const isControlled = open !== undefined;
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const currentOpen = isControlled ? open : internalOpen;
+  const titleId = `${baseId}-title`;
+  const descriptionId = `${baseId}-description`;
 
   const setOpen = useCallback(
     (nextOpen: boolean) => {
@@ -99,7 +104,9 @@ function DialogRoot({ children, open, defaultOpen = false, onOpenChange }: Dialo
   }, [currentOpen, setOpen]);
 
   return (
-    <DialogContext.Provider value={{ open: currentOpen, setOpen, toggleOpen }}>
+    <DialogContext.Provider
+      value={{ open: currentOpen, titleId, descriptionId, setOpen, toggleOpen }}
+    >
       {children}
     </DialogContext.Provider>
   );
@@ -147,24 +154,42 @@ function DialogOverlay({ onClick, ...props }: DialogDivProps) {
   return <Primitive.div onClick={composeEventHandlers(onClick, () => setOpen(false))} {...props} />;
 }
 
-function DialogContent({ onClick, ...props }: DialogDivProps) {
+function DialogContent({
+  onClick,
+  role,
+  "aria-modal": ariaModal,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-describedby": ariaDescribedBy,
+  ...props
+}: DialogDivProps) {
+  const { titleId, descriptionId } = useDialogContext("Dialog.Content");
+
   const stopClickPropagation = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
   };
 
-  return <Primitive.div onClick={composeEventHandlers(stopClickPropagation, onClick)} {...props} />;
+  return (
+    <Primitive.div
+      {...props}
+      role={role ?? "dialog"}
+      aria-modal={ariaModal ?? true}
+      aria-labelledby={ariaLabelledBy ?? titleId}
+      aria-describedby={ariaDescribedBy ?? descriptionId}
+      onClick={composeEventHandlers(stopClickPropagation, onClick)}
+    />
+  );
 }
 
-function DialogTitle(props: DialogTitleProps) {
-  useDialogContext("Dialog.Title");
+function DialogTitle({ id, ...props }: DialogTitleProps) {
+  const { titleId } = useDialogContext("Dialog.Title");
 
-  return <Primitive.h2 {...props} />;
+  return <Primitive.h2 id={id ?? titleId} {...props} />;
 }
 
-function DialogDescription(props: DialogDescriptionProps) {
-  useDialogContext("Dialog.Description");
+function DialogDescription({ id, ...props }: DialogDescriptionProps) {
+  const { descriptionId } = useDialogContext("Dialog.Description");
 
-  return <Primitive.p {...props} />;
+  return <Primitive.p id={id ?? descriptionId} {...props} />;
 }
 
 export const Dialog = {

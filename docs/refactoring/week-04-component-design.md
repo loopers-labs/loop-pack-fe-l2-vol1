@@ -249,7 +249,7 @@ Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey
 - `Overlay`와 `Content`는 Portal로 렌더한다.
 - Escape 키와 overlay click으로 닫을 수 있어야 한다.
 - Dialog가 열려 있는 동안 배경 스크롤을 잠근다.
-- 이번 과제에서는 포커스 트랩, 포커스 복원, 초기 포커스, ARIA 세부 구현은 다루지 않는다.
+- 이번 과제에서는 포커스 트랩, 포커스 복원, 초기 포커스, `aria-hidden` 같은 ARIA 세부 구현은 다루지 않는다. 다만 `Title`과 `Description` 컴포넌트의 의미가 `Content`에 연결되도록 `aria-labelledby`, `aria-describedby`는 자동으로 연결한다.
 
 ### 레퍼런스 분석: Radix Dialog
 
@@ -266,7 +266,7 @@ Radix에서 참고할 핵심 구조는 다음과 같다.
 | `DialogContent` | 실제 Dialog 본문을 담당한다.                                              |
 | `DialogClose`   | Context의 `onOpenChange(false)`를 호출한다.                               |
 
-Radix 원본은 `FocusScope`, `DismissableLayer`, `RemoveScroll`, `aria-hidden`, focus guard, `Slot` 기반 `asChild` 등 접근성과 DOM edge case를 위한 모듈도 함께 사용한다. 하지만 과제 문서에서 포커스 관리와 ARIA는 범위 밖이라고 명시했기 때문에, 이번 구현에서는 Radix의 전체 기능이 아니라 **상태 관리, Context 조립, Portal 렌더링, Slot/Primitive 기반 asChild 방식**만 참고한다.
+Radix 원본은 `FocusScope`, `DismissableLayer`, `RemoveScroll`, `aria-hidden`, focus guard, `Slot` 기반 `asChild` 등 접근성과 DOM edge case를 위한 모듈도 함께 사용한다. 이번 구현에서는 Radix의 전체 기능이 아니라 **상태 관리, Context 조립, Portal 렌더링, Slot/Primitive 기반 asChild 방식**을 중심으로 참고한다. 접근성은 `Content`와 `Title`/`Description`을 id로 연결하는 최소 범위까지만 구현한다.
 
 ### 패턴 선택
 
@@ -406,7 +406,13 @@ Radix의 `asChild`는 컴포넌트가 기본 DOM을 렌더링하는 대신, 사�
 
 `onClick`은 child handler를 먼저 실행하고, `event.preventDefault()`가 호출되지 않은 경우에만 Dialog 내부 handler를 실행한다. 이 방식은 사용처가 기본 동작을 막을 수 있게 해준다.
 
-이번 과제에서는 `ref` compose, `onKeyDown` 병합, ARIA 자동 연결까지 구현하지 않는다. Radix 수준의 범용 Slot을 만드는 것이 목적이 아니라, compound 조각의 DOM 의미를 사용처가 바꿀 수 있는 최소 구조를 이해하는 것이 목적이기 때문이다.
+이번 과제에서는 `ref` compose, `onKeyDown` 병합까지 구현하지 않는다. Radix 수준의 범용 Slot을 만드는 것이 목적이 아니라, compound 조각의 DOM 의미를 사용처가 바꿀 수 있는 최소 구조를 이해하는 것이 목적이기 때문이다.
+
+### Title / Description 연결
+
+`Dialog.Root`는 Context를 통해 `titleId`, `descriptionId`를 제공한다. `Dialog.Title`과 `Dialog.Description`은 이 id를 기본으로 사용하고, `Dialog.Content`는 같은 id를 `aria-labelledby`, `aria-describedby`에 연결한다.
+
+이렇게 하면 화면상 제목과 설명으로 보이는 요소가 보조 기술에도 Dialog의 제목과 설명으로 전달된다. 사용처가 직접 `id`, `aria-labelledby`, `aria-describedby`를 넘기면 그 값을 우선한다.
 
 ### Portal 구현 전략
 
@@ -458,6 +464,7 @@ Dialog가 열리면 `document.body.style.overflow = "hidden"`으로 배경 스�
 - overlay click 닫기
 - body scroll lock과 scrollbar layout shift 보정
 - `asChild` 지원
+- `Dialog.Title` / `Dialog.Description`과 `Dialog.Content`의 `aria-labelledby`, `aria-describedby` 자동 연결
 - uncontrolled 예시, controlled 예시, asChild 예시
 
 ### 구현하지 않는 범위
@@ -467,7 +474,6 @@ Dialog가 열리면 `document.body.style.overflow = "hidden"`으로 배경 스�
 - Focus trap
 - Focus restore
 - Initial focus
-- `aria-labelledby`, `aria-describedby` 자동 연결
 - `aria-hidden` 처리
 - Nested Dialog
 - Animation presence 제어
