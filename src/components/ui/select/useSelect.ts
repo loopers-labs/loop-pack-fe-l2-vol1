@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { UseSelectOptions, UseSelectReturn } from './types';
 
 export const useSelect = <T>({
@@ -14,6 +14,12 @@ export const useSelect = <T>({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const menuRef = useRef<HTMLUListElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
+
+  // 인스턴스별 고유 id. 페이지 내에 셀렉트가 여러 개 있어도
+  // aria-activedescendant / aria-controls가 서로 충돌하지 않게 한다.
+  const uid = useId();
+  const menuId = `${uid}-menu`;
+  const getOptionId = (index: number) => `${uid}-option-${index}`;
 
   const keyOf = itemToKey ?? ((item: T) => item);
 
@@ -59,6 +65,13 @@ export const useSelect = <T>({
 
   const selectItem = (item: T) => {
     if (isItemDisabled?.(item)) return;
+
+    const isSame = selectedItem !== null && keyOf(selectedItem) === keyOf(item);
+    if (isSame) {
+      updateIsOpen(false); // 같은 항목이면 그냥 닫기만
+      return;
+    }
+
     setSelectedItem(item);
     updateIsOpen(false);
     onSelectedItemChange?.(item);
@@ -66,15 +79,20 @@ export const useSelect = <T>({
 
   const getToggleButtonProps = () => ({
     ref: toggleRef,
+    'aria-haspopup': 'listbox' as const,
+    'aria-expanded': isOpen,
+    'aria-controls': isOpen ? menuId : undefined, // 닫혀있으면 연관 관계 제거
     onClick: () => {
       updateIsOpen(!isOpen);
     },
   });
 
   const getMenuProps = () => ({
+    id: menuId,
     role: 'listbox',
     tabIndex: -1,
     ref: menuRef,
+    'aria-activedescendant': highlightedIndex >= 0 ? getOptionId(highlightedIndex) : undefined,
     onKeyDown: (e: React.KeyboardEvent) => {
       if (!isOpen) return;
       switch (e.key) {
@@ -98,25 +116,28 @@ export const useSelect = <T>({
           e.preventDefault();
           break;
         case 'Enter':
-          selectItem(items[highlightedIndex]);
+          if (highlightedIndex >= 0) {
+            // 하이라이트 항목이 존재할 때만 selectItem 실행
+            selectItem(items[highlightedIndex]);
+          }
           break;
         case 'Escape':
-          updateIsOpen(false); // ← 헬퍼 사용
+          updateIsOpen(false);
           setHighlightedIndex(-1);
+          toggleRef.current?.focus(); // Esc를 눌러도 바로 selectbox를 찾을 수 있도록
           break;
-        default:
-          e.stopPropagation();
       }
     },
   });
 
   const getItemProps = ({ item, index }: { item: T; index: number }) => ({
+    id: getOptionId(index),
     role: 'option',
     'aria-selected': selectedItem ? keyOf(item) === keyOf(selectedItem) : false,
     'aria-disabled': isItemDisabled?.(item) ?? false,
     onClick: () => selectItem(item),
     onMouseEnter: () => {
-      if (isItemDisabled && isItemDisabled(item)) return;
+      if (isItemDisabled?.(item)) return;
       setHighlightedIndex(index);
     },
     disabled: isItemDisabled?.(item) ?? false,
