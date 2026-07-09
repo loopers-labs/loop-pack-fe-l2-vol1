@@ -80,7 +80,15 @@ export default tseslint.config(
       'import-x/no-cycle': 'error',
       'import-x/no-extraneous-dependencies': [
         'error',
-        { devDependencies: ['next.config.ts', 'eslint.config.mjs'] },
+        {
+          devDependencies: [
+            'next.config.ts',
+            'eslint.config.mjs',
+            'vitest.config.ts',
+            'vitest.setup.ts',
+            '**/*.test.{ts,tsx}',
+          ],
+        },
       ],
 
       '@eslint-community/eslint-comments/no-unlimited-disable': 'error',
