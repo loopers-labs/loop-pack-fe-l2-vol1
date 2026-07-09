@@ -6,6 +6,7 @@ import {
   type LiHTMLAttributes,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react';
@@ -75,6 +76,13 @@ export function useSelect<T>({
 
   const toggleButtonRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLUListElement | null>(null);
+
+  const baseId = useId();
+  const menuId = `${baseId}menu`;
+
+  const getItemId = (index: number) => {
+    return `${baseId}item-${index}`;
+  };
 
   // selectedItem prop을 넘기면 controlled(source of truth가 사용처), 안 넘기면 uncontrolled(hook 내부 state가 source of truth)
   const isControlled = selectedItem !== undefined;
@@ -215,6 +223,13 @@ export function useSelect<T>({
       ref: (node: HTMLButtonElement | null) => {
         toggleButtonRef.current = node;
       },
+      'aria-expanded': isOpen,
+      'aria-controls': menuId,
+      // focus는 버튼에 둔 채, 키보드 하이라이트가 논리적으로 어느 옵션 위에 있는지 보조기기에 알린다
+      'aria-activedescendant':
+        isOpen && highlightedIndex >= 0
+          ? getItemId(highlightedIndex)
+          : undefined,
       onClick: toggleMenu,
       onKeyDown: handleKeyDown,
     };
@@ -225,13 +240,19 @@ export function useSelect<T>({
       ref: (node: HTMLUListElement | null) => {
         menuRef.current = node;
       },
+      id: menuId,
+      role: 'listbox',
     };
   };
 
   const getItemProps = ({ item, index }: { item: T; index: number }) => {
-    const disabled = getIsItemDisabled(item, index);
+    const { selected, disabled } = getItemState({ item, index });
 
     return {
+      id: getItemId(index),
+      role: 'option',
+      'aria-selected': selected,
+      'aria-disabled': disabled,
       onMouseEnter: disabled
         ? undefined
         : () => {
