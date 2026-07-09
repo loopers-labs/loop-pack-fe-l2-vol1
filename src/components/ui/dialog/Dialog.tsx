@@ -169,9 +169,27 @@ export function DialogContent({ children }: DialogContentProps) {
   );
 }
 
+interface DialogTitleProps {
+  children: ReactNode;
+}
+
+export function DialogTitle({ children }: DialogTitleProps) {
+  return <h2>{children}</h2>;
+}
+
+interface DialogDescriptionProps {
+  children: ReactNode;
+}
+
+export function DialogDescription({ children }: DialogDescriptionProps) {
+  return <p>{children}</p>;
+}
+
 export const Dialog = Object.assign(DialogRoot, {
   Trigger: DialogTrigger,
-  Close: DialogClose,
   Overlay: DialogOverlay,
   Content: DialogContent,
+  Title: DialogTitle,
+  Description: DialogDescription,
+  Close: DialogClose,
 });
