@@ -387,11 +387,21 @@ export function useSelect<T>({
       nextSelectedItem = items[index];
     }
 
+    const isSameSelection =
+      nextSelectedItem === null
+        ? currentSelectedItem === null
+        : currentSelectedItem !== null &&
+          itemToKey(nextSelectedItem) === itemToKey(currentSelectedItem);
+
     if (!isControlled) {
       setInternalSelectedItem(nextSelectedItem);
     }
 
-    onSelectedItemChange?.({ selectedItem: nextSelectedItem });
+    // 이름(onSelectedItemChange)대로 값이 실제로 바뀔 때만 알린다. 같은 항목 재선택은 메뉴만 닫는다
+    if (!isSameSelection) {
+      onSelectedItemChange?.({ selectedItem: nextSelectedItem });
+    }
+
     closeMenu();
   };
 
