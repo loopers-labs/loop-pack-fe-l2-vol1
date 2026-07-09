@@ -1,7 +1,11 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import { Select } from "@/components/ui/select";
 
-export default function Home() {
+export default async function Home() {
+  const res = await fetch("http://localhost:3001/api/products");
+  const data = await res.json();
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -36,21 +40,7 @@ export default function Home() {
           </p>
         </div>
         <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
+          <Select products={data.products} />
           <a
             className={styles.secondary}
             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
