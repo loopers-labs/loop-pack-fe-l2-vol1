@@ -221,6 +221,29 @@ describe('Portal과 scroll lock', () => {
     document.documentElement.style.overflow = '';
   });
 
+  it('열릴 때 스크롤바 폭만큼 body padding을 보상하고 닫히면 원래 값으로 복구한다', async () => {
+    const user = userEvent.setup();
+
+    // jsdom엔 실제 스크롤바가 없어 뷰포트와 문서 폭 차이(16px)로 흉내낸다
+    Object.defineProperty(document.documentElement, 'clientWidth', {
+      value: window.innerWidth - 16,
+      configurable: true,
+    });
+    document.body.style.paddingRight = '4px';
+    renderDialog();
+
+    await user.click(screen.getByRole('button', { name: '열기' }));
+
+    expect(document.body.style.paddingRight).toBe('20px'); // 기존 4px + 스크롤바 16px
+
+    await user.keyboard('{Escape}');
+
+    expect(document.body.style.paddingRight).toBe('4px');
+
+    Reflect.deleteProperty(document.documentElement, 'clientWidth');
+    document.body.style.paddingRight = '';
+  });
+
   it('여러 Dialog가 겹쳐 열리면 닫는 순서와 무관하게 마지막 Dialog가 닫힐 때 복구된다', () => {
     document.body.style.overflow = 'auto';
 
