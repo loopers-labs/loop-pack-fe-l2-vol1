@@ -2,11 +2,9 @@ import Image from "next/image";
 import styles from "./page.module.css";
 import { SelectExample } from "@/components/ui/select/selectExample";
 import { DialogExample } from "@/components/ui/dialog/dialogExample";
+import { products } from "@/app/api/products/data";
 
-export default async function Home() {
-  const res = await fetch("http://localhost:3001/api/products");
-  const data = await res.json();
-
+export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -41,7 +39,7 @@ export default async function Home() {
           </p>
         </div>
         <div className={styles.ctas}>
-          <SelectExample products={data.products} />
+          <SelectExample products={products} />
           <DialogExample />
           <a
             className={styles.secondary}
