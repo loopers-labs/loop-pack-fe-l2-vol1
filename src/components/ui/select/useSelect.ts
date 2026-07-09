@@ -12,6 +12,7 @@ import { useId, useRef, useState } from "react";
 
 type UseSelectParams<Item> = {
   items: Item[];
+  getItemKey?: (item: Item | null) => unknown;
   isItemDisabled?: (item: Item, index: number) => boolean;
   selectedItem?: Item | null;
   defaultSelectedItem?: Item | null;
@@ -99,23 +100,28 @@ function getLastEnabledIndex<Item>(
 function getSelectedItemIndex<Item>({
   items,
   selectedItem,
+  getItemKey,
   isItemDisabled,
 }: {
   items: Item[];
   selectedItem: Item | null | undefined;
+  getItemKey: (item: Item | null) => unknown;
   isItemDisabled: (item: Item, index: number) => boolean;
 }) {
   if (selectedItem == null) {
     return -1;
   }
 
+  const selectedItemKey = getItemKey(selectedItem);
+
   return items.findIndex((item, index) => {
-    return Object.is(item, selectedItem) && !isItemDisabled(item, index);
+    return Object.is(getItemKey(item), selectedItemKey) && !isItemDisabled(item, index);
   });
 }
 
 export function useSelect<Item>({
   items,
+  getItemKey = (item) => item,
   selectedItem,
   defaultSelectedItem = null,
   onSelectedItemChange,
@@ -150,6 +156,7 @@ export function useSelect<Item>({
     const selectedIndex = getSelectedItemIndex({
       items,
       selectedItem: currentSelectedItem,
+      getItemKey,
       isItemDisabled,
     });
 
@@ -184,8 +191,9 @@ export function useSelect<Item>({
   };
 
   const selectItem = (item: Item) => {
+    const itemKey = getItemKey(item);
     const itemIndex = items.findIndex((candidate) => {
-      return Object.is(candidate, item);
+      return Object.is(getItemKey(candidate), itemKey);
     });
 
     if (itemIndex === -1 || isItemDisabled(item, itemIndex)) {
@@ -334,7 +342,7 @@ export function useSelect<Item>({
 
   const getItemState = ({ item, index }: { item: Item; index: number }) => {
     return {
-      selected: Object.is(currentSelectedItem, item),
+      selected: Object.is(getItemKey(currentSelectedItem ?? null), getItemKey(item)),
       highlighted: highlightedIndex === index,
       disabled: isItemDisabled(item, index),
     };
@@ -387,7 +395,7 @@ export function useSelect<Item>({
       },
       id: getItemId(index),
       role: "option" as const,
-      "aria-selected": Object.is(currentSelectedItem, item),
+      "aria-selected": Object.is(getItemKey(currentSelectedItem ?? null), getItemKey(item)),
       "aria-disabled": disabled,
       onMouseMove: () => handleItemMouseMove(index, disabled),
       onMouseDown: handleItemMouseDown,
