@@ -263,7 +263,7 @@ Radix에서 참고할 핵심 구조는 다음과 같다.
 | `DialogContent` | 실제 Dialog 본문을 담당한다.                                              |
 | `DialogClose`   | Context의 `onOpenChange(false)`를 호출한다.                               |
 
-Radix 원본은 `FocusScope`, `DismissableLayer`, `RemoveScroll`, `aria-hidden`, focus guard 등 접근성과 DOM edge case를 위한 모듈도 함께 사용한다. 하지만 과제 문서에서 포커스 관리와 ARIA는 범위 밖이라고 명시했기 때문에, 이번 구현에서는 Radix의 전체 기능이 아니라 **상태 관리, Context 조립, Portal 렌더링 방식**만 참고한다.
+Radix 원본은 `FocusScope`, `DismissableLayer`, `RemoveScroll`, `aria-hidden`, focus guard, `Slot` 기반 `asChild` 등 접근성과 DOM edge case를 위한 모듈도 함께 사용한다. 하지만 과제 문서에서 포커스 관리와 ARIA는 범위 밖이라고 명시했기 때문에, 이번 구현에서는 Radix의 전체 기능이 아니라 **상태 관리, Context 조립, Portal 렌더링, Slot/Primitive 기반 asChild 방식**만 참고한다.
 
 ### 패턴 선택
 
@@ -276,6 +276,7 @@ Dialog는 **Compound Component + Context** 방식으로 설계한다.
 | 부모가 Dialog open 상태를 제어할 수 있어야 한다     | controlled 지원    | 결제 확인, 삭제 확인처럼 외부 상태와 연결할 수 있다.                      |
 | 단순 사용처에서는 내부 상태만으로 충분하다          | uncontrolled 지원  | `Dialog.Root`만 감싸도 기본 열기/닫기가 가능해야 한다.                    |
 | overlay/content가 부모 layout에 갇히면 안 된다      | Portal             | stacking context, overflow, z-index 문제를 줄인다.                        |
+| 사용처가 실제 DOM 태그를 바꿀 수 있어야 한다        | `asChild`          | 버튼, 링크, 섹션, 제목 태그를 사용처 의미에 맞게 선택할 수 있다.          |
 
 ### 예상 API
 
@@ -284,13 +285,15 @@ Dialog는 **Compound Component + Context** 방식으로 설계한다.
 ```tsx
 <Dialog.Root>
   <Dialog.Trigger>구매하기</Dialog.Trigger>
-  <Dialog.Overlay />
-  <Dialog.Content>
-    <Dialog.Title>주문을 진행할까요?</Dialog.Title>
-    <Dialog.Description>선택한 옵션으로 결제를 진행합니다.</Dialog.Description>
-    <Dialog.Close>취소</Dialog.Close>
-    <button type="button">확인</button>
-  </Dialog.Content>
+  <Dialog.Portal>
+    <Dialog.Overlay />
+    <Dialog.Content>
+      <Dialog.Title>주문을 진행할까요?</Dialog.Title>
+      <Dialog.Description>선택한 옵션으로 결제를 진행합니다.</Dialog.Description>
+      <Dialog.Close>취소</Dialog.Close>
+      <button type="button">확인</button>
+    </Dialog.Content>
+  </Dialog.Portal>
 </Dialog.Root>
 ```
 
@@ -302,14 +305,44 @@ const [open, setOpen] = useState(false);
 return (
   <Dialog.Root open={open} onOpenChange={setOpen}>
     <Dialog.Trigger>배송지 변경</Dialog.Trigger>
-    <Dialog.Overlay />
-    <Dialog.Content>
-      <Dialog.Title>배송지 변경</Dialog.Title>
-      <Dialog.Description>새 배송지를 선택해 주세요.</Dialog.Description>
-      <Dialog.Close>닫기</Dialog.Close>
-    </Dialog.Content>
+    <Dialog.Portal>
+      <Dialog.Overlay />
+      <Dialog.Content>
+        <Dialog.Title>배송지 변경</Dialog.Title>
+        <Dialog.Description>새 배송지를 선택해 주세요.</Dialog.Description>
+        <Dialog.Close>닫기</Dialog.Close>
+      </Dialog.Content>
+    </Dialog.Portal>
   </Dialog.Root>
 );
+```
+
+`asChild`가 필요한 경우에는 Dialog 조각이 직접 DOM을 만들지 않고, 자식 element에 동작 props를 주입한다.
+
+```tsx
+<Dialog.Root>
+  <Dialog.Trigger asChild>
+    <button type="button">쿠폰 적용</button>
+  </Dialog.Trigger>
+  <Dialog.Portal>
+    <Dialog.Overlay asChild>
+      <div className="dialog-overlay" />
+    </Dialog.Overlay>
+    <Dialog.Content asChild>
+      <section className="dialog-content">
+        <Dialog.Title asChild>
+          <h3>쿠폰을 적용할까요?</h3>
+        </Dialog.Title>
+        <Dialog.Description asChild>
+          <p>선택한 쿠폰을 주문에 반영합니다.</p>
+        </Dialog.Description>
+        <Dialog.Close asChild>
+          <button type="button">닫기</button>
+        </Dialog.Close>
+      </section>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
 ```
 
 ### Controlled / Uncontrolled 판별
@@ -351,14 +384,35 @@ return (
 | `Dialog.Description` | 설명 마크업을 제공한다.                                                         |
 | `Dialog.Close`       | 클릭 시 Dialog를 닫는다.                                                        |
 
+### asChild 구현 전략
+
+Radix의 `asChild`는 컴포넌트가 기본 DOM을 렌더링하는 대신, 사용자가 넘긴 child element를 실제 DOM으로 사용하게 해주는 API다. 예를 들어 `Dialog.Trigger`는 기본적으로 `button`을 렌더링하지만, `asChild`를 사용하면 사용처가 직접 만든 `button`이나 링크에 Dialog 열기 동작을 붙일 수 있다.
+
+이번 구현에서는 이를 위해 `Primitive`와 `Slot`을 나누었다.
+
+| 모듈        | 책임                                                                             |
+| ----------- | -------------------------------------------------------------------------------- |
+| `Primitive` | `button`, `div`, `h2`, `p` 기본 태그를 렌더하거나 `asChild`면 `Slot`에 위임한다. |
+| `Slot`      | 단일 child element를 검사하고, Dialog가 제공한 props를 child에 병합한다.         |
+
+`Slot`은 현재 과제 범위에 맞춰 다음 병합만 처리한다.
+
+- `className`
+- `style`
+- `onClick`
+
+`onClick`은 child handler를 먼저 실행하고, `event.preventDefault()`가 호출되지 않은 경우에만 Dialog 내부 handler를 실행한다. 이 방식은 사용처가 기본 동작을 막을 수 있게 해준다.
+
+이번 과제에서는 `ref` compose, `onKeyDown` 병합, ARIA 자동 연결까지 구현하지 않는다. Radix 수준의 범용 Slot을 만드는 것이 목적이 아니라, compound 조각의 DOM 의미를 사용처가 바꿀 수 있는 최소 구조를 이해하는 것이 목적이기 때문이다.
+
 ### Portal 구현 전략
 
-`Dialog.Overlay`와 `Dialog.Content`는 `createPortal`을 사용해 `document.body` 아래에 렌더한다.
+`Dialog.Portal`은 `createPortal`을 사용해 자식으로 받은 overlay와 content를 `document.body` 아래에 렌더한다.
 
 이 방식은 사용처 JSX 구조는 compound 형태를 유지하면서도, 실제 DOM은 layout/overflow/z-index 영향을 덜 받는 위치에 생성한다.
 
 ```tsx
-return createPortal(<div className="dialog-content">{children}</div>, document.body);
+return createPortal(children, document.body);
 ```
 
 Next App Router 환경이므로 Dialog 구현 파일은 client component여야 한다. `document.body` 접근은 브라우저 환경에서만 가능하므로, `open`이 아닐 때는 `null`을 반환하고 열린 상태에서 Portal을 만든다.
@@ -373,23 +427,35 @@ Next App Router 환경이므로 Dialog 구현 파일은 client component여야 �
 
 `Dialog.Content` 내부 click은 overlay click으로 전파되지 않도록 막는다. 이렇게 하면 overlay click은 닫기 동작이지만 content 내부 버튼이나 입력 조작은 닫기 동작이 아니다.
 
+사용자가 넘긴 `onClick`과 Dialog 내부 닫기 handler는 `composeEventHandlers`로 합성한다. 사용처 handler가 `event.preventDefault()`를 호출하면 내부 닫기 동작은 실행하지 않는다.
+
+### Scroll lock 구현 전략
+
+Dialog가 열리면 `document.body.style.overflow = "hidden"`으로 배경 스크롤을 잠근다. 이때 스크롤바가 사라지며 레이아웃이 흔들릴 수 있으므로, 스크롤바 너비만큼 `body`의 `padding-right`를 보정한다.
+
+닫힐 때는 이전 `overflow`, `padding-right` 값을 복원한다. Nested Dialog나 여러 Dialog가 동시에 열리는 경우까지는 이번 과제 범위에서 다루지 않는다.
+
 ### 구현 범위
 
 이번 Dialog에서 구현할 범위는 다음으로 제한한다.
 
 - `Dialog.Root`
 - `Dialog.Trigger`
+- `Dialog.Portal`
 - `Dialog.Overlay`
 - `Dialog.Content`
 - `Dialog.Title`
 - `Dialog.Description`
 - `Dialog.Close`
+- `Primitive`
+- `Slot`
 - controlled/uncontrolled open 상태
 - Portal 렌더링
 - Escape 닫기
 - overlay click 닫기
-- body scroll lock
-- uncontrolled 예시와 controlled 예시
+- body scroll lock과 scrollbar layout shift 보정
+- `asChild` 지원
+- uncontrolled 예시, controlled 예시, asChild 예시
 
 ### 구현하지 않는 범위
 
@@ -403,13 +469,17 @@ Next App Router 환경이므로 Dialog 구현 파일은 client component여야 �
 - Nested Dialog
 - Animation presence 제어
 - Non-modal Dialog
+- 범용 `ref` compose
+- 모든 이벤트 핸들러 merge
 - 오른쪽 클릭, trigger 재클릭, Safari focus edge case 등 Radix 수준의 dismissable layer 세부 처리
 
 ### 설계 근거
 
 Select는 같은 선택 로직을 여러 UI에 적용해야 했으므로 hook 기반 headless API가 적절했다. 반면 Dialog는 여러 조각이 하나의 open 상태를 공유하며 조립되는 구조이므로 compound component가 더 적절하다.
 
-Radix Dialog는 production-grade 접근성과 포커스 처리를 포함하지만, 이번 과제는 compound 조립과 controlled/uncontrolled API를 직접 이해하는 것이 목적이다. 따라서 Radix의 내부 구조 중 `Root -> Context -> Trigger/Overlay/Content/Close`로 이어지는 상태 흐름만 차용하고, 포커스와 접근성 edge case 처리는 과제 범위 밖으로 둔다.
+Radix Dialog는 production-grade 접근성과 포커스 처리를 포함하지만, 이번 과제는 compound 조립과 controlled/uncontrolled API를 직접 이해하는 것이 목적이다. 따라서 Radix의 내부 구조 중 `Root -> Context -> Trigger/Portal/Overlay/Content/Close`로 이어지는 상태 흐름을 차용하고, 포커스와 접근성 edge case 처리는 과제 범위 밖으로 둔다.
+
+`asChild`는 Dialog 조각이 항상 정해진 태그만 렌더링하는 문제를 줄이기 위해 추가했다. `Trigger`와 `Close`는 버튼을 기본값으로 두되, 사용처가 이미 가진 버튼 컴포넌트를 그대로 사용할 수 있다. `Overlay`, `Content`, `Title`, `Description`도 `Primitive`를 통해 같은 패턴을 공유한다. 다만 이번 구현의 `Slot`은 학습용 최소 구현이므로 Radix처럼 모든 prop, ref, 접근성 edge case를 처리하지 않는다.
 
 ### 검증 기준
 
@@ -421,3 +491,4 @@ Radix Dialog는 production-grade 접근성과 포커스 처리를 포함하지�
 - `Dialog.Overlay`와 `Dialog.Content`가 Portal로 렌더된다.
 - `open`, `onOpenChange`를 넘긴 controlled 사용처가 동작한다.
 - `defaultOpen` 또는 내부 상태를 사용하는 uncontrolled 사용처가 동작한다.
+- `Dialog.Trigger`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.Close`가 `asChild`로 child element에 동작 props를 주입할 수 있다.
