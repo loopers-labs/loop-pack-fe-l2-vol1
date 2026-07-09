@@ -2,8 +2,8 @@
 
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -21,12 +21,8 @@ interface DialogContextValue {
 
 const DialogContext = createContext<DialogContextValue | null>(null);
 
-function useDialogContext(part: string): DialogContextValue {
-  const ctx = useContext(DialogContext);
-  if (!ctx) {
-    throw new Error(`<Dialog.${part}>은 <Dialog> 안에서만 사용할 수 있습니다`);
-  }
-  return ctx;
+function panic(part: string): never {
+  throw new Error(`<Dialog.${part}>은 <Dialog> 안에서만 사용할 수 있습니다`);
 }
 
 // ── 루트 — controlled / uncontrolled 이중 API ────────────────
@@ -74,7 +70,7 @@ function Portal({ children }: { children: ReactNode }) {
 // ── 조각들 ──────────────────────────────────────────────────
 
 function Trigger({ onClick, ...rest }: ComponentPropsWithoutRef<"button">) {
-  const { setOpen } = useDialogContext("Trigger");
+  const { setOpen } = use(DialogContext) ?? panic("Trigger");
   return (
     <button
       type="button"
@@ -88,7 +84,7 @@ function Trigger({ onClick, ...rest }: ComponentPropsWithoutRef<"button">) {
 }
 
 function Overlay({ onClick, style, ...rest }: ComponentPropsWithoutRef<"div">) {
-  const { open, setOpen } = useDialogContext("Overlay");
+  const { open, setOpen } = use(DialogContext) ?? panic("Overlay");
   if (!open) return null;
   return (
     <Portal>
@@ -111,7 +107,7 @@ function Overlay({ onClick, style, ...rest }: ComponentPropsWithoutRef<"div">) {
 }
 
 function Content({ style, ...rest }: ComponentPropsWithoutRef<"div">) {
-  const { open, setOpen } = useDialogContext("Content");
+  const { open, setOpen } = use(DialogContext) ?? panic("Content");
 
   // Esc 닫기 + 배경 스크롤 잠금 — 열려 있는 동안만
   useEffect(() => {
@@ -166,7 +162,7 @@ function Description({ style, ...rest }: ComponentPropsWithoutRef<"p">) {
 }
 
 function Close({ onClick, ...rest }: ComponentPropsWithoutRef<"button">) {
-  const { setOpen } = useDialogContext("Close");
+  const { setOpen } = use(DialogContext) ?? panic("Close");
   return (
     <button
       type="button"
