@@ -66,6 +66,14 @@ function getNextEnabledIndex<Item>({
     return -1;
   }
 
+  if (currentIndex === -1) {
+    if (direction === 1) {
+      return getFirstEnabledIndex(items, isItemDisabled);
+    }
+
+    return getLastEnabledIndex(items, isItemDisabled);
+  }
+
   for (let step = 1; step <= items.length; step += 1) {
     const nextIndex = (currentIndex + direction * step + items.length) % items.length;
     const nextItem = items[nextIndex];
