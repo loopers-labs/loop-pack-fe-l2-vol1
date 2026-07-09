@@ -4,6 +4,9 @@ import {
   type HTMLAttributes,
   type KeyboardEvent,
   type LiHTMLAttributes,
+  useCallback,
+  useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -28,6 +31,11 @@ type SelectItemState = {
   disabled: boolean;
 };
 
+type SelectElementProps<TElement extends HTMLElement> =
+  HTMLAttributes<TElement> & {
+    ref: (node: TElement | null) => void;
+  };
+
 type UseSelectReturn<T> = {
   isOpen: boolean;
   selectedItem: T | null;
@@ -37,7 +45,8 @@ type UseSelectReturn<T> = {
   toggleMenu: () => void;
   selectItem: (item: T | null) => void;
 
-  getToggleButtonProps: () => HTMLAttributes<HTMLElement>;
+  getToggleButtonProps: () => SelectElementProps<HTMLButtonElement>;
+  getMenuProps: () => SelectElementProps<HTMLUListElement>;
   getItemProps: (params: {
     item: T;
     index: number;
@@ -63,6 +72,9 @@ export function useSelect<T>({
   );
 
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+  const toggleButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLUListElement | null>(null);
 
   // selectedItem prop을 넘기면 controlled(source of truth가 사용처), 안 넘기면 uncontrolled(hook 내부 state가 source of truth)
   const isControlled = selectedItem !== undefined;
@@ -188,13 +200,31 @@ export function useSelect<T>({
     if (event.key === 'Escape') {
       event.preventDefault();
       closeMenu();
+
+      return;
+    }
+
+    // Tab 이동은 브라우저 기본 focus 이동에 맡기고, 열린 메뉴만 닫는다
+    if (event.key === 'Tab') {
+      closeMenu();
     }
   };
 
   const getToggleButtonProps = () => {
     return {
+      ref: (node: HTMLButtonElement | null) => {
+        toggleButtonRef.current = node;
+      },
       onClick: toggleMenu,
       onKeyDown: handleKeyDown,
+    };
+  };
+
+  const getMenuProps = () => {
+    return {
+      ref: (node: HTMLUListElement | null) => {
+        menuRef.current = node;
+      },
     };
   };
 
@@ -202,14 +232,16 @@ export function useSelect<T>({
     const disabled = getIsItemDisabled(item, index);
 
     return {
-      onMouseEnter: () => {
-        if (disabled) return;
-
-        setHighlightedIndex(index);
-      },
-      onClick: () => {
-        selectItem(item);
-      },
+      onMouseEnter: disabled
+        ? undefined
+        : () => {
+            setHighlightedIndex(index);
+          },
+      onClick: disabled
+        ? undefined
+        : () => {
+            selectItem(item);
+          },
     };
   };
 
@@ -243,10 +275,10 @@ export function useSelect<T>({
     setHighlightedIndex(getInitialHighlightedIndex());
   };
 
-  const closeMenu = () => {
+  const closeMenu = useCallback(() => {
     setIsOpen(false);
     setHighlightedIndex(-1);
-  };
+  }, []);
 
   const toggleMenu = () => {
     if (isOpen) {
@@ -257,6 +289,42 @@ export function useSelect<T>({
 
     openMenu();
   };
+
+  // 바깥 클릭 닫기. trigger/menu ref를 따로 봐서 DOM 배치가 달라도 내부 클릭을 유지한다
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const isSelectEventTarget = (target: EventTarget | null) => {
+      if (!(target instanceof Node)) {
+        return false;
+      }
+
+      // 현재 타겟이 버튼 안이거나 메뉴 안이면 내부로 판정
+      return [toggleButtonRef.current, menuRef.current].some((element) => {
+        return element !== null && element.contains(target);
+      });
+    };
+
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      if (isSelectEventTarget(event.target)) {
+        return;
+      }
+
+      closeMenu();
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointerDown, true);
+
+    return () => {
+      document.removeEventListener(
+        'pointerdown',
+        closeOnOutsidePointerDown,
+        true,
+      );
+    };
+  }, [isOpen, closeMenu]);
 
   // 값 선택시 controlled 여부에 따라 분기, 콜백 호출 후 메뉴 닫음
   const selectItem = (item: T | null) => {
@@ -292,6 +360,7 @@ export function useSelect<T>({
     selectItem,
 
     getToggleButtonProps,
+    getMenuProps,
     getItemProps,
     getItemState,
   };

@@ -71,7 +71,10 @@ function SizeSelectDemo({ items }: { items: SizeOption[] }) {
       </button>
 
       {select.isOpen && (
-        <ul className="list-none border-t border-[#e0e0e0]">
+        <ul
+          {...select.getMenuProps()}
+          className="list-none border-t border-[#e0e0e0]"
+        >
           {items.map((item, index) => {
             const { selected, highlighted, disabled } = select.getItemState({
               item,
@@ -129,7 +132,10 @@ function ThumbnailSelectDemo({ items }: { items: ThumbnailOption[] }) {
       </button>
 
       {select.isOpen && (
-        <ul className="list-none border-t border-[#eee]">
+        <ul
+          {...select.getMenuProps()}
+          className="list-none border-t border-[#eee]"
+        >
           {items.map((item, index) => {
             const { selected, highlighted, disabled } = select.getItemState({
               item,
@@ -209,7 +215,10 @@ function TextSelectDemo({ items }: { items: TextOption[] }) {
       </button>
 
       {select.isOpen && (
-        <ul className="mt-3 flex list-none flex-col gap-3">
+        <ul
+          {...select.getMenuProps()}
+          className="mt-3 flex list-none flex-col gap-3"
+        >
           {items.map((item, index) => {
             const { selected, highlighted, disabled } = select.getItemState({
               item,
