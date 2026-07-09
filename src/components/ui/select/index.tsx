@@ -13,31 +13,56 @@
 "use client";
 import { useState } from "react";
 
-export function Select({
-  products,
+export type SelectOption = { id: string; name: string; disabled?: boolean };
+export type OptionState = { selected: boolean; highlighted: boolean; disabled: boolean };
+
+// 제네릭 shell: 리스트박스의 "동작"만 담당하고, 옵션 생김새는 renderOption에 위임.
+// 같은 shell + 같은 useSelect로 서로 다른 옵션 UI 3종을 전부 그린다(headless의 핵심).
+export function Select<T extends SelectOption>({
+  options,
+  placeholder,
+  renderOption,
 }: {
-  products: { id: string; name: string; sizes: { value: number; stock: number }[] }[];
+  options: T[];
+  placeholder: string;
+  renderOption: (item: T, state: OptionState) => React.ReactNode;
 }) {
-  const options = products.map((product) => ({
-    ...product,
-    disabled: product.sizes.every((size) => size.stock === 0),
-  }));
   const select = useSelect(options);
   return (
     <div onKeyDown={select.onKeyDown}>
-      <button onClick={select.toggle}>뭐고</button>
+      <button type="button" onClick={select.toggle}>
+        {select.selected ? select.selected.name : placeholder}
+      </button>
       {select.open && (
-        <ul>
-          {select.items.map((item) => (
-            <li key={item.id}>{item.name}</li>
-          ))}
+        <ul role="listbox">
+          {select.items.map((item, index) => {
+            const state = select.getOptionState(item, index);
+            return (
+              <li
+                key={item.id}
+                role="option"
+                aria-selected={state.selected}
+                aria-disabled={state.disabled}
+                onClick={() => select.select(item)}
+                style={{
+                  // shell은 "동작 피드백"만 칠한다: 키보드 하이라이트 + 품절 잠금.
+                  // "선택됨"을 어떻게 보일지는 사용처(renderOption)가 state로 판단.
+                  background: state.highlighted ? "#e5edff" : "transparent",
+                  opacity: state.disabled ? 0.4 : 1,
+                  cursor: state.disabled ? "not-allowed" : "pointer",
+                }}
+              >
+                {renderOption(item, state)}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
   );
 }
 
-function useSelect<T extends { id: string; name: string; disabled?: boolean }>(items: T[]) {
+function useSelect<T extends SelectOption>(items: T[]) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<T | null>(null);
   const [highlight, setHighlight] = useState(-1);
@@ -64,13 +89,22 @@ function useSelect<T extends { id: string; name: string; disabled?: boolean }>(i
     if (e.key === "Escape") setOpen(false);
   };
 
+  // 옵션별 상태를 "사용처가 물어보게" 노출(B안). 훅은 생김새를 모르고
+  // "이 옵션이 지금 선택/하이라이트/비활성인가"만 답한다. raw highlight 인덱스는
+  // 감춰서, 사용처가 인덱스 계산에 얽히지 않고 스타일 판단만 하게 한다.
+  const getOptionState = (item: T, index: number) => ({
+    selected: selected?.id === item.id,
+    highlighted: highlight === index,
+    disabled: item.disabled ?? false,
+  });
+
   return {
     open,
     selected,
-    highlight,
     items,
     toggle: () => setOpen((o) => !o),
     select,
     onKeyDown,
+    getOptionState,
   };
 }

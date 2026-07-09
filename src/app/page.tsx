@@ -1,6 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
-import { Select } from "@/components/ui/select";
+import { SelectExample } from "@/components/ui/select/selectExample";
 
 export default async function Home() {
   const res = await fetch("http://localhost:3001/api/products");
@@ -40,7 +40,7 @@ export default async function Home() {
           </p>
         </div>
         <div className={styles.ctas}>
-          <Select products={data.products} />
+          <SelectExample products={data.products} />
           <a
             className={styles.secondary}
             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
