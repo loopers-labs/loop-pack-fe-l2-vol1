@@ -8,7 +8,7 @@ import type {
   MouseEvent,
   RefCallback,
 } from "react";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 type UseSelectParams<Item> = {
   items: Item[];
@@ -48,6 +48,8 @@ type UseSelectReturn<Item> = {
 type UseSelectRootProps = HTMLAttributes<HTMLElement> & {
   ref: RefCallback<HTMLElement>;
 };
+
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 function getNextEnabledIndex<Item>({
   items,
@@ -149,8 +151,15 @@ export function useSelect<Item>({
 
   const highlightItem = (index: number) => {
     setHighlightedIndex(index);
-    itemRefs.current[index]?.scrollIntoView({ block: "nearest" });
   };
+
+  useIsomorphicLayoutEffect(() => {
+    if (!isOpen || highlightedIndex < 0) {
+      return;
+    }
+
+    itemRefs.current[highlightedIndex]?.scrollIntoView({ block: "nearest" });
+  }, [isOpen, highlightedIndex]);
 
   const getInitialHighlightedIndex = () => {
     const selectedIndex = getSelectedItemIndex({
