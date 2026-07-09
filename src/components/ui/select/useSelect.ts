@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  type ButtonHTMLAttributes,
   type HTMLAttributes,
   type KeyboardEvent,
   type LiHTMLAttributes,
@@ -37,6 +38,24 @@ type SelectElementProps<TElement extends HTMLElement> =
     ref: (node: TElement | null) => void;
   };
 
+// 사용처 핸들러를 먼저 실행하고, preventDefault로 거부하지 않았을 때만 내부 동작을 실행한다
+function composeEventHandlers<TEvent extends { defaultPrevented: boolean }>(
+  consumerHandler: ((event: TEvent) => void) | undefined,
+  innerHandler: ((event: TEvent) => void) | undefined,
+) {
+  if (consumerHandler === undefined && innerHandler === undefined) {
+    return undefined;
+  }
+
+  return (event: TEvent) => {
+    consumerHandler?.(event);
+
+    if (!event.defaultPrevented) {
+      innerHandler?.(event);
+    }
+  };
+}
+
 type UseSelectReturn<T> = {
   isOpen: boolean;
   selectedItem: T | null;
@@ -46,12 +65,15 @@ type UseSelectReturn<T> = {
   toggleMenu: () => void;
   selectItem: (item: T | null) => void;
 
-  getToggleButtonProps: () => SelectElementProps<HTMLButtonElement>;
-  getMenuProps: () => SelectElementProps<HTMLUListElement>;
-  getItemProps: (params: {
-    item: T;
-    index: number;
-  }) => LiHTMLAttributes<HTMLLIElement>;
+  getToggleButtonProps: (
+    props?: ButtonHTMLAttributes<HTMLButtonElement>,
+  ) => SelectElementProps<HTMLButtonElement>;
+  getMenuProps: (
+    props?: HTMLAttributes<HTMLUListElement>,
+  ) => SelectElementProps<HTMLUListElement>;
+  getItemProps: (
+    params: { item: T; index: number } & LiHTMLAttributes<HTMLLIElement>,
+  ) => LiHTMLAttributes<HTMLLIElement>;
   getItemState: (params: { item: T; index: number }) => SelectItemState;
 };
 
@@ -242,8 +264,13 @@ export function useSelect<T>({
     }
   };
 
-  const getToggleButtonProps = () => {
+  const getToggleButtonProps = ({
+    onClick,
+    onKeyDown,
+    ...restProps
+  }: ButtonHTMLAttributes<HTMLButtonElement> = {}) => {
     return {
+      ...restProps,
       ref: (node: HTMLButtonElement | null) => {
         toggleButtonRef.current = node;
       },
@@ -256,13 +283,14 @@ export function useSelect<T>({
         isOpen && highlightedIndex >= 0
           ? getItemId(highlightedIndex)
           : undefined,
-      onClick: toggleMenu,
-      onKeyDown: handleKeyDown,
+      onClick: composeEventHandlers(onClick, toggleMenu),
+      onKeyDown: composeEventHandlers(onKeyDown, handleKeyDown),
     };
   };
 
-  const getMenuProps = () => {
+  const getMenuProps = (restProps: HTMLAttributes<HTMLUListElement> = {}) => {
     return {
+      ...restProps,
       ref: (node: HTMLUListElement | null) => {
         menuRef.current = node;
       },
@@ -271,24 +299,31 @@ export function useSelect<T>({
     };
   };
 
-  const getItemProps = ({ item, index }: { item: T; index: number }) => {
+  const getItemProps = ({
+    item,
+    index,
+    onMouseEnter,
+    onClick,
+    ...restProps
+  }: { item: T; index: number } & LiHTMLAttributes<HTMLLIElement>) => {
     const { selected, disabled } = getItemState({ item, index });
 
     return {
+      ...restProps,
       id: getItemId(index),
       role: 'option',
       'aria-selected': selected,
       'aria-disabled': disabled,
       onMouseEnter: disabled
         ? undefined
-        : () => {
+        : composeEventHandlers(onMouseEnter, () => {
             setHighlightedIndex(index);
-          },
+          }),
       onClick: disabled
         ? undefined
-        : () => {
+        : composeEventHandlers(onClick, () => {
             selectItem(item);
-          },
+          }),
     };
   };
 

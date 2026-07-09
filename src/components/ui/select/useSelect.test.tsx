@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { type ComponentPropsWithoutRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useSelect } from '@/components/ui/select/useSelect';
@@ -21,11 +22,18 @@ type TestSelectProps = {
   selectedItem?: Option | null;
   defaultSelectedItem?: Option | null;
   onSelectedItemChange?: (changes: { selectedItem: Option | null }) => void;
+  toggleProps?: ComponentPropsWithoutRef<'button'>;
+  itemProps?: ComponentPropsWithoutRef<'li'>;
 };
 
 // downshift 테스트처럼 hook을 최소 마크업에 연결한 하네스.
 // getItemState 반환값은 data-*로 노출해 "사용처가 상태를 알 수 있는가"를 함께 검증한다.
-function TestSelect({ items = defaultItems, ...rest }: TestSelectProps) {
+function TestSelect({
+  items = defaultItems,
+  toggleProps,
+  itemProps,
+  ...rest
+}: TestSelectProps) {
   const select = useSelect({
     items,
     itemToKey: (item) => item.id,
@@ -35,7 +43,7 @@ function TestSelect({ items = defaultItems, ...rest }: TestSelectProps) {
 
   return (
     <div>
-      <button type="button" {...select.getToggleButtonProps()}>
+      <button type="button" {...select.getToggleButtonProps(toggleProps)}>
         {select.selectedItem?.label ?? '옵션 선택'}
       </button>
       {select.isOpen && (
@@ -46,7 +54,7 @@ function TestSelect({ items = defaultItems, ...rest }: TestSelectProps) {
             return (
               <li
                 key={item.id}
-                {...select.getItemProps({ item, index })}
+                {...select.getItemProps({ item, index, ...itemProps })}
                 data-selected={state.selected}
                 data-highlighted={state.highlighted}
                 data-disabled={state.disabled}
@@ -528,6 +536,74 @@ describe('엣지 케이스', () => {
 
     await user.keyboard('{Enter}');
     expect(onSelectedItemChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('사용처 핸들러 병합', () => {
+  it('getter에 넘긴 사용처 onClick은 내부 동작(토글)과 함께 실행된다', async () => {
+    const user = userEvent.setup();
+    const consumerOnClick = vi.fn();
+
+    render(<TestSelect toggleProps={{ onClick: consumerOnClick }} />);
+
+    await user.click(getToggle());
+
+    expect(consumerOnClick).toHaveBeenCalledTimes(1);
+    expect(queryMenu()).toBeInTheDocument();
+  });
+
+  it('사용처 핸들러가 preventDefault하면 내부 동작이 거부된다', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestSelect
+        toggleProps={{ onClick: (event) => event.preventDefault() }}
+      />,
+    );
+
+    await user.click(getToggle());
+
+    expect(queryMenu()).not.toBeInTheDocument();
+  });
+
+  it('disabled 옵션에는 getter에 넘긴 사용처 onClick도 부착되지 않는다', async () => {
+    const user = userEvent.setup();
+    const consumerOnClick = vi.fn();
+
+    render(<TestSelect itemProps={{ onClick: consumerOnClick }} />);
+
+    await user.click(getToggle());
+    await user.click(getOption('25')); // 품절 옵션
+
+    expect(consumerOnClick).not.toHaveBeenCalled();
+
+    await user.click(getOption('26')); // enabled 옵션에는 정상 부착
+    expect(consumerOnClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('옵션의 사용처 onClick도 병합되고, preventDefault하면 선택이 거부된다', async () => {
+    const user = userEvent.setup();
+    const consumerOnClick = vi.fn();
+    const onSelectedItemChange = vi.fn();
+
+    render(
+      <TestSelect
+        itemProps={{
+          onClick: (event) => {
+            consumerOnClick();
+            event.preventDefault();
+          },
+        }}
+        onSelectedItemChange={onSelectedItemChange}
+      />,
+    );
+
+    await user.click(getToggle());
+    await user.click(getOption('26'));
+
+    expect(consumerOnClick).toHaveBeenCalledTimes(1);
+    expect(onSelectedItemChange).not.toHaveBeenCalled();
+    expect(queryMenu()).toBeInTheDocument(); // 선택이 veto되어 메뉴도 열린 채
   });
 });
 
