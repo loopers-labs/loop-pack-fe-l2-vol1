@@ -22,6 +22,12 @@ type UseSelectParams<T> = {
   isItemDisabled?: (item: T, index: number) => boolean;
 };
 
+type SelectItemState = {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+};
+
 type UseSelectReturn<T> = {
   isOpen: boolean;
   selectedItem: T | null;
@@ -36,6 +42,7 @@ type UseSelectReturn<T> = {
     item: T;
     index: number;
   }) => LiHTMLAttributes<HTMLLIElement>;
+  getItemState: (params: { item: T; index: number }) => SelectItemState;
 };
 
 /**
@@ -206,6 +213,17 @@ export function useSelect<T>({
     };
   };
 
+  // 화면 계산과 hook 내부 판단(itemToKey 비교, isItemDisabled)이 어긋나지 않게 상태를 한 곳에서 계산해 내려준다
+  const getItemState = ({ item, index }: { item: T; index: number }) => {
+    return {
+      selected:
+        currentSelectedItem !== null &&
+        itemToKey(item) === itemToKey(currentSelectedItem),
+      highlighted: index === highlightedIndex,
+      disabled: getIsItemDisabled(item, index),
+    };
+  };
+
   // 메뉴 열 때 highlight 시작 위치: 선택값이 있고 enabled면 거기서, 없거나 disabled면 첫 enabled item에서 시작
   const getInitialHighlightedIndex = () => {
     const selectedIndex = findSelectedIndex();
@@ -275,5 +293,6 @@ export function useSelect<T>({
 
     getToggleButtonProps,
     getItemProps,
+    getItemState,
   };
 }

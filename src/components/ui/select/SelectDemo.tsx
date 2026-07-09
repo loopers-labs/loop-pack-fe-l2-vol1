@@ -73,12 +73,10 @@ function SizeSelectDemo({ items }: { items: SizeOption[] }) {
       {select.isOpen && (
         <ul className="list-none border-t border-[#e0e0e0]">
           {items.map((item, index) => {
-            const selected =
-              select.selectedItem !== null &&
-              select.selectedItem.id === item.id;
-
-            const highlighted = select.highlightedIndex === index;
-            const disabled = item.stock === 0;
+            const { selected, highlighted, disabled } = select.getItemState({
+              item,
+              index,
+            });
 
             return (
               <li
@@ -133,12 +131,10 @@ function ThumbnailSelectDemo({ items }: { items: ThumbnailOption[] }) {
       {select.isOpen && (
         <ul className="list-none border-t border-[#eee]">
           {items.map((item, index) => {
-            const selected =
-              select.selectedItem !== null &&
-              select.selectedItem.id === item.id;
-
-            const highlighted = select.highlightedIndex === index;
-            const disabled = item.stock === 0;
+            const { selected, highlighted, disabled } = select.getItemState({
+              item,
+              index,
+            });
 
             return (
               <li
@@ -215,12 +211,10 @@ function TextSelectDemo({ items }: { items: TextOption[] }) {
       {select.isOpen && (
         <ul className="mt-3 flex list-none flex-col gap-3">
           {items.map((item, index) => {
-            const selected =
-              select.selectedItem !== null &&
-              select.selectedItem.id === item.id;
-
-            const highlighted = select.highlightedIndex === index;
-            const disabled = item.stock === 0;
+            const { selected, highlighted, disabled } = select.getItemState({
+              item,
+              index,
+            });
 
             return (
               <li
