@@ -1,0 +1,107 @@
+'use client';
+
+import { useSelect } from './useSelect';
+import { thumbnailOptions, ThumbnailOption } from '@/app/api/products/route';
+
+export function ThumbnailSelect() {
+  const {
+    isOpen,
+    selectedItem,
+    highlightedIndex,
+    getToggleButtonProps,
+    getMenuProps,
+    getItemProps,
+  } = useSelect<ThumbnailOption>({
+    items: thumbnailOptions,
+    itemToKey: (item) => item.id,
+    initialSelectedItem: null,
+  });
+
+  return (
+    <div style={{ width: 360, position: 'relative' }}>
+      <button
+        {...getToggleButtonProps()}
+        style={{
+          width: '100%',
+          padding: '10px 14px',
+          border: '1px solid #d0d6de',
+          borderRadius: 6,
+          background: '#fff',
+          textAlign: 'left',
+          cursor: 'pointer',
+          fontSize: 14,
+        }}
+      >
+        {selectedItem ? selectedItem.name : '옵션을 선택해 주세요'}
+      </button>
+
+      {isOpen && (
+        <ul
+          {...getMenuProps()}
+          style={{
+            listStyle: 'none',
+            margin: 0,
+            padding: 0,
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            border: '1px solid #d0d6de',
+            borderRadius: 6,
+            background: '#fff',
+            zIndex: 10,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          }}
+        >
+          {thumbnailOptions.map((item, index) => {
+            const itemProps = getItemProps({ item, index });
+            const isSelected = selectedItem?.id === item.id;
+            const isHighlighted = index === highlightedIndex;
+
+            let background = 'transparent';
+            if (isSelected) background = '#e6f4ff';
+            else if (isHighlighted) background = '#f0f0f0';
+
+            return (
+              <li
+                key={item.id}
+                {...itemProps}
+                style={{
+                  padding: 10,
+                  cursor: 'pointer',
+                  background,
+                  borderBottom: '1px solid #f0f0f0',
+                  fontSize: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                }}
+              >
+                {/* 썸네일 (왼쪽) */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  width={40}
+                  height={40}
+                  style={{
+                    borderRadius: 4,
+                    background: '#f5f5f5',
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                  }}
+                />
+                <div>
+                  <div style={{ fontWeight: 600 }}>{item.name}</div>
+                  <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                    {item.description}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
