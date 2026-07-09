@@ -61,8 +61,9 @@ function TestSelect({ items = defaultItems, ...rest }: TestSelectProps) {
   );
 }
 
+// role="combobox"가 내려가므로 toggle은 button이 아닌 combobox로 찾는다
 function getToggle() {
-  return screen.getByRole('button', { name: /옵션 선택|2\d/ });
+  return screen.getByRole('combobox');
 }
 
 function queryMenu() {
@@ -557,13 +558,15 @@ describe('사용처에 노출되는 상태', () => {
     expect(getOption('25')).toHaveAttribute('aria-disabled', 'true');
   });
 
-  it('접근성 계약: toggle의 aria-controls가 listbox의 id를 가리킨다', async () => {
+  it('접근성 계약: toggle은 listbox를 여는 combobox로 노출되고 aria-controls가 listbox의 id를 가리킨다', async () => {
     const user = userEvent.setup();
 
     render(<TestSelect />);
 
     await user.click(getToggle());
 
+    expect(getToggle()).toHaveAttribute('role', 'combobox');
+    expect(getToggle()).toHaveAttribute('aria-haspopup', 'listbox');
     expect(screen.getByRole('listbox').id).toBe(
       getToggle().getAttribute('aria-controls'),
     );

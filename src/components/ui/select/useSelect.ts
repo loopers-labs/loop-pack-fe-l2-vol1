@@ -247,6 +247,8 @@ export function useSelect<T>({
       ref: (node: HTMLButtonElement | null) => {
         toggleButtonRef.current = node;
       },
+      role: 'combobox',
+      'aria-haspopup': 'listbox' as const,
       'aria-expanded': isOpen,
       'aria-controls': menuId,
       // focus는 버튼에 둔 채, 키보드 하이라이트가 논리적으로 어느 옵션 위에 있는지 보조기기에 알린다

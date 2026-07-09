@@ -62,6 +62,7 @@ function SizeSelectDemo({ items }: { items: SizeOption[] }) {
       <button
         type="button"
         {...select.getToggleButtonProps()}
+        aria-label="사이즈 선택"
         className={toggleButtonClassName}
       >
         <span className={select.selectedItem ? 'text-[#111]' : 'text-[#888]'}>
@@ -123,6 +124,7 @@ function ThumbnailSelectDemo({ items }: { items: ThumbnailOption[] }) {
       <button
         type="button"
         {...select.getToggleButtonProps()}
+        aria-label="상품 옵션 선택"
         className={toggleButtonClassName}
       >
         <span className="font-bold text-[#111]">
@@ -206,6 +208,7 @@ function TextSelectDemo({ items }: { items: TextOption[] }) {
       <button
         type="button"
         {...select.getToggleButtonProps()}
+        aria-label="구성 옵션 선택"
         className={`${toggleButtonClassName} rounded-xl bg-white`}
       >
         <span className="font-bold text-[#111]">
