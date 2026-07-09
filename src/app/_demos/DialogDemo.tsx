@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 
-import { Dialog } from './Dialog';
+import { Dialog } from '@/components/ui/dialog/Dialog';
 
 const triggerClassName =
   'cursor-pointer rounded-lg border border-[#d0d5db] bg-white px-4 py-2.5 text-sm font-medium';

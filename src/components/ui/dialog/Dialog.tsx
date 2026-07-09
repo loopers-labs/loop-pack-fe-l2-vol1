@@ -13,7 +13,7 @@ import { createPortal } from 'react-dom';
 import { isTopDialog, popDialog, pushDialog } from './dialogStack';
 import { lockScroll, unlockScroll } from './scrollLock';
 
-import { useIsomorphicLayoutEffect } from '@/components/ui/shared/useIsomorphicLayoutEffect';
+import { useIsomorphicLayoutEffect } from '@/shared/useIsomorphicLayoutEffect';
 
 interface DialogProps {
   open?: boolean;

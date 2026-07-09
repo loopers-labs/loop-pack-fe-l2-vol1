@@ -1,5 +1,5 @@
-import { DialogDemo } from '@/components/ui/dialog/DialogDemo';
-import { SelectDemo } from '@/components/ui/select/SelectDemo';
+import { DialogDemo } from '@/app/_demos/DialogDemo';
+import { SelectDemo } from '@/app/_demos/SelectDemo';
 
 export default function Home() {
   return (
