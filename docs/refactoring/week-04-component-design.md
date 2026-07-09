@@ -66,7 +66,6 @@ Compound 구조는 Select의 조립 형태를 제공한다는 장점이 있지�
 ```ts
 type UseSelectParams<Item> = {
   items: Item[];
-  itemToString: (item: Item | null) => string;
   isItemDisabled?: (item: Item, index: number) => boolean;
 
   selectedItem?: Item | null;
@@ -96,19 +95,16 @@ type UseSelectReturn<Item> = {
 기본 사용처는 uncontrolled 방식으로 시작한다. Downshift 기본 예제처럼 `selectedItem`을 외부에서 주입하지 않으면 hook이 선택 상태를 내부에서 관리한다.
 
 ```tsx
-const itemToString = (item: ShippingOption | null) => item?.label ?? "";
-
 const select = useSelect({
   items: shippingOptions,
   defaultSelectedItem: shippingOptions[0],
-  itemToString,
   isItemDisabled: (item) => item.disabled === true,
 });
 
 return (
   <div>
     <button {...select.getToggleButtonProps()}>
-      {select.selectedItem ? itemToString(select.selectedItem) : "배송 선택"}
+      {select.selectedItem ? select.selectedItem.label : "배송 선택"}
     </button>
 
     <ul {...select.getMenuProps()}>
@@ -131,16 +127,16 @@ return (
 
 ```tsx
 const [selectedShipping, setSelectedShipping] = useState(shippingOptions[0]);
-const itemToString = (item: ShippingOption | null) => item?.label ?? "";
 
 const select = useSelect({
   items: shippingOptions,
   selectedItem: selectedShipping,
   onSelectedItemChange: setSelectedShipping,
-  itemToString,
   isItemDisabled: (item) => item.disabled === true,
 });
 ```
+
+Downshift는 `itemToString`을 통해 item의 문자열 표현을 받지만, 이번 구현에서는 사용처가 selected label과 option UI를 직접 렌더링한다. 따라서 hook API에는 실제로 사용하지 않는 `itemToString`을 두지 않는다.
 
 ### Controlled / Uncontrolled 범위
 
@@ -171,6 +167,7 @@ const select = useSelect({
 - Escape 닫기
 - disabled option 클릭 방지
 - disabled option 키보드 이동 스킵
+- public `selectItem` 호출에서도 disabled option 선택 방지
 - item state 계산: `selected`, `highlighted`, `disabled`
 
 ### 사용처가 책임지는 것

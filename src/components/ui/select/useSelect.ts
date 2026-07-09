@@ -12,7 +12,6 @@ import { useId, useRef, useState } from "react";
 
 type UseSelectParams<Item> = {
   items: Item[];
-  itemToString: (item: Item | null) => string;
   isItemDisabled?: (item: Item, index: number) => boolean;
   selectedItem?: Item | null;
   defaultSelectedItem?: Item | null;
@@ -185,6 +184,14 @@ export function useSelect<Item>({
   };
 
   const selectItem = (item: Item) => {
+    const itemIndex = items.findIndex((candidate) => {
+      return Object.is(candidate, item);
+    });
+
+    if (itemIndex === -1 || isItemDisabled(item, itemIndex)) {
+      return;
+    }
+
     if (!isControlled) {
       setInternalSelectedItem(item);
     }

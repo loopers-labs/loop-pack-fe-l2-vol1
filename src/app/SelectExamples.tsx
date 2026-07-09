@@ -163,7 +163,6 @@ function TextOptionSelect() {
   const select = useSelect({
     items: bundleOptions,
     defaultSelectedItem: bundleOptions[0],
-    itemToString: (item) => item?.title ?? "",
     isItemDisabled: (item) => item.disabled === true,
   });
 
@@ -215,7 +214,6 @@ function SizeOptionSelect() {
   const select = useSelect({
     items: sizeOptions,
     defaultSelectedItem: sizeOptions[0],
-    itemToString: (item) => (item ? String(item.size) : ""),
     isItemDisabled: (item) => item.disabled === true,
   });
 
@@ -258,7 +256,6 @@ function ThumbnailOptionSelect() {
   const select = useSelect({
     items: thumbnailOptions,
     defaultSelectedItem: thumbnailOptions[0],
-    itemToString: (item) => item?.name ?? "",
     isItemDisabled: (item) => item.disabled === true,
   });
 
@@ -317,7 +314,6 @@ function DisabledOptionSelect() {
   const select = useSelect({
     items: disabledExampleOptions,
     defaultSelectedItem: disabledExampleOptions[0],
-    itemToString: (item) => item?.label ?? "",
     isItemDisabled: (item) => item.disabled === true,
   });
 
