@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { StarIcon } from '@/components/icons/StarIcon';
 import { formatWon, calcDiscount } from '@/utils/format';
 import { CATEGORY_LABEL, CATEGORIES } from '@/constants/category';
+import { useProductFilter } from './_hooks/useProductFilter';
 import type { Product } from '@/types/product';
-import type { Category } from '@/constants/category';
 
 // ── Hero 슬라이드 데이터 ──
 
@@ -35,13 +34,11 @@ const HERO_SLIDES = [
 // ── 페이지 ──
 
 export default function HomePage() {
-  const searchParams = useSearchParams();
+  const { selectedCategory, filterProducts } = useProductFilter();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
-
-  const selectedCategory = (searchParams.get('category') ?? 'all') as Category;
 
   useEffect(() => {
     let ignore = false;
@@ -90,10 +87,7 @@ export default function HomePage() {
   });
 
   // 카테고리 필터 적용
-  const filtered =
-    selectedCategory === 'all'
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  const filtered = filterProducts(products);
 
   // 최신 상품 (카테고리 필터 적용 후 createdAt 기준 정렬)
   const latestProducts = [...filtered].sort(
