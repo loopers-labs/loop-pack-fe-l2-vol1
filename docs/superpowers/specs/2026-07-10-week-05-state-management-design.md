@@ -45,7 +45,7 @@ MSW, Pages Router, styled-components, Emotion, Axios, 모노레포, 무한 스�
 - `@tanstack/react-query`, `nuqs`, `zustand` 의존성
 - 홈과 상품 목록용 Next Route Handler
 - 약 30개의 상품 mock 데이터
-- 상품 이미지 등 정적 자산
+- 참고 fixture에서 선별해 한 번만 수집한 30개의 로컬 상품 이미지와 출처 기록
 - API 요청·응답 타입
 - 충돌 없는 예시 경로에 둔 홈·상품 목록 정적 JSX 골격과 최소 CSS
 - 5주차 과제 문서와 API 계약
@@ -96,6 +96,15 @@ API 구조와 네이밍은 4주차의 `src/app/api/products/route.ts`와 같은 
 - 불필요한 controller, repository, schema 계층 없음
 - 별도 API 클라이언트나 Query 추상화 제공 없음
 - 기존 `Product` 필드인 `id`, `name`, `price`, `originalPrice`, `image`, `freeShipping`, `sizes` 유지
+
+### 상품 이미지 수집 원칙
+
+- 런타임에 29CM CDN을 직접 요청하지 않는다.
+- 참고 저장소의 상품 fixture에서 이미지 URL 30개를 선별하고 구현 시 한 번만 수집한다.
+- 수집한 이미지는 `public/images/products/p1.jpg`부터 `p30.jpg`까지 로컬 정적 자산으로 제공한다.
+- `public/images/products/SOURCES.md`에 상품 ID, 참고 저장소, 원본 상품 번호, 원본 URL을 기록한다.
+- 크롤링·다운로드 스크립트는 멘티 과제나 애플리케이션 런타임에 포함하지 않는다.
+- 4주차 lint 설정인 Next.js `core-web-vitals`와 TypeScript preset을 그대로 유지한다.
 
 ### `GET /api/home`
 
@@ -196,7 +205,7 @@ type Product = {
 - `/api/products?scenario=empty`는 `products`를 비우되 카테고리와 페이지 정보는 유지한다.
 - 랜덤 오류는 사용하지 않는다.
 - 장바구니와 위시리스트 API는 제공하지 않는다.
-- 4주차의 `p1`, `p2` 상품은 기존 이름·가격·이미지·배송·사이즈 값을 유지하고 확장 필드만 추가한다.
+- 4주차의 `p1`, `p2` 상품은 기존 이름·가격·배송·사이즈 값을 유지한다. 이미지만 이번 과제에서 제공하는 로컬 상품 사진으로 교체한다.
 
 ## 7. 기본 요구사항
 
