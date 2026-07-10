@@ -29,9 +29,9 @@
 - Next.js 16 App Router
 - React 19
 - TypeScript
-- TanStack Query: API에서 조회한 서버 상태
+- TanStack Query v5: API에서 조회한 서버 상태와 캐시 정책
 - Zustand: 장바구니와 위시리스트 클라이언트 상태
-- URL Search Params: 검색, 카테고리, 정렬, 페이지
+- nuqs: 검색, 카테고리, 정렬, 페이지의 타입 안전한 URL 상태
 - React 로컬 상태: 입력 중인 값이나 일시적인 UI 상태
 - Next Route Handler: mock API
 - 기존 전역 CSS 또는 일반 CSS/CSS Modules
@@ -42,7 +42,7 @@ MSW, Pages Router, styled-components, Emotion, Axios, 모노레포, 무한 스�
 
 ### 제공한다
 
-- `@tanstack/react-query`, `zustand` 의존성
+- `@tanstack/react-query`, `nuqs`, `zustand` 의존성
 - 홈과 상품 목록용 Next Route Handler
 - 약 30개의 상품 mock 데이터
 - 상품 이미지 등 정적 자산
@@ -53,11 +53,12 @@ MSW, Pages Router, styled-components, Emotion, Axios, 모노레포, 무한 스�
 ### 제공하지 않는다
 
 - QueryClient Provider
-- API fetcher, query key, Custom Query Hook
+- API fetcher, `queryOptions` 쿼리 팩토리, Custom Query Hook
+- `NuqsAdapter`와 URL parser 구성
 - Zustand store, action, selector
 - 상태가 연결된 Header나 ProductCard
 - 장바구니·위시리스트 페이지
-- URL Search Params와 Query 연결
+- nuqs URL 상태와 Query 연결
 - 정답 폴더 구조
 - SSR prefetch와 hydration 구현
 
@@ -214,8 +215,10 @@ type Product = {
 
 - QueryClient와 Provider를 직접 구성한다.
 - 제공된 endpoint를 호출하는 API 함수를 작성한다.
-- 홈과 상품 목록의 query key를 직접 설계한다.
-- 검색·필터·정렬·페이지 조건을 상품 목록 query key에 반영한다.
+- `queryOptions`로 query key, queryFn, staleTime을 함께 정의하는 도메인 쿼리 팩토리를 만든다.
+- 홈과 상품 목록의 화면은 같은 쿼리 팩토리 정의를 재사용한다.
+- 검색·필터·정렬·페이지 조건을 상품 목록 쿼리 팩토리의 입력과 query key에 반영한다.
+- 선택한 staleTime과 gcTime 정책의 근거를 기록한다.
 - 로딩·에러·빈 결과를 처리한다.
 - API 응답을 Zustand에 복사하여 이중 관리하지 않는다.
 
@@ -231,7 +234,10 @@ type Product = {
 
 - `/products`에서 상품 목록을 표시한다.
 - 검색, 카테고리, 정렬, 페이지네이션을 제공한다.
-- 검색·카테고리·정렬·페이지를 URL Search Params로 표현한다.
+- App Router용 `NuqsAdapter`를 직접 배치한다.
+- `useQueryStates`와 parser를 사용해 검색·카테고리·정렬·페이지를 타입 안전한 URL 상태로 표현한다.
+- `q`는 문자열, `category`와 `sort`는 허용값만 받는 parser, `page`는 기본값 1의 정수 parser를 사용한다.
+- 검색·카테고리·정렬 조건을 변경하면 page를 1로 되돌린다.
 - 새로고침, URL 공유, 뒤로 가기, 앞으로 가기 후 같은 조건을 복원한다.
 - 홈과 동일하게 장바구니와 위시리스트를 토글할 수 있다.
 - 로딩·에러·빈 상태를 화면에 구분하여 표시한다.
@@ -244,10 +250,13 @@ type Product = {
 - 기본 과제에서는 새로고침 후 장바구니와 위시리스트가 초기화되어도 된다.
 - 공통 헤더에 장바구니와 위시리스트 개수를 표시한다.
 - 개수는 별도 상태로 저장하지 않고 파생한다.
-- 필요한 상태만 구독하도록 selector를 사용한다.
+- 헤더는 파생된 개수만, 상품 버튼은 해당 상품의 포함 여부와 필요한 action만 selector로 구독한다.
+- 전체 store를 통째로 구독하지 않는다.
 - store를 하나로 합칠지 책임별로 나눌지는 멘티가 근거를 남기고 선택한다.
 
 장바구니 수량 변경, 금액 계산, 별도 장바구니·위시리스트 페이지는 기본 범위에서 제외한다.
+
+이번 과제의 장바구니와 위시리스트는 로그인 및 서버 동기화가 없는 로컬 클라이언트 상태로 가정한다. 로그인 사용자나 여러 기기 간 동기화가 요구되면 상태의 원본과 관리 도구가 달라질 수 있다. 제공 API가 조회 전용이고 이 두 상태의 원본은 Zustand이므로, 기본 과제에는 TanStack Query 낙관적 업데이트를 적용하지 않는다.
 
 ### 7.6 설계 근거와 검증
 
@@ -257,6 +266,7 @@ type Product = {
 - URL에 둔 상태와 store에 둔 상태의 차이
 - store에 저장한 데이터 형태와 선택 이유
 - 전역으로 올리지 않은 상태와 그 이유
+- 로그인·서버 동기화 요구가 생긴다면 위시리스트의 소유권과 관리 도구가 어떻게 달라지는지
 - 홈과 목록에 같은 상품이 있을 때 상태가 일치하는지 확인한 결과
 - 목록 조건이 새로고침·뒤로 가기 후 URL에서 복원되는지 확인한 결과
 - 장바구니와 위시리스트가 클라이언트 페이지 이동 중 유지되는지 확인한 결과
@@ -275,7 +285,9 @@ Advanced는 필수가 아니다. 기본 과제를 마친 뒤 A~D 중 하나의 �
 ### B. App Router 서버 프리패치
 
 - Server Component에서 QueryClient로 데이터를 prefetch한다.
+- 클라이언트 조회와 동일한 `queryOptions` 쿼리 팩토리를 `prefetchQuery`에 재사용한다.
 - `dehydrate`와 `HydrationBoundary`를 구성한다.
+- 요청 간 캐시가 섞이지 않도록 QueryClient의 수명을 설계한다.
 - 클라이언트의 중복 요청 여부를 확인한다.
 - 모든 데이터를 무조건 prefetch하지 않고 적용 대상을 선택한 근거를 작성한다.
 
@@ -297,10 +309,12 @@ Advanced는 필수가 아니다. 기본 과제를 마친 뒤 A~D 중 하나의 �
 ## 9. 완료 기준
 
 - 홈과 목록의 서버 상태가 TanStack Query로 관리된다.
+- 홈과 목록의 query key, queryFn, 캐시 정책이 `queryOptions` 쿼리 팩토리로 함께 정의된다.
 - 장바구니와 위시리스트가 Zustand로 관리된다.
 - 같은 상품의 담기·찜 상태가 홈과 목록에서 일치한다.
 - 헤더의 장바구니·위시리스트 개수가 즉시 갱신된다.
-- 목록 조건이 URL과 동기화되고 재방문 시 복원된다.
+- 목록 조건이 nuqs parser를 통해 URL과 동기화되고 재방문 시 복원된다.
+- Header와 상품 버튼이 Zustand selector로 필요한 상태만 구독한다.
 - 로딩·에러·빈 상태가 구분된다.
 - 상태 분류와 아키텍처 선택 근거가 기록되어 있다.
 - 타입 오류와 lint 오류가 없다.
@@ -312,7 +326,7 @@ Advanced는 필수가 아니다. 기본 과제를 마친 뒤 A~D 중 하나의 �
 
 - 폴더 구조
 - API 함수와 query hook의 경계
-- query key 구성 방식
+- 쿼리 팩토리 내부의 key 계층과 네이밍
 - 장바구니와 위시리스트 store 통합 여부
 - selector 구성 방식
 - 공통 Header의 Client Component 경계
