@@ -119,15 +119,17 @@ function Content({ children, ...rest }: ComponentProps<'div'>) {
   }, [isOpen, setOpen]);
 
   // 배경 스크롤 잠금
-  // 모달이 열려있는 동안 body의 overflow를 hidden으로 바꾸고,
+  // global.css에서 html의 overflow-x가 hidden으로 설정되어 있으므로
+  // body.style.overflow = hidden으로 설정하더라도 스크롤이 막히지 않는다.
+  // 따라서 body.documentElement.style을 통해 뷰포트 스크롤의 본래 주체인 html을 잠가야 한다.
   // 닫히거나 언마운트 시 원래 값으로 복원한다.
   useEffect(() => {
     if (!isOpen) return;
 
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const originalOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = originalOverflow;
+      document.documentElement.style.overflow = originalOverflow;
     };
   }, [isOpen]);
 
