@@ -3,11 +3,11 @@
 import { Size } from '@/types/products';
 import { useSelect } from './useSelect';
 
-type Pros = {
+type Props = {
   products: Size[];
 };
 
-export const SizeSelect = ({ products }: Pros) => {
+export const SizeSelect = ({ products }: Props) => {
   const {
     isOpen,
     selectedOption,

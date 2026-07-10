@@ -47,7 +47,7 @@ export function useSelect<T>({ options, isDisabled }: UseSelectProps<T>) {
         break;
       }
       case 'Enter':
-        handleSelect(options[highlightedIndex]);
+        if (highlightedIndex >= 0) handleSelect(options[highlightedIndex]);
         break;
       case 'Escape':
         setIsOpen(false);
