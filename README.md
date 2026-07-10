@@ -35,7 +35,6 @@ docs/assignments/          # 주차별 과제 명세
 
 ## 주차별 과제
 
-- [5주차 — 상태관리 아키텍처](docs/assignments/week-05.md)
 - 과제 명세는 `docs/assignments/week-0N.md` 에 있습니다.
 - 새 과제가 올라오면 **본인 포크의 `main`을 이 레포(upstream)와 동기화**해 받으세요.
   - GitHub: 포크 레포의 **Sync fork** 버튼
