@@ -23,7 +23,7 @@ describe("GET /api/products", () => {
       name: "베이글 플레인",
       price: 3200,
       originalPrice: 4000,
-      image: "/next.svg",
+      image: "/images/products/p1.jpg",
       freeShipping: true,
       sizes: [
         { value: 24, stock: 3 },
@@ -38,13 +38,27 @@ describe("GET /api/products", () => {
       name: "에브리씽 베이글",
       price: 3800,
       originalPrice: null,
-      image: "/next.svg",
+      image: "/images/products/p2.jpg",
       freeShipping: false,
       sizes: [],
     });
 
     const allCategoryBody = await (await request("?category=all&pageSize=24")).json();
     expect(allCategoryBody.totalCount).toBe(30);
+  });
+
+  it("returns one unique local image for every product", async () => {
+    const firstPageBody = await (await request("?pageSize=24")).json();
+    const secondPageBody = await (await request("?pageSize=24&page=2")).json();
+    const products = [...firstPageBody.products, ...secondPageBody.products];
+    const images = products.map((product: { image: string }) => product.image);
+
+    expect(products).toHaveLength(30);
+    images.forEach((image: string) => {
+      expect(image).toMatch(/^\/images\/products\/p\d+\.jpg$/);
+    });
+    expect(new Set(images).size).toBe(30);
+    expect(images.some((image: string) => image.startsWith("http"))).toBe(false);
   });
 
   it("searches brand and name without case sensitivity", async () => {

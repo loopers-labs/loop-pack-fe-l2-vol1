@@ -11,7 +11,7 @@ export const categories: Category[] = [
 export const homeBanner = {
   title: "매일 새롭게 발견하는 취향",
   description: "지금 가장 사랑받는 상품을 만나보세요.",
-  image: "/images/products/fashion.svg",
+  image: "/images/products/p6.jpg",
 };
 
 type ProductSeed = readonly [
@@ -76,7 +76,7 @@ export const products: Product[] = seeds.map(
       category,
       price,
       originalPrice,
-      image: `/images/products/${category}.svg`,
+      image: `/images/products/${id}.jpg`,
       freeShipping: price >= 50000,
       sizes: category === "fashion" ? sizeOptions : [],
       rating,
@@ -85,11 +85,11 @@ export const products: Product[] = seeds.map(
     };
 
     if (id === "p1") {
-      return { ...product, image: "/next.svg", freeShipping: true, sizes: sizeOptions };
+      return { ...product, freeShipping: true, sizes: sizeOptions };
     }
 
     if (id === "p2") {
-      return { ...product, image: "/next.svg", freeShipping: false, sizes: [] };
+      return { ...product, freeShipping: false, sizes: [] };
     }
 
     return product;

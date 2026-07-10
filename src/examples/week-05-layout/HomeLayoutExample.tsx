@@ -37,7 +37,12 @@ export function HomeLayoutExample() {
           <div className="week05-grid">
             {Array.from({ length: 4 }, (_, index) => (
               <article className="week05-product" key={`${title}-${index}`}>
-                <div className="week05-image" aria-hidden="true" />
+                <img
+                  className="week05-image"
+                  src={title === "인기 상품" ? "/images/products/p1.jpg" : "/images/products/p6.jpg"}
+                  alt={title === "인기 상품" ? "베이글 플레인 상품 예시" : "오버핏 코튼 셔츠 상품 예시"}
+                  loading="lazy"
+                />
                 <p>브랜드</p>
                 <h3>상품명</h3>
                 <strong>0원</strong>

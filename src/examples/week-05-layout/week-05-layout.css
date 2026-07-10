@@ -60,8 +60,11 @@
 }
 
 .week05-image {
+  display: block;
+  width: 100%;
   aspect-ratio: 1;
   background: #ececec;
+  object-fit: cover;
 }
 
 .week05-filters label {

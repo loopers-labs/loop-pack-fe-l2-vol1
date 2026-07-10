@@ -32,7 +32,12 @@ export function ProductListLayoutExample() {
         <div className="week05-grid">
           {Array.from({ length: 8 }, (_, index) => (
             <article className="week05-product" key={index}>
-              <div className="week05-image" aria-hidden="true" />
+              <img
+                className="week05-image"
+                src={index % 2 === 0 ? "/images/products/p11.jpg" : "/images/products/p16.jpg"}
+                alt={index % 2 === 0 ? "수분 진정 세럼 상품 예시" : "워셔블 코튼 베딩 상품 예시"}
+                loading="lazy"
+              />
               <p>브랜드</p>
               <h2>상품명</h2>
               <strong>0원</strong>

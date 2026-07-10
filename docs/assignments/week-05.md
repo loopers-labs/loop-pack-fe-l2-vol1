@@ -19,10 +19,12 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 - `GET /api/home`
 - `GET /api/products`
 - `@tanstack/react-query`, `nuqs`, `zustand`
-- 상품 mock 데이터와 로컬 이미지
+- 상품 mock 데이터와 30장의 로컬 상품 사진 (`public/images/products/p1.jpg` ~ `p30.jpg`)
 - `src/examples/week-05-layout/`의 선택 가능한 정적 레이아웃 예시
 
 제공된 레이아웃은 UI 구현 시간을 줄이기 위한 예시입니다. 그대로 복사해도, 원하는 형태로 바꿔도, 사용하지 않아도 됩니다. 기존 레이아웃을 유지하거나 4주차까지 만든 컴포넌트를 재사용해도 됩니다. 제공된 파일 구조와 컴포넌트 경계는 평가 대상이나 권장 정답이 아닙니다.
+
+상품 사진은 과제 저장소에 포함되어 있으며 앱 실행 중 29CM으로 요청하지 않습니다.
 
 ## 기본 과제
 
@@ -102,7 +104,7 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 ## 새 주차 코드 동기화
 
 - `package.json` 충돌 시 기존 설정을 보존하면서 `@tanstack/react-query`, `nuqs`, `zustand` 의존성을 유지한 뒤 `pnpm install`로 lockfile을 다시 생성합니다.
-- `src/app/api/products/route.ts` 충돌 시 5주차 API 계약과 p1/p2의 기존 필드를 유지하고, 본인이 추가한 UI 코드는 덮어쓰지 않습니다.
+- `src/app/api/products/route.ts` 충돌 시 p1/p2의 이미지는 5주차 로컬 경로(`/images/products/p1.jpg`, `/images/products/p2.jpg`)를 사용하고, 그 외 4주차 필드는 유지합니다. 본인이 추가한 UI 코드는 덮어쓰지 않습니다.
 - `src/examples/week-05-layout/`은 자동 적용되지 않습니다. 필요한 부분만 옮겨 쓰거나 기존 레이아웃을 유지합니다.
 
 ## 기록할 설계 근거
