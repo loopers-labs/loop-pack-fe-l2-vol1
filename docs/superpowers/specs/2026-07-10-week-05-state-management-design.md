@@ -136,7 +136,7 @@ type Category = {
 지원하는 query parameter는 다음과 같다.
 
 - `q`: 상품명과 브랜드 검색
-- `category`: 카테고리 필터
+- `category`: `all` 또는 `CategoryId`, 기본값 `all`
 - `sort`: `latest | popular | price-asc | price-desc`
 - `page`: 1부터 시작, 기본값 1
 - `pageSize`: 기본값 12
@@ -187,6 +187,7 @@ type Product = {
 - 약 30개 상품을 제공한다.
 - 두 API의 정상 응답에 500ms의 고정 지연을 둔다.
 - `q`는 앞뒤 공백을 제거하고 상품명·브랜드를 대소문자 구분 없이 부분 검색한다.
+- `sort`를 생략하면 4주차 fixture 순서를 유지하고, `sort=latest`를 명시했을 때만 `createdAt` 내림차순으로 정렬한다.
 - `latest`는 `createdAt` 내림차순, `popular`는 `reviewCount` 내림차순 후 `rating` 내림차순으로 정렬한다.
 - `page < 1`, 지원하지 않는 `category`·`sort`, `1~24` 범위를 벗어난 `pageSize`는 `400`으로 응답한다.
 - 필터 결과의 마지막 페이지를 초과한 양수 `page`는 빈 `products`를 반환한다.
@@ -195,6 +196,7 @@ type Product = {
 - `/api/products?scenario=empty`는 `products`를 비우되 카테고리와 페이지 정보는 유지한다.
 - 랜덤 오류는 사용하지 않는다.
 - 장바구니와 위시리스트 API는 제공하지 않는다.
+- 4주차의 `p1`, `p2` 상품은 기존 이름·가격·이미지·배송·사이즈 값을 유지하고 확장 필드만 추가한다.
 
 ## 7. 기본 요구사항
 
@@ -236,7 +238,7 @@ type Product = {
 - 검색, 카테고리, 정렬, 페이지네이션을 제공한다.
 - App Router용 `NuqsAdapter`를 직접 배치한다.
 - `useQueryStates`와 parser를 사용해 검색·카테고리·정렬·페이지를 타입 안전한 URL 상태로 표현한다.
-- `q`는 문자열, `category`와 `sort`는 허용값만 받는 parser, `page`는 기본값 1의 정수 parser를 사용한다.
+- `q`는 문자열, `category`는 기본값 `all`, `sort`는 기본값 `latest`의 허용값 parser, `page`는 기본값 1의 정수 parser를 사용한다.
 - 검색·카테고리·정렬 조건을 변경하면 page를 1로 되돌린다.
 - 새로고침, URL 공유, 뒤로 가기, 앞으로 가기 후 같은 조건을 복원한다.
 - 홈과 동일하게 장바구니와 위시리스트를 토글할 수 있다.
