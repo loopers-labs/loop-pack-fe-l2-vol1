@@ -1,6 +1,8 @@
 # 빌드 산출물·의존성 — 우리가 작성하는 코드가 아니다
-dist
+.next
+out
 node_modules
+next-env.d.ts
 
 # 패키지 매니저가 관리 — Prettier가 건드리면 안 된다
 pnpm-lock.yaml
@@ -15,6 +17,3 @@ public
 
 # 마크다운은 산문(표·의도적 줄바꿈) — Prettier는 '코드만' 관리한다
 *.md
-
-# 과제 스타터(수정 금지) — 우리가 작성하는 코드가 아니다
-src/productList/_mockApi.ts
