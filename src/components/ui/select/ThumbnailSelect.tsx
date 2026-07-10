@@ -70,13 +70,14 @@ export const ThumbnailSelect = ({ products }: Props) => {
                     </span>
                   )}
                   <span className="font-bold">{product.price} 원</span>
-                  {product.freeShipping ? (
-                    <span className="rounded-full bg-pink-50 px-2 py-0.5 text-xs text-pink-500">
-                      무료배송
-                    </span>
-                  ) : (
+                  {product.stock === 0 && (
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
                       품절
+                    </span>
+                  )}
+                  {product.freeShipping && product.stock > 0 && (
+                    <span className="rounded-full bg-pink-50 px-2 py-0.5 text-xs text-pink-500">
+                      무료배송
                     </span>
                   )}
                 </div>
