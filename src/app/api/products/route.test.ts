@@ -8,21 +8,30 @@ const request = (query = "") =>
 const hugePositiveInteger = "9".repeat(400);
 
 describe("GET /api/products", () => {
-  it("preserves Week 04 defaults and adds paging metadata", async () => {
+  it("preserves Week 04 field shape while using the mapped source identity", async () => {
     const response = await request();
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.products).toHaveLength(12);
     expect(body.categories).toHaveLength(5);
+    expect(body.categories).toEqual([
+      { id: "casual", name: "캐주얼" },
+      { id: "fashion", name: "패션" },
+      { id: "goods", name: "뷰티·잡화" },
+      { id: "home", name: "홈" },
+      { id: "digital", name: "디지털" },
+    ]);
     expect(body.totalCount).toBe(30);
     expect(body.page).toBe(1);
     expect(body.pageSize).toBe(12);
     expect(body.products[0]).toMatchObject({
       id: "p1",
-      name: "베이글 플레인",
-      price: 3200,
-      originalPrice: 4000,
+      brand: "29CM 셀렉트",
+      name: "Basic Fit Ball Cap (6color)",
+      category: "casual",
+      price: 39000,
+      originalPrice: null,
       image: "/images/products/p1.jpg",
       freeShipping: true,
       sizes: [
@@ -35,8 +44,10 @@ describe("GET /api/products", () => {
     });
     expect(body.products[1]).toMatchObject({
       id: "p2",
-      name: "에브리씽 베이글",
-      price: 3800,
+      brand: "29CM 셀렉트",
+      name: "[Exclusive] Holiday Signature Ball Cap (20Colors)",
+      category: "casual",
+      price: 39000,
       originalPrice: null,
       image: "/images/products/p2.jpg",
       freeShipping: false,
@@ -45,6 +56,24 @@ describe("GET /api/products", () => {
 
     const allCategoryBody = await (await request("?category=all&pageSize=24")).json();
     expect(allCategoryBody.totalCount).toBe(30);
+  });
+
+  it("matches representative source products across all five image groups", async () => {
+    const body = await (await request("?pageSize=24")).json();
+    const secondPageBody = await (await request("?page=2&pageSize=24")).json();
+    const products = [...body.products, ...secondPageBody.products];
+
+    expect(products.filter((product: { id: string }) => ["p1", "p6", "p11", "p16", "p21"].includes(product.id)))
+      .toMatchObject([
+        { id: "p1", name: "Basic Fit Ball Cap (6color)", category: "casual", price: 39000 },
+        { id: "p6", name: "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502", category: "fashion", price: 69000 },
+        { id: "p11", name: "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml", category: "goods", price: 48000 },
+        { id: "p16", name: "스탠리 클래식 런치박스", category: "home", price: 75000 },
+        { id: "p21", name: "메이커스 투명케이스", category: "digital", price: 23000 },
+      ]);
+    expect(products.every((product: { brand: string; originalPrice: number | null }) =>
+      product.brand === "29CM 셀렉트" && product.originalPrice === null,
+    )).toBe(true);
   });
 
   it("returns one unique local image for every product", async () => {
@@ -61,14 +90,14 @@ describe("GET /api/products", () => {
     expect(images.some((image: string) => image.startsWith("http"))).toBe(false);
   });
 
-  it("searches brand and name without case sensitivity", async () => {
-    const response = await request("?q=%EB%A3%A8%ED%94%84&pageSize=24");
+  it("searches the shared brand and source name without case sensitivity", async () => {
+    const response = await request("?q=29cm%20%EC%85%80%EB%A0%89%ED%8A%B8&pageSize=24");
     const body = await response.json();
-    expect(body.products.map((product: { id: string }) => product.id)).toEqual(["p1", "p2", "p26"]);
+    expect(body.totalCount).toBe(30);
 
-    const caseResponse = await request("?q=%20%204k%20%20&pageSize=24");
+    const caseResponse = await request("?q=%20%20basic%20fit%20%20&pageSize=24");
     const caseBody = await caseResponse.json();
-    expect(caseBody.products.map((product: { id: string }) => product.id)).toEqual(["p24"]);
+    expect(caseBody.products.map((product: { id: string }) => product.id)).toEqual(["p1"]);
   });
 
   it("filters category and sorts popularity deterministically", async () => {
@@ -89,14 +118,14 @@ describe("GET /api/products", () => {
     expect(latestBody.products[0].id).toBe("p26");
 
     const lowPriceBody = await (await request("?sort=price-asc&pageSize=24")).json();
-    expect(lowPriceBody.products[0].id).toBe("p1");
+    expect(lowPriceBody.products[0]).toMatchObject({ id: "p29", price: 3000 });
 
     const highPriceBody = await (await request("?sort=price-desc&pageSize=24")).json();
-    expect(highPriceBody.products[0].id).toBe("p24");
+    expect(highPriceBody.products[0]).toMatchObject({ id: "p7", price: 428000 });
   });
 
   it("returns an empty page when page exceeds the filtered result", async () => {
-    const response = await request("?category=food&page=9&pageSize=12");
+    const response = await request("?category=casual&page=9&pageSize=12");
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.products).toEqual([]);
@@ -105,6 +134,8 @@ describe("GET /api/products", () => {
 
   it.each([
     "?category=unknown",
+    "?category=food",
+    "?category=beauty",
     "?sort=random",
     "?page=0",
     "?page=-1",

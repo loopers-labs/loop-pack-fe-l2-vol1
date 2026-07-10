@@ -12,7 +12,13 @@ describe("GET /api/home", () => {
 
     expect(response.status).toBe(200);
     expect(body.banner.title).toBe("매일 새롭게 발견하는 취향");
-    expect(body.categories).toHaveLength(5);
+    expect(body.categories).toEqual([
+      { id: "casual", name: "캐주얼" },
+      { id: "fashion", name: "패션" },
+      { id: "goods", name: "뷰티·잡화" },
+      { id: "home", name: "홈" },
+      { id: "digital", name: "디지털" },
+    ]);
     expect(body.popularProducts).toHaveLength(6);
     expect(body.newProducts).toHaveLength(6);
     expect(body.popularProducts[0].id).toBe("p21");

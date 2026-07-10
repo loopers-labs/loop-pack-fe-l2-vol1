@@ -1,4 +1,4 @@
-export type CategoryId = "food" | "fashion" | "beauty" | "home" | "digital";
+export type CategoryId = "casual" | "fashion" | "goods" | "home" | "digital";
 
 export type Category = {
   id: CategoryId;

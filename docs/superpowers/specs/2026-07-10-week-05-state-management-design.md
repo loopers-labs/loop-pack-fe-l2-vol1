@@ -102,7 +102,7 @@ API 구조와 네이밍은 4주차의 `src/app/api/products/route.ts`와 같은 
 - 런타임에 29CM CDN을 직접 요청하지 않는다.
 - 참고 저장소의 상품 fixture에서 이미지 URL 30개를 선별하고 구현 시 한 번만 수집한다.
 - 수집한 이미지는 `public/images/products/p1.jpg`부터 `p30.jpg`까지 로컬 정적 자산으로 제공한다.
-- `public/images/products/SOURCES.md`에 상품 ID, 참고 저장소, 원본 상품 번호, 원본 URL을 기록한다.
+- `public/images/products/SOURCES.md`에 상품 ID, 참고 저장소, 원본 상품 번호, 원본 상품명, 원본 URL을 기록한다.
 - 크롤링·다운로드 스크립트는 멘티 과제나 애플리케이션 런타임에 포함하지 않는다.
 - 4주차 lint 설정인 Next.js `core-web-vitals`와 TypeScript preset을 그대로 유지한다.
 
@@ -124,7 +124,7 @@ type HomeResponse = {
 ```
 
 ```ts
-type CategoryId = "food" | "fashion" | "beauty" | "home" | "digital";
+type CategoryId = "casual" | "fashion" | "goods" | "home" | "digital";
 
 type Category = {
   id: CategoryId;
@@ -205,7 +205,9 @@ type Product = {
 - `/api/products?scenario=empty`는 `products`를 비우되 카테고리와 페이지 정보는 유지한다.
 - 랜덤 오류는 사용하지 않는다.
 - 장바구니와 위시리스트 API는 제공하지 않는다.
-- 4주차의 `p1`, `p2` 상품은 기존 이름·가격·배송·사이즈 값을 유지한다. 이미지만 이번 과제에서 제공하는 로컬 상품 사진으로 교체한다.
+- 4주차의 `p1`, `p2` 상품 ID, `freeShipping`·`sizes` override와 전체 응답 필드 형태는 호환되게 유지한다. 5주차에는 참고 fixture와 사진의 의미를 일치시키기 위해 이름·가격·브랜드·이미지 값이 의도적으로 바뀐다.
+- 모든 상품은 원본 fixture에 브랜드와 정가 정보가 없으므로 공통 브랜드 `29CM 셀렉트`와 `originalPrice: null`을 사용한다.
+- 카테고리는 이미지 의미에 따라 `casual`(p1-p5, p26), `fashion`(p6-p10, p27), `goods`(p11-p15, p28), `home`(p16-p20, p29), `digital`(p21-p25, p30)로 균등하게 나눈다.
 
 ## 7. 기본 요구사항
 

@@ -88,7 +88,7 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 `q`, `category`, `sort`, `page`, `pageSize`, 검증용 `scenario`를 지원합니다.
 
 - q: 앞뒤 공백 제거, 상품명·브랜드의 대소문자 구분 없는 부분 검색
-- category: `all | food | fashion | beauty | home | digital`
+- category: `all | casual | fashion | goods | home | digital`
 - sort: `latest | popular | price-asc | price-desc`
 - sort 생략: 4주차 fixture 순서를 유지
 - 화면의 nuqs 기본값은 `latest`로 두고 API 요청에 `sort=latest`를 명시합니다. sort 생략 동작은 4주차 호환용입니다.
@@ -104,7 +104,7 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 ## 새 주차 코드 동기화
 
 - `package.json` 충돌 시 기존 설정을 보존하면서 `@tanstack/react-query`, `nuqs`, `zustand` 의존성을 유지한 뒤 `pnpm install`로 lockfile을 다시 생성합니다.
-- `src/app/api/products/route.ts` 충돌 시 p1/p2의 이미지는 5주차 로컬 경로(`/images/products/p1.jpg`, `/images/products/p2.jpg`)를 사용하고, 그 외 4주차 필드는 유지합니다. 본인이 추가한 UI 코드는 덮어쓰지 않습니다.
+- `src/app/api/products/route.ts` 충돌 시 p1/p2의 ID, `freeShipping`·`sizes` override와 전체 응답 필드 형태는 4주차와 호환되게 유지합니다. 5주차에는 참고 fixture와 사진의 의미를 맞추기 위해 이름·가격·브랜드·이미지 값이 의도적으로 바뀝니다. 본인이 추가한 UI 코드는 덮어쓰지 않습니다.
 - `src/examples/week-05-layout/`은 자동 적용되지 않습니다. 필요한 부분만 옮겨 쓰거나 기존 레이아웃을 유지합니다.
 
 ## 기록할 설계 근거

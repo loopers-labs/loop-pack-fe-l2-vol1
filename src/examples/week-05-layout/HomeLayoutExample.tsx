@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import "./week-05-layout.css";
 
@@ -26,7 +27,7 @@ export function HomeLayoutExample() {
       <section className="week05-section">
         <h2>카테고리</h2>
         <div className="week05-categories">
-          {["푸드", "패션", "뷰티", "홈", "디지털"].map((category) => (
+          {["캐주얼", "패션", "뷰티·잡화", "홈", "디지털"].map((category) => (
             <Link key={category} href="/products">{category}</Link>
           ))}
         </div>
@@ -37,14 +38,15 @@ export function HomeLayoutExample() {
           <div className="week05-grid">
             {Array.from({ length: 4 }, (_, index) => (
               <article className="week05-product" key={`${title}-${index}`}>
-                <img
+                <Image
                   className="week05-image"
                   src={title === "인기 상품" ? "/images/products/p1.jpg" : "/images/products/p6.jpg"}
-                  alt={title === "인기 상품" ? "베이글 플레인 상품 예시" : "오버핏 코튼 셔츠 상품 예시"}
-                  loading="lazy"
+                  alt={title === "인기 상품" ? "Basic Fit Ball Cap (6color)" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}
+                  width={400}
+                  height={400}
                 />
                 <p>브랜드</p>
-                <h3>상품명</h3>
+                <h3>{title === "인기 상품" ? "Basic Fit Ball Cap (6color)" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}</h3>
                 <strong>0원</strong>
                 <div>
                   <button
