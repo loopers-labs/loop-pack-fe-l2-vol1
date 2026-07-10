@@ -10,11 +10,13 @@ type OptionValue = { id: string; name: string; price: number; stock: number };
 interface TextOptionSelectProps {
   options: SelectOption<OptionValue>[];
   isFreeShipping?: boolean;
+  onSelect?: (option: SelectOption<OptionValue>) => void;
 }
 
 export function TextOptionSelect({
   options,
   isFreeShipping,
+  onSelect,
 }: TextOptionSelectProps) {
   const {
     isOpen,
@@ -23,7 +25,7 @@ export function TextOptionSelect({
     getToggleButtonProps,
     getMenuProps,
     getItemProps,
-  } = useSelect({ options });
+  } = useSelect({ options, onSelectedOptionChange: onSelect });
 
   return (
     <div ref={containerRef} className="relative">

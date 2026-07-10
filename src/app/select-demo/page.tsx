@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/ui/dialog';
+import { formatWon } from '@/utils/format';
 import { TextOptionSelect } from './_components/TextOptionSelect';
 import { SizeOptionSelect } from './_components/SizeOptionSelect';
 import { ThumbnailOptionSelect } from './_components/ThumbnailOptionSelect';
@@ -17,6 +18,12 @@ type SizeValue = { value: number; stock: number };
 
 export default function SelectDemoPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedText, setSelectedText] =
+    useState<SelectOption<OptionValue> | null>(null);
+  const [selectedSize, setSelectedSize] =
+    useState<SelectOption<SizeValue> | null>(null);
+  const [selectedThumb, setSelectedThumb] =
+    useState<SelectOption<Product> | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -96,7 +103,17 @@ export default function SelectDemoPage() {
           <TextOptionSelect
             options={optionItems}
             isFreeShipping={product.freeShipping}
+            onSelect={setSelectedText}
           />
+          {selectedText && (
+            <div className="mt-3 rounded-lg bg-bg px-4 py-3 text-[13px] text-text-secondary">
+              선택:{' '}
+              <span className="font-medium text-text">
+                {selectedText.value.name}
+              </span>{' '}
+              · {formatWon(selectedText.value.price)}
+            </div>
+          )}
         </section>
 
         <section className="mt-4 rounded-2xl bg-bg-card p-6">
@@ -108,7 +125,16 @@ export default function SelectDemoPage() {
               사이즈 번호 + 배송 도착보장 / 품절
             </p>
           </div>
-          <SizeOptionSelect options={sizeItems} />
+          <SizeOptionSelect options={sizeItems} onSelect={setSelectedSize} />
+          {selectedSize && (
+            <div className="mt-3 rounded-lg bg-bg px-4 py-3 text-[13px] text-text-secondary">
+              선택: 사이즈{' '}
+              <span className="font-medium text-text">
+                {selectedSize.value.value}
+              </span>{' '}
+              · 재고 {selectedSize.value.stock}개
+            </div>
+          )}
         </section>
 
         <section className="mt-4 rounded-2xl bg-bg-card p-6">
@@ -120,7 +146,19 @@ export default function SelectDemoPage() {
               상품 이미지 + 할인율 + 가격 + 배송 뱃지
             </p>
           </div>
-          <ThumbnailOptionSelect options={thumbnailItems} />
+          <ThumbnailOptionSelect
+            options={thumbnailItems}
+            onSelect={setSelectedThumb}
+          />
+          {selectedThumb && (
+            <div className="mt-3 rounded-lg bg-bg px-4 py-3 text-[13px] text-text-secondary">
+              선택:{' '}
+              <span className="font-medium text-text">
+                {selectedThumb.value.name}
+              </span>{' '}
+              · {formatWon(selectedThumb.value.price)}
+            </div>
+          )}
         </section>
 
         {/* Dialog — uncontrolled 사용 예시 */}

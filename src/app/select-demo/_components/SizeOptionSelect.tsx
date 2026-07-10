@@ -9,9 +9,10 @@ type SizeValue = { value: number; stock: number };
 
 interface SizeOptionSelectProps {
   options: SelectOption<SizeValue>[];
+  onSelect?: (option: SelectOption<SizeValue>) => void;
 }
 
-export function SizeOptionSelect({ options }: SizeOptionSelectProps) {
+export function SizeOptionSelect({ options, onSelect }: SizeOptionSelectProps) {
   const {
     isOpen,
     selectedOption,
@@ -19,7 +20,7 @@ export function SizeOptionSelect({ options }: SizeOptionSelectProps) {
     getToggleButtonProps,
     getMenuProps,
     getItemProps,
-  } = useSelect({ options });
+  } = useSelect({ options, onSelectedOptionChange: onSelect });
 
   return (
     <div ref={containerRef} className="relative">

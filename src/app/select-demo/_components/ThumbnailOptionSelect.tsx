@@ -8,9 +8,13 @@ import type { SelectOption } from '@/components/ui/select';
 
 interface ThumbnailOptionSelectProps {
   options: SelectOption<Product>[];
+  onSelect?: (option: SelectOption<Product>) => void;
 }
 
-export function ThumbnailOptionSelect({ options }: ThumbnailOptionSelectProps) {
+export function ThumbnailOptionSelect({
+  options,
+  onSelect,
+}: ThumbnailOptionSelectProps) {
   const {
     isOpen,
     selectedOption,
@@ -18,7 +22,7 @@ export function ThumbnailOptionSelect({ options }: ThumbnailOptionSelectProps) {
     getToggleButtonProps,
     getMenuProps,
     getItemProps,
-  } = useSelect({ options });
+  } = useSelect({ options, onSelectedOptionChange: onSelect });
 
   return (
     <div ref={containerRef} className="relative">
