@@ -62,9 +62,6 @@ export function useSelect<T extends SelectOption>({
   const [value, setValue] = useControllableState<T | null>({
     value: controlledValue,
     defaultValue,
-    onChange: (next) => {
-      if (next !== null) onChange?.(next);
-    },
   });
 
   const [isOpen, setIsOpen] = useControllableState({
@@ -83,13 +80,13 @@ export function useSelect<T extends SelectOption>({
     return -1;
   };
 
-  const open = () => {
+  const openMenu = () => {
     const selectedIndex = value ? options.findIndex((o) => o.id === value.id) : -1;
     setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : findEnabledIndex(0, 1));
     setIsOpen(true);
   };
 
-  const close = () => {
+  const closeMenu = () => {
     setIsOpen(false);
     setHighlightedIndex(-1);
   };
@@ -97,7 +94,8 @@ export function useSelect<T extends SelectOption>({
   const selectOption = (option: T) => {
     if (option.disabled) return;
     setValue(option);
-    close();
+    onChange?.(option);
+    closeMenu();
   };
 
   const moveHighlight = (delta: 1 | -1) => {
@@ -116,12 +114,12 @@ export function useSelect<T extends SelectOption>({
       case "ArrowDown":
         e.preventDefault();
         if (isOpen) moveHighlight(1);
-        else open();
+        else openMenu();
         break;
       case "ArrowUp":
         e.preventDefault();
         if (isOpen) moveHighlight(-1);
-        else open();
+        else openMenu();
         break;
       case "Home":
         if (isOpen) {
@@ -138,20 +136,20 @@ export function useSelect<T extends SelectOption>({
       case "Enter":
       case " ":
         e.preventDefault();
-        if (!isOpen) open();
+        if (!isOpen) openMenu();
         else if (highlightedIndex >= 0) selectOption(options[highlightedIndex]);
         break;
       case "Escape":
-        close();
+        if (isOpen) closeMenu();
         break;
     }
   };
 
-  useOutsideClick(rootRef, close, isOpen);
+  useOutsideClick(rootRef, closeMenu, isOpen);
 
   const getToggleProps = (): SelectToggleProps => ({
     tabIndex: 0,
-    onClick: () => (isOpen ? close() : open()),
+    onClick: () => (isOpen ? closeMenu() : openMenu()),
     onKeyDown: handleTriggerKeyDown,
     "data-state": isOpen ? "open" : "closed",
   });
