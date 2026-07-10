@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { type ComponentProps, type ComponentPropsWithoutRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -140,7 +140,7 @@ describe('열기/닫기', () => {
     expect(queryMenu()).not.toBeInTheDocument();
   });
 
-  it('메뉴 바깥을 누르면 닫힌다', async () => {
+  it('메뉴 바깥을 누르고 떼면 닫힌다', async () => {
     const user = userEvent.setup();
 
     render(
@@ -153,6 +153,27 @@ describe('열기/닫기', () => {
     await user.click(getToggle());
     await user.click(screen.getByRole('button', { name: '바깥 버튼' }));
 
+    expect(queryMenu()).not.toBeInTheDocument();
+  });
+
+  it('바깥을 누르기만 한 상태(드래그 선택 시작 등)에서는 닫히지 않고, 뗀 시점에 닫힌다', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <div>
+        <TestSelect />
+        <button type="button">바깥 버튼</button>
+      </div>,
+    );
+
+    await user.click(getToggle());
+
+    const outsideButton = screen.getByRole('button', { name: '바깥 버튼' });
+
+    fireEvent.pointerDown(outsideButton);
+    expect(queryMenu()).toBeInTheDocument();
+
+    fireEvent.pointerUp(outsideButton);
     expect(queryMenu()).not.toBeInTheDocument();
   });
 

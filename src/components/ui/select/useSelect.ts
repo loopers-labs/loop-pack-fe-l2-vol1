@@ -422,7 +422,7 @@ export function useSelect<T>({
       });
     };
 
-    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+    const closeOnOutsidePointerUp = (event: PointerEvent) => {
       if (isSelectEventTarget(event.target)) {
         return;
       }
@@ -430,14 +430,10 @@ export function useSelect<T>({
       closeMenu();
     };
 
-    document.addEventListener('pointerdown', closeOnOutsidePointerDown, true);
+    document.addEventListener('pointerup', closeOnOutsidePointerUp, true);
 
     return () => {
-      document.removeEventListener(
-        'pointerdown',
-        closeOnOutsidePointerDown,
-        true,
-      );
+      document.removeEventListener('pointerup', closeOnOutsidePointerUp, true);
     };
   }, [isOpen, closeMenu]);
 
