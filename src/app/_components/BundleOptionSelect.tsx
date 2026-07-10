@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { useSelect } from '@/components/ui/select'
+import { formatWon } from '@/lib/formatWon'
 
 interface BundleOption {
   id: string
@@ -44,7 +45,9 @@ const BUNDLE_OPTIONS: BundleOption[] = [
 
 const SHIPPING_FEE = 3000
 
-const formatWon = (value: number) => `${value.toLocaleString('ko-KR')}원`
+// 순수 함수 — 렌더 스코프에 둘 이유가 없다.
+const pricePerUnit = (bundle: BundleOption) =>
+  Math.round(bundle.price / bundle.unitCount)
 
 export default function BundleOptionSelect() {
   const [selectedBundle, setSelectedBundle] = useState<BundleOption | null>(
@@ -60,8 +63,6 @@ export default function BundleOptionSelect() {
   })
 
   // 파생값 — 선택된 "객체"에서 렌더 중 계산한다.
-  const pricePerUnit = (bundle: BundleOption) =>
-    Math.round(bundle.price / bundle.unitCount)
   const totalWithShipping = selectedBundle
     ? selectedBundle.price + (selectedBundle.freeShipping ? 0 : SHIPPING_FEE)
     : null

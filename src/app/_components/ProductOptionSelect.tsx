@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { useSelect } from '@/components/ui/select'
+import { formatWon } from '@/lib/formatWon'
 
 interface AmpouleOption {
   id: string
@@ -41,8 +42,6 @@ const AMPOULE_OPTIONS: AmpouleOption[] = [
     soldOut: true,
   },
 ]
-
-const formatWon = (value: number) => `${value.toLocaleString('ko-KR')}원`
 
 export default function ProductOptionSelect() {
   const [selectedOption, setSelectedOption] = useState<AmpouleOption | null>(

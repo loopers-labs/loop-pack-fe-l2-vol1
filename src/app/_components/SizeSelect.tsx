@@ -61,6 +61,10 @@ export default function SizeSelect() {
   if (sizesState.status === 'error') {
     return <p style={{ color: '#c0392b' }}>사이즈를 불러오지 못했어요.</p>
   }
+  // 빈 배열이면 눌리는데 아무것도 안 열리는 트리거가 남는다 — 셀렉트 자체를 렌더하지 않는다.
+  if (sizes.length === 0) {
+    return <p style={{ color: '#8794a3' }}>등록된 사이즈가 없어요.</p>
+  }
 
   return (
     <div style={{ border: '1px solid #d9dee5', borderRadius: 8 }}>

@@ -10,13 +10,16 @@
 // - 품절 같은 도메인 판단은 isItemDisabled 콜백으로 사용처가 내린다.
 //   훅은 "disabled면 건너뛰고 선택 불가"라는 동작만 책임진다.
 
-import { useState, type KeyboardEvent } from 'react'
+import { useState, type KeyboardEvent, type MouseEvent } from 'react'
 
 export interface SelectOptionState {
   selected: boolean
   highlighted: boolean
   disabled: boolean
 }
+
+// 하이라이트는 열려 있을 때만 존재한다 — 닫힘+하이라이트 조합을 타입으로 봉쇄한다.
+type OpenState = { isOpen: false } | { isOpen: true; highlightedIndex: number }
 
 interface UseSelectParams<Item> {
   items: Item[]
@@ -34,10 +37,16 @@ export function useSelect<Item>({
   getItemId,
   isItemDisabled,
 }: UseSelectParams<Item>) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const [openState, setOpenState] = useState<OpenState>({ isOpen: false })
 
-  // 파생값 — 렌더 중 계산한다. items가 refetch로 바뀌어도 동기화 코드가 필요 없다.
+  const isOpen = openState.isOpen
+  // 파생값 — 렌더 중 계산. items가 열려 있는 동안 줄어들어 인덱스가 범위를
+  // 벗어나면 -1로 클램프해 키보드 내비게이션이 좌초하지 않게 한다.
+  const highlightedIndex =
+    openState.isOpen && openState.highlightedIndex < items.length
+      ? openState.highlightedIndex
+      : -1
+
   const selectedIndex =
     value === null
       ? -1
@@ -47,6 +56,9 @@ export function useSelect<Item>({
     const item = items[index]
     return item !== undefined && (isItemDisabled?.(item) ?? false)
   }
+
+  const canSelectAt = (index: number) =>
+    index >= 0 && index < items.length && !isDisabledAt(index)
 
   // from부터 step 방향으로 첫 활성 옵션을 찾는다. 없으면 -1 (경계에서 멈춤, 순환 없음).
   const findEnabledIndex = (from: number, step: 1 | -1) => {
@@ -62,17 +74,13 @@ export function useSelect<Item>({
       selectedIndex >= 0 && !isDisabledAt(selectedIndex)
         ? selectedIndex
         : findEnabledIndex(0, 1)
-    setHighlightedIndex(initial)
-    setIsOpen(true)
+    setOpenState({ isOpen: true, highlightedIndex: initial })
   }
 
-  const close = () => {
-    setIsOpen(false)
-    setHighlightedIndex(-1)
-  }
+  const close = () => setOpenState({ isOpen: false })
 
   const selectAt = (index: number) => {
-    if (index < 0 || index >= items.length || isDisabledAt(index)) return
+    if (!canSelectAt(index)) return
     onChange(items[index])
     close()
   }
@@ -82,7 +90,7 @@ export function useSelect<Item>({
     const edgeStart = step === 1 ? 0 : items.length - 1
     const from = highlightedIndex === -1 ? edgeStart : highlightedIndex + step
     const next = findEnabledIndex(from, step)
-    if (next !== -1) setHighlightedIndex(next)
+    if (next !== -1) setOpenState({ isOpen: true, highlightedIndex: next })
   }
 
   // 포커스 관리는 이번 주 범위 밖 — 키보드는 트리거 버튼에 머문 채 처리한다.
@@ -106,7 +114,9 @@ export function useSelect<Item>({
       case 'Enter':
       case ' ':
         event.preventDefault()
-        selectAt(highlightedIndex)
+        // 선택할 수 있는 하이라이트가 없으면(전 옵션 품절 등) 네이티브 select처럼 닫는다.
+        if (canSelectAt(highlightedIndex)) selectAt(highlightedIndex)
+        else close()
         break
       case 'Escape':
         event.preventDefault()
@@ -118,17 +128,23 @@ export function useSelect<Item>({
   return {
     isOpen,
     highlightedIndex,
-    /** 트리거 버튼에 스프레드 — 클릭 토글 + 키보드(열기·이동·선택·닫기) */
+    /** 트리거 버튼에 스프레드 — 클릭 토글 + 키보드(열기·이동·선택·닫기) + blur 닫기 */
     getToggleProps: () => ({
       type: 'button' as const,
       onClick: () => (isOpen ? close() : open()),
       onKeyDown: handleTriggerKeyDown,
+      // 다른 곳을 클릭/Tab하면 닫는다 — 페이지에 셀렉트가 여러 개일 때 동시 열림 방지.
+      onBlur: () => close(),
     }),
     /** 각 옵션 요소에 스프레드 — 클릭 선택, 호버 하이라이트 */
     getOptionProps: (index: number) => ({
       onClick: () => selectAt(index),
+      // 옵션을 누르는 순간 트리거가 blur로 먼저 닫혀 클릭이 증발하는 것을 막는다.
+      onMouseDown: (event: MouseEvent) => event.preventDefault(),
       onMouseEnter: () => {
-        if (!isDisabledAt(index)) setHighlightedIndex(index)
+        if (!isDisabledAt(index)) {
+          setOpenState({ isOpen: true, highlightedIndex: index })
+        }
       },
     }),
     /** 사용처가 스타일 판단에 쓰는 옵션별 상태 */
