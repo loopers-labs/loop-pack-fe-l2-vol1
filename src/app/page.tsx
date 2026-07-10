@@ -1,6 +1,7 @@
 import SizeSelect from './_components/SizeSelect'
 import ProductOptionSelect from './_components/ProductOptionSelect'
 import BundleOptionSelect from './_components/BundleOptionSelect'
+import DialogShowcase from './_components/DialogShowcase'
 
 export default function Home() {
   return (
@@ -31,6 +32,12 @@ export default function Home() {
             3. 묶음 옵션 — 개당가·무료배송 계산
           </h2>
           <BundleOptionSelect />
+        </div>
+        <div>
+          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
+            4. Dialog — compound + controlled/uncontrolled 이중 API
+          </h2>
+          <DialogShowcase />
         </div>
       </section>
     </main>
