@@ -27,7 +27,13 @@ export default defineConfig([
       "@next/next": nextPlugin,
     },
     rules: {
-      ...nextPlugin.configs.recommended.rules,
+      "@next/next/no-img-element": "warn",
+      "@next/next/no-html-link-for-pages": "error",
+      "@next/next/no-sync-scripts": "error",
+      "@next/next/no-async-client-component": "error",
+      "@next/next/inline-script-id": "error",
+      "@next/next/no-assign-module-variable": "error",
+
       ...nextPlugin.configs["core-web-vitals"].rules,
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-non-null-assertion": "error",
