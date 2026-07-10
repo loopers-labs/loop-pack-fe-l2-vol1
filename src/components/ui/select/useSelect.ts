@@ -17,6 +17,7 @@ export const useSelect = <T>({
 
   // 인스턴스별 고유 id. 페이지 내에 셀렉트가 여러 개 있어도
   // aria-activedescendant / aria-controls가 서로 충돌하지 않게 한다.
+  // 위 아이디어는 AI를 활용
   const uid = useId();
   const menuId = `${uid}-menu`;
   const getOptionId = (index: number) => `${uid}-option-${index}`;

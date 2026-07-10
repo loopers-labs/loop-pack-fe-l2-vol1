@@ -1,3 +1,4 @@
+import { DialogPlayground } from '@/components/ui/dialog/DialogPlayground';
 import { SelectPlayground } from '@/components/ui/select/SelectPlayground';
 
 export default function Home() {
@@ -11,7 +12,7 @@ export default function Home() {
       <ul style={{ lineHeight: 2, color: '#18212e', paddingLeft: 18 }}>
         <li>
           컴포넌트 자리: <code>src/components/ui/select</code> · <SelectPlayground />
-          <code>src/components/ui/dialog</code>
+          <code>src/components/ui/dialog</code> <DialogPlayground />
         </li>
         <li>
           mock 백엔드: <code>GET /api/products</code> (<code>src/app/api/products/route.ts</code>)

@@ -51,6 +51,7 @@ interface DialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+// DialogRoot의 props 구조 및 controlled, uncontrolled 판단 AI로 작성
 function DialogRoot({ children, open, defaultOpen, onOpenChange }: DialogProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
 
@@ -94,7 +95,7 @@ function Overlay({ ...rest }: ComponentProps<'div'>) {
       {...rest}
       onClick={(e) => {
         rest.onClick?.(e);
-        setOpen(false);
+        setOpen(false); // 배경 클릭 시 닫힘
       }}
     />,
     document.body
@@ -105,6 +106,7 @@ function Content({ children, ...rest }: ComponentProps<'div'>) {
   const { isOpen, setOpen } = useDialogContext();
 
   // Esc 키 처리
+  // 클릭 이벤트 전파를 막을 필요는 없다. Overlay도 Portal이라 DOM 상에서 형제 관계이므로
   useEffect(() => {
     if (!isOpen) return;
 
