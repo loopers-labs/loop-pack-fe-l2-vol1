@@ -24,7 +24,7 @@ import {
   type ComponentProps,
   type ReactNode,
 } from 'react';
-import { createPortal } from 'react-dom';
+import { Portal } from './Portal';
 
 interface DialogContextValue {
   isOpen: boolean;
@@ -90,15 +90,16 @@ function Overlay({ ...rest }: ComponentProps<'div'>) {
   const { isOpen, setOpen } = useDialogContext();
   if (!isOpen) return null;
 
-  return createPortal(
-    <div
-      {...rest}
-      onClick={(e) => {
-        rest.onClick?.(e);
-        setOpen(false); // 배경 클릭 시 닫힘
-      }}
-    />,
-    document.body
+  return (
+    <Portal>
+      <div
+        {...rest}
+        onClick={(e) => {
+          rest.onClick?.(e);
+          setOpen(false);
+        }}
+      />
+    </Portal>
   );
 }
 
@@ -132,11 +133,12 @@ function Content({ children, ...rest }: ComponentProps<'div'>) {
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div role="dialog" {...rest}>
-      {children}
-    </div>,
-    document.body
+  return (
+    <Portal>
+      <div role="dialog" {...rest}>
+        {children}
+      </div>
+    </Portal>
   );
 }
 
