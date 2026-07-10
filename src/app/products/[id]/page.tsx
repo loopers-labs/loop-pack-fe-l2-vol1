@@ -11,6 +11,7 @@ import { formatWon, calcDiscount } from '@/utils/format';
 import { CATEGORY_LABEL } from '@/constants/category';
 import { OptionSelect } from './_components/OptionSelect';
 import { SizeSelect } from './_components/SizeSelect';
+import { ProductDetailResponseSchema } from '@/types/product';
 import type { Product } from '@/types/product';
 import type { SelectOption } from '@/components/ui/select';
 
@@ -24,6 +25,8 @@ type SizeValue = { value: number; stock: number };
 export default function ProductDetailPage() {
   const params = useParams();
   const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [isCartDialogOpen, setIsCartDialogOpen] = useState(false);
   const [selectedOptionName, setSelectedOptionName] = useState<string | null>(
     null,
@@ -33,9 +36,19 @@ export default function ProductDetailPage() {
     let ignore = false;
 
     void fetch(`/api/products?id=${params.id}`)
-      .then((r) => r.json())
-      .then((data: { product: Product }) => {
+      .then((response) => {
+        if (!response.ok) throw new Error('상품을 찾을 수 없습니다.');
+        return response.json();
+      })
+      .then((raw: unknown) => {
+        const data = ProductDetailResponseSchema.parse(raw);
         if (!ignore) setProduct(data.product);
+      })
+      .catch(() => {
+        if (!ignore) setIsError(true);
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
       });
 
     return () => {
@@ -43,7 +56,7 @@ export default function ProductDetailPage() {
     };
   }, [params.id]);
 
-  if (!product) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg">
         <div className="flex flex-col items-center gap-3">
@@ -51,6 +64,24 @@ export default function ProductDetailPage() {
           <p className="text-sm text-text-secondary">
             상품 정보를 불러오는 중...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !product) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-text-secondary">
+            상품을 찾을 수 없습니다.
+          </p>
+          <Link
+            href="/"
+            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
+          >
+            홈으로 돌아가기
+          </Link>
         </div>
       </div>
     );

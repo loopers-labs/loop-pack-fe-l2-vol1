@@ -6,6 +6,7 @@ import { formatWon } from '@/utils/format';
 import { TextOptionSelect } from './_components/TextOptionSelect';
 import { SizeOptionSelect } from './_components/SizeOptionSelect';
 import { ThumbnailOptionSelect } from './_components/ThumbnailOptionSelect';
+import { ProductListResponseSchema } from '@/types/product';
 import type { Product } from '@/types/product';
 import type { SelectOption } from '@/components/ui/select';
 
@@ -30,7 +31,8 @@ export default function SelectDemoPage() {
 
     void fetch('/api/products')
       .then((r) => r.json())
-      .then((data: { products: Product[] }) => {
+      .then((raw: unknown) => {
+        const data = ProductListResponseSchema.parse(raw);
         if (!ignore) setProducts(data.products);
       });
 
