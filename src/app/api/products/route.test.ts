@@ -5,6 +5,19 @@ import { GET } from "./route";
 const request = (query = "") =>
   GET(new NextRequest(`http://localhost/api/products${query}`));
 
+const allProductIds = async (sort: string) => {
+  const firstPageBody = await (
+    await request(`?sort=${sort}&page=1&pageSize=24`)
+  ).json();
+  const secondPageBody = await (
+    await request(`?sort=${sort}&page=2&pageSize=24`)
+  ).json();
+
+  return [...firstPageBody.products, ...secondPageBody.products].map(
+    (product: { id: string }) => product.id,
+  );
+};
+
 const hugePositiveInteger = "9".repeat(400);
 
 describe("GET /api/products", () => {
@@ -28,9 +41,9 @@ describe("GET /api/products", () => {
     expect(body.products[0]).toMatchObject({
       id: "p1",
       brand: "29CM 셀렉트",
-      name: "Basic Fit Ball Cap (6color)",
+      name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
       category: "casual",
-      price: 39000,
+      price: 79000,
       originalPrice: null,
       image: "/images/products/p1.jpg",
       freeShipping: true,
@@ -65,15 +78,19 @@ describe("GET /api/products", () => {
 
     expect(products.filter((product: { id: string }) => ["p1", "p6", "p11", "p16", "p21"].includes(product.id)))
       .toMatchObject([
-        { id: "p1", name: "Basic Fit Ball Cap (6color)", category: "casual", price: 39000 },
+        {
+          id: "p1",
+          brand: "29CM 셀렉트",
+          name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
+          category: "casual",
+          price: 79000,
+          originalPrice: null,
+        },
         { id: "p6", name: "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502", category: "fashion", price: 69000 },
-        { id: "p11", name: "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml", category: "goods", price: 48000 },
-        { id: "p16", name: "스탠리 클래식 런치박스", category: "home", price: 75000 },
-        { id: "p21", name: "메이커스 투명케이스", category: "digital", price: 23000 },
+        { id: "p11", brand: "인스테드", name: "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml", category: "goods", price: 48000, originalPrice: 58000 },
+        { id: "p16", brand: "스탠리", name: "스탠리 클래식 런치박스", category: "home", price: 75000, originalPrice: 89000 },
+        { id: "p21", brand: "메이커스", name: "메이커스 투명케이스", category: "digital", price: 23000, originalPrice: 29000 },
       ]);
-    expect(products.every((product: { brand: string; originalPrice: number | null }) =>
-      product.brand === "29CM 셀렉트" && product.originalPrice === null,
-    )).toBe(true);
   });
 
   it("returns one unique local image for every product", async () => {
@@ -90,12 +107,17 @@ describe("GET /api/products", () => {
     expect(images.some((image: string) => image.startsWith("http"))).toBe(false);
   });
 
-  it("searches the shared brand and source name without case sensitivity", async () => {
-    const response = await request("?q=29cm%20%EC%85%80%EB%A0%89%ED%8A%B8&pageSize=24");
+  it("searches explicit brands and source names without case sensitivity", async () => {
+    const response = await request("?q=%EC%8A%A4%ED%83%A0%EB%A6%AC&pageSize=24");
     const body = await response.json();
-    expect(body.totalCount).toBe(30);
+    expect(body.products.map((product: { id: string }) => product.id)).toEqual([
+      "p16",
+      "p17",
+      "p19",
+      "p20",
+    ]);
 
-    const caseResponse = await request("?q=%20%20basic%20fit%20%20&pageSize=24");
+    const caseResponse = await request("?q=%20%20winter%20rocky%20%20&pageSize=24");
     const caseBody = await caseResponse.json();
     expect(caseBody.products.map((product: { id: string }) => product.id)).toEqual(["p1"]);
   });
@@ -111,17 +133,43 @@ describe("GET /api/products", () => {
       "p25",
       "p24",
     ]);
+    expect(
+      body.products
+        .filter((product: { id: string }) => ["p22", "p30"].includes(product.id))
+        .map((product: { id: string; rating: number; reviewCount: number }) => ({
+          id: product.id,
+          rating: product.rating,
+          reviewCount: product.reviewCount,
+        })),
+    ).toEqual([
+      { id: "p22", rating: 4.6, reviewCount: 689 },
+      { id: "p30", rating: 4.5, reviewCount: 689 },
+    ]);
   });
 
-  it("sorts latest and price order explicitly", async () => {
-    const latestBody = await (await request("?sort=latest&pageSize=24")).json();
-    expect(latestBody.products[0].id).toBe("p26");
-
-    const lowPriceBody = await (await request("?sort=price-asc&pageSize=24")).json();
-    expect(lowPriceBody.products[0]).toMatchObject({ id: "p29", price: 3000 });
-
-    const highPriceBody = await (await request("?sort=price-desc&pageSize=24")).json();
-    expect(highPriceBody.products[0]).toMatchObject({ id: "p7", price: 428000 });
+  it.each([
+    ["latest", [
+      "p26", "p6", "p27", "p24", "p1", "p28", "p19", "p2", "p29", "p11",
+      "p22", "p3", "p30", "p7", "p16", "p12", "p9", "p15", "p8", "p13",
+      "p4", "p18", "p21", "p5", "p20", "p25", "p10", "p17", "p14", "p23",
+    ]],
+    ["popular", [
+      "p21", "p11", "p15", "p8", "p22", "p30", "p14", "p18", "p6", "p12",
+      "p23", "p16", "p5", "p25", "p20", "p10", "p1", "p24", "p13", "p7",
+      "p4", "p28", "p2", "p17", "p27", "p9", "p29", "p3", "p19", "p26",
+    ]],
+    ["price-asc", [
+      "p29", "p30", "p25", "p21", "p24", "p15", "p3", "p22", "p2", "p23",
+      "p17", "p20", "p11", "p28", "p14", "p9", "p12", "p19", "p6", "p13",
+      "p26", "p16", "p1", "p10", "p8", "p5", "p4", "p18", "p27", "p7",
+    ]],
+    ["price-desc", [
+      "p7", "p27", "p18", "p4", "p5", "p8", "p10", "p1", "p16", "p26",
+      "p6", "p13", "p19", "p12", "p9", "p14", "p28", "p11", "p20", "p17",
+      "p23", "p2", "p22", "p3", "p15", "p24", "p21", "p25", "p30", "p29",
+    ]],
+  ])("returns the complete %s order", async (sort, expectedIds) => {
+    expect(await allProductIds(sort)).toEqual(expectedIds);
   });
 
   it("returns an empty page when page exceeds the filtered result", async () => {

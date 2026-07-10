@@ -11,7 +11,11 @@ describe("GET /api/home", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.banner.title).toBe("매일 새롭게 발견하는 취향");
+    expect(body.banner).toEqual({
+      title: "매일 새롭게 발견하는 취향",
+      description: "지금 가장 사랑받는 상품을 만나보세요.",
+      image: "/images/products/p6.jpg",
+    });
     expect(body.categories).toEqual([
       { id: "casual", name: "캐주얼" },
       { id: "fashion", name: "패션" },
@@ -19,10 +23,22 @@ describe("GET /api/home", () => {
       { id: "home", name: "홈" },
       { id: "digital", name: "디지털" },
     ]);
-    expect(body.popularProducts).toHaveLength(6);
-    expect(body.newProducts).toHaveLength(6);
-    expect(body.popularProducts[0].id).toBe("p21");
-    expect(body.newProducts[0].id).toBe("p26");
+    expect(body.popularProducts.map((product: { id: string }) => product.id)).toEqual([
+      "p21",
+      "p11",
+      "p15",
+      "p8",
+      "p22",
+      "p30",
+    ]);
+    expect(body.newProducts.map((product: { id: string }) => product.id)).toEqual([
+      "p26",
+      "p6",
+      "p27",
+      "p24",
+      "p1",
+      "p28",
+    ]);
   });
 
   it("keeps banner and categories in the empty scenario", async () => {

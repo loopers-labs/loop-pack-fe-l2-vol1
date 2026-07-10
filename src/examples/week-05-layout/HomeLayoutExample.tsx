@@ -41,12 +41,12 @@ export function HomeLayoutExample() {
                 <Image
                   className="week05-image"
                   src={title === "인기 상품" ? "/images/products/p1.jpg" : "/images/products/p6.jpg"}
-                  alt={title === "인기 상품" ? "Basic Fit Ball Cap (6color)" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}
+                  alt={title === "인기 상품" ? "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}
                   width={400}
                   height={400}
                 />
                 <p>브랜드</p>
-                <h3>{title === "인기 상품" ? "Basic Fit Ball Cap (6color)" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}</h3>
+                <h3>{title === "인기 상품" ? "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}</h3>
                 <strong>0원</strong>
                 <div>
                   <button

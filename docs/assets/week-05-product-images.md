@@ -1,10 +1,18 @@
-# Product image sources
+# Week 05 product image provenance
 
 These thumbnails were acquired once for the local fixture. The application serves the checked-in files and makes no runtime request to 29CM.
 
+- Retrieval date: `2026-07-10`
+- `29cm-fe-pretest-commerce` source commit: `e17b28f3085719bb00608e42d54cee96484afea6`
+- `00_test_project` source commit: `19832723bdbe9780cc40f47f30def3fcaf1c8be4`
+
+Attribution does not grant redistribution rights. Confirm permission with the rights holder before public release.
+
+The `originalPrice` values in the Week 05 fixture are deterministic mock merchandising fields for exercising discount UI branches. They are not sourced prices.
+
 | Local product | Reference repository/path | Source product/item number | Exact source product name | Original CDN URL |
 | --- | --- | ---: | --- | --- |
-| p1 | `29cm-fe-pretest-commerce/packages/mocks/data/src/data/products.ts` | 884789 | Basic Fit Ball Cap (6color) | https://img.29cm.co.kr/next-product/2022/04/06/2176030f536c43f3b84ccfe07344262c_20220406175142.jpg?width=400 |
+| p1 | `29cm-fe-pretest-commerce/packages/mocks/data/src/data/products.ts` | 1340400 | [11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG | https://img.29cm.co.kr/next-product/2021/12/08/a1c959f9fb2d47098eca6015446efe48_20211208183740.jpg?width=400 |
 | p2 | `29cm-fe-pretest-commerce/packages/mocks/data/src/data/products.ts` | 1109224 | [Exclusive] Holiday Signature Ball Cap (20Colors) | https://img.29cm.co.kr/next-product/2022/07/27/f5a6a786640f41bfa72cb53b4b1126a0_20220727185042.jpg?width=400 |
 | p3 | `29cm-fe-pretest-commerce/packages/mocks/data/src/data/products.ts` | 785342 | [1+1] 베이직 무지 롱 슬리브 102-CVL 17수 긴팔티 | https://img.29cm.co.kr/next-product/2021/09/13/1541b259afb142e4bab04c4298323ef6_20210913121440.jpg?width=400 |
 | p4 | `29cm-fe-pretest-commerce/packages/mocks/data/src/data/products.ts` | 2201224 | [29Exclusive] PLAIN COTTON CASHMERE CARDIGAN (5 COLORS) | https://img.29cm.co.kr/item/202310/11ee73de8b710e018a7f3126868ac607.jpg?width=400 |

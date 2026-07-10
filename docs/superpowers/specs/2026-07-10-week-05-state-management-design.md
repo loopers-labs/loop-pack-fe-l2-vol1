@@ -47,7 +47,7 @@ MSW, Pages Router, styled-components, Emotion, Axios, 모노레포, 무한 스�
 - `@tanstack/react-query`, `nuqs`, `zustand` 의존성
 - 홈과 상품 목록용 Next Route Handler
 - 약 30개의 상품 mock 데이터
-- 참고 fixture에서 선별해 한 번만 수집한 30개의 로컬 상품 이미지와 출처 기록
+- 참고 fixture에서 선별해 한 번만 수집한 30개의 로컬 상품 이미지와 `docs/assets/week-05-product-images.md` 출처 기록
 - API 요청·응답 타입
 - 충돌 없는 예시 경로에 둔 홈·상품 목록 정적 JSX 골격과 최소 CSS
 - 5주차 과제 문서와 API 계약
@@ -104,7 +104,9 @@ API 구조와 네이밍은 4주차의 `src/app/api/products/route.ts`와 같은 
 - 런타임에 29CM CDN을 직접 요청하지 않는다.
 - 참고 저장소의 상품 fixture에서 이미지 URL 30개를 선별하고 구현 시 한 번만 수집한다.
 - 수집한 이미지는 `public/images/products/p1.jpg`부터 `p30.jpg`까지 로컬 정적 자산으로 제공한다.
-- `public/images/products/SOURCES.md`에 상품 ID, 참고 저장소, 원본 상품 번호, 원본 상품명, 원본 URL을 기록한다.
+- `docs/assets/week-05-product-images.md`에 수집일 `2026-07-10`, 상품 ID, 참고 저장소와 고정 commit, 원본 상품 번호, 원본 상품명, 원본 URL을 기록한다.
+- 참고 저장소 commit은 `29cm-fe-pretest-commerce`의 `e17b28f3085719bb00608e42d54cee96484afea6`과 `00_test_project`의 `19832723bdbe9780cc40f47f30def3fcaf1c8be4`로 고정한다.
+- 출처 표시는 이미지 재배포 권리를 부여하지 않는다. 공개 배포 전 권리자의 허가를 별도로 확인해야 한다.
 - 크롤링·다운로드 스크립트는 멘티 과제나 애플리케이션 런타임에 포함하지 않는다.
 - 4주차 lint 설정인 Next.js `core-web-vitals`와 TypeScript preset을 그대로 유지한다.
 
@@ -210,8 +212,11 @@ type Product = {
 - `/api/products?scenario=empty`는 `products`를 비우되 카테고리와 페이지 정보는 유지한다.
 - 랜덤 오류는 사용하지 않는다.
 - 장바구니와 위시리스트 API는 제공하지 않는다.
-- 4주차의 `p1`, `p2` 상품 ID, `freeShipping`·`sizes` override와 전체 응답 필드 형태는 호환되게 유지한다. 5주차에는 참고 fixture와 사진의 의미를 일치시키기 위해 이름·가격·브랜드·이미지 값이 의도적으로 바뀐다.
-- 모든 상품은 원본 fixture에 브랜드와 정가 정보가 없으므로 공통 브랜드 `29CM 셀렉트`와 `originalPrice: null`을 사용한다.
+- 4주차의 `p1`, `p2` 상품 ID와 전체 응답 필드 형태는 호환되게 유지한다. p1은 원본 상품 번호 `1340400`의 `[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG`, 가격 79000으로 사진과 숫자 사이즈의 의미를 일치시킨다.
+- 숫자 사이즈는 p1에만 제공한다. p1은 `freeShipping: true`와 숫자 사이즈를, p2는 `freeShipping: false`와 빈 사이즈를 명시적으로 override한다.
+- 이름이나 이미지에서 확인되는 브랜드만 p11 `인스테드`, p16·p17·p19·p20 `스탠리`, p18 `렉슨`, p21 `메이커스`, p23 `위키오`, p25 `신지마운트`, p30 `신지루프`로 override하고 나머지는 `29CM 셀렉트`를 기본값으로 사용한다.
+- `originalPrice`는 할인 UI 분기를 위한 결정적 mock merchandising 값이며 원본 fixture에서 가져온 가격이 아니다. p4=158000, p7=498000, p10=109000, p11=58000, p16=89000, p18=279000, p21=29000, p23=49900, p27=499000, p30=7900을 사용하고 나머지는 `null`로 정규화한다.
+- p22와 p30의 `reviewCount`를 689로 같게 두어 `rating` 내림차순 tie-breaker가 p22를 먼저 정렬하는지 검증한다.
 - 카테고리는 이미지 의미에 따라 `casual`(p1-p5, p26), `fashion`(p6-p10, p27), `goods`(p11-p15, p28), `home`(p16-p20, p29), `digital`(p21-p25, p30)로 균등하게 나눈다.
 
 ## 7. 기본 요구사항
