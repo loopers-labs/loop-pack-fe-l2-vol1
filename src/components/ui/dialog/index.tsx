@@ -125,8 +125,10 @@ function DialogContent({ children }: ContentProps) {
   useEffect(() => {
     if (!open) return;
 
-    const originalOverflow = document.body.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onOpenChange(false);
@@ -134,7 +136,8 @@ function DialogContent({ children }: ContentProps) {
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.body.style.overflow = originalOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [open, onOpenChange]);
