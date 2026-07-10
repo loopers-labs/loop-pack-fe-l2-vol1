@@ -5,6 +5,7 @@ import {
   type MouseEvent,
   useState,
   useEffect,
+  useRef,
   useCallback,
   useSyncExternalStore,
 } from 'react';
@@ -22,6 +23,18 @@ type DialogProps = {
 function Dialog({ children, open, onOpenChange }: DialogProps) {
   const isControlled = open !== undefined;
   const [internalOpen, setInternalOpen] = useState(false);
+  const wasControlledRef = useRef(isControlled);
+
+  useEffect(() => {
+    if (wasControlledRef.current !== isControlled) {
+      const from = wasControlledRef.current ? 'controlled' : 'uncontrolled';
+      const to = isControlled ? 'controlled' : 'uncontrolled';
+      console.warn(
+        `Dialog가 ${from}에서 ${to}로 전환되었습니다. 컴포넌트 생명주기 동안 하나의 모드를 유지해야 합니다.`,
+      );
+    }
+    wasControlledRef.current = isControlled;
+  });
 
   const isOpen = isControlled ? open : internalOpen;
 

@@ -33,6 +33,18 @@ export function useSelect<T>({
 
   const isControlled = controlledSelected !== undefined;
   const selectedOption = isControlled ? controlledSelected : internalSelected;
+  const wasControlledRef = useRef(isControlled);
+
+  useEffect(() => {
+    if (wasControlledRef.current !== isControlled) {
+      const from = wasControlledRef.current ? 'controlled' : 'uncontrolled';
+      const to = isControlled ? 'controlled' : 'uncontrolled';
+      console.warn(
+        `useSelect가 ${from}에서 ${to}로 전환되었습니다. 컴포넌트 생명주기 동안 하나의 모드를 유지해야 합니다.`,
+      );
+    }
+    wasControlledRef.current = isControlled;
+  });
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
