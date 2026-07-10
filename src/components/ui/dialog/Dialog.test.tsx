@@ -45,6 +45,23 @@ function ControlledDialog() {
   );
 }
 
+function CustomClassNameDialog() {
+  return (
+    <Dialog>
+      <Dialog.Trigger>
+        <span>열기</span>
+      </Dialog.Trigger>
+      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/30" />
+      <Dialog.Content className="fixed inset-0 z-[51] flex items-center justify-center p-6">
+        <div className="rounded-2xl bg-white p-7">
+          <Dialog.Title>Custom Dialog</Dialog.Title>
+          <Dialog.Close>닫기</Dialog.Close>
+        </div>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+
 // ── 테스트 ──
 
 describe('Dialog', () => {
@@ -162,6 +179,20 @@ describe('Dialog', () => {
       await user.click(screen.getByText('열기'));
       const dialog = screen.getByRole('dialog');
       expect(dialog).toHaveAttribute('aria-modal', 'true');
+    });
+
+    it('custom className을 넘겨도 overlay 클릭으로 닫힌다', async () => {
+      const user = userEvent.setup();
+      render(<CustomClassNameDialog />);
+
+      await user.click(screen.getByText('열기'));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+      // overlay 영역 클릭 (Dialog.Overlay에 해당)
+      const overlay = document.querySelector('.fixed.inset-0.z-50');
+      expect(overlay).toBeInTheDocument();
+      await user.click(overlay as HTMLElement);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('Context 밖에서 사용하면 에러를 던진다', () => {

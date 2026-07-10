@@ -57,7 +57,6 @@ function Dialog({ children, open, onOpenChange }: DialogProps) {
 
 type TriggerProps = {
   children: ReactNode;
-  asChild?: boolean;
 };
 
 function DialogTrigger({ children }: TriggerProps) {
@@ -101,17 +100,7 @@ function DialogOverlay({ className }: OverlayProps) {
   return (
     <Portal>
       <div
-        className={className}
-        style={
-          !className
-            ? {
-                position: 'fixed',
-                inset: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                zIndex: 50,
-              }
-            : undefined
-        }
+        className={className ?? 'fixed inset-0 z-50 bg-black/40'}
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
       />
@@ -159,23 +148,10 @@ function DialogContent({ children, className }: ContentProps) {
       <div
         role="dialog"
         aria-modal="true"
-        className={className}
-        style={
-          !className
-            ? {
-                position: 'fixed',
-                inset: 0,
-                zIndex: 51,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pointerEvents: 'none',
-              }
-            : undefined
-        }
+        className={`pointer-events-none ${className ?? 'fixed inset-0 z-[51] flex items-center justify-center'}`}
       >
         <div
-          style={{ pointerEvents: 'auto' }}
+          className="pointer-events-auto"
           onClick={(e: MouseEvent) => e.stopPropagation()}
         >
           {children}
