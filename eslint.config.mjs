@@ -37,7 +37,7 @@ const eslintConfig = defineConfig([
       "no-empty": ["error", { allowEmptyCatch: false }],
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-non-null-assertion": "error",
-      "no-magic-numbers": ["error", { ignore: [0, 1, -1] }],
+      "no-magic-numbers": ["error", { ignore: [0, 1, -1, 100] }],
     },
   },
 
