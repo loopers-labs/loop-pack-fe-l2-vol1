@@ -43,7 +43,11 @@ export default function DialogDemoPage() {
           ① uncontrolled — 페이지는 열림 상태를 모른다
         </h2>
         <Dialog>
-          <Dialog.Trigger style={primaryButtonStyle}>구매하기</Dialog.Trigger>
+          <Dialog.Trigger asChild>
+            <button type="button" style={primaryButtonStyle}>
+              구매하기
+            </button>
+          </Dialog.Trigger>
           <Dialog.Overlay />
           <Dialog.Content>
             <Dialog.Title>바로 구매할까요?</Dialog.Title>

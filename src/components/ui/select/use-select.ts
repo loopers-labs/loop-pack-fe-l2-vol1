@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, type KeyboardEvent, type RefObject } from "react";
+
+import { useControllableState } from "../internal/use-controllable-state";
+import { useOutsideClick } from "../internal/use-outside-click";
 
 export interface SelectOption {
   id: string;
@@ -8,12 +11,68 @@ export interface SelectOption {
 
 interface UseSelectProps<T extends SelectOption> {
   options: T[];
-  value: T | null;
-  onChange: (option: T) => void;
+  value?: T | null;
+  defaultValue?: T | null;
+  onChange?: (option: T) => void;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function useSelect<T extends SelectOption>({ options, value, onChange }: UseSelectProps<T>) {
-  const [isOpen, setIsOpen] = useState(false);
+interface SelectToggleProps {
+  tabIndex: number;
+  onClick: () => void;
+  onKeyDown: (event: KeyboardEvent) => void;
+  "data-state": "open" | "closed";
+}
+
+interface SelectOptionProps {
+  onClick: () => void;
+  onMouseEnter: () => void;
+  "data-selected": "" | undefined;
+  "data-highlighted": "" | undefined;
+  "data-disabled": "" | undefined;
+}
+
+interface SelectOptionState {
+  selected: boolean;
+  highlighted: boolean;
+  disabled: boolean;
+}
+
+interface UseSelectReturn<T extends SelectOption> {
+  isOpen: boolean;
+  value: T | null;
+  highlightedIndex: number;
+  rootRef: RefObject<HTMLDivElement | null>;
+  getToggleProps: () => SelectToggleProps;
+  getOptionProps: (option: T, index: number) => SelectOptionProps;
+  getOptionState: (option: T, index: number) => SelectOptionState;
+}
+
+export function useSelect<T extends SelectOption>({
+  options,
+  value: controlledValue,
+  defaultValue = null,
+  onChange,
+  open: controlledOpen,
+  defaultOpen = false,
+  onOpenChange,
+}: UseSelectProps<T>): UseSelectReturn<T> {
+  const [value, setValue] = useControllableState<T | null>({
+    value: controlledValue,
+    defaultValue,
+    onChange: (next) => {
+      if (next !== null) onChange?.(next);
+    },
+  });
+
+  const [isOpen, setIsOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
+
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -37,7 +96,7 @@ export function useSelect<T extends SelectOption>({ options, value, onChange }: 
 
   const selectOption = (option: T) => {
     if (option.disabled) return;
-    onChange(option);
+    setValue(option);
     close();
   };
 
@@ -46,7 +105,13 @@ export function useSelect<T extends SelectOption>({ options, value, onChange }: 
     if (next !== -1) setHighlightedIndex(next);
   };
 
-  const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
+  const jumpHighlight = (edge: "start" | "end") => {
+    const next =
+      edge === "start" ? findEnabledIndex(0, 1) : findEnabledIndex(options.length - 1, -1);
+    if (next !== -1) setHighlightedIndex(next);
+  };
+
+  const handleTriggerKeyDown = (e: KeyboardEvent) => {
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
@@ -57,6 +122,18 @@ export function useSelect<T extends SelectOption>({ options, value, onChange }: 
         e.preventDefault();
         if (isOpen) moveHighlight(-1);
         else open();
+        break;
+      case "Home":
+        if (isOpen) {
+          e.preventDefault();
+          jumpHighlight("start");
+        }
+        break;
+      case "End":
+        if (isOpen) {
+          e.preventDefault();
+          jumpHighlight("end");
+        }
         break;
       case "Enter":
       case " ":
@@ -70,32 +147,26 @@ export function useSelect<T extends SelectOption>({ options, value, onChange }: 
     }
   };
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const onPointerDown = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setIsOpen(false);
-        setHighlightedIndex(-1);
-      }
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [isOpen]);
+  useOutsideClick(rootRef, close, isOpen);
 
-  const getToggleProps = () => ({
+  const getToggleProps = (): SelectToggleProps => ({
     tabIndex: 0,
     onClick: () => (isOpen ? close() : open()),
     onKeyDown: handleTriggerKeyDown,
+    "data-state": isOpen ? "open" : "closed",
   });
 
-  const getOptionProps = (option: T, index: number) => ({
+  const getOptionProps = (option: T, index: number): SelectOptionProps => ({
     onClick: () => selectOption(option),
     onMouseEnter: () => {
       if (!option.disabled) setHighlightedIndex(index);
     },
+    "data-selected": value !== null && value.id === option.id ? "" : undefined,
+    "data-highlighted": index === highlightedIndex ? "" : undefined,
+    "data-disabled": option.disabled === true ? "" : undefined,
   });
 
-  const getOptionState = (option: T, index: number) => ({
+  const getOptionState = (option: T, index: number): SelectOptionState => ({
     selected: value !== null && value.id === option.id,
     highlighted: index === highlightedIndex,
     disabled: option.disabled === true,
@@ -103,6 +174,7 @@ export function useSelect<T extends SelectOption>({ options, value, onChange }: 
 
   return {
     isOpen,
+    value,
     highlightedIndex,
     rootRef,
     getToggleProps,
