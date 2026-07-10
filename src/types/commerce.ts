@@ -7,11 +7,7 @@ export type Category = {
 
 export type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
 
-export type ApiScenario = "empty" | "error";
-
-export type HomeQuery = {
-  scenario?: ApiScenario;
-};
+export type MockApiScenario = "empty" | "error";
 
 export type ProductListQuery = {
   q?: string;
@@ -19,7 +15,6 @@ export type ProductListQuery = {
   sort?: ProductSort;
   page?: number;
   pageSize?: number;
-  scenario?: ApiScenario;
 };
 
 export type Product = {

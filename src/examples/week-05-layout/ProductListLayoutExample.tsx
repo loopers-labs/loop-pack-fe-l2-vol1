@@ -24,7 +24,7 @@ export function ProductListLayoutExample() {
         <h1>상품 목록</h1>
         <form className="week05-filters">
           <label>검색<input name="q" placeholder="상품명 또는 브랜드" /></label>
-          <label>카테고리<select name="category" defaultValue=""><option value="">전체</option></select></label>
+          <label>카테고리<select name="category" defaultValue="all"><option value="all">전체</option><option value="casual">캐주얼</option><option value="fashion">패션</option><option value="goods">뷰티·잡화</option><option value="home">홈</option><option value="digital">디지털</option></select></label>
           <label>정렬<select name="sort" defaultValue="latest"><option value="latest">최신순</option></select></label>
         </form>
       </section>

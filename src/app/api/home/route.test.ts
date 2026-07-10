@@ -39,4 +39,11 @@ describe("GET /api/home", () => {
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ message: "홈 데이터를 불러오지 못했습니다." });
   });
+
+  it("rejects an unknown scenario", async () => {
+    const response = await request("?scenario=unknown");
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
+  });
 });

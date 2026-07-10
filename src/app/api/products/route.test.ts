@@ -137,6 +137,7 @@ describe("GET /api/products", () => {
     "?category=food",
     "?category=beauty",
     "?sort=random",
+    "?scenario=unknown",
     "?page=0",
     "?page=-1",
     "?page=1.5",
@@ -151,11 +152,31 @@ describe("GET /api/products", () => {
     expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
   });
 
+  it("validates request inputs before applying the error scenario", async () => {
+    const response = await request("?scenario=error&page=0");
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
+  });
+
   it("supports deterministic empty and error scenarios", async () => {
-    const emptyResponse = await request("?scenario=empty");
+    const emptyResponse = await request(
+      "?scenario=empty&category=digital&page=2&pageSize=3",
+    );
     const emptyBody = await emptyResponse.json();
+
+    expect(emptyResponse.status).toBe(200);
     expect(emptyBody.products).toEqual([]);
-    expect(emptyBody.categories).toHaveLength(5);
+    expect(emptyBody.totalCount).toBe(0);
+    expect(emptyBody.categories).toEqual([
+      { id: "casual", name: "캐주얼" },
+      { id: "fashion", name: "패션" },
+      { id: "goods", name: "뷰티·잡화" },
+      { id: "home", name: "홈" },
+      { id: "digital", name: "디지털" },
+    ]);
+    expect(emptyBody.page).toBe(2);
+    expect(emptyBody.pageSize).toBe(3);
 
     const errorResponse = await request("?scenario=error");
     expect(errorResponse.status).toBe(500);

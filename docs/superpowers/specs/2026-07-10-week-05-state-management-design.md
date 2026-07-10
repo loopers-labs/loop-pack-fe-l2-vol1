@@ -35,6 +35,8 @@
 - React 로컬 상태: 입력 중인 값이나 일시적인 UI 상태
 - Next Route Handler: mock API
 - 기존 전역 CSS 또는 일반 CSS/CSS Modules
+- Node.js 24.17.0 (`.nvmrc`, 지원 범위 `>=22.12.0`)
+- pnpm 10.15.1 (`package.json`의 `packageManager`)
 
 MSW, Pages Router, styled-components, Emotion, Axios, 모노레포, 무한 스크롤은 도입하지 않는다.
 
@@ -151,6 +153,8 @@ type Category = {
 - `pageSize`: 기본값 12
 - `scenario`: 검증용 `error | empty`, 기본 UI에서는 사용하지 않음
 
+학습자가 소유하는 `ProductListQuery`에는 `scenario`를 포함하지 않는다. mock 응답을 검증하기 위한 제어값은 `MockApiScenario`로 별도 표현한다.
+
 응답은 4주차의 `{ products, totalCount }` 형태를 유지하며 현재 페이지 정보만 추가한다.
 
 ```ts
@@ -194,11 +198,12 @@ type Product = {
 ### 응답 동작
 
 - 약 30개 상품을 제공한다.
-- 두 API의 정상 응답에 500ms의 고정 지연을 둔다.
+- 두 API는 요청값 검증을 통과한 기본·empty·error 응답에 500ms의 고정 지연을 둔다.
 - `q`는 앞뒤 공백을 제거하고 상품명·브랜드를 대소문자 구분 없이 부분 검색한다.
 - `sort`를 생략하면 4주차 fixture 순서를 유지하고, `sort=latest`를 명시했을 때만 `createdAt` 내림차순으로 정렬한다.
 - `latest`는 `createdAt` 내림차순, `popular`는 `reviewCount` 내림차순 후 `rating` 내림차순으로 정렬한다.
-- `page < 1`, 지원하지 않는 `category`·`sort`, `1~24` 범위를 벗어난 `pageSize`는 `400`으로 응답한다.
+- `page < 1`, 지원하지 않는 `category`·`sort`·`scenario`, `1~24` 범위를 벗어난 `pageSize`는 `400`으로 응답한다.
+- 요청값 검증은 scenario 적용과 mock 지연보다 먼저 수행한다. 잘못된 요청은 지연 없이 `400`으로 끝나며 `scenario=error&page=0`도 `400`이 우선한다.
 - 필터 결과의 마지막 페이지를 초과한 양수 `page`는 빈 `products`를 반환한다.
 - 두 API 모두 `scenario=error`에서 `{ message: string }` 형태의 고정된 `500` 응답을 반환한다.
 - `/api/home?scenario=empty`는 `popularProducts`와 `newProducts`를 비우되 배너와 카테고리는 유지한다.
@@ -330,7 +335,8 @@ Advanced는 필수가 아니다. 기본 과제를 마친 뒤 A~D 중 하나의 �
 - Header와 상품 버튼이 Zustand selector로 필요한 상태만 구독한다.
 - 로딩·에러·빈 상태가 구분된다.
 - 상태 분류와 아키텍처 선택 근거가 기록되어 있다.
-- 타입 오류와 lint 오류가 없다.
+- `pnpm test`의 전체 테스트가 통과한다.
+- `pnpm check`의 테스트, lint, 타입 검사, 프로덕션 빌드가 모두 통과한다.
 - AI로 생성한 부분을 표시하고 직접 검토했다.
 
 ## 10. 의도적으로 열어 두는 결정

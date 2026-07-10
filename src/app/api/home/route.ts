@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categories, homeBanner, products, waitForMockApi } from "@/app/api/_data/commerce";
-import type { ApiErrorResponse, HomeResponse } from "@/types/commerce";
+import type { ApiErrorResponse, HomeResponse, MockApiScenario } from "@/types/commerce";
+
+const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
+
+const isMockApiScenario = (value: string): value is MockApiScenario =>
+  scenarioValues.some((scenario) => scenario === value);
 
 export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<HomeResponse | ApiErrorResponse>> {
-  await waitForMockApi();
-
   const scenario = request.nextUrl.searchParams.get("scenario");
+
+  if (scenario !== null && !isMockApiScenario(scenario)) {
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: 400 },
+    );
+  }
+
+  await waitForMockApi();
 
   if (scenario === "error") {
     return NextResponse.json(

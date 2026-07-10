@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
-import type { ApiErrorResponse, ProductListResponse, ProductSort } from "@/types/commerce";
+import type {
+  ApiErrorResponse,
+  MockApiScenario,
+  ProductListResponse,
+  ProductSort,
+} from "@/types/commerce";
 
-const sortValues: ProductSort[] = ["latest", "popular", "price-asc", "price-desc"];
+const sortValues = ["latest", "popular", "price-asc", "price-desc"] as const satisfies
+  readonly ProductSort[];
+const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
+
+const isProductSort = (value: string): value is ProductSort =>
+  sortValues.some((sort) => sort === value);
+
+const isMockApiScenario = (value: string): value is MockApiScenario =>
+  scenarioValues.some((scenario) => scenario === value);
 
 const isPositiveInteger = (value: string | null) =>
   value !== null && /^[1-9]\d*$/.test(value);
@@ -10,18 +23,8 @@ const isPositiveInteger = (value: string | null) =>
 export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<ProductListResponse | ApiErrorResponse>> {
-  await waitForMockApi();
-
   const params = request.nextUrl.searchParams;
   const scenario = params.get("scenario");
-
-  if (scenario === "error") {
-    return NextResponse.json(
-      { message: "상품 목록을 불러오지 못했습니다." },
-      { status: 500 },
-    );
-  }
-
   const q = params.get("q")?.trim().toLocaleLowerCase("ko") ?? "";
   const category = params.get("category");
   const sort = params.get("sort");
@@ -30,19 +33,41 @@ export async function GET(
   const page = Number(pageValue);
   const pageSize = Number(pageSizeValue);
 
+  if (scenario !== null && !isMockApiScenario(scenario)) {
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: 400 },
+    );
+  }
+
+  if (sort !== null && !isProductSort(sort)) {
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: 400 },
+    );
+  }
+
   const validCategory =
     category === null ||
     category === "all" ||
     categories.some((item) => item.id === category);
-  const validSort = sort === null || sortValues.includes(sort as ProductSort);
   const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page);
   const validPageSize =
     isPositiveInteger(pageSizeValue) && Number.isSafeInteger(pageSize) && pageSize <= 24;
 
-  if (!validCategory || !validSort || !validPage || !validPageSize) {
+  if (!validCategory || !validPage || !validPageSize) {
     return NextResponse.json(
       { message: "요청 조건을 확인해주세요." },
       { status: 400 },
+    );
+  }
+
+  await waitForMockApi();
+
+  if (scenario === "error") {
+    return NextResponse.json(
+      { message: "상품 목록을 불러오지 못했습니다." },
+      { status: 500 },
     );
   }
 
@@ -57,7 +82,7 @@ export async function GET(
 
   if (sort !== null) {
     sortedProducts.sort((a, b) => {
-      switch (sort as ProductSort) {
+      switch (sort) {
         case "popular":
           return b.reviewCount - a.reviewCount || b.rating - a.rating;
         case "price-asc":

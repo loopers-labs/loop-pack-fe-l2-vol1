@@ -26,6 +26,13 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 
 상품 사진은 과제 저장소에 포함되어 있으며 앱 실행 중 29CM으로 요청하지 않습니다.
 
+## 실행 환경
+
+- Node.js 24.17.0 (`.nvmrc`, 지원 범위 `>=22.12.0`)
+- pnpm 10.15.1 (`package.json`의 `packageManager`)
+
+의존성을 설치한 뒤 개발 중에는 `pnpm test`로 전체 테스트를 확인합니다. 제출 전에는 `pnpm check`를 실행해 테스트, lint, 타입 검사, 프로덕션 빌드가 모두 통과하는지 확인합니다.
+
 ## 기본 과제
 
 1. `상태 · 소유자 · 수명 · 공유 범위 · 선택 이유` 표를 먼저 작성합니다.
@@ -82,6 +89,7 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 - 기본: banner, categories, popularProducts, newProducts
 - `scenario=empty`: 상품 배열만 비움
 - `scenario=error`: `{ "message": "홈 데이터를 불러오지 못했습니다." }`, HTTP 500
+- `scenario`는 생략하거나 `empty | error`만 사용할 수 있으며, 다른 값은 `{ "message": "요청 조건을 확인해주세요." }`, HTTP 400
 
 ### `GET /api/products`
 
@@ -100,6 +108,8 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 - `scenario=empty`: products는 비우고 totalCount는 0으로 반환하며 categories·page·pageSize는 유지
 - `scenario=error`: `{ "message": "상품 목록을 불러오지 못했습니다." }`, HTTP 500
 - TypeScript 계약: `src/types/commerce.ts`
+
+`scenario`는 mock API 검증 전용 제어값입니다. 학습자가 관리하는 URL 상태와 `ProductListQuery`에는 포함하지 않으며 서버에서는 `MockApiScenario`로 구분합니다. 두 API는 요청값을 먼저 검증합니다. 잘못된 요청은 지연 없이 400으로 끝나므로 `scenario=error&page=0`도 500보다 400이 우선합니다. 검증을 통과한 기본·empty·error 요청은 모두 500ms 고정 지연 후 각 응답을 반환합니다.
 
 ## 새 주차 코드 동기화
 
@@ -123,5 +133,5 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 - 로컬 장바구니·위시리스트는 Zustand와 선택적 구독으로 관리됩니다.
 - 홈과 목록의 같은 상품 상태와 Header 개수가 일치합니다.
 - 로딩·에러·빈 상태가 구분됩니다.
-- 타입·lint·build가 통과합니다.
+- `pnpm test`의 전체 테스트와 `pnpm check`의 테스트·lint·타입 검사·build가 통과합니다.
 - AI 생성 부분을 표시하고 직접 검토했습니다.
