@@ -18,11 +18,11 @@
     "react-dom": "19.2.4"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{ts,tsx,js,jsx,mjs}": [
       "eslint --fix --max-warnings=0 --no-warn-ignored",
       "prettier --write"
     ],
-    "*.{css,json,mjs}": [
+    "*.{css,json}": [
       "prettier --write"
     ]
   },
@@ -34,6 +34,8 @@
     "@types/react-dom": "^19",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
