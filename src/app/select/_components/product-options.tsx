@@ -6,8 +6,8 @@ import type { ProductCatalog } from "@/types/product";
 
 import { toBundleOptions, toItemOptions, toSizeOptions } from "../_lib/option-mappers";
 import { BundleSelect, type BundleOption } from "./bundle-select";
-import { SizeSelect, type SizeOption } from "./size-select";
 import { ItemSelect, type ItemOption } from "./item-select";
+import { SizeSelect, type SizeOption } from "./size-select";
 
 export function ProductOptions({ catalog }: { catalog: ProductCatalog }) {
   const [bundle, setBundle] = useState<BundleOption | null>(null);
@@ -35,6 +35,13 @@ export function ProductOptions({ catalog }: { catalog: ProductCatalog }) {
       <section style={{ display: "grid", gap: 8 }}>
         <h2 style={{ fontSize: 15, color: "#5a6675" }}>③ 썸네일 옵션 — 앰플</h2>
         <ItemSelect options={itemOptions} value={item} onChange={setItem} />
+      </section>
+
+      <section style={{ display: "grid", gap: 8 }}>
+        <h2 style={{ fontSize: 15, color: "#5a6675" }}>
+          ④ uncontrolled — 페이지는 선택 상태를 모른다 (defaultValue만 전달)
+        </h2>
+        <BundleSelect options={bundleOptions} defaultValue={bundleOptions[0] ?? null} />
       </section>
 
       <section

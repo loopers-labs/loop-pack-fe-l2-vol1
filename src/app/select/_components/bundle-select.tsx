@@ -10,14 +10,23 @@ export interface BundleOption extends SelectOption {
 
 interface BundleSelectProps {
   options: BundleOption[];
-  value: BundleOption | null;
-  onChange: (option: BundleOption) => void;
+  value?: BundleOption | null;
+  defaultValue?: BundleOption | null;
+  onChange?: (option: BundleOption) => void;
 }
 
-export function BundleSelect({ options, value, onChange }: BundleSelectProps) {
-  const { isOpen, rootRef, getToggleProps, getOptionProps, getOptionState } = useSelect({
+export function BundleSelect({ options, value, defaultValue, onChange }: BundleSelectProps) {
+  const {
+    isOpen,
+    value: selected,
+    rootRef,
+    getToggleProps,
+    getOptionProps,
+    getOptionState,
+  } = useSelect({
     options,
     value,
+    defaultValue,
     onChange,
   });
 
@@ -42,7 +51,7 @@ export function BundleSelect({ options, value, onChange }: BundleSelectProps) {
           fontWeight: 700,
         }}
       >
-        <span>{value ? value.label : "옵션 선택"}</span>
+        <span>{selected ? selected.label : "옵션 선택"}</span>
         <span aria-hidden>{isOpen ? "︿" : "﹀"}</span>
       </button>
 

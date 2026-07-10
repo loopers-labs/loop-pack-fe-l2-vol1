@@ -9,14 +9,23 @@ export interface SizeOption extends SelectOption {
 
 interface SizeSelectProps {
   options: SizeOption[];
-  value: SizeOption | null;
-  onChange: (option: SizeOption) => void;
+  value?: SizeOption | null;
+  defaultValue?: SizeOption | null;
+  onChange?: (option: SizeOption) => void;
 }
 
-export function SizeSelect({ options, value, onChange }: SizeSelectProps) {
-  const { isOpen, rootRef, getToggleProps, getOptionProps, getOptionState } = useSelect({
+export function SizeSelect({ options, value, defaultValue, onChange }: SizeSelectProps) {
+  const {
+    isOpen,
+    value: selected,
+    rootRef,
+    getToggleProps,
+    getOptionProps,
+    getOptionState,
+  } = useSelect({
     options,
     value,
+    defaultValue,
     onChange,
   });
 
@@ -41,8 +50,8 @@ export function SizeSelect({ options, value, onChange }: SizeSelectProps) {
           fontWeight: 700,
         }}
       >
-        <span style={{ color: value ? "#1a1a1a" : "#5a6675", fontWeight: value ? 700 : 500 }}>
-          {value ? value.label : "사이즈"}
+        <span style={{ color: selected ? "#1a1a1a" : "#5a6675", fontWeight: selected ? 700 : 500 }}>
+          {selected ? selected.label : "사이즈"}
         </span>
         <span aria-hidden>{isOpen ? "︿" : "﹀"}</span>
       </button>

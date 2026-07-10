@@ -12,14 +12,23 @@ export interface ItemOption extends SelectOption {
 
 interface ItemSelectProps {
   options: ItemOption[];
-  value: ItemOption | null;
-  onChange: (option: ItemOption) => void;
+  value?: ItemOption | null;
+  defaultValue?: ItemOption | null;
+  onChange?: (option: ItemOption) => void;
 }
 
-export function ItemSelect({ options, value, onChange }: ItemSelectProps) {
-  const { isOpen, rootRef, getToggleProps, getOptionProps, getOptionState } = useSelect({
+export function ItemSelect({ options, value, defaultValue, onChange }: ItemSelectProps) {
+  const {
+    isOpen,
+    value: selected,
+    rootRef,
+    getToggleProps,
+    getOptionProps,
+    getOptionState,
+  } = useSelect({
     options,
     value,
+    defaultValue,
     onChange,
   });
 
@@ -44,7 +53,7 @@ export function ItemSelect({ options, value, onChange }: ItemSelectProps) {
           fontWeight: 700,
         }}
       >
-        <span>{value ? value.label : "옵션을 선택해 주세요"}</span>
+        <span>{selected ? selected.label : "옵션을 선택해 주세요"}</span>
         <span aria-hidden>{isOpen ? "︿" : "﹀"}</span>
       </button>
 
