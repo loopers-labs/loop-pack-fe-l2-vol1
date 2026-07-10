@@ -6,6 +6,7 @@ import "./week-05-layout.css";
  * 이 구조는 상태관리 아키텍처의 정답이 아닙니다.
  * 그대로 사용하거나, 기존 컴포넌트를 재사용하거나, 자유롭게 교체해도 됩니다.
  * 데이터 조회, Query 구성, 전역 상태와 이벤트 연결은 포함되어 있지 않습니다.
+ * 실제 상태를 연결할 때 각 버튼의 aria-pressed를 해당 상품의 포함 여부로 바꿉니다.
  */
 export function HomeLayoutExample() {
   return (
@@ -40,7 +41,22 @@ export function HomeLayoutExample() {
                 <p>브랜드</p>
                 <h3>상품명</h3>
                 <strong>0원</strong>
-                <div><button type="button">찜</button><button type="button">담기</button></div>
+                <div>
+                  <button
+                    type="button"
+                    aria-label={`${title} ${index + 1}번 상품 위시리스트`}
+                    aria-pressed={false}
+                  >
+                    찜
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`${title} ${index + 1}번 상품 장바구니`}
+                    aria-pressed={false}
+                  >
+                    담기
+                  </button>
+                </div>
               </article>
             ))}
           </div>

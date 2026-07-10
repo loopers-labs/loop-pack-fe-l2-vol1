@@ -5,6 +5,8 @@ import { GET } from "./route";
 const request = (query = "") =>
   GET(new NextRequest(`http://localhost/api/products${query}`));
 
+const hugePositiveInteger = "9".repeat(400);
+
 describe("GET /api/products", () => {
   it("preserves Week 04 defaults and adds paging metadata", async () => {
     const response = await request();
@@ -96,6 +98,8 @@ describe("GET /api/products", () => {
     "?pageSize=0",
     "?pageSize=25",
     "?pageSize=1.5",
+    `?page=${hugePositiveInteger}`,
+    `?pageSize=${hugePositiveInteger}`,
   ])("rejects invalid query %s", async (query) => {
     const response = await request(query);
     expect(response.status).toBe(400);

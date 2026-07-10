@@ -27,15 +27,17 @@ export async function GET(
   const sort = params.get("sort");
   const pageValue = params.get("page") ?? "1";
   const pageSizeValue = params.get("pageSize") ?? "12";
+  const page = Number(pageValue);
+  const pageSize = Number(pageSizeValue);
 
   const validCategory =
     category === null ||
     category === "all" ||
     categories.some((item) => item.id === category);
   const validSort = sort === null || sortValues.includes(sort as ProductSort);
-  const validPage = isPositiveInteger(pageValue);
+  const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page);
   const validPageSize =
-    isPositiveInteger(pageSizeValue) && Number(pageSizeValue) <= 24;
+    isPositiveInteger(pageSizeValue) && Number.isSafeInteger(pageSize) && pageSize <= 24;
 
   if (!validCategory || !validSort || !validPage || !validPageSize) {
     return NextResponse.json(
@@ -43,9 +45,6 @@ export async function GET(
       { status: 400 },
     );
   }
-
-  const page = Number(pageValue);
-  const pageSize = Number(pageSizeValue);
 
   const filteredProducts = products.filter((product) => {
     const matchesCategory =
