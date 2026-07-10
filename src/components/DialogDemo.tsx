@@ -1,10 +1,18 @@
 'use client';
 
 import { Dialog } from '@/components/ui/dialog';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+const AUTO_CLOSE_DELAY = 3000;
 
 export function DialogDemo() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => setOpen(false), AUTO_CLOSE_DELAY);
+    return () => clearTimeout(timer);
+  }, [open]);
 
   return (
     <div className="flex flex-col gap-8 pt-10">
@@ -44,9 +52,7 @@ export function DialogDemo() {
             <Dialog.Overlay />
             <Dialog.Content>
               <Dialog.Title>베이글 주문 확인</Dialog.Title>
-              <Dialog.Description>
-                선택하신 옵션으로 주문을 진행할까요?
-              </Dialog.Description>
+              <Dialog.Description>3초 후 자동으로 닫힙니다.</Dialog.Description>
               <div className="flex justify-end gap-2">
                 <Dialog.Close>
                   <span className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-500">
@@ -61,9 +67,6 @@ export function DialogDemo() {
               </div>
             </Dialog.Content>
           </Dialog>
-          <button type="button" onClick={() => setOpen(false)}>
-            외부에서 닫기
-          </button>
         </div>
       </div>
     </div>
