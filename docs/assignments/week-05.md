@@ -94,7 +94,7 @@ TanStack Query는 서버 데이터의 조회 상태와 캐시 수명을 맡습�
 - page가 마지막 페이지를 초과하면 빈 products와 실제 totalCount를 반환
 - 잘못된 category·sort·page·pageSize: `{ "message": "요청 조건을 확인해주세요." }`, HTTP 400
 - 응답: products, categories, totalCount, page, pageSize
-- `scenario=empty`: products만 비움
+- `scenario=empty`: products는 비우고 totalCount는 0으로 반환하며 categories·page·pageSize는 유지
 - `scenario=error`: `{ "message": "상품 목록을 불러오지 못했습니다." }`, HTTP 500
 - TypeScript 계약: `src/types/commerce.ts`
 
