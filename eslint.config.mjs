@@ -31,7 +31,6 @@ const eslintConfig = defineConfig([
       eqeqeq: ["error", "always"],
       "no-empty": "error",
       "no-console": ["error", { allow: ["warn", "error"] }],
-      curly: ["error", "all"],
       "prefer-const": "error",
       "no-restricted-syntax": [
         "error",
@@ -45,6 +44,7 @@ const eslintConfig = defineConfig([
   },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
   eslintConfigPrettier,
+  { rules: { curly: ["error", "all"] } },
 ]);
 
 export default eslintConfig;
