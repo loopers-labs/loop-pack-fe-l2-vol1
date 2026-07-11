@@ -40,7 +40,7 @@ describe("GET /api/products", () => {
     expect(body.pageSize).toBe(12);
     expect(body.products[0]).toMatchObject({
       id: "p1",
-      brand: "29CM 셀렉트",
+      brand: "Loopers Select",
       name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
       category: "casual",
       price: 79000,
@@ -57,7 +57,7 @@ describe("GET /api/products", () => {
     });
     expect(body.products[1]).toMatchObject({
       id: "p2",
-      brand: "29CM 셀렉트",
+      brand: "Loopers Select",
       name: "[Exclusive] Holiday Signature Ball Cap (20Colors)",
       category: "casual",
       price: 39000,
@@ -80,7 +80,7 @@ describe("GET /api/products", () => {
       .toMatchObject([
         {
           id: "p1",
-          brand: "29CM 셀렉트",
+          brand: "Loopers Select",
           name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
           category: "casual",
           price: 79000,

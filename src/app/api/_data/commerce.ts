@@ -71,7 +71,7 @@ const productSeeds: ProductSeed[] = [
   },
   {
     id: "p4",
-    name: "[29Exclusive] PLAIN COTTON CASHMERE CARDIGAN (5 COLORS)",
+    name: "[Exclusive] PLAIN COTTON CASHMERE CARDIGAN (5 COLORS)",
     category: "casual",
     price: 138000,
     originalPrice: 158000,
@@ -336,7 +336,7 @@ const productSeeds: ProductSeed[] = [
 
 const normalizeProduct = (seed: ProductSeed): Product => ({
   id: seed.id,
-  brand: seed.brand ?? "29CM 셀렉트",
+  brand: seed.brand ?? "Loopers Select",
   name: seed.name,
   category: seed.category,
   price: seed.price,

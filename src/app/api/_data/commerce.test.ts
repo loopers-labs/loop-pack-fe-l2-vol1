@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { homeBanner, products } from "./commerce";
 
 const productImagesDirectory = join(process.cwd(), "public/images/products");
-const provenancePath = join(
+const imageManifestPath = join(
   process.cwd(),
   "docs/assets/week-05-product-images.md",
 );
@@ -13,6 +13,12 @@ const provenancePath = join(
 describe("commerce fixture", () => {
   it("uses at least three explicit product brands", () => {
     expect(new Set(products.map((product) => product.brand)).size).toBeGreaterThanOrEqual(3);
+  });
+
+  it("uses a neutral local brand for products without an explicit brand", () => {
+    expect(products.find((product) => product.id === "p1")?.brand).toBe(
+      "Loopers Select",
+    );
   });
 
   it("provides deterministic mock discounts while retaining full-price products", () => {
@@ -61,6 +67,9 @@ describe("commerce fixture", () => {
       freeShipping: false,
       sizes: [],
     });
+    expect(products.find((product) => product.id === "p4")?.name).toBe(
+      "[Exclusive] PLAIN COTTON CASHMERE CARDIGAN (5 COLORS)",
+    );
   });
 
   it("uses p6 for the home banner image", () => {
@@ -81,33 +90,26 @@ describe("commerce fixture", () => {
     expect(new Set(hashes).size).toBe(30);
   });
 
-  it("records pinned source provenance outside public assets", () => {
+  it("records the local image manifest outside public assets", () => {
     expect(existsSync(join(productImagesDirectory, "SOURCES.md"))).toBe(false);
-    expect(existsSync(provenancePath)).toBe(true);
+    expect(existsSync(imageManifestPath)).toBe(true);
 
-    if (!existsSync(provenancePath)) {
+    if (!existsSync(imageManifestPath)) {
       return;
     }
 
-    const provenance = readFileSync(provenancePath, "utf8");
-    const sourceRows = provenance
+    const manifest = readFileSync(imageManifestPath, "utf8");
+    const imageRows = manifest
       .split("\n")
       .filter((line) => /^\| p\d+ \|/.test(line));
-    const p1Row = sourceRows.find((line) => line.startsWith("| p1 |"));
+    const p1Row = imageRows.find((line) => line.startsWith("| p1 |"));
 
-    expect(sourceRows).toHaveLength(30);
-    expect(provenance).toContain("2026-07-10");
-    expect(provenance).toContain("e17b28f3085719bb00608e42d54cee96484afea6");
-    expect(provenance).toContain("19832723bdbe9780cc40f47f30def3fcaf1c8be4");
-    expect(provenance).toContain(
-      "Attribution does not grant redistribution rights. Confirm permission with the rights holder before public release.",
-    );
-    expect(p1Row).toContain("| 1340400 |");
+    expect(imageRows).toHaveLength(30);
+    expect(manifest).not.toMatch(/29\s*cm/i);
+    expect(manifest).not.toContain("http");
+    expect(p1Row).toContain("| `p1.jpg` |");
     expect(p1Row).toContain(
       "| [11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG |",
-    );
-    expect(p1Row).toContain(
-      "https://img.29cm.co.kr/next-product/2021/12/08/a1c959f9fb2d47098eca6015446efe48_20211208183740.jpg?width=400",
     );
   });
 });
