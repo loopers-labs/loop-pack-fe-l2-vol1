@@ -35,11 +35,7 @@ export function ProductListLayoutExample() {
             <article className="week05-product" key={index}>
               <Image
                 className="week05-image"
-                src={
-                  index % 2 === 0
-                    ? "/images/products/product-11.svg"
-                    : "/images/products/product-16.svg"
-                }
+                src={index % 2 === 0 ? "/images/products/p11.jpg" : "/images/products/p16.jpg"}
                 alt={index % 2 === 0 ? "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml" : "스탠리 클래식 런치박스"}
                 width={400}
                 height={400}
