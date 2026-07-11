@@ -5,14 +5,20 @@ import { describe, expect, it } from "vitest";
 import { homeBanner, products } from "./commerce";
 
 const productImagesDirectory = join(process.cwd(), "public/images/products");
-const provenancePath = join(
+const assetManifestPath = join(
   process.cwd(),
-  "docs/assets/week-05-product-images.md",
+  "docs/assets/week-05-product-assets.md",
 );
 
 describe("commerce fixture", () => {
   it("uses at least three explicit product brands", () => {
     expect(new Set(products.map((product) => product.brand)).size).toBeGreaterThanOrEqual(3);
+  });
+
+  it("uses a neutral local brand for products without an explicit brand", () => {
+    expect(products.find((product) => product.id === "p1")?.brand).toBe(
+      "Loopers Select",
+    );
   });
 
   it("provides deterministic mock discounts while retaining full-price products", () => {
@@ -61,53 +67,48 @@ describe("commerce fixture", () => {
       freeShipping: false,
       sizes: [],
     });
+    expect(products.find((product) => product.id === "p4")?.name).toBe(
+      "[Exclusive] PLAIN COTTON CASHMERE CARDIGAN (5 COLORS)",
+    );
   });
 
   it("uses p6 for the home banner image", () => {
-    expect(homeBanner.image).toBe("/images/products/p6.jpg");
+    expect(homeBanner.image).toBe("/images/products/product-06.svg");
   });
 
-  it("keeps all 30 product images non-empty, unique JPEG files", () => {
+  it("keeps all 30 product illustrations non-empty, unique local SVG files", () => {
     const hashes = Array.from({ length: 30 }, (_, index) => {
-      const imagePath = join(productImagesDirectory, `p${index + 1}.jpg`);
+      const fileName = `product-${String(index + 1).padStart(2, "0")}.svg`;
+      const imagePath = join(productImagesDirectory, fileName);
 
       expect(existsSync(imagePath)).toBe(true);
-      const image = readFileSync(imagePath);
+      const image = readFileSync(imagePath, "utf8");
       expect(image.length).toBeGreaterThan(0);
-      expect([...image.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+      expect(image).toContain("<svg");
+      expect(image).not.toMatch(/(?:href|src)=["']https?:/);
       return createHash("sha256").update(image).digest("hex");
     });
 
     expect(new Set(hashes).size).toBe(30);
   });
 
-  it("records pinned source provenance outside public assets", () => {
+  it("records the local asset manifest outside public assets", () => {
     expect(existsSync(join(productImagesDirectory, "SOURCES.md"))).toBe(false);
-    expect(existsSync(provenancePath)).toBe(true);
+    expect(existsSync(assetManifestPath)).toBe(true);
 
-    if (!existsSync(provenancePath)) {
+    if (!existsSync(assetManifestPath)) {
       return;
     }
 
-    const provenance = readFileSync(provenancePath, "utf8");
-    const sourceRows = provenance
+    const manifest = readFileSync(assetManifestPath, "utf8");
+    const assetRows = manifest
       .split("\n")
       .filter((line) => /^\| p\d+ \|/.test(line));
-    const p1Row = sourceRows.find((line) => line.startsWith("| p1 |"));
+    const p1Row = assetRows.find((line) => line.startsWith("| p1 |"));
 
-    expect(sourceRows).toHaveLength(30);
-    expect(provenance).toContain("2026-07-10");
-    expect(provenance).toContain("e17b28f3085719bb00608e42d54cee96484afea6");
-    expect(provenance).toContain("19832723bdbe9780cc40f47f30def3fcaf1c8be4");
-    expect(provenance).toContain(
-      "Attribution does not grant redistribution rights. Confirm permission with the rights holder before public release.",
-    );
-    expect(p1Row).toContain("| 1340400 |");
-    expect(p1Row).toContain(
-      "| [11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG |",
-    );
-    expect(p1Row).toContain(
-      "https://img.29cm.co.kr/next-product/2021/12/08/a1c959f9fb2d47098eca6015446efe48_20211208183740.jpg?width=400",
-    );
+    expect(assetRows).toHaveLength(30);
+    expect(manifest).not.toContain("http");
+    expect(p1Row).toContain("| `product-01.svg` |");
+    expect(p1Row).toContain("| casual |");
   });
 });

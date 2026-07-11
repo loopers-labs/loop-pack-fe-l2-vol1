@@ -11,7 +11,7 @@ export const categories: Category[] = [
 export const homeBanner = {
   title: "매일 새롭게 발견하는 취향",
   description: "지금 가장 사랑받는 상품을 만나보세요.",
-  image: "/images/products/p6.jpg",
+  image: "/images/products/product-06.svg",
 };
 
 const sizeOptions = [
@@ -71,7 +71,7 @@ const productSeeds: ProductSeed[] = [
   },
   {
     id: "p4",
-    name: "[29Exclusive] PLAIN COTTON CASHMERE CARDIGAN (5 COLORS)",
+    name: "[Exclusive] PLAIN COTTON CASHMERE CARDIGAN (5 COLORS)",
     category: "casual",
     price: 138000,
     originalPrice: 158000,
@@ -334,14 +334,17 @@ const productSeeds: ProductSeed[] = [
   },
 ];
 
+const getProductImage = (productId: string) =>
+  `/images/products/product-${productId.slice(1).padStart(2, "0")}.svg`;
+
 const normalizeProduct = (seed: ProductSeed): Product => ({
   id: seed.id,
-  brand: seed.brand ?? "29CM 셀렉트",
+  brand: seed.brand ?? "Loopers Select",
   name: seed.name,
   category: seed.category,
   price: seed.price,
   originalPrice: seed.originalPrice ?? null,
-  image: seed.image ?? `/images/products/${seed.id}.jpg`,
+  image: seed.image ?? getProductImage(seed.id),
   freeShipping: seed.freeShipping ?? seed.price >= 50000,
   sizes: seed.sizes ?? [],
   rating: seed.rating,

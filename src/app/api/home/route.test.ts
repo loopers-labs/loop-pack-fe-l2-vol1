@@ -14,7 +14,7 @@ describe("GET /api/home", () => {
     expect(body.banner).toEqual({
       title: "매일 새롭게 발견하는 취향",
       description: "지금 가장 사랑받는 상품을 만나보세요.",
-      image: "/images/products/p6.jpg",
+      image: "/images/products/product-06.svg",
     });
     expect(body.categories).toEqual([
       { id: "casual", name: "캐주얼" },

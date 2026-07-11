@@ -40,12 +40,12 @@ describe("GET /api/products", () => {
     expect(body.pageSize).toBe(12);
     expect(body.products[0]).toMatchObject({
       id: "p1",
-      brand: "29CM 셀렉트",
+      brand: "Loopers Select",
       name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
       category: "casual",
       price: 79000,
       originalPrice: null,
-      image: "/images/products/p1.jpg",
+      image: "/images/products/product-01.svg",
       freeShipping: true,
       sizes: [
         { value: 24, stock: 3 },
@@ -57,12 +57,12 @@ describe("GET /api/products", () => {
     });
     expect(body.products[1]).toMatchObject({
       id: "p2",
-      brand: "29CM 셀렉트",
+      brand: "Loopers Select",
       name: "[Exclusive] Holiday Signature Ball Cap (20Colors)",
       category: "casual",
       price: 39000,
       originalPrice: null,
-      image: "/images/products/p2.jpg",
+      image: "/images/products/product-02.svg",
       freeShipping: false,
       sizes: [],
     });
@@ -80,7 +80,7 @@ describe("GET /api/products", () => {
       .toMatchObject([
         {
           id: "p1",
-          brand: "29CM 셀렉트",
+          brand: "Loopers Select",
           name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
           category: "casual",
           price: 79000,
@@ -101,7 +101,7 @@ describe("GET /api/products", () => {
 
     expect(products).toHaveLength(30);
     images.forEach((image: string) => {
-      expect(image).toMatch(/^\/images\/products\/p\d+\.jpg$/);
+      expect(image).toMatch(/^\/images\/products\/product-\d{2}\.svg$/);
     });
     expect(new Set(images).size).toBe(30);
     expect(images.some((image: string) => image.startsWith("http"))).toBe(false);

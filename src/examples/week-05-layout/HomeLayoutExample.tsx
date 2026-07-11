@@ -40,7 +40,11 @@ export function HomeLayoutExample() {
               <article className="week05-product" key={`${title}-${index}`}>
                 <Image
                   className="week05-image"
-                  src={title === "인기 상품" ? "/images/products/p1.jpg" : "/images/products/p6.jpg"}
+                  src={
+                    title === "인기 상품"
+                      ? "/images/products/product-01.svg"
+                      : "/images/products/product-06.svg"
+                  }
                   alt={title === "인기 상품" ? "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}
                   width={400}
                   height={400}
