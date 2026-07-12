@@ -10,14 +10,21 @@ import type {
 } from "react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
-type UseSelectParams<Item> = {
+type GetItemKey<Item> = (item: Item | null) => unknown;
+
+type UseSelectBaseParams<Item> = {
   items: Item[];
-  getItemKey?: (item: Item | null) => unknown;
   isItemDisabled?: (item: Item, index: number) => boolean;
   selectedItem?: Item | null;
   defaultSelectedItem?: Item | null;
   onSelectedItemChange?: (item: Item) => void;
 };
+
+type UseSelectKeyParams<Item> = [Item] extends [object]
+  ? { getItemKey: GetItemKey<Item> }
+  : { getItemKey?: GetItemKey<Item> };
+
+type UseSelectParams<Item> = UseSelectBaseParams<Item> & UseSelectKeyParams<Item>;
 
 type UseSelectItemState = {
   selected: boolean;
@@ -129,14 +136,16 @@ function getSelectedItemIndex<Item>({
   });
 }
 
-export function useSelect<Item>({
-  items,
-  getItemKey = (item) => item,
-  selectedItem,
-  defaultSelectedItem = null,
-  onSelectedItemChange,
-  isItemDisabled = () => false,
-}: UseSelectParams<Item>): UseSelectReturn<Item> {
+export function useSelect<Item>(params: UseSelectParams<Item>): UseSelectReturn<Item> {
+  const {
+    items,
+    selectedItem,
+    defaultSelectedItem = null,
+    onSelectedItemChange,
+    isItemDisabled = () => false,
+  } = params;
+  const getItemKey = params.getItemKey ?? ((item: Item | null) => item);
+
   const isControlled = selectedItem !== undefined;
   const [internalSelectedItem, setInternalSelectedItem] = useState<Item | null>(
     defaultSelectedItem,

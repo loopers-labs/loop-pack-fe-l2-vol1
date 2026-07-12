@@ -66,7 +66,7 @@ Compound 구조는 Select의 조립 형태를 제공한다는 장점이 있지�
 ```ts
 type UseSelectParams<Item> = {
   items: Item[];
-  getItemKey?: (item: Item | null) => unknown;
+  getItemKey: (item: Item | null) => unknown; // 객체 option에서는 필수
   isItemDisabled?: (item: Item, index: number) => boolean;
 
   selectedItem?: Item | null;
@@ -141,7 +141,7 @@ const select = useSelect({
 
 Downshift는 `itemToString`을 통해 item의 문자열 표현을 받지만, 이번 구현에서는 사용처가 selected label과 option UI를 직접 렌더링한다. 따라서 hook API에는 실제로 사용하지 않는 `itemToString`을 두지 않는다.
 
-Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey`를 제공한다. 이번 구현도 같은 문제를 막기 위해 `getItemKey`를 선택적으로 받는다. 기본값은 기존처럼 item 객체 자체를 key로 사용하지만, 서버 응답이나 렌더 중 새로 만들어지는 option처럼 객체 참조가 바뀔 수 있는 경우에는 `getItemKey: (item) => item?.id`처럼 안정적인 식별자를 넘긴다.
+Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey`를 제공한다. 이번 구현도 같은 문제를 막기 위해 `getItemKey`를 받는다. 특히 과제처럼 option이 객체인 경우에는 타입 차원에서 `getItemKey`를 필수로 요구한다. 사용처가 객체 option을 매 렌더 새로 만들어도 `selected` 상태가 깨지지 않게 하려면 `getItemKey: (item) => item?.id`처럼 안정적인 식별자를 넘겨야 하기 때문이다. 문자열이나 숫자 같은 primitive option에서는 identity 비교가 의미 있으므로 `getItemKey`를 생략할 수 있다.
 
 ### Controlled / Uncontrolled 범위
 
@@ -174,7 +174,7 @@ Downshift는 참조 동일성만으로 item을 비교하지 않도록 `itemToKey
 - disabled option 클릭 방지
 - disabled option 키보드 이동 스킵
 - public `selectItem` 호출에서도 disabled option 선택 방지
-- `getItemKey`가 있으면 참조가 아니라 안정적인 key 기준으로 selected 상태 판별
+- 객체 option에서는 `getItemKey`를 필수로 받아 참조가 아니라 안정적인 key 기준으로 selected 상태 판별
 - item state 계산: `selected`, `highlighted`, `disabled`
 
 ### 사용처가 책임지는 것
