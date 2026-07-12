@@ -141,11 +141,13 @@ function DialogClose({ asChild, onClick, type = "button", ...props }: DialogButt
 function DialogPortal({ children }: DialogPortalProps) {
   const { open } = useDialogContext("Dialog.Portal");
 
-  if (!open) {
+  const portalContainer = typeof document === "undefined" ? null : document.body;
+
+  if (!open || portalContainer === null) {
     return null;
   }
 
-  return createPortal(children, document.body);
+  return createPortal(children, portalContainer);
 }
 
 function DialogOverlay({ onClick, ...props }: DialogDivProps) {
