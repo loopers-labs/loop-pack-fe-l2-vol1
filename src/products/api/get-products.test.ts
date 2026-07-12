@@ -14,8 +14,15 @@ describe("getProducts", () => {
 
   it("production에서 NEXT_PUBLIC_BASE_URL이 없으면 fail-fast로 reject한다", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("NEXT_PUBLIC_BASE_URL", "");
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
 
     await expect(getProducts()).rejects.toThrow();
+  });
+
+  it("development에서 NEXT_PUBLIC_BASE_URL이 없으면 localhost로 폴백해 3개의 Product를 반환한다", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
+
+    await expect(getProducts()).resolves.toHaveLength(3);
   });
 });
