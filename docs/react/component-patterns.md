@@ -50,9 +50,7 @@ function CategoryDropdown() {
       {s.open && (
         <ul>
           {s.items.map((c) => (
-            <li key={c.id} onClick={() => s.select(c)}>
-              {c.label}
-            </li>
+            <li key={c.id} onClick={() => s.select(c)}>{c.label}</li>
           ))}
         </ul>
       )}
@@ -67,9 +65,7 @@ function CategorySheet() {
       <button onClick={s.toggle}>{s.selected?.label ?? "카테고리"}</button>
       <BottomSheet open={s.open} onClose={s.toggle}>
         {s.items.map((c) => (
-          <SheetItem key={c.id} onClick={() => s.select(c)}>
-            {c.label}
-          </SheetItem>
+          <SheetItem key={c.id} onClick={() => s.select(c)}>{c.label}</SheetItem>
         ))}
       </BottomSheet>
     </>
@@ -92,13 +88,11 @@ function CategorySheet() {
     <Tabs.Trigger value="home">홈</Tabs.Trigger>
     <Tabs.Trigger value="deal">특가</Tabs.Trigger>
   </Tabs.List>
+
   <PromotionBanner /> {/* Tabs 내부를 안 건드리고 사이에 끼운다 */}
-  <Tabs.Content value="home">
-    <Feed type="home" />
-  </Tabs.Content>
-  <Tabs.Content value="deal">
-    <Feed type="deal" />
-  </Tabs.Content>
+
+  <Tabs.Content value="home"><Feed type="home" /></Tabs.Content>
+  <Tabs.Content value="deal"><Feed type="deal" /></Tabs.Content>
 </Tabs>
 // Trigger를 누르면 '떨어져 있는' Content가 반응한다 → 형제끼리 상태를 안다
 ```
@@ -123,11 +117,7 @@ export function Tabs({ defaultValue, children }: TabsProps) {
 // 3) 자식 — props 없이 Context에서 상태를 읽는다
 function Trigger({ value, children }: TriggerProps) {
   const { active, setActive } = useTabsContext();
-  return (
-    <button data-active={active === value} onClick={() => setActive(value)}>
-      {children}
-    </button>
-  );
+  return <button data-active={active === value} onClick={() => setActive(value)}>{children}</button>;
 }
 function Content({ value, children }: ContentProps) {
   const { active } = useTabsContext();
@@ -174,11 +164,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {mounted &&
         createPortal(
-          <div className="toast-viewport">
-            {toasts.map((t) => (
-              <div key={t.id}>{t.message}</div>
-            ))}
-          </div>,
+          <div className="toast-viewport">{toasts.map((t) => <div key={t.id}>{t.message}</div>)}</div>,
           document.body,
         )}
     </ToastContext.Provider>
@@ -216,13 +202,7 @@ export function Toaster() {
     () => [], // server snapshot: 서버엔 토스트가 없다. 빠뜨리면 SSR에서 "Missing getServerSnapshot" 크래시
   );
   // 라이브러리처럼 portal 대신 인라인 position:fixed(.toast-viewport) — 서버에 document 접근이 없어 SSR-safe
-  return (
-    <div className="toast-viewport">
-      {snapshot.map((t) => (
-        <div key={t.id}>{t.message}</div>
-      ))}
-    </div>
-  );
+  return <div className="toast-viewport">{snapshot.map((t) => <div key={t.id}>{t.message}</div>)}</div>;
 }
 ```
 

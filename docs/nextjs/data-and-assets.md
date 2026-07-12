@@ -11,9 +11,7 @@ CSR은 빈 화면 → 로딩 → 데이터 순서를 거친다. Server Component
 function ProductDetail({ id }: { id: string }) {
   const [product, setProduct] = useState<Product | null>(null);
   useEffect(() => {
-    fetch(`/api/products/${id}`)
-      .then((r) => r.json())
-      .then(setProduct);
+    fetch(`/api/products/${id}`).then((r) => r.json()).then(setProduct);
   }, [id]);
   if (!product) return <Spinner />; // 로딩 화면을 반드시 거친다
   return <ProductView product={product} />;
@@ -61,13 +59,7 @@ srcset·lazy·webp·크기 지정을 손으로 챙기던 걸 컴포넌트 하나
 
 ```tsx
 // ❌ 최적화를 직접 챙긴다
-<img
-  src="/hero.png"
-  srcSet="/hero@1x.webp 1x, /hero@2x.webp 2x"
-  loading="lazy"
-  width={1200}
-  height={600}
-/>;
+<img src="/hero.png" srcSet="/hero@1x.webp 1x, /hero@2x.webp 2x" loading="lazy" width={1200} height={600} />
 
 // ✅ next/image — 크기·webp 변환·lazy는 자동, blur는 placeholder="blur"로 opt-in
 import Image from "next/image";
