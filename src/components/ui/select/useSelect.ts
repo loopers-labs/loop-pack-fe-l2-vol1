@@ -27,13 +27,12 @@ export const useSelect = <T>({
   // isOpen 상태 변경 + onIsOpenChange 콜백 호출을 한 곳에서 책임지는 헬퍼
   const updateIsOpen = useCallback(
     (next: boolean) => {
-      setIsOpen((prev) => {
-        if (prev === next) return prev; // 값이 같으면 스킵 (불필요한 콜백/리렌더 방지)
-        onIsOpenChange?.(next);
-        return next;
-      });
+      if (isOpen !== next) onIsOpenChange?.(next);
+      setIsOpen(
+        (prev) => (prev === next ? prev : next) // 값이 같으면 스킵 (불필요한 콜백/리렌더 방지)
+      );
     },
-    [onIsOpenChange]
+    [onIsOpenChange, isOpen]
   );
 
   // 드롭다운이 열리면 포커스를 <ul>로 이동
@@ -142,6 +141,8 @@ export const useSelect = <T>({
       setHighlightedIndex(index);
     },
     disabled: isItemDisabled?.(item) ?? false,
+    isSelected: selectedItem !== null && keyOf(selectedItem) === keyOf(item),
+    isHighlighted: index === highlightedIndex,
   });
 
   return {

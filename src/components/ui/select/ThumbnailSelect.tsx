@@ -4,18 +4,12 @@ import { useSelect } from './useSelect';
 import { thumbnailOptions, ThumbnailOption } from '@/app/api/products/route';
 
 export function ThumbnailSelect() {
-  const {
-    isOpen,
-    selectedItem,
-    highlightedIndex,
-    getToggleButtonProps,
-    getMenuProps,
-    getItemProps,
-  } = useSelect<ThumbnailOption>({
-    items: thumbnailOptions,
-    itemToKey: (item) => item.id,
-    initialSelectedItem: null,
-  });
+  const { isOpen, selectedItem, getToggleButtonProps, getMenuProps, getItemProps } =
+    useSelect<ThumbnailOption>({
+      items: thumbnailOptions,
+      itemToKey: (item) => item.id,
+      initialSelectedItem: null,
+    });
 
   return (
     <div style={{ width: 360, position: 'relative' }}>
@@ -54,9 +48,7 @@ export function ThumbnailSelect() {
           }}
         >
           {thumbnailOptions.map((item, index) => {
-            const itemProps = getItemProps({ item, index });
-            const isSelected = selectedItem?.id === item.id;
-            const isHighlighted = index === highlightedIndex;
+            const { isSelected, isHighlighted, ...itemProps } = getItemProps({ item, index });
 
             let background = 'transparent';
             if (isSelected) background = '#e6f4ff';

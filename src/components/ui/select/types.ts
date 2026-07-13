@@ -23,5 +23,9 @@ export interface UseSelectReturn<T> {
     // li에 전달(선택/하이라이트/품절 처리)
     item: T;
     index: number;
-  }) => JSX.IntrinsicElements['li'] & { disabled: boolean }; // disabled 여부를 별도로 노출
+  }) => JSX.IntrinsicElements['li'] & {
+    disabled: boolean; // disabled 여부를 별도로 노출
+    isSelected: boolean; // 현재 항목이 선택된 항목인지
+    isHighlighted: boolean; // 키보드로 이동 중인 항목인지
+  };
 }

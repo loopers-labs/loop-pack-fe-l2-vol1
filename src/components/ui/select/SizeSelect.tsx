@@ -4,19 +4,13 @@ import { useSelect } from './useSelect';
 import { sizeOptions, SizeOption } from '@/app/api/products/route';
 
 export function SizeSelect() {
-  const {
-    isOpen,
-    selectedItem,
-    highlightedIndex,
-    getToggleButtonProps,
-    getMenuProps,
-    getItemProps,
-  } = useSelect<SizeOption>({
-    items: sizeOptions,
-    itemToKey: (item) => item.value,
-    isItemDisabled: (item) => item.soldOut,
-    initialSelectedItem: null,
-  });
+  const { isOpen, selectedItem, getToggleButtonProps, getMenuProps, getItemProps } =
+    useSelect<SizeOption>({
+      items: sizeOptions,
+      itemToKey: (item) => item.value,
+      isItemDisabled: (item) => item.soldOut,
+      initialSelectedItem: null,
+    });
 
   return (
     <div style={{ width: 320, position: 'relative' }}>
@@ -55,10 +49,7 @@ export function SizeSelect() {
           }}
         >
           {sizeOptions.map((item, index) => {
-            const itemProps = getItemProps({ item, index });
-            const isSelected = selectedItem?.value === item.value;
-            const isHighlighted = index === highlightedIndex;
-
+            const { isSelected, isHighlighted, ...itemProps } = getItemProps({ item, index });
             let background = 'transparent';
             if (isSelected) background = '#e6f4ff';
             else if (isHighlighted) background = '#f0f0f0';

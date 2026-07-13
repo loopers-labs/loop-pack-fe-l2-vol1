@@ -4,18 +4,12 @@ import { useSelect } from './useSelect';
 import { titlePriceOptions, TitlePriceOption } from '@/app/api/products/route';
 
 export function TitlePriceSelect() {
-  const {
-    isOpen,
-    selectedItem,
-    highlightedIndex,
-    getToggleButtonProps,
-    getMenuProps,
-    getItemProps,
-  } = useSelect<TitlePriceOption>({
-    items: titlePriceOptions,
-    itemToKey: (item) => item.id,
-    initialSelectedItem: null,
-  });
+  const { isOpen, selectedItem, getToggleButtonProps, getMenuProps, getItemProps } =
+    useSelect<TitlePriceOption>({
+      items: titlePriceOptions,
+      itemToKey: (item) => item.id,
+      initialSelectedItem: null,
+    });
 
   return (
     <div style={{ width: 320, position: 'relative' }}>
@@ -56,9 +50,7 @@ export function TitlePriceSelect() {
           }}
         >
           {titlePriceOptions.map((item, index) => {
-            const itemProps = getItemProps({ item, index });
-            const isSelected = selectedItem?.id === item.id;
-            const isHighlighted = index === highlightedIndex;
+            const { isSelected, isHighlighted, ...itemProps } = getItemProps({ item, index });
 
             let background = 'transparent';
             if (isSelected) background = '#e6f4ff';
