@@ -1,8 +1,11 @@
 import Link from "next/link";
+import type { Category } from "@/types/commerce";
 
-const categories = ["캐주얼", "패션", "뷰티·잡화", "홈", "디지털"];
+type CategoryNavProps = {
+  categories: Category[];
+};
 
-export function CategoryNav() {
+export function CategoryNav({ categories }: CategoryNavProps) {
   return (
     <section className="mt-10">
       <h2 className="mb-4">카테고리</h2>
@@ -10,10 +13,10 @@ export function CategoryNav() {
         {categories.map((category) => (
           <Link
             className="border border-[#c8c8c8] bg-transparent px-3 py-2 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
-            key={category}
-            href="/products"
+            key={category.id}
+            href={`/products?category=${category.id}`}
           >
-            {category}
+            {category.name}
           </Link>
         ))}
       </div>
