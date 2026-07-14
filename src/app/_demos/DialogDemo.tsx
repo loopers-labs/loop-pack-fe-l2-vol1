@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 
 import { Dialog } from '@/components/ui/dialog/Dialog';
+import { useSelect } from '@/components/ui/select/useSelect';
 
 const triggerClassName =
   'cursor-pointer rounded-lg border border-[#d0d5db] bg-white px-4 py-2.5 text-sm font-medium';
@@ -249,6 +250,65 @@ function CloseConfirmDialogDemo() {
   );
 }
 
+const SIZE_OPTIONS = [
+  { id: 's', label: 'S' },
+  { id: 'm', label: 'M' },
+  { id: 'l', label: 'L' },
+];
+
+// Select in Dialog — 레이어 조합 검증용. 메뉴를 연 채 ESC를 누르면 무엇이 닫히는지 직접 확인한다
+function SelectInDialogDemo() {
+  const select = useSelect({
+    items: SIZE_OPTIONS,
+    itemToKey: (item) => item.id,
+  });
+
+  return (
+    <Dialog>
+      <Dialog.Trigger className={triggerClassName}>
+        사이즈 변경하기
+      </Dialog.Trigger>
+
+      <Dialog.Overlay className={overlayClassName} />
+
+      <Dialog.Content className={contentClassName}>
+        <Dialog.Title className={titleClassName}>사이즈 변경</Dialog.Title>
+
+        <div className="relative mt-4">
+          <button
+            type="button"
+            {...select.getToggleButtonProps()}
+            className={`${secondaryButtonClassName} flex w-full items-center justify-between`}
+          >
+            {select.selectedItem?.label ?? '사이즈 선택'}
+            <span aria-hidden>▾</span>
+          </button>
+          {select.isOpen && (
+            <ul
+              {...select.getMenuProps()}
+              className="absolute top-full right-0 left-0 z-10 mt-1.5 list-none overflow-hidden rounded-lg border border-[#e0e0e0] bg-white shadow-lg"
+            >
+              {SIZE_OPTIONS.map((item, index) => (
+                <li
+                  key={item.id}
+                  {...select.getItemProps({ item, index })}
+                  className="cursor-pointer px-4 py-2.5 text-sm data-highlighted:bg-[#f7f7f7] data-selected:font-bold"
+                >
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <Dialog.Close className={primaryButtonClassName}>확인</Dialog.Close>
+        </div>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+
 export function DialogDemo() {
   return (
     <section className="flex flex-col gap-8">
@@ -278,6 +338,12 @@ export function DialogDemo() {
           confirmation’)
         </p>
         <CloseConfirmDialogDemo />
+      </div>
+      <div>
+        <p className="mb-2 text-sm text-[#8794a3]">
+          5. Select in Dialog · 레이어 조합
+        </p>
+        <SelectInDialogDemo />
       </div>
     </section>
   );

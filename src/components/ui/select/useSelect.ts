@@ -273,7 +273,13 @@ export function useSelect<T>({
     }
 
     if (event.key === 'Escape') {
+      if (!isOpen) {
+        return;
+      }
+
+      // 한 번의 Esc는 최상단 레이어(메뉴) 하나만 닫는다. 전파를 멈춰 상위 레이어까지 닫히는 것을 막는다
       event.preventDefault();
+      event.stopPropagation();
       closeMenu();
 
       return;

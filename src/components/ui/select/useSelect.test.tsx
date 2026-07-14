@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { type ComponentProps, type ComponentPropsWithoutRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { Dialog } from '@/components/ui/dialog/Dialog';
 import { useSelect } from '@/components/ui/select/useSelect';
 
 type Option = { id: string; label: string; stock: number };
@@ -741,5 +742,48 @@ describe('사용처에 노출되는 상태', () => {
     expect(screen.getByRole('listbox').id).toBe(
       getToggle().getAttribute('aria-controls'),
     );
+  });
+});
+
+// Dialog 같은 상위 레이어와 겹칠 때 "한 번의 Esc는 최상단 레이어 하나만 닫는다"는 계약
+describe('Dialog 안에서의 레이어 동작', () => {
+  function SelectInDialog() {
+    return (
+      <Dialog defaultOpen>
+        <Dialog.Content>
+          <Dialog.Title>다이얼로그 제목</Dialog.Title>
+          <TestSelect />
+        </Dialog.Content>
+      </Dialog>
+    );
+  }
+
+  it('메뉴가 열린 상태의 Esc는 메뉴만 닫고, 두 번째 Esc가 Dialog를 닫는다', async () => {
+    const user = userEvent.setup();
+
+    render(<SelectInDialog />);
+
+    await user.click(getToggle());
+    expect(queryMenu()).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(queryMenu()).not.toBeInTheDocument();
+    expect(screen.getByText('다이얼로그 제목')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByText('다이얼로그 제목')).not.toBeInTheDocument();
+  });
+
+  it('메뉴가 닫힌 상태의 Esc는 소비하지 않아 Dialog가 닫힌다', async () => {
+    const user = userEvent.setup();
+
+    render(<SelectInDialog />);
+
+    getToggle().focus();
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByText('다이얼로그 제목')).not.toBeInTheDocument();
   });
 });
