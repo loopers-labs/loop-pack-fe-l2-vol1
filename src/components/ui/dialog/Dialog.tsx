@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useRef,
   type ComponentPropsWithoutRef,
   type ReactNode,
@@ -75,6 +76,11 @@ function DialogRoot({
     };
   }, [currentOpen, dialogToken]);
 
+  // 인라인 onOpenChange로 requestOpenChange 참조가 렌더마다 바뀌어도 리스너를 재등록하지 않도록 최신 참조만 읽는다
+  const closeOnEscape = useEffectEvent(() => {
+    requestOpenChange(false);
+  });
+
   useEffect(() => {
     if (!currentOpen) {
       return;
@@ -82,7 +88,7 @@ function DialogRoot({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isTopDialog(dialogToken)) {
-        requestOpenChange(false);
+        closeOnEscape();
       }
     };
 
@@ -91,7 +97,7 @@ function DialogRoot({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentOpen, requestOpenChange, dialogToken]);
+  }, [currentOpen, dialogToken]);
 
   useEffect(() => {
     if (!currentOpen) {

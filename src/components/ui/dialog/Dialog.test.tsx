@@ -146,6 +146,26 @@ describe('열고 닫기 (uncontrolled)', () => {
     expect(topSpy).toHaveBeenCalledWith(false);
     expect(bottomSpy).not.toHaveBeenCalled();
   });
+
+  it('인라인 onOpenChange로 부모가 리렌더돼도 Esc 리스너는 한 번만 등록된다', () => {
+    const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+
+    const renderOpenDialog = () => (
+      <Dialog open onOpenChange={(open) => void open}>
+        <Dialog.Content>내용</Dialog.Content>
+      </Dialog>
+    );
+
+    const { rerender } = render(renderOpenDialog());
+    rerender(renderOpenDialog());
+    rerender(renderOpenDialog());
+
+    const keydownRegistrations = addEventListenerSpy.mock.calls.filter(
+      ([type]) => type === 'keydown',
+    );
+
+    expect(keydownRegistrations).toHaveLength(1);
+  });
 });
 
 describe('controlled 계약', () => {
