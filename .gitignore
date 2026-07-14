@@ -42,3 +42,7 @@ next-env.d.ts
 
 # playwright-cli 스냅샷/로그
 .playwright-cli/
+
+# playwright
+/test-results/
+/playwright-report/

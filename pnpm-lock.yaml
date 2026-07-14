@@ -30,6 +30,9 @@ importers:
       '@next/eslint-plugin-next':
         specifier: 16.2.10
         version: 16.2.10
+      '@playwright/test':
+        specifier: ^1.61.1
+        version: 1.61.1
       '@stylistic/eslint-plugin':
         specifier: ^5.10.0
         version: 5.10.0(eslint@10.6.0(jiti@2.7.0))
@@ -2620,7 +2623,6 @@ snapshots:
   '@playwright/test@1.61.1':
     dependencies:
       playwright: 1.61.1
-    optional: true
 
   '@rolldown/binding-android-arm64@1.1.5':
     optional: true
@@ -3638,15 +3640,13 @@ snapshots:
 
   picomatch@4.0.5: {}
 
-  playwright-core@1.61.1:
-    optional: true
+  playwright-core@1.61.1: {}
 
   playwright@1.61.1:
     dependencies:
       playwright-core: 1.61.1
     optionalDependencies:
       fsevents: 2.3.2
-    optional: true
 
   postcss@8.4.31:
     dependencies:
