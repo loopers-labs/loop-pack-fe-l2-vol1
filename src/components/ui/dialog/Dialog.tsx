@@ -15,7 +15,7 @@ import { createPortal } from 'react-dom';
 import { isTopDialog, popDialog, pushDialog } from './dialogStack';
 import { lockScroll, unlockScroll } from './scrollLock';
 
-import { useIsomorphicLayoutEffect } from '@/shared/useIsomorphicLayoutEffect';
+import { useHydrated } from '@/shared/useHydrated';
 
 interface DialogProps {
   open?: boolean;
@@ -158,14 +158,9 @@ interface DialogPortalProps {
 }
 
 function DialogPortal({ children }: DialogPortalProps) {
-  const [mounted, setMounted] = useState(false);
+  const hydrated = useHydrated();
 
-  // Portal은 열릴 때마다 마운트되므로 mounted 전환이 paint 전에 끝나야 빈 프레임이 안 보인다
-  useIsomorphicLayoutEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
+  if (!hydrated) {
     return null;
   }
 
