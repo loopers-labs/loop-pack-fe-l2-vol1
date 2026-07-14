@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
-import type {
-  ApiErrorResponse,
-  MockApiScenario,
-  ProductListResponse,
-  ProductSort,
-} from "@/types/commerce";
+import type { ProductListResponse } from "@/features/products/api/productApi";
+import { PRODUCT_SORTS } from "@/features/products/constants";
+import type { ProductSort } from "@/features/products/types";
+import type { ApiErrorResponse, MockApiScenario } from "@/types/api";
 
-const sortValues = [
-  "latest",
-  "popular",
-  "price-asc",
-  "price-desc",
-] as const satisfies readonly ProductSort[];
 const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
 
 const isProductSort = (value: string): value is ProductSort =>
-  sortValues.some((sort) => sort === value);
+  PRODUCT_SORTS.some((sort) => sort === value);
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);

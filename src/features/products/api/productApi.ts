@@ -1,8 +1,26 @@
 import { parseApiError, setSearchParam } from "@/lib/apiUtils";
-import type { MockApiScenario, ProductListQuery, ProductListResponse } from "@/types/commerce";
+import type { MockApiScenario } from "@/types/api";
+import type { Category, Product } from "@/types/commerce";
+import type { ProductCategoryFilter, ProductSort } from "../types";
 
 type GetProductsParams = ProductListQuery & {
   scenario?: MockApiScenario;
+};
+
+export type ProductListQuery = {
+  q?: string;
+  category?: ProductCategoryFilter;
+  sort?: ProductSort;
+  page?: number;
+  pageSize?: number;
+};
+
+export type ProductListResponse = {
+  products: Product[];
+  categories: Category[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
 };
 
 export async function getProducts(params: GetProductsParams = {}): Promise<ProductListResponse> {

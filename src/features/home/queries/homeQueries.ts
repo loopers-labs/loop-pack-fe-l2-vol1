@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { getHome } from "../api/homeApi";
-import type { MockApiScenario } from "@/types/commerce";
+import type { MockApiScenario } from "@/types/api";
 
 type HomeQueryParams = {
   scenario?: MockApiScenario;

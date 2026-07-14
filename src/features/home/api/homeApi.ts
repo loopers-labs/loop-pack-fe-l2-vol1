@@ -1,8 +1,16 @@
 import { parseApiError, setSearchParam } from "@/lib/apiUtils";
-import type { HomeResponse, MockApiScenario } from "@/types/commerce";
+import type { MockApiScenario } from "@/types/api";
+import type { Category, Product } from "@/types/commerce";
 
 type GetHomeParams = {
   scenario?: MockApiScenario;
+};
+
+export type HomeResponse = {
+  banner: { title: string; description: string; image: string };
+  categories: Category[];
+  popularProducts: Product[];
+  newProducts: Product[];
 };
 
 export async function getHome(params: GetHomeParams = {}): Promise<HomeResponse> {

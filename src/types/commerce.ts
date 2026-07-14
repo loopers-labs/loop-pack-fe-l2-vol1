@@ -1,20 +1,10 @@
-export type CategoryId = "casual" | "fashion" | "goods" | "home" | "digital";
+import type { CATEGORY_IDS } from "@/constants/commerce";
+
+export type CategoryId = (typeof CATEGORY_IDS)[number];
 
 export type Category = {
   id: CategoryId;
   name: string;
-};
-
-export type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
-
-export type MockApiScenario = "empty" | "error";
-
-export type ProductListQuery = {
-  q?: string;
-  category?: CategoryId | "all";
-  sort?: ProductSort;
-  page?: number;
-  pageSize?: number;
 };
 
 export type Product = {
@@ -30,23 +20,4 @@ export type Product = {
   rating: number;
   reviewCount: number;
   createdAt: string;
-};
-
-export type HomeResponse = {
-  banner: { title: string; description: string; image: string };
-  categories: Category[];
-  popularProducts: Product[];
-  newProducts: Product[];
-};
-
-export type ProductListResponse = {
-  products: Product[];
-  categories: Category[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-};
-
-export type ApiErrorResponse = {
-  message: string;
 };

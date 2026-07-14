@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { getProducts } from "../api/productApi";
-import type { MockApiScenario, ProductListQuery } from "@/types/commerce";
+import type { ProductListQuery } from "../api/productApi";
+import type { MockApiScenario } from "@/types/api";
 
 type ProductListQueryParams = ProductListQuery & {
   scenario?: MockApiScenario;

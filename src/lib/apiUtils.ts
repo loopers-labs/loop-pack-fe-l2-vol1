@@ -1,4 +1,4 @@
-import type { ApiErrorResponse } from "@/types/commerce";
+import type { ApiErrorResponse } from "@/types/api";
 
 export async function parseApiError(response: Response, fallbackMessage: string) {
   try {
