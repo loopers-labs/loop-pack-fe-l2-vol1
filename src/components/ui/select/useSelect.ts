@@ -30,10 +30,10 @@ type UseSelectParams<T> = {
   isItemDisabled?: (item: T, index: number) => boolean;
 };
 
-type SelectItemState = {
-  selected: boolean;
-  highlighted: boolean;
-  disabled: boolean;
+type SelectItemDataAttributes = {
+  'data-selected'?: string;
+  'data-highlighted'?: string;
+  'data-disabled'?: string;
 };
 
 type SelectElementProps<TElement extends HTMLElement> =
@@ -95,8 +95,7 @@ type UseSelectReturn<T> = {
   ) => SelectElementProps<HTMLUListElement>;
   getItemProps: (
     params: { item: T; index: number } & LiHTMLAttributes<HTMLLIElement>,
-  ) => LiHTMLAttributes<HTMLLIElement>;
-  getItemState: (params: { item: T; index: number }) => SelectItemState;
+  ) => LiHTMLAttributes<HTMLLIElement> & SelectItemDataAttributes;
 };
 
 /**
@@ -339,7 +338,11 @@ export function useSelect<T>({
     onClick,
     ...restProps
   }: { item: T; index: number } & LiHTMLAttributes<HTMLLIElement>) => {
-    const { selected, disabled } = getItemState({ item, index });
+    const selected =
+      currentSelectedItem !== null &&
+      itemToKey(item) === itemToKey(currentSelectedItem);
+    const highlighted = index === highlightedIndex;
+    const disabled = getIsItemDisabled(item, index);
 
     return {
       ...restProps,
@@ -347,6 +350,9 @@ export function useSelect<T>({
       role: 'option',
       'aria-selected': selected,
       'aria-disabled': disabled,
+      'data-selected': selected ? '' : undefined,
+      'data-highlighted': highlighted ? '' : undefined,
+      'data-disabled': disabled ? '' : undefined,
       onMouseEnter: disabled
         ? undefined
         : composeEventHandlers(onMouseEnter, () => {
@@ -357,17 +363,6 @@ export function useSelect<T>({
         : composeEventHandlers(onClick, () => {
             selectItem(item);
           }),
-    };
-  };
-
-  // 화면 계산과 hook 내부 판단(itemToKey 비교, isItemDisabled)이 어긋나지 않게 상태를 한 곳에서 계산해 내려준다
-  const getItemState = ({ item, index }: { item: T; index: number }) => {
-    return {
-      selected:
-        currentSelectedItem !== null &&
-        itemToKey(item) === itemToKey(currentSelectedItem),
-      highlighted: index === highlightedIndex,
-      disabled: getIsItemDisabled(item, index),
     };
   };
 
@@ -485,6 +480,5 @@ export function useSelect<T>({
     getToggleButtonProps,
     getMenuProps,
     getItemProps,
-    getItemState,
   };
 }

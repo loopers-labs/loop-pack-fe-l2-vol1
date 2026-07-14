@@ -61,6 +61,8 @@ type ProductsResponse = {
   };
 };
 
+const isSoldOut = (item: { stock: number }) => item.stock === 0;
+
 const triggerClassName =
   'flex w-100 cursor-pointer items-center justify-between rounded-xl border border-[#e0e0e0] bg-white px-5 py-4.5 text-base';
 
@@ -144,7 +146,7 @@ function SizeSelectDemo({ items }: { items: SizeOption[] }) {
     items,
     defaultSelectedItem: items[1],
     itemToKey: (item) => item.id,
-    isItemDisabled: (item) => item.stock === 0,
+    isItemDisabled: isSoldOut,
   });
   const { refs, floatingStyles } = useSelectPopover(select.isOpen, {
     maxHeight: 360,
@@ -172,42 +174,31 @@ function SizeSelectDemo({ items }: { items: SizeOption[] }) {
           style={floatingStyles}
           className={menuClassName}
         >
-          {items.map((item, index) => {
-            const { selected, highlighted, disabled } = select.getItemState({
-              item,
-              index,
-            });
-
-            return (
-              <li
-                key={item.id}
-                {...select.getItemProps({ item, index })}
-                className={`border-b border-[#f2f2f2] px-6 py-4 last:border-b-0 ${
-                  disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
-                } ${highlighted ? 'bg-[#f7f7f7]' : 'bg-white'}`}
+          {items.map((item, index) => (
+            <li
+              key={item.id}
+              {...select.getItemProps({ item, index })}
+              className="group cursor-pointer border-b border-[#f2f2f2] bg-white px-6 py-4 last:border-b-0 data-disabled:cursor-not-allowed data-disabled:opacity-40 data-highlighted:bg-[#f7f7f7]"
+            >
+              <div className="text-lg font-medium group-data-selected:font-bold">
+                {item.label}
+              </div>
+              <div
+                className={`mt-1.5 flex items-center gap-1.5 text-[15px] ${
+                  isSoldOut(item) ? 'text-[#888]' : 'text-[#2b4df0]'
+                }`}
               >
-                <div
-                  className={`text-lg ${selected ? 'font-bold' : 'font-medium'}`}
-                >
-                  {item.label}
-                </div>
-                <div
-                  className={`mt-1.5 flex items-center gap-1.5 text-[15px] ${
-                    disabled ? 'text-[#888]' : 'text-[#2b4df0]'
-                  }`}
-                >
-                  {disabled ? (
-                    '품절'
-                  ) : (
-                    <>
-                      <TruckIcon />
-                      {item.deliveryLabel}
-                    </>
-                  )}
-                </div>
-              </li>
-            );
-          })}
+                {isSoldOut(item) ? (
+                  '품절'
+                ) : (
+                  <>
+                    <TruckIcon />
+                    {item.deliveryLabel}
+                  </>
+                )}
+              </div>
+            </li>
+          ))}
         </ul>
       )}
     </div>
@@ -219,7 +210,7 @@ function ThumbnailSelectDemo({ items }: { items: ThumbnailOption[] }) {
   const select = useSelect({
     items,
     itemToKey: (item) => item.id,
-    isItemDisabled: (item) => item.stock === 0,
+    isItemDisabled: isSoldOut,
   });
   const { refs, floatingStyles } = useSelectPopover(select.isOpen);
 
@@ -243,53 +234,40 @@ function ThumbnailSelectDemo({ items }: { items: ThumbnailOption[] }) {
           style={floatingStyles}
           className={menuClassName}
         >
-          {items.map((item, index) => {
-            const { selected, highlighted, disabled } = select.getItemState({
-              item,
-              index,
-            });
-
-            return (
-              <li
-                key={item.id}
-                {...select.getItemProps({ item, index })}
-                className={`flex items-center gap-5 border-b border-[#f5f5f5] px-6 py-5 last:border-b-0 ${
-                  disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
-                } ${highlighted ? 'bg-[#f7f7f7]' : 'bg-white'}`}
-              >
-                <div
-                  className={`h-22 w-16 shrink-0 rounded-md ${
-                    selected ? 'outline-2 outline-solid outline-[#111]' : ''
-                  }`}
-                  style={{ backgroundColor: item.thumbnailColor }}
-                />
-                <div className="min-w-0">
-                  <div
-                    className={`truncate text-base ${selected ? 'font-bold' : 'font-normal'}`}
-                  >
-                    {item.name}
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-[17px] font-bold text-[#e9435a]">
-                      {item.discountRate}%
-                    </span>
-                    <span className="text-[17px] font-bold">
-                      {item.price.toLocaleString()}원
-                    </span>
-                    <span
-                      className={`rounded px-2 py-0.75 text-[13px] ${
-                        disabled
-                          ? 'bg-[#f0f0f0] text-[#888]'
-                          : 'bg-[#fceef1] text-[#f04e6e]'
-                      }`}
-                    >
-                      {disabled ? '품절' : item.badgeLabel}
-                    </span>
-                  </div>
+          {items.map((item, index) => (
+            <li
+              key={item.id}
+              {...select.getItemProps({ item, index })}
+              className="group flex cursor-pointer items-center gap-5 border-b border-[#f5f5f5] bg-white px-6 py-5 last:border-b-0 data-disabled:cursor-not-allowed data-disabled:opacity-40 data-highlighted:bg-[#f7f7f7]"
+            >
+              <div
+                className="h-22 w-16 shrink-0 rounded-md group-data-selected:outline-2 group-data-selected:outline-solid group-data-selected:outline-[#111]"
+                style={{ backgroundColor: item.thumbnailColor }}
+              />
+              <div className="min-w-0">
+                <div className="truncate text-base font-normal group-data-selected:font-bold">
+                  {item.name}
                 </div>
-              </li>
-            );
-          })}
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[17px] font-bold text-[#e9435a]">
+                    {item.discountRate}%
+                  </span>
+                  <span className="text-[17px] font-bold">
+                    {item.price.toLocaleString()}원
+                  </span>
+                  <span
+                    className={`rounded px-2 py-0.75 text-[13px] ${
+                      isSoldOut(item)
+                        ? 'bg-[#f0f0f0] text-[#888]'
+                        : 'bg-[#fceef1] text-[#f04e6e]'
+                    }`}
+                  >
+                    {isSoldOut(item) ? '품절' : item.badgeLabel}
+                  </span>
+                </div>
+              </div>
+            </li>
+          ))}
         </ul>
       )}
     </div>
@@ -305,7 +283,7 @@ function TextSelectDemo({ items }: { items: TextOption[] }) {
     selectedItem: selectedOption,
     onSelectedItemChange: ({ selectedItem }) => setSelectedOption(selectedItem),
     itemToKey: (item) => item.id,
-    isItemDisabled: (item) => item.stock === 0,
+    isItemDisabled: isSoldOut,
   });
   const { refs, floatingStyles } = useSelectPopover(select.isOpen, {
     maxHeight: 360,
@@ -331,49 +309,38 @@ function TextSelectDemo({ items }: { items: TextOption[] }) {
           style={floatingStyles}
           className={menuClassName}
         >
-          {items.map((item, index) => {
-            const { selected, highlighted, disabled } = select.getItemState({
-              item,
-              index,
-            });
-
-            return (
-              <li
-                key={item.id}
-                {...select.getItemProps({ item, index })}
-                className={`flex items-center justify-between gap-4 border-b border-[#f2f2f2] px-5 py-4.5 last:border-b-0 ${
-                  disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
-                } ${highlighted ? 'bg-[#f7f7f7]' : 'bg-white'}`}
-              >
-                <div>
-                  <div
-                    className={`text-[15px] text-[#111] ${selected ? 'font-bold' : ''}`}
-                  >
-                    {item.name}
-                  </div>
-                  <div className="mt-1.5">
-                    <span className="text-[17px] font-bold">
-                      {item.price.toLocaleString()}원
-                    </span>{' '}
-                    <span className="text-[15px] text-[#f2670d]">
-                      (1개당 {item.unitPrice.toLocaleString()}원)
-                    </span>
-                  </div>
+          {items.map((item, index) => (
+            <li
+              key={item.id}
+              {...select.getItemProps({ item, index })}
+              className="group flex cursor-pointer items-center justify-between gap-4 border-b border-[#f2f2f2] bg-white px-5 py-4.5 last:border-b-0 data-disabled:cursor-not-allowed data-disabled:opacity-40 data-highlighted:bg-[#f7f7f7]"
+            >
+              <div>
+                <div className="text-[15px] text-[#111] group-data-selected:font-bold">
+                  {item.name}
                 </div>
-                {(disabled || item.badgeLabel) && (
-                  <span
-                    className={`whitespace-nowrap rounded-full border px-3.5 py-2 text-sm font-bold ${
-                      disabled
-                        ? 'border-[#bbb] text-[#888]'
-                        : 'border-[#f2670d] text-[#f2670d]'
-                    }`}
-                  >
-                    {disabled ? '품절' : item.badgeLabel}
+                <div className="mt-1.5">
+                  <span className="text-[17px] font-bold">
+                    {item.price.toLocaleString()}원
+                  </span>{' '}
+                  <span className="text-[15px] text-[#f2670d]">
+                    (1개당 {item.unitPrice.toLocaleString()}원)
                   </span>
-                )}
-              </li>
-            );
-          })}
+                </div>
+              </div>
+              {(isSoldOut(item) || item.badgeLabel) && (
+                <span
+                  className={`whitespace-nowrap rounded-full border px-3.5 py-2 text-sm font-bold ${
+                    isSoldOut(item)
+                      ? 'border-[#bbb] text-[#888]'
+                      : 'border-[#f2670d] text-[#f2670d]'
+                  }`}
+                >
+                  {isSoldOut(item) ? '품절' : item.badgeLabel}
+                </span>
+              )}
+            </li>
+          ))}
         </ul>
       )}
 
@@ -402,7 +369,7 @@ function GroupedSelectDemo({ items }: { items: ColorOption[] }) {
   const select = useSelect({
     items,
     itemToKey: (item) => item.id,
-    isItemDisabled: (item) => item.stock === 0,
+    isItemDisabled: isSoldOut,
   });
   const { refs, floatingStyles } = useSelectPopover(select.isOpen, {
     maxHeight: 360,
@@ -437,10 +404,8 @@ function GroupedSelectDemo({ items }: { items: ColorOption[] }) {
           className={`${menuClassName} pb-2`}
         >
           {items.map((item, index) => {
-            const { selected, highlighted, disabled } = select.getItemState({
-              item,
-              index,
-            });
+            // ✓ 표시처럼 콘텐츠가 바뀌는 곳은 CSS로 못 가리므로 노출된 selectedItem에서 파생한다
+            const selected = select.selectedItem?.id === item.id;
             // 응답이 tone 순으로 정렬돼 있다는 전제로, tone이 바뀌는 경계에만 그룹 라벨을 그린다
             const isGroupStart =
               index === 0 || items[index - 1].tone !== item.tone;
@@ -457,11 +422,7 @@ function GroupedSelectDemo({ items }: { items: ColorOption[] }) {
                 )}
                 <li
                   {...select.getItemProps({ item, index })}
-                  className={`flex items-center gap-3 px-5 py-2.5 text-[15px] ${
-                    disabled
-                      ? 'cursor-not-allowed opacity-40'
-                      : 'cursor-pointer'
-                  } ${highlighted ? 'bg-[#f7f7f7]' : 'bg-white'}`}
+                  className="flex cursor-pointer items-center gap-3 bg-white px-5 py-2.5 text-[15px] data-disabled:cursor-not-allowed data-disabled:opacity-40 data-highlighted:bg-[#f7f7f7]"
                 >
                   <span
                     className="h-5 w-5 shrink-0 rounded-full border border-black/10"
@@ -470,7 +431,7 @@ function GroupedSelectDemo({ items }: { items: ColorOption[] }) {
                   <span className={selected ? 'font-bold' : ''}>
                     {item.name}
                   </span>
-                  {disabled && (
+                  {isSoldOut(item) && (
                     <span className="text-[13px] text-[#888]">품절</span>
                   )}
                   {selected && (
@@ -494,7 +455,7 @@ function ActionPropsSelectDemo({ items }: { items: TextOption[] }) {
   const select = useSelect({
     items,
     itemToKey: (item) => item.id,
-    isItemDisabled: (item) => item.stock === 0,
+    isItemDisabled: isSoldOut,
   });
   const { refs, floatingStyles } = useSelectPopover(select.isOpen, {
     maxHeight: 300,
@@ -561,27 +522,18 @@ function ActionPropsSelectDemo({ items }: { items: TextOption[] }) {
           style={floatingStyles}
           className={menuClassName}
         >
-          {items.map((item, index) => {
-            const { selected, highlighted, disabled } = select.getItemState({
-              item,
-              index,
-            });
-
-            return (
-              <li
-                key={item.id}
-                {...select.getItemProps({ item, index })}
-                className={`flex items-center justify-between px-5 py-3 text-[15px] ${
-                  disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
-                } ${highlighted ? 'bg-[#f7f7f7]' : 'bg-white'}`}
-              >
-                <span className={selected ? 'font-bold' : ''}>{item.name}</span>
-                <span className="text-[13px] text-[#5a6675]">
-                  {disabled ? '품절' : `${item.price.toLocaleString()}원`}
-                </span>
-              </li>
-            );
-          })}
+          {items.map((item, index) => (
+            <li
+              key={item.id}
+              {...select.getItemProps({ item, index })}
+              className="group flex cursor-pointer items-center justify-between bg-white px-5 py-3 text-[15px] data-disabled:cursor-not-allowed data-disabled:opacity-40 data-highlighted:bg-[#f7f7f7]"
+            >
+              <span className="group-data-selected:font-bold">{item.name}</span>
+              <span className="text-[13px] text-[#5a6675]">
+                {isSoldOut(item) ? '품절' : `${item.price.toLocaleString()}원`}
+              </span>
+            </li>
+          ))}
         </ul>
       )}
     </div>

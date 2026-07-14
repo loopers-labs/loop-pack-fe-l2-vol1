@@ -28,7 +28,7 @@ type TestSelectProps = {
 };
 
 // downshift 테스트처럼 hook을 최소 마크업에 연결한 하네스.
-// getItemState 반환값은 data-*로 노출해 "사용처가 상태를 알 수 있는가"를 함께 검증한다.
+// 상태는 getItemProps가 data-* 속성으로 내려주므로 props만 spread한다.
 function TestSelect({
   items = defaultItems,
   toggleProps,
@@ -50,21 +50,14 @@ function TestSelect({
       </button>
       {select.isOpen && (
         <ul {...select.getMenuProps(menuProps)}>
-          {items.map((item, index) => {
-            const state = select.getItemState({ item, index });
-
-            return (
-              <li
-                key={item.id}
-                {...select.getItemProps({ item, index, ...itemProps })}
-                data-selected={state.selected}
-                data-highlighted={state.highlighted}
-                data-disabled={state.disabled}
-              >
-                {item.label}
-              </li>
-            );
-          })}
+          {items.map((item, index) => (
+            <li
+              key={item.id}
+              {...select.getItemProps({ item, index, ...itemProps })}
+            >
+              {item.label}
+            </li>
+          ))}
         </ul>
       )}
     </div>
@@ -323,7 +316,7 @@ describe('키보드 하이라이트', () => {
     await user.keyboard('{ArrowDown}');
 
     expect(getHighlightedLabel()).toBe('26');
-    expect(getOption('26')).toHaveAttribute('data-selected', 'true');
+    expect(getOption('26')).toHaveAttribute('data-selected');
   });
 
   it('선택값이 disabled면 열 때 첫 번째 enabled 옵션이 하이라이트된다', async () => {
@@ -710,7 +703,7 @@ describe('하이라이트 스크롤 추적', () => {
 });
 
 describe('사용처에 노출되는 상태', () => {
-  it('getItemState로 각 옵션의 selected/highlighted/disabled를 알 수 있다', async () => {
+  it('selected/highlighted/disabled가 data 속성의 존재 여부로 내려간다 (CSS 셀렉터 매칭 계약)', async () => {
     const user = userEvent.setup();
 
     render(<TestSelect defaultSelectedItem={defaultItems[1]} />);
@@ -718,10 +711,14 @@ describe('사용처에 노출되는 상태', () => {
     getToggle().focus();
     await user.keyboard('{ArrowDown}'); // 열림, 선택값 24가 하이라이트
 
-    expect(getOption('24')).toHaveAttribute('data-selected', 'true');
-    expect(getOption('24')).toHaveAttribute('data-highlighted', 'true');
-    expect(getOption('25')).toHaveAttribute('data-disabled', 'true');
-    expect(getOption('26')).toHaveAttribute('data-selected', 'false');
+    expect(getOption('24')).toHaveAttribute('data-selected');
+    expect(getOption('24')).toHaveAttribute('data-highlighted');
+    expect(getOption('25')).toHaveAttribute('data-disabled');
+
+    // false는 "false" 값이 아니라 속성 부재여야 [data-*] 셀렉터가 오매칭하지 않는다
+    expect(getOption('26')).not.toHaveAttribute('data-selected');
+    expect(getOption('26')).not.toHaveAttribute('data-highlighted');
+    expect(getOption('26')).not.toHaveAttribute('data-disabled');
   });
 
   it('접근성 계약: listbox/option role과 aria-selected/aria-disabled가 내려간다', async () => {
