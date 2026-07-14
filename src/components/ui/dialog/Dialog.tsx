@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useRef,
-  useState,
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from 'react';
@@ -15,6 +14,7 @@ import { createPortal } from 'react-dom';
 import { isTopDialog, popDialog, pushDialog } from './dialogStack';
 import { lockScroll, unlockScroll } from './scrollLock';
 
+import { useControlledState } from '@/shared/useControlledState';
 import { useHydrated } from '@/shared/useHydrated';
 
 interface DialogProps {
@@ -46,22 +46,21 @@ function DialogRoot({
   onOpenChange,
   children,
 }: DialogProps) {
-  const isControlled = open !== undefined;
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+  const [currentOpen, setUncontrolledOpen] = useControlledState({
+    controlled: open,
+    defaultValue: defaultOpen,
+    component: 'Dialog',
+    prop: 'open',
+  });
 
   const dialogToken = useRef(Symbol('Dialog')).current;
 
-  const currentOpen = isControlled ? open : uncontrolledOpen;
-
   const requestOpenChange = useCallback(
     (nextOpen: boolean) => {
-      if (!isControlled) {
-        setUncontrolledOpen(nextOpen);
-      }
-
+      setUncontrolledOpen(nextOpen);
       onOpenChange?.(nextOpen);
     },
-    [isControlled, onOpenChange],
+    [setUncontrolledOpen, onOpenChange],
   );
 
   useEffect(() => {

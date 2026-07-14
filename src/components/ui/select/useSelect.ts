@@ -14,6 +14,7 @@ import {
 } from 'react';
 
 import { useScrollIntoView } from '@/components/ui/select/useScrollIntoView';
+import { useControlledState } from '@/shared/useControlledState';
 
 type SelectKey = string | number;
 
@@ -111,9 +112,12 @@ export function useSelect<T>({
 }: UseSelectParams<T>): UseSelectReturn<T> {
   const [isOpen, setIsOpen] = useState(false);
 
-  const [internalSelectedItem, setInternalSelectedItem] = useState<T | null>(
-    defaultSelectedItem,
-  );
+  const [currentSelectedItem, setInternalSelectedItem] = useControlledState({
+    controlled: selectedItem,
+    defaultValue: defaultSelectedItem,
+    component: 'useSelect',
+    prop: 'selectedItem',
+  });
 
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
@@ -129,13 +133,6 @@ export function useSelect<T>({
     },
     [baseId],
   );
-
-  // selectedItem prop을 넘기면 controlled(source of truth가 사용처), 안 넘기면 uncontrolled(hook 내부 state가 source of truth)
-  const isControlled = selectedItem !== undefined;
-
-  const currentSelectedItem = isControlled
-    ? selectedItem
-    : internalSelectedItem;
 
   const getIsItemDisabled = (item: T, index: number) => {
     return isItemDisabled?.(item, index) ?? false;
@@ -456,9 +453,7 @@ export function useSelect<T>({
         : currentSelectedItem !== null &&
           itemToKey(nextSelectedItem) === itemToKey(currentSelectedItem);
 
-    if (!isControlled) {
-      setInternalSelectedItem(nextSelectedItem);
-    }
+    setInternalSelectedItem(nextSelectedItem);
 
     // 이름(onSelectedItemChange)대로 값이 실제로 바뀔 때만 알린다. 같은 항목 재선택은 메뉴만 닫는다
     if (!isSameSelection) {

@@ -505,11 +505,7 @@ describe('선택', () => {
   it('controlled: selectedItem prop이 단일 출처가 되고, 외부에서 값을 바꾸면 따라간다', async () => {
     const user = userEvent.setup();
 
-    function ControlledSelect() {
-      return <TestSelect selectedItem={defaultItems[1]} />;
-    }
-
-    const { rerender } = render(<ControlledSelect />);
+    const { rerender } = render(<TestSelect selectedItem={defaultItems[1]} />);
     expect(getToggle()).toHaveTextContent('24');
 
     // 내부에서 선택해도 controlled라 외부 값(24)이 유지된다

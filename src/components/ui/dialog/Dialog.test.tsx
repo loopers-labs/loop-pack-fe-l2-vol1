@@ -378,9 +378,8 @@ describe('확장 지점', () => {
   });
 
   it('Dialog 밖에서 하위 컴포넌트를 쓰면 어느 컴포넌트인지 알려주는 에러를 던진다', () => {
-    const consoleError = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    // throw된 에러를 React가 console.error로도 찍으므로 조용히 삼킨다 (복구는 restoreMocks가)
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => render(<Dialog.Close>닫기</Dialog.Close>)).toThrow(
       'Dialog.Close는 <Dialog> 안에서 사용해야 합니다.',
@@ -388,7 +387,5 @@ describe('확장 지점', () => {
     expect(() => render(<Dialog.Content>내용</Dialog.Content>)).toThrow(
       'Dialog.Content는 <Dialog> 안에서 사용해야 합니다.',
     );
-
-    consoleError.mockRestore();
   });
 });
