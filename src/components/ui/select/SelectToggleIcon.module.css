@@ -1,0 +1,7 @@
+.toggleIcon {
+  transition: transform 0.15s ease;
+}
+
+.toggleIconOpen {
+  transform: rotate(180deg);
+}

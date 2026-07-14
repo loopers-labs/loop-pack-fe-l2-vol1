@@ -1,6 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
-import "./week-05-layout.css";
+import Image from 'next/image'
+import Link from 'next/link'
+import './week-05-layout.css'
 
 /**
  * 5주차 과제를 빠르게 시작할 수 있도록 제공하는 최소 레이아웃 예시입니다.
@@ -27,12 +27,14 @@ export function HomeLayoutExample() {
       <section className="week05-section">
         <h2>카테고리</h2>
         <div className="week05-categories">
-          {["캐주얼", "패션", "뷰티·잡화", "홈", "디지털"].map((category) => (
-            <Link key={category} href="/products">{category}</Link>
+          {['캐주얼', '패션', '뷰티·잡화', '홈', '디지털'].map((category) => (
+            <Link key={category} href="/products">
+              {category}
+            </Link>
           ))}
         </div>
       </section>
-      {["인기 상품", "신상품"].map((title) => (
+      {['인기 상품', '신상품'].map((title) => (
         <section className="week05-section" key={title}>
           <h2>{title}</h2>
           <div className="week05-grid">
@@ -40,13 +42,23 @@ export function HomeLayoutExample() {
               <article className="week05-product" key={`${title}-${index}`}>
                 <Image
                   className="week05-image"
-                  src={title === "인기 상품" ? "/images/products/p1.jpg" : "/images/products/p6.jpg"}
-                  alt={title === "인기 상품" ? "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}
+                  src={
+                    title === '인기 상품' ? '/images/products/p1.jpg' : '/images/products/p6.jpg'
+                  }
+                  alt={
+                    title === '인기 상품'
+                      ? '[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG'
+                      : 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'
+                  }
                   width={400}
                   height={400}
                 />
                 <p>브랜드</p>
-                <h3>{title === "인기 상품" ? "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG" : "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502"}</h3>
+                <h3>
+                  {title === '인기 상품'
+                    ? '[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG'
+                    : 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'}
+                </h3>
                 <strong>0원</strong>
                 <div>
                   <button
@@ -70,5 +82,5 @@ export function HomeLayoutExample() {
         </section>
       ))}
     </main>
-  );
+  )
 }

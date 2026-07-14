@@ -1,6 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
-import "./week-05-layout.css";
+import Image from 'next/image'
+import Link from 'next/link'
+import './week-05-layout.css'
 
 /**
  * 5주차 과제를 빠르게 시작할 수 있도록 제공하는 최소 레이아웃 예시입니다.
@@ -23,9 +23,27 @@ export function ProductListLayoutExample() {
       <section className="week05-section">
         <h1>상품 목록</h1>
         <form className="week05-filters">
-          <label>검색<input name="q" placeholder="상품명 또는 브랜드" /></label>
-          <label>카테고리<select name="category" defaultValue="all"><option value="all">전체</option><option value="casual">캐주얼</option><option value="fashion">패션</option><option value="goods">뷰티·잡화</option><option value="home">홈</option><option value="digital">디지털</option></select></label>
-          <label>정렬<select name="sort" defaultValue="latest"><option value="latest">최신순</option></select></label>
+          <label>
+            검색
+            <input name="q" placeholder="상품명 또는 브랜드" />
+          </label>
+          <label>
+            카테고리
+            <select name="category" defaultValue="all">
+              <option value="all">전체</option>
+              <option value="casual">캐주얼</option>
+              <option value="fashion">패션</option>
+              <option value="goods">뷰티·잡화</option>
+              <option value="home">홈</option>
+              <option value="digital">디지털</option>
+            </select>
+          </label>
+          <label>
+            정렬
+            <select name="sort" defaultValue="latest">
+              <option value="latest">최신순</option>
+            </select>
+          </label>
         </form>
       </section>
       <section className="week05-section" aria-label="상품 검색 결과">
@@ -35,13 +53,21 @@ export function ProductListLayoutExample() {
             <article className="week05-product" key={index}>
               <Image
                 className="week05-image"
-                src={index % 2 === 0 ? "/images/products/p11.jpg" : "/images/products/p16.jpg"}
-                alt={index % 2 === 0 ? "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml" : "스탠리 클래식 런치박스"}
+                src={index % 2 === 0 ? '/images/products/p11.jpg' : '/images/products/p16.jpg'}
+                alt={
+                  index % 2 === 0
+                    ? '하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml'
+                    : '스탠리 클래식 런치박스'
+                }
                 width={400}
                 height={400}
               />
               <p>브랜드</p>
-              <h2>{index % 2 === 0 ? "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml" : "스탠리 클래식 런치박스"}</h2>
+              <h2>
+                {index % 2 === 0
+                  ? '하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml'
+                  : '스탠리 클래식 런치박스'}
+              </h2>
               <strong>0원</strong>
               <div>
                 <button
@@ -63,9 +89,11 @@ export function ProductListLayoutExample() {
           ))}
         </div>
         <nav className="week05-pagination" aria-label="페이지 이동">
-          <button type="button">이전</button><span>1 / 1</span><button type="button">다음</button>
+          <button type="button">이전</button>
+          <span>1 / 1</span>
+          <button type="button">다음</button>
         </nav>
       </section>
     </main>
-  );
+  )
 }

@@ -1,0 +1,42 @@
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.lead {
+  color: #5a6675;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.list {
+  line-height: 2;
+  color: #18212e;
+  padding-left: 18px;
+}
+
+.note {
+  color: #8794a3;
+  margin-top: 24px;
+  font-size: 14px;
+}
+
+.previewSection {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid #eceff2;
+}
+
+.previewTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #18212e;
+  margin-bottom: 16px;
+}

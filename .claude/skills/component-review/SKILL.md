@@ -1,6 +1,6 @@
 ---
 name: component-review
-description: '컴포넌트 관심사 분리 및 Custom Hook 책임 리뷰. 경로 지정 시 4개 관점 병렬 점검 후 우선순위 리포트 생성'
+description: '컴포넌트 관심사 분리 및 Custom Hook 책임 리뷰. 경로 지정 시 5개 관점 병렬 점검 후 우선순위 리포트 생성'
 ---
 
 # 컴포넌트 리뷰
@@ -14,7 +14,7 @@ TRIGGER — 컴포넌트 리팩터링/관심사 분리 리뷰, Hook 책임 점�
 - 대상: 사용자가 지정한 파일 또는 폴더 경로 (예: `src/productList/`)
 - 경로가 지정되지 않으면 리뷰를 시작하기 전에 먼저 사용자에게 되물어 확인한다 (diff 기반이 아니므로 대상이 명확해야 한다)
 
-## 4개 병렬 점검 관점
+## 5개 병렬 점검 관점
 
 각 관점의 세부 체크 항목과 출력 형식은 [template.md](template.md) 참고.
 
@@ -22,11 +22,12 @@ TRIGGER — 컴포넌트 리팩터링/관심사 분리 리뷰, Hook 책임 점�
 2. **Custom Hook 책임** — 각 Hook이 단일 책임을 가지는가, 이름이 역할을 설명하는가, service에 의존하는가
 3. **API 레이어** — endpoint·request/response 변환이 한 곳에 모여 있는가
 4. **분리 근거/프로세스** — 분리(또는 미분리) 결정에 근거가 남아 있는가
+5. **Server/Client 경계 (Next.js)** — `'use client'` 범위가 최소인가, mutation이 Server Actions 원칙을 따르는가, App Router 파일 컨벤션을 우회하지 않는가
 
 ## 실행 방법
 
 1. 지정된 경로의 파일 구조를 파악한다 (Read/Glob)
-2. Task 도구로 4개 관점을 병렬 리뷰한다 — 각 Task는 template.md의 해당 체크 항목을 기준으로 점검
+2. Task 도구로 5개 관점을 병렬 리뷰한다 — 각 Task는 template.md의 해당 체크 항목을 기준으로 점검
 3. 각 Task 결과를 종합해 template.md의 출력 형식에 맞춰 우선순위 리포트를 생성한다
 
 ## 범위 밖

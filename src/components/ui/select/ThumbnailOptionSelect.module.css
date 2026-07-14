@@ -1,0 +1,141 @@
+.container {
+  border: 1px solid #d9dde3;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 400;
+  color: #8a92a0;
+  cursor: pointer;
+}
+
+.triggerActive {
+  font-weight: 700;
+  color: #18212e;
+}
+
+.list {
+  list-style: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid #eceff2;
+  cursor: pointer;
+}
+
+.highlighted {
+  background: #f2f5ff;
+}
+
+.disabled {
+  color: #b0b6bd;
+  cursor: not-allowed;
+}
+
+.thumbnail {
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.thumbnailSoldOut {
+  opacity: 0.4;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 14px;
+}
+
+.price {
+  font-weight: 700;
+  color: #ff5722;
+}
+
+.discountRate {
+  font-weight: 700;
+  font-size: 13px;
+  color: #ff5722;
+}
+
+.textSoldOut {
+  color: #b0b6bd;
+}
+
+.badge {
+  font-size: 12px;
+  background: #fdeef1;
+  color: #ff4d6a;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.bundleBadge {
+  font-size: 12px;
+  border: 1px solid #d9dde3;
+  color: #5a6675;
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+
+.soldOutBadge {
+  font-size: 12px;
+  background: #5a6675;
+  color: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.clearButton {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: #8a92a0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* toggleIcon/toggleIconOpen은 SelectToggleIcon.module.css로 이전. */
+.selected {
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: 1px solid #d9dde3;
+  border-radius: 12px;
+  background: #f7f8fa;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

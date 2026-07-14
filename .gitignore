@@ -19,6 +19,17 @@
 
 # production
 /build
+dist/
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# superpowers
+.superpowers/
+docs/superpowers/
 
 # misc
 .DS_Store

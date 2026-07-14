@@ -13,7 +13,7 @@
 - 한 문장으로 설명되는가 ("그리고"가 두 번 들어가면 분리 후보)
 - 같은 상태+로직 조합이 반복되는가 (추출 후보)
 - JSX나 스타일을 반환하고 있지 않은가
-- `fetch`/`axios` 구현체에 직접 묶이지 않고 service 함수에 의존하는가
+- `fetch`/`axios` 구현체에 직접 묶이지 않고 service 함수에 의존하는가 (Client Component 기준 — Server Component에서 직접 `fetch`하는 경우는 예외)
 - Hook이 컴포넌트의 복잡도를 그대로 옮긴 "큰 Hook"은 아닌가
 - Hook 이름이 역할을 충분히 설명하는가 (`useData` ❌ / `useProductFilter` ✅)
 
@@ -28,6 +28,13 @@
 - "이 분리가 무엇을 좋게 하나"가 문서(README 등)나 커밋/PR 설명에 기록되어 있는가
 - 분리하지 않은 부분에도 근거가 있는가 (분리 자체가 목적이 되는 과잉 분리 방지)
 - 타입·린트를 `any`/`@ts-ignore`/`eslint-disable`로 침묵시키지 않았는가
+
+## Task 5 — Server/Client 경계 (Next.js)
+
+- 상호작용(이벤트 핸들러/훅/브라우저 API)이 없는데 불필요하게 `'use client'`가 선언되어 있지 않은가
+- `'use client'`가 최대한 leaf 컴포넌트에 있는가 (상위에 선언하면 그 아래 트리 전체가 Client Component가 됨)
+- 클라이언트 상태만 다루는 경우가 아닌 mutation인데 Server Actions 대신 클라이언트 이벤트 핸들러로 처리하고 있지 않은가
+- 라우트 단위 로딩/에러를 `loading.tsx`/`error.tsx`/`not-found.tsx` 대신 임의로 구현하고 있지 않은가
 
 ## 출력 형식
 
@@ -58,4 +65,5 @@
 | Custom Hook | ✅ / ❌ |
 | API 레이어 | ✅ / ❌ |
 | 분리 근거/프로세스 | ✅ / ❌ |
+| Server/Client 경계 | ✅ / ❌ |
 ```

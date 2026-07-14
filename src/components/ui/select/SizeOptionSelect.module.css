@@ -1,0 +1,97 @@
+.container {
+  border: 1px solid #d9dde3;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #fff;
+  border: none;
+  font-size: 16px;
+  color: #8a92a0;
+  cursor: pointer;
+}
+
+.list {
+  list-style: none;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-top: 1px solid #eceff2;
+  cursor: pointer;
+}
+
+.highlighted {
+  background: #f2f5ff;
+}
+
+.disabled {
+  color: #b0b6bd;
+  cursor: not-allowed;
+}
+
+.value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #18212e;
+}
+
+.delivery {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #3562ff;
+}
+
+.deliveryIcon {
+  flex-shrink: 0;
+}
+
+.soldOut {
+  font-size: 13px;
+  color: #b0b6bd;
+}
+
+/* toggleIcon/toggleIconOpen은 SelectToggleIcon.module.css로 이전. */
+.selected {
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: 1px solid #d9dde3;
+  border-radius: 12px;
+  background: #f7f8fa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.selectedInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clearButton {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: #8a92a0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}

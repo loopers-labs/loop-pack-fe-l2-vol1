@@ -1,0 +1,114 @@
+/* src/components/ui/select/TextOptionSelect.module.css */
+.container {
+  border: 1px solid #d9dde3;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f7f8fa;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.list {
+  list-style: none;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-top: 1px solid #eceff2;
+  cursor: pointer;
+}
+
+.highlighted {
+  background: #f2f5ff;
+}
+
+.disabled {
+  color: #b0b6bd;
+  cursor: not-allowed;
+}
+
+.optionTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.optionPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.label {
+  font-size: 15px;
+}
+
+.price {
+  font-weight: 700;
+  color: #18212e;
+}
+
+.unitPrice {
+  font-size: 13px;
+  color: #ff7a45;
+}
+
+.badge {
+  border: 1px solid #ff7a45;
+  color: #ff7a45;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* toggleIcon/toggleIconOpen은 SelectToggleIcon.module.css로 이전. */
+.selected {
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: 1px solid #d9dde3;
+  border-radius: 12px;
+  background: #f7f8fa;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selectedLabel {
+  font-size: 14px;
+}
+
+.selectedTopRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clearButton {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: #8a92a0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
