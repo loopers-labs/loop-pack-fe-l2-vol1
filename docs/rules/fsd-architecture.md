@@ -1,13 +1,13 @@
 # FSD 아키텍처 규칙
 
-이 저장소는 기능이 커질수록 Feature-Sliced Design(FSD)을 따른다. 현재 `src/App.tsx` 중심의 작은 Vite 구조이지만, 새 기능과 도메인 로직은 아래 구조로 확장한다.
+이 저장소는 기능이 커질수록 Feature-Sliced Design(FSD)을 따른다. 현재 Next App Router 구조이며, 새 기능과 도메인 로직은 아래 구조로 확장한다.
 
 ## 목표 구조
 
 ```txt
 src/
   app/
-  pages/
+  views/
   widgets/
   features/
   entities/
@@ -23,13 +23,13 @@ src/
 - 앱 bootstrap, provider, router, 전역 설정을 둔다.
 - Next.js 전환 후 `src/app` 라우트 파일은 프레임워크 entry point로 취급한다.
 - 라우트 파일에는 비즈니스 로직을 두지 않고 하위 FSD 모듈을 조립한다.
-- Next.js의 `app` router 디렉터리와 FSD의 `app` 레이어가 겹칠 때도 원칙은 같다. 라우트 파일은 entry point이고, 실제 화면/기능/도메인 구현은 `pages`, `widgets`, `features`, `entities`, `shared`로 분리한다.
+- Next.js의 `app` router 디렉터리와 FSD의 `app` 레이어가 겹칠 때도 원칙은 같다. 라우트 파일은 entry point이고, 실제 화면/기능/도메인 구현은 `views`, `widgets`, `features`, `entities`, `shared`로 분리한다.
 
-### pages
+### views
 
-- route/page 단위 화면 조립을 담당한다.
+- route/view 단위 화면 조립을 담당한다. Next 예약어인 `src/pages` 대신 `src/views`를 사용한다.
 - widgets, features, entities, shared를 조합한다.
-- 복잡한 도메인 로직이나 재사용 UI를 pages 내부에 숨기지 않는다.
+- 복잡한 도메인 로직이나 재사용 UI를 views 내부에 숨기지 않는다.
 
 ### widgets
 
@@ -55,7 +55,7 @@ src/
 
 - 도메인에 종속되지 않는 공용 코드다.
 - 예: 공용 UI primitive, lib, config, API client, constants.
-- 상위 레이어(app/pages/widgets/features/entities)를 import하지 않는다.
+- 상위 레이어(app/views/widgets/features/entities)를 import하지 않는다.
 - 도메인에 종속되지 않는 공용 HTTP client, Zod helper, env parser 같은 런타임 검증 기반은 `shared`에 둘 수 있다. 특정 도메인 DTO schema는 `shared`가 아니라 해당 `entities/*` 또는 가까운 slice에 둔다.
 
 ## import 방향
@@ -63,12 +63,12 @@ src/
 상위 레이어는 하위 레이어를 import할 수 있지만, 하위 레이어는 상위 레이어를 import할 수 없다.
 
 ```txt
-app -> pages -> widgets -> features -> entities -> shared
+app -> views -> widgets -> features -> entities -> shared
 ```
 
 허용 예:
 
-- `pages`가 `widgets`, `features`, `entities`, `shared`를 import
+- `views`가 `widgets`, `features`, `entities`, `shared`를 import
 - `features`가 `entities`, `shared`를 import
 - `entities`가 `shared`를 import
 
@@ -96,7 +96,6 @@ src/features/add-to-cart/
 
 - `ui`: 컴포넌트와 화면 표현
 - `model`: 상태, selector, reducer, hook 등 기능 모델. 상태 전이와 그 상태를 사용하는 로직은 컴포넌트에 누적하지 않고 커스텀 훅으로 분리한다.
-- `api`: 해당 slice에 가까운 API 호출
 - `api`: 해당 slice에 가까운 API 호출. 외부 응답은 이 경계에서 Zod로 검증하고, 검증된 DTO를 model 계층으로 넘긴다.
 - `lib`: slice 내부 유틸리티
 - `config`: slice 설정
@@ -192,14 +191,14 @@ import { AddToCartButton } from '@/features/add-to-cart'
 import { AddToCartButton } from '@/features/add-to-cart/ui/add-to-cart-button'
 ```
 
-현재 저장소에는 `@` alias가 설정되어 있지 않다. alias를 도입하려면 `tsconfig`, Vite/Next 설정, ESLint import 규칙을 함께 갱신한다. alias가 없을 때도 원칙은 동일하다: 외부 slice에서는 public API를 통해 접근한다.
+현재 저장소에는 `@` alias가 설정되어 있다. alias를 변경하려면 `tsconfig`, Next 설정, ESLint import 규칙을 함께 갱신한다. alias가 있더라도 원칙은 동일하다: 외부 slice에서는 public API를 통해 접근한다.
 
-## App.tsx와 라우트 파일
+## Next 라우트 파일
 
-현재 `src/App.tsx`는 bootstrap/demo 역할이다. 새 기능이 커지면 `App.tsx`는 provider와 page 조립만 담당하도록 줄인다.
+`src/app` 라우트 파일은 프레임워크 entry point다. provider와 라우팅 연결만 담당하고, 화면 조립은 `src/views`, 재사용 UI와 기능은 하위 FSD 레이어에 둔다.
 
 - 상태 전이, API 호출, 도메인 로직을 `App.tsx`에 누적하지 않는다.
-- 페이지 규모 UI는 `pages` 또는 Next.js 라우트에서 조립한다.
+- 페이지 규모 UI는 `views` 또는 Next.js 라우트에서 조립한다.
 - 재사용 화면 블록은 `widgets`, 사용자 행동은 `features`, 도메인 표현은 `entities`, 공용 코드는 `shared`로 이동한다.
 
 ## 검토 기준

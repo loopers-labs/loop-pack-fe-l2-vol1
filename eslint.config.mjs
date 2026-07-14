@@ -1,10 +1,11 @@
 import js from '@eslint/js'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTs from 'eslint-config-next/typescript'
 import prettier from 'eslint-config-prettier/flat'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
 import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import tailwindcss from 'eslint-plugin-tailwindcss'
 import unusedImports from 'eslint-plugin-unused-imports'
@@ -14,6 +15,9 @@ import tseslint from 'typescript-eslint'
 const tsFiles = ['**/*.{ts,tsx}']
 const reactFiles = ['**/*.{tsx,jsx}']
 const jsConfigFiles = ['*.config.{js,mjs,cjs}', 'eslint.config.mjs']
+const nextFrameworkFiles = [
+  'src/app/**/{page,layout,loading,error,not-found}.tsx',
+]
 
 const withFiles = (configs, files) =>
   configs.map((config) => ({
@@ -116,7 +120,16 @@ const restrictedSyntaxLibUtilities = [
 ]
 
 const eslintConfig = defineConfig([
-  globalIgnores(['dist/**', 'coverage/**']),
+  ...nextVitals,
+  ...nextTs,
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'dist/**',
+    'coverage/**',
+    'next-env.d.ts',
+  ]),
   {
     linterOptions: {
       noInlineConfig: true,
@@ -215,23 +228,19 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    ...jsxA11y.flatConfigs.recommended,
     files: reactFiles,
     languageOptions: {
       ...jsxA11y.flatConfigs.recommended.languageOptions,
       globals: globals.browser,
     },
-  },
-  {
-    ...reactRefresh.configs.vite,
-    files: reactFiles,
+    rules: jsxA11y.flatConfigs.recommended.rules,
   },
   {
     extends: [tailwindcss.configs.recommended],
     files: ['**/*.{js,jsx,ts,tsx}'],
     settings: {
       tailwindcss: {
-        cssConfigPath: './src/index.css',
+        cssConfigPath: './src/app/globals.css',
         functions: [
           'classnames',
           'classNames',
@@ -286,7 +295,6 @@ const eslintConfig = defineConfig([
         },
       ],
       'react/self-closing-comp': 'error',
-      'react-refresh/only-export-components': 'off',
     },
   },
   {
@@ -351,6 +359,12 @@ const eslintConfig = defineConfig([
     files: ['src/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': ['error', ...restrictedSyntaxReactRendering],
+    },
+  },
+  {
+    files: nextFrameworkFiles,
+    rules: {
+      'no-restricted-syntax': ['error', ...restrictedSyntaxBase],
     },
   },
   {

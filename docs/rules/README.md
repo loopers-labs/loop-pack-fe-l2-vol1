@@ -10,11 +10,12 @@
 - `fsd-architecture.md`: FSD 레이어, 슬라이스, 세그먼트, import 경계
 - `accessibility.md`: UI 변경 시 접근성 체크리스트
 - `testing.md`: 작업 완료 전 검증 명령과 수동 확인 기준
-- `audit.md`: `/audit` 커맨드와 감사 에이전트 운영 방식
+- `audit.md`: OpenCode 전용 `/audit` 커맨드와 감사 기준 적용 방식
 
 ## 운영 원칙
 
-- `AGENTS.md`는 짧은 최상위 계약으로 유지한다.
-- 상세 규칙은 `docs/rules/*`에 추가한다.
+- 항상 먼저 읽히는 `AGENTS.md`는 짧은 최상위 계약과 문서 라우터로 유지한다.
+- 상세 규칙은 `docs/rules/*`에 추가하고, `AGENTS.md`에 길게 복제하지 않는다.
 - OpenCode 전용 커맨드와 에이전트는 `.opencode/commands`, `.opencode/agents`에 둔다.
+- OpenCode가 아닌 환경에서는 `.opencode/agents/*.md`의 감사 기준을 필요한 범위에서 직접 적용한다.
 - 같은 규칙을 여러 문서에 길게 복제하지 않는다. 중복이 필요하면 원문 문서로 링크한다.

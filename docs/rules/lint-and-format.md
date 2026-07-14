@@ -27,7 +27,7 @@ Prettier는 포맷만 담당합니다. 코드 품질 판단은 ESLint와 TypeScr
 
 ## TypeScript
 
-`tsconfig.app.json`, `tsconfig.node.json` 기준:
+`tsconfig.json` 기준:
 
 - `target`: `es2023`
 - `moduleResolution`: `bundler`
@@ -70,10 +70,9 @@ ESLint는 inline config를 허용하지 않습니다.
 - React recommended rules를 사용한다.
 - JSX runtime 설정을 사용한다.
 - React Hooks recommended latest rules를 사용한다.
-- React Compiler는 `babel-plugin-react-compiler`와 `@rolldown/plugin-babel`을 통해 Vite 빌드에 연결한다. 설정의 source of truth는 `vite.config.ts`다.
 - React Compiler lint 규칙을 포함하기 위해 `eslint-plugin-react-hooks`의 `recommended-latest` 구성을 사용한다.
 - `react-hooks/exhaustive-deps`는 error다.
-- Vite React Refresh 규칙을 따른다.
+- Next.js flat config(`core-web-vitals`, `typescript`)를 baseline으로 사용한다.
 - JSX boolean prop은 `disabled={true}`가 아니라 `disabled`처럼 작성한다.
 - 불필요한 JSX 중괄호를 사용하지 않는다.
 - `target="_blank"` 링크는 보안 속성을 함께 둔다.
@@ -101,7 +100,7 @@ ESLint는 inline config를 허용하지 않습니다.
 - `var`는 금지한다.
 - object shorthand, `const`, template literal을 우선한다.
 - import/export 순서는 `simple-import-sort`를 따른다.
-- `src` 내부 default export는 금지한다. 도구 설정 파일처럼 외부 도구가 요구하는 entry point만 예외로 한다.
+- `src` 내부 default export는 금지한다. Next 라우트 파일과 도구 설정 파일처럼 외부 도구가 요구하는 entry point만 예외로 한다.
 - FSD public API인 `index.ts`에서는 `export *`를 금지한다.
 - FSD `lib` segment에서 export되는 유틸리티는 namespace class의 static method로 묶는다. lint는 `lib` segment의 exported standalone function/arrow function을 제한하고, 세부 그룹명과 책임은 리뷰에서 확인한다. 단, React custom hook은 React 규약상 `use[A-Z0-9]...` 형태의 standalone function API가 필요하므로 이 제한에서 예외로 둔다.
 

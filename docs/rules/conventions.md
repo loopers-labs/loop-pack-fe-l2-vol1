@@ -1,6 +1,6 @@
 # 프로젝트 컨벤션
 
-이 저장소는 Loopers 프론트엔드 과정의 과제 제출과 피드백을 위한 React/TypeScript 프로젝트입니다. 현재는 React 19 + Vite + TypeScript 기반이며, 이후 Next.js로 전환될 수 있습니다.
+이 저장소는 Loopers 프론트엔드 과정의 과제 제출과 피드백을 위한 React/TypeScript/Next.js 프로젝트입니다.
 
 ## 제1원칙
 
@@ -41,7 +41,7 @@ AI가 생성한 코드도 머지하는 순간 작성자의 코드입니다. 코�
 
 ## React
 
-- 이 프로젝트는 React Compiler를 Vite 빌드 파이프라인에 연결해 둔다. 컴포넌트와 훅은 먼저 순수하고 예측 가능하게 작성하고, 수동 memoization을 기본값으로 삼지 않는다.
+- 컴포넌트와 훅은 먼저 순수하고 예측 가능하게 작성하고, 수동 memoization을 기본값으로 삼지 않는다.
 - `useMemo`, `useCallback`, `React.memo`는 기본 성능 습관으로 추가하지 않는다. 측정된 렌더링 병목이 있거나, memoized child/context value/custom hook 반환값처럼 참조 안정성이 실제 계약인 경우에만 사용하고 이유를 설명한다.
 - React 컴포넌트는 `function ComponentName()` 선언을 기본으로 한다. 화살표 함수 컴포넌트는 HOC callback처럼 이름 없는 함수가 필요한 경우에만 사용한다.
 - 재사용 가능한 컴포넌트는 명확한 props 타입을 가진다. props 타입은 인라인 객체 타입 대신 컴포넌트 위에 이름 있는 type alias로 분리한다. 예: `type ProductCardProps = { ... }`.
@@ -58,7 +58,8 @@ AI가 생성한 코드도 머지하는 순간 작성자의 코드입니다. 코�
 
 - 하나의 컴포넌트나 동작만을 위해 함께 움직이는 타입, 상수, 작은 helper는 같은 파일에 둔다. 파일이 커지거나 재사용성이 생길 때만 폴더로 승격하고 내부 파일로 나눈다.
 - 재사용 모듈은 named export를 사용한다.
-- default export는 거의 허용하지 않는다. 프레임워크가 요구하는 entry point, Vite/ESLint 설정 파일처럼 외부 도구가 default export를 요구하는 파일만 예외로 둔다.
+- 파일 이름은 기본적으로 그 파일에서 내보내는 대표 export 이름을 그대로 따른다. 예: 타입은 `SelectOption.ts`에서 `SelectOption`, 컴포넌트는 `SelectTrigger.tsx`에서 `SelectTrigger`, 훅은 `useSelectRootState.ts`에서 `useSelectRootState`, namespace 유틸은 `OptionNavigation.ts`에서 `OptionNavigation`을 export한다.
+- default export는 거의 허용하지 않는다. Next 라우트 파일, ESLint/Next 설정 파일처럼 외부 도구가 default export를 요구하는 파일만 예외로 둔다.
 - FSD slice 외부에서 접근해야 하는 API는 slice의 public API(`index.ts`)로 노출한다.
 - `index.ts` public API는 `export { Name } from './path'`처럼 명시적으로 나열한다. `export * from './path'`는 slice 경계를 흐리므로 금지한다.
 - 내부 구현 파일을 다른 slice나 상위 레이어에서 deep import하지 않는다.

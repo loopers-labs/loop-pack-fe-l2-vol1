@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+:root {
+  --color-ink: #08060d;
+  --color-text: #18212e;
+  --color-muted: #5a6675;
+  --color-subtle: #8794a3;
+  --color-border: #d8d2c3;
+  --color-border-soft: #e4dece;
+  --color-surface: #fffdf6;
+  --color-surface-muted: #f8f7f0;
+  --color-surface-soft: #f4f3ec;
+  --color-panel: #fbfaf3;
+  --color-overlay: rgb(8 6 13 / 0.55);
+}

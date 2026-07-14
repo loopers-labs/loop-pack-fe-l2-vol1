@@ -1,1 +1,0 @@
-export { useProductListSearchParams } from './useProductListSearchParams'

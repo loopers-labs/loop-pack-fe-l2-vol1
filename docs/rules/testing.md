@@ -15,8 +15,8 @@ pnpm build
 
 - `pnpm format:check`: Prettier 포맷 위반 확인
 - `pnpm lint`: ESLint 규칙 위반 확인
-- `pnpm typecheck`: TypeScript 프로젝트 references 기준 타입 검사
-- `pnpm build`: 타입 검사 후 Vite 빌드
+- `pnpm typecheck`: Next 단일 TypeScript 프로젝트 타입 검사
+- `pnpm build`: Next production 빌드
 
 ## 변경 유형별 기준
 

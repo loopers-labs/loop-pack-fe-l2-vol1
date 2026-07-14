@@ -1,6 +1,8 @@
 # 감사 운영 방식
 
-이 저장소는 OpenCode의 `/audit` 커맨드로 변경 범위가 FSD, 컨벤션, 접근성, 품질 게이트를 따르는지 점검한다.
+이 저장소는 OpenCode의 `/audit` 커맨드로 변경 범위가 FSD, 컨벤션, 접근성, 품질 게이트를 따르는지 점검한다. `/audit`와 `.opencode/*` 문서는 OpenCode 전용 운영 문서다.
+
+OpenCode가 아닌 환경에서는 이 문서와 `.opencode/agents/*.md`의 감사 기준을 읽고, 필요한 항목을 직접 점검한다.
 
 ## 기본 철학
 
@@ -28,7 +30,7 @@
 
 ## 감사 에이전트
 
-`.opencode/agents` 아래의 에이전트 지침을 사용한다.
+OpenCode에서는 `.opencode/agents` 아래의 에이전트 지침을 사용한다. 다른 에이전트는 같은 기준을 수동 체크리스트처럼 적용한다.
 
 - `fsd-auditor`: FSD 레이어, slice 책임, import 경계, public API 점검
 - `convention-auditor`: TypeScript/React/스타일/AI 협업 컨벤션 점검
