@@ -1,5 +1,5 @@
-import { DialogPlayground } from '@/components/ui/dialog/DialogPlayground';
-import { SelectPlayground } from '@/components/ui/select/SelectPlayground';
+import { DialogDemo } from '@/components/ui/dialog/DialogDemo';
+import { SelectDemo } from '@/components/ui/select/SelectDemo';
 
 export default function Home() {
   return (
@@ -11,8 +11,8 @@ export default function Home() {
       </p>
       <ul style={{ lineHeight: 2, color: '#18212e', paddingLeft: 18 }}>
         <li>
-          컴포넌트 자리: <code>src/components/ui/select</code> · <SelectPlayground />
-          <code>src/components/ui/dialog</code> <DialogPlayground />
+          컴포넌트 자리: <code>src/components/ui/select</code> · <SelectDemo />
+          <code>src/components/ui/dialog</code> <DialogDemo />
         </li>
         <li>
           mock 백엔드: <code>GET /api/products</code> (<code>src/app/api/products/route.ts</code>)

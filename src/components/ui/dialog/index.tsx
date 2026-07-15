@@ -24,6 +24,7 @@ import {
   type ComponentProps,
   type ReactNode,
 } from 'react';
+import { useIsomorphicLayoutEffect } from '@/hooks/useIsomorphicLayoutEffect';
 import { Portal } from './Portal';
 
 interface DialogContextValue {
@@ -123,7 +124,10 @@ function Content({ children, ...rest }: ComponentProps<'div'>) {
   // body.style.overflow = hidden으로 설정하더라도 스크롤이 막히지 않는다.
   // 따라서 body.documentElement.style을 통해 뷰포트 스크롤의 본래 주체인 html을 잠가야 한다.
   // 닫히거나 언마운트 시 원래 값으로 복원한다.
-  useEffect(() => {
+  // ⚠ useIsomorphicLayoutEffect: paint 직전에 잠가야 열리는 프레임에 배경이
+  //   미끄러지는(flash) 현상을 막을 수 있다. SSR 에서 useLayoutEffect 경고를 피하기 위해
+  //   isomorphic 버전을 사용한다.
+  useIsomorphicLayoutEffect(() => {
     if (!isOpen) return;
 
     const originalOverflow = document.documentElement.style.overflow;

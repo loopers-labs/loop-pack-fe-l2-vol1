@@ -5,8 +5,16 @@ import type { JSX } from 'react';
 export type UseSelectOptions<T> = {
   items: readonly T[];
   isItemDisabled?: (item: T) => boolean; // 특정 항목을 클릭하지 못하게 할 때
+  // ── selection: controlled / uncontrolled 이중 API ──
+  // selectedItem 을 넘기면 controlled (부모가 값 소유),
+  // initialSelectedItem 만 넘기면 uncontrolled (내부 상태).
+  selectedItem?: T | null;
   initialSelectedItem?: T | null;
   onSelectedItemChange?: (item: T | null) => void; // 선택이 바뀌었을 때 부가 동작을 처리(서버 전송, 로컬스토리지 저장 등)
+  // ── open: controlled / uncontrolled 이중 API ──
+  // isOpen 을 넘기면 controlled, defaultIsOpen 만 넘기면 uncontrolled.
+  isOpen?: boolean;
+  defaultIsOpen?: boolean;
   onIsOpenChange?: (open: boolean) => void; // 드롭다운이 열리거나 닫힐 때 호출될 콜백(열릴 때 lazy 데이터 fetch, 다른 UI 닫기 등)
 } & (T extends object // T가 객체 타입이면 itemToKey 필수, 원시 타입이면 옵셔널(AI 활용 X)
   ? { itemToKey: (item: T) => string | number }

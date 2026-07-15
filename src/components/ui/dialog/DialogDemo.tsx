@@ -3,12 +3,12 @@
 import { useState, type CSSProperties } from 'react';
 import { Dialog } from './index';
 
-export function DialogPlayground() {
+export function DialogDemo() {
   const [controlledOpen, setControlledOpen] = useState(false);
 
   return (
     <main style={{ maxWidth: 480, margin: '0 auto', padding: '48px 24px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Dialog Playground</h1>
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Dialog Demo</h1>
       <p style={{ fontSize: 13, color: '#8794a3', marginBottom: 32, lineHeight: 1.6 }}>
         Compound 조립 + 이중 API(controlled/uncontrolled)를 테스트합니다. 모든 스타일은 사용처(이
         컴포넌트)에서 주입합니다 — Dialog 자체는 스타일이 없는 headless 컴포넌트입니다.
@@ -104,7 +104,7 @@ export function DialogPlayground() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 스타일 — 전부 사용처(Playground)에서 정의
+// 스타일 — 전부 사용처(Demo)에서 정의
 // Dialog 자체는 스타일이 없으므로, 다른 사용처에서는 전혀 다른 스타일을
 // 줄 수도 있다. 이게 Headless 패턴의 힘.
 // ─────────────────────────────────────────────────────────────
