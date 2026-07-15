@@ -102,4 +102,12 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // 스타터가 제공한 mock 백엔드는 과제 판별 대상이라 수정하지 않고 스타일 룰만 끈다
+    files: ['src/app/api/**'],
+    rules: {
+      'import-x/order': 'off',
+      '@stylistic/padding-line-between-statements': 'off',
+    },
+  },
 );

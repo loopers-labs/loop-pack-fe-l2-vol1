@@ -7,7 +7,7 @@ import {
   size,
   useFloating,
 } from '@floating-ui/react';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useState } from 'react';
 
 import { useSelect } from '@/components/ui/select/useSelect';
 
@@ -52,13 +52,187 @@ type ColorOption = {
   tone: ColorTone;
 };
 
-type ProductsResponse = {
-  selectOptions: {
-    sizeOptions: SizeOption[];
-    thumbnailOptions: ThumbnailOption[];
-    textOptions: TextOption[];
-    colorOptions: ColorOption[];
-  };
+type SelectDemoOptions = {
+  sizeOptions: SizeOption[];
+  thumbnailOptions: ThumbnailOption[];
+  textOptions: TextOption[];
+  colorOptions: ColorOption[];
+};
+
+// 5주차 스타터가 /api/products를 커머스 API로 교체해서 데모 데이터는 로컬 상수로 유지한다
+const DEMO_SELECT_OPTIONS: SelectDemoOptions = {
+  sizeOptions: [
+    { id: '23', label: '23', deliveryLabel: '내일(토) 도착보장', stock: 0 },
+    { id: '24', label: '24', deliveryLabel: '내일(토) 도착보장', stock: 5 },
+    { id: '25', label: '25', deliveryLabel: '내일(토) 도착보장', stock: 0 },
+    { id: '26', label: '26', deliveryLabel: '내일(토) 도착보장', stock: 2 },
+    { id: '27', label: '27', deliveryLabel: '내일(토) 도착보장', stock: 0 },
+    { id: '28', label: '28', deliveryLabel: '내일(토) 도착보장', stock: 4 },
+    { id: '29', label: '29', deliveryLabel: '내일(토) 도착보장', stock: 1 },
+    { id: '30', label: '30', deliveryLabel: '내일(토) 도착보장', stock: 7 },
+    { id: '31', label: '31', deliveryLabel: '내일(토) 도착보장', stock: 0 },
+    { id: '32', label: '32', deliveryLabel: '내일(토) 도착보장', stock: 3 },
+  ],
+  thumbnailOptions: [
+    {
+      id: '100ml',
+      name: '그로우턴 앰플 100ml기획(+100ml)',
+      thumbnailColor: '#e8956d',
+      discountRate: 2,
+      price: 38800,
+      badgeLabel: '오늘드림',
+      stock: 5,
+    },
+    {
+      id: '130ml',
+      name: '그로우턴 앰플 130ml기획(+30ml)',
+      thumbnailColor: '#f0c0a8',
+      discountRate: 2,
+      price: 33800,
+      badgeLabel: '오늘드림',
+      stock: 3,
+    },
+    {
+      id: '50ml-mini',
+      name: '그로우턴 앰플 미니 50ml',
+      thumbnailColor: '#f5dcc8',
+      discountRate: 5,
+      price: 19800,
+      badgeLabel: '오늘드림',
+      stock: 0,
+    },
+    {
+      id: 'double-set',
+      name: '그로우턴 앰플 더블 세트(100ml×2)',
+      thumbnailColor: '#d98a5f',
+      discountRate: 10,
+      price: 69800,
+      badgeLabel: '오늘드림',
+      stock: 2,
+    },
+  ],
+  textOptions: [
+    {
+      id: 'bagel-20',
+      name: '[대용량] 베이글 10+10개',
+      price: 38000,
+      unitPrice: 1900,
+      badgeLabel: '무료배송',
+      stock: 3,
+    },
+    {
+      id: 'bagel-15',
+      name: '베이글 15개',
+      price: 30000,
+      unitPrice: 2000,
+      badgeLabel: '무료배송',
+      stock: 0,
+    },
+    {
+      id: 'bagel-10',
+      name: '[최대할인] 베이글 5+5개',
+      price: 21000,
+      unitPrice: 2100,
+      badgeLabel: '무료배송',
+      stock: 5,
+    },
+    {
+      id: 'bagel-7',
+      name: '베이글 7개',
+      price: 15400,
+      unitPrice: 2200,
+      badgeLabel: '무료배송',
+      stock: 2,
+    },
+    {
+      id: 'bagel-5',
+      name: '베이글 5개',
+      price: 11000,
+      unitPrice: 2200,
+      badgeLabel: '무료배송',
+      stock: 0,
+    },
+    {
+      id: 'bagel-4',
+      name: '베이글 4개',
+      price: 9600,
+      unitPrice: 2400,
+      badgeLabel: null,
+      stock: 6,
+    },
+    {
+      id: 'bagel-3',
+      name: '베이글 3개',
+      price: 7500,
+      unitPrice: 2500,
+      badgeLabel: null,
+      stock: 4,
+    },
+    {
+      id: 'bagel-2',
+      name: '베이글 2개',
+      price: 5600,
+      unitPrice: 2800,
+      badgeLabel: null,
+      stock: 0,
+    },
+    {
+      id: 'bagel-1',
+      name: '베이글 1개',
+      price: 4200,
+      unitPrice: 4200,
+      badgeLabel: null,
+      stock: 10,
+    },
+  ],
+  // 그룹 select 데모용. tone 순으로 정렬해 내려준다 (사용처가 인접 경계로 그룹 라벨을 그린다)
+  colorOptions: [
+    {
+      id: 'terracotta',
+      name: '테라코타',
+      color: '#c96f4a',
+      stock: 4,
+      tone: 'warm',
+    },
+    { id: 'walnut', name: '월넛', color: '#6b4a35', stock: 1, tone: 'warm' },
+    {
+      id: 'blush',
+      name: '블러시 핑크',
+      color: '#e6b7b0',
+      stock: 0,
+      tone: 'warm',
+    },
+    {
+      id: 'dusty-blue',
+      name: '더스티 블루',
+      color: '#7d94ad',
+      stock: 3,
+      tone: 'cool',
+    },
+    {
+      id: 'sage',
+      name: '세이지 그린',
+      color: '#9caf88',
+      stock: 2,
+      tone: 'cool',
+    },
+    { id: 'olive', name: '올리브', color: '#8a8f5c', stock: 0, tone: 'cool' },
+    { id: 'cream', name: '크림', color: '#f3ead8', stock: 2, tone: 'neutral' },
+    {
+      id: 'ivory',
+      name: '아이보리',
+      color: '#f6f1e7',
+      stock: 6,
+      tone: 'neutral',
+    },
+    {
+      id: 'charcoal',
+      name: '차콜',
+      color: '#3d3d3f',
+      stock: 5,
+      tone: 'neutral',
+    },
+  ],
 };
 
 const isSoldOut = (item: { stock: number }) => item.stock === 0;
@@ -541,45 +715,7 @@ function ActionPropsSelectDemo({ items }: { items: TextOption[] }) {
 }
 
 export function SelectDemo() {
-  const [selectOptions, setSelectOptions] = useState<
-    ProductsResponse['selectOptions'] | null
-  >(null);
-  const [isError, setIsError] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch('/api/products')
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('products 조회 실패');
-        }
-
-        return response.json();
-      })
-      .then((body: ProductsResponse) => {
-        if (!cancelled) {
-          setSelectOptions(body.selectOptions);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsError(true);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (isError) {
-    return <p>옵션을 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.</p>;
-  }
-
-  if (selectOptions === null) {
-    return <p>옵션을 불러오는 중…</p>;
-  }
+  const selectOptions = DEMO_SELECT_OPTIONS;
 
   return (
     <section className="flex flex-col gap-8">
