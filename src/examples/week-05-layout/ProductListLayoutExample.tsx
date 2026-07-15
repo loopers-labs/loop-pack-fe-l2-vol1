@@ -18,12 +18,20 @@ export function ProductListLayoutExample() {
       <SiteHeader wishlistCount={0} cartCount={0} />
       <section className="mt-10">
         <h1 className="mb-4">상품 목록</h1>
-        <ProductFilters />
+        <ProductFilters
+          q=""
+          category="all"
+          sort="latest"
+          onSearchChange={() => {}}
+          onCategoryChange={() => {}}
+          onSortChange={() => {}}
+          onReset={() => {}}
+        />
       </section>
       <section className="mt-10" aria-label="상품 검색 결과">
         <ProductResultSummary totalCount={0} />
         <ProductGrid products={products} />
-        <Pagination currentPage={1} totalPages={1} />
+        <Pagination currentPage={1} totalPages={1} onPageChange={() => {}} />
       </section>
     </main>
   );

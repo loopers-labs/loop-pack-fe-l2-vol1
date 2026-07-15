@@ -1,6 +1,21 @@
-import { parseAsInteger, parseAsString, parseAsStringEnum } from "nuqs";
+import { createParser, parseAsString, parseAsStringEnum } from "nuqs/server";
 import { PRODUCT_CATEGORY_FILTERS, PRODUCT_SORTS } from "./constants";
 import type { ProductCategoryFilter, ProductSort } from "./types";
+
+const parseAsPageNumber = createParser({
+  parse(value) {
+    const parsed = Number(value);
+
+    if (!Number.isInteger(parsed) || parsed < 1) {
+      return null;
+    }
+
+    return parsed;
+  },
+  serialize(value) {
+    return String(value);
+  },
+});
 
 export const productListSearchParams = {
   q: parseAsString.withDefault(""),
@@ -8,5 +23,5 @@ export const productListSearchParams = {
     "all",
   ),
   sort: parseAsStringEnum<ProductSort>([...PRODUCT_SORTS]).withDefault("latest"),
-  page: parseAsInteger.withDefault(1),
+  page: parseAsPageNumber.withDefault(1),
 };

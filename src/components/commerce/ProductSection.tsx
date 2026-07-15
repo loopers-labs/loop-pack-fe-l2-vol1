@@ -1,5 +1,5 @@
 import { ProductGrid } from "./ProductGrid";
-import type { ProductCardItem } from "./ProductCard";
+import { mapProductToCardItem } from "./productCardAdapter";
 import type { Product } from "@/types/commerce";
 
 type ProductSectionProps = {
@@ -20,15 +20,4 @@ export function ProductSection({ title, products }: ProductSectionProps) {
       )}
     </section>
   );
-}
-
-function mapProductToCardItem(product: Product): ProductCardItem {
-  return {
-    id: product.id,
-    image: product.image,
-    imageAlt: product.name,
-    brand: product.brand,
-    name: product.name,
-    priceText: `${product.price.toLocaleString()}원`,
-  };
 }
