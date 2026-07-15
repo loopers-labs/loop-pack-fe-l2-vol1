@@ -1,3 +1,7 @@
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
+
+# string-width@8.2.2가 어제 출시라 pnpm11 minimumReleaseAge(24h)에 걸림. 하루 지나면 제거 가능
+minimumReleaseAgeExclude:
+  - string-width
