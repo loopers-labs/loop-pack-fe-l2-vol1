@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useQueryStates } from "nuqs";
 import { useEffect } from "react";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { mapProductToCardItem } from "@/components/commerce/productCardAdapter";
@@ -9,15 +8,13 @@ import { Pagination } from "./Pagination";
 import { ProductFilters } from "./ProductFilters";
 import { ProductListContent } from "./ProductListContent";
 import { productQueries } from "./queries/productQueries";
-import { productListSearchParams } from "./searchParams";
-import type { ProductCategoryFilter, ProductSort } from "./types";
+import { useProductListSearchParams } from "./useProductListSearchParams";
 
 const PRODUCT_LIST_PAGE_SIZE = 12;
 
 export function ProductListContainer() {
-  const [params, setParams] = useQueryStates(productListSearchParams, {
-    history: "push",
-  });
+  const { params, setSearchQuery, setCategory, setSort, setPage, replacePage, resetFilters } =
+    useProductListSearchParams();
 
   const productsQuery = useQuery(
     productQueries.list({
@@ -28,31 +25,6 @@ export function ProductListContainer() {
       pageSize: PRODUCT_LIST_PAGE_SIZE,
     }),
   );
-
-  const handleSearchChange = (q: string) => {
-    void setParams({ q, page: 1 });
-  };
-
-  const handleCategoryChange = (category: ProductCategoryFilter) => {
-    void setParams({ category, page: 1 });
-  };
-
-  const handleSortChange = (sort: ProductSort) => {
-    void setParams({ sort, page: 1 });
-  };
-
-  const handlePageChange = (page: number) => {
-    void setParams({ page });
-  };
-
-  const handleResetFilters = () => {
-    void setParams({
-      q: "",
-      category: "all",
-      sort: "latest",
-      page: 1,
-    });
-  };
 
   const totalCount = productsQuery.data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PRODUCT_LIST_PAGE_SIZE));
@@ -67,8 +39,8 @@ export function ProductListContainer() {
       return;
     }
 
-    void setParams({ page: totalPages }, { history: "replace" });
-  }, [params.page, productsQuery.data, setParams, totalPages]);
+    replacePage(totalPages);
+  }, [params.page, productsQuery.data, replacePage, totalPages]);
 
   return (
     <>
@@ -78,10 +50,10 @@ export function ProductListContainer() {
           q={params.q}
           category={params.category}
           sort={params.sort}
-          onSearchChange={handleSearchChange}
-          onCategoryChange={handleCategoryChange}
-          onSortChange={handleSortChange}
-          onReset={handleResetFilters}
+          onSearchChange={setSearchQuery}
+          onCategoryChange={setCategory}
+          onSortChange={setSort}
+          onReset={resetFilters}
         />
       </section>
 
@@ -94,11 +66,7 @@ export function ProductListContainer() {
           onRetry={() => void productsQuery.refetch()}
         >
           <ProductGrid products={products} />
-          <Pagination
-            currentPage={params.page}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+          <Pagination currentPage={params.page} totalPages={totalPages} onPageChange={setPage} />
         </ProductListContent>
       </section>
     </>
