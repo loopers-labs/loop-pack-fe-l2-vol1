@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { getProducts } from "../api/productApi";
 import type { ProductListQuery } from "../api/productApi";
 import type { MockApiScenario } from "@/types/api";
@@ -14,5 +14,6 @@ export const productQueries = {
       queryKey: [...productQueries.all(), "list", params],
       queryFn: () => getProducts(params),
       staleTime: 1000 * 60,
+      placeholderData: keepPreviousData,
     }),
 };

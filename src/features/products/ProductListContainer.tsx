@@ -65,7 +65,13 @@ export function ProductListContainer() {
           totalCount={totalCount}
           onRetry={() => void productsQuery.refetch()}
         >
-          <ProductGrid products={products} />
+          <div
+            className={productsQuery.isPlaceholderData ? "opacity-60" : undefined}
+            aria-label="상품 목록"
+            aria-busy={productsQuery.isPlaceholderData}
+          >
+            <ProductGrid products={products} />
+          </div>
           <Pagination currentPage={params.page} totalPages={totalPages} onPageChange={setPage} />
         </ProductListContent>
       </section>
