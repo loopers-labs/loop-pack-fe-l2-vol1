@@ -19,6 +19,13 @@
     "react-dom": "19.2.4",
     "zod": "^4.4.3"
   },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint",
+      "prettier --write"
+    ],
+    "*.{js,json,css,md}": "prettier --write"
+  },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^10.0.1",
