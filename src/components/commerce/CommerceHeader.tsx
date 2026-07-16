@@ -1,11 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useCommerceStore } from "@/stores/commerce/store";
 
-type SiteHeaderProps = {
-  wishlistCount: number;
-  cartCount: number;
-};
+export function CommerceHeader() {
+  const wishlistCount = useCommerceStore((state) => state.wishlistProductIds.length);
+  const cartCount = useCommerceStore((state) => state.cartProductIds.length);
 
-export function SiteHeader({ wishlistCount, cartCount }: SiteHeaderProps) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 pb-6 max-[480px]:items-start">
       <Link href="/">Commerce</Link>

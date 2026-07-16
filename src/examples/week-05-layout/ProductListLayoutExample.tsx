@@ -1,5 +1,5 @@
 import { ProductGrid } from "@/components/commerce/ProductGrid";
-import { SiteHeader } from "@/components/commerce/SiteHeader";
+import { CommerceHeader } from "@/components/commerce/CommerceHeader";
 import type { ProductCardItem } from "@/components/commerce/ProductCard";
 import { Pagination } from "@/features/products/Pagination";
 import { ProductFilters } from "@/features/products/ProductFilters";
@@ -15,7 +15,7 @@ import { ProductResultSummary } from "@/features/products/ProductResultSummary";
 export function ProductListLayoutExample() {
   return (
     <main className="mx-auto w-full max-w-[1200px] px-4 py-6 pb-16">
-      <SiteHeader wishlistCount={0} cartCount={0} />
+      <CommerceHeader />
       <section className="mt-10">
         <h1 className="mb-4">상품 목록</h1>
         <ProductFilters
