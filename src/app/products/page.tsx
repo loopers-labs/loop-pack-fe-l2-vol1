@@ -12,8 +12,7 @@ import {
   useProductListFilters,
 } from '@/features/product-list/hooks/useProductListFilters';
 
-// [AI] examples/week-05-layout/ProductListLayoutExample.tsx에서 인라인.
-// nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
+// [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
 const ProductsPage = () => {
   const { q, category, sort, page, setQ, setCategory, setSort, setPage, query } =
     useProductListFilters();

@@ -1,6 +1,16 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { CategoryId } from '@/types/commerce';
+
+const HomeCategoryArr = ['인기 상품', '신상품'] as const;
+const ProductCategoryArr: { id: CategoryId; label: string }[] = [
+  { id: 'casual', label: '캐주얼' },
+  { id: 'fashion', label: '패션' },
+  { id: 'goods', label: '뷰티·잡화' },
+  { id: 'home', label: '홈' },
+  { id: 'digital', label: '디지털' },
+] as const;
 
 const Home = () => {
   return (
@@ -20,14 +30,15 @@ const Home = () => {
       <section className={styles.section}>
         <h2>카테고리</h2>
         <div className={styles.categories}>
-          {['캐주얼', '패션', '뷰티·잡화', '홈', '디지털'].map((category) => (
-            <Link key={category} href="/products">
-              {category}
+          {/* [AI] 클릭 시 /products?category=<id> 로 이동해 해당 카테고리가 적용된다. */}
+          {ProductCategoryArr.map(({ id, label }) => (
+            <Link key={id} href={`/products?category=${id}`}>
+              {label}
             </Link>
           ))}
         </div>
       </section>
-      {['인기 상품', '신상품'].map((title) => (
+      {HomeCategoryArr.map((title) => (
         <section className={styles.section} key={title}>
           <h2>{title}</h2>
           <div className={styles.grid}>
