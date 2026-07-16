@@ -32,7 +32,7 @@ export class ApiError extends Error {
 
 // response.json()은 Promise<any>를 반환하므로, 별도의 타입 단언 없이
 // 반환 타입 Promise<T>로 직접 할당 가능하다. (eslint consistent-type-assertions: never 대응)
-export async function apiFetch<T>(path: string, options?: FetcherOptions): Promise<T> {
+export const apiFetch = async <T>(path: string, options?: FetcherOptions): Promise<T> => {
   const response = await fetch(`${path}${buildQueryString(options?.query)}`);
 
   if (!response.ok) {
@@ -49,4 +49,4 @@ export async function apiFetch<T>(path: string, options?: FetcherOptions): Promi
   }
 
   return response.json();
-}
+};

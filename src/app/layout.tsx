@@ -18,11 +18,11 @@ export const metadata: Metadata = {
   description: 'Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.',
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
@@ -30,4 +30,6 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

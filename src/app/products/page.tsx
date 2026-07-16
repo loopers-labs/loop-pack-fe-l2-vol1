@@ -1,5 +1,7 @@
 import { ProductListLayoutExample } from '@/examples/week-05-layout/ProductListLayoutExample';
 
-export default function ProductsPage() {
+const ProductsPage = () => {
   return <ProductListLayoutExample />;
-}
+};
+
+export default ProductsPage;

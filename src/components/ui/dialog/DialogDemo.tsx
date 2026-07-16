@@ -3,7 +3,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Dialog } from './index';
 
-export function DialogDemo() {
+export const DialogDemo = () => {
   const [controlledOpen, setControlledOpen] = useState(false);
 
   return (
@@ -101,7 +101,7 @@ export function DialogDemo() {
       </section>
     </main>
   );
-}
+};
 
 // ─────────────────────────────────────────────────────────────
 // 스타일 — 전부 사용처(Demo)에서 정의

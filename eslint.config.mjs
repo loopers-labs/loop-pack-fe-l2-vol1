@@ -38,6 +38,7 @@ export default tseslint.config(
       'no-template-curly-in-string': 'error',
       'no-nested-ternary': 'error',
       'no-console': 'error',
+      'func-style': ['error', 'expression', { allowArrowFunctions: true }],
     },
   },
   configPrettier

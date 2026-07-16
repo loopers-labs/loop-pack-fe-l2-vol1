@@ -30,7 +30,7 @@ type HarnessProps = Omit<UseSelectOptions<Item>, 'items' | 'itemToKey' | 'isItem
   maxHeight?: number;
 };
 
-function SelectHarness({ items = ITEMS, maxHeight, ...options }: HarnessProps) {
+const SelectHarness = ({ items = ITEMS, maxHeight, ...options }: HarnessProps) => {
   const select = useSelect<Item>({
     items,
     itemToKey,
@@ -65,20 +65,20 @@ function SelectHarness({ items = ITEMS, maxHeight, ...options }: HarnessProps) {
       )}
     </div>
   );
-}
+};
 
 // 제어 모드(open) 를 부모가 소유하는 래퍼 — 외부 상태로 열고닫음을 검증.
-function ControlledOpenHarness() {
+const ControlledOpenHarness = () => {
   const [isOpen, setIsOpen] = useState(false);
   return <SelectHarness isOpen={isOpen} onIsOpenChange={setIsOpen} />;
-}
+};
 
 const user = userEvent.setup();
 
 // 메뉴가 열려있는 상태로 만드는 헬퍼
-async function openMenu() {
+const openMenu = async () => {
   await user.click(screen.getByTestId('toggle'));
-}
+};
 
 describe('useSelect — 기본 동작', () => {
   it('초기엔 닫혀있고 토글 클릭으로 열린다', async () => {

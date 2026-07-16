@@ -11,7 +11,7 @@ import {
   type TitlePriceOption,
 } from '@/app/api/products/route';
 
-export function SelectDemo() {
+export const SelectDemo = () => {
   return (
     <main style={{ maxWidth: 480, margin: '0 auto', padding: '48px 24px' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
@@ -38,12 +38,12 @@ export function SelectDemo() {
       </section>
     </main>
   );
-}
+};
 
 // ─────────────────────────────────────────────────────────────
 // 1) 제목 + 가격 + 무료배송 뱃지
 // ─────────────────────────────────────────────────────────────
-function TitlePriceSelect() {
+const TitlePriceSelect = () => {
   const { isOpen, selectedItem, getToggleButtonProps, getMenuProps, getItemProps } =
     useSelect<TitlePriceOption>({
       items: titlePriceOptions,
@@ -92,12 +92,12 @@ function TitlePriceSelect() {
       )}
     </div>
   );
-}
+};
 
 // ─────────────────────────────────────────────────────────────
 // 2) 사이즈 + 도착요일 (품절 스킵)
 // ─────────────────────────────────────────────────────────────
-function SizeSelect() {
+const SizeSelect = () => {
   const { isOpen, selectedItem, getToggleButtonProps, getMenuProps, getItemProps } =
     useSelect<SizeOption>({
       items: sizeOptions,
@@ -143,12 +143,12 @@ function SizeSelect() {
       )}
     </div>
   );
-}
+};
 
 // ─────────────────────────────────────────────────────────────
 // 3) 썸네일 이미지
 // ─────────────────────────────────────────────────────────────
-function ThumbnailSelect() {
+const ThumbnailSelect = () => {
   const { isOpen, selectedItem, getToggleButtonProps, getMenuProps, getItemProps } =
     useSelect<ThumbnailOption>({
       items: thumbnailOptions,
@@ -209,7 +209,7 @@ function ThumbnailSelect() {
       )}
     </div>
   );
-}
+};
 
 // ─────────────────────────────────────────────────────────────
 // 공통 스타일

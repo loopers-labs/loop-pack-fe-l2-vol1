@@ -53,7 +53,7 @@ interface DialogProps {
 }
 
 // DialogRoot의 props 구조 및 controlled, uncontrolled 판단 AI로 작성
-function DialogRoot({ children, open, defaultOpen, onOpenChange }: DialogProps) {
+const DialogRoot = ({ children, open, defaultOpen, onOpenChange }: DialogProps) => {
   const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
 
   // open prop이 넘어왔으면 controlled, 아니면 uncontrolled
@@ -69,9 +69,9 @@ function DialogRoot({ children, open, defaultOpen, onOpenChange }: DialogProps) 
   );
 
   return <DialogContext.Provider value={{ isOpen, setOpen }}>{children}</DialogContext.Provider>;
-}
+};
 
-function Trigger({ children, ...rest }: ComponentProps<'button'>) {
+const Trigger = ({ children, ...rest }: ComponentProps<'button'>) => {
   const { setOpen } = useDialogContext();
   return (
     <button
@@ -85,9 +85,9 @@ function Trigger({ children, ...rest }: ComponentProps<'button'>) {
       {children}
     </button>
   );
-}
+};
 
-function Overlay({ ...rest }: ComponentProps<'div'>) {
+const Overlay = ({ ...rest }: ComponentProps<'div'>) => {
   const { isOpen, setOpen } = useDialogContext();
   if (!isOpen) return null;
 
@@ -102,9 +102,9 @@ function Overlay({ ...rest }: ComponentProps<'div'>) {
       />
     </Portal>
   );
-}
+};
 
-function Content({ children, ...rest }: ComponentProps<'div'>) {
+const Content = ({ children, ...rest }: ComponentProps<'div'>) => {
   const { isOpen, setOpen } = useDialogContext();
 
   // Esc 키 처리
@@ -146,17 +146,17 @@ function Content({ children, ...rest }: ComponentProps<'div'>) {
       </div>
     </Portal>
   );
-}
+};
 
-function Title({ children, ...rest }: ComponentProps<'h2'>) {
+const Title = ({ children, ...rest }: ComponentProps<'h2'>) => {
   return <h2 {...rest}>{children}</h2>;
-}
+};
 
-function Description({ children, ...rest }: ComponentProps<'p'>) {
+const Description = ({ children, ...rest }: ComponentProps<'p'>) => {
   return <p {...rest}>{children}</p>;
-}
+};
 
-function Close({ children, ...rest }: ComponentProps<'button'>) {
+const Close = ({ children, ...rest }: ComponentProps<'button'>) => {
   const { setOpen } = useDialogContext();
   return (
     <button
@@ -170,7 +170,7 @@ function Close({ children, ...rest }: ComponentProps<'button'>) {
       {children}
     </button>
   );
-}
+};
 
 export const Dialog = Object.assign(DialogRoot, {
   Trigger,

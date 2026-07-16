@@ -6,7 +6,7 @@ import { Dialog } from './index';
 
 const user = userEvent.setup();
 
-function renderDialog(overrides: { open?: boolean; defaultOpen?: boolean } = {}) {
+const renderDialog = (overrides: { open?: boolean; defaultOpen?: boolean } = {}) => {
   const onOpenChange = vi.fn();
   const utils = render(
     <Dialog open={overrides.open} defaultOpen={overrides.defaultOpen} onOpenChange={onOpenChange}>
@@ -20,7 +20,7 @@ function renderDialog(overrides: { open?: boolean; defaultOpen?: boolean } = {})
     </Dialog>
   );
   return { ...utils, onOpenChange };
-}
+};
 
 describe('Dialog — uncontrolled', () => {
   it('초기엔 닫혀있고 Trigger 클릭으로 열린다', async () => {
@@ -59,7 +59,7 @@ describe('Dialog — uncontrolled', () => {
 });
 
 describe('Dialog — controlled', () => {
-  function ControlledDialog() {
+  const ControlledDialog = () => {
     const [open, setOpen] = useState(false);
     return (
       <Dialog open={open} onOpenChange={setOpen}>
@@ -69,7 +69,7 @@ describe('Dialog — controlled', () => {
         </Dialog.Content>
       </Dialog>
     );
-  }
+  };
 
   it('부모 상태로 열고닫기가 동작한다', async () => {
     render(<ControlledDialog />);
