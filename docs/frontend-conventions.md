@@ -109,7 +109,7 @@ export function ProductCard({
 const [items, setItems] = useState<Item[]>([]);
 
 const isEmpty = items.length === 0;
-const selectedItems = items.filter(item => item.isSelected);
+const selectedItems = items.filter((item) => item.isSelected);
 ```
 
 ## 렌더링
@@ -124,7 +124,7 @@ if (items.length === 0) {
   return <EmptyState />;
 }
 
-return items.map(item => <ItemRow key={item.id} item={item} />);
+return items.map((item) => <ItemRow key={item.id} item={item} />);
 ```
 
 ## 컴포넌트 분리 기준

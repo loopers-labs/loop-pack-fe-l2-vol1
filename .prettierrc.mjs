@@ -6,7 +6,7 @@ export default {
   singleQuote: true, // 작은 따옴표 사용
   trailingComma: 'all', // 꼬리 콤마 사용
   bracketSpacing: true, // 중괄호 내에 공백 사용
-  arrowParens: 'avoid', // 화살표 함수 단일 인자 시, 괄호 생략
+  arrowParens: 'always', // 화살표 함수 단일 인자 시, 괄호 생략
   proseWrap: 'preserve', // 마크다운(ex.readme.md) 포매팅 제외
   endOfLine: 'auto', // 개행문자 유지 (혼합일 경우, 첫 줄 개행문자로 통일)
   jsxSingleQuote: false, // JSX에 single Quotation 사용 여부
