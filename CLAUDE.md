@@ -2,8 +2,8 @@
 
 ## 프로젝트 개요
 
-React 19 + Vite + TypeScript 프론트엔드 프로젝트.
-1차 하네스(ESLint · Prettier · husky + lint-staged)로 커밋 게이트를 강제한다 — lint/format 미통과 시 커밋 불가.
+React 19 + Next.js 16 (App Router) + TypeScript 커머스 프로젝트. (4주차에 Vite → Next 전환)
+1차 하네스(ESLint · Prettier · husky + lint-staged)를 Next로 이식해 커밋 게이트를 강제한다 — lint/format 미통과 시 커밋 불가.
 
 ## 코드
 
@@ -32,11 +32,12 @@ React 19 + Vite + TypeScript 프론트엔드 프로젝트.
 ## 환경
 
 - 패키지 매니저: **pnpm** (npm/yarn 쓰지 말 것).
-- Lint: ESLint flat config — typescript-eslint `recommended-type-checked` + `react-hooks` (핵심 규칙 `error`). TypeScript는 `strict`.
+- Lint: ESLint flat config — typescript-eslint `recommended-type-checked` + `react-hooks` (핵심 규칙 `error`) + `@next/eslint-plugin-next` (Next 도메인 룰). create-next-app 기본 `eslint-config-next` 번들은 쓰지 않음 — 내 flat config가 뼈대, Next는 도메인 룰만 편입. TypeScript는 `strict`.
 - Format: **Prettier 전담** (`semi: true`, `singleQuote`). ESLint에 포맷 룰을 넣지 말 것.
 
 ## 컴포넌트 설계 원칙
 
+- Server Component가 기본. 상호작용·훅·브라우저 API가 필요할 때만 `'use client'`
 - 컴포넌트의 Props가 5개를 넘으면 설계를 재검토
 - children을 적극 활용해 합성(Composition) 우선
 - Props Drilling이 3단계 이상이면 Context 또는 상태 관리 도입 검토
@@ -46,5 +47,5 @@ React 19 + Vite + TypeScript 프론트엔드 프로젝트.
 
 - 서버에서 오는 데이터 → 서버 상태 (추후 TanStack Query)
 - UI 전용 (모달 열림, 탭 선택) → 로컬 상태 (useState)
-- URL에 반영되어야 하는 것 (필터, 페이지, 검색어) → URL 상태
+- URL에 반영되어야 하는 것 (필터, 페이지, 검색어) → URL 상태 (Next: `searchParams` / `useSearchParams`)
 - 여러 컴포넌트가 공유해야 하는 것 → Context 또는 전역 상태
