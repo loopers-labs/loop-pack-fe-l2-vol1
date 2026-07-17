@@ -1,4 +1,5 @@
-import { ProductCard, type ProductCardItem } from "./ProductCard";
+import { CommerceProductCard } from "./CommerceProductCard";
+import type { ProductCardItem } from "./ProductCard";
 
 type ProductGridProps = {
   products: ProductCardItem[];
@@ -15,7 +16,7 @@ export function ProductGrid({ products, titleLevel = 2, labelPrefix }: ProductGr
           : `${index + 1}번 상품`;
 
         return (
-          <ProductCard
+          <CommerceProductCard
             key={product.id}
             product={product}
             titleLevel={titleLevel}

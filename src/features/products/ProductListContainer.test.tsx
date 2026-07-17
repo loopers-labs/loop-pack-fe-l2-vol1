@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListContainer } from "./ProductListContainer";
 import { getProducts } from "./api/productApi";
 import type { ProductListResponse } from "./api/productApi";
+import { useCommerceStore } from "@/stores/commerce/store";
 import type { Product } from "@/types/commerce";
 
 vi.mock("./api/productApi", () => ({
@@ -56,6 +57,10 @@ function renderProductListContainer({
 
 describe("ProductListContainer", () => {
   beforeEach(() => {
+    useCommerceStore.setState({
+      cartProductIds: [],
+      wishlistProductIds: [],
+    });
     mockedGetProducts.mockReset();
     mockedGetProducts.mockResolvedValue({
       products: [],

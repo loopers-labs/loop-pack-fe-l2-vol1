@@ -14,8 +14,10 @@ type ProductCardProps = {
   titleLevel?: 2 | 3;
   wishlistLabel: string;
   cartLabel: string;
-  isWishlisted?: boolean;
-  isInCart?: boolean;
+  isInWishlist: boolean;
+  isInCart: boolean;
+  onWishlistToggle: () => void;
+  onCartToggle: () => void;
 };
 
 export function ProductCard({
@@ -23,8 +25,10 @@ export function ProductCard({
   titleLevel = 2,
   wishlistLabel,
   cartLabel,
-  isWishlisted = false,
-  isInCart = false,
+  isInWishlist,
+  isInCart,
+  onWishlistToggle,
+  onCartToggle,
 }: ProductCardProps) {
   const Title = titleLevel === 2 ? "h2" : "h3";
 
@@ -45,17 +49,19 @@ export function ProductCard({
           className="border border-[#c8c8c8] bg-transparent px-3 py-2 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
           type="button"
           aria-label={wishlistLabel}
-          aria-pressed={isWishlisted}
+          aria-pressed={isInWishlist}
+          onClick={onWishlistToggle}
         >
-          찜
+          {isInWishlist ? "찜 해제" : "찜"}
         </button>
         <button
           className="border border-[#c8c8c8] bg-transparent px-3 py-2 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
           type="button"
           aria-label={cartLabel}
           aria-pressed={isInCart}
+          onClick={onCartToggle}
         >
-          담기
+          {isInCart ? "빼기" : "담기"}
         </button>
       </div>
     </article>
