@@ -1,17 +1,17 @@
-export type CategoryId = "casual" | "fashion" | "goods" | "home" | "digital";
+export type CategoryId = 'casual' | 'fashion' | 'goods' | 'home' | 'digital';
 
 export type Category = {
   id: CategoryId;
   name: string;
 };
 
-export type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
+export type ProductSort = 'latest' | 'popular' | 'price-asc' | 'price-desc';
 
-export type MockApiScenario = "empty" | "error";
+export type MockApiScenario = 'empty' | 'error';
 
 export type ProductListQuery = {
   q?: string;
-  category?: CategoryId | "all";
+  category?: CategoryId | 'all';
   sort?: ProductSort;
   page?: number;
   pageSize?: number;
@@ -50,3 +50,7 @@ export type ProductListResponse = {
 export type ApiErrorResponse = {
   message: string;
 };
+
+// Product 객체 전체를 저장한은 게 아니라 최소 정보만 저장한다.
+export type WishListItem = Pick<Product, 'id' | 'name' | 'price' | 'image'>;
+export type CartItem = Pick<Product, 'id' | 'name' | 'price' | 'image'>;
