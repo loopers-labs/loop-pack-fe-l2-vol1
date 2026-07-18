@@ -13,6 +13,20 @@
   gap: 20px;
 }
 
+.product {
+  display: grid;
+  gap: 8px;
+}
+
+/* [AI] 이미지를 정사각형 비율로 크롭하여 product-list와 동일한 모양으로 맞춘다. */
+.image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #ececec;
+  object-fit: cover;
+}
+
 @media (max-width: 960px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

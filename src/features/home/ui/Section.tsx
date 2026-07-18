@@ -12,8 +12,14 @@ export const Section = ({ list, title }: { list: Product[]; title: HomeCategory 
           <p>검색 결과가 없습니다.</p>
         ) : (
           list.map((product) => (
-            <article key={product.id}>
-              <Image src={product.image} alt={product.name} width={400} height={400} />
+            <article className={styles.product} key={product.id}>
+              <Image
+                className={styles.image}
+                src={product.image}
+                alt={product.name}
+                width={400}
+                height={400}
+              />
               <p>{product.brand}</p>
               <h3>{product.name}</h3>
               <strong>{product.price.toLocaleString()}원</strong>
