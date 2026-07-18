@@ -9,6 +9,12 @@ export type ProductSort = 'latest' | 'popular' | 'price-asc' | 'price-desc';
 
 export type MockApiScenario = 'empty' | 'error';
 
+// [AI] 클라이언트/서버 양쪽에서 재사용하기 위해 시나리오 값과 타입 가드를 함께 둔다.
+export const MOCK_API_SCENARIOS = ['empty', 'error'] as const satisfies readonly MockApiScenario[];
+
+export const isMockApiScenario = (value: string | null | undefined): value is MockApiScenario =>
+  value !== null && value !== undefined && MOCK_API_SCENARIOS.some((s) => s === value);
+
 export type ProductListQuery = {
   q?: string;
   category?: CategoryId | 'all';

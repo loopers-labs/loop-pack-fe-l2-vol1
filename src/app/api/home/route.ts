@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { categories, homeBanner, products, waitForMockApi } from '@/app/api/_data/commerce';
-import type { ApiErrorResponse, HomeResponse, MockApiScenario } from '@/types/commerce';
-
-const scenarioValues = ['empty', 'error'] as const satisfies readonly MockApiScenario[];
-
-const isMockApiScenario = (value: string): value is MockApiScenario =>
-  scenarioValues.some((scenario) => scenario === value);
+import { isMockApiScenario } from '@/types/commerce';
+import type { ApiErrorResponse, HomeResponse } from '@/types/commerce';
 
 export const GET = async (
   request: NextRequest

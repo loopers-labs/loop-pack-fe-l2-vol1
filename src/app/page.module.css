@@ -6,8 +6,7 @@
 
 .header,
 .header nav,
-.categories,
-.product > div:last-child {
+.categories {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -38,48 +37,16 @@
   margin-bottom: 16px;
 }
 
-.categories a,
-.product button {
+.categories a {
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   background: transparent;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.product {
-  display: grid;
-  gap: 8px;
-}
-
-.image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  background: #ececec;
-  object-fit: cover;
 }
 
 .page a:focus-visible,
 .page button:focus-visible {
   outline: 3px solid #2557a7;
   outline-offset: 3px;
-}
-
-@media (max-width: 960px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 720px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 480px) {
@@ -95,9 +62,5 @@
   .hero {
     min-height: 180px;
     padding: 24px;
-  }
-
-  .grid {
-    gap: 24px 12px;
   }
 }

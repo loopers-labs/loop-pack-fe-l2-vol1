@@ -1,9 +1,14 @@
-import Image from 'next/image';
+'use client';
+
 import Link from 'next/link';
 import styles from './page.module.css';
 import { CategoryId } from '@/types/commerce';
+import { useQuery } from '@tanstack/react-query';
+import { homeQueries } from '@/features/home/api/queries';
+import { HomeCategory } from '@/features/home/types';
+import { Section } from '@/features/home/ui/Section';
 
-const HomeCategoryArr = ['인기 상품', '신상품'] as const;
+const HomeCategoryArr: HomeCategory[] = ['인기 상품', '신상품'] as const;
 const ProductCategoryArr: { id: CategoryId; label: string }[] = [
   { id: 'casual', label: '캐주얼' },
   { id: 'fashion', label: '패션' },
@@ -13,6 +18,22 @@ const ProductCategoryArr: { id: CategoryId; label: string }[] = [
 ] as const;
 
 const Home = () => {
+  const { data, isPending, isError } = useQuery(homeQueries.home());
+
+  const renderItems = () => {
+    if (isPending) {
+      return <p>불러오는 중...</p>;
+    }
+    if (isError) {
+      return <p role="alert">상품을 불러오지 못했습니다.</p>;
+    }
+
+    return HomeCategoryArr.map((title) => {
+      const list = title === '인기 상품' ? data.popularProducts : data.newProducts;
+      return <Section key={title} list={list} title={title} />;
+    });
+  };
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -38,53 +59,7 @@ const Home = () => {
           ))}
         </div>
       </section>
-      {HomeCategoryArr.map((title) => (
-        <section className={styles.section} key={title}>
-          <h2>{title}</h2>
-          <div className={styles.grid}>
-            {Array.from({ length: 4 }, (_, index) => (
-              <article className={styles.product} key={`${title}-${index}`}>
-                <Image
-                  className={styles.image}
-                  src={
-                    title === '인기 상품' ? '/images/products/p1.jpg' : '/images/products/p6.jpg'
-                  }
-                  alt={
-                    title === '인기 상품'
-                      ? '[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG'
-                      : 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'
-                  }
-                  width={400}
-                  height={400}
-                />
-                <p>브랜드</p>
-                <h3>
-                  {title === '인기 상품'
-                    ? '[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG'
-                    : 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'}
-                </h3>
-                <strong>0원</strong>
-                <div>
-                  <button
-                    type="button"
-                    aria-label={`${title} ${index + 1}번 상품 위시리스트`}
-                    aria-pressed={false}
-                  >
-                    찜
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`${title} ${index + 1}번 상품 장바구니`}
-                    aria-pressed={false}
-                  >
-                    담기
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ))}
+      {renderItems()}
     </main>
   );
 };
