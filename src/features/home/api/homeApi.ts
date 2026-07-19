@@ -1,4 +1,4 @@
-import { parseApiError, setSearchParam } from "@/lib/apiUtils";
+import { createApiUrl, parseApiError, setSearchParam } from "@/lib/apiUtils";
 import type { MockApiScenario } from "@/types/api";
 import type { Category, Product } from "@/types/commerce";
 
@@ -19,7 +19,8 @@ export async function getHome(params: GetHomeParams = {}): Promise<HomeResponse>
   setSearchParam(searchParams, "scenario", params.scenario);
 
   const queryString = searchParams.toString();
-  const response = await fetch(`/api/home${queryString ? `?${queryString}` : ""}`);
+  const apiPath = `/api/home${queryString ? `?${queryString}` : ""}`;
+  const response = await fetch(createApiUrl(apiPath));
 
   if (!response.ok) {
     throw await parseApiError(response, "홈 데이터를 불러오지 못했습니다.");

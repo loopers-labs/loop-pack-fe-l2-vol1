@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createElement } from "react";
+import { createElement, Suspense } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { HomeErrorBoundary } from "./HomeErrorBoundary";
+import { HomeLoading } from "./HomeLoading";
 import { HomePageClient } from "./HomePageClient";
 import { getHome } from "./api/homeApi";
 import { useCommerceStore } from "@/stores/commerce/store";
@@ -19,7 +21,7 @@ vi.mock("next/image", () => ({
 
 const mockedGetHome = vi.mocked(getHome);
 
-function renderHomePageClient() {
+function renderHomePageState() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -30,12 +32,16 @@ function renderHomePageClient() {
 
   render(
     <QueryClientProvider client={queryClient}>
-      <HomePageClient />
+      <HomeErrorBoundary>
+        <Suspense fallback={<HomeLoading />}>
+          <HomePageClient />
+        </Suspense>
+      </HomeErrorBoundary>
     </QueryClientProvider>,
   );
 }
 
-describe("HomePageClient", () => {
+describe("HomePageState", () => {
   beforeEach(() => {
     useCommerceStore.setState({
       cartProductIds: [],
@@ -51,7 +57,7 @@ describe("HomePageClient", () => {
   it("홈 데이터를 불러오는 동안 로딩 상태를 보여준다", () => {
     mockedGetHome.mockReturnValue(new Promise(() => {}));
 
-    renderHomePageClient();
+    renderHomePageState();
 
     expect(screen.getByText("홈 데이터를 불러오는 중...")).toBeInTheDocument();
   });
@@ -59,7 +65,7 @@ describe("HomePageClient", () => {
   it("홈 데이터 요청이 실패하면 에러 상태와 다시 시도 버튼을 보여준다", async () => {
     mockedGetHome.mockRejectedValue(new Error("홈 데이터를 불러오지 못했습니다."));
 
-    renderHomePageClient();
+    renderHomePageState();
 
     expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
@@ -89,7 +95,7 @@ describe("HomePageClient", () => {
         ],
       });
 
-    renderHomePageClient();
+    renderHomePageState();
 
     expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
 
@@ -113,7 +119,7 @@ describe("HomePageClient", () => {
       newProducts: [],
     });
 
-    renderHomePageClient();
+    renderHomePageState();
 
     expect(await screen.findByRole("heading", { name: "인기 상품" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "신상품" })).toBeInTheDocument();
@@ -142,7 +148,7 @@ describe("HomePageClient", () => {
       ],
     });
 
-    renderHomePageClient();
+    renderHomePageState();
 
     expect(
       await screen.findByRole("heading", { name: "매일 새롭게 발견하는 취향", level: 1 }),

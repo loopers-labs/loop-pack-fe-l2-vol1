@@ -11,6 +11,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.101.2
         version: 5.101.2(react@19.2.4)
+      '@tanstack/react-query-devtools':
+        specifier: ^5.101.2
+        version: 5.101.2(@tanstack/react-query@5.101.2(react@19.2.4))(react@19.2.4)
       next:
         specifier: 16.2.10
         version: 16.2.10(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -23,6 +26,9 @@ importers:
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
+      react-error-boundary:
+        specifier: ^6.1.2
+        version: 6.1.2(react@19.2.4)
       zustand:
         specifier: ^5.0.14
         version: 5.0.14(@types/react@19.2.17)(react@19.2.4)
@@ -728,6 +734,15 @@ packages:
 
   '@tanstack/query-core@5.101.2':
     resolution: {integrity: sha512-hH5MLoJhF7KaIGd7q3xTXGXvslI+GYlM1Z/35aSHHWaCJWB7XvTSHYuV3eM7tw+aE0mT/xMro4M4Q9rCGHT0lw==}
+
+  '@tanstack/query-devtools@5.101.2':
+    resolution: {integrity: sha512-o+wHcqgN7Pp0s8v1i0UGq/ZrrEKrxdIiMQmKRdYb2w7NPtylYSJ4+wg/tIn71m9DLstwUwdEGAvROdly6HXP6w==}
+
+  '@tanstack/react-query-devtools@5.101.2':
+    resolution: {integrity: sha512-eU7HctdA9gDjqoERoEdzLbw9DiqnBDfh5+Hu0u26gjqoHJezOpQAuiesDL2VvkU+2cPV76zgv0tMZsOrI4LjnQ==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.101.2
+      react: ^18 || ^19
 
   '@tanstack/react-query@5.101.2':
     resolution: {integrity: sha512-seDkr6kzGzX1okaaTtZPtgA688CDPlXUz1C6xSg0ESqn04Vuc8tlrYms1s3de+znBqhPVxFRfpAfUf+6XvfPWg==}
@@ -2229,6 +2244,11 @@ packages:
     peerDependencies:
       react: ^19.2.4
 
+  react-error-boundary@6.1.2:
+    resolution: {integrity: sha512-3DpCr5HVdZ0caUjYE/kIHBEJN0mNP3ZCgf16c48uJ5TbWjorKVp+YG8W3XqlJ7vJAVNw6wNIImyPXmFydwmyng==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -3312,6 +3332,14 @@ snapshots:
       tailwindcss: 4.3.2
 
   '@tanstack/query-core@5.101.2': {}
+
+  '@tanstack/query-devtools@5.101.2': {}
+
+  '@tanstack/react-query-devtools@5.101.2(@tanstack/react-query@5.101.2(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@tanstack/query-devtools': 5.101.2
+      '@tanstack/react-query': 5.101.2(react@19.2.4)
+      react: 19.2.4
 
   '@tanstack/react-query@5.101.2(react@19.2.4)':
     dependencies:
@@ -4903,6 +4931,10 @@ snapshots:
     dependencies:
       react: 19.2.4
       scheduler: 0.27.0
+
+  react-error-boundary@6.1.2(react@19.2.4):
+    dependencies:
+      react: 19.2.4
 
   react-is@16.13.1: {}
 

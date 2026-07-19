@@ -20,3 +20,13 @@ export function setSearchParam(
 
   params.set(key, String(value));
 }
+
+export function createApiUrl(path: string) {
+  if (typeof window !== "undefined") {
+    return path;
+  }
+
+  const baseUrl = process.env.INTERNAL_API_BASE_URL ?? "http://localhost:3000";
+
+  return new URL(path, baseUrl).toString();
+}
