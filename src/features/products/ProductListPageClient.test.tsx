@@ -162,6 +162,40 @@ describe("ProductListPageClient", () => {
     expect(onUrlUpdate).not.toHaveBeenCalled();
   });
 
+  it("카테고리를 변경하면 page를 1로 되돌린 조건으로 조회한다", async () => {
+    renderProductListPageClient({
+      searchParams: "?category=all&sort=latest&page=3",
+    });
+
+    await userEvent.selectOptions(screen.getByLabelText("카테고리"), "goods");
+
+    await waitFor(() => {
+      expect(mockedGetProducts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "goods",
+          page: 1,
+        }),
+      );
+    });
+  });
+
+  it("정렬을 변경하면 page를 1로 되돌린 조건으로 조회한다", async () => {
+    renderProductListPageClient({
+      searchParams: "?category=goods&sort=latest&page=3",
+    });
+
+    await userEvent.selectOptions(screen.getByLabelText("정렬"), "popular");
+
+    await waitFor(() => {
+      expect(mockedGetProducts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sort: "popular",
+          page: 1,
+        }),
+      );
+    });
+  });
+
   it("페이지 전환 중에는 이전 상품 목록을 유지하고 갱신 중 상태를 표시한다", async () => {
     mockedGetProducts.mockImplementation((params = {}) => {
       if (params.page === 3) {
@@ -248,6 +282,28 @@ describe("ProductListPageClient", () => {
         page: 3,
       }),
     );
+  });
+
+  it("상품 목록 요청이 실패하면 새로고침 없이 다시 시도할 수 있다", async () => {
+    mockedGetProducts
+      .mockRejectedValueOnce(new Error("상품 목록을 불러오지 못했습니다."))
+      .mockResolvedValueOnce({
+        products: [firstProduct],
+        categories: [],
+        totalCount: 1,
+        page: 1,
+        pageSize: 12,
+      });
+
+    renderProductListPageClient({
+      searchParams: "",
+    });
+
+    expect(await screen.findByText("상품 목록을 불러오지 못했습니다.")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
   });
 
   it("검색어는 debounce 완료 후 URL 상태와 조회 조건에 반영한다", async () => {
