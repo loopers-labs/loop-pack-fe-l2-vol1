@@ -5,7 +5,7 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProductListContainer } from "@/features/products/ProductListContainer";
+import { ProductListPageClient } from "@/features/products/ProductListPageClient";
 import { getProducts } from "@/features/products/api/productApi";
 import { useCommerceStore } from "@/stores/commerce/store";
 import type { Product } from "@/types/commerce";
@@ -39,7 +39,7 @@ function renderHomeSectionWithProductList() {
     <QueryClientProvider client={queryClient}>
       <NuqsTestingAdapter searchParams="" hasMemory>
         <ProductSection title="인기 상품" products={[sharedProduct]} />
-        <ProductListContainer />
+        <ProductListPageClient />
       </NuqsTestingAdapter>
     </QueryClientProvider>,
   );

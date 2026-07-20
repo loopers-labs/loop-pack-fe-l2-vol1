@@ -6,7 +6,7 @@ import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommerceHeader } from "@/components/commerce/CommerceHeader";
-import { ProductListContainer } from "./ProductListContainer";
+import { ProductListPageClient } from "./ProductListPageClient";
 import { getProducts } from "./api/productApi";
 import { useCommerceStore } from "@/stores/commerce/store";
 import type { Product } from "@/types/commerce";
@@ -34,7 +34,7 @@ function renderProductListWithHeader() {
     <QueryClientProvider client={queryClient}>
       <NuqsTestingAdapter searchParams="" hasMemory>
         <CommerceHeader />
-        <ProductListContainer />
+        <ProductListPageClient />
       </NuqsTestingAdapter>
     </QueryClientProvider>,
   );

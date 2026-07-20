@@ -6,7 +6,7 @@ import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProductListContainer } from "./ProductListContainer";
+import { ProductListPageClient } from "./ProductListPageClient";
 import { getProducts } from "./api/productApi";
 import type { ProductListResponse } from "./api/productApi";
 import { useCommerceStore } from "@/stores/commerce/store";
@@ -27,7 +27,7 @@ const firstProduct = createProduct({
   name: "첫 번째 상품",
 });
 
-function renderProductListContainer({
+function renderProductListPageClient({
   searchParams,
   onUrlUpdate = vi.fn<OnUrlUpdateFunction>(),
 }: {
@@ -47,7 +47,7 @@ function renderProductListContainer({
   render(
     <QueryClientProvider client={queryClient}>
       <NuqsTestingAdapter searchParams={searchParams} hasMemory onUrlUpdate={onUrlUpdate}>
-        <ProductListContainer />
+        <ProductListPageClient />
       </NuqsTestingAdapter>
     </QueryClientProvider>,
   );
@@ -55,7 +55,7 @@ function renderProductListContainer({
   return { onUrlUpdate };
 }
 
-describe("ProductListContainer", () => {
+describe("ProductListPageClient", () => {
   beforeEach(() => {
     useCommerceStore.setState({
       cartProductIds: [],
@@ -85,7 +85,7 @@ describe("ProductListContainer", () => {
       pageSize: 12,
     });
 
-    const { onUrlUpdate } = renderProductListContainer({
+    const { onUrlUpdate } = renderProductListPageClient({
       searchParams: "?page=100",
     });
 
@@ -102,7 +102,7 @@ describe("ProductListContainer", () => {
   });
 
   it("유효하지 않은 page query가 들어오면 기본 page로 조회하고 URL은 유지한다", async () => {
-    renderProductListContainer({
+    renderProductListPageClient({
       searchParams: "?page=-1",
     });
 
@@ -118,7 +118,7 @@ describe("ProductListContainer", () => {
   });
 
   it("유효하지 않은 category query가 들어오면 기본 category로 조회하고 URL은 유지한다", async () => {
-    renderProductListContainer({
+    renderProductListPageClient({
       searchParams: "?category=wrong",
     });
 
@@ -134,7 +134,7 @@ describe("ProductListContainer", () => {
   });
 
   it("유효하지 않은 sort query가 들어오면 기본 sort로 조회하고 URL은 유지한다", async () => {
-    renderProductListContainer({
+    renderProductListPageClient({
       searchParams: "?sort=wrong",
     });
 
@@ -150,7 +150,7 @@ describe("ProductListContainer", () => {
   });
 
   it("유효한 query가 들어오면 URL을 다시 쓰지 않는다", async () => {
-    const { onUrlUpdate } = renderProductListContainer({
+    const { onUrlUpdate } = renderProductListPageClient({
       searchParams: "?category=goods&sort=popular&page=2",
     });
 
@@ -176,7 +176,7 @@ describe("ProductListContainer", () => {
       });
     });
 
-    renderProductListContainer({
+    renderProductListPageClient({
       searchParams: "?page=1",
     });
 

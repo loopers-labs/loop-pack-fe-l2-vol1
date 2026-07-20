@@ -1,10 +1,37 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { ProductListContainer } from "@/features/products/ProductListContainer";
+import { getQueryClient } from "../../get-query-client";
+import { ProductListPageClient } from "@/features/products/ProductListPageClient";
+import { PRODUCT_LIST_PAGE_SIZE } from "@/features/products/constants";
+import { productQueries } from "@/features/products/queries/productQueries";
+import { loadProductListSearchParams } from "@/features/products/searchParams";
+import type { SearchParams } from "nuqs/server";
 
-export default function ProductsPage() {
+export const dynamic = "force-dynamic";
+
+type ProductsPageProps = {
+  searchParams: Promise<SearchParams>;
+};
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const params = await loadProductListSearchParams(searchParams);
+  const queryClient = getQueryClient();
+
+  await queryClient.prefetchQuery(
+    productQueries.list({
+      q: params.q,
+      category: params.category,
+      sort: params.sort,
+      page: params.page,
+      pageSize: PRODUCT_LIST_PAGE_SIZE,
+    }),
+  );
+
   return (
-    <Suspense fallback={<div className="py-20 text-center">상품을 불러오는 중입니다.</div>}>
-      <ProductListContainer />
-    </Suspense>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Suspense fallback={<div className="py-20 text-center">상품을 불러오는 중입니다.</div>}>
+        <ProductListPageClient />
+      </Suspense>
+    </HydrationBoundary>
   );
 }

@@ -1,4 +1,4 @@
-import { parseApiError, setSearchParam } from "@/lib/apiUtils";
+import { createApiUrl, parseApiError, setSearchParam } from "@/lib/apiUtils";
 import type { MockApiScenario } from "@/types/api";
 import type { Category, Product } from "@/types/commerce";
 import type { ProductCategoryFilter, ProductSort } from "../types";
@@ -34,7 +34,8 @@ export async function getProducts(params: GetProductsParams = {}): Promise<Produ
   setSearchParam(searchParams, "scenario", params.scenario);
 
   const queryString = searchParams.toString();
-  const response = await fetch(`/api/products${queryString ? `?${queryString}` : ""}`);
+  const apiPath = `/api/products${queryString ? `?${queryString}` : ""}`;
+  const response = await fetch(createApiUrl(apiPath));
 
   if (!response.ok) {
     throw await parseApiError(response, "상품 목록을 불러오지 못했습니다.");

@@ -1,4 +1,4 @@
-import { createParser, parseAsString, parseAsStringEnum } from "nuqs/server";
+import { createLoader, createParser, parseAsString, parseAsStringEnum } from "nuqs/server";
 import { PRODUCT_CATEGORY_FILTERS, PRODUCT_SORTS } from "./constants";
 import type { ProductCategoryFilter, ProductSort } from "./types";
 
@@ -25,3 +25,5 @@ export const productListSearchParams = {
   sort: parseAsStringEnum<ProductSort>([...PRODUCT_SORTS]).withDefault("latest"),
   page: parseAsPageNumber.withDefault(1),
 };
+
+export const loadProductListSearchParams = createLoader(productListSearchParams);
