@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import { normalizeProductIds } from "./persistence";
 import type { CommerceStore } from "./store";
 
 export type CartSlice = {
@@ -9,10 +10,14 @@ export type CartSlice = {
 export const createCartSlice: StateCreator<CommerceStore, [], [], CartSlice> = (set) => ({
   cartProductIds: [],
   toggleCart: (productId) => {
-    set((state) => ({
-      cartProductIds: state.cartProductIds.includes(productId)
-        ? state.cartProductIds.filter((id) => id !== productId)
-        : [...state.cartProductIds, productId],
-    }));
+    set((state) => {
+      const cartProductIds = normalizeProductIds(state.cartProductIds);
+
+      return {
+        cartProductIds: cartProductIds.includes(productId)
+          ? cartProductIds.filter((id) => id !== productId)
+          : [...cartProductIds, productId],
+      };
+    });
   },
 });

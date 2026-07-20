@@ -15,6 +15,7 @@ export function CommerceProductCard({
   wishlistLabel,
   cartLabel,
 }: CommerceProductCardProps) {
+  const hasHydrated = useCommerceStore((state) => state.hasHydrated);
   const isInWishlist = useCommerceStore((state) => state.wishlistProductIds.includes(product.id));
   const isInCart = useCommerceStore((state) => state.cartProductIds.includes(product.id));
   const toggleWishlist = useCommerceStore((state) => state.toggleWishlist);
@@ -26,8 +27,8 @@ export function CommerceProductCard({
       titleLevel={titleLevel}
       wishlistLabel={wishlistLabel}
       cartLabel={cartLabel}
-      isInWishlist={isInWishlist}
-      isInCart={isInCart}
+      isInWishlist={hasHydrated ? isInWishlist : false}
+      isInCart={hasHydrated ? isInCart : false}
       onWishlistToggle={() => toggleWishlist(product.id)}
       onCartToggle={() => toggleCart(product.id)}
     />
