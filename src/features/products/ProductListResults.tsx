@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { mapProductToCardItem } from "@/components/commerce/productCardAdapter";
@@ -28,6 +28,7 @@ export function ProductListResults({
   onPageChange,
   onPageReplace,
 }: ProductListResultsProps) {
+  const queryClient = useQueryClient();
   const productsQuery = useQuery(
     productQueries.list({
       q: params.q,
@@ -40,6 +41,7 @@ export function ProductListResults({
 
   const totalCount = productsQuery.data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PRODUCT_LIST_PAGE_SIZE));
+  const hasNextPage = params.page < totalPages;
   const products = productsQuery.data?.products.map(mapProductToCardItem) ?? [];
 
   useEffect(() => {
@@ -53,6 +55,34 @@ export function ProductListResults({
 
     onPageReplace(totalPages);
   }, [params.page, productsQuery.data, onPageReplace, totalPages]);
+
+  useEffect(() => {
+    if (productsQuery.data === undefined) {
+      return;
+    }
+
+    if (!hasNextPage) {
+      return;
+    }
+
+    void queryClient.prefetchQuery(
+      productQueries.list({
+        q: params.q,
+        category: params.category,
+        sort: params.sort,
+        page: params.page + 1,
+        pageSize: PRODUCT_LIST_PAGE_SIZE,
+      }),
+    );
+  }, [
+    hasNextPage,
+    params.category,
+    params.page,
+    params.q,
+    params.sort,
+    productsQuery.data,
+    queryClient,
+  ]);
 
   return (
     <ProductListContent

@@ -164,21 +164,21 @@ describe("ProductListPageClient", () => {
 
   it("페이지 전환 중에는 이전 상품 목록을 유지하고 갱신 중 상태를 표시한다", async () => {
     mockedGetProducts.mockImplementation((params = {}) => {
-      if (params.page === 2) {
+      if (params.page === 3) {
         return new Promise<ProductListResponse>(() => {});
       }
 
       return Promise.resolve({
         products: [firstProduct],
         categories: [],
-        totalCount: 24,
-        page: 1,
+        totalCount: 36,
+        page: 2,
         pageSize: 12,
       });
     });
 
     renderProductListPageClient({
-      searchParams: "?page=1",
+      searchParams: "?page=2",
     });
 
     expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("ProductListPageClient", () => {
     await waitFor(() => {
       expect(mockedGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
-          page: 2,
+          page: 3,
         }),
       );
     });
@@ -196,6 +196,58 @@ describe("ProductListPageClient", () => {
     expect(screen.getByText("첫 번째 상품")).toBeInTheDocument();
     expect(screen.queryByText("두 번째 상품")).not.toBeInTheDocument();
     expect(screen.getByLabelText("상품 목록")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("다음 페이지가 있으면 현재 조건의 다음 페이지를 미리 가져온다", async () => {
+    mockedGetProducts.mockResolvedValue({
+      products: [firstProduct],
+      categories: [],
+      totalCount: 24,
+      page: 1,
+      pageSize: 12,
+    });
+
+    renderProductListPageClient({
+      searchParams: "?category=goods&sort=popular&page=1",
+    });
+
+    await waitFor(() => {
+      expect(mockedGetProducts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "goods",
+          sort: "popular",
+          page: 2,
+        }),
+      );
+    });
+  });
+
+  it("마지막 페이지이면 다음 페이지를 미리 가져오지 않는다", async () => {
+    mockedGetProducts.mockResolvedValue({
+      products: [firstProduct],
+      categories: [],
+      totalCount: 24,
+      page: 2,
+      pageSize: 12,
+    });
+
+    renderProductListPageClient({
+      searchParams: "?page=2",
+    });
+
+    await waitFor(() => {
+      expect(mockedGetProducts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 2,
+        }),
+      );
+    });
+
+    expect(mockedGetProducts).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        page: 3,
+      }),
+    );
   });
 
   it("검색어는 debounce 완료 후 URL 상태와 조회 조건에 반영한다", async () => {
