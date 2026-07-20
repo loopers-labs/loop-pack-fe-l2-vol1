@@ -51,6 +51,7 @@ export default tseslint.config(
       '@typescript-eslint/ban-ts-comment': 'error',
       'no-empty': ['error', { allowEmptyCatch: false }],
       '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'error',
       'import/no-unresolved': 'error',
       'no-magic-numbers': ['error', { ignore: [0, 1, -1] }],
     },

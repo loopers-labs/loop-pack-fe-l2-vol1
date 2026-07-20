@@ -21,7 +21,8 @@ export function useCheckout() {
   const [placed, setPlaced] = useState(false);
   const [memo, setMemo] = useState('');
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
+  const address =
+    ADDRESSES.find((a) => a.id === selectedAddressId) ?? ADDRESSES[0];
 
   // ── 배송비 정책 ──────────────────────────────
   const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
@@ -64,33 +65,41 @@ export function useCheckout() {
     setPlaced(true);
   };
 
+  const coupon = {
+    code: couponCode,
+    setCode: setCouponCode,
+    applied: appliedCoupon,
+    discount: couponDiscount,
+    apply: applyCoupon,
+  };
+
+  const point = {
+    use: usePoint,
+    setUse: setUsePoint,
+    input: pointInput,
+    setInput: setPointInput,
+    discount: pointDiscount,
+  };
+
   return {
     member,
     cart,
     selectedAddressId,
-    couponCode,
-    appliedCoupon,
-    usePoint,
-    pointInput,
-    payment,
-    agreed,
-    placed,
-    memo,
     setSelectedAddressId,
-    setCouponCode,
-    setUsePoint,
-    setPointInput,
+    coupon,
+    point,
+    payment,
     setPayment,
+    agreed,
     setAgreed,
-    setMemo,
+    placed,
     setPlaced,
+    memo,
+    setMemo,
     itemTotal,
     shippingFee,
-    couponDiscount,
-    pointDiscount,
     basePrice,
     finalPrice,
-    applyCoupon,
     handleSubmit,
   };
 }
