@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
@@ -73,6 +73,7 @@ describe("ProductListPageClient", () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     window.history.replaceState(null, "", "/");
   });
 
@@ -195,6 +196,66 @@ describe("ProductListPageClient", () => {
     expect(screen.getByText("첫 번째 상품")).toBeInTheDocument();
     expect(screen.queryByText("두 번째 상품")).not.toBeInTheDocument();
     expect(screen.getByLabelText("상품 목록")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("검색어는 debounce 완료 후 URL 상태와 조회 조건에 반영한다", async () => {
+    const { onUrlUpdate } = renderProductListPageClient({
+      searchParams: "",
+    });
+
+    await waitFor(() => {
+      expect(mockedGetProducts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          q: "",
+        }),
+      );
+    });
+
+    vi.useFakeTimers();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "검색" }), {
+      target: { value: "스탠리" },
+    });
+
+    expect(mockedGetProducts).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        q: "스탠리",
+      }),
+    );
+    expect(onUrlUpdate).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryString: "?q=%EC%8A%A4%ED%83%A0%EB%A6%AC",
+      }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    vi.useRealTimers();
+
+    await waitFor(() => {
+      expect(mockedGetProducts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          q: "스탠리",
+        }),
+      );
+    });
+  });
+
+  it("필터를 초기화하면 검색 input의 draft 값도 비운다", async () => {
+    renderProductListPageClient({
+      searchParams: "?q=스탠리&category=goods&sort=popular&page=2",
+    });
+
+    const searchInput = screen.getByRole("textbox", { name: "검색" });
+
+    expect(searchInput).toHaveValue("스탠리");
+
+    await userEvent.click(screen.getByRole("button", { name: "필터 초기화" }));
+
+    await waitFor(() => {
+      expect(searchInput).toHaveValue("");
+    });
   });
 });
 

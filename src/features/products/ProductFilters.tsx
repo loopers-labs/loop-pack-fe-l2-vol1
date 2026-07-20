@@ -1,5 +1,9 @@
 import type { ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import type { ProductCategoryFilter, ProductSort } from "./types";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+
+const SEARCH_DEBOUNCE_DELAY_MS = 300;
 
 const CATEGORY_OPTIONS: Array<{ value: ProductCategoryFilter; label: string }> = [
   { value: "all", label: "전체" },
@@ -36,8 +40,29 @@ export function ProductFilters({
   onSortChange,
   onReset,
 }: ProductFiltersProps) {
+  const [draftQ, setDraftQ] = useState(q);
+  const [prevQ, setPrevQ] = useState(q);
+  const debouncedQ = useDebouncedValue(draftQ, SEARCH_DEBOUNCE_DELAY_MS);
+
+  if (q !== prevQ) {
+    setPrevQ(q);
+    setDraftQ(q);
+  }
+
+  useEffect(() => {
+    if (debouncedQ !== draftQ) {
+      return;
+    }
+
+    if (debouncedQ === q) {
+      return;
+    }
+
+    onSearchChange(debouncedQ);
+  }, [debouncedQ, draftQ, onSearchChange, q]);
+
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onSearchChange(event.target.value);
+    setDraftQ(event.target.value);
   };
 
   const handleCategoryChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -60,7 +85,7 @@ export function ProductFilters({
           className="min-h-10 border border-[#c8c8c8] bg-transparent px-2.5 py-2 text-inherit focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
           name="q"
           placeholder="상품명 또는 브랜드"
-          value={q}
+          value={draftQ}
           onChange={handleSearchChange}
         />
       </label>
