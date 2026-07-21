@@ -1,13 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
 import Link from 'next/link';
 
-import './home.css';
-
+import { ProductCard } from '@/features/products/ProductCard';
 import { productQueries } from '@/features/products/queries';
-import type { Product } from '@/types/commerce';
 
 export default function HomePage() {
   const { data, isPending, isError, error } = useQuery(productQueries.home());
@@ -39,6 +36,9 @@ export default function HomePage() {
     <main className="week05-page">
       <header className="week05-header">
         <Link href="/">Commerce</Link>
+        <nav aria-label="주요 메뉴">
+          <Link href="/products">상품</Link>
+        </nav>
       </header>
 
       <section
@@ -65,7 +65,11 @@ export default function HomePage() {
         ) : (
           <div className="week05-grid">
             {popularProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                headingLevel="h3"
+              />
             ))}
           </div>
         )}
@@ -78,35 +82,15 @@ export default function HomePage() {
         ) : (
           <div className="week05-grid">
             {newProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                headingLevel="h3"
+              />
             ))}
           </div>
         )}
       </section>
     </main>
-  );
-}
-
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <article className="week05-product">
-      <Image
-        className="week05-image"
-        src={product.image}
-        alt={product.name}
-        width={400}
-        height={400}
-      />
-      <p className="week05-brand">{product.brand}</p>
-      <h3 className="week05-name">{product.name}</h3>
-      <div className="week05-price">
-        <strong>{product.price.toLocaleString()}원</strong>
-        {product.originalPrice !== null && (
-          <span className="week05-original">
-            {product.originalPrice.toLocaleString()}원
-          </span>
-        )}
-      </div>
-    </article>
   );
 }

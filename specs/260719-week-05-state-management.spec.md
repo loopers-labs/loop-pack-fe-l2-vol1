@@ -107,7 +107,9 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
   화면 단위로 key를 나누면 상품 캐시가 어디에 있는지 흩어지고, prefix를 공유하면 나중에 상품 mutation이
   생겼을 때 `["products"]` 하나로 두 조회를 함께 무효화할 수 있다.
 - 기본 조건은 `q=""`, `category="all"`, `sort="latest"`, `page=1`, `pageSize=12`다.
-- 빈 q는 API 요청에서 생략할 수 있지만 나머지 기본 조건은 요청에 명시하며, key와 요청은 같은 정규화 함수를 사용한다.
+- 빈 q는 API 요청에서 생략할 수 있지만 나머지 기본 조건은 요청에 명시한다.
+- list queryOptions는 조건을 전부 채운 객체로만 받고, 그 객체 하나를 query key와 요청이 함께 쓴다.
+  기본값을 채우는 책임은 조회 계층이 아니라 조건의 원본인 URL parser에 둔다.
 - 홈·목록 queryOptions 모두 query key, queryFn, `staleTime: 1분`을 함께 정의한다.
 - 1분 staleTime은 짧은 홈↔목록 이동과 같은 조건 재방문에서는 500ms API 요청을 반복하지 않으면서,
   오래 머문 뒤 돌아왔을 때는 background refetch를 허용하는 보수적인 기준이다.
@@ -131,8 +133,10 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
 - 목록 loading은 결과 영역에 로딩 상태를, error는 API 오류 메시지를 표시한다.
 - 목록 empty는 totalCount 0과 빈 상태를 표시하고 페이지 이동을 노출하지 않는다.
 - API가 반환한 로컬 `/images/products/` 경로만 사용하며 외부 이미지 서버를 추가하지 않는다.
-- error·empty UI는 production query에 scenario를 추가하지 않고 테스트의 fetch 응답 대체로 검증한다.
-- URL history, 새 탭 직접 진입, 클라이언트 페이지 이동처럼 자동화하지 않은 동작만 브라우저에서 확인한다.
+- production query에 scenario를 추가하지 않는다. loading·error·empty를 재현할 땐 API의 `scenario`를
+  직접 호출하거나 개발자 도구로 응답을 대체한다.
+- loading·error·empty 화면은 렌더 테스트로 검증하지 않고 브라우저에서 확인한다. 이 분기들은 조회 상태를 그대로 그리는 배선이라, 렌더 테스트가 잡아주는 결함보다 문구·마크업 변경마다 따라 고치는 비용이 크다.
+- URL history, 새 탭 직접 진입, 클라이언트 페이지 이동처럼 자동화하지 않은 동작은 브라우저에서 확인한다.
 - 브라우저 검증은 PR에 시작 URL·행동·기대 결과·실제 결과를 짧게 기록하며, 같은 흐름을 자동화했다면 중복 기록하지 않는다.
 
 ### D7. 설계와 AI 사용 기록
@@ -199,7 +203,7 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
 - 실제 검증 절차와 결과, 발견한 버그, 남은 위험을 스펙과 PR 본문에 기록한다.
 - `pnpm check`를 통과한다.
 - fulfills: 전체 완료 조건 재검증, C1–C3
-- 커밋 후보: `test: 5주차 상태 경계와 사용자 흐름 검증`
+- 커밋 후보: `chore: 5주차 상태 경계 검증 결과와 제출 증거 기록`
 
 발견한 기능 결함은 6번 묶음에 섞지 않고 원래 책임 단위의 `fix:` 커밋으로 분리한다.
 
