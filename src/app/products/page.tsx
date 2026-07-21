@@ -11,6 +11,8 @@ import {
   isSortValue,
   useProductListFilters,
 } from '@/features/product-list/hooks/useProductListFilters';
+import { WishlistButton } from '@/features/wishlist/ui/WishlistButton';
+import { CartButton } from '@/features/cart/ui/CartButton';
 
 // [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
 const ProductsPage = () => {
@@ -43,16 +45,8 @@ const ProductsPage = () => {
               <h2>{product.name}</h2>
               <strong>{product.price.toLocaleString()}원</strong>
               <div>
-                <button
-                  type="button"
-                  aria-label={`${product.name} 위시리스트`}
-                  aria-pressed={false}
-                >
-                  찜
-                </button>
-                <button type="button" aria-label={`${product.name} 장바구니`} aria-pressed={false}>
-                  담기
-                </button>
+                <WishlistButton product={product} />
+                <CartButton product={product} />
               </div>
             </article>
           ))}
