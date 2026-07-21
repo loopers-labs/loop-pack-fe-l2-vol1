@@ -1,29 +1,87 @@
-export default function Home() {
+"use client";
+
+import { getHome } from "@/services/commerce";
+import type { Product } from "@/types/commerce";
+import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
+import Link from "next/link";
+
+/**
+ * 5주차 과제를 빠르게 시작할 수 있도록 제공하는 최소 레이아웃 예시입니다.
+ * 이 구조는 상태관리 아키텍처의 정답이 아닙니다.
+ * 그대로 사용하거나, 기존 컴포넌트를 재사용하거나, 자유롭게 교체해도 됩니다.
+ * 데이터 조회, Query 구성, 전역 상태와 이벤트 연결은 포함되어 있지 않습니다.
+ * 실제 상태를 연결할 때 각 버튼의 aria-pressed를 해당 상품의 포함 여부로 바꿉니다.
+ */
+export default function HomePage() {
+  const { data: home, isLoading } = useQuery({
+    queryKey: ["home"],
+    queryFn: getHome,
+  });
+
+  if (home === undefined || isLoading) {
+    return <div></div>;
+  }
+
+  const sections: Array<{ title: string; products: Product[] }> = [
+    { title: "인기 상품", products: home.popularProducts },
+    { title: "신상품", products: home.newProducts },
+  ];
+
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
-        Commerce
-      </h1>
-      <p style={{ color: "#5a6675", lineHeight: 1.7, marginBottom: 24 }}>
-        4주차부터 여기에 커머스를 쌓아갑니다. 이번 주는 디자인 시스템의 뼈대
-        <b> Select</b>와 <b>Dialog</b>를 직접 만드는 것부터 시작해요.
-      </p>
-      <ul style={{ lineHeight: 2, color: "#18212e", paddingLeft: 18 }}>
-        <li>
-          컴포넌트 자리: <code>src/components/ui/select</code> ·{" "}
-          <code>src/components/ui/dialog</code>
-        </li>
-        <li>
-          mock 백엔드: <code>GET /api/products</code> (
-          <code>src/app/api/products/route.ts</code>)
-        </li>
-        <li>
-          과제 명세: <code>docs/assignments/week-04.md</code>
-        </li>
-      </ul>
-      <p style={{ color: "#8794a3", marginTop: 24, fontSize: 14 }}>
-        구조는 최소 골격만 있어요. 폴더 구성은 각자 근거를 대고 바꾸면 돼요.
-      </p>
-    </main>
+    <>
+      <section className="week05-hero">
+        <p>{home.banner.description}</p>
+        <h1>{home.banner.title}</h1>
+      </section>
+      <section className="week05-section">
+        <h2>카테고리</h2>
+        <div className="week05-categories">
+          {home.categories.map((category) => (
+            <Link key={category.id} href="/products">
+              {category.name}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {sections.map(({ title, products }) => (
+        <section className="week05-section" key={title}>
+          <h2>{title}</h2>
+          <div className="week05-grid">
+            {products.map((product) => (
+              <article className="week05-product" key={product.id}>
+                <Image
+                  className="week05-image"
+                  src={product.image}
+                  alt={product.name}
+                  width={400}
+                  height={400}
+                />
+                <p>{product.brand}</p>
+                <h3>{product.name}</h3>
+                <strong>{product.price.toLocaleString()}원</strong>
+                <div>
+                  <button
+                    type="button"
+                    aria-label={`${product.name} 위시리스트`}
+                    aria-pressed={false}
+                  >
+                    찜
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`${product.name} 장바구니`}
+                    aria-pressed={false}
+                  >
+                    담기
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </>
   );
 }
