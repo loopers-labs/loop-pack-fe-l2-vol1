@@ -1,17 +1,32 @@
-export type CategoryId = "casual" | "fashion" | "goods" | "home" | "digital";
+export const CATEGORY_IDS = [
+  'casual',
+  'fashion',
+  'goods',
+  'home',
+  'digital',
+] as const;
+
+export type CategoryId = (typeof CATEGORY_IDS)[number];
 
 export type Category = {
   id: CategoryId;
   name: string;
 };
 
-export type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
+export const PRODUCT_SORTS = [
+  'latest',
+  'popular',
+  'price-asc',
+  'price-desc',
+] as const;
 
-export type MockApiScenario = "empty" | "error";
+export type ProductSort = (typeof PRODUCT_SORTS)[number];
+
+export type MockApiScenario = 'empty' | 'error';
 
 export type ProductListQuery = {
   q?: string;
-  category?: CategoryId | "all";
+  category?: CategoryId | 'all';
   sort?: ProductSort;
   page?: number;
   pageSize?: number;

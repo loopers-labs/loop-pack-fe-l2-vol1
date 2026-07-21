@@ -5,6 +5,7 @@
 }
 
 .week05-header,
+.week05-filters,
 .week05-categories,
 .week05-price {
   display: flex;
@@ -63,6 +64,24 @@
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   border-radius: 999px;
+}
+
+.week05-filters {
+  margin-bottom: 20px;
+}
+
+.week05-filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.week05-filters input,
+.week05-filters select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
 }
 
 .week05-grid {
