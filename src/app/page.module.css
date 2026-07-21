@@ -4,18 +4,11 @@
   padding: 24px 0 64px;
 }
 
-.header,
-.header nav,
 .categories {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-}
-
-.header {
-  justify-content: space-between;
-  padding-bottom: 24px;
 }
 
 .hero {
@@ -50,15 +43,6 @@
 }
 
 @media (max-width: 480px) {
-  .header {
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .header nav {
-    width: 100%;
-  }
-
   .hero {
     min-height: 180px;
     padding: 24px;

@@ -6,7 +6,8 @@ import { CategoryId } from '@/types/commerce';
 import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/features/home/api/queries';
 import { HomeCategory } from '@/features/home/types';
-import { Section } from '@/features/home/ui/Section';
+import { ProductCarousel } from '@/features/product/ui/ProductCarousel';
+import { Header } from '@/widgets/Header';
 
 const HomeCategoryArr: HomeCategory[] = ['인기 상품', '신상품'] as const;
 const ProductCategoryArr: { id: CategoryId; label: string }[] = [
@@ -30,20 +31,13 @@ const Home = () => {
 
     return HomeCategoryArr.map((title) => {
       const list = title === '인기 상품' ? data.popularProducts : data.newProducts;
-      return <Section key={title} list={list} title={title} />;
+      return <ProductCarousel key={title} list={list} title={title} />;
     });
   };
 
   return (
     <main className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/">Commerce</Link>
-        <nav aria-label="주요 메뉴">
-          <Link href="/products">상품</Link>
-          <span>위시리스트 0</span>
-          <span>장바구니 0</span>
-        </nav>
-      </header>
+      <Header />
       <section className={styles.hero}>
         <p>배너 설명</p>
         <h1>홈 배너 제목</h1>

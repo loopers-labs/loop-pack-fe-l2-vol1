@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import styles from './page.module.css';
 import { productQueries } from '@/features/product-list/api/queries';
@@ -13,6 +12,7 @@ import {
 } from '@/features/product-list/hooks/useProductListFilters';
 import { WishlistButton } from '@/features/wishlist/ui/WishlistButton';
 import { CartButton } from '@/features/cart/ui/CartButton';
+import { Header } from '@/widgets/Header';
 
 // [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
 const ProductsPage = () => {
@@ -57,14 +57,7 @@ const ProductsPage = () => {
 
   return (
     <main className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/">Commerce</Link>
-        <nav aria-label="주요 메뉴">
-          <Link href="/products">상품</Link>
-          <span>위시리스트 0</span>
-          <span>장바구니 0</span>
-        </nav>
-      </header>
+      <Header />
       <section className={styles.section}>
         <h1>상품 목록</h1>
         <form className={styles.filters} onSubmit={(event) => event.preventDefault()}>

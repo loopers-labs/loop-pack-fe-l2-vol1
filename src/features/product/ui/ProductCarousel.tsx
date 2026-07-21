@@ -1,9 +1,11 @@
 import { Product } from '@/types/commerce';
-import { HomeCategory } from '../types';
-import styles from './Section.module.css';
+import { HomeCategory } from '../../home/types';
+import styles from './ProductCarousel.module.css';
 import Image from 'next/image';
+import { WishlistButton } from '@/features/wishlist/ui/WishlistButton';
+import { CartButton } from '@/features/cart/ui/CartButton';
 
-export const Section = ({ list, title }: { list: Product[]; title: HomeCategory }) => {
+export const ProductCarousel = ({ list, title }: { list: Product[]; title: HomeCategory }) => {
   return (
     <section className={styles.section} key={title}>
       <h2>{title}</h2>
@@ -24,20 +26,8 @@ export const Section = ({ list, title }: { list: Product[]; title: HomeCategory 
               <h3>{product.name}</h3>
               <strong>{product.price.toLocaleString()}원</strong>
               <div>
-                <button
-                  type="button"
-                  aria-label={`${title} ${product.id} 상품 위시리스트`}
-                  aria-pressed={false}
-                >
-                  찜
-                </button>
-                <button
-                  type="button"
-                  aria-label={`${title} ${product.id} 상품 장바구니`}
-                  aria-pressed={false}
-                >
-                  담기
-                </button>
+                <WishlistButton product={product} />
+                <CartButton product={product} />
               </div>
             </article>
           ))
