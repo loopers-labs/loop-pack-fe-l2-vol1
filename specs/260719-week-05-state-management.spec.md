@@ -101,9 +101,11 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
 
 ### D4. TanStack Query 캐시와 조회 계약
 
-- 홈 key는 `["home"]`으로 둔다.
-- 목록 key는 `["products", "list", conditions]`로 두며 conditions는
+- 홈 key는 `["products", "home"]`, 목록 key는 `["products", "list", conditions]`로 두고 conditions는
   `{ q, category, sort, page, pageSize }`의 정규화된 전체 조건이다.
+- 홈 응답도 결국 인기·신상품 목록이므로 두 조회를 `productQueries` 한 곳에 모으고 `products` prefix를 공유한다.
+  화면 단위로 key를 나누면 상품 캐시가 어디에 있는지 흩어지고, prefix를 공유하면 나중에 상품 mutation이
+  생겼을 때 `["products"]` 하나로 두 조회를 함께 무효화할 수 있다.
 - 기본 조건은 `q=""`, `category="all"`, `sort="latest"`, `page=1`, `pageSize=12`다.
 - 빈 q는 API 요청에서 생략할 수 있지만 나머지 기본 조건은 요청에 명시하며, key와 요청은 같은 정규화 함수를 사용한다.
 - 홈·목록 queryOptions 모두 query key, queryFn, `staleTime: 1분`을 함께 정의한다.
