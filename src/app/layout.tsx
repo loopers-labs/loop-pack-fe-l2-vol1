@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Commerce",
-  description: "Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.",
+  title: 'Commerce',
+  description: 'Loopers 커머스',
 };
 
 export default function RootLayout({
