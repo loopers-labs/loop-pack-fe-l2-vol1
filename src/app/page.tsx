@@ -1,7 +1,70 @@
+'use client'
+
+import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
+import ProductCard from '@/components/commerce/ProductCard'
+import { homeQuery } from '@/lib/commerce/queries'
+
 export default function HomePage() {
+  const { data, isPending, isError, refetch } = useQuery(homeQuery())
+
+  if (isPending) {
+    return (
+      <main className="week05-section">
+        <p>홈을 불러오는 중입니다.</p>
+      </main>
+    )
+  }
+
+  if (isError) {
+    return (
+      <main className="week05-section">
+        <p>홈 데이터를 불러오지 못했습니다.</p>
+        <button type="button" onClick={() => refetch()}>
+          다시 시도
+        </button>
+      </main>
+    )
+  }
+
+  const productSections = [
+    { title: '인기 상품', products: data.popularProducts },
+    { title: '신상품', products: data.newProducts },
+  ]
+
   return (
-    <main className="week05-section">
-      <h1>Commerce</h1>
+    <main>
+      <section className="week05-hero">
+        <p>{data.banner.description}</p>
+        <h1>{data.banner.title}</h1>
+      </section>
+
+      <section className="week05-section">
+        <h2>카테고리</h2>
+        <div className="week05-categories">
+          {data.categories.map((category) => (
+            <Link key={category.id} href={`/products?category=${category.id}`}>
+              {category.name}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 상품이 비어도 배너와 카테고리는 그대로 둔다. 빈 것은 상품 섹션뿐이다. */}
+      {productSections.map(({ title, products }) => (
+        <section className="week05-section" key={title}>
+          <h2>{title}</h2>
+          {products.length === 0 ? (
+            <p>아직 보여줄 상품이 없습니다.</p>
+          ) : (
+            <div className="week05-grid">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
     </main>
   )
 }
