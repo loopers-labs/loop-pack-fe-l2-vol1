@@ -2,23 +2,15 @@
 
 import { Placeholder } from "@/app/_components/placeholder";
 import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
-import { CommerceApiError, getHome } from "@/services/commerce";
+import { commerceQueries } from "@/queries/commerce";
+import { CommerceApiError } from "@/services/commerce";
 import type { Product } from "@/types/commerce";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function HomePage() {
-  const {
-    data: home,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["home"],
-    queryFn: getHome,
-  });
+  const { data: home, isLoading, isError, error, refetch } = useQuery(commerceQueries.home());
 
   if (isLoading) {
     return (

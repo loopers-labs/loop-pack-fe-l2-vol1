@@ -3,8 +3,9 @@
 import { Placeholder } from "@/app/_components/placeholder";
 import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
 import { ProductSearchInput } from "@/app/products/_components/product-search-input";
-import { CommerceApiError, getProducts } from "@/services/commerce";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { commerceQueries } from "@/queries/commerce";
+import { CommerceApiError } from "@/services/commerce";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 
@@ -33,11 +34,7 @@ export default function ProductListPage() {
     isError,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["products", search],
-    queryFn: () => getProducts(search),
-    placeholderData: keepPreviousData,
-  });
+  } = useQuery(commerceQueries.products(search));
 
   if (isLoading) {
     return (
