@@ -1,8 +1,9 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/queries/homeQueries';
+import { Header } from '@/components/Header';
+import { ProductCard } from '@/components/ProductCard';
 
 export default function Home() {
   const { data, isLoading, isError } = useQuery(homeQueries.data());
@@ -15,14 +16,7 @@ export default function Home() {
 
   return (
     <main className="week05-page">
-      <header className="week05-header">
-        <Link href="/">Commerce</Link>
-        <nav aria-label="주요 메뉴">
-          <Link href="/products">상품</Link>
-          <span>위시리스트 0</span>
-          <span>장바구니 0</span>
-        </nav>
-      </header>
+      <Header />
       <section className="week05-hero">
         <p>{banner.description}</p>
         <h1>{banner.title}</h1>
@@ -45,34 +39,7 @@ export default function Home() {
           <h2>{title}</h2>
           <div className="week05-grid">
             {products.map((product) => (
-              <article className="week05-product" key={product.id}>
-                <Image
-                  className="week05-image"
-                  src={product.image}
-                  alt={product.name}
-                  width={400}
-                  height={400}
-                />
-                <p>{product.brand}</p>
-                <h3>{product.name}</h3>
-                <strong>{product.price.toLocaleString()}원</strong>
-                <div>
-                  <button
-                    type="button"
-                    aria-label={`${product.name} 위시리스트`}
-                    aria-pressed={false}
-                  >
-                    찜
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`${product.name} 장바구니`}
-                    aria-pressed={false}
-                  >
-                    담기
-                  </button>
-                </div>
-              </article>
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         </section>

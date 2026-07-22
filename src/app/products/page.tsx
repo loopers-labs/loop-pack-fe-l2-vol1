@@ -1,7 +1,7 @@
 'use client';
-import Image from 'next/image';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { Header } from '@/components/Header';
+import { ProductCard } from '@/components/ProductCard';
 import {
   parseAsInteger,
   parseAsString,
@@ -42,14 +42,7 @@ export default function ProductListPage() {
 
   return (
     <main className="week05-page">
-      <header className="week05-header">
-        <Link href="/">Commerce</Link>
-        <nav aria-label="주요 메뉴">
-          <Link href="/products">상품</Link>
-          <span>위시리스트 0</span>
-          <span>장바구니 0</span>
-        </nav>
-      </header>
+      <Header />
       <section className="week05-section">
         <h1>상품 목록</h1>
         <form className="week05-filters">
@@ -107,34 +100,7 @@ export default function ProductListPage() {
         <div className="week05-grid">
           {data?.products.length === 0 && <p>상품이 없습니다.</p>}
           {data?.products.map((product) => (
-            <article className="week05-product" key={product.id}>
-              <Image
-                className="week05-image"
-                src={product.image}
-                alt={product.name}
-                width={400}
-                height={400}
-              />
-              <p>{product.brand}</p>
-              <h2>{product.name}</h2>
-              <strong>{product.price.toLocaleString()}원</strong>
-              <div>
-                <button
-                  type="button"
-                  aria-label={`${product.name} 위시리스트`}
-                  aria-pressed={false}
-                >
-                  찜
-                </button>
-                <button
-                  type="button"
-                  aria-label={`${product.name} 장바구니`}
-                  aria-pressed={false}
-                >
-                  담기
-                </button>
-              </div>
-            </article>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
         <nav className="week05-pagination" aria-label="페이지 이동">
