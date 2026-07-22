@@ -1,17 +1,28 @@
 "use client";
 
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ProductSearchInputProps = {
-  initialValue: string;
+  value: string;
   onDebouncedChange: (value: string) => void;
   delay?: number;
 };
 
-export function ProductSearchInput({ initialValue, onDebouncedChange }: ProductSearchInputProps) {
-  const [text, setText] = useState(initialValue);
-  const commit = useDebouncedCallback(onDebouncedChange);
+export function ProductSearchInput({ value, onDebouncedChange }: ProductSearchInputProps) {
+  const [text, setText] = useState(value);
+  const lastCommittedRef = useRef(value);
+  const commit = useDebouncedCallback((next: string) => {
+    lastCommittedRef.current = next;
+    onDebouncedChange(next);
+  });
+
+  useEffect(() => {
+    if (value !== lastCommittedRef.current) {
+      lastCommittedRef.current = value;
+      setText(value);
+    }
+  }, [value]);
 
   return (
     <label>

@@ -7,7 +7,26 @@ import { commerceQueries } from "@/queries/commerce";
 import { CommerceApiError } from "@/services/commerce";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
-import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import {
+  createParser,
+  parseAsNumberLiteral,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryStates,
+} from "nuqs";
+
+const parseAsPositiveInteger = createParser({
+  parse: (value) => {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isSafeInteger(parsed) || parsed < 1) {
+      return null;
+    }
+    return parsed;
+  },
+  serialize: (value) => String(value),
+});
+
+const pageSizeValues = [6, 12, 24] as const;
 
 const productSearchParsers = {
   q: parseAsString.withDefault(""),
@@ -22,8 +41,8 @@ const productSearchParsers = {
   sort: parseAsStringLiteral(["latest", "popular", "price-asc", "price-desc"] as const).withDefault(
     "latest",
   ),
-  page: parseAsInteger.withDefault(1),
-  pageSize: parseAsInteger.withDefault(20),
+  page: parseAsPositiveInteger.withDefault(1),
+  pageSize: parseAsNumberLiteral(pageSizeValues).withDefault(12),
 };
 
 export default function ProductListPage() {
@@ -75,7 +94,7 @@ export default function ProductListPage() {
         <h1>상품 목록</h1>
         <form className="week05-filters">
           <ProductSearchInput
-            initialValue={search.q}
+            value={search.q}
             onDebouncedChange={(q) => setSearch({ q, page: 1 })}
           />
           <label>
@@ -114,6 +133,25 @@ export default function ProductListPage() {
               <option value="popular">인기순</option>
               <option value="price-asc">낮은 가격순</option>
               <option value="price-desc">높은 가격순</option>
+            </select>
+          </label>
+          <label>
+            페이지 크기
+            <select
+              name="pageSize"
+              value={search.pageSize}
+              onChange={(event) =>
+                setSearch({
+                  pageSize: Number(event.target.value) as (typeof search)["pageSize"],
+                  page: 1,
+                })
+              }
+            >
+              {pageSizeValues.map((size) => (
+                <option key={size} value={size}>
+                  {size}개씩
+                </option>
+              ))}
             </select>
           </label>
         </form>
@@ -162,18 +200,18 @@ export default function ProductListPage() {
             <nav className="week05-pagination" aria-label="페이지 이동">
               <button
                 type="button"
-                disabled={products.page <= 1}
-                onClick={() => setSearch({ page: products.page - 1 })}
+                disabled={search.page <= 1}
+                onClick={() => setSearch({ page: search.page - 1 })}
               >
                 이전
               </button>
               <span>
-                {products.page} / {totalPages}
+                {search.page} / {totalPages}
               </span>
               <button
                 type="button"
-                disabled={products.page >= totalPages}
-                onClick={() => setSearch({ page: products.page + 1 })}
+                disabled={search.page >= totalPages}
+                onClick={() => setSearch({ page: search.page + 1 })}
               >
                 다음
               </button>
