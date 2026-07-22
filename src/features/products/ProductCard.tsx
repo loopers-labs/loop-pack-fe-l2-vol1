@@ -1,5 +1,8 @@
 import Image from 'next/image';
 
+import { CartToggleButton } from './CartToggleButton';
+import { WishlistToggleButton } from './WishlistToggleButton';
+
 import type { Product } from '@/types/commerce';
 
 export function ProductCard({
@@ -27,6 +30,13 @@ export function ProductCard({
             {product.originalPrice.toLocaleString()}원
           </span>
         )}
+      </div>
+      <div className="week05-product-actions">
+        <WishlistToggleButton
+          productId={product.id}
+          productName={product.name}
+        />
+        <CartToggleButton productId={product.id} productName={product.name} />
       </div>
     </article>
   );

@@ -5,6 +5,9 @@
 }
 
 .week05-header,
+.week05-header-actions,
+.week05-header nav,
+.week05-product-actions,
 .week05-filters,
 .week05-pagination,
 .week05-categories,
@@ -131,10 +134,16 @@
   margin-top: 32px;
 }
 
+.week05-product-actions button,
 .week05-pagination button {
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   background: transparent;
+}
+
+.week05-product-actions button[aria-pressed='true'] {
+  border-color: #2557a7;
+  color: #2557a7;
 }
 
 .week05-pagination button:disabled {
