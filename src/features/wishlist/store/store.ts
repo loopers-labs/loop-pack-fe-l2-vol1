@@ -6,6 +6,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+import { mergeStoredItems } from '@/lib/storedItem';
+
 // [AI] 헤더 카운트와 위시리스트 페이지 렌더에 필요한 최소 메타만 저장.
 // Product 객체 전체를 넣으면 서버 데이터가 바뀌었을 때 스토어가 낡은 정보를 갖게 되므로 ID+표시용 메타로 좁힌다.
 export type WishlistItem = {
@@ -52,6 +54,8 @@ export const useWishlistStore = create<WishlistState>()(
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },
+      // [AI] 저장값 복구 전략: 객체가 아니면 currentState로 폴백, items는 필드별 검증 통과한 항목만.
+      merge: mergeStoredItems,
     }
   )
 );

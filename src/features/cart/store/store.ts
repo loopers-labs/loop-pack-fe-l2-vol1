@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 import type { CartItem } from '@/types/commerce';
+import { mergeStoredItems } from '@/lib/storedItem';
 
 type CartState = {
   items: CartItem[];
@@ -44,6 +45,8 @@ export const useCartStore = create<CartState>()(
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },
+      // [AI] 저장값 복구 전략: 객체가 아니면 currentState로 폴백, items는 필드별 검증 통과한 항목만.
+      merge: mergeStoredItems,
     }
   )
 );
