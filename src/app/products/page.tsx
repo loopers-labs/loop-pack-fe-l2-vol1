@@ -1,7 +1,9 @@
 "use client";
 
+import { Placeholder } from "@/app/_components/placeholder";
+import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
 import { ProductSearchInput } from "@/app/products/_components/product-search-input";
-import { getProducts } from "@/services/commerce";
+import { CommerceApiError, getProducts } from "@/services/commerce";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
@@ -23,23 +25,47 @@ const productSearchParsers = {
   pageSize: parseAsInteger.withDefault(20),
 };
 
-/**
- * 5주차 과제를 빠르게 시작할 수 있도록 제공하는 최소 레이아웃 예시입니다.
- * 이 구조는 상태관리 아키텍처의 정답이 아닙니다.
- * 그대로 사용하거나, 기존 컴포넌트를 재사용하거나, 자유롭게 교체해도 됩니다.
- * 데이터 조회, Query 구성, 전역 상태와 이벤트 연결은 포함되어 있지 않습니다.
- * 실제 상태를 연결할 때 각 버튼의 aria-pressed를 해당 상품의 포함 여부로 바꿉니다.
- */
 export default function ProductListPage() {
   const [search, setSearch] = useQueryStates(productSearchParsers);
-  const { data: products, isLoading } = useQuery({
+  const {
+    data: products,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["products", search],
     queryFn: () => getProducts(search),
     placeholderData: keepPreviousData,
   });
 
-  if (products === undefined || isLoading) {
-    return <div></div>;
+  if (isLoading) {
+    return (
+      <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
+        <ProductGridSkeleton count={search.pageSize} />
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Placeholder
+        role="alert"
+        title="상품을 불러오지 못했어요"
+        description={
+          error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요."
+        }
+        action={
+          <button type="button" onClick={() => refetch()}>
+            다시 시도
+          </button>
+        }
+      />
+    );
+  }
+
+  if (products === undefined) {
+    return null;
   }
 
   const totalPages = Math.max(1, Math.ceil(products.totalCount / products.pageSize));
@@ -95,57 +121,66 @@ export default function ProductListPage() {
       </section>
       <section className="week05-section" aria-label="상품 검색 결과">
         <p>총 {products.totalCount}개</p>
-        <div className="week05-grid">
-          {products.products.map((product, index) => (
-            <article className="week05-product" key={product.id}>
-              <Image
-                className="week05-image"
-                src={product.image}
-                alt={product.name}
-                width={400}
-                height={400}
-              />
-              <p>{product.brand}</p>
-              <h2>{product.name}</h2>
-              <strong>{product.price.toLocaleString()}원</strong>
-              <div>
-                <button
-                  type="button"
-                  aria-label={`${index + 1}번 상품 위시리스트`}
-                  aria-pressed={false}
-                >
-                  찜
-                </button>
-                <button
-                  type="button"
-                  aria-label={`${index + 1}번 상품 장바구니`}
-                  aria-pressed={false}
-                >
-                  담기
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-        <nav className="week05-pagination" aria-label="페이지 이동">
-          <button
-            type="button"
-            disabled={products.page <= 1}
-            onClick={() => setSearch({ page: products.page - 1 })}
-          >
-            이전
-          </button>
-          <span>
-            {products.page} / {totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={products.page >= totalPages}
-            onClick={() => setSearch({ page: products.page + 1 })}
-          >
-            다음
-          </button>
-        </nav>
+        {products.products.length === 0 ? (
+          <Placeholder
+            title="검색 결과가 없어요"
+            description="다른 검색어나 카테고리·정렬을 선택해 보세요."
+          />
+        ) : (
+          <>
+            <div className="week05-grid">
+              {products.products.map((product, index) => (
+                <article className="week05-product" key={product.id}>
+                  <Image
+                    className="week05-image"
+                    src={product.image}
+                    alt={product.name}
+                    width={400}
+                    height={400}
+                  />
+                  <p>{product.brand}</p>
+                  <h2>{product.name}</h2>
+                  <strong>{product.price.toLocaleString()}원</strong>
+                  <div>
+                    <button
+                      type="button"
+                      aria-label={`${index + 1}번 상품 위시리스트`}
+                      aria-pressed={false}
+                    >
+                      찜
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`${index + 1}번 상품 장바구니`}
+                      aria-pressed={false}
+                    >
+                      담기
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <nav className="week05-pagination" aria-label="페이지 이동">
+              <button
+                type="button"
+                disabled={products.page <= 1}
+                onClick={() => setSearch({ page: products.page - 1 })}
+              >
+                이전
+              </button>
+              <span>
+                {products.page} / {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={products.page >= totalPages}
+                onClick={() => setSearch({ page: products.page + 1 })}
+              >
+                다음
+              </button>
+            </nav>
+          </>
+        )}
       </section>
     </>
   );

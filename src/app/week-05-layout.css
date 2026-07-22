@@ -86,6 +86,83 @@
   margin-top: 32px;
 }
 
+.week05-skeleton-card {
+  display: grid;
+  gap: 8px;
+}
+
+.week05-skeleton {
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ececec 25%, #f5f5f5 37%, #ececec 63%);
+  background-size: 400% 100%;
+  animation: week05-skeleton-shimmer 1.4s ease infinite;
+}
+
+.week05-skeleton-image {
+  aspect-ratio: 1;
+}
+
+.week05-skeleton-line {
+  height: 14px;
+}
+
+.week05-skeleton-line.is-short {
+  width: 60%;
+}
+
+.week05-skeleton-line.is-price {
+  width: 40%;
+  height: 18px;
+  margin-top: 4px;
+}
+
+@keyframes week05-skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week05-skeleton {
+    animation: none;
+  }
+}
+
+.week05-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 24px;
+  text-align: center;
+  color: #555;
+}
+
+.week05-placeholder[role="alert"] {
+  color: #b3261e;
+}
+
+.week05-placeholder-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.week05-placeholder-description {
+  color: #777;
+}
+
+.week05-placeholder button {
+  padding: 10px 16px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
 .week05-page a:focus-visible,
 .week05-page button:focus-visible,
 .week05-page input:focus-visible,

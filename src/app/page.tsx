@@ -1,26 +1,52 @@
 "use client";
 
-import { getHome } from "@/services/commerce";
+import { Placeholder } from "@/app/_components/placeholder";
+import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
+import { CommerceApiError, getHome } from "@/services/commerce";
 import type { Product } from "@/types/commerce";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 
-/**
- * 5주차 과제를 빠르게 시작할 수 있도록 제공하는 최소 레이아웃 예시입니다.
- * 이 구조는 상태관리 아키텍처의 정답이 아닙니다.
- * 그대로 사용하거나, 기존 컴포넌트를 재사용하거나, 자유롭게 교체해도 됩니다.
- * 데이터 조회, Query 구성, 전역 상태와 이벤트 연결은 포함되어 있지 않습니다.
- * 실제 상태를 연결할 때 각 버튼의 aria-pressed를 해당 상품의 포함 여부로 바꿉니다.
- */
 export default function HomePage() {
-  const { data: home, isLoading } = useQuery({
+  const {
+    data: home,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["home"],
     queryFn: getHome,
   });
 
-  if (home === undefined || isLoading) {
-    return <div></div>;
+  if (isLoading) {
+    return (
+      <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
+        <ProductGridSkeleton />
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Placeholder
+        role="alert"
+        title="상품을 불러오지 못했어요"
+        description={
+          error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요."
+        }
+        action={
+          <button type="button" onClick={() => refetch()}>
+            다시 시도
+          </button>
+        }
+      />
+    );
+  }
+
+  if (home === undefined) {
+    return null;
   }
 
   const sections: Array<{ title: string; products: Product[] }> = [
