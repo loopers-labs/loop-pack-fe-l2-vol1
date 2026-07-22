@@ -21,9 +21,16 @@ export default function ProductsPage() {
         </div>
       </header>
 
-      <section className="week05-section" aria-label="상품 검색 결과">
+      <section className="week05-section">
         <h1>상품 목록</h1>
 
+        <Suspense>
+          <ProductSearchForm />
+          <ProductListFilters />
+        </Suspense>
+      </section>
+
+      <section className="week05-section" aria-label="상품 검색 결과">
         <Suspense
           fallback={
             <p className="week05-status" role="status">
@@ -31,8 +38,6 @@ export default function ProductsPage() {
             </p>
           }
         >
-          <ProductSearchForm />
-          <ProductListFilters />
           <ProductList />
         </Suspense>
       </section>
