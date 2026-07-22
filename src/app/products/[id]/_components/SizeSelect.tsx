@@ -26,16 +26,18 @@ export function SizeSelect({ options }: SizeSelectProps) {
       <button
         type="button"
         {...getToggleButtonProps()}
-        className="flex w-full items-center justify-between rounded-xl border border-border bg-bg-card px-5 py-4 transition-colors hover:border-text-caption aria-expanded:border-text-secondary"
+        className="flex w-full items-center justify-between rounded-xl border border-border bg-bg-card py-3 pl-4 pr-3 transition-colors hover:border-text-caption aria-expanded:border-text-secondary"
       >
         <span
-          className={`text-[15px] ${selectedOption ? 'font-medium text-text' : 'text-text-caption'}`}
+          className={`text-[14px] ${selectedOption ? 'font-medium text-text' : 'text-text-caption'}`}
         >
           {selectedOption
             ? `사이즈 ${selectedOption.value.value}`
             : '사이즈를 선택해 주세요'}
         </span>
-        <ChevronIcon isOpen={isOpen} />
+        <span className="flex size-8 items-center justify-center">
+          <ChevronIcon isOpen={isOpen} />
+        </span>
       </button>
 
       {isOpen && (
@@ -49,7 +51,7 @@ export function SizeSelect({ options }: SizeSelectProps) {
               <li
                 key={opt.value.value}
                 {...itemProps}
-                className={`cursor-pointer px-5 py-4 transition-colors
+                className={`cursor-pointer px-4 py-3 transition-colors
                   ${i > 0 ? 'border-t border-border/50' : ''}
                   ${itemProps['data-highlighted'] ? 'bg-brand-light' : ''}
                   ${itemProps['data-selected'] ? 'bg-brand-light' : ''}
