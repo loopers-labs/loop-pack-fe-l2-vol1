@@ -2,10 +2,9 @@
 
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
-import styles from './page.module.css';
 import { productQueries } from '@/features/product-list/api/queries';
 import {
-  ITEMS_PER_PAGE,
+  PAGE_SIZE,
   isCategoryValue,
   isSortValue,
   useProductListFilters,
@@ -21,7 +20,7 @@ const ProductsPage = () => {
   const { data, isPending, isError } = useQuery(productQueries.list(query));
 
   const totalCount = data?.totalCount ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalCount / (data?.pageSize ?? ITEMS_PER_PAGE)));
+  const totalPages = Math.max(1, Math.ceil(totalCount / (data?.pageSize ?? PAGE_SIZE)));
 
   const renderResults = () => {
     if (isPending) return <p>불러오는 중...</p>;
@@ -31,11 +30,11 @@ const ProductsPage = () => {
     return (
       <>
         <p>총 {totalCount.toLocaleString()}개</p>
-        <div className={styles.grid}>
+        <div className="grid">
           {data.products.map((product) => (
-            <article className={styles.product} key={product.id}>
+            <article className="product" key={product.id}>
               <Image
-                className={styles.image}
+                className="image"
                 src={product.image}
                 alt={product.name}
                 width={400}
@@ -56,11 +55,11 @@ const ProductsPage = () => {
   };
 
   return (
-    <main className={styles.page}>
+    <main className="page">
       <Header />
-      <section className={styles.section}>
+      <section className="section">
         <h1>상품 목록</h1>
-        <form className={styles.filters} onSubmit={(event) => event.preventDefault()}>
+        <form className="filters" onSubmit={(event) => event.preventDefault()}>
           <label>
             검색
             <input
@@ -108,9 +107,9 @@ const ProductsPage = () => {
           </label>
         </form>
       </section>
-      <section className={styles.section} aria-label="상품 검색 결과">
+      <section className="section" aria-label="상품 검색 결과">
         {renderResults()}
-        <nav className={styles.pagination} aria-label="페이지 이동">
+        <nav className="pagination" aria-label="페이지 이동">
           <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>
             이전
           </button>

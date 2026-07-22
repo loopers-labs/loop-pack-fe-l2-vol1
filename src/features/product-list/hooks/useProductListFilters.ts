@@ -22,8 +22,8 @@ export const SORTS = [
 export type CategoryValue = (typeof CATEGORIES)[number];
 export type SortValue = (typeof SORTS)[number];
 
-// itemsPerPage는 URL 상태가 아닌 고정값 (과제 범위). scenario는 URL/쿼리에 넣지 않는다.
-export const ITEMS_PER_PAGE = 12;
+// pageSize는 URL 상태가 아닌 고정값 (과제 범위). scenario는 URL/쿼리에 넣지 않는다.
+export const PAGE_SIZE = 12;
 
 // [AI] q/category/sort/page를 URL 상태로 관리.
 // history: 'push' — 각 변경을 히스토리에 push해 앞뒤 이동으로 복원.
@@ -50,13 +50,13 @@ export const useProductListFilters = () => {
   const setSort = (sort: SortValue) => setFilters({ sort, page: 1 });
   const setPage = (page: number) => setFilters({ page });
 
-  // 쿼리 팩토리에 넘길 ProductListQuery. 기본 정렬 latest를 항상 명시하고 itemsPerPage는 고정.
+  // 쿼리 팩토리에 넘길 ProductListQuery. 기본 정렬 latest를 항상 명시하고 pageSize는 고정.
   const query = {
     q: filters.q,
     category: filters.category,
     sort: filters.sort,
     page: filters.page,
-    itemsPerPage: ITEMS_PER_PAGE,
+    pageSize: PAGE_SIZE,
   };
 
   return {

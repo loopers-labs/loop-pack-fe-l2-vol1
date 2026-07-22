@@ -1,12 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import styles from './page.module.css';
 import { CategoryId } from '@/types/commerce';
 import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/features/home/api/queries';
 import { HomeCategory } from '@/features/home/types';
-import { ProductCarousel } from '@/features/product/ui/ProductCarousel';
+import { Product } from '@/features/product/ui/Product';
 import { Header } from '@/widgets/Header';
 
 const HomeCategoryArr: HomeCategory[] = ['인기 상품', '신상품'] as const;
@@ -31,20 +30,31 @@ const Home = () => {
 
     return HomeCategoryArr.map((title) => {
       const list = title === '인기 상품' ? data.popularProducts : data.newProducts;
-      return <ProductCarousel key={title} list={list} title={title} />;
+      return (
+        <section className="section" key={title}>
+          <h2>{title}</h2>
+          <div className="grid">
+            {list.length === 0 ? (
+              <p>검색 결과가 없습니다.</p>
+            ) : (
+              list.map((product) => <Product key={product.id} product={product} />)
+            )}
+          </div>
+        </section>
+      );
     });
   };
 
   return (
-    <main className={styles.page}>
+    <main className="page">
       <Header />
-      <section className={styles.hero}>
+      <section className="hero">
         <p>배너 설명</p>
         <h1>홈 배너 제목</h1>
       </section>
-      <section className={styles.section}>
+      <section className="section">
         <h2>카테고리</h2>
-        <div className={styles.categories}>
+        <div className="categories">
           {/* [AI] 클릭 시 /products?category=<id> 로 이동해 해당 카테고리가 적용된다. */}
           {ProductCategoryArr.map(({ id, label }) => (
             <Link key={id} href={`/products?category=${id}`}>
