@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/fetcher';
 import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
 
@@ -25,5 +25,7 @@ export const productQueries = {
       queryFn: () => fetchProductList(query),
       staleTime: 30 * 1000,
       gcTime: 5 * 60 * 1000,
+      // 페이지 이동 중에도 이전 데이터를 placeholder로 유지해 totalPages가 1로 튀는 현상을 막는다.
+      placeholderData: keepPreviousData,
     }),
 };

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import styles from './page.module.css';
 import { productQueries } from '@/features/product-list/api/queries';
 import {
-  PAGE_SIZE,
+  ITEMS_PER_PAGE,
   isCategoryValue,
   isSortValue,
   useProductListFilters,
@@ -21,7 +21,7 @@ const ProductsPage = () => {
   const { data, isPending, isError } = useQuery(productQueries.list(query));
 
   const totalCount = data?.totalCount ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalCount / (data?.pageSize ?? PAGE_SIZE)));
+  const totalPages = Math.max(1, Math.ceil(totalCount / (data?.pageSize ?? ITEMS_PER_PAGE)));
 
   const renderResults = () => {
     if (isPending) return <p>불러오는 중...</p>;
