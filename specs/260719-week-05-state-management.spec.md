@@ -29,7 +29,6 @@
 ## 조사 결과
 
 - 홈은 5주차 커머스 화면으로 교체하고, 기존 Select·Dialog 데모는 컴포넌트를 유지한 채 `/demos`에서 접근하게 한다
-  (`src/app/page.tsx`, `src/app/_demos/`).
 - 상품 목록 페이지는 아직 없으므로 `/products` 경로를 추가해야 한다.
 - `QueryClientProvider`와 `NuqsAdapter`는 아직 구성되지 않았다 (`src/app/layout.tsx`).
 - `@tanstack/react-query`, `nuqs`, `zustand`는 이미 설치되어 있어 의존성 추가가 필요 없다 (`package.json`).
@@ -65,13 +64,25 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
 
 ### D1. 잘못된 URL과 페이지 초과
 
-- category와 sort는 허용값만 받고, page는 1 이상의 안전한 정수만 받는다.
-- parser가 처리할 수 없는 값은 기본값으로 바꾸고 잘못된 history를 남기지 않도록 URL을 `replace`한다.
-- 문법상 유효하지만 마지막 페이지를 초과한 page는 응답의 totalCount로 확인한 뒤 page 1로 `replace`한다.
+- category와 sort는 허용값만 받고, page는 1 이상의 안전한 정수만 받는다. 허용값을 벗어난 값은
+  parser가 기본값으로 대체한다. 화면과 조회 조건은 이 시점에 이미 정상이다.
+- **주소창에 남은 잘못된 값은 다시 쓰지 않는다.** 값 보정은 parser가 끝냈고, 주소를 고치려면
+  렌더 이후 effect로 URL을 다시 써야 하는데 그 비용이 얻는 것보다 크다고 판단했다.
+- 문법상 유효하지만 마지막 페이지를 초과한 page만 응답의 totalCount로 확인한 뒤 마지막 페이지로
+  `history: "replace"` 한다. 총 개수를 받아야 알 수 있어 parser로는 판단할 수 없는 유일한 경우다.
+- 보정으로 주소가 바뀌기 전까지는 목록 대신 이동 중 상태를 표시해 잘못된 페이지 화면이 노출되지 않게 한다.
 - totalCount가 0이면 page 1에서 목록 빈 상태를 표시한다.
 
-직접 입력하거나 오래된 공유 URL로 접근하는 읽기 전용 목록이므로 마지막 페이지로 임의 이동하는 것보다
-첫 페이지라는 예측 가능한 기준으로 복구한다. 필터·검색·정렬 변경도 결과 집합이 달라지므로 page 1로 돌아간다.
+직접 입력하거나 오래된 공유 URL로 접근했을 때 요청한 page와 가장 가까운 유효 범위를 유지하도록 마지막
+페이지로 clamp한다. 필터·검색·정렬 변경은 결과 집합이 달라지므로 기존처럼 page 1로 돌아간다.
+
+주소창을 정리하지 않기로 한 근거는 조사 결과다. nuqs는 읽을 때 URL을 고치지 않으며, 이는 같은 키를
+구독하는 컴포넌트끼리 충돌할 수 있어 의도적으로 앱에 맡긴 설계다(Discussion #942). 메인테이너는 같은
+질문에 대해 클라이언트가 아니라 middleware에서 처리할 문제라고 답했고(#1139), 기본값을 URL에 심는
+요청에는 "버그가 아니라 의도된 동작"이라고 못박았다(#761). 실제로 nuqs를 쓰는 저장소 중 잘못된 값을
+감지해 주소를 다시 쓰는 코드를 가진 곳을 찾지 못했다(tablecn, openstatus, data-table-filters, nuqs 본체).
+공유 링크 오염과 SEO 중복이 남는 문제인데, SEO는 nuqs 문서가 지정한 대로 `metadata.alternates.canonical`로
+푸는 것이 정공법이고 `replaceState`는 크롤러에게 보이지 않아 도움이 되지 않는다.
 
 ### D2. 검색 확정과 URL history
 
@@ -83,7 +94,7 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
 - 빈 검색어를 제출하면 q를 URL에서 제거하고 page 1의 전체 목록으로 이동한다.
 - category·sort·page 변경도 이전 결과로 돌아갈 수 있어야 하는 탐색 행위이므로 각 사용자 이벤트에서
   `history: "push"`를 사용한다. `NuqsAdapter` 전역 기본값으로 지정하지 않는다.
-- 잘못된 URL과 페이지 초과 보정은 사용자 탐색이 아니므로 `history: "replace"`를 사용한다.
+- 마지막 페이지 초과 보정은 사용자 탐색이 아니므로 `history: "replace"`를 사용한다 (D1).
 - 실시간 검증이나 글자 수처럼 입력 중 렌더링 요구가 생기기 전에는 controlled `useState`와 동기화 `useEffect`를 추가하지 않는다.
 - 타이핑만으로는 URL, history, query key를 변경하지 않는다.
 
@@ -184,7 +195,7 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
 
 - totalCount와 pageSize로 페이지 이동 UI를 연결한다.
 - 공유·새로고침·뒤로 가기·앞으로 가기에서 조건과 목록이 함께 복원되는지 검증한다.
-- 잘못된 URL과 마지막 페이지 초과 정책을 적용한다.
+- 잘못된 URL과 마지막 페이지 초과 정책을 적용한다 (D1).
 - fulfills: U3, U5, V2
 - 커밋 후보: `feat: URL 페이지네이션과 탐색 복원 구현`
 
@@ -274,7 +285,7 @@ merge할지 discard할지 결정하지 않으며, 서버 동기화 도입 시 �
 - [ ] 검색·카테고리·정렬 변경 시 URL과 page 1이 한 번에 반영된다.
 - [ ] 검색어를 타이핑만 하면 URL·history·네트워크 요청이 바뀌지 않는다.
 - [ ] 여러 조건을 변경한 뒤 뒤로 가기와 앞으로 가기를 하면 URL·검색 폼·목록이 함께 복원된다.
-- [ ] 잘못된 parameter와 마지막 페이지 초과 URL이 page 1의 정상 URL로 `replace`된다.
+- [ ] 잘못된 parameter는 기본값으로 읽혀 화면이 정상 동작하고, 마지막 페이지 초과 URL만 마지막 페이지로 `replace`된다.
 - [ ] 같은 조건으로 돌아오면 1분 staleTime과 기본 5분 gcTime 정책에 맞게 캐시가 재사용된다.
 - [ ] 홈과 목록의 loading·error·empty 상태가 각각 재현된다.
 - [ ] 홈과 목록을 이동하며 장바구니·위시리스트 버튼과 Header 개수가 일치한다.

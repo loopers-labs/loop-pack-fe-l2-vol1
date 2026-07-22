@@ -5,6 +5,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import type { ReactNode } from 'react';
 
 function makeQueryClient() {
@@ -26,10 +27,12 @@ function getQueryClient() {
   return browserQueryClient;
 }
 
-export function QueryProvider({ children }: { children: ReactNode }) {
+export default function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <NuqsAdapter>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </NuqsAdapter>
   );
 }

@@ -6,6 +6,7 @@
 
 .week05-header,
 .week05-filters,
+.week05-pagination,
 .week05-categories,
 .week05-price {
   display: flex;
@@ -123,6 +124,22 @@
   font-size: 0.8125rem;
   color: #8794a3;
   text-decoration: line-through;
+}
+
+.week05-pagination {
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.week05-pagination button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+}
+
+.week05-pagination button:disabled {
+  color: #8794a3;
+  cursor: not-allowed;
 }
 
 .week05-status,

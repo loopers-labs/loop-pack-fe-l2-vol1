@@ -1,38 +1,78 @@
-import {
-  createParser,
-  parseAsString,
-  parseAsStringLiteral,
-  useQueryStates,
-} from 'nuqs';
+import { createParser, parseAsStringLiteral, useQueryStates } from 'nuqs';
+import { useEffect, useEffectEvent } from 'react';
 
-import { CATEGORY_FILTERS } from './constants';
+import { CATEGORY_FILTERS, type CategoryFilter } from './constants';
 
-import { PRODUCT_SORTS } from '@/types/commerce';
+import { PRODUCT_SORTS, type ProductSort } from '@/types/commerce';
+
+// 주소로 직접 들어와도, 폼으로 제출해도 같은 규칙을 써야 같은 검색이 같은 캐시를 쓴다.
+const normalizeSearchQuery = (value: string) => value.trim().normalize('NFC');
+
+const conditionParsers = {
+  q: createParser({
+    parse: normalizeSearchQuery,
+    serialize: String,
+  }).withDefault(''),
+
+  category: parseAsStringLiteral(CATEGORY_FILTERS).withDefault('all'),
+  sort: parseAsStringLiteral(PRODUCT_SORTS).withDefault('latest'),
+
+  page: createParser({
+    parse: (value: string) => {
+      const page = Number(value);
+
+      return Number.isSafeInteger(page) && page >= 1 ? page : null;
+    },
+    serialize: String,
+  }).withDefault(1),
+};
 
 /**
- * 상품 검색터, 필터 상태 원본
- * 조건 변경은 이전 결과로 돌아갈 수 있어야 해 history에 push한다.
+ * 상품 목록 조건.
+ * 검색·필터를 바꾸면 결과 목록이 달라지므로 page를 1로 되돌린다.
  */
 export function useProductListUrlState() {
-  return useQueryStates(
-    {
-      q: parseAsString.withDefault(''),
-      category: parseAsStringLiteral(CATEGORY_FILTERS).withDefault('all'),
-      sort: parseAsStringLiteral(PRODUCT_SORTS).withDefault('latest'),
+  const [conditions, setConditions] = useQueryStates(conditionParsers, {
+    history: 'push',
+  });
 
-      // page는 1 이상의 안전한 정수만 받고, null을 돌려주면 nuqs가 기본값 1로 떨어뜨린다.
-      // Number()만 쓰면 '1e3'·' 2 '·'0x10'도 통과하므로 API route와 같은 규칙으로 표기부터 검사한다.
-      page: createParser({
-        parse: (value: string) => {
-          if (!/^[1-9]\d*$/.test(value)) return null;
-
-          const page = Number(value);
-
-          return Number.isSafeInteger(page) ? page : null;
-        },
-        serialize: String,
-      }).withDefault(1),
+  return {
+    conditions,
+    submitSearch: (keyword: string) => {
+      void setConditions({ q: normalizeSearchQuery(keyword) || null, page: 1 });
     },
-    { history: 'push' },
-  );
+    changeCategory: (category: CategoryFilter) => {
+      void setConditions({ category, page: 1 });
+    },
+    changeSort: (sort: ProductSort) => {
+      void setConditions({ sort, page: 1 });
+    },
+    changePage: (page: number) => {
+      void setConditions({ page });
+    },
+  };
+}
+
+/**
+ * 마지막 페이지를 넘긴 주소를 마지막 페이지로 clamp.
+ * 총 개수를 응답으로 받아봐야 알 수 있어 parser에서는 판단할 수 없다.
+ * 사용자가 이동한 게 아니므로 뒤로 가기 기록에는 남기지 않는다.
+ */
+export function usePageClamp(totalPages: number | null) {
+  const [{ page }, setConditions] = useQueryStates(conditionParsers, {
+    history: 'replace',
+  });
+
+  const isPageOutOfRange = totalPages !== null && page > totalPages;
+  const clampPage = useEffectEvent((lastPage: number) => {
+    void setConditions({ page: lastPage });
+  });
+
+  useEffect(() => {
+    if (!isPageOutOfRange || totalPages === null) return;
+
+    clampPage(totalPages);
+  }, [isPageOutOfRange, totalPages]);
+
+  return { isPageOutOfRange };
 }
