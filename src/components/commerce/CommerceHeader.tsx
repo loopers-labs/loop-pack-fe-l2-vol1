@@ -11,12 +11,26 @@ export function CommerceHeader() {
   const visibleCartCount = hasHydrated ? String(cartCount) : "-";
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 pb-6 max-[480px]:items-start">
-      <Link href="/">Commerce</Link>
-      <nav className="flex flex-wrap items-center gap-3 max-[480px]:w-full" aria-label="주요 메뉴">
-        <Link href="/products">상품</Link>
-        <span>위시리스트 {visibleWishlistCount}</span>
-        <span>장바구니 {visibleCartCount}</span>
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-gds-gray-200 bg-gds-gray-100/95 pb-5 max-[480px]:items-start">
+      <Link className="text-xl font-bold tracking-tight text-gds-gray-900" href="/">
+        Commerce
+      </Link>
+      <nav
+        className="flex flex-wrap items-center gap-2 text-sm text-gds-gray-700 max-[480px]:w-full"
+        aria-label="주요 메뉴"
+      >
+        <Link
+          className="rounded-gds-sm px-2.5 py-1.5 font-semibold text-gds-gray-900 hover:bg-gds-gray-200 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
+          href="/products"
+        >
+          상품
+        </Link>
+        <span className="rounded-full bg-white px-3 py-1.5 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
+          위시리스트 {visibleWishlistCount}
+        </span>
+        <span className="rounded-full bg-white px-3 py-1.5 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
+          장바구니 {visibleCartCount}
+        </span>
       </nav>
     </header>
   );

@@ -78,21 +78,21 @@ export function ProductFilters({
   };
 
   return (
-    <form className="flex flex-wrap items-center gap-3">
-      <label className="grid gap-1.5 max-md:flex-[1_1_100%]">
+    <form className="flex flex-wrap items-end gap-3 rounded-gds-lg bg-white p-4 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
+      <label className="grid flex-1 gap-1.5 text-sm font-semibold text-gds-gray-900 max-md:flex-[1_1_100%]">
         검색
         <input
-          className="min-h-10 border border-[#c8c8c8] bg-transparent px-2.5 py-2 text-inherit focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
+          className="min-h-11 rounded-gds-sm border border-gds-gray-300 bg-white px-3 py-2.5 text-sm font-normal text-gds-gray-900 placeholder:text-gds-gray-500 focus:border-gds-gray-900 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
           name="q"
           placeholder="상품명 또는 브랜드"
           value={draftQ}
           onChange={handleSearchChange}
         />
       </label>
-      <label className="grid gap-1.5 max-md:flex-[1_1_100%]">
+      <label className="grid gap-1.5 text-sm font-semibold text-gds-gray-900 max-md:flex-[1_1_100%]">
         카테고리
         <select
-          className="min-h-10 border border-[#c8c8c8] bg-transparent px-2.5 py-2 text-inherit focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
+          className="min-h-11 min-w-36 rounded-gds-sm border border-gds-gray-300 bg-white px-3 py-2.5 text-sm font-normal text-gds-gray-900 focus:border-gds-gray-900 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
           name="category"
           value={category}
           onChange={handleCategoryChange}
@@ -104,10 +104,10 @@ export function ProductFilters({
           ))}
         </select>
       </label>
-      <label className="grid gap-1.5 max-md:flex-[1_1_100%]">
+      <label className="grid gap-1.5 text-sm font-semibold text-gds-gray-900 max-md:flex-[1_1_100%]">
         정렬
         <select
-          className="min-h-10 border border-[#c8c8c8] bg-transparent px-2.5 py-2 text-inherit focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
+          className="min-h-11 min-w-36 rounded-gds-sm border border-gds-gray-300 bg-white px-3 py-2.5 text-sm font-normal text-gds-gray-900 focus:border-gds-gray-900 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
           name="sort"
           value={sort}
           onChange={handleSortChange}
@@ -120,7 +120,7 @@ export function ProductFilters({
         </select>
       </label>
       <button
-        className="self-end border border-[#c8c8c8] bg-transparent px-3 py-2 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#2557a7]"
+        className="min-h-11 rounded-gds-sm border border-gds-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gds-gray-900 hover:bg-gds-gray-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
         type="button"
         onClick={onReset}
       >

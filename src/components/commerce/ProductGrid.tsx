@@ -9,7 +9,7 @@ type ProductGridProps = {
 
 export function ProductGrid({ products, titleLevel = 2, labelPrefix }: ProductGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 lg:grid-cols-5 lg:gap-5">
+    <div className="grid grid-cols-2 gap-x-3 gap-y-7 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-5 lg:gap-y-8">
       {products.map((product, index) => {
         const labelTarget = labelPrefix
           ? `${labelPrefix} ${index + 1}번 상품`

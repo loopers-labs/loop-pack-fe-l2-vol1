@@ -10,8 +10,8 @@ export function ProductListPageClient() {
 
   return (
     <>
-      <section className="mt-10">
-        <h1 className="mb-4">상품 목록</h1>
+      <section className="mt-8">
+        <h1 className="mb-5 text-3xl font-bold tracking-tight text-gds-gray-900">상품 목록</h1>
         <ProductFilters
           q={params.q}
           category={params.category}
@@ -23,7 +23,7 @@ export function ProductListPageClient() {
         />
       </section>
 
-      <section className="mt-10" aria-label="상품 검색 결과">
+      <section className="mt-8" aria-label="상품 검색 결과">
         <ProductListResults params={params} onPageChange={setPage} onPageReplace={replacePage} />
       </section>
     </>
