@@ -64,7 +64,7 @@
   font-weight: 700;
 }
 
-.week05-categories span {
+.week05-categories a {
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   border-radius: 999px;

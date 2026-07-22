@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 
 import { ProductCard } from './ProductCard';
 import { productQueries } from './queries';
@@ -41,7 +42,9 @@ export function HomeContent() {
         <h2>카테고리</h2>
         <div className="week05-categories">
           {categories.map((category) => (
-            <span key={category.id}>{category.name}</span>
+            <Link key={category.id} href={`/products?category=${category.id}`}>
+              {category.name}
+            </Link>
           ))}
         </div>
       </section>
