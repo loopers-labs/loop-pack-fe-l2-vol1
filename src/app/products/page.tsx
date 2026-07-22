@@ -27,7 +27,9 @@ const productSearchParsers = {
 };
 
 export default function ProductListPage() {
-  const [search, setSearch] = useQueryStates(productSearchParsers);
+  const [search, setSearch] = useQueryStates(productSearchParsers, {
+    history: "push",
+  });
   const {
     data: products,
     isLoading,
