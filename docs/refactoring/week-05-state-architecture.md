@@ -17,10 +17,10 @@
 | 상품 목록, 전체 개수, 목록 카테고리  | 서버                         | `staleTime` 동안 fresh, 이후 재검증 가능     | 상품 목록 화면                        | 검색 조건에 따라 달라지는 서버 데이터이므로 Zustand에 복사하지 않는다.                         |
 | 검색어 `q`, 카테고리, 정렬, 페이지   | URL                          | 사용자가 URL을 바꾸거나 조건을 변경할 때까지 | 공유 링크, 새로고침, 뒤로/앞으로 이동 | 같은 조건을 복원해야 하므로 `nuqs`로 URL 상태로 관리한다.                                      |
 | 검색 input draft                     | React 로컬 상태              | `ProductFilters` 수명 동안                   | 검색 input                            | 타이핑 즉시는 input에 반영하고 URL/API 요청은 debounce 이후 반영해야 하므로 URL 값과 분리한다. |
-| 장바구니 상품 ID 목록                | Zustand                      | 브라우저 저장소에 persist된 익명 세션        | 헤더, 홈 상품 카드, 목록 상품 카드    | 비로그인 사용자의 로컬 장바구니 상태이며 여러 화면에서 공유한다.                               |
-| 위시리스트 상품 ID 목록              | Zustand                      | 브라우저 저장소에 persist된 익명 세션        | 헤더, 홈 상품 카드, 목록 상품 카드    | 비로그인 사용자의 로컬 위시리스트 상태이며 여러 화면에서 공유한다.                             |
-| 헤더 장바구니/위시리스트 개수        | 파생값                       | 렌더링 시 계산                               | 헤더                                  | ID 배열 길이로 계산 가능하므로 별도 state로 저장하지 않는다.                                   |
-| 상품 카드의 포함 여부                | 파생값                       | 렌더링 시 계산                               | 개별 상품 카드                        | 상품 ID가 store 배열에 포함되는지 계산 가능하므로 중복 저장하지 않는다.                        |
+| 장바구니 상품 ID map                 | Zustand                      | 브라우저 저장소에 persist된 익명 세션        | 헤더, 홈 상품 카드, 목록 상품 카드    | 비로그인 사용자의 로컬 장바구니 상태이며 여러 화면에서 공유한다.                               |
+| 위시리스트 상품 ID map               | Zustand                      | 브라우저 저장소에 persist된 익명 세션        | 헤더, 홈 상품 카드, 목록 상품 카드    | 비로그인 사용자의 로컬 위시리스트 상태이며 여러 화면에서 공유한다.                             |
+| 헤더 장바구니/위시리스트 개수        | 파생값                       | 렌더링 시 계산                               | 헤더                                  | ID map의 key 개수로 계산 가능하므로 별도 state로 저장하지 않는다.                              |
+| 상품 카드의 포함 여부                | 파생값                       | 렌더링 시 계산                               | 개별 상품 카드                        | 상품 ID가 store map에 존재하는지 계산 가능하므로 중복 저장하지 않는다.                         |
 | 로딩, 에러, empty 상태               | TanStack Query와 렌더링 분기 | 요청 상태에 따라 변경                        | 홈, 상품 목록                         | 서버 조회 흐름에서 생기는 상태이므로 query result와 화면 분기로 표현한다.                      |
 
 ## 도구별 책임
@@ -29,7 +29,7 @@
 | ----------------- | ------------------------------------------------------ | --------------------------------------------------- |
 | TanStack Query    | 홈/상품 목록 서버 데이터, 로딩, 에러, retry, 캐시 수명 | 장바구니, 위시리스트 같은 사용자 로컬 상태          |
 | nuqs              | 검색, 카테고리, 정렬, 페이지 URL 상태                  | mock API 검증용 `scenario`, 서버 응답 데이터        |
-| Zustand           | 비로그인 사용자의 장바구니/위시리스트 ID 목록          | 서버에서 내려온 상품 목록 응답                      |
+| Zustand           | 비로그인 사용자의 장바구니/위시리스트 ID map           | 서버에서 내려온 상품 목록 응답                      |
 | React local state | 검색 input draft처럼 컴포넌트 수명에 머무는 UI 상태    | 공유해야 하는 검색 조건, 여러 화면이 함께 쓰는 상태 |
 
 서버 응답을 Zustand에 복사하지 않은 이유는 원본이 두 곳으로 갈라지기 때문이다. 상품 목록은 서버 응답 스냅샷이고, 장바구니/위시리스트는 사용자가 브라우저에서 만든 로컬 상태다. 두 상태의 변경 이유와 수명이 다르므로 분리했다.
@@ -85,14 +85,14 @@ prefetch 대상은 모든 데이터가 아니라 다음으로 제한했다.
 
 ## Zustand store 정책
 
-store에는 상품 객체 전체가 아니라 ID 목록만 저장한다.
+store에는 상품 객체 전체가 아니라 상품 ID를 key로 갖는 map만 저장한다.
 
-| 상태       | 저장 형태                      | 이유                                                                 |
-| ---------- | ------------------------------ | -------------------------------------------------------------------- |
-| 장바구니   | `cartProductIds: string[]`     | 이번 범위에서는 수량, 옵션, 합계가 없고 포함 여부와 개수만 필요하다. |
-| 위시리스트 | `wishlistProductIds: string[]` | 상품 데이터는 서버가 원본이므로 로컬 store에는 식별자만 둔다.        |
+| 상태       | 저장 형태                                    | 이유                                                                                            |
+| ---------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 장바구니   | `cartProductIdMap: Record<string, true>`     | 이번 범위에서는 수량, 옵션, 합계가 없고 포함 여부와 개수만 필요하다. 포함 여부 조회가 명확하다. |
+| 위시리스트 | `wishlistProductIdMap: Record<string, true>` | 상품 데이터는 서버가 원본이므로 로컬 store에는 식별자만 둔다. 포함 여부 조회가 명확하다.        |
 
-헤더 개수는 `cartProductIds.length`, `wishlistProductIds.length`로 파생한다. 별도 count state를 두면 ID 배열과 count가 어긋날 수 있다.
+헤더 개수는 `Object.keys(cartProductIdMap).length`, `Object.keys(wishlistProductIdMap).length`로 파생한다. 별도 count state를 두면 ID map과 count가 어긋날 수 있다.
 
 Header는 개수만 구독하고, 상품 버튼은 해당 상품의 포함 여부와 toggle action만 구독한다. 컴포넌트가 필요한 값만 구독해야 불필요한 렌더링과 결합을 줄일 수 있기 때문이다.
 
@@ -102,17 +102,20 @@ Header는 개수만 구독하고, 상품 버튼은 해당 상품의 포함 여�
 
 Zustand `persist`로 비로그인 장바구니와 위시리스트를 복원한다.
 
-| 옵션                 | 역할                                                                                         |
-| -------------------- | -------------------------------------------------------------------------------------------- |
-| `partialize`         | action이나 hydration 상태는 저장하지 않고 `cartProductIds`, `wishlistProductIds`만 저장한다. |
-| `version`            | 저장 데이터 구조가 바뀌었는지 판단할 기준을 둔다.                                            |
-| `migrate`            | 오래되었거나 잘못된 저장값을 현재 구조로 복구한다.                                           |
-| `merge`              | 같은 version이어도 저장값이 잘못된 경우를 대비해 병합 전에 정규화한다.                       |
-| `onRehydrateStorage` | localStorage 복원이 끝났음을 `hasHydrated`로 표시한다.                                       |
+| 옵션                 | 역할                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `partialize`         | action이나 hydration 상태는 저장하지 않고 `cartProductIdMap`, `wishlistProductIdMap`만 저장한다.       |
+| `version`            | 저장 데이터 구조가 바뀌었는지 판단할 기준을 둔다.                                                      |
+| `migrate`            | 오래되었거나 잘못된 저장값을 현재 구조로 복구한다.                                                     |
+| `merge`              | 같은 version이어도 저장값이 잘못된 경우를 대비해 병합 전에 정규화한다.                                 |
+| `skipHydration`      | Next.js 초기 렌더링 중 localStorage 자동 복원을 막고, 클라이언트 마운트 이후 명시적으로 복원하게 한다. |
+| `onRehydrateStorage` | localStorage 복원이 끝났음을 `hasHydrated`로 표시한다.                                                 |
 
-Next.js hydration mismatch를 피하기 위해 store 복원 전에는 헤더 count와 상품 버튼 포함 상태를 기본값으로 렌더링한다. 클라이언트에서 localStorage 복원이 끝난 뒤에 저장값 기준 UI로 전환한다.
+Next.js hydration mismatch를 피하기 위해 `skipHydration: true`로 초기 자동 복원을 막고, `CommerceStoreHydrator`에서 클라이언트 마운트 이후 `persist.rehydrate()`를 명시적으로 호출한다. 클라이언트에서 localStorage 복원이 끝난 뒤에 저장값 기준 UI로 전환한다.
 
-잘못된 localStorage 값은 빈 배열 또는 유효한 string 배열로 정규화한다. 예를 들어 `wishlistProductIds: "24"`처럼 배열이 아닌 값이 들어와도 문자열을 쪼개지 않고 안전한 배열 상태로 복구한다.
+`hasHydrated`는 복원 전 상태와 실제 빈 상태를 구분하기 위한 신호다. 복원 전 헤더 count는 `0`을 확정값처럼 보여주지 않고 `-`로 표시한다. 상품 버튼은 로컬 복원이 짧은 작업이라고 보고 비활성화하지 않고, 복원 전에는 기본 포함 상태로 렌더링한다.
+
+잘못된 localStorage 값은 빈 map 또는 유효한 product id map으로 정규화한다. 예를 들어 `wishlistProductIdMap: "24"`처럼 map이 아닌 값이 들어오면 문자열을 쪼개지 않고 안전한 빈 map 상태로 복구한다. map 값도 `true`만 유효한 포함 상태로 인정한다.
 
 ## Advanced B: App Router 서버 prefetch
 
@@ -146,8 +149,8 @@ Next.js hydration mismatch를 피하기 위해 store 복원 전에는 헤더 cou
 
 | 테스트 대상            | 대표 테스트                                                    |
 | ---------------------- | -------------------------------------------------------------- |
-| Zustand action         | 위시리스트/장바구니 toggle, 잘못된 배열 상태 방어              |
-| persist 복구           | version, partialize, 잘못된 저장값 정규화, hydration 완료      |
+| Zustand action         | 위시리스트/장바구니 toggle, 잘못된 map 상태 방어               |
+| persist 복구           | version, partialize, 잘못된 저장값 정규화, 수동 hydration 완료 |
 | Header 개수 파생       | store 복원 전/후 헤더 count 렌더링                             |
 | 상품 버튼 selector     | store 복원 전/후 `aria-pressed` 상태                           |
 | nuqs URL 조건          | 잘못된 page/category/sort 기본값 조회, URL 유지                |
