@@ -36,6 +36,7 @@ export const useCommerceStore = create<CommerceStore>()(
       name: COMMERCE_STORE_STORAGE_KEY,
       version: COMMERCE_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
       partialize: selectPersistedCommerceState,
       migrate: (persistedState) => normalizePersistedCommerceState(persistedState),
       merge: (persistedState, currentState) => ({

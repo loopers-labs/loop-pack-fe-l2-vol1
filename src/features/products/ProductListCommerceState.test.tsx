@@ -45,6 +45,7 @@ describe("ProductListCommerceState", () => {
     useCommerceStore.setState({
       cartProductIdMap: {},
       wishlistProductIdMap: {},
+      hasHydrated: true,
     });
     mockedGetProducts.mockReset();
     mockedGetProducts.mockResolvedValue({

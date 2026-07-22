@@ -7,6 +7,7 @@ import { CommerceProductCard } from "./CommerceProductCard";
 import type { ProductCardItem } from "./ProductCard";
 import { COMMERCE_STORE_STORAGE_KEY } from "@/stores/commerce/persistence";
 import { useCommerceStore } from "@/stores/commerce/store";
+import { CommerceStoreHydrator } from "@/stores/commerce/CommerceStoreHydrator";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
@@ -33,9 +34,10 @@ describe("commerce hydration", () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
   });
 
-  it("store 복원 전에는 헤더 개수를 서버 기준 기본값으로 렌더링한다", () => {
+  it("store 복원 전에는 헤더 개수를 확정값처럼 렌더링하지 않는다", () => {
     useCommerceStore.setState({
       cartProductIdMap: { p1: true },
       wishlistProductIdMap: { p2: true },
@@ -44,8 +46,8 @@ describe("commerce hydration", () => {
 
     render(<CommerceHeader />);
 
-    expect(screen.getByText("위시리스트 0")).toBeInTheDocument();
-    expect(screen.getByText("장바구니 0")).toBeInTheDocument();
+    expect(screen.getByText("위시리스트 -")).toBeInTheDocument();
+    expect(screen.getByText("장바구니 -")).toBeInTheDocument();
   });
 
   it("store 복원 후에는 헤더 개수를 저장값 기준으로 렌더링한다", () => {
@@ -117,5 +119,17 @@ describe("commerce hydration", () => {
     await useCommerceStore.persist.rehydrate();
 
     expect(useCommerceStore.getState().hasHydrated).toBe(true);
+  });
+
+  it("persist 자동 복원을 건너뛰도록 설정한다", () => {
+    expect(useCommerceStore.persist.getOptions().skipHydration).toBe(true);
+  });
+
+  it("hydrator가 마운트되면 store 복원을 명시적으로 실행한다", () => {
+    const rehydrateSpy = vi.spyOn(useCommerceStore.persist, "rehydrate").mockResolvedValue();
+
+    render(<CommerceStoreHydrator />);
+
+    expect(rehydrateSpy).toHaveBeenCalledOnce();
   });
 });

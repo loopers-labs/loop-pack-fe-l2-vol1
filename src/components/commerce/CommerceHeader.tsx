@@ -7,8 +7,8 @@ export function CommerceHeader() {
   const hasHydrated = useCommerceStore((state) => state.hasHydrated);
   const wishlistCount = useCommerceStore((state) => Object.keys(state.wishlistProductIdMap).length);
   const cartCount = useCommerceStore((state) => Object.keys(state.cartProductIdMap).length);
-  const visibleWishlistCount = hasHydrated ? wishlistCount : 0;
-  const visibleCartCount = hasHydrated ? cartCount : 0;
+  const visibleWishlistCount = hasHydrated ? String(wishlistCount) : "-";
+  const visibleCartCount = hasHydrated ? String(cartCount) : "-";
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 pb-6 max-[480px]:items-start">
