@@ -1,7 +1,8 @@
 "use client";
 
+import { ProductSearchInput } from "@/app/products/_components/product-search-input";
 import { getProducts } from "@/services/commerce";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 
@@ -34,6 +35,7 @@ export default function ProductListPage() {
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", search],
     queryFn: () => getProducts(search),
+    placeholderData: keepPreviousData,
   });
 
   if (products === undefined || isLoading) {
@@ -47,15 +49,10 @@ export default function ProductListPage() {
       <section className="week05-section">
         <h1>상품 목록</h1>
         <form className="week05-filters">
-          <label>
-            검색
-            <input
-              name="q"
-              placeholder="상품명 또는 브랜드"
-              value={search.q}
-              onChange={(event) => setSearch({ q: event.target.value, page: 1 })}
-            />
-          </label>
+          <ProductSearchInput
+            initialValue={search.q}
+            onDebouncedChange={(q) => setSearch({ q, page: 1 })}
+          />
           <label>
             카테고리
             <select
