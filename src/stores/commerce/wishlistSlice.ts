@@ -1,23 +1,26 @@
 import type { StateCreator } from "zustand";
-import { normalizeProductIds } from "./persistence";
+import { normalizeProductIdMap } from "./persistence";
+import type { ProductIdMap } from "./persistence";
 import type { CommerceStore } from "./store";
 
 export type WishlistSlice = {
-  wishlistProductIds: string[];
+  wishlistProductIdMap: ProductIdMap;
   toggleWishlist: (productId: string) => void;
 };
 
 export const createWishlistSlice: StateCreator<CommerceStore, [], [], WishlistSlice> = (set) => ({
-  wishlistProductIds: [],
+  wishlistProductIdMap: {},
   toggleWishlist: (productId) => {
     set((state) => {
-      const wishlistProductIds = normalizeProductIds(state.wishlistProductIds);
+      const wishlistProductIdMap = normalizeProductIdMap(state.wishlistProductIdMap);
 
-      return {
-        wishlistProductIds: wishlistProductIds.includes(productId)
-          ? wishlistProductIds.filter((id) => id !== productId)
-          : [...wishlistProductIds, productId],
-      };
+      if (wishlistProductIdMap[productId] === true) {
+        const { [productId]: _removed, ...nextWishlistProductIdMap } = wishlistProductIdMap;
+
+        return { wishlistProductIdMap: nextWishlistProductIdMap };
+      }
+
+      return { wishlistProductIdMap: { ...wishlistProductIdMap, [productId]: true } };
     });
   },
 });

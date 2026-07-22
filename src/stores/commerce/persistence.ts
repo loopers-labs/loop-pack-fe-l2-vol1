@@ -3,15 +3,17 @@ import type { CommerceStore } from "./store";
 export const COMMERCE_STORE_STORAGE_KEY = "commerce-anonymous-store";
 export const COMMERCE_STORE_VERSION = 1;
 
+export type ProductIdMap = Record<string, true>;
+
 export type PersistedCommerceStore = {
-  cartProductIds: string[];
-  wishlistProductIds: string[];
+  cartProductIdMap: ProductIdMap;
+  wishlistProductIdMap: ProductIdMap;
 };
 
 export function selectPersistedCommerceState(state: CommerceStore): PersistedCommerceStore {
   return {
-    cartProductIds: state.cartProductIds,
-    wishlistProductIds: state.wishlistProductIds,
+    cartProductIdMap: state.cartProductIdMap,
+    wishlistProductIdMap: state.wishlistProductIdMap,
   };
 }
 
@@ -21,27 +23,31 @@ export function normalizePersistedCommerceState(value: unknown): PersistedCommer
   }
 
   return {
-    cartProductIds: normalizeProductIds(value.cartProductIds),
-    wishlistProductIds: normalizeProductIds(value.wishlistProductIds),
+    cartProductIdMap: normalizeProductIdMap(value.cartProductIdMap),
+    wishlistProductIdMap: normalizeProductIdMap(value.wishlistProductIdMap),
   };
 }
 
-export function normalizeProductIds(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
+export function normalizeProductIdMap(value: unknown): ProductIdMap {
+  if (!isObjectRecord(value)) {
+    return {};
   }
 
-  const productIds = value.filter((item): item is string => {
-    return typeof item === "string" && item.trim().length > 0;
+  const productIdMap: ProductIdMap = {};
+
+  Object.entries(value).forEach(([productId, included]) => {
+    if (productId.trim().length > 0 && included === true) {
+      productIdMap[productId] = true;
+    }
   });
 
-  return Array.from(new Set(productIds));
+  return productIdMap;
 }
 
 function createEmptyPersistedCommerceState(): PersistedCommerceStore {
   return {
-    cartProductIds: [],
-    wishlistProductIds: [],
+    cartProductIdMap: {},
+    wishlistProductIdMap: {},
   };
 }
 

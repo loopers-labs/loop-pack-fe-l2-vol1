@@ -43,8 +43,8 @@ function renderProductListWithHeader() {
 describe("ProductListCommerceState", () => {
   beforeEach(() => {
     useCommerceStore.setState({
-      cartProductIds: [],
-      wishlistProductIds: [],
+      cartProductIdMap: {},
+      wishlistProductIdMap: {},
     });
     mockedGetProducts.mockReset();
     mockedGetProducts.mockResolvedValue({

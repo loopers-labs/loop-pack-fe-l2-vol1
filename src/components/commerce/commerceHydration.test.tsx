@@ -25,8 +25,8 @@ describe("commerce hydration", () => {
   beforeEach(() => {
     localStorage.clear();
     useCommerceStore.setState({
-      cartProductIds: [],
-      wishlistProductIds: [],
+      cartProductIdMap: {},
+      wishlistProductIdMap: {},
       hasHydrated: false,
     });
   });
@@ -37,8 +37,8 @@ describe("commerce hydration", () => {
 
   it("store 복원 전에는 헤더 개수를 서버 기준 기본값으로 렌더링한다", () => {
     useCommerceStore.setState({
-      cartProductIds: ["p1"],
-      wishlistProductIds: ["p2"],
+      cartProductIdMap: { p1: true },
+      wishlistProductIdMap: { p2: true },
       hasHydrated: false,
     });
 
@@ -50,8 +50,8 @@ describe("commerce hydration", () => {
 
   it("store 복원 후에는 헤더 개수를 저장값 기준으로 렌더링한다", () => {
     useCommerceStore.setState({
-      cartProductIds: ["p1"],
-      wishlistProductIds: ["p2"],
+      cartProductIdMap: { p1: true },
+      wishlistProductIdMap: { p2: true },
       hasHydrated: true,
     });
 
@@ -63,8 +63,8 @@ describe("commerce hydration", () => {
 
   it("store 복원 전에는 상품 버튼 상태를 서버 기준 기본값으로 렌더링한다", () => {
     useCommerceStore.setState({
-      cartProductIds: ["p1"],
-      wishlistProductIds: ["p1"],
+      cartProductIdMap: { p1: true },
+      wishlistProductIdMap: { p1: true },
       hasHydrated: false,
     });
 
@@ -88,8 +88,8 @@ describe("commerce hydration", () => {
 
   it("store 복원 후에는 상품 버튼 상태를 저장값 기준으로 렌더링한다", () => {
     useCommerceStore.setState({
-      cartProductIds: ["p1"],
-      wishlistProductIds: ["p1"],
+      cartProductIdMap: { p1: true },
+      wishlistProductIdMap: { p1: true },
       hasHydrated: true,
     });
 

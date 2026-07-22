@@ -1,23 +1,26 @@
 import type { StateCreator } from "zustand";
-import { normalizeProductIds } from "./persistence";
+import { normalizeProductIdMap } from "./persistence";
+import type { ProductIdMap } from "./persistence";
 import type { CommerceStore } from "./store";
 
 export type CartSlice = {
-  cartProductIds: string[];
+  cartProductIdMap: ProductIdMap;
   toggleCart: (productId: string) => void;
 };
 
 export const createCartSlice: StateCreator<CommerceStore, [], [], CartSlice> = (set) => ({
-  cartProductIds: [],
+  cartProductIdMap: {},
   toggleCart: (productId) => {
     set((state) => {
-      const cartProductIds = normalizeProductIds(state.cartProductIds);
+      const cartProductIdMap = normalizeProductIdMap(state.cartProductIdMap);
 
-      return {
-        cartProductIds: cartProductIds.includes(productId)
-          ? cartProductIds.filter((id) => id !== productId)
-          : [...cartProductIds, productId],
-      };
+      if (cartProductIdMap[productId] === true) {
+        const { [productId]: _removed, ...nextCartProductIdMap } = cartProductIdMap;
+
+        return { cartProductIdMap: nextCartProductIdMap };
+      }
+
+      return { cartProductIdMap: { ...cartProductIdMap, [productId]: true } };
     });
   },
 });

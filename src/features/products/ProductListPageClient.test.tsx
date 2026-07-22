@@ -58,8 +58,8 @@ function renderProductListPageClient({
 describe("ProductListPageClient", () => {
   beforeEach(() => {
     useCommerceStore.setState({
-      cartProductIds: [],
-      wishlistProductIds: [],
+      cartProductIdMap: {},
+      wishlistProductIdMap: {},
     });
     mockedGetProducts.mockReset();
     mockedGetProducts.mockResolvedValue({

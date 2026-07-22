@@ -44,8 +44,8 @@ function renderHomePageState() {
 describe("HomePageState", () => {
   beforeEach(() => {
     useCommerceStore.setState({
-      cartProductIds: [],
-      wishlistProductIds: [],
+      cartProductIdMap: {},
+      wishlistProductIdMap: {},
     });
     mockedGetHome.mockReset();
   });

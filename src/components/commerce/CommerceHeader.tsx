@@ -5,8 +5,8 @@ import { useCommerceStore } from "@/stores/commerce/store";
 
 export function CommerceHeader() {
   const hasHydrated = useCommerceStore((state) => state.hasHydrated);
-  const wishlistCount = useCommerceStore((state) => state.wishlistProductIds.length);
-  const cartCount = useCommerceStore((state) => state.cartProductIds.length);
+  const wishlistCount = useCommerceStore((state) => Object.keys(state.wishlistProductIdMap).length);
+  const cartCount = useCommerceStore((state) => Object.keys(state.cartProductIdMap).length);
   const visibleWishlistCount = hasHydrated ? wishlistCount : 0;
   const visibleCartCount = hasHydrated ? cartCount : 0;
 

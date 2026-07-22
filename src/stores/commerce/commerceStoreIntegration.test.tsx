@@ -48,8 +48,8 @@ function renderHomeSectionWithProductList() {
 describe("CommerceStoreIntegration", () => {
   beforeEach(() => {
     useCommerceStore.setState({
-      cartProductIds: [],
-      wishlistProductIds: [],
+      cartProductIdMap: {},
+      wishlistProductIdMap: {},
     });
     mockedGetProducts.mockReset();
     mockedGetProducts.mockResolvedValue({
