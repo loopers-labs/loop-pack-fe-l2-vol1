@@ -1,29 +1,82 @@
+'use client';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { homeQueries } from '@/queries/homeQueries';
+
 export default function Home() {
+  const { data, isLoading, isError } = useQuery(homeQueries.data());
+
+  if (isLoading) return <p>로딩 중...</p>;
+  if (isError) return <p>오류가 발생했습니다.</p>;
+  if (!data) return null;
+
+  const { banner, categories, popularProducts, newProducts } = data;
+
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
-        Commerce
-      </h1>
-      <p style={{ color: "#5a6675", lineHeight: 1.7, marginBottom: 24 }}>
-        4주차부터 여기에 커머스를 쌓아갑니다. 이번 주는 디자인 시스템의 뼈대
-        <b> Select</b>와 <b>Dialog</b>를 직접 만드는 것부터 시작해요.
-      </p>
-      <ul style={{ lineHeight: 2, color: "#18212e", paddingLeft: 18 }}>
-        <li>
-          컴포넌트 자리: <code>src/components/ui/select</code> ·{" "}
-          <code>src/components/ui/dialog</code>
-        </li>
-        <li>
-          mock 백엔드: <code>GET /api/products</code> (
-          <code>src/app/api/products/route.ts</code>)
-        </li>
-        <li>
-          과제 명세: <code>docs/assignments/week-04.md</code>
-        </li>
-      </ul>
-      <p style={{ color: "#8794a3", marginTop: 24, fontSize: 14 }}>
-        구조는 최소 골격만 있어요. 폴더 구성은 각자 근거를 대고 바꾸면 돼요.
-      </p>
+    <main className="week05-page">
+      <header className="week05-header">
+        <Link href="/">Commerce</Link>
+        <nav aria-label="주요 메뉴">
+          <Link href="/products">상품</Link>
+          <span>위시리스트 0</span>
+          <span>장바구니 0</span>
+        </nav>
+      </header>
+      <section className="week05-hero">
+        <p>{banner.description}</p>
+        <h1>{banner.title}</h1>
+      </section>
+      <section className="week05-section">
+        <h2>카테고리</h2>
+        <div className="week05-categories">
+          {categories.map((category) => (
+            <Link key={category.id} href={`/products?category=${category.id}`}>
+              {category.name}
+            </Link>
+          ))}
+        </div>
+      </section>
+      {[
+        { title: '인기 상품', products: popularProducts },
+        { title: '신상품', products: newProducts },
+      ].map(({ title, products }) => (
+        <section className="week05-section" key={title}>
+          <h2>{title}</h2>
+          <div className="week05-grid">
+            {products.map((product) => (
+              <article className="week05-product" key={product.id}>
+                <Image
+                  className="week05-image"
+                  src={product.image}
+                  alt={product.name}
+                  width={400}
+                  height={400}
+                />
+                <p>{product.brand}</p>
+                <h3>{product.name}</h3>
+                <strong>{product.price.toLocaleString()}원</strong>
+                <div>
+                  <button
+                    type="button"
+                    aria-label={`${product.name} 위시리스트`}
+                    aria-pressed={false}
+                  >
+                    찜
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`${product.name} 장바구니`}
+                    aria-pressed={false}
+                  >
+                    담기
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
     </main>
   );
 }
