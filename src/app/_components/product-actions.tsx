@@ -39,7 +39,7 @@ export function WishlistButton({ productId, label }: ProductActionProps): React.
       isActive={isActive}
       onToggle={() => toggle(productId)}
     >
-      찜
+      {isActive ? "찜됨" : "찜"}
     </ActionButton>
   );
 }
@@ -54,7 +54,7 @@ export function CartButton({ productId, label }: ProductActionProps): React.JSX.
       isActive={isActive}
       onToggle={() => toggle(productId)}
     >
-      담기
+      {isActive ? "담김" : "담기"}
     </ActionButton>
   );
 }

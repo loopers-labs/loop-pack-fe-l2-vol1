@@ -48,6 +48,12 @@
   background: transparent;
 }
 
+.week05-product button[aria-pressed="true"] {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
 .week05-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
