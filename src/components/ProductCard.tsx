@@ -1,11 +1,22 @@
+'use client';
 import Image from 'next/image';
 import type { Product } from '@/types/commerce';
+import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
 
 type Props = {
   product: Product;
 };
 
 export function ProductCard({ product }: Props) {
+  const isInWishlist = useWishlistStore((state) =>
+    state.items.includes(product.id),
+  );
+  const toggleWishlist = useWishlistStore((state) => state.toggleItem);
+  const isInCart = useCartStore((state) => state.items.includes(product.id));
+  const addToCart = useCartStore((state) => state.addItem);
+  const removeFromCart = useCartStore((state) => state.removeItem);
+
   return (
     <article className="week05-product">
       <Image
@@ -22,14 +33,18 @@ export function ProductCard({ product }: Props) {
         <button
           type="button"
           aria-label={`${product.name} 위시리스트`}
-          aria-pressed={false}
+          aria-pressed={isInWishlist}
+          onClick={() => toggleWishlist(product.id)}
         >
           찜
         </button>
         <button
           type="button"
           aria-label={`${product.name} 장바구니`}
-          aria-pressed={false}
+          aria-pressed={isInCart}
+          onClick={() =>
+            isInCart ? removeFromCart(product.id) : addToCart(product.id)
+          }
         >
           담기
         </button>
