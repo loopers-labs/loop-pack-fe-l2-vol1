@@ -86,6 +86,50 @@ staleTime: 0이 무조건 빠른 렌더링은 아니다.
 직접 판매하는 다브랜드 이커머스(무신사·쿠팡 모델)에 해당하므로 staleTime: 0 + gcTime 기본 5분을 채택했다.
 지그재그처럼 중개 모델이라면 캐시를 더 길게 잡는 전략이 적합하다.
 
+## Server Prefetch (dehydrate / hydrate)
+
+### 개념
+
+Java MVC로 비유하면:
+- **dehydrate** = Controller에서 Model에 데이터를 담아 JSP로 넘기는 것 (`request.setAttribute`)
+- **hydrate** = JSP에서 Model 데이터를 받아 화면을 렌더링하는 것 (`request.getAttribute`)
+
+TanStack Query에서의 흐름:
+1. **서버 (Server Component)**: `prefetchQuery()`로 API 호출 → QueryClient 캐시에 저장 → `dehydrate()`로 캐시를 JSON으로 직렬화
+2. **전달**: Next.js가 HTML에 JSON 데이터를 심어서 브라우저로 전송
+3. **클라이언트**: `HydrationBoundary`가 JSON을 받아 클라이언트 QueryClient 캐시에 복원
+4. **결과**: 클라이언트의 `useQuery`가 실행될 때 이미 캐시에 데이터가 있으므로 API 호출 없이 즉시 렌더링
+
+### 구현 패턴
+
+```
+page.tsx (Server Component)
+├─ getQueryClient() — 요청마다 새 QueryClient 생성 (서버) / 싱글턴 반환 (클라이언트)
+├─ prefetchQuery(queryOptions) — 서버에서 미리 API 호출
+├─ dehydrate(queryClient) — 캐시를 직렬화
+└─ HydrationBoundary state={dehydratedState}
+     └─ ClientComponent — useQuery가 캐시에서 즉시 데이터 사용
+```
+
+### 적용 대상과 근거
+
+| 페이지 | prefetch 대상 | 근거 |
+|---|---|---|
+| 홈 (`/`) | `homeQueryOptions()` | 진입점이라 초기 로딩 제거 효과가 가장 큼 |
+| 상품 목록 (`/products`) | `productListQueryOptions(searchParams)` | URL의 필터 조건을 서버에서 읽어 해당 조건으로 prefetch |
+| 상품 상세 (`/products/[id]`) | `productDetailQueryOptions(id)` | 동적 라우트의 id를 서버에서 읽어 해당 상품 prefetch |
+
+모든 페이지에 적용한 이유: Next.js App Router를 사용하는 주된 목적이 서버에서 데이터를 미리 가져와 초기 로딩을 없애는 것. 특정 페이지만 제외할 이유가 없음.
+
+### getQueryClient 전략
+
+- **서버**: 요청마다 새 QueryClient 생성 (요청 간 캐시 공유 방지)
+- **클라이언트**: 싱글턴 패턴으로 한 번만 생성 (SPA 탐색 중 캐시 유지)
+
+### 중복 요청 방지 확인
+
+서버에서 prefetch한 데이터가 HydrationBoundary를 통해 클라이언트 캐시에 복원되므로, 클라이언트의 useQuery는 캐시 히트로 처리. staleTime과 무관하게 초기 마운트 시 API 재요청 없음.
+
 ## 로그인·서버 동기화가 생기면
 
 위시리스트의 원본 소유자가 클라이언트 → 서버로 이동한다.
