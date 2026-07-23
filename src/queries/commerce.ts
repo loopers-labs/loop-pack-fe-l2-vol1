@@ -9,11 +9,14 @@ export const commerceQueries = {
       staleTime: 5 * 60 * 1000,
     }),
 
-  products: (params: ProductListParams) =>
-    queryOptions({
-      queryKey: ["products", params] as const,
-      queryFn: () => getProducts(params),
+  products: (params: ProductListParams) => {
+    const normalized = { ...params, q: params.q.trim() };
+    return queryOptions({
+      queryKey: ["products", normalized] as const,
+      queryFn: () => getProducts(normalized),
       staleTime: 60 * 1000,
+      gcTime: 5 * 60 * 1000,
       placeholderData: keepPreviousData,
-    }),
+    });
+  },
 };
