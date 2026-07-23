@@ -3,3 +3,4 @@ out
 node_modules
 pnpm-lock.yaml
 next-env.d.ts
+docs/assets/week-05-product-images.md
