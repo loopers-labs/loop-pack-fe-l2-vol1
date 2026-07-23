@@ -1,56 +1,29 @@
-import Image from "next/image";
-import styles from "./page.module.css";
-import { SelectExample } from "@/components/ui/select/selectExample";
-import { DialogExample } from "@/components/ui/dialog/dialogExample";
-import { products } from "@/app/api/products/data";
-
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <SelectExample products={products} />
-          <DialogExample />
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px" }}>
+      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
+        Commerce
+      </h1>
+      <p style={{ color: "#5a6675", lineHeight: 1.7, marginBottom: 24 }}>
+        4주차부터 여기에 커머스를 쌓아갑니다. 이번 주는 디자인 시스템의 뼈대
+        <b> Select</b>와 <b>Dialog</b>를 직접 만드는 것부터 시작해요.
+      </p>
+      <ul style={{ lineHeight: 2, color: "#18212e", paddingLeft: 18 }}>
+        <li>
+          컴포넌트 자리: <code>src/components/ui/select</code> ·{" "}
+          <code>src/components/ui/dialog</code>
+        </li>
+        <li>
+          mock 백엔드: <code>GET /api/products</code> (
+          <code>src/app/api/products/route.ts</code>)
+        </li>
+        <li>
+          과제 명세: <code>docs/assignments/week-04.md</code>
+        </li>
+      </ul>
+      <p style={{ color: "#8794a3", marginTop: 24, fontSize: 14 }}>
+        구조는 최소 골격만 있어요. 폴더 구성은 각자 근거를 대고 바꾸면 돼요.
+      </p>
+    </main>
   );
 }
