@@ -25,9 +25,16 @@ export default function Home() {
     <main className="week05-page">
       <SiteHeader />
 
-      <section className="week05-section">
-        <h1>{data.banner.title}</h1>
+      <section
+        className="week05-hero"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.85)), url(${data.banner.image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
         <p>{data.banner.description}</p>
+        <h1>{data.banner.title}</h1>
       </section>
 
       <section className="week05-section" aria-label="카테고리">

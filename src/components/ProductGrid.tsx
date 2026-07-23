@@ -23,6 +23,7 @@ function ProductCard({ product }: { product: Product }) {
         alt={product.name}
         width={400}
         height={400}
+        style={{ height: 'auto' }}
       />
       <p>{product.brand}</p>
       <h3>{product.name}</h3>
