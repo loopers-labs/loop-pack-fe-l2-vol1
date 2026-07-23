@@ -5,7 +5,11 @@ import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 
 export function HeaderNav() {
-  const cartCount = useCartStore((s) => s.items.length);
+  const cartCount = useCartStore((s) => {
+    let total = 0;
+    for (const item of s.items.values()) total += item.quantity;
+    return total;
+  });
   const wishlistCount = useWishlistStore((s) => s.ids.size);
 
   return (

@@ -5,25 +5,33 @@ interface CartItem {
   name: string;
   image: string;
   price: number;
+  quantity: number;
 }
 
 interface CartState {
-  items: CartItem[];
-  addItem: (item: CartItem) => void;
+  items: Map<string, CartItem>;
+  addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (id: string) => void;
 }
 
 export const useCartStore = create<CartState>((set) => ({
-  items: [],
+  items: new Map(),
 
   addItem: (item) =>
     set((state) => {
-      if (state.items.some((i) => i.id === item.id)) return state;
-      return { items: [...state.items, item] };
+      const next = new Map(state.items);
+      const existing = next.get(item.id);
+      next.set(item.id, {
+        ...item,
+        quantity: existing ? existing.quantity + 1 : 1,
+      });
+      return { items: next };
     }),
 
   removeItem: (id) =>
-    set((state) => ({
-      items: state.items.filter((i) => i.id !== id),
-    })),
+    set((state) => {
+      const next = new Map(state.items);
+      next.delete(id);
+      return { items: next };
+    }),
 }));
