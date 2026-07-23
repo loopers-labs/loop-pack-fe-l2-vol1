@@ -42,7 +42,7 @@
 
 | query     | query key                      | queryFn               | staleTime |
 | --------- | ------------------------------ | --------------------- | --------- |
-| 홈        | `["home", "main", params]`     | `getHome(params)`     | 5분       |
+| 홈        | `["home", "main"]`             | `getHome()`           | 5분       |
 | 상품 목록 | `["products", "list", params]` | `getProducts(params)` | 1분       |
 
 query key, queryFn, staleTime을 한곳에 둔 이유는 같은 조회를 `useQuery`, 서버 prefetch, 테스트에서 같은 계약으로 재사용하기 위해서다. 특히 상품 목록은 URL 조건이 query key와 API 요청에 모두 들어가야 캐시가 조건별로 분리된다.
@@ -81,7 +81,7 @@ prefetch 대상은 모든 데이터가 아니라 다음으로 제한했다.
 
 잘못된 query param은 URL을 강제로 정리하지 않고 내부 기본값으로 조회한다. 예를 들어 `?category=wrong`은 URL에는 남지만, 화면 조회 조건은 `category: "all"`로 해석한다. 사용자가 입력한 URL을 즉시 바꿔버리기보다, 앱 내부에서는 안전한 기본값으로 동작하게 하는 정책이다.
 
-`scenario`는 mock API 검증용 값이므로 사용자 URL 상태와 `ProductListQuery`의 일반 흐름에는 넣지 않았다. API 호출 함수에는 테스트와 mock scenario 검증을 위해 선택적으로 받을 수 있게 했지만, 화면의 `useQueryStates` parser에는 포함하지 않는다.
+`scenario`는 mock API 검증용 값이므로 사용자 URL 상태와 화면 조회용 `ProductListQuery`에는 넣지 않았다. 화면에서 사용하는 `getHome`, `getProducts`, `homeQueries`, `productQueries`도 `scenario`를 받지 않는다. `scenario`는 API route와 API 계약 테스트에서만 직접 URL query로 다룬다.
 
 ## Zustand store 정책
 
@@ -113,7 +113,7 @@ Zustand `persist`로 비로그인 장바구니와 위시리스트를 복원한�
 
 Next.js hydration mismatch를 피하기 위해 `skipHydration: true`로 초기 자동 복원을 막고, `CommerceStoreHydrator`에서 클라이언트 마운트 이후 `persist.rehydrate()`를 명시적으로 호출한다. 클라이언트에서 localStorage 복원이 끝난 뒤에 저장값 기준 UI로 전환한다.
 
-`hasHydrated`는 복원 전 상태와 실제 빈 상태를 구분하기 위한 신호다. 복원 전 헤더 count는 `0`을 확정값처럼 보여주지 않고 `-`로 표시한다. 상품 버튼은 로컬 복원이 짧은 작업이라고 보고 비활성화하지 않고, 복원 전에는 기본 포함 상태로 렌더링한다.
+`hasHydrated`는 복원 전 상태와 실제 빈 상태를 구분하기 위한 신호다. 복원 전 헤더 count는 `0`을 확정값처럼 보여주지 않고 `-`로 표시한다. 상품 버튼은 복원 전에는 기본 포함 상태로 렌더링하되 disabled 처리한다. localStorage 복원이 끝나기 전에 사용자가 잘못된 기본 상태를 기준으로 장바구니나 위시리스트를 변경하지 않게 하기 위해서다.
 
 잘못된 localStorage 값은 빈 map 또는 유효한 product id map으로 정규화한다. 예를 들어 `wishlistProductIdMap: "24"`처럼 map이 아닌 값이 들어오면 문자열을 쪼개지 않고 안전한 빈 map 상태로 복구한다. map 값도 `true`만 유효한 포함 상태로 인정한다.
 
