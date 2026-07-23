@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Suspense, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { productQueries } from '@/features/products/products.queries';
 import { useProductFilters } from '@/features/products/useProductFilters';
+import { SiteHeader } from '@/components/SiteHeader';
+import { ProductGrid } from '@/components/ProductGrid';
 import type { ProductListQuery } from '@/types/commerce';
 import '@/examples/week-05-layout/week-05-layout.css';
 
@@ -39,22 +39,7 @@ function ProductsResult({
   return (
     <>
       <p>총 {data.totalCount}개</p>
-      <div className="week05-grid">
-        {data.products.map((product) => (
-          <article className="week05-product" key={product.id}>
-            <Image
-              className="week05-image"
-              src={product.image}
-              alt={product.name}
-              width={400}
-              height={400}
-            />
-            <p>{product.brand}</p>
-            <h2>{product.name}</h2>
-            <strong>{product.price.toLocaleString()}원</strong>
-          </article>
-        ))}
-      </div>
+      <ProductGrid products={data.products} />
       <nav className="week05-pagination" aria-label="페이지 이동">
         <button
           type="button"
@@ -107,18 +92,22 @@ function SearchForm({
   );
 }
 
+// useProductFilters(내부 useSearchParams)는 정적 프리렌더 시 Suspense 경계가 필요하다.
 export default function ProductsPage() {
+  return (
+    <Suspense fallback={<p>불러오는 중…</p>}>
+      <ProductsPageContent />
+    </Suspense>
+  );
+}
+
+function ProductsPageContent() {
   const { filters, setSearch, setCategory, setSort, setPage } =
     useProductFilters();
 
   return (
     <main className="week05-page">
-      <header className="week05-header">
-        <Link href="/">Commerce</Link>
-        <nav aria-label="주요 메뉴">
-          <Link href="/products">상품</Link>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <section className="week05-section">
         <h1>상품 목록</h1>
