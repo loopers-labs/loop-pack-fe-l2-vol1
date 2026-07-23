@@ -2,6 +2,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { getQueryClient } from "../../get-query-client";
 import { ProductListPageClient } from "@/features/products/ProductListPageClient";
+import { ProductListPageSkeleton } from "@/features/products/ProductListPageSkeleton";
 import { PRODUCT_LIST_PAGE_SIZE } from "@/features/products/constants";
 import { productQueries } from "@/features/products/queries/productQueries";
 import { loadProductListSearchParams } from "@/features/products/searchParams";
@@ -29,7 +30,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense fallback={<div className="py-20 text-center">상품을 불러오는 중입니다.</div>}>
+      <Suspense fallback={<ProductListPageSkeleton />}>
         <ProductListPageClient />
       </Suspense>
     </HydrationBoundary>

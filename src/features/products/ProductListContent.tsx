@@ -1,5 +1,7 @@
 import { ProductResultSummary } from "./ProductResultSummary";
 import type { ReactNode } from "react";
+import { ProductGridSkeleton } from "@/components/commerce/ProductGridSkeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type ProductListContentProps = {
   isLoading: boolean;
@@ -20,9 +22,10 @@ export function ProductListContent({
 }: ProductListContentProps) {
   if (isLoading) {
     return (
-      <p className="rounded-gds-md bg-white px-5 py-8 text-sm text-gds-gray-700 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
-        상품을 불러오는 중입니다.
-      </p>
+      <div aria-label="상품을 불러오는 중입니다.">
+        <Skeleton className="mb-4 h-5 w-16 rounded-full" />
+        <ProductGridSkeleton />
+      </div>
     );
   }
 

@@ -59,7 +59,7 @@ describe("HomePageState", () => {
 
     renderHomePageState();
 
-    expect(screen.getByText("홈 데이터를 불러오는 중...")).toBeInTheDocument();
+    expect(screen.getByLabelText("홈 데이터를 불러오는 중입니다.")).toBeInTheDocument();
   });
 
   it("홈 데이터 요청이 실패하면 에러 상태와 다시 시도 버튼을 보여준다", async () => {
