@@ -92,7 +92,8 @@ a {
 
 .week05-categories a,
 .week05-product button,
-.week05-pagination button {
+.week05-pagination button,
+.week05-error button {
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   background: transparent;

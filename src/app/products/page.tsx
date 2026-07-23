@@ -51,14 +51,11 @@ function ProductListContent() {
     return () => clearTimeout(timer);
   }, [searchInput, setFilters]);
 
-  const { data, isLoading, isError } = useQuery(
+  const { data, isLoading, isError, refetch } = useQuery(
     productsQueries.productList(filters),
   );
 
   const totalPages = data ? Math.ceil(data.totalCount / data.pageSize) : 1;
-
-  if (isLoading) return <p>로딩 중...</p>;
-  if (isError) return <p>오류가 발생했습니다.</p>;
 
   return (
     <main className="week05-page">
@@ -116,13 +113,26 @@ function ProductListContent() {
         </form>
       </section>
       <section className="week05-section" aria-label="상품 검색 결과">
-        <p>총 {data?.totalCount ?? 0}개</p>
-        <div className="week05-grid">
-          {data?.products.length === 0 && <p>상품이 없습니다.</p>}
-          {data?.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoading && <p>로딩 중...</p>}
+        {isError && (
+          <div className="week05-error">
+            <p>오류가 발생했습니다.</p>
+            <button type="button" onClick={() => void refetch()}>
+              다시 시도
+            </button>
+          </div>
+        )}
+        {!isLoading && !isError && (
+          <>
+            <p>총 {data?.totalCount ?? 0}개</p>
+            <div className="week05-grid">
+              {data?.products.length === 0 && <p>상품이 없습니다.</p>}
+              {data?.products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </>
+        )}
         <nav className="week05-pagination" aria-label="페이지 이동">
           <button
             type="button"
