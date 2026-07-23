@@ -2,6 +2,7 @@
 
 import { Placeholder } from "@/app/_components/placeholder";
 import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
+import { CartButton, WishlistButton } from "@/app/_components/product-actions";
 import { commerceQueries } from "@/queries/commerce";
 import { CommerceApiError } from "@/services/commerce";
 import type { Product } from "@/types/commerce";
@@ -80,20 +81,8 @@ export default function HomePage() {
                 <h3>{product.name}</h3>
                 <strong>{product.price.toLocaleString()}원</strong>
                 <div>
-                  <button
-                    type="button"
-                    aria-label={`${product.name} 위시리스트`}
-                    aria-pressed={false}
-                  >
-                    찜
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`${product.name} 장바구니`}
-                    aria-pressed={false}
-                  >
-                    담기
-                  </button>
+                  <WishlistButton productId={product.id} label={product.name} />
+                  <CartButton productId={product.id} label={product.name} />
                 </div>
               </article>
             ))}
