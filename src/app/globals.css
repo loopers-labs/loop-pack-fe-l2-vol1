@@ -97,6 +97,16 @@ a {
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.week05-product button:hover {
+  background: #f0f0f0;
+}
+
+.week05-product button:active {
+  background: #e0e0e0;
 }
 
 .week05-grid {
