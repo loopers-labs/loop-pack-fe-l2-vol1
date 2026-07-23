@@ -46,11 +46,15 @@ export default function Home() {
           ].map(({ title, products }) => (
             <section className="week05-section" key={title}>
               <h2>{title}</h2>
-              <div className="week05-grid">
-                {products.map((product: Product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              {products.length === 0 ? (
+                <p>상품이 없습니다.</p>
+              ) : (
+                <div className="week05-grid">
+                  {products.map((product: Product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              )}
             </section>
           ))}
         </>
