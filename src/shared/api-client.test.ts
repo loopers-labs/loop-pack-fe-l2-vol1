@@ -29,8 +29,15 @@ const mockUnparsableFetch = (response: { ok: boolean; status: number }) => {
   );
 };
 
+// 서버에는 window가 없다. jsdom 환경에서 서버 분기를 확인하려면 지워야 한다.
+const mockServerEnvironment = (appOrigin?: string) => {
+  vi.stubGlobal('window', undefined);
+  vi.stubEnv('APP_ORIGIN', appOrigin);
+};
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe('apiClient', () => {
@@ -75,5 +82,48 @@ describe('apiClient', () => {
     await expect(apiClient('/api/home')).rejects.toThrow(
       '응답을 처리하지 못했습니다.',
     );
+  });
+
+  it('브라우저에서는 상대 경로 그대로 요청한다', async () => {
+    mockFetch({ ok: true, status: 200, body: {} });
+
+    await apiClient('/api/products?page=2');
+
+    expect(fetch).toHaveBeenCalledWith('/api/products?page=2');
+  });
+
+  it('서버에서는 APP_ORIGIN을 붙인 절대 URL로 요청한다', async () => {
+    mockServerEnvironment('https://commerce.example');
+    mockFetch({ ok: true, status: 200, body: {} });
+
+    await apiClient('/api/products?page=2');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://commerce.example/api/products?page=2',
+    );
+  });
+
+  it('서버에서 APP_ORIGIN이 없으면 설정 오류로 throw한다', async () => {
+    mockServerEnvironment();
+    mockFetch({ ok: true, status: 200, body: {} });
+
+    await expect(apiClient('/api/home')).rejects.toThrow('APP_ORIGIN');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('서버에서 APP_ORIGIN이 URL 형식이 아니면 설정 오류로 throw한다', async () => {
+    mockServerEnvironment('commerce.example');
+    mockFetch({ ok: true, status: 200, body: {} });
+
+    await expect(apiClient('/api/home')).rejects.toThrow('APP_ORIGIN');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('서버에서 APP_ORIGIN이 http·https가 아니면 설정 오류로 throw한다', async () => {
+    mockServerEnvironment('ftp://commerce.example');
+    mockFetch({ ok: true, status: 200, body: {} });
+
+    await expect(apiClient('/api/home')).rejects.toThrow('APP_ORIGIN');
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
