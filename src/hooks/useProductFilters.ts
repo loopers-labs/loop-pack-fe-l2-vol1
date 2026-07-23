@@ -50,6 +50,12 @@ export function useProductFilters() {
 
   const totalPages = data ? Math.ceil(data.totalCount / data.pageSize) : 1;
 
+  useEffect(() => {
+    if (data && filters.page > totalPages) {
+      void setFilters({ page: 1 });
+    }
+  }, [data, filters.page, totalPages, setFilters]);
+
   return {
     filters,
     setFilters,
