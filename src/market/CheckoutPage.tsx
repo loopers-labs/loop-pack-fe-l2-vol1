@@ -64,7 +64,9 @@ export function CheckoutPage() {
   const handleApplyCoupon = () => {
     const found = COUPONS.find((c) => c.code === couponCodeInput.trim());
     setAppliedCoupon(found ?? null);
-    if (!found) alert("존재하지 않는 쿠폰이에요");
+    if (!found) {
+      alert("존재하지 않는 쿠폰이에요");
+    }
   };
 
   const handleBackToCheckout = () => {

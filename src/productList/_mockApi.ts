@@ -377,13 +377,19 @@ function applyFilters(params: URLSearchParams) {
   }
 
   const minPrice = params.get("minPrice");
-  if (minPrice) list = list.filter((p) => p.price >= Number(minPrice));
+  if (minPrice) {
+    list = list.filter((p) => p.price >= Number(minPrice));
+  }
 
   const maxPrice = params.get("maxPrice");
-  if (maxPrice) list = list.filter((p) => p.price <= Number(maxPrice));
+  if (maxPrice) {
+    list = list.filter((p) => p.price <= Number(maxPrice));
+  }
 
   const inStock = params.get("inStock");
-  if (inStock === "true") list = list.filter((p) => p.stock > 0);
+  if (inStock === "true") {
+    list = list.filter((p) => p.stock > 0);
+  }
 
   const q = params.get("q")?.trim().toLowerCase();
   if (q) {
