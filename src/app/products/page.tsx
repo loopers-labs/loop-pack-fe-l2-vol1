@@ -6,6 +6,7 @@ import { CartButton, WishlistButton } from "@/app/_components/product-actions";
 import { ProductSearchInput } from "@/app/products/_components/product-search-input";
 import { commerceQueries } from "@/queries/commerce";
 import { CommerceApiError } from "@/services/commerce";
+import type { CategoryId } from "@/types/commerce";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import {
@@ -15,6 +16,7 @@ import {
   parseAsStringLiteral,
   useQueryStates,
 } from "nuqs";
+import { Suspense } from "react";
 
 const parseAsPositiveInteger = createParser({
   parse: (value) => {
@@ -28,17 +30,18 @@ const parseAsPositiveInteger = createParser({
 });
 
 const pageSizeValues = [6, 12, 24] as const;
+const categoryFilterValues = [
+  "all",
+  "casual",
+  "fashion",
+  "goods",
+  "home",
+  "digital",
+] as const satisfies readonly ("all" | CategoryId)[];
 
 const productSearchParsers = {
   q: parseAsString.withDefault(""),
-  category: parseAsStringLiteral([
-    "all",
-    "casual",
-    "fashion",
-    "goods",
-    "home",
-    "digital",
-  ] as const).withDefault("all"),
+  category: parseAsStringLiteral(categoryFilterValues).withDefault("all"),
   sort: parseAsStringLiteral(["latest", "popular", "price-asc", "price-desc"] as const).withDefault(
     "latest",
   ),
@@ -46,7 +49,7 @@ const productSearchParsers = {
   pageSize: parseAsNumberLiteral(pageSizeValues).withDefault(12),
 };
 
-export default function ProductListPage() {
+function ProductListContent() {
   const [search, setSearch] = useQueryStates(productSearchParsers, {
     history: "push",
   });
@@ -93,7 +96,7 @@ export default function ProductListPage() {
     <>
       <section className="week05-section">
         <h1>상품 목록</h1>
-        <form className="week05-filters">
+        <form className="week05-filters" onSubmit={(event) => event.preventDefault()}>
           <ProductSearchInput
             value={search.q}
             onDebouncedChange={(q) => setSearch({ q, page: 1 })}
@@ -167,7 +170,7 @@ export default function ProductListPage() {
         ) : (
           <>
             <div className="week05-grid">
-              {products.products.map((product, index) => (
+              {products.products.map((product) => (
                 <article className="week05-product" key={product.id}>
                   <Image
                     className="week05-image"
@@ -180,8 +183,8 @@ export default function ProductListPage() {
                   <h2>{product.name}</h2>
                   <strong>{product.price.toLocaleString()}원</strong>
                   <div>
-                    <WishlistButton productId={product.id} label={`${index + 1}번 상품`} />
-                    <CartButton productId={product.id} label={`${index + 1}번 상품`} />
+                    <WishlistButton productId={product.id} label={product.name} />
+                    <CartButton productId={product.id} label={product.name} />
                   </div>
                 </article>
               ))}
@@ -209,5 +212,20 @@ export default function ProductListPage() {
         )}
       </section>
     </>
+  );
+}
+
+// useQueryStates(useSearchParams)는 정적 프리렌더 시 Suspense 경계가 필요하다.
+export default function ProductListPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
+          <ProductGridSkeleton />
+        </section>
+      }
+    >
+      <ProductListContent />
+    </Suspense>
   );
 }
