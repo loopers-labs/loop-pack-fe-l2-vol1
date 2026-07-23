@@ -1,8 +1,7 @@
 import Image from 'next/image';
 
-import { CartToggleButton } from './CartToggleButton';
-import { WishlistToggleButton } from './WishlistToggleButton';
-
+import { CartToggleButton } from '@/features/cart/CartToggleButton';
+import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
 import type { Product } from '@/types/commerce';
 
 export function ProductCard({

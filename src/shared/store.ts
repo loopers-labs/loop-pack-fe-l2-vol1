@@ -1,13 +1,10 @@
 import { create } from 'zustand';
 
-import {
-  createCartSlice,
-  type CartSlice,
-} from '@/features/products/cart-slice';
+import { createCartSlice, type CartSlice } from '@/features/cart/cart-slice';
 import {
   createWishlistSlice,
   type WishlistSlice,
-} from '@/features/products/wishlist-slice';
+} from '@/features/wishlist/wishlist-slice';
 
 /**
  * 앱 전역 클라이언트 상태. 기능별 slice를 합쳐 하나의 store로 둔다.

@@ -1,18 +1,13 @@
 import type { StateCreator } from 'zustand';
 
-import type { WishlistSlice } from './wishlist-slice';
-
 export type CartSlice = {
   cartProductIds: string[];
   toggleCart: (productId: string) => void;
 };
 
-export const createCartSlice: StateCreator<
-  CartSlice & WishlistSlice,
-  [],
-  [],
-  CartSlice
-> = (set) => ({
+export const createCartSlice: StateCreator<CartSlice, [], [], CartSlice> = (
+  set,
+) => ({
   cartProductIds: [],
   toggleCart: (productId) =>
     set((state) => ({

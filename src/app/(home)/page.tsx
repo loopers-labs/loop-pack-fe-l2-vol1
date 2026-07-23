@@ -3,11 +3,10 @@ import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
 
-import { HomeContent } from './HomeContent';
-
-import { CartCount } from '@/features/products/CartCount';
-import { WishlistCount } from '@/features/products/WishlistCount';
+import { CartCount } from '@/features/cart/CartCount';
+import { HomeContent } from '@/features/products/HomeContent';
 import { productQueries } from '@/features/products/queries';
+import { WishlistCount } from '@/features/wishlist/WishlistCount';
 import { getQueryClient } from '@/shared/get-query-client';
 
 export default function HomePage() {

@@ -3,16 +3,16 @@ import Link from 'next/link';
 import type { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
-import { CartCount } from '@/features/products/CartCount';
+import { CartCount } from '@/features/cart/CartCount';
 import { ProductList } from '@/features/products/ProductList';
 import { ProductListFilters } from '@/features/products/ProductListFilters';
 import { ProductSearchForm } from '@/features/products/ProductSearchForm';
-import { WishlistCount } from '@/features/products/WishlistCount';
 import {
   loadProductListConditions,
   toProductListQuery,
 } from '@/features/products/product-list-params';
 import { productQueries } from '@/features/products/queries';
+import { WishlistCount } from '@/features/wishlist/WishlistCount';
 import { getQueryClient } from '@/shared/get-query-client';
 
 export default function ProductsPage({
