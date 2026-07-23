@@ -1,8 +1,10 @@
 'use client';
 
+import { useCallback } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/queries/homeQueries';
+import { productListQueryOptions } from '@/queries/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { formatWon, calcDiscount } from '@/utils/format';
@@ -79,7 +81,14 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 export function HomeClient() {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery(homeQueryOptions());
+
+  const prefetchProducts = useCallback(() => {
+    void queryClient.prefetchQuery(
+      productListQueryOptions({ category: 'all', sort: 'latest', page: 1 }),
+    );
+  }, [queryClient]);
 
   if (isLoading) {
     return (
@@ -138,6 +147,7 @@ export function HomeClient() {
               <Link
                 href="/products"
                 className="mt-7 inline-flex h-11 items-center rounded-lg bg-white px-6 text-[13px] font-semibold text-text transition-colors hover:bg-white/90"
+                onMouseEnter={prefetchProducts}
               >
                 Shop Now
               </Link>
