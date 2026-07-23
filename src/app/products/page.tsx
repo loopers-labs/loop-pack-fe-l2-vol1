@@ -61,105 +61,112 @@ function ProductListContent() {
     refetch,
   } = useQuery(commerceQueries.products(search));
 
+  const filterSection = (
+    <section className="week05-section">
+      <h1>상품 목록</h1>
+      <div className="week05-filters">
+        <ProductSearchInput value={search.q} onDebouncedChange={(q) => setSearch({ q, page: 1 })} />
+        <label>
+          카테고리
+          <select
+            name="category"
+            value={search.category}
+            onChange={(event) =>
+              setSearch({
+                category: event.target.value as (typeof search)["category"],
+                page: 1,
+              })
+            }
+          >
+            <option value="all">전체</option>
+            {(products?.categories ?? []).map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          정렬
+          <select
+            name="sort"
+            value={search.sort}
+            onChange={(event) =>
+              setSearch({
+                sort: event.target.value as (typeof search)["sort"],
+                page: 1,
+              })
+            }
+          >
+            <option value="latest">최신순</option>
+            <option value="popular">인기순</option>
+            <option value="price-asc">낮은 가격순</option>
+            <option value="price-desc">높은 가격순</option>
+          </select>
+        </label>
+        <label>
+          페이지 크기
+          <select
+            name="pageSize"
+            value={search.pageSize}
+            onChange={(event) =>
+              setSearch({
+                pageSize: Number(event.target.value) as (typeof search)["pageSize"],
+                page: 1,
+              })
+            }
+          >
+            {pageSizeValues.map((size) => (
+              <option key={size} value={size}>
+                {size}개씩
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </section>
+  );
+
   if (isLoading) {
     return (
-      <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
-        <ProductGridSkeleton count={search.pageSize} />
-      </section>
+      <>
+        {filterSection}
+        <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
+          <ProductGridSkeleton count={search.pageSize} />
+        </section>
+      </>
     );
   }
 
   if (isError) {
     return (
-      <Placeholder
-        role="alert"
-        title="상품을 불러오지 못했어요"
-        description={
-          error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요."
-        }
-        action={
-          <button type="button" onClick={() => refetch()}>
-            다시 시도
-          </button>
-        }
-      />
+      <>
+        {filterSection}
+        <Placeholder
+          role="alert"
+          title="상품을 불러오지 못했어요"
+          description={
+            error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요."
+          }
+          action={
+            <button type="button" onClick={() => refetch()}>
+              다시 시도
+            </button>
+          }
+        />
+      </>
     );
   }
 
   if (products === undefined) {
-    return null;
+    return filterSection;
   }
 
   const totalPages = Math.max(1, Math.ceil(products.totalCount / products.pageSize));
 
   return (
     <>
-      <section className="week05-section">
-        <h1>상품 목록</h1>
-        <form className="week05-filters" onSubmit={(event) => event.preventDefault()}>
-          <ProductSearchInput
-            value={search.q}
-            onDebouncedChange={(q) => setSearch({ q, page: 1 })}
-          />
-          <label>
-            카테고리
-            <select
-              name="category"
-              value={search.category}
-              onChange={(event) =>
-                setSearch({
-                  category: event.target.value as (typeof search)["category"],
-                  page: 1,
-                })
-              }
-            >
-              <option value="all">전체</option>
-              {products.categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            정렬
-            <select
-              name="sort"
-              value={search.sort}
-              onChange={(event) =>
-                setSearch({
-                  sort: event.target.value as (typeof search)["sort"],
-                  page: 1,
-                })
-              }
-            >
-              <option value="latest">최신순</option>
-              <option value="popular">인기순</option>
-              <option value="price-asc">낮은 가격순</option>
-              <option value="price-desc">높은 가격순</option>
-            </select>
-          </label>
-          <label>
-            페이지 크기
-            <select
-              name="pageSize"
-              value={search.pageSize}
-              onChange={(event) =>
-                setSearch({
-                  pageSize: Number(event.target.value) as (typeof search)["pageSize"],
-                  page: 1,
-                })
-              }
-            >
-              {pageSizeValues.map((size) => (
-                <option key={size} value={size}>
-                  {size}개씩
-                </option>
-              ))}
-            </select>
-          </label>
-        </form>
-      </section>
+      {filterSection}
       <section className="week05-section" aria-label="상품 검색 결과">
         <p>총 {products.totalCount}개</p>
         {products.products.length === 0 ? (
@@ -215,7 +222,6 @@ function ProductListContent() {
   );
 }
 
-// useQueryStates(useSearchParams)는 정적 프리렌더 시 Suspense 경계가 필요하다.
 export default function ProductListPage() {
   return (
     <Suspense
