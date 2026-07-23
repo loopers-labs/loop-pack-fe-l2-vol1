@@ -62,7 +62,26 @@ export async function GET(
     );
   }
 
+  const id = params.get("id");
+
   await waitForMockApi();
+
+  if (id) {
+    const product = products.find((p) => p.id === id);
+    if (!product) {
+      return NextResponse.json(
+        { message: "상품을 찾을 수 없습니다." },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({
+      products: [product],
+      categories,
+      totalCount: 1,
+      page: 1,
+      pageSize: 1,
+    });
+  }
 
   if (scenario === "error") {
     return NextResponse.json(

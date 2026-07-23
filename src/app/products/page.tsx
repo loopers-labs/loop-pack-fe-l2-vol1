@@ -10,15 +10,7 @@ import { productListQueryOptions } from '@/queries/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { useProductSearchParams } from './_hooks/useProductSearchParams';
-import type { Product, ProductListQuery } from '@/types/commerce';
-
-const CATEGORIES = [
-  { id: 'casual', name: '캐주얼' },
-  { id: 'fashion', name: '패션' },
-  { id: 'goods', name: '뷰티·잡화' },
-  { id: 'home', name: '홈' },
-  { id: 'digital', name: '디지털' },
-] as const;
+import type { Product, ProductListResponse } from '@/types/commerce';
 
 function ProductActions({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
@@ -57,36 +49,12 @@ function ProductActions({ product }: { product: Product }) {
 }
 
 interface ProductGridProps {
-  query: ProductListQuery;
+  data: ProductListResponse;
+  isFetching: boolean;
   setPage: (page: number) => void;
 }
 
-function ProductGrid({ query, setPage }: ProductGridProps) {
-  const { data, isLoading, isError, error, isFetching } = useQuery({
-    ...productListQueryOptions(query),
-    placeholderData: keepPreviousData,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[30vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">상품을 불러오는 중...</p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex min-h-[30vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">
-          {error?.message ?? '오류가 발생했습니다.'}
-        </p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
+function ProductGrid({ data, isFetching, setPage }: ProductGridProps) {
   const { products, totalCount, page, pageSize } = data;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -181,6 +149,11 @@ function ProductListContent() {
   const { params, query, setCategory, setSort, setSearch, setPage } =
     useProductSearchParams();
 
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    ...productListQueryOptions(query),
+    placeholderData: keepPreviousData,
+  });
+
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleSearchChange = useCallback(
@@ -193,6 +166,28 @@ function ProductListContent() {
     },
     [setSearch],
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-sm text-text-secondary">상품을 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-sm text-text-secondary">
+          {error?.message ?? '오류가 발생했습니다.'}
+        </p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { categories } = data;
 
   return (
     <main className="mx-auto max-w-5xl px-8 py-10">
@@ -216,7 +211,7 @@ function ProductListContent() {
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
         >
           <option value="all">전체</option>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
@@ -234,7 +229,7 @@ function ProductListContent() {
         </select>
       </div>
 
-      <ProductGrid query={query} setPage={setPage} />
+      <ProductGrid data={data} isFetching={isFetching} setPage={setPage} />
     </main>
   );
 }
