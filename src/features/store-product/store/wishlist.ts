@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-import { migrateStoredItems } from '@/lib/storedItem';
+import { migrateStoredItems } from '@/features/store-product/store/migrate';
 
 // [AI] 헤더 카운트와 위시리스트 페이지 렌더에 필요한 최소 메타만 저장.
 // Product 객체 전체를 넣으면 서버 데이터가 바뀌었을 때 스토어가 낡은 정보를 갖게 되므로 ID+표시용 메타로 좁힌다.

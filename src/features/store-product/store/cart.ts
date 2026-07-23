@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 import type { CartItem } from '@/types/commerce';
-import { migrateStoredItems } from '@/lib/storedItem';
+import { migrateStoredItems } from '@/features/store-product/store/migrate';
 
 type CartState = {
   items: CartItem[];

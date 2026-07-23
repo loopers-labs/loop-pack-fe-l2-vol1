@@ -1,7 +1,7 @@
 'use client';
 
 import { Product } from '@/types/commerce';
-import { useIsInWishlist, useWishlistStore } from '../store/store';
+import { useIsInWishlist, useWishlistStore } from '../store/wishlist';
 
 export const WishlistButton = ({ product }: { product: Product }) => {
   const toggle = useWishlistStore((state) => state.toggle);

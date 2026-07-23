@@ -9,9 +9,9 @@ import {
   isSortValue,
   useProductListFilters,
 } from '@/features/product-list/hooks/useProductListFilters';
-import { WishlistButton } from '@/features/wishlist/ui/WishlistButton';
-import { CartButton } from '@/features/cart/ui/CartButton';
 import { Header } from '@/widgets/Header';
+import { CartButton } from '@/features/store-product/ui/CartButton';
+import { WishlistButton } from '@/features/store-product/ui/WishlistButton';
 
 // [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
 const ProductsPage = () => {

@@ -1,5 +1,5 @@
 import { Product } from '@/types/commerce';
-import { useCartStore, useIsInCart } from '../store/store';
+import { useCartStore, useIsInCart } from '../store/cart';
 
 export const CartButton = ({ product }: { product: Product }) => {
   const toggle = useCartStore((state) => state.toggle);

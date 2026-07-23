@@ -1,8 +1,8 @@
 import { Product as ProductType } from '@/types/commerce';
 import styles from './Product.module.css';
 import Image from 'next/image';
-import { WishlistButton } from '@/features/wishlist/ui/WishlistButton';
-import { CartButton } from '@/features/cart/ui/CartButton';
+import { CartButton } from '@/features/store-product/ui/CartButton';
+import { WishlistButton } from '@/features/store-product/ui/WishlistButton';
 
 export const Product = ({ product }: { product: ProductType }) => {
   return (

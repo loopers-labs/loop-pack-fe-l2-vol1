@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useWishlistCount } from '@/features/wishlist/store/store';
-import { useCartCount } from '@/features/cart/store/store';
+import { useWishlistCount } from '@/features/store-product/store/wishlist';
+import { useCartCount } from '@/features/store-product/store/cart';
 import styles from './Header.module.css';
 
 export const Header = () => {
