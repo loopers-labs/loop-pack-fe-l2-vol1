@@ -1,5 +1,5 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
@@ -10,6 +10,7 @@ import {
   useQueryStates,
 } from 'nuqs';
 import { productsQueries } from '@/queries/productsQueries';
+import { DEBOUNCE_DELAY } from '@/constants/time';
 
 const categoryValues = [
   'all',
@@ -40,6 +41,16 @@ function ProductListContent() {
     { history: 'push' },
   );
 
+  // 검색 입력은 로컬 state로 관리 — 300ms 후 URL 업데이트
+  const [searchInput, setSearchInput] = useState(filters.q);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void setFilters({ q: searchInput, page: 1 });
+    }, DEBOUNCE_DELAY);
+    return () => clearTimeout(timer);
+  }, [searchInput, setFilters]);
+
   const { data, isLoading, isError } = useQuery(
     productsQueries.productList(filters),
   );
@@ -60,8 +71,8 @@ function ProductListContent() {
             <input
               name="q"
               placeholder="상품명 또는 브랜드"
-              value={filters.q}
-              onChange={(e) => setFilters({ q: e.target.value, page: 1 })}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </label>
           <label>
