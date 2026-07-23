@@ -1,26 +1,8 @@
 'use client';
-import { Suspense, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
-import {
-  parseAsInteger,
-  parseAsString,
-  parseAsStringLiteral,
-  useQueryStates,
-} from 'nuqs';
-import { productsQueries } from '@/queries/productsQueries';
-import { DEBOUNCE_DELAY } from '@/constants/time';
-
-const categoryValues = [
-  'all',
-  'casual',
-  'fashion',
-  'goods',
-  'home',
-  'digital',
-] as const;
-const sortValues = ['latest', 'popular', 'price-asc', 'price-desc'] as const;
+import { useProductFilters } from '@/hooks/useProductFilters';
 
 export default function ProductListPage() {
   return (
@@ -31,31 +13,17 @@ export default function ProductListPage() {
 }
 
 function ProductListContent() {
-  const [filters, setFilters] = useQueryStates(
-    {
-      q: parseAsString.withDefault(''),
-      category: parseAsStringLiteral(categoryValues).withDefault('all'),
-      sort: parseAsStringLiteral(sortValues).withDefault('latest'),
-      page: parseAsInteger.withDefault(1),
-    },
-    { history: 'push' },
-  );
-
-  // 검색 입력은 로컬 state로 관리 — 300ms 후 URL 업데이트
-  const [searchInput, setSearchInput] = useState(filters.q);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      void setFilters({ q: searchInput, page: 1 });
-    }, DEBOUNCE_DELAY);
-    return () => clearTimeout(timer);
-  }, [searchInput, setFilters]);
-
-  const { data, isLoading, isError, refetch } = useQuery(
-    productsQueries.productList(filters),
-  );
-
-  const totalPages = data ? Math.ceil(data.totalCount / data.pageSize) : 1;
+  const {
+    filters,
+    setFilters,
+    searchInput,
+    setSearchInput,
+    data,
+    isLoading,
+    isError,
+    refetch,
+    totalPages,
+  } = useProductFilters();
 
   return (
     <main className="week05-page">
