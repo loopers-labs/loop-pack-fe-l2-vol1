@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/queries/homeQueries';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
+import type { Category, Product } from '@/types/commerce';
 
 export default function Home() {
   const { data, isLoading, isError } = useQuery(homeQueries.data());
@@ -24,7 +25,7 @@ export default function Home() {
       <section className="week05-section">
         <h2>카테고리</h2>
         <div className="week05-categories">
-          {categories.map((category) => (
+          {categories.map((category: Category) => (
             <Link key={category.id} href={`/products?category=${category.id}`}>
               {category.name}
             </Link>
@@ -38,7 +39,7 @@ export default function Home() {
         <section className="week05-section" key={title}>
           <h2>{title}</h2>
           <div className="week05-grid">
-            {products.map((product) => (
+            {products.map((product: Product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

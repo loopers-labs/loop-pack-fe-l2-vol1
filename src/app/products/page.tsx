@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
@@ -21,6 +22,14 @@ const categoryValues = [
 const sortValues = ['latest', 'popular', 'price-asc', 'price-desc'] as const;
 
 export default function ProductListPage() {
+  return (
+    <Suspense>
+      <ProductListContent />
+    </Suspense>
+  );
+}
+
+function ProductListContent() {
   const [filters, setFilters] = useQueryStates(
     {
       q: parseAsString.withDefault(''),
