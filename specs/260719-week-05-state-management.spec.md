@@ -9,7 +9,7 @@
 ## 비범위
 
 - Zustand `persist`
-- App Router 서버 prefetch와 `HydrationBoundary`
+- App Router 서버 prefetch와 `HydrationBoundary` (기본 과제 완료 후 [260722-week-05-advanced-server-prefetch.spec.md](260722-week-05-advanced-server-prefetch.spec.md)에서 별도로 다룬다)
 - 검색 debounce, 페이지 prefetch, 이전 목록 유지 등 Advanced 사용자 경험 개선
 - 상세 상품·장바구니 페이지, 상품 수량, 합계 금액
 - 로그인과 서버 장바구니·위시리스트 동기화
