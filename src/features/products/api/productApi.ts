@@ -1,11 +1,6 @@
 import { createApiUrl, parseApiError, setSearchParam } from "@/lib/apiUtils";
-import type { MockApiScenario } from "@/types/api";
 import type { Category, Product } from "@/types/commerce";
 import type { ProductCategoryFilter, ProductSort } from "../types";
-
-type GetProductsParams = ProductListQuery & {
-  scenario?: MockApiScenario;
-};
 
 export type ProductListQuery = {
   q?: string;
@@ -23,7 +18,7 @@ export type ProductListResponse = {
   pageSize: number;
 };
 
-export async function getProducts(params: GetProductsParams = {}): Promise<ProductListResponse> {
+export async function getProducts(params: ProductListQuery = {}): Promise<ProductListResponse> {
   const searchParams = new URLSearchParams();
 
   setSearchParam(searchParams, "q", params.q);
@@ -31,7 +26,6 @@ export async function getProducts(params: GetProductsParams = {}): Promise<Produ
   setSearchParam(searchParams, "sort", params.sort);
   setSearchParam(searchParams, "page", params.page);
   setSearchParam(searchParams, "pageSize", params.pageSize);
-  setSearchParam(searchParams, "scenario", params.scenario);
 
   const queryString = searchParams.toString();
   const apiPath = `/api/products${queryString ? `?${queryString}` : ""}`;
