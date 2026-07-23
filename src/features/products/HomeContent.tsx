@@ -9,7 +9,6 @@ import { productQueries } from './queries';
 export function HomeContent() {
   const { data, isPending, isError, error } = useQuery(productQueries.home());
 
-  // FIXME: Suspense 고려
   if (isPending) {
     return (
       <p className="week05-status" role="status">
