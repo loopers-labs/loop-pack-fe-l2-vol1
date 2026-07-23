@@ -13,7 +13,7 @@ const countTotalPages = (totalCount: number, pageSize: number) =>
 export function ProductList() {
   const { conditions, changePage } = useProductListUrlState();
 
-  const { data, isPending, isError, error } = useQuery(
+  const { data, isPending, isError, error, isPlaceholderData } = useQuery(
     productQueries.list(toProductListQuery(conditions)),
   );
 
@@ -32,7 +32,7 @@ export function ProductList() {
     );
   }
 
-  if (isPending || isPageOutOfRange) {
+  if (isPending) {
     return (
       <p className="week05-status" role="status">
         상품 목록을 불러오는 중입니다…
@@ -51,6 +51,11 @@ export function ProductList() {
   return (
     <>
       <p>총 {data.totalCount}개</p>
+      {isPlaceholderData && (
+        <p className="week05-status" role="status">
+          새 페이지를 불러오는 중입니다.
+        </p>
+      )}
       {data.totalCount === 0 ? (
         <p className="week05-empty">조건에 맞는 상품이 없습니다.</p>
       ) : (
@@ -64,9 +69,11 @@ export function ProductList() {
               />
             ))}
           </div>
+          {/* 이전 목록을 보여주는 동안엔 URL이 아니라 응답의 page를 써 상품과 번호를 함께 바꾼다. */}
           <ProductListPagination
-            page={conditions.page}
+            page={data.page}
             totalPages={totalPages ?? 1}
+            isChangingPage={isPlaceholderData}
             onPageChange={changePage}
           />
         </>
@@ -78,17 +85,19 @@ export function ProductList() {
 function ProductListPagination({
   page,
   totalPages,
+  isChangingPage,
   onPageChange,
 }: {
   page: number;
   totalPages: number;
+  isChangingPage: boolean;
   onPageChange: (page: number) => void;
 }) {
   return (
     <nav className="week05-pagination" aria-label="페이지 이동">
       <button
         type="button"
-        disabled={page <= 1}
+        disabled={page <= 1 || isChangingPage}
         onClick={() => {
           onPageChange(page - 1);
         }}
@@ -100,7 +109,7 @@ function ProductListPagination({
       </span>
       <button
         type="button"
-        disabled={page >= totalPages}
+        disabled={page >= totalPages || isChangingPage}
         onClick={() => {
           onPageChange(page + 1);
         }}

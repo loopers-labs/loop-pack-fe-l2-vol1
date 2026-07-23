@@ -110,7 +110,8 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 - 목록 쿼리에 `placeholderData` 콜백을 추가한다.
 - 이 콜백은 이전 쿼리와 현재 쿼리의 `q`, `category`, `sort`, `pageSize`가 같고 `page`만 다를 때 이전 데이터를 반환한다. 검색·카테고리·정렬이 달라지면 `undefined`를 반환한다.
 - 대상 페이지의 `staleTime` 안 캐시가 있으면 그 데이터를 바로 보여주며 `isPlaceholderData`도 `false`다.
-- 캐시에 없으면 이전 페이지 데이터를 보여준다. 이때 목록 영역에 `aria-busy="true"`를 적용하고 "새 페이지를 불러오는 중입니다." 문구를 표시한다.
+- 캐시에 없으면 이전 페이지 데이터를 보여주고 "새 페이지를 불러오는 중입니다." 문구를 표시한다.
+- 목록 영역에 `aria-busy`는 쓰지 않는다. 이 속성은 live region의 중간 알림을 억제하는 용도인데 목록은 한 번에 통째로 교체되므로 억제할 중간 상태가 없다. 진행 상황은 `role="status"` 문구가 알린다.
 - 이전 데이터를 보여주는 동안 페이지 번호는 URL의 새 값이 아니라 응답의 `data.page`를 사용한다. 상품과 페이지 번호가 한 번에 바뀌게 한다.
 - `isPlaceholderData` 동안 이전·다음 버튼을 비활성화해 요청과 방문 기록이 연달아 쌓이지 않게 한다.
 - 검색·카테고리·정렬을 바꾸면 이전 목록 대신 기존 인라인 로딩 화면을 보여준다.
@@ -162,7 +163,7 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 ### T4. 페이지 변경 중 기존 목록 유지
 
 - 목록 조건 중 `page`만 달라졌을 때 이전 데이터를 반환하는 `placeholderData` 콜백을 추가한다.
-- `isPlaceholderData`로 상태 문구, `aria-busy`, 페이지 이동 버튼 비활성화를 제어한다.
+- `isPlaceholderData`로 상태 문구와 페이지 이동 버튼 비활성화를 제어한다.
 - 이전 데이터를 보여주는 동안 응답의 `data.page`를 페이지 번호로 사용한다.
 
 ### T5. 검증과 기록
@@ -202,7 +203,7 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 ### Advanced C — 페이지 변경 중 기존 목록 유지
 
 - [ ] C1. 캐시가 없는 페이지로 이동하는 동안 기존 상품과 페이지 번호가 유지된다.
-- [ ] C2. `isPlaceholderData` 동안 `role="status"` 상태 문구가 보이고 목록 영역에 `aria-busy="true"`가 적용된다.
+- [ ] C2. `isPlaceholderData` 동안 `role="status"` 상태 문구가 보인다.
 - [ ] C3. `isPlaceholderData` 동안 이전·다음 버튼이 비활성화된다.
 - [ ] C4. `staleTime` 안의 캐시가 있는 페이지는 placeholder 없이 바로 표시된다.
 - [ ] C5. 검색·카테고리·정렬 변경은 기존 목록 유지 대상에 포함되지 않는다.
@@ -219,8 +220,8 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 - [ ] hydration 오류나 React 콘솔 경고가 없다.
 - [ ] 서버 prefetch가 기존 `productQueries`의 `getHome`, `getProducts`를 통해 내부 `/api/home`, `/api/products`를 호출한다.
 - [ ] 캐시가 없는 다음 페이지를 누르면 현재 상품과 페이지 번호가 유지되고 "새 페이지를 불러오는 중입니다." 문구가 보인다.
-- [ ] 이전 데이터를 보여주는 동안 상태 문구에 `role="status"`, 목록에 `aria-busy="true"`가 적용되고 이전·다음 버튼을 다시 누를 수 없다.
-- [ ] 새 페이지가 준비되면 상품과 페이지 번호가 함께 바뀌고 `aria-busy`가 제거되며 버튼이 다시 활성화된다.
+- [ ] 이전 데이터를 보여주는 동안 상태 문구에 `role="status"`가 적용되고 이전·다음 버튼을 다시 누를 수 없다.
+- [ ] 새 페이지가 준비되면 상품과 페이지 번호가 함께 바뀌고 버튼이 다시 활성화된다.
 - [ ] 1분 안에 이전 페이지로 돌아가면 캐시를 사용해 placeholder 없이 바로 표시된다.
 - [ ] 검색어·카테고리·정렬을 바꾸면 이전 목록 대신 목록의 인라인 로딩 화면이 표시된다.
 - [ ] 마지막 페이지를 넘긴 주소로 들어가면 기존 clamp가 마지막 페이지로 고친다.
