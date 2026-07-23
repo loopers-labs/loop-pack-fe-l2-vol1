@@ -27,7 +27,7 @@
 - 서버 prefetch도 기존 `getHome`, `getProducts`를 통해 `/api/home`, `/api/products`를 호출한다.
 - 기존 Route Handler, 목 데이터와 계산 로직, 목 데이터 테스트는 현재 위치와 형태를 유지한다.
 - 홈과 상품 목록의 데이터 영역은 하위 서버 컴포넌트에서 `await prefetchQuery`한다. 헤더와 대기 화면을 먼저 보내고, 조회가 끝나면 실제 콘텐츠 HTML을 보낸다.
-- `HomeSections`와 `ProductList`는 `useQuery`와 hydration 캐시 읽기를 유지한다.
+- `HomeContent`와 `ProductList`는 `useQuery`와 hydration 캐시 읽기를 유지한다.
 - 페이지 변경 때 `staleTime` 안의 캐시가 있으면 바로 보여준다. 캐시에 없으면 `placeholderData`로 현재 페이지를 유지하면서 새 페이지를 조회한다.
 - 검색·카테고리·정렬이 바뀌면 이전 목록을 남기지 않고 기존 인라인 로딩 화면을 보여준다.
 - 정상적인 첫 화면에서는 브라우저가 `/api/home`이나 `/api/products`를 다시 요청하지 않는다.
@@ -76,8 +76,8 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 ### D2. 홈은 헤더와 대기 화면을 먼저 보낸다
 
 - `HomePage`는 헤더를 바로 렌더링하고 홈 데이터 영역만 `Suspense`로 감싼다.
-- `src/app/page.tsx`에 local async 컴포넌트 `HomeContent`를 두고 기존 `src/features/products/HomeContent.tsx`는 화면 역할에 맞춰 `HomeSections.tsx`로 이름을 바꾼다.
-- `HomeContent`는 `connection()`을 호출한 뒤 홈 쿼리의 prefetch가 끝날 때까지 기다린다. 그다음 기본 `dehydrate(queryClient)` 결과와 `HomeSections`를 반환한다.
+- `src/app/page.tsx`에 local async 컴포넌트 `HomePageInner`를 둔다. 기존 `src/features/products/HomeContent.tsx`는 이름과 위치를 그대로 둔다.
+- `HomePageInner`는 `connection()`을 호출한 뒤 홈 쿼리의 prefetch가 끝날 때까지 기다린다. 그다음 기본 `dehydrate(queryClient)` 결과와 `HomeContent`를 반환한다.
 - prefetch 경계만을 위한 별도 컴포넌트 파일은 만들지 않는다.
 
 ```tsx
@@ -88,11 +88,11 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
     </p>
   }
 >
-  <HomeContent />
+  <HomePageInner />
 </Suspense>
 ```
 
-- `HomeSections`는 기존 `useQuery`를 유지한다. 정상 흐름에서는 복원된 데이터가 `staleTime` 안에 있으므로 브라우저에서 다시 조회하지 않는다.
+- `HomeContent`는 기존 `useQuery`를 유지한다. 정상 흐름에서는 복원된 데이터가 `staleTime` 안에 있으므로 브라우저에서 다시 조회하지 않는다.
 - 서버 prefetch가 실패하면 기본 dehydration이 실패한 쿼리를 제외한다. 브라우저가 기존 `/api/home` 쿼리로 다시 시도한다. 재시도가 성공하면 콘텐츠를, 실패하면 기존 인라인 오류 화면을 보여준다.
 
 ### D3. 상품 목록도 실제 콘텐츠를 스트리밍한다
@@ -127,7 +127,7 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 
 ### D6. QueryClient 생성 함수만 공유한다
 
-- `makeQueryClient`와 `getQueryClient`를 `src/shared/query-client.ts`로 옮긴다. `Providers`와 서버 컴포넌트가 같은 함수를 쓴다.
+- `makeQueryClient`와 `getQueryClient`를 `src/shared/get-query-client.ts`로 옮긴다. `Providers`와 서버 컴포넌트가 같은 함수를 쓴다.
 - 서버에서는 호출할 때마다 새 `QueryClient`를 만들고, 브라우저에서는 기존처럼 하나를 재사용한다.
 - 기본 `dehydrate`만 사용하며 pending 쿼리 설정은 추가하지 않는다.
 - 각 prefetch 경계에서 `QueryClient`를 한 번만 만들므로 React `cache()`는 쓰지 않는다.
@@ -149,10 +149,10 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 
 ### T2. 홈 데이터 경계
 
-- `getQueryClient`를 `src/shared/query-client.ts`로 옮긴다.
+- `getQueryClient`를 `src/shared/get-query-client.ts`로 옮긴다.
 - 헤더 아래의 홈 데이터 영역을 `Suspense`로 감싼다.
-- `src/app/page.tsx`의 local async `HomeContent`에서 `connection()`을 호출하고 `productQueries.home()`의 prefetch를 기다린 뒤 `HydrationBoundary`를 반환한다.
-- 기존 `HomeContent.tsx`를 `HomeSections.tsx`로 이름을 바꾸고 `useQuery`와 로딩·오류 처리를 유지한다.
+- `src/app/page.tsx`의 local async `HomePageInner`에서 `connection()`을 호출하고 `productQueries.home()`의 prefetch를 기다린 뒤 `HydrationBoundary`를 반환한다.
+- 기존 `HomeContent.tsx`는 그대로 두고 `useQuery`와 로딩·오류 처리를 유지한다.
 
 ### T3. 상품 목록 데이터 경계
 
@@ -182,49 +182,49 @@ await queryClient.prefetchQuery(productQueries.list(conditions));
 
 ### Advanced B — 서버 prefetch
 
-- [ ] B1. 서버에서 `QueryClient`를 prefetch 경계마다 새로 만든다.
-- [ ] B2. 서버와 브라우저가 같은 `productQueries`의 `queryKey`, `queryFn`, 캐시 정책을 쓴다.
-- [ ] B3. 서버 prefetch는 `productQueries.home()`, `productQueries.list(conditions)`을 그대로 사용한다.
-- [ ] B4. `apiClient`가 서버에서만 검증된 `APP_ORIGIN`으로 절대 URL을 만들며 환경별 호스트를 하드코딩하지 않는다.
-- [ ] B5. 기존 Route Handler, 목 데이터와 계산 로직, 목 데이터 테스트를 이동하거나 재구성하지 않는다.
-- [ ] B6. 홈 헤더와 대기 화면을 홈 데이터보다 먼저 보낸다.
-- [ ] B7. 홈 쿼리를 prefetch한 뒤 완성된 홈 콘텐츠 HTML을 스트리밍한다.
-- [ ] B8. 상품 목록 쿼리를 prefetch한 뒤 목록 대기 화면 다음에 실제 목록 HTML을 스트리밍한다.
-- [ ] B9. 홈과 상품 목록 모두 기본 `dehydrate`로 완료된 캐시만 전달한다.
-- [ ] B10. `HomeSections`와 `ProductList`는 `useQuery`로 복원된 캐시를 읽는다.
-- [ ] B11. 목록 조건을 브라우저와 같은 nuqs 파서로 읽는다.
-- [ ] B12. 정상적인 첫 진입에서 브라우저가 보낸 `/api/home`, `/api/products` 요청이 0건이다.
-- [ ] B13. 서버 prefetch가 실패하면 브라우저 쿼리로 다시 시도하고, 그 요청도 실패하면 기존 인라인 오류 화면을 보여준다.
-- [ ] B14. 기존 API 및 목 데이터 테스트가 통과한다.
-- [ ] B15. `apiClient`의 서버 절대 URL, 브라우저 상대 URL, 누락·잘못된 `APP_ORIGIN` 테스트가 통과한다.
-- [ ] B16. 서버 loader와 클라이언트 parser가 같은 조건, 기본값, `queryKey`를 만든다.
+- [x] B1. 서버에서 `QueryClient`를 prefetch 경계마다 새로 만든다.
+- [x] B2. 서버와 브라우저가 같은 `productQueries`의 `queryKey`, `queryFn`, 캐시 정책을 쓴다.
+- [x] B3. 서버 prefetch는 `productQueries.home()`, `productQueries.list(conditions)`을 그대로 사용한다.
+- [x] B4. `apiClient`가 서버에서만 검증된 `APP_ORIGIN`으로 절대 URL을 만들며 환경별 호스트를 하드코딩하지 않는다.
+- [x] B5. 기존 Route Handler, 목 데이터와 계산 로직, 목 데이터 테스트를 이동하거나 재구성하지 않는다.
+- [x] B6. 홈 헤더와 대기 화면을 홈 데이터보다 먼저 보낸다.
+- [x] B7. 홈 쿼리를 prefetch한 뒤 완성된 홈 콘텐츠 HTML을 스트리밍한다.
+- [x] B8. 상품 목록 쿼리를 prefetch한 뒤 목록 대기 화면 다음에 실제 목록 HTML을 스트리밍한다.
+- [x] B9. 홈과 상품 목록 모두 기본 `dehydrate`로 완료된 캐시만 전달한다.
+- [x] B10. `HomeContent`와 `ProductList`는 `useQuery`로 복원된 캐시를 읽는다.
+- [x] B11. 목록 조건을 브라우저와 같은 nuqs 파서로 읽는다.
+- [x] B12. 정상적인 첫 진입에서 브라우저가 보낸 `/api/home`, `/api/products` 요청이 0건이다.
+- [x] B13. 서버 prefetch가 실패하면 브라우저 쿼리로 다시 시도하고, 그 요청도 실패하면 기존 인라인 오류 화면을 보여준다.
+- [x] B14. 기존 API 및 목 데이터 테스트가 통과한다.
+- [x] B15. `apiClient`의 서버 절대 URL, 브라우저 상대 URL, 누락·잘못된 `APP_ORIGIN` 테스트가 통과한다.
+- [x] B16. 서버 loader와 클라이언트 parser가 같은 조건, 기본값, `queryKey`를 만든다.
 - [ ] B17. 선택한 대상과 추가한 복잡도, 검증 결과를 PR에 기록하고 `pnpm check`가 통과한다.
 
 ### Advanced C — 페이지 변경 중 기존 목록 유지
 
-- [ ] C1. 캐시가 없는 페이지로 이동하는 동안 기존 상품과 페이지 번호가 유지된다.
-- [ ] C2. `isPlaceholderData` 동안 `role="status"` 상태 문구가 보인다.
-- [ ] C3. `isPlaceholderData` 동안 이전·다음 버튼이 비활성화된다.
-- [ ] C4. `staleTime` 안의 캐시가 있는 페이지는 placeholder 없이 바로 표시된다.
-- [ ] C5. 검색·카테고리·정렬 변경은 기존 목록 유지 대상에 포함되지 않는다.
-- [ ] C6. `placeholderData`가 `page` 변경에만 이전 데이터를 반환하는 테스트가 통과한다.
+- [x] C1. 캐시가 없는 페이지로 이동하는 동안 기존 상품과 페이지 번호가 유지된다.
+- [x] C2. `isPlaceholderData` 동안 `role="status"` 상태 문구가 보인다.
+- [x] C3. `isPlaceholderData` 동안 이전·다음 버튼이 비활성화된다.
+- [x] C4. `staleTime` 안의 캐시가 있는 페이지는 placeholder 없이 바로 표시된다.
+- [x] C5. 검색·카테고리·정렬 변경은 기존 목록 유지 대상에 포함되지 않는다.
+- [x] C6. `placeholderData`가 `page` 변경에만 이전 데이터를 반환하는 테스트가 통과한다.
 
 ## 런타임 검증
 
-- [ ] `APP_ORIGIN`을 설정한 프로덕션 빌드·실행 환경에서 아래 항목을 확인한다.
-- [ ] `/`를 새 탭에서 연다. 헤더와 홈 대기 화면이 먼저 보이고 약 500ms 뒤 홈 상품이 표시된다.
-- [ ] 홈 응답 스트림에서 헤더·대기 화면 HTML이 먼저, 홈 콘텐츠 HTML이 나중에 도착한다.
-- [ ] `/products?sort=popular&page=2`를 새 탭에서 연다. 목록 대기 화면이 먼저 보이고 약 500ms 뒤 2페이지 상품이 표시된다.
-- [ ] 상품 목록 응답 스트림에서 대기 화면 HTML이 먼저, 상품 목록 HTML이 나중에 도착한다.
-- [ ] 정상적인 첫 진입의 Network 탭에 브라우저가 보낸 `/api/home`, `/api/products` 요청이 없다.
-- [ ] hydration 오류나 React 콘솔 경고가 없다.
-- [ ] 서버 prefetch가 기존 `productQueries`의 `getHome`, `getProducts`를 통해 내부 `/api/home`, `/api/products`를 호출한다.
-- [ ] 캐시가 없는 다음 페이지를 누르면 현재 상품과 페이지 번호가 유지되고 "새 페이지를 불러오는 중입니다." 문구가 보인다.
-- [ ] 이전 데이터를 보여주는 동안 상태 문구에 `role="status"`가 적용되고 이전·다음 버튼을 다시 누를 수 없다.
-- [ ] 새 페이지가 준비되면 상품과 페이지 번호가 함께 바뀌고 버튼이 다시 활성화된다.
-- [ ] 1분 안에 이전 페이지로 돌아가면 캐시를 사용해 placeholder 없이 바로 표시된다.
-- [ ] 검색어·카테고리·정렬을 바꾸면 이전 목록 대신 목록의 인라인 로딩 화면이 표시된다.
-- [ ] 마지막 페이지를 넘긴 주소로 들어가면 기존 clamp가 마지막 페이지로 고친다.
-- [ ] 서버 prefetch만 실패하면 브라우저 재조회로 홈과 목록이 복구된다.
-- [ ] 서버와 브라우저 API가 모두 실패하면 홈과 목록의 기존 인라인 오류 화면이 표시된다.
-- [ ] 기존 API 및 목 데이터 테스트와 `pnpm check`가 통과한다.
+- [x] `APP_ORIGIN`을 설정한 프로덕션 빌드·실행 환경에서 아래 항목을 확인한다.
+- [x] `/`를 새 탭에서 연다. 헤더와 홈 대기 화면이 먼저 보이고 약 500ms 뒤 홈 상품이 표시된다.
+- [x] 홈 응답 스트림에서 헤더·대기 화면 HTML이 먼저, 홈 콘텐츠 HTML이 나중에 도착한다.
+- [x] `/products?sort=popular&page=2`를 새 탭에서 연다. 목록 대기 화면이 먼저 보이고 약 500ms 뒤 2페이지 상품이 표시된다.
+- [x] 상품 목록 응답 스트림에서 대기 화면 HTML이 먼저, 상품 목록 HTML이 나중에 도착한다.
+- [x] 정상적인 첫 진입의 Network 탭에 브라우저가 보낸 `/api/home`, `/api/products` 요청이 없다.
+- [x] hydration 오류나 React 콘솔 경고가 없다.
+- [x] 서버 prefetch가 기존 `productQueries`의 `getHome`, `getProducts`를 통해 내부 `/api/home`, `/api/products`를 호출한다.
+- [x] 캐시가 없는 다음 페이지를 누르면 현재 상품과 페이지 번호가 유지되고 "새 페이지를 불러오는 중입니다." 문구가 보인다.
+- [x] 이전 데이터를 보여주는 동안 상태 문구에 `role="status"`가 적용되고 이전·다음 버튼을 다시 누를 수 없다.
+- [x] 새 페이지가 준비되면 상품과 페이지 번호가 함께 바뀌고 버튼이 다시 활성화된다.
+- [x] 1분 안에 이전 페이지로 돌아가면 캐시를 사용해 placeholder 없이 바로 표시된다.
+- [x] 검색어·카테고리·정렬을 바꾸면 이전 목록 대신 목록의 인라인 로딩 화면이 표시된다.
+- [x] 마지막 페이지를 넘긴 주소로 들어가면 기존 clamp가 마지막 페이지로 고친다.
+- [x] 서버 prefetch만 실패하면 브라우저 재조회로 홈과 목록이 복구된다.
+- [x] 서버와 브라우저 API가 모두 실패하면 홈과 목록의 기존 인라인 오류 화면이 표시된다.
+- [x] 기존 API 및 목 데이터 테스트와 `pnpm check`가 통과한다.
