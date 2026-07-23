@@ -1,14 +1,13 @@
 "use client";
 
+import { HomeBanner } from "@/app/_components/home-banner";
+import { HomeCategoryLinks } from "@/app/_components/home-category-links";
+import { HomeProductSection } from "@/app/_components/home-product-section";
 import { Placeholder } from "@/app/_components/placeholder";
 import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
-import { CartButton, WishlistButton } from "@/app/_components/product-actions";
 import { commerceQueries } from "@/queries/commerce";
 import { CommerceApiError } from "@/services/commerce";
-import type { Product } from "@/types/commerce";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
-import Link from "next/link";
 
 export default function HomePage() {
   const { data: home, isLoading, isError, error, refetch } = useQuery(commerceQueries.home());
@@ -42,57 +41,12 @@ export default function HomePage() {
     return null;
   }
 
-  const sections: Array<{ title: string; products: Product[] }> = [
-    { title: "인기 상품", products: home.popularProducts },
-    { title: "신상품", products: home.newProducts },
-  ];
-
   return (
     <>
-      <section className="week05-hero">
-        <p>{home.banner.description}</p>
-        <h1>{home.banner.title}</h1>
-      </section>
-      <section className="week05-section">
-        <h2>카테고리</h2>
-        <div className="week05-categories">
-          {home.categories.map((category) => (
-            <Link key={category.id} href={`/products?category=${category.id}`}>
-              {category.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {sections.map(({ title, products }) => (
-        <section className="week05-section" key={title}>
-          <h2>{title}</h2>
-          {products.length === 0 ? (
-            <Placeholder title="보여줄 상품이 없어요" description="상품이 준비되면 보여드릴게요." />
-          ) : (
-            <div className="week05-grid">
-              {products.map((product) => (
-                <article className="week05-product" key={product.id}>
-                  <Image
-                    className="week05-image"
-                    src={product.image}
-                    alt={product.name}
-                    width={400}
-                    height={400}
-                  />
-                  <p>{product.brand}</p>
-                  <h3>{product.name}</h3>
-                  <strong>{product.price.toLocaleString()}원</strong>
-                  <div>
-                    <WishlistButton productId={product.id} label={product.name} />
-                    <CartButton productId={product.id} label={product.name} />
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      ))}
+      <HomeBanner banner={home.banner} />
+      <HomeCategoryLinks categories={home.categories} />
+      <HomeProductSection title="인기 상품" products={home.popularProducts} />
+      <HomeProductSection title="신상품" products={home.newProducts} />
     </>
   );
 }
