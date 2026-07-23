@@ -1,17 +1,15 @@
 'use client';
 
-import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
-import { productQueries } from '@/features/product-list/api/queries';
+import { productQueries } from '@/features/product/api/queries';
 import {
   PAGE_SIZE,
   isCategoryValue,
   isSortValue,
   useProductListFilters,
-} from '@/features/product-list/hooks/useProductListFilters';
+} from '@/features/product/hooks/useProductListFilters';
 import { Header } from '@/widgets/Header';
-import { CartButton } from '@/features/store-product/ui/CartButton';
-import { WishlistButton } from '@/features/store-product/ui/WishlistButton';
+import { ProductCard } from '@/features/product/ui/ProductCard';
 
 // [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
 const ProductsPage = () => {
@@ -32,22 +30,7 @@ const ProductsPage = () => {
         <p>총 {totalCount.toLocaleString()}개</p>
         <div className="grid">
           {data.products.map((product) => (
-            <article className="product" key={product.id}>
-              <Image
-                className="image"
-                src={product.image}
-                alt={product.name}
-                width={400}
-                height={400}
-              />
-              <p>{product.brand}</p>
-              <h2>{product.name}</h2>
-              <strong>{product.price.toLocaleString()}원</strong>
-              <div>
-                <WishlistButton product={product} />
-                <CartButton product={product} />
-              </div>
-            </article>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </>

@@ -5,7 +5,7 @@ import { CategoryId } from '@/types/commerce';
 import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/features/home/api/queries';
 import { HomeCategory } from '@/features/home/types';
-import { Product } from '@/features/product/ui/Product';
+import { ProductCard } from '@/features/product/ui/ProductCard';
 import { Header } from '@/widgets/Header';
 
 const HomeCategoryArr: HomeCategory[] = ['인기 상품', '신상품'] as const;
@@ -37,7 +37,7 @@ const Home = () => {
             {list.length === 0 ? (
               <p>검색 결과가 없습니다.</p>
             ) : (
-              list.map((product) => <Product key={product.id} product={product} />)
+              list.map((product) => <ProductCard key={product.id} product={product} />)
             )}
           </div>
         </section>
