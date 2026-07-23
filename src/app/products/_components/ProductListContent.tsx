@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
   useQuery,
+  useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query';
 import { productListQueryOptions } from '@/queries/productQueries';
@@ -135,10 +136,22 @@ export function ProductListContent() {
   const { params, query, setCategory, setSort, setSearch, setPage } =
     useProductSearchParams();
 
+  const queryClient = useQueryClient();
+
   const { data, isLoading, isError, error, isFetching } = useQuery({
     ...productListQueryOptions(query),
     placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (!data) return;
+    const totalPages = Math.ceil(data.totalCount / data.pageSize);
+    if (data.page < totalPages) {
+      void queryClient.prefetchQuery(
+        productListQueryOptions({ ...query, page: data.page + 1 }),
+      );
+    }
+  }, [data, query, queryClient]);
 
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
