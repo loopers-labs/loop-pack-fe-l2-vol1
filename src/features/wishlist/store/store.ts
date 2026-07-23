@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-import { mergeStoredItems } from '@/lib/storedItem';
+import { migrateStoredItems } from '@/lib/storedItem';
 
 // [AI] 헤더 카운트와 위시리스트 페이지 렌더에 필요한 최소 메타만 저장.
 // Product 객체 전체를 넣으면 서버 데이터가 바뀌었을 때 스토어가 낡은 정보를 갖게 되므로 ID+표시용 메타로 좁힌다.
@@ -48,14 +48,16 @@ export const useWishlistStore = create<WishlistState>()(
     {
       name: 'loopers-wishlist-v1',
       storage: createJSONStorage(() => localStorage),
+      version: 1,
       // [AI] persist는 클라이언트에서 비동기로 hydration을 수행한다.
       // rehydrate 완료 시점에 플래그를 켜야 서버 렌더(항상 0)와 충돌하지 않는다.
       partialize: (state) => ({ items: state.items }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },
-      // [AI] 저장값 복구 전략: 객체가 아니면 currentState로 폴백, items는 필드별 검증 통과한 항목만.
-      merge: mergeStoredItems,
+      // [AI] 저장값 복구 전략: persisted version과 version이 다를 때 migrate가 실행된다.
+      // items를 필드별로 검증해 통과한 항목만 남겨 변조/옛날 스키마를 현재 스키마로 변환한다.
+      migrate: migrateStoredItems,
     }
   )
 );

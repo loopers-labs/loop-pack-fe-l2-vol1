@@ -23,19 +23,15 @@ const filterStoredItems = (raw: unknown): StoredItem[] => {
   return raw.filter(isStoredItem);
 };
 
-// [AI] persist merge에서 호출: persisted가 객체가 아니면 currentState로 폴백하고,
-// items 필드는 filterStoredItems로 검증을 통과한 항목만 남긴다.
-// 'in' 연산자로 narrowing해 as 단언 없이 items에 안전하게 접근한다.
-export const mergeStoredItems = <S extends { items: StoredItem[] }>(
+// [AI] persist migrate에서 호출: 저장된 버전과 현재 버전이 다를 때 실행된다.
+// fromVersion에 상관없이 items를 필드별로 검증해 통과한 항목만 남긴다(브라우저 변조/스키마 드리프트 방지).
+// 반환값은 persisted state로, 이후 기본 merge가 currentState와 얕게 합친다(함수 등은 currentState 유지).
+// 'in' 연산자로 narrowing해 items에 안전하게 접근한다.
+export const migrateStoredItems = (
   persisted: unknown,
-  currentState: S
-): S => {
-  if (typeof persisted !== 'object' || persisted === null) {
-    return currentState;
-  }
-  const rawItems = 'items' in persisted ? persisted.items : undefined;
-  return {
-    ...currentState,
-    items: filterStoredItems(rawItems),
-  };
+  fromVersion: number
+): { items: StoredItem[] } => {
+  void fromVersion;
+  const rawItems = isRecord(persisted) && 'items' in persisted ? persisted.items : undefined;
+  return { items: filterStoredItems(rawItems) };
 };
