@@ -1,4 +1,6 @@
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import Link from 'next/link';
+import type { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
 import { CartCount } from '@/features/products/CartCount';
@@ -6,8 +8,18 @@ import { ProductList } from '@/features/products/ProductList';
 import { ProductListFilters } from '@/features/products/ProductListFilters';
 import { ProductSearchForm } from '@/features/products/ProductSearchForm';
 import { WishlistCount } from '@/features/products/WishlistCount';
+import {
+  loadProductListConditions,
+  toProductListQuery,
+} from '@/features/products/product-list-params';
+import { productQueries } from '@/features/products/queries';
+import { getQueryClient } from '@/shared/get-query-client';
 
-export default function ProductsPage() {
+export default function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   return (
     <main className="week05-page">
       <header className="week05-header">
@@ -38,9 +50,32 @@ export default function ProductsPage() {
             </p>
           }
         >
-          <ProductList />
+          <ProductListContent searchParams={searchParams} />
         </Suspense>
       </section>
     </main>
+  );
+}
+
+/**
+ * 목록 대기 화면을 먼저 보내고, 조회가 끝나면 완성된 목록 HTML을 이어서 보낸다.
+ * searchParams가 요청 시점 값이라 Next.js가 이 페이지를 알아서 동적으로 렌더한다.
+ */
+async function ProductListContent({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const conditions = await loadProductListConditions(searchParams);
+  const queryClient = getQueryClient();
+
+  await queryClient.prefetchQuery(
+    productQueries.list(toProductListQuery(conditions)),
+  );
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ProductList />
+    </HydrationBoundary>
   );
 }

@@ -1,31 +1,10 @@
-import { createParser, parseAsStringLiteral, useQueryStates } from 'nuqs';
+import { useQueryStates } from 'nuqs';
 import { useEffect, useEffectEvent } from 'react';
 
-import { CATEGORY_FILTERS, type CategoryFilter } from './constants';
+import type { CategoryFilter } from './constants';
+import { conditionParsers, normalizeSearchQuery } from './product-list-params';
 
-import { PRODUCT_SORTS, type ProductSort } from '@/types/commerce';
-
-// 주소로 직접 들어와도, 폼으로 제출해도 같은 규칙을 써야 같은 검색이 같은 캐시를 쓴다.
-const normalizeSearchQuery = (value: string) => value.trim().normalize('NFC');
-
-const conditionParsers = {
-  q: createParser({
-    parse: normalizeSearchQuery,
-    serialize: String,
-  }).withDefault(''),
-
-  category: parseAsStringLiteral(CATEGORY_FILTERS).withDefault('all'),
-  sort: parseAsStringLiteral(PRODUCT_SORTS).withDefault('latest'),
-
-  page: createParser({
-    parse: (value: string) => {
-      const page = Number(value);
-
-      return Number.isSafeInteger(page) && page >= 1 ? page : null;
-    },
-    serialize: String,
-  }).withDefault(1),
-};
+import type { ProductSort } from '@/types/commerce';
 
 /**
  * 상품 목록 조건.

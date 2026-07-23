@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { ProductCard } from './ProductCard';
-import { PRODUCT_PAGE_SIZE } from './constants';
+import { toProductListQuery } from './product-list-params';
 import { productQueries } from './queries';
 import { usePageClamp, useProductListUrlState } from './search-params';
 
@@ -14,13 +14,7 @@ export function ProductList() {
   const { conditions, changePage } = useProductListUrlState();
 
   const { data, isPending, isError, error } = useQuery(
-    productQueries.list({
-      q: conditions.q,
-      category: conditions.category,
-      sort: conditions.sort,
-      page: conditions.page,
-      pageSize: PRODUCT_PAGE_SIZE,
-    }),
+    productQueries.list(toProductListQuery(conditions)),
   );
 
   const totalPages = data
