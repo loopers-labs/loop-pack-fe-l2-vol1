@@ -9,12 +9,7 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps): React.JSX.Element {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: { queries: { staleTime: 1000 * 20 } },
-      }),
-  );
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
