@@ -27,7 +27,7 @@ export function useProductListUrlState() {
       void setConditions({ sort, page: 1 });
     },
     changePage: (page: number) => {
-      void setConditions({ page });
+      void setConditions({ page }, { scroll: true });
     },
   };
 }
