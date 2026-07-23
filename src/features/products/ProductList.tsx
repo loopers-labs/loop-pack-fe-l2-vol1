@@ -13,9 +13,15 @@ const countTotalPages = (totalCount: number, pageSize: number) =>
 export function ProductList() {
   const { conditions, changePage } = useProductListUrlState();
 
-  const { data, isPending, isError, error, isPlaceholderData } = useQuery(
-    productQueries.list(toProductListQuery(conditions)),
-  );
+  const {
+    data,
+    isPending,
+    isError,
+    error,
+    isPlaceholderData,
+    isFetching,
+    refetch,
+  } = useQuery(productQueries.list(toProductListQuery(conditions)));
 
   const totalPages = data
     ? countTotalPages(data.totalCount, data.pageSize)
@@ -44,6 +50,14 @@ export function ProductList() {
     return (
       <p className="week05-status" role="alert">
         {error.message}
+
+        <button
+          type="button"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+        >
+          다시 시도
+        </button>
       </p>
     );
   }

@@ -7,7 +7,9 @@ import { ProductCard } from './ProductCard';
 import { productQueries } from './queries';
 
 export function HomeContent() {
-  const { data, isPending, isError, error } = useQuery(productQueries.home());
+  const { data, isPending, isError, error, isFetching, refetch } = useQuery(
+    productQueries.home(),
+  );
 
   if (isPending) {
     return (
@@ -21,6 +23,14 @@ export function HomeContent() {
     return (
       <p className="week05-status" role="alert">
         {error.message}
+
+        <button
+          type="button"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+        >
+          다시 시도
+        </button>
       </p>
     );
   }

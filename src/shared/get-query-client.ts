@@ -1,7 +1,18 @@
 import { environmentManager, QueryClient } from '@tanstack/react-query';
 
 function makeQueryClient() {
-  return new QueryClient();
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        /**
+         * 기본값은 서버 0회 · 브라우저 3회인데 `??` 병합이라 값을 그냥 넣으면 서버까지 덮어쓴다.
+         * 서버는 실패해도 브라우저가 다시 조회하므로 스트리밍을 막지 않게 0회를 유지한다.
+         * 브라우저는 3회차에 살아날 확률이 낮은 데 비해 대기만 4초 늘어 2회로 줄인다.
+         */
+        retry: environmentManager.isServer() ? 0 : 2,
+      },
+    },
+  });
 }
 
 let browserQueryClient: QueryClient | undefined;
