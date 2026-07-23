@@ -9,20 +9,21 @@ type ProductSearchInputProps = {
   delay?: number;
 };
 
-export function ProductSearchInput({ value, onDebouncedChange }: ProductSearchInputProps) {
+export function ProductSearchInput({ value, onDebouncedChange, delay }: ProductSearchInputProps) {
   const [text, setText] = useState(value);
   const lastCommittedRef = useRef(value);
   const commit = useDebouncedCallback((next: string) => {
     lastCommittedRef.current = next;
     onDebouncedChange(next);
-  });
+  }, delay);
 
   useEffect(() => {
     if (value !== lastCommittedRef.current) {
+      commit.cancel();
       lastCommittedRef.current = value;
       setText(value);
     }
-  }, [value]);
+  }, [value, commit]);
 
   return (
     <label>
@@ -35,6 +36,11 @@ export function ProductSearchInput({ value, onDebouncedChange }: ProductSearchIn
           const next = event.target.value;
           setText(next);
           commit(next);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+            commit.flush();
+          }
         }}
       />
     </label>
