@@ -25,6 +25,23 @@ const keepPreviousList = (changed: Partial<Required<ProductListQuery>>) =>
     queryKey: productQueries.list(CONDITIONS).queryKey,
   });
 
+describe('상품 쿼리 키', () => {
+  it('루트 키는 상품 도메인만 가리킨다', () => {
+    expect(productQueries.all()).toEqual(['products']);
+  });
+
+  it('모든 키가 루트 키로 시작해 한 번에 무효화할 수 있다', () => {
+    const all = productQueries.all();
+
+    for (const { queryKey } of [
+      productQueries.home(),
+      productQueries.list(CONDITIONS),
+    ]) {
+      expect(queryKey.slice(0, all.length)).toEqual(all);
+    }
+  });
+});
+
 describe('목록 쿼리의 placeholderData', () => {
   it('목록 쿼리에 연결되어 있다', () => {
     expect(productQueries.list(CONDITIONS).placeholderData).toBeInstanceOf(

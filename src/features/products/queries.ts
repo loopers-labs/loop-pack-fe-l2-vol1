@@ -13,9 +13,11 @@ const MINUTE = 60 * SECOND;
  * 상품 도메인 쿼리 팩토리
  */
 export const productQueries = {
+  all: () => ['products'] as const,
+
   home: () =>
     queryOptions({
-      queryKey: ['products', 'home'] as const,
+      queryKey: [...productQueries.all(), 'home'] as const,
       queryFn: getHome,
       staleTime: 5 * MINUTE,
       gcTime: 10 * MINUTE,
@@ -23,7 +25,7 @@ export const productQueries = {
 
   list: (conditions: ProductListConditions) =>
     queryOptions({
-      queryKey: ['products', 'list', conditions] as const,
+      queryKey: [...productQueries.all(), 'list', conditions] as const,
       queryFn: () => getProducts(conditions),
       staleTime: MINUTE,
       placeholderData: keepPreviousPage(conditions),
