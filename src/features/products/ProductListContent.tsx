@@ -31,7 +31,7 @@ export function ProductListContent({
       <div className="grid gap-3 rounded-gds-md bg-white px-5 py-8 text-sm text-gds-gray-700 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
         <p>상품 목록을 불러오지 못했습니다.</p>
         <button
-          className="w-fit rounded-gds-sm border border-gds-cta bg-gds-cta px-4 py-2 text-sm font-semibold text-white hover:bg-gds-blue-500 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
+          className="w-fit cursor-pointer rounded-gds-sm border border-gds-cta bg-gds-cta px-4 py-2 text-sm font-semibold text-white hover:bg-gds-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
           type="button"
           onClick={onRetry}
         >

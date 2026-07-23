@@ -12,7 +12,10 @@ export function ProductSection({ title, products }: ProductSectionProps) {
 
   return (
     <section className="mt-12">
-      <h2 className="mb-4 text-xl font-bold tracking-tight text-gds-gray-900">{title}</h2>
+      <h2 className="mb-4 flex items-center gap-2 text-xl font-bold tracking-tight text-gds-gray-900">
+        <span className="h-5 w-1 rounded-full bg-gds-green-500" aria-hidden />
+        {title}
+      </h2>
       {cardItems.length > 0 ? (
         <ProductGrid products={cardItems} titleLevel={3} labelPrefix={title} />
       ) : (

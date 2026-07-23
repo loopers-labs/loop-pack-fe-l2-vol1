@@ -167,7 +167,8 @@ describe("ProductListPageClient", () => {
       searchParams: "?category=all&sort=latest&page=3",
     });
 
-    await userEvent.selectOptions(screen.getByLabelText("카테고리"), "goods");
+    await userEvent.click(screen.getByRole("button", { name: "카테고리" }));
+    await userEvent.click(screen.getByRole("option", { name: "뷰티·잡화" }));
 
     await waitFor(() => {
       expect(mockedGetProducts).toHaveBeenCalledWith(
@@ -184,7 +185,8 @@ describe("ProductListPageClient", () => {
       searchParams: "?category=goods&sort=latest&page=3",
     });
 
-    await userEvent.selectOptions(screen.getByLabelText("정렬"), "popular");
+    await userEvent.click(screen.getByRole("button", { name: "정렬" }));
+    await userEvent.click(screen.getByRole("option", { name: "인기순" }));
 
     await waitFor(() => {
       expect(mockedGetProducts).toHaveBeenCalledWith(

@@ -175,7 +175,7 @@ export function useSelect<Item>(params: UseSelectParams<Item>): UseSelectReturn<
       return;
     }
 
-    itemRefs.current[highlightedIndex]?.scrollIntoView({ block: "nearest" });
+    itemRefs.current[highlightedIndex]?.scrollIntoView?.({ block: "nearest" });
   }, [isOpen, highlightedIndex]);
 
   const getInitialHighlightedIndex = () => {
