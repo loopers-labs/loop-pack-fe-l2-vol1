@@ -101,6 +101,25 @@ describe("commerce hydration", () => {
     );
   });
 
+  it("store 복원 전에는 상품 액션 버튼을 비활성화한다", () => {
+    useCommerceStore.setState({
+      cartProductIdMap: { p1: true },
+      wishlistProductIdMap: { p1: true },
+      hasHydrated: false,
+    });
+
+    render(
+      <CommerceProductCard
+        product={product}
+        wishlistLabel="테스트 상품 위시리스트"
+        cartLabel="테스트 상품 장바구니"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "테스트 상품 위시리스트" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "테스트 상품 장바구니" })).toBeDisabled();
+  });
+
   it("store 복원 후에는 상품 버튼 상태를 저장값 기준으로 렌더링한다", () => {
     useCommerceStore.setState({
       cartProductIdMap: { p1: true },

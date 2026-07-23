@@ -29,6 +29,7 @@ export function CommerceProductCard({
       cartLabel={cartLabel}
       isInWishlist={hasHydrated ? isInWishlist : false}
       isInCart={hasHydrated ? isInCart : false}
+      isActionDisabled={!hasHydrated}
       onWishlistToggle={() => toggleWishlist(product.id)}
       onCartToggle={() => toggleCart(product.id)}
     />
