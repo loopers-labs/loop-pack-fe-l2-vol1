@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   parseAsInteger,
@@ -31,8 +31,13 @@ export function useProductFilters() {
   );
 
   const [searchInput, setSearchInput] = useState(filters.q);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       void setFilters({ q: searchInput, page: 1 });
     }, DEBOUNCE_DELAY);
