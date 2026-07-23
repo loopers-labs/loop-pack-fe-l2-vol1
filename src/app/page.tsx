@@ -15,7 +15,7 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
+      <section className="week05-section" aria-busy="true" aria-label="홈 불러오는 중">
         <ProductGridSkeleton />
       </section>
     );
@@ -67,26 +67,30 @@ export default function HomePage() {
       {sections.map(({ title, products }) => (
         <section className="week05-section" key={title}>
           <h2>{title}</h2>
-          <div className="week05-grid">
-            {products.map((product) => (
-              <article className="week05-product" key={product.id}>
-                <Image
-                  className="week05-image"
-                  src={product.image}
-                  alt={product.name}
-                  width={400}
-                  height={400}
-                />
-                <p>{product.brand}</p>
-                <h3>{product.name}</h3>
-                <strong>{product.price.toLocaleString()}원</strong>
-                <div>
-                  <WishlistButton productId={product.id} label={product.name} />
-                  <CartButton productId={product.id} label={product.name} />
-                </div>
-              </article>
-            ))}
-          </div>
+          {products.length === 0 ? (
+            <Placeholder title="보여줄 상품이 없어요" description="상품이 준비되면 보여드릴게요." />
+          ) : (
+            <div className="week05-grid">
+              {products.map((product) => (
+                <article className="week05-product" key={product.id}>
+                  <Image
+                    className="week05-image"
+                    src={product.image}
+                    alt={product.name}
+                    width={400}
+                    height={400}
+                  />
+                  <p>{product.brand}</p>
+                  <h3>{product.name}</h3>
+                  <strong>{product.price.toLocaleString()}원</strong>
+                  <div>
+                    <WishlistButton productId={product.id} label={product.name} />
+                    <CartButton productId={product.id} label={product.name} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       ))}
     </>
