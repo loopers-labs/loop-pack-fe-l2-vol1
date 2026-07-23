@@ -3,8 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { type ComponentProps, type ComponentPropsWithoutRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Dialog } from '@/components/ui/dialog/Dialog';
-import { useSelect } from '@/components/ui/select/useSelect';
+import { useSelect } from './useSelect';
+
+import { Dialog } from '@/shared/ui/dialog/Dialog';
 
 type Option = { id: string; label: string; stock: number };
 

@@ -3,8 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
-import { ProductCard } from './ProductCard';
-import { productQueries } from './queries';
+import { ProductCard } from '@/features/products/ProductCard';
+import { productQueries } from '@/features/products/queries';
 
 export function HomeContent() {
   const { data, isPending, isError, error } = useQuery(productQueries.home());

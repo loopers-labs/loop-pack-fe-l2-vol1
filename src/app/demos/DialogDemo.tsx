@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 
-import { Dialog } from '@/components/ui/dialog/Dialog';
-import { useSelect } from '@/components/ui/select/useSelect';
+import { Dialog } from '@/shared/ui/dialog/Dialog';
+import { useSelect } from '@/shared/ui/select/useSelect';
 
 const triggerClassName =
   'cursor-pointer rounded-lg border border-[#d0d5db] bg-white px-4 py-2.5 text-sm font-medium';

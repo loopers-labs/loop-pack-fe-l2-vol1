@@ -21,10 +21,14 @@ pnpm dev
 
 ```
 src/
-  app/                     # Next App Router
+  app/                     # Next App Router — 라우트와 화면 조립
+    (home)/                # 홈 화면 (route group, URL에는 안 드러남)
+    products/              # 상품 목록 화면
     api/products/route.ts  # mock 백엔드 (route handler)
-    layout.tsx  page.tsx
-  components/
+    layout.tsx
+  features/                # 도메인 단위 기능
+    products/              # 홈·상품 목록 — 5주차
+  shared/                  # 여러 기능이 공유하는 것만
     ui/
       select/              # Select (Headless) — 4주차 1단계
       dialog/              # Dialog (Compound) — 4주차 2단계

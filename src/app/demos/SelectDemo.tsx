@@ -9,7 +9,7 @@ import {
 } from '@floating-ui/react';
 import { Fragment, useState } from 'react';
 
-import { useSelect } from '@/components/ui/select/useSelect';
+import { useSelect } from '@/shared/ui/select/useSelect';
 
 type SizeOption = {
   id: string;

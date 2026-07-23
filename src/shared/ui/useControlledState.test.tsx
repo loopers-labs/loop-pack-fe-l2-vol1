@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useControlledState } from '@/shared/useControlledState';
+import { useControlledState } from './useControlledState';
 
 type HookProps = {
   controlled?: string;

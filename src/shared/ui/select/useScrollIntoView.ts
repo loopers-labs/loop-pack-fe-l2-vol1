@@ -1,6 +1,6 @@
 import { type RefObject } from 'react';
 
-import { useIsomorphicLayoutEffect } from '@/shared/useIsomorphicLayoutEffect';
+import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
 
 type UseScrollIntoViewParams = {
   isOpen: boolean;

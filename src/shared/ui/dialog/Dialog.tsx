@@ -12,11 +12,11 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useControlledState } from '../useControlledState';
+
 import { isTopDialog, popDialog, pushDialog } from './dialogStack';
 import { lockScroll, unlockScroll } from './scrollLock';
-
-import { useControlledState } from '@/shared/useControlledState';
-import { useHydrated } from '@/shared/useHydrated';
+import { useHydrated } from './useHydrated';
 
 interface DialogProps {
   open?: boolean;

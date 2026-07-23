@@ -13,8 +13,9 @@ import {
   useState,
 } from 'react';
 
-import { useScrollIntoView } from '@/components/ui/select/useScrollIntoView';
-import { useControlledState } from '@/shared/useControlledState';
+import { useControlledState } from '../useControlledState';
+
+import { useScrollIntoView } from './useScrollIntoView';
 
 type SelectKey = string | number;
 
