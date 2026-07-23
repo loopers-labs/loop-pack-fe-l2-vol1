@@ -22,6 +22,10 @@
 }
 
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     background: var(--color-gds-gray-100);
     color: var(--color-gds-gray-900);

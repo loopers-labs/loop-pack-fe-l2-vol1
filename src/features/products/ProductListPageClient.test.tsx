@@ -57,6 +57,7 @@ function renderProductListPageClient({
 
 describe("ProductListPageClient", () => {
   beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
     useCommerceStore.setState({
       cartProductIdMap: {},
       wishlistProductIdMap: {},
@@ -232,6 +233,28 @@ describe("ProductListPageClient", () => {
     expect(screen.getByText("첫 번째 상품")).toBeInTheDocument();
     expect(screen.queryByText("두 번째 상품")).not.toBeInTheDocument();
     expect(screen.getByLabelText("상품 목록")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("페이지를 변경하면 상품 목록 필터 영역으로 스크롤한다", async () => {
+    mockedGetProducts.mockResolvedValue({
+      products: [firstProduct],
+      categories: [],
+      totalCount: 24,
+      page: 1,
+      pageSize: 12,
+    });
+
+    renderProductListPageClient({
+      searchParams: "?page=1",
+    });
+
+    expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "다음" }));
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+      block: "start",
+    });
   });
 
   it("다음 페이지가 있으면 현재 조건의 다음 페이지를 미리 가져온다", async () => {

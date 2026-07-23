@@ -46,8 +46,21 @@ describe("commerce hydration", () => {
 
     render(<CommerceHeader />);
 
-    expect(screen.getByText("위시리스트 -")).toBeInTheDocument();
-    expect(screen.getByText("장바구니 -")).toBeInTheDocument();
+    expect(screen.getByLabelText("위시리스트 -")).toBeInTheDocument();
+    expect(screen.getByLabelText("장바구니 -")).toBeInTheDocument();
+  });
+
+  it("store 복원 전후에 헤더 메뉴 폭이 바뀌지 않도록 개수 영역 폭을 예약한다", () => {
+    useCommerceStore.setState({
+      cartProductIdMap: { p1: true },
+      wishlistProductIdMap: { p2: true },
+      hasHydrated: false,
+    });
+
+    render(<CommerceHeader />);
+
+    expect(screen.getByLabelText("위시리스트 -")).toHaveClass("min-w-[7.5rem]");
+    expect(screen.getByLabelText("장바구니 -")).toHaveClass("min-w-[7rem]");
   });
 
   it("store 복원 후에는 헤더 개수를 저장값 기준으로 렌더링한다", () => {
@@ -59,8 +72,8 @@ describe("commerce hydration", () => {
 
     render(<CommerceHeader />);
 
-    expect(screen.getByText("위시리스트 1")).toBeInTheDocument();
-    expect(screen.getByText("장바구니 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("위시리스트 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("장바구니 1")).toBeInTheDocument();
   });
 
   it("store 복원 전에는 상품 버튼 상태를 서버 기준 기본값으로 렌더링한다", () => {

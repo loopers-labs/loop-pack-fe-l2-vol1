@@ -70,14 +70,14 @@ describe("ProductListCommerceState", () => {
     renderProductListWithHeader();
 
     expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
-    expect(screen.getByText("위시리스트 0")).toBeInTheDocument();
-    expect(screen.getByText("장바구니 0")).toBeInTheDocument();
+    expect(screen.getByLabelText("위시리스트 0")).toBeInTheDocument();
+    expect(screen.getByLabelText("장바구니 0")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "1번 상품 위시리스트" }));
     await userEvent.click(screen.getByRole("button", { name: "1번 상품 장바구니" }));
 
-    expect(screen.getByText("위시리스트 1")).toBeInTheDocument();
-    expect(screen.getByText("장바구니 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("위시리스트 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("장바구니 1")).toBeInTheDocument();
   });
 });
 
