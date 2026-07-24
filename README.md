@@ -79,7 +79,7 @@ docs/assignments/          # 주차별 과제 명세
 
 ### store에 저장한 데이터 형태와 선택 이유
 
-`Set<string>`(상품 id)과 `add` / `remove` / `toggle` 세 action만 둔 selection store를 팩토리(`createSelectionStore`)로 만들어 위시리스트와 장바구니가 같은 구조를 공유한다.
+`Set<string>`(상품 id)과 `toggle` action 하나만 둔 selection store를 팩토리(`createSelectionStore`)로 만들어 위시리스트와 장바구니가 같은 구조를 공유한다. UI가 담기·빼기를 모두 버튼 토글로 수행하므로 `add`/`remove`는 두지 않았다.
 
 - 상품 객체가 아니라 **id만** 저장한다. 상품 정보의 원본은 서버(TanStack Query 캐시)이므로 store에 복사하면 두 원본이 생긴다.
 - `Set`은 담김 여부 조회(`has`)가 O(1)이라 상품 버튼 selector가 싸고, 중복 담기가 구조적으로 불가능하다.
