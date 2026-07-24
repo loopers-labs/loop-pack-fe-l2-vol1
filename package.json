@@ -25,6 +25,8 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
+    "@tanstack/react-query-devtools": "^5.101.4",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
