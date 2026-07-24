@@ -155,6 +155,13 @@ export function ProductListContent() {
   }, [data, query, queryClient]);
 
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current && inputRef.current !== document.activeElement) {
+      inputRef.current.value = params.q ?? '';
+    }
+  }, [params.q]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,7 +205,7 @@ export function ProductListContent() {
       {/* 필터 */}
       <div className="mt-6 flex flex-wrap gap-4">
         <input
-          key={params.q}
+          ref={inputRef}
           type="text"
           placeholder="상품명 또는 브랜드"
           defaultValue={params.q}
