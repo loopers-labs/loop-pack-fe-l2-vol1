@@ -1,6 +1,11 @@
 'use client'
 
-import { useShoppingStore } from '@/stores/shopping'
+import {
+  useIsInCart,
+  useIsInWishlist,
+  useToggleCart,
+  useToggleWishlist,
+} from '@/stores/shopping'
 
 interface ShoppingToggleButtonsProps {
   productId: string
@@ -13,14 +18,10 @@ export default function ShoppingToggleButtons({
   productId,
   productName,
 }: ShoppingToggleButtonsProps) {
-  const isInWishlist = useShoppingStore((state) =>
-    state.wishlistIds.includes(productId),
-  )
-  const isInCart = useShoppingStore((state) =>
-    state.cartIds.includes(productId),
-  )
-  const toggleWishlist = useShoppingStore((state) => state.toggleWishlist)
-  const toggleCart = useShoppingStore((state) => state.toggleCart)
+  const isInWishlist = useIsInWishlist(productId)
+  const isInCart = useIsInCart(productId)
+  const toggleWishlist = useToggleWishlist()
+  const toggleCart = useToggleCart()
 
   return (
     <div>

@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
 import HeaderCounts from '@/components/commerce/HeaderCounts'
-import { useShoppingStore } from '@/stores/shopping'
+import { resetShoppingState } from '@/stores/shopping'
 import type { Product } from '@/types/commerce'
 import HomePage from './page'
 import ProductListView from './products/ProductListView'
@@ -89,7 +89,7 @@ const renderApp = (
 }
 
 beforeEach(() => {
-  useShoppingStore.setState({ cartIds: [], wishlistIds: [] })
+  resetShoppingState()
 })
 
 afterEach(() => {
@@ -194,6 +194,22 @@ describe('목록 조건의 원본은 URL이다', () => {
     expect(requestedUrl).toContain('category=digital')
     expect(requestedUrl).toContain('sort=popular')
     expect(requestedUrl).toContain('page=2')
+  })
+
+  it('잘못된 URL 조건은 화면과 API 요청 모두 기본값으로 수렴한다', async () => {
+    const fetchMock = stubCommerceApi()
+    renderApp(<ProductListView />, {
+      searchParams: '?category=unknown&sort=cheapest&page=1.5',
+    })
+
+    await screen.findByText('총 2개')
+
+    expect(screen.getByLabelText('카테고리')).toHaveValue('all')
+    expect(screen.getByLabelText('정렬')).toHaveValue('latest')
+    const requestedUrl = String(fetchMock.mock.calls[0][0])
+    expect(requestedUrl).toContain('category=all')
+    expect(requestedUrl).toContain('sort=latest')
+    expect(requestedUrl).toContain('page=1')
   })
 
   it('카테고리를 바꾸면 page는 1로 돌아가고 검색어는 유지된다', async () => {

@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import ProductCard from '@/components/commerce/ProductCard'
-import { homeQuery } from '@/lib/commerce/queries'
+import { commerceQueries } from '@/lib/commerce/queries'
 
 export default function HomePage() {
-  const { data, isPending, isError, refetch } = useQuery(homeQuery())
+  const { data, isPending, isError, refetch } = useQuery(commerceQueries.home())
 
   if (isPending) {
     return (

@@ -30,6 +30,8 @@
 
 ## staleTime, gcTime 정책
 
+- 전역 staleTime 20초. 새 쿼리가 도메인 정책 없이 추가돼도 한 화면 안의 중복 요청은 피한다.
+  홈과 목록 팩토리는 아래의 더 구체적인 정책으로 전역 기본값을 덮어쓴다.
 - 홈 staleTime 60초. 배너와 랭킹은 분 단위로 바뀌지 않는다. 탐색 중 홈 재방문에 재요청하지 않는다.
 - 목록 staleTime 30초. 조건 이동과 뒤로가기가 잦아 캐시를 즉시 보여주되, 오래되면 백그라운드에서 갱신한다.
 - gcTime은 둘 다 5분. 기본값이지만 조건을 바꿨다 되돌아오는 동선을 덮는다는 근거를 확인하고 명시했다.
@@ -40,6 +42,8 @@
 - 저장하지 않음: Product 전체(서버 캐시와 이중 원본이 된다), 개수(length 파생), 포함 여부(includes 파생).
 - selector 경계: 헤더는 length만, 카드는 자기 상품의 boolean과 action만 구독한다.
   다른 상품을 토글해도 관련 없는 카드는 리렌더되지 않는다.
+- store 자체는 파일 밖으로 공개하지 않는다. 화면은 `useCartCount`, `useIsInCart`,
+  `useToggleCart`처럼 용도가 드러나는 selector 어댑터만 사용한다.
 
 ## 전역으로 올리지 않은 상태
 
@@ -54,7 +58,7 @@
 
 ## 검증 결과
 
-자동 테스트로 고정한 계약 (`pnpm test`, 총 99건 중 이번 주 18건)
+자동 테스트로 고정한 계약 (`pnpm test`, 총 109건)
 
 - 홈에서 담으면 목록의 같은 상품과 헤더 개수가 함께 바뀐다.
 - 목록과 홈의 요청 실패 시 전용 에러 화면이 뜨고, 재시도로 목록에 복귀한다.
@@ -62,7 +66,10 @@
 - 카테고리를 바꾸면 page가 1로 돌아가고 검색어는 유지된다.
 - 검색어는 제출 전에는 URL을 건드리지 않는다.
 - page에 0, 음수, 소수, 문자가 와도 parser가 기본값 1로 되돌려 API 400을 차단한다.
+- 잘못된 category, sort, page는 화면과 API 요청에서 같은 기본값으로 수렴한다.
+- 조건 변경으로 쿼리가 취소되면 AbortSignal이 실제 fetch까지 전달된다.
 - store 개수는 length 파생이며 별도 카운트 필드가 존재하지 않는다.
+- 세션 상태 폐기 시 장바구니와 위시리스트가 함께 초기화된다.
 
 브라우저에서 확인할 항목 (테스트 대역으로는 부분 검증)
 
@@ -100,7 +107,9 @@
 ## 경계 설계
 
 - `src/lib/commerce/api.ts` — fetch 함수. HTTP 실패를 throw로 승격해 쿼리가 에러 상태를 알게 한다.
-- `src/lib/commerce/queries.ts` — queryOptions 팩토리. key, queryFn, staleTime을 한 정의에 묶는다.
+- `src/lib/commerce/queries.ts` — queryOptions 팩토리. key, queryFn, staleTime을 한 정의에
+  묶고 `products → list → condition` 계층으로 무효화 범위를 조준한다.
 - `src/lib/commerce/searchParams.ts` — nuqs parser. 잘못된 URL 값이 API 계약을 벗어나지 않게 막는 관문.
-- `src/stores/shopping.ts` — 장바구니, 위시리스트 ID 목록과 toggle 액션만 가진 store.
+- `src/stores/shopping.ts` — 장바구니, 위시리스트 ID 목록과 toggle 액션만 가진 비공개
+  store. 화면에는 용도별 selector 훅을 어댑터로 공개한다.
 - 화면은 이 네 경계를 조합만 한다. scenario 제어값은 사용자 상태 어디에도 넣지 않는다.

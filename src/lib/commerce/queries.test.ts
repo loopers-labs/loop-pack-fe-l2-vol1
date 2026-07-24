@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { ProductListCondition } from './api'
-import { productListQuery } from './queries'
+import { commerceQueries } from './queries'
 
 // 조건 객체 하나가 key와 요청 양쪽의 근원이다. key만 다르거나 요청만 다르면
 // 캐시가 화면과 어긋난다.
 
-describe('productListQuery', () => {
-  it('조건 객체가 그대로 query key가 된다', () => {
+describe('commerceQueries.products', () => {
+  it('일반에서 구체로 내려가는 목록 key 계층을 만든다', () => {
     const condition: ProductListCondition = {
       q: '니트',
       category: 'casual',
@@ -15,8 +15,11 @@ describe('productListQuery', () => {
       pageSize: 12,
     }
 
-    expect(productListQuery(condition).queryKey).toEqual([
+    expect(commerceQueries.products.all()).toEqual(['products'])
+    expect(commerceQueries.products.lists()).toEqual(['products', 'list'])
+    expect(commerceQueries.products.list(condition).queryKey).toEqual([
       'products',
+      'list',
       condition,
     ])
   })
@@ -30,7 +33,9 @@ describe('productListQuery', () => {
       pageSize: 12,
     }
 
-    const pageChanged = productListQuery({ ...base, page: 2 })
-    expect(pageChanged.queryKey).not.toEqual(productListQuery(base).queryKey)
+    const pageChanged = commerceQueries.products.list({ ...base, page: 2 })
+    expect(pageChanged.queryKey).not.toEqual(
+      commerceQueries.products.list(base).queryKey,
+    )
   })
 })

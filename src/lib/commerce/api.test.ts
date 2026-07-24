@@ -74,4 +74,24 @@ describe('fetchProducts', () => {
       }),
     ).rejects.toThrow('HTTP 500')
   })
+
+  it('쿼리 취소 신호를 fetch까지 전달한다', async () => {
+    const fetchMock = stubFetch(emptyListResponse)
+    const controller = new AbortController()
+
+    await fetchProducts(
+      {
+        q: '',
+        category: 'all',
+        sort: 'latest',
+        page: 1,
+        pageSize: 12,
+      },
+      controller.signal,
+    )
+
+    expect(fetchMock).toHaveBeenCalledWith(expect.any(String), {
+      signal: controller.signal,
+    })
+  })
 })

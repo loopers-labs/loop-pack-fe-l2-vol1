@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useQueryStates } from 'nuqs'
 import ProductCard from '@/components/commerce/ProductCard'
-import { productListQuery } from '@/lib/commerce/queries'
+import { commerceQueries } from '@/lib/commerce/queries'
 import {
   categoryFilterValues,
   PRODUCT_PAGE_SIZE,
@@ -38,7 +38,10 @@ export default function ProductListView() {
   )
   // URL 조건이 그대로 query key와 요청이 된다. 기본 정렬도 API에 명시된다.
   const { data, isPending, isError, refetch } = useQuery(
-    productListQuery({ ...filters, pageSize: PRODUCT_PAGE_SIZE }),
+    commerceQueries.products.list({
+      ...filters,
+      pageSize: PRODUCT_PAGE_SIZE,
+    }),
   )
 
   // 검색, 카테고리, 정렬이 바뀌면 보던 페이지는 의미가 없다. 1페이지로 되돌린다.
