@@ -41,11 +41,20 @@ React 로컬 state — 한 화면에서만 쓰는 것
 
 ### page 범위 초과 처리
 URL에 `page=3`을 직접 입력해도 해당 페이지가 실제로 존재하면 유지하고, 존재하지 않으면 데이터 로드 후 자동으로 page 1로 리셋.
+리셋은 사용자가 의도한 이동이 아니라 자동 보정이므로 `history: 'replace'`로 처리해 히스토리에 쌓이지 않도록 함.
 
 ### debounce (검색어)
 검색어 입력 중 매 키 입력마다 API를 호출하면 불필요한 요청이 많아짐.
 `searchInput`을 로컬 state로 두고 300ms 후 URL에 반영.
 마운트 시 초기값으로 인한 page 리셋을 막기 위해 `useRef`로 첫 렌더를 건너뜀.
+
+### searchInput ↔ URL sync (앞/뒤로가기)
+브라우저 앞/뒤로가기로 URL이 바뀌면 `filters.q`가 바뀌지만 `searchInput`(로컬 state)은 그대로 남음.
+이 상태에서 debounce가 발동하면 `searchInput`의 이전 값이 URL을 덮어써 탐색 복원이 깨짐.
+
+두 가지 ref로 해결:
+- `skipNextDebounce`: URL 변경으로 `searchInput`을 sync할 때 debounce가 URL을 즉시 덮어쓰지 않도록 한 번 건너뜀
+- `lastDebounceQ`: debounce가 URL을 업데이트하면 sync effect도 같이 발동됨. 이때 `searchInput`을 URL 값으로 덮어쓰면 타이핑 중인 글자가 지워짐. `lastDebounceQ`에 "내가 방금 이 값을 URL에 썼다"를 기억해두고, 그 값이 돌아올 때는 sync를 건너뜀.
 
 ---
 
@@ -109,6 +118,9 @@ B를 적용하려면 `page.tsx`를 서버 컴포넌트로 전환하고, 요청�
 | -------- | ---- |
 | URL 새로고침 후 필터 복원 | 통과 |
 | 뒤로가기·앞으로가기 필터 복원 | 통과 |
+| 뒤로가기·앞으로가기 후 검색어 input sync | 통과 |
 | URL 공유 후 새 탭 동일 결과 | 통과 |
 | 홈 ↔ 목록 이동 중 store 유지 | 통과 |
 | persist 새로고침 후 장바구니·위시리스트 복원 | 통과 |
+| 검색 input에서 Enter 키 입력 시 페이지 새로고침 없음 | 통과 |
+| 로딩·에러 상태에서 페이지네이션 미노출 | 통과 |
