@@ -10,12 +10,15 @@ interface CartItem {
 
 interface CartState {
   items: Map<string, CartItem>;
+  lastAddedItem: Omit<CartItem, 'quantity'> | null;
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (id: string) => void;
+  clearLastAdded: () => void;
 }
 
 export const useCartStore = create<CartState>((set) => ({
   items: new Map(),
+  lastAddedItem: null,
 
   addItem: (item) =>
     set((state) => {
@@ -25,7 +28,7 @@ export const useCartStore = create<CartState>((set) => ({
         ...item,
         quantity: existing ? existing.quantity + 1 : 1,
       });
-      return { items: next };
+      return { items: next, lastAddedItem: item };
     }),
 
   removeItem: (id) =>
@@ -34,4 +37,6 @@ export const useCartStore = create<CartState>((set) => ({
       next.delete(id);
       return { items: next };
     }),
+
+  clearLastAdded: () => set({ lastAddedItem: null }),
 }));

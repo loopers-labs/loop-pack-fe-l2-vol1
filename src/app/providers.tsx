@@ -2,6 +2,7 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { CartDialog } from '@/components/CartDialog';
 import { getQueryClient } from './getQueryClient';
 
 interface ProvidersProps {
@@ -13,7 +14,10 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NuqsAdapter>{children}</NuqsAdapter>
+      <NuqsAdapter>
+        {children}
+        <CartDialog />
+      </NuqsAdapter>
     </QueryClientProvider>
   );
 }
