@@ -20,6 +20,15 @@ const buildQueryString = (query?: FetcherOptions['query']): string => {
   return qs ? `?${qs}` : '';
 };
 
+// [AI] 서버(Node.js) fetch는 상대 URL을 처리하지 못하므로 절대 URL이 필요하다.
+// 브라우저에서는 빈 문자열을 써서 상대 URL 그대로 동작하게 한다.
+const getBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+};
+
 // TanStack Query가 error 상태로 인식하도록 HTTP 에러를 예외로 던진다. (AI 활용)
 export class ApiError extends Error {
   status: number;
@@ -33,7 +42,7 @@ export class ApiError extends Error {
 // response.json()은 Promise<any>를 반환하므로, 별도의 타입 단언 없이
 // 반환 타입 Promise<T>로 직접 할당 가능하다. (eslint consistent-type-assertions: never 대응)
 export const apiFetch = async <T>(path: string, options?: FetcherOptions): Promise<T> => {
-  const response = await fetch(`${path}${buildQueryString(options?.query)}`);
+  const response = await fetch(`${getBaseUrl()}${path}${buildQueryString(options?.query)}`);
 
   if (!response.ok) {
     let message = `요청에 실패했습니다. (status: ${response.status})`;
