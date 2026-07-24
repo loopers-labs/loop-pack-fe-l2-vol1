@@ -4,8 +4,7 @@ import { useSelect } from '@/components/ui/select';
 import { ChevronIcon } from '@/components/icons/ChevronIcon';
 import { DeliveryIcon } from '@/components/icons/DeliveryIcon';
 import type { SelectOption } from '@/components/ui/select';
-
-type SizeValue = { value: number; stock: number };
+import type { SizeValue } from '@/types/commerce';
 
 interface SizeSelectProps {
   options: SelectOption<SizeValue>[];

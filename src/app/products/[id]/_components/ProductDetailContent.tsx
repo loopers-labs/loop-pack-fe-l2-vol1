@@ -11,8 +11,7 @@ import { StarIcon } from '@/components/icons/StarIcon';
 import { formatWon, calcDiscount } from '@/utils/format';
 import { SizeSelect } from './SizeSelect';
 import type { SelectOption } from '@/components/ui/select';
-
-type SizeValue = { value: number; stock: number };
+import type { SizeValue } from '@/types/commerce';
 
 const CATEGORY_NAME: Record<string, string> = {
   casual: '캐주얼',

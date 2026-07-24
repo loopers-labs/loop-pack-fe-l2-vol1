@@ -17,6 +17,8 @@ export type ProductListQuery = {
   pageSize?: number;
 };
 
+export type SizeValue = { value: number; stock: number };
+
 export type Product = {
   id: string;
   brand: string;
@@ -26,7 +28,7 @@ export type Product = {
   originalPrice: number | null;
   image: string;
   freeShipping: boolean;
-  sizes: Array<{ value: number; stock: number }>;
+  sizes: SizeValue[];
   rating: number;
   reviewCount: number;
   createdAt: string;
