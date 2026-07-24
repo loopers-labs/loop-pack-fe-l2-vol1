@@ -5,10 +5,7 @@ import { describe, expect, it } from "vitest";
 import { homeBanner, products } from "./commerce";
 
 const productImagesDirectory = join(process.cwd(), "public/images/products");
-const imageManifestPath = join(
-  process.cwd(),
-  "docs/assets/week-05-product-images.md",
-);
+const imageManifestPath = join(process.cwd(), "docs/assets/week-05-product-images.md");
 
 describe("commerce fixture", () => {
   it("uses at least three explicit product brands", () => {
@@ -16,21 +13,15 @@ describe("commerce fixture", () => {
   });
 
   it("uses a neutral local brand for products without an explicit brand", () => {
-    expect(products.find((product) => product.id === "p1")?.brand).toBe(
-      "Loopers Select",
-    );
+    expect(products.find((product) => product.id === "p1")?.brand).toBe("Loopers Select");
   });
 
   it("provides deterministic mock discounts while retaining full-price products", () => {
-    const discountedProducts = products.filter(
-      (product) => product.originalPrice !== null,
-    );
+    const discountedProducts = products.filter((product) => product.originalPrice !== null);
 
     expect(products.some((product) => product.originalPrice === null)).toBe(true);
     expect(
-      Object.fromEntries(
-        discountedProducts.map((product) => [product.id, product.originalPrice]),
-      ),
+      Object.fromEntries(discountedProducts.map((product) => [product.id, product.originalPrice])),
     ).toEqual({
       p4: 158000,
       p7: 498000,
@@ -99,17 +90,13 @@ describe("commerce fixture", () => {
     }
 
     const manifest = readFileSync(imageManifestPath, "utf8");
-    const imageRows = manifest
-      .split("\n")
-      .filter((line) => /^\| p\d+ \|/.test(line));
+    const imageRows = manifest.split("\n").filter((line) => /^\| p\d+ \|/.test(line));
     const p1Row = imageRows.find((line) => line.startsWith("| p1 |"));
 
     expect(imageRows).toHaveLength(30);
     expect(manifest).not.toMatch(/29\s*cm/i);
     expect(manifest).not.toContain("http");
     expect(p1Row).toContain("| `p1.jpg` |");
-    expect(p1Row).toContain(
-      "| [11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG |",
-    );
+    expect(p1Row).toContain("| [11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG |");
   });
 });

@@ -13,19 +13,13 @@ export async function GET(
   const scenario = request.nextUrl.searchParams.get("scenario");
 
   if (scenario !== null && !isMockApiScenario(scenario)) {
-    return NextResponse.json(
-      { message: "요청 조건을 확인해주세요." },
-      { status: 400 },
-    );
+    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
   await waitForMockApi();
 
   if (scenario === "error") {
-    return NextResponse.json(
-      { message: "홈 데이터를 불러오지 못했습니다." },
-      { status: 500 },
-    );
+    return NextResponse.json({ message: "홈 데이터를 불러오지 못했습니다." }, { status: 500 });
   }
 
   const popularProducts = [...products]
