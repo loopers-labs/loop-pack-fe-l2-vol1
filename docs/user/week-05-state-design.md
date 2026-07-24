@@ -130,6 +130,45 @@ page.tsx (Server Component)
 
 서버에서 prefetch한 데이터가 HydrationBoundary를 통해 클라이언트 캐시에 복원되므로, 클라이언트의 useQuery는 캐시 히트로 처리. staleTime과 무관하게 초기 마운트 시 API 재요청 없음.
 
+## Advanced 과제 선택: B (Server Prefetch) + C (UX 개선)
+
+### 선택 이유
+
+사용자 경험을 가장 우선하기 때문에 B와 C를 선택했다.
+주변 5명에게 "이커머스를 이용할 때 가장 불편한 점"을 물었고, 3명이 **속도**를 가장 중요하게 꼽았다.
+나머지 불편사항(복잡한 UI, 느린 검색 등)을 종합하면, 결국 **체감 속도를 높이는 것**이 사용자 만족도에 가장 큰 영향을 미친다는 결론에 도달했다.
+
+- **B (Server Prefetch)**: 서버에서 데이터를 미리 가져와 초기 로딩 스피너를 제거 → 첫 화면이 즉시 보임
+- **C (UX 개선)**: 다음 페이지 prefetch + 링크 hover 시 pre-navigation prefetch → 페이지 전환이 즉각적
+
+### C: Prefetch 전략 상세
+
+#### 1. 다음 페이지 prefetch (Next Page Prefetch)
+
+상품 목록에서 현재 페이지 데이터가 로드되면, 다음 페이지 데이터를 백그라운드로 미리 가져온다.
+사용자가 "다음" 버튼을 누르면 이미 캐시에 데이터가 있으므로 즉시 렌더링된다.
+
+```
+useEffect → data.page < totalPages → prefetchQuery(page + 1)
+```
+
+#### 2. Pre-navigation prefetch (Hover Prefetch)
+
+사용자가 상품 목록 페이지로 이동할 가능성이 높은 링크에 hover하면 데이터를 미리 가져온다.
+
+| 위치 | 링크 | prefetch 대상 |
+|---|---|---|
+| HeaderNav | "상품" | 기본 조건 상품 목록 (전체/최신순/1페이지) |
+| HomeClient 배너 | "Shop Now" | 동일 |
+
+마우스를 올리는 것만으로 네트워크 요청이 시작되므로, 클릭 후 페이지 전환 시 데이터가 이미 캐시에 있을 확률이 높다.
+
+### 참고: 실무에서의 prefetch
+
+- **무신사**: 상품 목록에서 스크롤하면 다음 페이지를 미리 로드 (무한 스크롤 + prefetch)
+- **쿠팡**: 검색 결과 페이지에서 다음 페이지 데이터를 미리 가져옴
+- **Next.js**: `<Link>` 컴포넌트가 viewport에 들어오면 자동으로 JS 번들을 prefetch하지만, 데이터 prefetch는 별도로 구현해야 함
+
 ## 로그인·서버 동기화가 생기면
 
 위시리스트의 원본 소유자가 클라이언트 → 서버로 이동한다.

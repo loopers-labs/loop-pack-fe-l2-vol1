@@ -11,5 +11,6 @@ export function homeQueryOptions() {
     },
     // 홈 배너·인기·신상품은 자주 바뀌지 않으므로 5분간 fresh 유지
     staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }

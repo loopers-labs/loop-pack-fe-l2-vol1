@@ -36,5 +36,6 @@ export function productDetailQueryOptions(id: string) {
       return data.products[0];
     },
     staleTime: 0,
+    gcTime: 10 * 60 * 1000,
   });
 }
