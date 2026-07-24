@@ -13,8 +13,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:browser:smoke": "node scripts/playwright-ci-smoke.mjs",
     "test:watch": "vitest",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build"
+    "check": "pnpm test && pnpm test:browser:smoke && pnpm lint && pnpm typecheck && pnpm build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
@@ -30,6 +31,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "playwright": "1.61.1",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }
