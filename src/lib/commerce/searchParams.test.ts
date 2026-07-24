@@ -17,6 +17,12 @@ describe('page parser', () => {
     expect(productListSearchParams.page.parse('abc')).toBeNull()
     expect(productListSearchParams.page.defaultValue).toBe(1)
   })
+
+  it('안전 정수를 벗어난 거대 수도 거부한다. API가 400으로 거절하는 값이다', () => {
+    expect(
+      productListSearchParams.page.parse('99999999999999999999'),
+    ).toBeNull()
+  })
 })
 
 describe('category, sort parser', () => {

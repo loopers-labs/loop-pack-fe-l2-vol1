@@ -19,12 +19,13 @@ export const sortFilterValues = [
 
 export type CategoryFilter = (typeof categoryFilterValues)[number]
 
-// page=0, 음수, 소수는 API가 400으로 거절하는 값이다.
+// page=0, 음수, 소수, 안전 정수 초과는 API가 400으로 거절하는 값이다.
 // parser가 관문이 되어 잘못된 URL을 기본값 1로 되돌린다.
+// isSafeInteger인 이유: isInteger는 1e20 같은 거대 수를 통과시키는데 API는 거절한다.
 const parseAsPageNumber = createParser<number>({
   parse: (value) => {
     const page = Number(value)
-    return Number.isInteger(page) && page >= 1 ? page : null
+    return Number.isSafeInteger(page) && page >= 1 ? page : null
   },
   serialize: (value) => String(value),
 })
