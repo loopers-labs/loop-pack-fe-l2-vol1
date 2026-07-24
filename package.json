@@ -1,13 +1,12 @@
 {
-  "name": "loop-pack-fe-l2-vol1",
+  "name": "commerce",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "packageManager": "pnpm@10.15.1",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -16,40 +15,42 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{ts,tsx,js,jsx,mjs}": [
       "eslint --fix --max-warnings=0 --no-warn-ignored",
       "prettier --write"
     ],
-    "*.{css,json,mjs}": [
+    "*.{css,json}": [
       "prettier --write"
     ]
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@next/eslint-plugin-next": "16.2.10",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.4",
-    "typescript": "~6.0.2",
+    "typescript": "^5",
     "typescript-eslint": "^8.61.1",
-    "vite": "^8.0.12",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   }
 }
