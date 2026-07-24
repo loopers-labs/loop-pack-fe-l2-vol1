@@ -16,10 +16,20 @@ export function ProductListResults({ result, page, onPageChange }: ProductListRe
   return (
     <section className="week05-section" aria-label="상품 검색 결과">
       <p>총 {result.totalCount}개</p>
-      {result.products.length === 0 ? (
+      {result.totalCount === 0 ? (
         <Placeholder
           title="검색 결과가 없어요"
           description="다른 검색어나 카테고리·정렬을 선택해 보세요."
+        />
+      ) : result.products.length === 0 ? (
+        <Placeholder
+          title="존재하지 않는 페이지예요"
+          description={`마지막 페이지는 ${totalPages}페이지예요.`}
+          action={
+            <button type="button" onClick={() => onPageChange(totalPages)}>
+              마지막 페이지로 이동
+            </button>
+          }
         />
       ) : (
         <>
