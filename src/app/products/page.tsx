@@ -27,11 +27,7 @@ function ProductListContent() {
     <>
       <section className="week05-section">
         <h1>상품 목록</h1>
-        <ProductFilters
-          search={search}
-          categories={products?.categories ?? []}
-          onChange={setSearch}
-        />
+        <ProductFilters search={search} onChange={setSearch} />
       </section>
       {isLoading ? (
         <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
