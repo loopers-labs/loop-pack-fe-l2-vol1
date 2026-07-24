@@ -70,6 +70,31 @@
 - 에러와 빈 화면은 scenario=error, scenario=empty를 주소창에 직접 입력해 확인한다.
   scenario는 사용자 URL 상태와 쿼리 조건에 포함하지 않았다.
 
+## 엣지케이스 점검과 트레이드오프 판단
+
+적용한 것
+
+- page parser를 isSafeInteger로 강화. isInteger는 1e20을 통과시키는데 API는 거절해서,
+  재시도로 못 빠져나오는 에러 화면이 될 수 있었다.
+- 빈 응답을 둘로 구분. 조건 불일치와 범위 밖 페이지는 다른 상태다.
+  후자에는 개수 안내와 1페이지 이동 출구를 준다.
+- React Query의 취소 신호를 fetch까지 전달. 조건 연타 시 낡은 요청을 끊는다.
+
+보류한 것과 이유
+
+- 4xx에 retry 제외: parser 강화 후에는 우리 UI가 400을 만들 경로가 없다.
+  도달 불가능한 경로에 에러 클래스와 retry 분기를 추가하는 것은 비용만 남는다.
+- error.tsx(Error Boundary): 계약 밖 200 응답을 막는 안전망인데 mock API는 그런 응답을
+  만들지 못하고, Error Boundary는 이후 라운드 주제라 그때 페이지 경계와 함께 설계한다.
+- placeholderData로 페이지 전환 중 기존 목록 유지: Advanced C 범위라 Basic에서 제외.
+
+장애영향 범위
+
+- 목록 API 장애: 결과 영역만 에러. 필터와 헤더와 장바구니 상태는 생존한다.
+- 홈 API 장애: 단일 endpoint라 홈 전체가 에러 화면이 되지만, 헤더가 layout에 있어
+  다른 페이지로의 출구는 살아 있고 재시도 버튼을 둔다.
+- store는 순수 토글이라 예외 경로가 없고, persist가 없어 hydration 불일치도 없다.
+
 ## 경계 설계
 
 - `src/lib/commerce/api.ts` — fetch 함수. HTTP 실패를 throw로 승격해 쿼리가 에러 상태를 알게 한다.
