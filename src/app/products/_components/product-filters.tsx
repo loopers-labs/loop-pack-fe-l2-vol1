@@ -1,16 +1,18 @@
 "use client";
 
 import { ProductSearchInput } from "@/app/products/_components/product-search-input";
-import { pageSizeValues, type ProductSearchState } from "@/app/products/_lib/search-params";
-import type { Category } from "@/types/commerce";
+import {
+  categoryFilterOptions,
+  pageSizeValues,
+  type ProductSearchState,
+} from "@/app/products/_lib/search-params";
 
 type ProductFiltersProps = {
   search: ProductSearchState;
-  categories: Category[];
   onChange: (patch: Partial<ProductSearchState>) => void;
 };
 
-export function ProductFilters({ search, categories, onChange }: ProductFiltersProps) {
+export function ProductFilters({ search, onChange }: ProductFiltersProps) {
   return (
     <div className="week05-filters">
       <ProductSearchInput value={search.q} onDebouncedChange={(q) => onChange({ q, page: 1 })} />
@@ -26,10 +28,9 @@ export function ProductFilters({ search, categories, onChange }: ProductFiltersP
             })
           }
         >
-          <option value="all">전체</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
+          {categoryFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>
