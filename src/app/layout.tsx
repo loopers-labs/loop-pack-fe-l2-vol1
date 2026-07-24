@@ -30,7 +30,7 @@ export default function RootLayout({
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <Providers>
-          <main className="week05-page">
+          <div className="week05-page">
             <header className="week05-header">
               <Link href="/">Commerce</Link>
               <nav aria-label="주요 메뉴">
@@ -38,8 +38,8 @@ export default function RootLayout({
                 <HeaderActions />
               </nav>
             </header>
-            {children}
-          </main>
+            <main>{children}</main>
+          </div>
         </Providers>
       </body>
     </html>
