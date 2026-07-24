@@ -9,11 +9,7 @@ import { useWishlistStore } from '@/store/wishlistStore';
 
 export function HeaderNav() {
   const queryClient = useQueryClient();
-  const cartCount = useCartStore((s) => {
-    let total = 0;
-    for (const item of s.items.values()) total += item.quantity;
-    return total;
-  });
+  const cartCount = useCartStore((s) => s.items.size);
   const wishlistCount = useWishlistStore((s) => s.ids.size);
 
   const prefetchProducts = useCallback(() => {

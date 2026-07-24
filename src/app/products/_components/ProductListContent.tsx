@@ -11,6 +11,7 @@ import { productListQueryOptions } from '@/queries/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { useProductSearchParams } from '../_hooks/useProductSearchParams';
+import { formatWon } from '@/utils/format';
 import type { Product, ProductListResponse } from '@/types/commerce';
 
 function ProductActions({ product }: { product: Product }) {
@@ -91,11 +92,11 @@ function ProductGrid({ data, isFetching, setPage }: ProductGridProps) {
                   {product.name}
                 </h2>
                 <strong className="mt-1 block text-sm font-semibold text-text">
-                  {product.price.toLocaleString('ko-KR')}원
+                  {formatWon(product.price)}
                 </strong>
                 {product.originalPrice && (
                   <span className="text-xs text-text-caption line-through">
-                    {product.originalPrice.toLocaleString('ko-KR')}원
+                    {formatWon(product.originalPrice)}
                   </span>
                 )}
               </Link>
