@@ -20,7 +20,7 @@ const ProductCategoryArr: { id: CategoryId; label: string }[] = [
 ] as const;
 
 export const HomeContent = () => {
-  const { data, isPending, isError } = useQuery(homeQueries.home());
+  const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
 
   const queryClient = useQueryClient();
 
@@ -35,7 +35,14 @@ export const HomeContent = () => {
       return <p>불러오는 중...</p>;
     }
     if (isError) {
-      return <p role="alert">상품을 불러오지 못했습니다.</p>;
+      return (
+        <p role="alert">
+          상품을 불러오지 못했습니다.{' '}
+          <button type="button" onClick={() => refetch()}>
+            다시 시도
+          </button>
+        </p>
+      );
     }
 
     return HomeCategoryArr.map((title) => {

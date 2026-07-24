@@ -25,7 +25,7 @@ const ProductsPage = () => {
     setSearchInput,
     query,
   } = useProductPage();
-  const { data, isPending, isError } = useQuery(productQueries.list(query));
+  const { data, isPending, isError, refetch } = useQuery(productQueries.list(query));
 
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / (data?.pageSize ?? PAGE_SIZE)));
@@ -39,7 +39,15 @@ const ProductsPage = () => {
 
   const renderResults = () => {
     if (isPending) return <p>불러오는 중...</p>;
-    if (isError) return <p role="alert">상품을 불러오지 못했습니다.</p>;
+    if (isError)
+      return (
+        <p role="alert">
+          상품을 불러오지 못했습니다.{' '}
+          <button type="button" onClick={() => refetch()}>
+            다시 시도
+          </button>
+        </p>
+      );
     if (data.products.length === 0) return <p>검색 결과가 없습니다.</p>;
 
     return (
