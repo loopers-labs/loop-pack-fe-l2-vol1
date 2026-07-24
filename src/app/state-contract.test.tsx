@@ -139,6 +139,45 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
   })
 })
 
+describe('요청 실패는 전용 화면과 재시도 출구를 가진다', () => {
+  it('목록 실패 시 에러 화면을 보여주고, 재시도가 성공하면 목록으로 복귀한다', async () => {
+    // 첫 요청만 500, 재시도부터 성공하는 스텁
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 500 } as Response)
+      .mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(listPayload),
+      } as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderApp(<ProductListView />)
+
+    expect(
+      await screen.findByText('상품 목록을 불러오지 못했습니다.'),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
+    expect(await screen.findByText('총 2개')).toBeInTheDocument()
+  })
+
+  it('홈 실패 시 에러 화면과 재시도 버튼을 보여준다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response),
+    )
+
+    renderApp(<HomePage />)
+
+    expect(
+      await screen.findByText('홈 데이터를 불러오지 못했습니다.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '다시 시도' }),
+    ).toBeInTheDocument()
+  })
+})
+
 describe('목록 조건의 원본은 URL이다', () => {
   it('URL의 조건이 화면과 API 요청에 그대로 나타난다', async () => {
     const fetchMock = stubCommerceApi()
