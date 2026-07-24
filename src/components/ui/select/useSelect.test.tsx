@@ -1,3 +1,5 @@
+// [AI] render/userEvent에 DOM이 필요하므로 jsdom 환경을 명시한다.
+// @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, within, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

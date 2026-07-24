@@ -2,14 +2,50 @@
 
 import type { CSSProperties } from 'react';
 import { useSelect } from './useSelect';
-import {
-  sizeOptions,
-  thumbnailOptions,
-  titlePriceOptions,
-  type SizeOption,
-  type ThumbnailOption,
-  type TitlePriceOption,
-} from '@/app/api/products/route';
+
+// [AI] 5주차 동기화로 route.ts에서 삭제된 데모용 fixture를 이 파일로 옮겼다.
+// API 라우트와 무관한 데모 전용 데이터이므로 라우트가 아닌 여기에 둔다.
+interface TitlePriceOption {
+  id: string;
+  name: string;
+  price: number;
+  freeShipping: boolean;
+}
+
+const titlePriceOptions: TitlePriceOption[] = [
+  { id: 'tp1', name: '플레인 베이글', price: 3200, freeShipping: true },
+  { id: 'tp2', name: '에브리씽 베이글', price: 3800, freeShipping: false },
+  { id: 'tp3', name: '시나몬 레이즌 베이글', price: 4200, freeShipping: true },
+  { id: 'tp4', name: '블루베리 베이글', price: 4500, freeShipping: false },
+];
+
+interface SizeOption {
+  value: number;
+  arrivalText: string;
+  soldOut: boolean;
+}
+
+const sizeOptions: SizeOption[] = [
+  { value: 24, arrivalText: '내일 (토) 도착보장', soldOut: false },
+  { value: 25, arrivalText: '내일 (토) 도착보장', soldOut: true },
+  { value: 26, arrivalText: '내일 (토) 도착보장', soldOut: false },
+  { value: 27, arrivalText: '모레 (일) 도착보장', soldOut: false },
+  { value: 28, arrivalText: '모레 (일) 도착보장', soldOut: true },
+];
+
+interface ThumbnailOption {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+}
+
+const thumbnailOptions: ThumbnailOption[] = [
+  { id: 'th1', name: '플레인 베이글', description: '고소한 오리지널', image: '/next.svg' },
+  { id: 'th2', name: '에브리씽 베이글', description: '풍성한 토핑', image: '/next.svg' },
+  { id: 'th3', name: '시나몬 레이즌', description: '달콤한 계핏가루', image: '/next.svg' },
+  { id: 'th4', name: '블루베리', description: '상큼한 베리', image: '/next.svg' },
+];
 
 export const SelectDemo = () => {
   return (
