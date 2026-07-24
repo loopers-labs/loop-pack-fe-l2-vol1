@@ -13,7 +13,7 @@ import {
 export const homeQuery = () =>
   queryOptions({
     queryKey: ['home'],
-    queryFn: fetchHome,
+    queryFn: ({ signal }) => fetchHome(signal),
     staleTime: 60_000,
     gcTime: 5 * 60_000,
   })
@@ -22,7 +22,7 @@ export const productListQuery = (condition: ProductListCondition) =>
   queryOptions({
     // 조건 객체가 key다. 조건이 다르면 다른 캐시, 같으면 같은 캐시를 재사용한다.
     queryKey: ['products', condition],
-    queryFn: () => fetchProducts(condition),
+    queryFn: ({ signal }) => fetchProducts(condition, signal),
     staleTime: 30_000,
     gcTime: 5 * 60_000,
   })
