@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { productQueries } from '@/features/product/api/queries';
 import {
   PAGE_SIZE,
@@ -10,6 +10,7 @@ import {
 } from '@/features/product/hooks/useProductListFilters';
 import { Header } from '@/widgets/Header';
 import { ProductCard } from '@/features/product/ui/ProductCard';
+import { useEffect } from 'react';
 
 // [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
 const ProductsPage = () => {
@@ -19,6 +20,13 @@ const ProductsPage = () => {
 
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / (data?.pageSize ?? PAGE_SIZE)));
+
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (page >= totalPages) return;
+    const nextQuery = { ...query, page: page + 1 };
+    queryClient.prefetchQuery(productQueries.list(nextQuery));
+  });
 
   const renderResults = () => {
     if (isPending) return <p>불러오는 중...</p>;
