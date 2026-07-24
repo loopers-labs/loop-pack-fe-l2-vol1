@@ -16,6 +16,13 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Playwright/Vitest Browser Mode를 쓸 때만 Chromium 설치(가드). 안 쓰면 no-op.
+      # loopers 공통 quality workflow #100과 동일 — Actions에 Chromium 없어 실패하는 문제 방지.
+      - name: Install Playwright Chromium when used
+        run: |
+          if pnpm exec playwright --version >/dev/null 2>&1; then
+            pnpm exec playwright install --with-deps chromium
+          fi
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm depcruise
