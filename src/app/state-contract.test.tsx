@@ -48,10 +48,11 @@ const listPayload = {
   pageSize: 12,
 }
 
-const stubCommerceApi = () => {
+const stubCommerceApi = (listOverrides: Partial<typeof listPayload> = {}) => {
+  const list = { ...listPayload, ...listOverrides }
   const fetchMock = vi.fn((input: RequestInfo | URL) => {
     const url = String(input)
-    const payload = url.startsWith('/api/home') ? homePayload : listPayload
+    const payload = url.startsWith('/api/home') ? homePayload : list
     return Promise.resolve({
       ok: true,
       json: () => Promise.resolve(payload),
@@ -175,6 +176,28 @@ describe('목록 조건의 원본은 URL이다', () => {
     expect(updated.get('q')).toBe('니트')
     // page=1은 기본값이라 URL에서 사라진다. 3이 남아있으면 안 된다
     expect(updated.get('page')).toBeNull()
+  })
+
+  it('범위 밖 페이지는 빈 결과가 아니라 출구가 있는 안내를 보여준다', async () => {
+    stubCommerceApi({ products: [], totalCount: 2, page: 99 })
+    const onUrlUpdate = vi.fn()
+    renderApp(<ProductListView />, { searchParams: '?page=99', onUrlUpdate })
+
+    await screen.findByText(/없는 페이지/)
+    fireEvent.click(screen.getByRole('button', { name: '1페이지로 이동' }))
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
+    // page=1은 기본값이라 URL에서 제거된다
+    expect(lastUrlUpdate(onUrlUpdate).searchParams.get('page')).toBeNull()
+  })
+
+  it('결과가 정말 없을 때만 조건 불일치 문구를 보여준다', async () => {
+    stubCommerceApi({ products: [], totalCount: 0 })
+    renderApp(<ProductListView />)
+
+    expect(
+      await screen.findByText('조건에 맞는 상품이 없습니다.'),
+    ).toBeInTheDocument()
   })
 
   it('검색을 제출해야 URL에 반영된다. 입력 중에는 로컬에 머문다', async () => {

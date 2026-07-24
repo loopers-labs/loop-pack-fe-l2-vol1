@@ -83,6 +83,17 @@ export default function ProductListView() {
         </button>
       </>
     )
+  } else if (data.products.length === 0 && data.totalCount > 0) {
+    // 빈 응답에는 두 종류가 있다. 조건에 맞는 상품이 없는 것과
+    // 범위 밖 페이지를 연 것. 후자는 막다른 화면이 되지 않게 출구를 준다
+    results = (
+      <>
+        <p>없는 페이지입니다. 조건에 맞는 상품은 {data.totalCount}개입니다.</p>
+        <button type="button" onClick={() => handlePageChange(1)}>
+          1페이지로 이동
+        </button>
+      </>
+    )
   } else if (data.products.length === 0) {
     results = <p>조건에 맞는 상품이 없습니다.</p>
   } else {
