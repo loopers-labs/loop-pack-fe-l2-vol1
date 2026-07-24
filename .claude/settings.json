@@ -2,21 +2,13 @@
   "permissions": {
     "deny": [
       "Edit(eslint.config.mjs)",
-      "Write(eslint.config.mjs)",
       "Edit(tsconfig.json)",
-      "Write(tsconfig.json)",
       "Edit(.prettierrc)",
-      "Write(.prettierrc)",
       "Edit(.husky/**)",
-      "Write(.husky/**)",
       "Edit(.github/workflows/**)",
-      "Write(.github/workflows/**)",
       "Edit(.claude/settings.json)",
-      "Write(.claude/settings.json)",
       "Edit(.claude/settings.local.json)",
-      "Write(.claude/settings.local.json)",
-      "Edit(.claude/hooks/**)",
-      "Write(.claude/hooks/**)"
+      "Edit(.claude/hooks/**)"
     ]
   },
   "hooks": {

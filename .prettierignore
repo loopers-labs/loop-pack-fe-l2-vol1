@@ -8,3 +8,4 @@ docs/assignments/
 # 로컬 도구 산출물(git-ignored) — 프로젝트 소스 아님
 .playwright-mcp
 .superset
+.sync-backup

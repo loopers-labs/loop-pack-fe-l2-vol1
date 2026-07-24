@@ -21,6 +21,26 @@ DOM 렌더·조회는 React Testing Library(RTL), 사용자 상호작용 시뮬�
 
 이 방식은 [conventions.md의 "외부 경계만 모킹" 원칙](./conventions.md#모킹)과 같은 축이다 — 내부 모듈을 `vi.mock`하면 실제 통합이 숨어 false green이 나오는 것처럼, 네트워크도 라이브러리 함수가 아니라 경계 자체를 가로채야 실제 요청 흐름을 검증한다.
 
+### MSW의 전제와 실패 모드
+
+> **Caveat**: MSW는 HTTP 요청 경계를 가로챈다. 따라서 두 가지가 성립해야 동작한다:
+> **① 테스트 환경에서 그 호출이 실제로 HTTP 요청이 되어야 하고,**
+> **② 그 요청이 핸들러가 매칭하는 축(method·URL·operationName)으로 식별 가능해야 한다.**
+
+**①이 깨지는 경우 — Next.js Server Action.** `'use server'` 모듈을 Vitest에서 import하면 평범한 async 함수일 뿐이다. 액션 ID도 client reference 마커도 없이 인프로세스로 실행되고, fetch는 0회 발생한다. 프로덕션에서는 Next.js 컴파일러가 클라이언트 번들을 만들 때 함수를 "액션 ID + POST 디스패처"로 치환하는데, Vitest는 이 컴파일러를 태우지 않는다. MSW가 이 호출을 "못 잡는" 게 아니라 애초에 "잡을 네트워크 요청이 없다" — 올바른 레버는 `vi.mock`(모듈 모킹)이다. 이건 "외부 경계만 모킹" 원칙의 예외가 아니라, Server Action이 이 테스트 환경에서는 네트워크 경계가 아니라는 사실이다. (참고: 프로덕션 런타임에서 액션은 자기 페이지 URL로 POST되고 액션 ID는 `next-action` 헤더에 실린다(https://nextjs.org/docs/app/guides/server-actions) — URL만으로는 액션을 식별할 수 없다. 응답은 Flight 스트림이고 MSW에 `rsc` 네임스페이스는 없다. Next.js 공식 Vitest 가이드(https://nextjs.org/docs/app/guides/testing/vitest)는 MSW도 Server Action 테스트 방법도 다루지 않는다 — 이 부분은 1차 출처가 없다.)
+
+**②가 깨지는 경우 — GraphQL 배칭.** Apollo `BatchHttpLink`는 여러 operation을 하나의 HTTP 요청 배열 body로 합친다(https://www.apollographql.com/docs/react/api/link/apollo-link-batch-http). MSW의 `graphql` 핸들러는 body에서 `.query`를 찾는데 배칭 body는 배열이라 매칭이 실패한다 — `graphql.operation()` 만능 핸들러도 마찬가지다. 공식은 이걸 wontfix로 밝혔다: "MSW does not provide a built-in way of handling such queries." 메인테이너도 "query batching isn't a part of the GraphQL specification… MSW, however, cannot cater to particular clients, it's against our core philosophy."라고 답했다(https://github.com/mswjs/msw/issues/510). 공식 우회로는 있다 — `graphql` 네임스페이스 대신 `http.post()` + `getResponse()`로 배열을 언랩해 개별 핸들러에 재분배한다(https://mswjs.io/docs/recipes/graphql-query-batching). 배칭 전송을 쓰는 다른 RPC 스택에도 같은 모양의 함정이 있다 — 어댑터 라이브러리에 의존한다면 그 어댑터가 배칭을 지원하는지 먼저 확인하라.
+
+MSW가 지원하는 프로토콜은 `http` / `graphql` / `ws`(WebSocket, 2.6.0+) / `sse`(Server-Sent Events, 2.12.0+)다.
+
+**채택 전 체크리스트:**
+
+1. 그 호출이 테스트 환경에서 실제로 HTTP 요청이 되는가?
+2. 요청이 핸들러가 볼 수 있는 축으로 식별되는가? (`http`=method+URL, `graphql`=body의 operationName)
+3. body가 핸들러가 기대하는 모양인가? (배칭이면 `graphql` 핸들러가 매칭에 실패한다)
+4. 응답을 원하는 포맷으로 만들 수 있는가?
+5. 프로토콜이 지원 범위 안인가?
+
 ## E2E: Playwright가 표준, 이 저장소는 역할을 나눈다
 
 커뮤니티 표준 E2E 프레임워크는 Playwright다. 만족도 설문에서 Playwright(~91%)가 Cypress(~72%)보다 높게 나타나고, 무료 병렬 실행·샤딩, 크로스브라우저 지원, 실패 재생을 위한 Trace Viewer를 제공한다(https://playwright.dev).
@@ -40,3 +60,5 @@ DOM 환경은 필요한 만큼만 올린다.
 3. **Vitest Browser Mode** — 실제 브라우저에서 실행한다. v4.0부터 stable이다(https://vitest.dev/guide/browser/).
 
 ⚠️ 흔한 오해: "Vitest 기본 환경이 happy-dom"이 아니다. Vitest의 기본 `environment`는 `node`이고, DOM 환경(happy-dom/jsdom)은 설정 파일에서 명시적으로 켜야 하는 opt-in이다(https://vitest.dev/guide/environment/).
+
+⚠️ 흔한 오해: 루트에 `__mocks__` 디렉터리를 만들어두면 Jest처럼 자동 적용되는 게 아니다. Jest는 루트 `__mocks__`를 자동 적용하지만(https://jestjs.io/docs/manual-mocks), Vitest는 `vi.mock`을 호출하지 않으면 모듈이 자동으로 목되지 않는다. Jest의 automocking을 재현하려면 `setupFiles`에서 모듈마다 `vi.mock`을 직접 호출해야 한다(https://vitest.dev/api/vi.html).
