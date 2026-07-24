@@ -6,16 +6,25 @@ import {
   PAGE_SIZE,
   isCategoryValue,
   isSortValue,
-  useProductListFilters,
 } from '@/features/product/hooks/useProductListFilters';
 import { Header } from '@/widgets/Header';
 import { ProductCard } from '@/features/product/ui/ProductCard';
 import { useEffect } from 'react';
+import { useProductPage } from './products.hook';
 
 // [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
 const ProductsPage = () => {
-  const { q, category, sort, page, setQ, setCategory, setSort, setPage, query } =
-    useProductListFilters();
+  const {
+    category,
+    sort,
+    page,
+    searchInput,
+    setCategory,
+    setSort,
+    setPage,
+    setSearchInput,
+    query,
+  } = useProductPage();
   const { data, isPending, isError } = useQuery(productQueries.list(query));
 
   const totalCount = data?.totalCount ?? 0;
@@ -56,8 +65,8 @@ const ProductsPage = () => {
             <input
               name="q"
               placeholder="상품명 또는 브랜드"
-              value={q}
-              onChange={(event) => setQ(event.target.value)}
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
             />
           </label>
           <label>
