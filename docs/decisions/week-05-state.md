@@ -46,15 +46,15 @@ URL에 `page=3`을 직접 입력해도 해당 페이지가 실제로 존재하�
 ### debounce (검색어)
 검색어 입력 중 매 키 입력마다 API를 호출하면 불필요한 요청이 많아짐.
 `searchInput`을 로컬 state로 두고 300ms 후 URL에 반영.
-마운트 시 초기값으로 인한 page 리셋을 막기 위해 `useRef`로 첫 렌더를 건너뜀.
+마운트 시 초기값으로 인한 page 리셋을 막기 위해 첫 렌더에서는 실행되지 않도록 `useRef`로 건너뜀.
 
 ### searchInput ↔ URL sync (앞/뒤로가기)
 브라우저 앞/뒤로가기로 URL이 바뀌면 `filters.q`가 바뀌지만 `searchInput`(로컬 state)은 그대로 남음.
-이 상태에서 debounce가 발동하면 `searchInput`의 이전 값이 URL을 덮어써 탐색 복원이 깨짐.
+이 상태에서 debounce가 실행되면 `searchInput`의 이전 값이 URL을 덮어써 탐색 복원이 깨짐.
 
 두 가지 ref로 해결:
-- `skipNextDebounce`: URL 변경으로 `searchInput`을 sync할 때 debounce가 URL을 즉시 덮어쓰지 않도록 한 번 건너뜀
-- `lastDebounceQ`: debounce가 URL을 업데이트하면 sync effect도 같이 발동됨. 이때 `searchInput`을 URL 값으로 덮어쓰면 타이핑 중인 글자가 지워짐. `lastDebounceQ`에 "내가 방금 이 값을 URL에 썼다"를 기억해두고, 그 값이 돌아올 때는 sync를 건너뜀.
+- `skipNextDebounce`: 뒤로가기로 URL이 바뀌어 `searchInput`을 업데이트할 때, debounce가 곧바로 그 값을 URL에 덮어쓰지 않도록 한 번 건너뜀
+- `lastDebounceQ`: debounce가 URL을 바꾸면 URL 변화를 감지하는 `useEffect`도 함께 실행됨. 이때 `searchInput`을 URL 값으로 덮어쓰면 타이핑 중인 글자가 지워짐. `lastDebounceQ`에 "내가 방금 이 값을 URL에 썼다"는 것을 기억해두고, 그 값이 다시 들어올 때는 덮어쓰기를 건너뜀.
 
 ---
 
