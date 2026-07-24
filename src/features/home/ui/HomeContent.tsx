@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CategoryId } from '@/types/commerce';
 import { homeQueries } from '@/features/home/api/queries';
 import { HomeCategory } from '@/features/home/types';
 import { ProductCard } from '@/features/product/ui/ProductCard';
 import { Header } from '@/widgets/Header';
+import { productQueries } from '@/features/product/api/queries';
+import { PAGE_SIZE } from '@/features/product/hooks/useProductListFilters';
 
 const HomeCategoryArr: HomeCategory[] = ['인기 상품', '신상품'] as const;
 const ProductCategoryArr: { id: CategoryId; label: string }[] = [
@@ -19,6 +21,14 @@ const ProductCategoryArr: { id: CategoryId; label: string }[] = [
 
 export const HomeContent = () => {
   const { data, isPending, isError } = useQuery(homeQueries.home());
+
+  const queryClient = useQueryClient();
+
+  const prefetch = (id: CategoryId) => {
+    queryClient.prefetchQuery(
+      productQueries.list({ q: '', category: id, sort: 'latest', page: 1, pageSize: PAGE_SIZE })
+    );
+  };
 
   const renderItems = () => {
     if (isPending) {
@@ -57,7 +67,12 @@ export const HomeContent = () => {
         <div className="categories">
           {/* [AI] 클릭 시 /products?category=<id> 로 이동해 해당 카테고리가 적용된다. */}
           {ProductCategoryArr.map(({ id, label }) => (
-            <Link key={id} href={`/products?category=${id}`}>
+            <Link
+              key={id}
+              href={`/products?category=${id}`}
+              onMouseEnter={() => prefetch(id)}
+              onFocus={() => prefetch(id)}
+            >
               {label}
             </Link>
           ))}
