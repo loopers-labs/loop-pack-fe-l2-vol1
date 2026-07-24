@@ -1,67 +1,44 @@
 import type { CSSProperties } from "react";
-import { getProducts, ProductOptions, PurchaseDialog } from "@/products";
 
-export const dynamic = "force-dynamic";
+const mainStyle: CSSProperties = { maxWidth: 640, margin: "0 auto", padding: "64px 24px" };
+const titleStyle: CSSProperties = { fontSize: 28, fontWeight: 800, marginBottom: 12 };
+const leadStyle: CSSProperties = { color: "#5a6675", lineHeight: 1.7, marginBottom: 24 };
+const listStyle: CSSProperties = { lineHeight: 2, color: "#18212e", paddingLeft: 18 };
+const noteStyle: CSSProperties = { color: "#8794a3", marginTop: 24, fontSize: 14 };
 
-const mainStyle: CSSProperties = {
-  maxWidth: 720,
-  margin: "0 auto",
-  padding: "64px 24px",
-  display: "flex",
-  flexDirection: "column",
-  gap: 40,
-};
-
-const titleStyle: CSSProperties = {
-  fontSize: 28,
-  fontWeight: 800,
-  color: "#141a2b",
-};
-
-const listStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 24,
-};
-
-const cardStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 12,
-  padding: 20,
-  border: "1px solid #e4e7ec",
-  borderRadius: 16,
-  background: "#ffffff",
-};
-
-const productNameStyle: CSSProperties = {
-  fontSize: 17,
-  fontWeight: 700,
-  color: "#141a2b",
-};
-
-const dialogSectionStyle: CSSProperties = {
-  paddingTop: 24,
-  borderTop: "1px solid #e4e7ec",
-};
-
-export default async function Home() {
-  const products = await getProducts();
-
+// 5주차 스타터: 서버 데이터(mock route)·타입·이미지·deps만 심어둔 상태.
+// 상태관리(TanStack Query·nuqs·Zustand)와 홈·목록 UI는 과제 본체이므로 학습자가 채운다.
+export default function Home() {
   return (
     <main style={mainStyle}>
       <h1 style={titleStyle}>Commerce</h1>
-      <section aria-label="상품 목록" style={listStyle}>
-        {products.map((product) => (
-          <article key={product.id} style={cardStyle}>
-            <h2 style={productNameStyle}>{product.name}</h2>
-            <ProductOptions product={product} />
-          </article>
-        ))}
-      </section>
-      <section aria-label="구매" style={dialogSectionStyle}>
-        <PurchaseDialog productName={products[0]?.name ?? "상품"} priceLabel="구매 요약" />
-      </section>
+      <p style={leadStyle}>
+        5주차는 서버·URL·클라이언트 상태의 경계를 직접 정합니다. 아래 인프라 위에 홈·목록을
+        쌓아가세요.
+      </p>
+      <ul style={listStyle}>
+        <li>
+          mock 백엔드: <code>GET /api/home</code> · <code>GET /api/products</code> (
+          <code>app/api/*/route.ts</code>)
+        </li>
+        <li>
+          도메인·데이터·타입: <code>src/commerce/</code> (배럴 <code>@/commerce</code>)
+        </li>
+        <li>
+          제공 deps: <code>@tanstack/react-query</code> · <code>nuqs</code> · <code>zustand</code>
+        </li>
+        <li>
+          레이아웃 예시: <code>src/examples/week-05-layout/</code> · 과제 명세:{" "}
+          <code>docs/assignments/week-05.md</code>
+        </li>
+        <li>
+          4주차 옵션 선택·구매 다이얼로그: <a href="/week-04">/week-04</a> (
+          <code>src/products/</code> · <code>GET /api/product-options</code>)
+        </li>
+      </ul>
+      <p style={noteStyle}>
+        4주차 산출물은 그대로 살아 있습니다. 폴더 구성은 각자 근거를 대고 바꿔도 됩니다.
+      </p>
     </main>
   );
 }
