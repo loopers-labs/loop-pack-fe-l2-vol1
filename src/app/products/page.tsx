@@ -30,7 +30,7 @@ function ProductListContent() {
       <Header />
       <section className="week05-section">
         <h1>상품 목록</h1>
-        <form className="week05-filters">
+        <form className="week05-filters" onSubmit={(e) => e.preventDefault()}>
           <label>
             검색
             <input
@@ -99,27 +99,27 @@ function ProductListContent() {
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+            <nav className="week05-pagination" aria-label="페이지 이동">
+              <button
+                type="button"
+                disabled={filters.page <= 1}
+                onClick={() => setFilters({ page: filters.page - 1 })}
+              >
+                이전
+              </button>
+              <span>
+                {filters.page} / {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={filters.page >= totalPages}
+                onClick={() => setFilters({ page: filters.page + 1 })}
+              >
+                다음
+              </button>
+            </nav>
           </>
         )}
-        <nav className="week05-pagination" aria-label="페이지 이동">
-          <button
-            type="button"
-            disabled={filters.page <= 1}
-            onClick={() => setFilters({ page: filters.page - 1 })}
-          >
-            이전
-          </button>
-          <span>
-            {filters.page} / {totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={filters.page >= totalPages}
-            onClick={() => setFilters({ page: filters.page + 1 })}
-          >
-            다음
-          </button>
-        </nav>
       </section>
     </main>
   );
