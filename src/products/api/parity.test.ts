@@ -5,9 +5,9 @@ function hasProducts(value: unknown): value is { products: unknown } {
   return typeof value === "object" && value !== null && "products" in value;
 }
 
-describe("GET /api/products (MSW handlers parity)", () => {
+describe("GET /api/product-options (MSW handlers parity)", () => {
   it("route.ts와 동일한 shape의 products를 반환한다", async () => {
-    const res = await fetch("/api/products");
+    const res = await fetch("/api/product-options");
     const body: unknown = await res.json();
 
     if (!hasProducts(body)) {

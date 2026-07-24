@@ -5,7 +5,7 @@ import { assertProducts } from "@/products/api/types";
 
 import { GET } from "./route";
 
-describe("GET /api/products", () => {
+describe("GET /api/product-options", () => {
   it("returns 3 products with totalCount 3", async () => {
     const res = await GET();
     const body = await res.json();

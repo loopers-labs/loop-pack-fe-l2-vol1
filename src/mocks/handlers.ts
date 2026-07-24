@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 
-// route.ts와 동일 shape·값을 인라인으로 독립 복제한다 (src/products import 금지 — depcruise no-cross-feature).
+// /api/product-options route.ts와 동일 shape·값을 인라인으로 독립 복제한다
+// (src/products import 금지 — depcruise no-cross-feature).
 const products = [
   {
     id: "p1",
@@ -51,7 +52,7 @@ const products = [
 ];
 
 export const handlers = [
-  http.get("/api/products", () => {
+  http.get("/api/product-options", () => {
     return HttpResponse.json({ products, totalCount: products.length });
   }),
 ];

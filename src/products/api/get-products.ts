@@ -13,7 +13,7 @@ export async function getProducts(): Promise<Product[]> {
     throw new Error("NEXT_PUBLIC_BASE_URL이 설정되지 않았습니다.");
   }
 
-  const res = await fetch(`${baseUrl}/api/products`, { cache: "no-store" });
+  const res = await fetch(`${baseUrl}/api/product-options`, { cache: "no-store" });
   const json: unknown = await res.json();
 
   if (!hasProducts(json)) {
