@@ -69,7 +69,8 @@
 - 잘못된 category, sort, page는 화면과 API 요청에서 같은 기본값으로 수렴한다.
 - 조건 변경으로 쿼리가 취소되면 AbortSignal이 실제 fetch까지 전달된다.
 - store 개수는 length 파생이며 별도 카운트 필드가 존재하지 않는다.
-- 세션 상태 폐기 시 장바구니와 위시리스트가 함께 초기화된다.
+- 클라이언트 상태를 비우면 장바구니와 위시리스트가 함께 초기화된다.
+  persist가 없어 새로고침으로도 같은 결과가 되며, 현재 이 어댑터의 용도는 테스트 격리다.
 
 브라우저에서 확인할 항목 (테스트 대역으로는 부분 검증)
 
@@ -88,6 +89,15 @@
 - 빈 응답을 둘로 구분. 조건 불일치와 범위 밖 페이지는 다른 상태다.
   후자에는 개수 안내와 1페이지 이동 출구를 준다.
 - React Query의 취소 신호를 fetch까지 전달. 조건 연타 시 낡은 요청을 끊는다.
+- q parser에 trim 추가. 폼은 제출할 때 잘라내지만 주소창 입력과 뒤로가기는 폼을 거치지
+  않아서, 같은 검색어가 공백 유무로 다른 캐시 엔트리를 만들었다. 정규화 관문을 page와
+  같은 자리인 parser로 모았다.
+- 조건 조립을 `useProductListCondition` 훅으로 이동. pageSize가 화면에서 붙고 있어서
+  다른 호출자가 다른 값을 넣으면 같은 URL이 다른 query key가 될 수 있었다.
+- 카테고리 표시 이름의 원본을 서버 응답으로 이동. 허용값 목록은 parser가 컴파일 타임
+  유니온을 요구해 상수로 남기고, 이름만 응답에서 읽는다. 홈은 이미 응답으로 그리고
+  있어서 서버가 이름을 바꾸면 홈과 목록 필터가 서로 다른 이름을 보여줬다.
+  응답 전 첫 페인트에는 로컬 폴백을 쓴다.
 
 보류한 것과 이유
 
@@ -104,12 +114,44 @@
   다른 페이지로의 출구는 살아 있고 재시도 버튼을 둔다.
 - store는 순수 토글이라 예외 경로가 없고, persist가 없어 hydration 불일치도 없다.
 
+## Advanced 선택과 근거
+
+선택한 항목은 D 하나다.
+
+### D. 테스트 (선택)
+
+과제가 요구한 네 축을 전부 자동 테스트로 고정했다.
+
+- Zustand action과 selector: `src/stores/shopping.test.ts`
+- Header 개수 파생: `state-contract.test.tsx`의 담기 후 헤더 개수 검증
+- nuqs URL 조건과 query key 일치: `searchParams.test.ts`, `queries.test.ts`,
+  `state-contract.test.tsx`의 요청 URL 검증
+- 홈과 목록의 store 상태 동기화: 같은 상품을 홈에서 담으면 목록 버튼과 헤더가 함께 바뀐다
+
+선택한 이유는 이번 주의 결과물이 화면이 아니라 상태 경계라서다. 경계는 눈으로 확인해도
+다음 변경에서 조용히 깨진다. 추가한 복잡도는 테스트 대역 두 개뿐이다. fetch 스텁과
+nuqs 테스트 어댑터를 썼고, 새 DOM 환경이나 e2e 러너를 들이지 않았다.
+
+### 선택하지 않은 항목과 이유
+
+- A 상태 영속화: 과제가 새로고침 초기화를 허용한다. persist를 넣으면 hydration 불일치와
+  version, migrate까지 따라오는데, 지금 저장할 값은 ID 배열 두 개뿐이라 얻는 것보다
+  다룰 예외가 많다. 로그인이 생기면 원본이 서버로 넘어가 이 저장소 자체가 폐기 대상이다.
+- B 서버 프리패치: 지금 구조가 두 군데서 막고 있다. `src/app/page.tsx`가 클라이언트
+  컴포넌트라 prefetch를 놓을 서버 자리가 없고, `api.ts`가 상대 경로를 써서 서버에서
+  부르면 base URL이 없다. 두 곳을 먼저 되돌려야 해서 이번 범위에서 제외했다.
+- C 사용자 경험: 재시도 버튼은 기본 과제의 에러 분기로 이미 있다. placeholderData와
+  다음 페이지 prefetch는 위의 보류 항목에 근거를 적었다.
+
 ## 경계 설계
 
 - `src/lib/commerce/api.ts` — fetch 함수. HTTP 실패를 throw로 승격해 쿼리가 에러 상태를 알게 한다.
 - `src/lib/commerce/queries.ts` — queryOptions 팩토리. key, queryFn, staleTime을 한 정의에
   묶고 `products → list → condition` 계층으로 무효화 범위를 조준한다.
-- `src/lib/commerce/searchParams.ts` — nuqs parser. 잘못된 URL 값이 API 계약을 벗어나지 않게 막는 관문.
+- `src/lib/commerce/searchParams.ts` — nuqs parser. 잘못된 URL 값이 API 계약을 벗어나지 않게
+  막는 관문. 검색어 공백 제거도 여기서 한다.
+- `src/lib/commerce/useProductListCondition.ts` — URL 조건에 pageSize를 붙여 요청 조건으로
+  조립하는 유일한 자리. 화면은 조립된 조건만 받는다.
 - `src/stores/shopping.ts` — 장바구니, 위시리스트 ID 목록과 toggle 액션만 가진 비공개
   store. 화면에는 용도별 selector 훅을 어댑터로 공개한다.
 - 화면은 이 네 경계를 조합만 한다. scenario 제어값은 사용자 상태 어디에도 넣지 않는다.
