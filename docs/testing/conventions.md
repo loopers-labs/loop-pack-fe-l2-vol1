@@ -40,6 +40,7 @@
 ## 테스트 유틸 · 픽스처
 
 - 공용 `render` — provider(Query client·테마·i18n 등)로 감싸는 커스텀 `render`를 만들고 `@testing-library/react`를 전부 re-export하면서 `render`만 덮어쓴다(https://testing-library.com/docs/react-testing-library/setup/). 모든 테스트에 동일한 앰비언트 컨텍스트를 공급할 뿐 특정 테스트의 원인은 인코딩하지 않는다 — General Fixture와는 다르다. 그 경계 판단은 [setup-and-coupling.md](./setup-and-coupling.md) 참고.
+  - 단, 이 저장소는 `export *`(`ExportAllDeclaration`)를 배럴 규칙으로 전역 금지한다(`eslint.config.mjs`의 `no-restricted-syntax`, 메시지: "배럴은 순수 named re-export만 — `export *` 금지"). 그래서 `mocks/render.tsx`는 공식 처방의 "전부 re-export" 대신 **실제로 쓰는 이름만 named re-export**한다(`export { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react"`). 새 RTL API(예: `act`)가 필요해지면 이 목록에 먼저 추가해야 한다.
 - 핸들러 조직 — 커지면 도메인별 파일로 나누고 나중에 합성한다(https://mswjs.io/docs/best-practices/structuring-handlers). 공식 권장은 테스트별 오버라이드를 `server.use()`로 얹는 것이다(https://mswjs.io/docs/best-practices/network-behavior-overrides). 이 레포는 위 상단 안내대로 `mocks/`가 `src/` 밖에 있어 `no-cross-feature` 제약을 받지 않으므로, 테스트별 오버라이드가 필요하면 공식 권장대로 `server.use()`를 그대로 쓸 수 있다.
 - 테스트 데이터는 팩토리로 뽑는다. 테스트 대역 배선(`vi.mock` 연결)은 값이 아니라 구조라 팩토리로 못 뽑는다 — 상세는 [setup-and-coupling.md](./setup-and-coupling.md).
 

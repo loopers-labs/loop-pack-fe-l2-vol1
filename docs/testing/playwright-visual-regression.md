@@ -44,6 +44,12 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      // src/products/api/get-products.ts가 production(NODE_ENV=production, 이 webServer가 그
+      // 상태다)에서 이 값이 없으면 fail-fast로 reject한다 — 안 넣으면 /week-04 스냅샷의 첫 실행부터
+      // 실패한다.
+      NEXT_PUBLIC_BASE_URL: "http://localhost:3000",
+    },
   },
 });
 ```
@@ -78,7 +84,11 @@ import { test, expect } from "@playwright/test";
 
 test("커머스 홈이 baseline과 픽셀 단위로 일치한다", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("status", { name: "상품을 불러오는 중" })).toBeHidden();
+  // "카테고리" 제목은 query 성공 분기에서만 렌더된다(home-view.tsx) — 성공 산출물의
+  // toBeVisible()로 기다린다. role="status" 스켈레톤에 toBeHidden()을 쓰면 안 된다: 로케이터가
+  // 아무것도 못 찾아도 통과하는 matcher라, 스켈레톤이 아직 마운트되기 전(hydration 이전)에도
+  // 즉시 통과해 로딩 중 화면을 baseline으로 찍는다.
+  await expect(page.getByRole("heading", { name: "카테고리" })).toBeVisible();
   await expect(page).toHaveScreenshot("commerce-home.png", { fullPage: true });
 });
 
@@ -87,20 +97,23 @@ test("상품 목록이 baseline과 픽셀 단위로 일치한다", async ({ page
   // 어떤 조합을 찍는지 명시하지 않으면 baseline이 매번 다른 필터/정렬/페이지를 찍을 수 있다.
   // 여기서는 기본값 조합(전체 카테고리·최신순·1페이지)을 그대로 pin했다.
   await page.goto("/products?q=&category=all&sort=latest&page=1");
-  await expect(page.getByRole("status", { name: "상품을 불러오는 중" })).toBeHidden();
+  // "총 N개"는 pending·error를 뺀 나머지 세 분기(성공·빈 결과·페이지 범위 초과) 전부에서
+  // 렌더된다(list-view.tsx) — 어느 분기든 이 텍스트가 뜨면 로딩은 끝난 상태다. 같은 이유로
+  // role="status" 스켈레톤에 toBeHidden()을 쓰지 않는다 — 위 홈 케이스와 동일한 함정.
+  await expect(page.getByText(/^총 \d+개$/)).toBeVisible();
   await expect(page).toHaveScreenshot("commerce-products.png", { fullPage: true });
 });
 ```
 
-두 화면 모두 TanStack Query로 데이터를 받아 첫 렌더가 `role="status"` 스켈레톤이다(`home-view.tsx`/`list-view.tsx`) — 로딩이 끝나 스켈레톤이 사라진 뒤에 스크린샷을 찍어야 baseline이 로딩 프레임을 찍는 flaky를 피한다.
+두 화면 모두 TanStack Query로 데이터를 받아 첫 렌더가 `role="status"` 스켈레톤이다(`home-view.tsx`/`list-view.tsx`). 스켈레톤이 사라졌는지가 아니라 **성공 산출물이 나타났는지**를 기다려야 한다 — `toBeHidden()`/`toHaveCount(0)`은 로케이터가 아무것도 못 찾아도 통과하므로 "스켈레톤이 사라짐"과 "스켈레톤이 아직 마운트 전"을 구별하지 못해 로딩 프레임을 찍는 flaky를 만든다.
 
 ## human 활성화 체크리스트
 
 `vitest.config.mts`의 `test.exclude`에 `"e2e/**"`를 추가하는 항목은 이미 반영돼 있다(`exclude: [...defaultExclude, "e2e/**"]`) — vitest가 `*.spec.ts`를 자신의 테스트로 오인해 실행하지 않으므로, 아래 목록에서는 뺐다.
 
 1. `pnpm add -D @playwright/test` — 의존성 설치 **(human 전용 — AI 편집 차단)**
-2. `npx playwright install chromium` — 브라우저 바이너리 설치
+2. `pnpm exec playwright install chromium` — 브라우저 바이너리 설치
 3. `tsconfig.json`의 `exclude`에 `"e2e/**"` 추가 **(human 전용 — AI 편집 차단)** — 안 하면 tsc가 위 spec들을 컴파일하려다 `Cannot find module '@playwright/test'`로 실패한다
 4. 위 세 코드블록을 실제 `playwright.config.ts`·`e2e/skins-visual.spec.ts`·`e2e/commerce-visual.spec.ts`로 저장한다
-5. `.github/workflows/ci.yml`에 시각 회귀 job 추가 **(human 전용 — AI 편집 차단)** — `pnpm add -D @playwright/test` → `npx playwright install --with-deps chromium` → `pnpm build` → `npx playwright test`
-6. `npx playwright test --update-snapshots`로 최초 baseline을 생성한다 — CI와 동일한 OS·브라우저 환경에서 잡아야 픽셀 차이가 나지 않는다
+5. `.github/workflows/ci.yml`에 시각 회귀 job 추가 **(human 전용 — AI 편집 차단)** — `pnpm add -D @playwright/test` → `pnpm exec playwright install --with-deps chromium` → `pnpm build` → `pnpm exec playwright test`
+6. `pnpm exec playwright test --update-snapshots`로 최초 baseline을 생성한다 — CI와 동일한 OS·브라우저 환경에서 잡아야 픽셀 차이가 나지 않는다
