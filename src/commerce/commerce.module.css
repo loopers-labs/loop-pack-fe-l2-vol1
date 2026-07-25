@@ -252,6 +252,23 @@
   color: var(--commerce-muted);
 }
 
+.message button {
+  margin-left: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--commerce-border);
+  border-radius: var(--commerce-radius-pill);
+  background: transparent;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.message button:hover {
+  border-color: var(--commerce-accent);
+  color: var(--commerce-accent);
+}
+
 .filters {
   display: flex;
   align-items: center;
