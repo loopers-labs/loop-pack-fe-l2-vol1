@@ -1,11 +1,34 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { render as rtlRender } from "@testing-library/react"; // 순수 RTL render만 예외로 직접 가져온다 — layout이 CommerceProviders를 실제로 공급하는지 보려면 mocks/render가 대신 공급하는 provider를 우회해야 한다(list-view.test.tsx와 동일 패턴)
+// nuqs의 NuqsAdapter(next/app)는 dist 빌드 안에서 next/navigation을 직접 import한다 — 이 nuqs
+// import는 Vitest가 외부(native) 모듈로 취급해 로드하므로, 같은 파일에서 vi.mock("next/navigation")을
+// 걸어도 nuqs 내부의 import는 가로채지 못한다(실측: 아래 확인 결과 참고). 대신 useRouter·usePathname·
+// useSearchParams가 실제로 값을 읽는 통로인 Next의 진짜 App Router Context를 직접 공급한다 —
+// NuqsAdapter도, next/navigation의 훅 구현도 전부 real이고 우리가 주는 건 그 훅들이 읽는 context
+// value뿐이다(QueryClientProvider에 real client를 주는 것과 동일한 성격).
+import {
+  AppRouterContext,
+  type AppRouterInstance,
+} from "next/dist/shared/lib/app-router-context.shared-runtime";
+import {
+  PathnameContext,
+  SearchParamsContext,
+} from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { cleanup, render, screen } from "../../mocks/render";
 import CommerceLayout from "./layout";
 import HomePage from "./page";
 import ProductsPage from "./products/page";
 
 afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않는다
+
+const noopRouter = {
+  back: () => {},
+  forward: () => {},
+  refresh: () => {},
+  push: () => {},
+  replace: () => {},
+  prefetch: () => {},
+} satisfies AppRouterInstance;
 
 // G1의 정적 3검사(app/page.tsx 부재·app-paths-manifest·index.html href)는 전부
 // page.tsx가 빈 컴포넌트여도 통과한다 — HomeView를 실제로 마운트하지 않아도 되기 때문이다.
@@ -56,5 +79,20 @@ describe("app/(commerce)/layout.tsx의 CommerceProviders 배선", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "매일 새롭게 발견하는 취향" }),
     ).toBeInTheDocument();
+  });
+
+  it("layout이 NuqsAdapter도 소유한다 — ListView의 URL 상태 훅이 어댑터 없이 던지지 않는다", () => {
+    rtlRender(
+      <AppRouterContext.Provider value={noopRouter}>
+        <PathnameContext.Provider value="/products">
+          <SearchParamsContext.Provider value={new URLSearchParams()}>
+            <CommerceLayout>
+              <ProductsPage />
+            </CommerceLayout>
+          </SearchParamsContext.Provider>
+        </PathnameContext.Provider>
+      </AppRouterContext.Provider>,
+    );
+    expect(screen.getAllByRole("combobox")).toHaveLength(2);
   });
 });
