@@ -342,6 +342,29 @@ describe("ListView", () => {
 
         expect(onUrlUpdate).not.toHaveBeenCalled();
       });
+
+      it("A5: (교차 케이스) 2페이지에서 같은 검색어(shirt)를 그대로 재제출해도 page가 1로 리셋된다 — 제출은 언제나 1페이지부터 시작하는 게 의도된 동작이라 no-op이 아니다", async () => {
+        // A2와 대칭인 케이스다: A2는 page가 이미 1이라 재제출해도 병합 결과가
+        // 현재 query와 같아 no-op 가드에 걸린다. 여기는 page가 2라 q는 안
+        // 바꿔도 page:1 리셋(use-list-query.ts의 키 존재 판정, C9b) 때문에
+        // 병합 결과가 현재 query(page=2)와 달라지므로 no-op 가드를 통과하고
+        // onUrlUpdate가 1회 나가야 한다. 이걸 버그로 오인해 no-op 처리로
+        // "고치면" 안 된다 — 같은 검색어를 다시 제출했는데 5페이지에 그대로
+        // 머무는 쪽이 오히려 제출의 의미를 흐리는 회귀다.
+        const onUrlUpdate = vi.fn();
+        const user = userEvent.setup();
+        render(<ListView />, { searchParams: "?q=shirt&page=2", onUrlUpdate });
+        await screen.findByText(/^총 /);
+
+        const searchInput = screen.getByLabelText("검색");
+        await user.click(searchInput);
+        await user.type(searchInput, "{Enter}");
+
+        expect(onUrlUpdate).toHaveBeenCalledTimes(1);
+        const { searchParams } = onUrlUpdate.mock.calls[0][0];
+        expect(searchParams.has("page")).toBe(false);
+        expect(searchParams.get("q")).toBe("shirt");
+      });
     });
 
     describe("검색 제출 후 포커스가 유지된다 — key 리마운트에도 살아남는 포커스 복원 (C5)", () => {

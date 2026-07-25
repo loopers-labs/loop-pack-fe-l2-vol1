@@ -73,7 +73,10 @@ describe("commerce 배럴(index.ts)", () => {
 
 // 타입은 컴파일 시점에 지워져 런타임에 셀 수 없다 — 9개 전부를 참조하는 타입 계약을
 // 만들어 `pnpm typecheck`가 통과하는 것으로 배럴이 9개를 그대로 노출함을 보증한다.
-type BarrelTypeContract = {
+// 이 타입 선언 자체가 검증이다 — 이 선언이 존재하고 tsc를 통과한다는 사실이 곧
+// 검증 결과이므로, `pnpm typecheck`가 게이트고 별도의 런타임 단정(it/expect)은
+// 필요 없다.
+type _BarrelTypeContract = {
   apiErrorResponse: ApiErrorResponse;
   category: Category;
   categoryId: CategoryId;
@@ -84,11 +87,3 @@ type BarrelTypeContract = {
   productListResponse: ProductListResponse;
   productSort: ProductSort;
 };
-
-describe("commerce 배럴 타입 보존(컴파일 타임 단정)", () => {
-  it("타입 9개를 모두 참조하는 계약 타입이 존재한다", () => {
-    const contract: BarrelTypeContract | undefined = undefined;
-
-    expect(contract).toBeUndefined();
-  });
-});

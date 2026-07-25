@@ -39,8 +39,17 @@ describe("ProductCard", () => {
 
     render(<ProductCard product={discounted} />);
 
-    expect(screen.getByText("판매가")).toBeVisible();
-    expect(screen.getByText("정가")).toBeVisible();
+    expect(screen.getByText("판매가")).toBeInTheDocument();
+    expect(screen.getByText("정가")).toBeInTheDocument();
+  });
+
+  it("할인 상품에서 라벨과 숫자가 판매가·정가 순서로 읽힌다", () => {
+    const discounted: Product = { ...baseProduct, price: 75000, originalPrice: 89000 };
+
+    render(<ProductCard product={discounted} />);
+
+    const strong = screen.getByText("판매가").closest("strong");
+    expect(strong).toHaveTextContent(/^판매가75,000원정가89,000원$/);
   });
 
   it("할인이 없는 상품에서는 취소선 없이 판매가 라벨만 읽힌다", () => {

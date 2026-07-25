@@ -23,7 +23,9 @@
 }
 
 .page {
-  padding-bottom: 64px;
+  /* 상단 여백은 .page가 직접 소유한다 — 첫 자식의 margin-top(margin collapsing)에
+     기대면 첫 자식이 렌더 분기(skeleton/message/hero/section)마다 달라 여백이 들쭉날쭉해진다. */
+  padding: 24px 0 64px;
 }
 
 .header,

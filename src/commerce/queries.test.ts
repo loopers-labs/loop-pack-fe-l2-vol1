@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup } from "@testing-library/react";
 import { createElement } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { render } from "../../mocks/render";
+import { cleanup, render } from "../../mocks/render";
 import { homeQueryOptions, productListQueryOptions } from "./queries";
 import type { ProductListQuery } from "./api/types";
 
