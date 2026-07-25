@@ -6,7 +6,7 @@ import type { BundleOption } from "@/products/api/types";
 
 afterEach(cleanup);
 
-// s2 route(src/mocks/handlers.ts)의 b1/b2와 정합.
+// s2 route(mocks/handlers.ts)의 b1/b2와 정합.
 const bundleOptions: BundleOption[] = [
   { id: "b1", label: "10개입", price: 21000, unitPrice: 2100, stock: 9 },
   { id: "b2", label: "1개", price: 4200, unitPrice: 4200, stock: 6 },
