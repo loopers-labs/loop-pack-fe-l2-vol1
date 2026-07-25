@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { render } from "../../mocks/render";
+import { cleanup, render, screen, waitFor } from "../../mocks/render";
 import { useCommerceStore } from "./store";
 import { getHomeData } from "./api/home";
 import { Header } from "./header";

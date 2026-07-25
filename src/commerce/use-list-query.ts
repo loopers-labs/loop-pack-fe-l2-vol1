@@ -68,7 +68,7 @@ type ListQueryValues = {
 export function useListQuery() {
   const [query, setQuery] = useQueryStates(LIST_QUERY_PARSERS);
 
-  const setListQuery = (partial: Partial<ListQueryValues>) => {
+  const setListQuery = (partial: Partial<ListQueryValues>): void => {
     const resetsPage = "q" in partial || "category" in partial || "sort" in partial;
     const next = resetsPage ? { ...partial, page: 1 } : partial;
 
@@ -82,13 +82,16 @@ export function useListQuery() {
       merged.sort === query.sort &&
       merged.page === query.page;
     if (isNoop) {
-      // setQuery는 Promise<URLSearchParams>를 반환하므로 시그니처를 맞춘다. 아무 것도
-      // 쓰지 않았으니 "쓰기 후의 URL"은 곧 "현재 URL"과 같다 — window.location.search를
-      // 그대로 돌려준다(호출 시점은 항상 사용자 상호작용 이후라 window가 존재한다).
-      return Promise.resolve(new URLSearchParams(window.location.search));
+      // 반환값을 쓰는 호출자가 없다(list-filter-bar·list-pagination 전부 무시한다).
+      // setQuery의 Promise<URLSearchParams> 시그니처를 흉내 내려면 "쓰기 후 URL"을
+      // 만들어야 하는데, NuqsTestingAdapter(hasMemory:true) 아래서는 실제 URL이 아니라
+      // 메모리에만 있어 window.location.search가 비어 있고, nuqs 스로틀 창 안에서는
+      // 아직 갱신 전이라 둘 다 참이 아닌 값을 돌려주게 된다 — 아무도 안 쓰는 값을
+      // 거짓말로 채우느니 반환하지 않는다.
+      return;
     }
 
-    return setQuery(next);
+    void setQuery(next);
   };
 
   return [query, setListQuery] as const;

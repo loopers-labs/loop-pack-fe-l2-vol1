@@ -41,7 +41,10 @@ export function ListFilterBar({ query, setQuery }: ListFilterBarProps) {
   // 제출로 인한 key 리마운트인지(포커스 복원 필요) 최초 마운트인지(포커스 훔치면 안 됨)
   // 구별하는 플래그. 상태(state)로 안 두는 이유: 이 값 자체는 화면에 아무것도 그리지
   // 않고 SearchInput의 ref 콜백이 커밋 시점에 한 번 읽고 끄는 신호일 뿐이라
-  // 리렌더를 유발할 필요가 없다 — ref가 정확히 그 용도다.
+  // 리렌더를 유발할 필요가 없다 — ref가 정확히 그 용도다. 켜는 조건(q !== query.q)은
+  // 끄는 조건(key={query.q} 리마운트)과 동치여야 한다 — 같은 값 재제출(no-op)에서
+  // 켜면 리마운트가 없어 못 꺼지고, 다음에 폼 바깥에서 온 q 변경(뒤로가기)이 리마운트를
+  // 낼 때 잔류한 플래그가 사용자가 제출하지 않은 포커스 이동을 일으킨다.
   const focusNextMountRef = useRef(false);
 
   return (
@@ -51,7 +54,9 @@ export function ListFilterBar({ query, setQuery }: ListFilterBarProps) {
         initialQ={query.q}
         focusNextMountRef={focusNextMountRef}
         onSubmit={(q) => {
-          focusNextMountRef.current = true;
+          if (q !== query.q) {
+            focusNextMountRef.current = true;
+          }
           setQuery({ q });
         }}
       />

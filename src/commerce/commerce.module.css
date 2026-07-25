@@ -9,6 +9,7 @@
 
   width: min(100% - 32px, 1200px);
   margin: 0 auto;
+  padding-top: 24px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,7 +23,7 @@
 }
 
 .page {
-  padding: 24px 0 64px;
+  padding-bottom: 64px;
 }
 
 .header,
@@ -160,7 +161,6 @@
   gap: 8px;
 }
 
-.product strong span,
 .product strong s {
   color: var(--commerce-muted);
   font-weight: 400;

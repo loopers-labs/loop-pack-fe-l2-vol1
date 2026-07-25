@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { render as rtlRender } from "@testing-library/react"; // 순수 RTL render만 예외로 직접 가져온다 — 결함1 회귀 테스트가 NuqsTestingAdapter를 직접 감싸 searchParams prop을 rerender로 바꿔야 하는데, 커스텀 render로는 어댑터 prop에 닿을 수 없다
 import userEvent from "@testing-library/user-event";
 import { http, delay } from "msw";
 import { NextRequest } from "next/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { server } from "../../mocks/server";
-import { render } from "../../mocks/render"; // RTL render가 아니라 이걸 쓴다(QueryClientProvider 필요)
+import { cleanup, fireEvent, render, screen, within } from "../../mocks/render"; // render는 QueryClientProvider로 감싸는 커스텀 버전이다(ListView가 useQuery를 쓴다)
 import { GET as getProducts } from "../../app/api/products/route";
 import { useCommerceStore } from "./store";
 import { ListView } from "./list-view";
@@ -373,6 +375,45 @@ describe("ListView", () => {
 
         const searchInputAfterSubmit = screen.getByLabelText("검색");
         expect(searchInputAfterSubmit).not.toBe(searchInputBeforeSubmit);
+      });
+
+      it("결함1 회귀: 같은 검색어 재제출(no-op) 후 폼 바깥에서 온 q 변경(뒤로가기)이 사용자가 제출하지 않았는데 검색창 포커스를 훔치지 않는다", async () => {
+        const user = userEvent.setup();
+        const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+        // mocks/render의 rerender는 원래 감싸는 Provider 없이 바로 새 엘리먼트로
+        // 리렌더하므로 NuqsTestingAdapter의 searchParams prop을 바꿀 수 없다 — 여기서만
+        // 직접 감싸 렌더한다. hasMemory:true 아래서도 adapters/testing.js의 useEffect가
+        // [hasMemory, renderedInitialSearchParams]에 걸려 있어, searchParams prop이
+        // 바뀌면(=폼 바깥에서 온 URL 변경, 예: 브라우저 뒤로가기) 내부 상태를 그 값으로
+        // 재동기화한다 — 이걸로 "폼 바깥에서 온 q 변경"을 흉내 낸다.
+        const tree = (searchParams: string) => (
+          <QueryClientProvider client={queryClient}>
+            <NuqsTestingAdapter hasMemory searchParams={searchParams}>
+              <ListView />
+            </NuqsTestingAdapter>
+          </QueryClientProvider>
+        );
+
+        const { rerender } = rtlRender(tree("?q=shirt"));
+        await screen.findByText(/^총 /);
+
+        // 같은 검색어("shirt")로 재제출 — no-op이라 URL도 안 바뀌고 SearchInput도
+        // 리마운트되지 않는다. 고친 코드는 이 제출에서 플래그를 켜지 않는다.
+        await user.type(screen.getByLabelText("검색"), "{Enter}");
+
+        // 사용자가 검색창을 떠난다.
+        screen.getByLabelText("검색").blur();
+        expect(document.activeElement).not.toBe(screen.getByLabelText("검색"));
+
+        // 폼 바깥에서 q가 되돌아온다(뒤로가기) — SearchInput이 key={query.q} 때문에
+        // 리마운트된다.
+        rerender(tree(""));
+        await screen.findByText(/^총 /);
+
+        // 사용자가 아무것도 제출하지 않았는데 포커스가 검색창으로 끌려가면 결함이
+        // 재현된 것이다.
+        expect(document.activeElement).not.toBe(screen.getByLabelText("검색"));
       });
     });
 

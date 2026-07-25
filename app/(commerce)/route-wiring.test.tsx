@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
-import { render } from "../../mocks/render";
+import { cleanup, render, screen } from "../../mocks/render";
 import HomePage from "./page";
 import ProductsPage from "./products/page";
 

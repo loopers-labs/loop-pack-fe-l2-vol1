@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
-import { http, delay } from "msw";
+import { http, delay, HttpResponse } from "msw";
 import { NextRequest } from "next/server";
 import { server } from "../../mocks/server";
-import { render } from "../../mocks/render"; // RTL render가 아니라 이걸 쓴다(QueryClientProvider 필요)
+import { cleanup, fireEvent, render, screen } from "../../mocks/render"; // render는 QueryClientProvider로 감싸는 커스텀 버전이다(HomeView가 useQuery를 쓴다)
 import { GET as getHome } from "../../app/api/home/route";
 import { useCommerceStore } from "./store";
 import { getHomeData } from "./api/home";
@@ -36,6 +35,10 @@ const emptyScenario = () =>
     ),
   );
 
+// 실제 요청 URL 그대로 route.ts에 위임한다 — list-view.test.tsx의 successScenario와 동일한 형태.
+const successScenario = () =>
+  server.use(http.get("/api/home", ({ request }) => getHome(new NextRequest(request.url))));
+
 describe("HomeView", () => {
   it("pending 상태에서 aria-busy 스켈레톤을 낸다", () => {
     server.use(
@@ -55,6 +58,29 @@ describe("HomeView", () => {
     render(<HomeView />);
 
     expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
+  });
+
+  it("네트워크 전송 실패에서도 홈 데이터를 불러오지 못했습니다 문구를 낸다 (서버 메시지가 아니라 화면이 문구를 소유한다)", async () => {
+    server.use(http.get("/api/home", () => HttpResponse.error()));
+
+    render(<HomeView />);
+
+    expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
+  });
+
+  it("재시도 버튼 클릭이 refetch를 트리거해 성공 화면으로 전환된다", async () => {
+    errorScenario();
+
+    render(<HomeView />);
+
+    const retryButton = await screen.findByRole("button", { name: "재시도" });
+
+    successScenario();
+    fireEvent.click(retryButton);
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "매일 새롭게 발견하는 취향" }),
+    ).toBeInTheDocument();
   });
 
   it("success 상태에서 배너·카테고리·인기 상품·신상품 4영역이 전부 있다", async () => {

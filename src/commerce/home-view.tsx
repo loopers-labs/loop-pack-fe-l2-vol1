@@ -28,7 +28,15 @@ export function HomeView() {
       </div>
     );
   } else if (query.isError) {
-    body = <p className={styles.message}>{query.error.message}</p>;
+    // 내부 에러 메시지(query.error.message)를 노출하지 않고 화면이 고정 문구를 소유한다 — 재시도 버튼으로 같은 쿼리를 다시 fetch.
+    body = (
+      <p className={styles.message}>
+        홈 데이터를 불러오지 못했습니다.
+        <button type="button" onClick={() => query.refetch()}>
+          재시도
+        </button>
+      </p>
+    );
   } else {
     const { data } = query;
     body = (

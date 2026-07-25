@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { cleanup, render, screen } from "../../mocks/render";
 import { useCommerceStore } from "./store";
 import { ProductActions } from "./product-actions";
 
