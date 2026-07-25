@@ -33,7 +33,7 @@ app/                            # Next App Router — 라우팅 전용(페이지
 ├─ layout.tsx
 └─ globals.css
 mocks/                          # MSW — src/ 밖에 둬 no-cross-feature 스캔 대상에서 제외
-├─ handlers.ts                  # 실제 라우트 GET에 위임(응답을 손으로 합성하지 않음)
+├─ handlers.ts                  # products·home은 실제 라우트 GET에 위임(그 외는 손으로 합성)
 ├─ server.ts
 ├─ setup.ts
 └─ render.tsx                   # 테스트 렌더 헬퍼 — QueryClient·NuqsTestingAdapter 주입
@@ -113,13 +113,13 @@ selector 경계도 필요한 값만 구독하도록 나눈다. `Header`는 `cart
 
 ### 데이터 정확성 검증의 1차 안전망
 
-MSW 핸들러는 응답을 직접 합성하지 않고 실제 라우트 핸들러(`app/api/products/route.ts`·`app/api/home/route.ts`)의 `GET`에 위임한다. 그래서 데이터 정확성(검증·정렬·페이지네이션)의 1차 안전망은 `app/api/products/route.test.ts`이고, 컴포넌트 렌더 스위트(`list-view`·`home-view` 등 상위 테스트)는 그 계약이 화면에 올바르게 배선됐는지만 본다 — 데이터 정확성을 상위 테스트에서 다시 검증하지 않는다.
+MSW 핸들러는 응답을 직접 합성하지 않고 실제 라우트 핸들러(`app/api/products/route.ts`·`app/api/home/route.ts`)의 `GET`에 위임한다. 그래서 데이터 정확성(검증·정렬·페이지네이션)의 1차 안전망은 `app/api/products/route.test.ts`이고, 컴포넌트 렌더 스위트(`list-view`·`home-view` 등 상위 테스트)가 픽스처 파생 값(예: `총 30개`)을 단정하는 것은 데이터 정확성을 다시 검증하려는 목적이 아니라 그 계약이 화면에 올바르게 배선됐는지 관찰하는 수단이다 — 다만 이 수단이 픽스처에 결합돼 있어, 카탈로그(픽스처)가 바뀌면 `route.test.ts`뿐 아니라 상위 스위트도 함께 깨진다.
 
 ### `use-list-query` 검증 표면
 
 `use-list-query` 훅은 `renderHook`으로 직접 부르지 않는다. 이 훅의 사용자는 `list-view` 컴포넌트이므로, 훅의 동작(URL 파싱·`page` 리셋·요청 직렬화)은 `list-view` 렌더 스위트를 통해 검증한다. `page-parser`·`use-list-query` 두 단위 스위트는 파서 표와 모듈 표면(named export·모듈 스코프 상수)만 다룬다.
 
-`page` 리셋(검색·카테고리·정렬 변경 시 `page`를 1로 되돌리는 동작)의 소유 위치는 **훅 내부 불변식**이다 — `setQuery`에 넘기는 partial에 `q`·`category`·`sort` 중 하나라도 있으면 훅이 `page: 1`을 함께 넣는다. 호출자(`list-filter-bar` 등)의 규약으로 두지 않는 이유: 그러면 `list-filter-bar`가 `setQuery({ q })`만 호출해도 통과해버려 리셋 로직이 지켜지는지 아무도 강제하지 않는다. 이 배치는 소스에서 `page: 1`이 `use-list-query.ts`에만 존재하도록 고정한다.
+`page` 리셋(검색·카테고리·정렬 변경 시 `page`를 1로 되돌리는 동작)의 소유 위치는 **훅 내부 불변식**이다 — `setQuery`에 넘기는 partial에 `q`·`category`·`sort` 중 하나라도 있으면 훅이 `page: 1`을 함께 넣는다. 호출자(`list-filter-bar` 등)의 규약으로 두지 않는 이유: 그러면 `list-filter-bar`가 `setQuery({ q })`만 호출해도 통과해버려 리셋 로직이 지켜지는지 아무도 강제하지 않는다. 이 배치가 고정하는 것은 "`page: 1`이 한 곳에만 존재한다"가 아니라 "호출자가 리셋 로직을 복제하지 않는다"이다 — `list-view.tsx`의 범위 초과 복구 버튼(`setQuery({ page: 1 })`)은 리셋 불변식과 다른 동작(사용자 조작에 의한 1페이지 이동)이라 별도로 존재한다.
 
 ### URL 상태 정규화 미적용 근거
 

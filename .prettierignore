@@ -12,3 +12,4 @@ docs/assignments/
 playwright-report/
 test-results/
 blob-report/
+.omo/
