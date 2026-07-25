@@ -20,9 +20,13 @@ export function ProductCard({ product }: ProductCardProps) {
       <p>{product.brand}</p>
       <h3>{product.name}</h3>
       <strong>
+        <span className={styles.visuallyHidden}>판매가</span>
         {product.price.toLocaleString("ko-KR")}원
         {product.originalPrice !== null && (
-          <span>{product.originalPrice.toLocaleString("ko-KR")}원</span>
+          <s>
+            <span className={styles.visuallyHidden}>정가</span>
+            {product.originalPrice.toLocaleString("ko-KR")}원
+          </s>
         )}
       </strong>
       <ProductActions productId={product.id} productName={product.name} />

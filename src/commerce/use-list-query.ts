@@ -23,13 +23,18 @@ export const CATEGORY_FILTER_VALUES = [
 type _AssertNever<T extends never> = T;
 type _CategoryCoverage = _AssertNever<Exclude<CategoryId, (typeof CATEGORY_FILTER_VALUES)[number]>>;
 
-// route.ts:19의 /^[1-9]\d*$/와 정합되는 클램프: 앞쪽 숫자열을 취하되(2abc→2),
-// 그 숫자열 자체가 선행 0 없는 양의 정수 형태가 아니면(01·1e3의 "e" 앞부분은 통과하지만
-// 0·01은 거부) 1로 되돌린다. parseAsInteger는 "0"·"-1"을 그대로 통과시켜 route가
-// 400으로 거부하는 값을 상태로 들여보내므로 쓸 수 없다.
+// route.ts:47의 두 조건(isPositiveInteger·Number.isSafeInteger(page))과 정합되는
+// 클램프. 앞쪽 숫자열을 취하되(2abc→2), (1) 그 숫자열 자체가 선행 0 없는 양의 정수
+// 형태가 아니거나(01·1e3의 "e" 앞부분은 통과하지만 0·01은 거부) (2) 안전 정수 범위를
+// 벗어나면(MAX_SAFE_INTEGER+2처럼 route가 400으로 거부하는 값) 1로 되돌린다.
+// 두 번째 조건이 없으면 route가 거부하는 큰 값을 상태로 들여보내 회복 불가능한
+// 에러 화면(재시도 버튼만 있고 탈출 경로가 없는 분기)을 연다.
+// parseAsInteger는 "0"·"-1"을 그대로 통과시켜 route가 400으로 거부하는 값을 상태로
+// 들여보내므로 쓸 수 없다.
 const parsePageValue = (value: string): number => {
   const leadingDigits = /^\d+/.exec(value)?.[0] ?? "";
-  return /^[1-9]\d*$/.test(leadingDigits) ? Number(leadingDigits) : 1;
+  const parsed = Number(leadingDigits);
+  return /^[1-9]\d*$/.test(leadingDigits) && Number.isSafeInteger(parsed) ? parsed : 1;
 };
 
 export const pageParser = createParser<number>({
@@ -65,7 +70,25 @@ export function useListQuery() {
 
   const setListQuery = (partial: Partial<ListQueryValues>) => {
     const resetsPage = "q" in partial || "category" in partial || "sort" in partial;
-    return setQuery(resetsPage ? { ...partial, page: 1 } : partial);
+    const next = resetsPage ? { ...partial, page: 1 } : partial;
+
+    // no-op 가드(docs/react/url-state.md:14, :44) — nuqs는 값 비교 없이 무조건
+    // history.pushState를 큐에 넣으므로(C4), 병합 후 최종 4필드가 현재 query와
+    // 같으면 여기서 막아야 한다. 4필드 전부 원시값이라 얕은 필드별 비교로 충분하다.
+    const merged: ListQueryValues = { ...query, ...next };
+    const isNoop =
+      merged.q === query.q &&
+      merged.category === query.category &&
+      merged.sort === query.sort &&
+      merged.page === query.page;
+    if (isNoop) {
+      // setQuery는 Promise<URLSearchParams>를 반환하므로 시그니처를 맞춘다. 아무 것도
+      // 쓰지 않았으니 "쓰기 후의 URL"은 곧 "현재 URL"과 같다 — window.location.search를
+      // 그대로 돌려준다(호출 시점은 항상 사용자 상호작용 이후라 window가 존재한다).
+      return Promise.resolve(new URLSearchParams(window.location.search));
+    }
+
+    return setQuery(next);
   };
 
   return [query, setListQuery] as const;

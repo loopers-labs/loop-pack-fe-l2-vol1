@@ -89,6 +89,20 @@ describe("ListView", () => {
     });
   });
 
+  describe("범위 초과 복구 버튼이 실제로 1페이지 결과를 렌더한다 (L3-a)", () => {
+    it("C1: 1페이지로 이동 버튼을 클릭하면 카드가 렌더되고 범위 초과 문구가 사라진다", async () => {
+      const user = userEvent.setup();
+      render(<ListView />, { searchParams: "?q=스탠리&page=2" });
+
+      await screen.findByRole("button", { name: "1페이지로 이동" });
+
+      await user.click(screen.getByRole("button", { name: "1페이지로 이동" }));
+
+      expect(await screen.findAllByRole("article")).toHaveLength(4);
+      expect(screen.queryByText("이 페이지에는 상품이 없습니다")).toBeNull();
+    });
+  });
+
   describe("총 개수·필터바 (F5·F5b, 다섯 분기 각각 유도)", () => {
     it("pending에는 총 개수가 없고, 필터바는 여전히 활성 상태로 마운트되어 있다", () => {
       pendingScenario();
@@ -169,6 +183,42 @@ describe("ListView", () => {
 
       expect(screen.queryByRole("navigation", { name: "페이지 이동" })).toBeNull();
     });
+
+    it("D1: page=2에서는 aria-current가 2페이지 버튼에만 붙는다 (L3-b)", async () => {
+      render(<ListView />, { searchParams: "?page=2" });
+
+      await screen.findByText("총 30개");
+
+      const nav = screen.getByRole("navigation", { name: "페이지 이동" });
+      expect(within(nav).getByRole("button", { name: "2페이지" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+      expect(within(nav).getByRole("button", { name: "1페이지" })).not.toHaveAttribute(
+        "aria-current",
+      );
+      expect(within(nav).getByRole("button", { name: "3페이지" })).not.toHaveAttribute(
+        "aria-current",
+      );
+    });
+
+    it("D2: page=3에서는 aria-current가 3페이지 버튼에만 붙는다 (L3-b)", async () => {
+      render(<ListView />, { searchParams: "?page=3" });
+
+      await screen.findByText("총 30개");
+
+      const nav = screen.getByRole("navigation", { name: "페이지 이동" });
+      expect(within(nav).getByRole("button", { name: "3페이지" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+      expect(within(nav).getByRole("button", { name: "1페이지" })).not.toHaveAttribute(
+        "aria-current",
+      );
+      expect(within(nav).getByRole("button", { name: "2페이지" })).not.toHaveAttribute(
+        "aria-current",
+      );
+    });
   });
 
   describe("URL 파라미터 (C4~C16)", () => {
@@ -229,6 +279,100 @@ describe("ListView", () => {
         expect(onUrlUpdate).toHaveBeenCalledTimes(1);
         const event = onUrlUpdate.mock.calls[0][0];
         expect(event.options.history).toBe("push");
+      });
+    });
+
+    describe("no-op 가드 — 병합 결과가 현재 query와 같으면 history를 쓰지 않는다 (C4 no-op)", () => {
+      it("A1: 현재 페이지 버튼(2페이지)을 3회 클릭해도 onUrlUpdate가 0회다", async () => {
+        const onUrlUpdate = vi.fn();
+        const user = userEvent.setup();
+        render(<ListView />, { searchParams: "?page=2", onUrlUpdate });
+        await screen.findByText("총 30개");
+
+        const nav = screen.getByRole("navigation", { name: "페이지 이동" });
+        const currentPageButton = within(nav).getByRole("button", { name: "2페이지" });
+
+        await user.click(currentPageButton);
+        await user.click(currentPageButton);
+        await user.click(currentPageButton);
+
+        expect(onUrlUpdate).not.toHaveBeenCalled();
+      });
+
+      it("A2: 같은 검색어(shirt)로 3회 제출해도 onUrlUpdate가 0회다", async () => {
+        const onUrlUpdate = vi.fn();
+        const user = userEvent.setup();
+        render(<ListView />, { searchParams: "?q=shirt", onUrlUpdate });
+        await screen.findByText(/^총 /);
+
+        const searchInput = screen.getByLabelText("검색");
+        await user.type(searchInput, "{Enter}");
+        await user.type(searchInput, "{Enter}");
+        await user.type(searchInput, "{Enter}");
+
+        expect(onUrlUpdate).not.toHaveBeenCalled();
+      });
+
+      it("A3: (회귀 가드) 다른 페이지 버튼(3페이지) 클릭은 onUrlUpdate가 1회다", async () => {
+        const onUrlUpdate = vi.fn();
+        const user = userEvent.setup();
+        render(<ListView />, { searchParams: "?page=2", onUrlUpdate });
+        await screen.findByText("총 30개");
+
+        const nav = screen.getByRole("navigation", { name: "페이지 이동" });
+        await user.click(within(nav).getByRole("button", { name: "3페이지" }));
+
+        expect(onUrlUpdate).toHaveBeenCalledTimes(1);
+      });
+
+      it("A4: 기본 URL(쿼리 없음)에서 카테고리를 이미 선택된 값(전체)으로 change해도 onUrlUpdate가 0회다", async () => {
+        // <select>에서 이미 선택된 값을 다시 골라도 happy-dom(user-event)은 change를
+        // 발생시킨다(실측 확인: 가드를 무력화하면 이 케이스가 실패로 바뀐다) — 그래서
+        // 대표 케이스가 성립한다. 병합 결과(카테고리 동일 + page 리셋 후 1)가 현재
+        // query(all·1)와 같아야만 여기서 막히므로, 바뀐 필드만 비교하는 얕은 가드로는
+        // 못 잡고 병합 후 4필드 전체 비교가 필요함을 보여준다.
+        const onUrlUpdate = vi.fn();
+        const user = userEvent.setup();
+        render(<ListView />, { onUrlUpdate });
+        await screen.findByText("총 30개");
+
+        await user.selectOptions(screen.getByLabelText("카테고리"), "all");
+
+        expect(onUrlUpdate).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("검색 제출 후 포커스가 유지된다 — key 리마운트에도 살아남는 포커스 복원 (C5)", () => {
+      it("B1: 최초 렌더 직후에는 검색 입력이 포커스를 훔치지 않는다", async () => {
+        render(<ListView />);
+        await screen.findByText("총 30개");
+
+        expect(document.activeElement).not.toBe(screen.getByLabelText("검색"));
+      });
+
+      it("B2: 검색 입력에 포커스 후 제출하면 제출 후에도 검색 입력이 포커스를 유지한다", async () => {
+        const user = userEvent.setup();
+        render(<ListView />);
+        await screen.findByText("총 30개");
+
+        const searchInput = screen.getByLabelText("검색");
+        await user.click(searchInput);
+        await user.type(searchInput, "스탠리{Enter}");
+
+        expect(document.activeElement).toBe(screen.getByLabelText("검색"));
+      });
+
+      it("B3: (회귀 가드) 제출 전후로 검색 입력 DOM 노드 자체는 교체된다 — key 리마운트가 유지됨을 확인한다(C22 보호)", async () => {
+        const user = userEvent.setup();
+        render(<ListView />);
+        await screen.findByText("총 30개");
+
+        const searchInputBeforeSubmit = screen.getByLabelText("검색");
+        await user.click(searchInputBeforeSubmit);
+        await user.type(searchInputBeforeSubmit, "스탠리{Enter}");
+
+        const searchInputAfterSubmit = screen.getByLabelText("검색");
+        expect(searchInputAfterSubmit).not.toBe(searchInputBeforeSubmit);
       });
     });
 
@@ -435,8 +579,8 @@ describe("ListView", () => {
   describe("정렬 조작 (F8)", () => {
     it("F8: 정렬을 인기순→낮은가격순→높은가격순→최신순 순서로 바꾸면 각 단계 첫 카드가 갱신된다", async () => {
       const user = userEvent.setup();
-      // latest가 클라이언트 기본값이라 latest에서 시작해 latest로 change하면
-      // change 이벤트가 발생하지 않는다 — 그래서 latest를 마지막에 복귀시킨다.
+      // latest가 클라이언트 기본값이라 latest에서 시작해 latest를 다시 고르면
+      // 정렬 결과가 그대로라 첫 카드 변화를 관찰할 수 없다 — 그래서 latest를 마지막에 복귀시킨다.
       render(<ListView />);
       await screen.findByText("총 30개");
 

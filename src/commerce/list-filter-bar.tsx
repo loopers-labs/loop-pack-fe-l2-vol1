@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { isCategoryId, PRODUCT_SORTS, isProductSort } from "./api/products";
 import type { ProductSort } from "./api/types";
@@ -37,9 +38,23 @@ type ListFilterBarProps = {
 };
 
 export function ListFilterBar({ query, setQuery }: ListFilterBarProps) {
+  // 제출로 인한 key 리마운트인지(포커스 복원 필요) 최초 마운트인지(포커스 훔치면 안 됨)
+  // 구별하는 플래그. 상태(state)로 안 두는 이유: 이 값 자체는 화면에 아무것도 그리지
+  // 않고 SearchInput의 ref 콜백이 커밋 시점에 한 번 읽고 끄는 신호일 뿐이라
+  // 리렌더를 유발할 필요가 없다 — ref가 정확히 그 용도다.
+  const focusNextMountRef = useRef(false);
+
   return (
     <div className={styles.filters}>
-      <SearchInput key={query.q} initialQ={query.q} onSubmit={(q) => setQuery({ q })} />
+      <SearchInput
+        key={query.q}
+        initialQ={query.q}
+        focusNextMountRef={focusNextMountRef}
+        onSubmit={(q) => {
+          focusNextMountRef.current = true;
+          setQuery({ q });
+        }}
+      />
       <label>
         카테고리
         <select
@@ -80,8 +95,33 @@ export function ListFilterBar({ query, setQuery }: ListFilterBarProps) {
   );
 }
 
-function SearchInput({ initialQ, onSubmit }: { initialQ: string; onSubmit: (q: string) => void }) {
+function SearchInput({
+  initialQ,
+  onSubmit,
+  focusNextMountRef,
+}: {
+  initialQ: string;
+  onSubmit: (q: string) => void;
+  focusNextMountRef: RefObject<boolean>;
+}) {
   const [draft, setDraft] = useState(initialQ);
+
+  // 제출로 새 key의 SearchInput이 마운트될 때만(focusNextMountRef.current === true) 포커스를
+  // 되돌린다 — 최초 마운트(플래그 false)는 건드리지 않는다. ref 자체를 dep으로 두면
+  // (원시값이 아닌 ref 객체는 리렌더 내내 참조가 고정이므로) 이 콜백은 이 인스턴스의
+  // 수명 동안 재생성되지 않아, 타이핑 등 무관한 리렌더에서 다시 불리지 않는다.
+  // 커서는 끝에 둔다 — 그래야 이어서 타이핑할 때 자연스럽다(기본 focus()는 시작점에 둔다).
+  const restoreFocus = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (!node || !focusNextMountRef.current) {
+        return;
+      }
+      focusNextMountRef.current = false;
+      node.focus();
+      node.setSelectionRange(node.value.length, node.value.length);
+    },
+    [focusNextMountRef],
+  );
 
   return (
     <form
@@ -93,6 +133,7 @@ function SearchInput({ initialQ, onSubmit }: { initialQ: string; onSubmit: (q: s
       <label>
         검색
         <input
+          ref={restoreFocus}
           name="q"
           placeholder="상품명 또는 브랜드"
           value={draft}

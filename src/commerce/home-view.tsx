@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { homeQueryOptions } from "./queries";
@@ -11,8 +12,10 @@ const SKELETON_CARD_COUNT = 10;
 export function HomeView() {
   const query = useQuery(homeQueryOptions());
 
+  let body: ReactNode;
+
   if (query.isPending) {
-    return (
+    body = (
       <div
         className={styles.skeleton}
         role="status"
@@ -24,32 +27,31 @@ export function HomeView() {
         ))}
       </div>
     );
+  } else if (query.isError) {
+    body = <p className={styles.message}>{query.error.message}</p>;
+  } else {
+    const { data } = query;
+    body = (
+      <>
+        <section className={styles.hero}>
+          <p>{data.banner.description}</p>
+          <h1>{data.banner.title}</h1>
+        </section>
+        <section className={styles.section}>
+          <h2>카테고리</h2>
+          <div className={styles.categories}>
+            {data.categories.map((category) => (
+              <Link key={category.id} href={`/products?category=${category.id}`}>
+                {category.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+        <ProductSection title="인기 상품" products={data.popularProducts} />
+        <ProductSection title="신상품" products={data.newProducts} />
+      </>
+    );
   }
 
-  if (query.isError) {
-    return <p className={styles.message}>{query.error.message}</p>;
-  }
-
-  const { data } = query;
-
-  return (
-    <div className={styles.page}>
-      <section className={styles.hero}>
-        <p>{data.banner.description}</p>
-        <h1>{data.banner.title}</h1>
-      </section>
-      <section className={styles.section}>
-        <h2>카테고리</h2>
-        <div className={styles.categories}>
-          {data.categories.map((category) => (
-            <Link key={category.id} href={`/products?category=${category.id}`}>
-              {category.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-      <ProductSection title="인기 상품" products={data.popularProducts} />
-      <ProductSection title="신상품" products={data.newProducts} />
-    </div>
-  );
+  return <div className={styles.page}>{body}</div>;
 }
