@@ -147,7 +147,26 @@ nuqs의 `useQueryStates`는 내부에서 `useSearchParams()`를 호출한다. Ne
 
 ### Advanced 항목
 
-이번 구현은 과제의 Advanced(A~D) 항목을 claim하지 않는다.
+D(상태 아키텍처 테스트) 4항목 전부와 C(사용자 경험 개선)의 한 항목을 했다. A(상태 영속화)와 B(App Router 서버 프리패치)는 하지 않았다.
+
+**D — 상태 아키텍처 테스트**
+
+| 과제 항목                      | 검증 위치                                                                                                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Zustand action과 selector      | `store.test.ts` 8개(토글 왕복, 새 Set 교체, 두 Set의 상호 비간섭), `product-actions.test.tsx` 4개(selector 구독 결과가 `aria-pressed`에 반영되는지)                                  |
+| Header 개수 파생               | `header.test.tsx` 5개 — store에 값을 넣고 `Header`만 렌더해 개수가 따라오는지                                                                                                        |
+| nuqs URL 조건과 query key 일치 | `queries.test.ts`가 5필드 각각이 queryKey를 바꾸는지 단정하고, `list-view.test.tsx`가 MSW Life-cycle events API로 실제 요청 쿼리를 캡처해 URL 조건이 요청에 그대로 나가는지 단정한다 |
+| 홈과 목록의 store 동기화       | `home-list-sync.test.tsx`                                                                                                                                                            |
+
+선택 이유: 상태 소유권 4분할이 이번 과제의 본체인데, 그 경계가 지켜지는지는 코드를 읽어서 알 수 없다. `ProductActions`가 로컬 `useState`로 담김 여부를 들고 있어도 화면 하나만 보는 스위트는 전부 통과한다. 홈과 목록, `Header`를 한 트리에 렌더해 공통 상품(p26)을 한 번만 토글하는 `home-list-sync.test.tsx`만이 그 오귀속을 잡는다. 카드가 2장인데 헤더 개수가 1이어야 한다는 단정이 판별력의 핵심이다.
+
+추가한 복잡도: 새 DOM이나 E2E 환경은 넣지 않았다. Vitest와 React Testing Library, MSW, happy-dom은 이전 주차에 이미 있었고 5주차에 더한 것은 `mocks/render.tsx` 하나다. QueryClient와 `NuqsTestingAdapter`를 주입하는 렌더 헬퍼 36줄이다.
+
+**C — 전체 페이지를 새로고침하지 않는 오류 재시도**
+
+에러 화면의 재시도 버튼이 `query.refetch()`로 같은 쿼리만 다시 부른다. Basic 요구인 로딩과 에러, 빈 상태 구분을 만들다 보니 에러 화면에 탈출 경로가 필요했고, 그 자리에 전체 새로고침 대신 refetch를 넣었으므로 추가한 복잡도는 없다. `home-view.test.tsx`와 `list-view.test.tsx`가 재시도 클릭 후 성공 화면으로 전환되는지 단정한다.
+
+C의 나머지 네 항목(검색어 debounce, 다음 페이지 prefetch, 목록 이동 전 prefetch, 페이지 변경 중 기존 목록 유지)은 하지 않았다.
 
 ### 검증 결과 — 새로고침·URL 공유·앞뒤 이동·페이지 이동
 
