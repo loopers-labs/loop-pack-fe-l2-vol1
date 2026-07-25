@@ -12,7 +12,7 @@ import type {
   ProductSort,
 } from "./index";
 
-// 배럴이 실제로 내보내야 하는 런타임 이름 8개(도메인 함수 5개 + UI 3개).
+// 배럴이 실제로 내보내야 하는 런타임 이름 9개(도메인 함수 5개 + UI 4개).
 const RUNTIME_EXPORT_NAMES = [
   "waitForMockApi",
   "getHomeData",
@@ -22,6 +22,7 @@ const RUNTIME_EXPORT_NAMES = [
   "CommerceProviders",
   "Header",
   "HomeView",
+  "ListView",
 ];
 
 // 피처 내부 구현 — 배럴에 새어 나오면 안 된다.
@@ -35,15 +36,16 @@ const PRIVATE_IMPLEMENTATION_NAMES = [
   "ProductCard",
   "ProductActions",
   "ProductSection",
+  "ListFilterBar",
+  "ListPagination",
   "homeQueryOptions",
   "productListQueryOptions",
   "fetchHome",
   "fetchProductList",
-  "ListView",
 ];
 
 describe("commerce 배럴(index.ts)", () => {
-  it("런타임 export가 정확히 8개이며 이름 집합이 일치한다", () => {
+  it("런타임 export가 정확히 9개이며 이름 집합이 일치한다", () => {
     const keys = Object.keys(commerce).sort();
 
     expect(keys).toEqual([...RUNTIME_EXPORT_NAMES].sort());
@@ -53,10 +55,11 @@ describe("commerce 배럴(index.ts)", () => {
     expect(Object.keys(commerce)).not.toContain(name);
   });
 
-  it("UI 3개(CommerceProviders·Header·HomeView)는 함수다", () => {
+  it("UI 4개(CommerceProviders·Header·HomeView·ListView)는 함수다", () => {
     expect(typeof commerce.CommerceProviders).toBe("function");
     expect(typeof commerce.Header).toBe("function");
     expect(typeof commerce.HomeView).toBe("function");
+    expect(typeof commerce.ListView).toBe("function");
   });
 
   it("도메인 함수 5개(waitForMockApi·getHomeData·isCategoryId·isProductSort·queryProducts)도 함수다", () => {

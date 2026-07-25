@@ -4,6 +4,7 @@ export { isCategoryId, isProductSort, queryProducts } from "./api/products";
 export { CommerceProviders } from "./providers";
 export { Header } from "./header";
 export { HomeView } from "./home-view";
+export { ListView } from "./list-view";
 export type {
   ApiErrorResponse,
   Category,
