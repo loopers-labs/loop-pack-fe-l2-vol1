@@ -12,7 +12,11 @@ import { useProductListCondition } from '@/lib/commerce/useProductListCondition'
 import type { ProductSort } from '@/types/commerce'
 import SearchForm from './SearchForm'
 
-const categoryLabels: Record<CategoryFilter, string> = {
+// 허용값 목록은 URL 계약이라 상수로 고정한다. parser가 컴파일 타임 유니온을 요구해서
+// 서버 응답으로 대체할 수 없다. 반면 표시 이름의 원본은 서버 응답이고,
+// 아래 이름은 응답이 오기 전 첫 페인트에만 쓰는 폴백이다.
+// all은 서버에 없는 UI 전용 값이라 항상 이쪽을 쓴다.
+const categoryFallbackLabels: Record<CategoryFilter, string> = {
   all: '전체',
   casual: '캐주얼',
   fashion: '패션',
@@ -34,6 +38,11 @@ export default function ProductListView() {
   const { data, isPending, isError, refetch } = useQuery(
     commerceQueries.products.list(condition),
   )
+
+  // 표시 이름은 서버 응답에서 찾고, 없으면 폴백을 쓴다.
+  const categoryLabel = (value: CategoryFilter) =>
+    data?.categories.find((category) => category.id === value)?.name ??
+    categoryFallbackLabels[value]
 
   // 검색, 카테고리, 정렬이 바뀌면 보던 페이지는 의미가 없다. 1페이지로 되돌린다.
   const handleSearch = (query: string) => {
@@ -141,7 +150,7 @@ export default function ProductListView() {
             >
               {categoryFilterValues.map((value) => (
                 <option key={value} value={value}>
-                  {categoryLabels[value]}
+                  {categoryLabel(value)}
                 </option>
               ))}
             </select>
