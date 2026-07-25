@@ -25,6 +25,18 @@ describe('page parser', () => {
   })
 })
 
+describe('q parser', () => {
+  it('앞뒤 공백을 잘라 같은 검색어가 하나의 조건이 되게 한다', () => {
+    expect(productListSearchParams.q.parse('  니트  ')).toBe('니트')
+    expect(productListSearchParams.q.parse('니트')).toBe('니트')
+  })
+
+  it('공백뿐인 검색어는 조건이 아니라 기본값과 같아진다', () => {
+    expect(productListSearchParams.q.parse('   ')).toBe('')
+    expect(productListSearchParams.q.defaultValue).toBe('')
+  })
+})
+
 describe('category, sort parser', () => {
   it('지원 목록 밖의 값은 거부한다', () => {
     expect(productListSearchParams.category.parse('unknown')).toBeNull()
