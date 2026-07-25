@@ -18,8 +18,10 @@ export const createBrowserQueryClient = () =>
   })
 
 export default function Providers({ children }: ProvidersProps) {
-  // QueryClient는 컴포넌트 수명에 묶어 한 번만 만든다.
-  // 모듈 스코프에 두면 서버 렌더 시 요청 간 캐시가 섞인다.
+  // QueryClient를 Provider 최초 렌더에 한 번만 만든다.
+  // 본문에서 생성하면 리렌더마다 새 인스턴스가 되어 캐시가 초기화된다.
+  // 서버 prefetch를 추가하면 요청마다 새로 만들어야 한다.
+  // 모듈 스코프에 하나를 두면 요청 사이로 캐시가 샌다.
   const [queryClient] = useState(createBrowserQueryClient)
 
   return (

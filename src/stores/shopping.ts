@@ -45,6 +45,7 @@ export const useToggleCart = () => useShoppingStore((state) => state.toggleCart)
 export const useToggleWishlist = () =>
   useShoppingStore((state) => state.toggleWishlist)
 
-// 로그아웃·테스트 격리처럼 React 밖에서 세션 상태를 폐기할 때 쓰는 명시적 어댑터다.
+// 테스트 격리처럼 React 밖에서 클라이언트 상태를 비울 때 쓰는 어댑터다.
+// 로그인이 생기면 로그아웃 경로가 여기에 붙는다.
 export const resetShoppingState = () =>
   useShoppingStore.setState(initialShoppingState)
