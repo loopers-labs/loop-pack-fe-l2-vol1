@@ -1,17 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useQueryStates } from 'nuqs'
 import ProductCard from '@/components/commerce/ProductCard'
 import { commerceQueries } from '@/lib/commerce/queries'
 import {
   categoryFilterValues,
-  PRODUCT_PAGE_SIZE,
-  productListSearchParams,
-  productListUrlOptions,
   sortFilterValues,
   type CategoryFilter,
 } from '@/lib/commerce/searchParams'
+import { useProductListCondition } from '@/lib/commerce/useProductListCondition'
 import type { ProductSort } from '@/types/commerce'
 import SearchForm from './SearchForm'
 
@@ -32,16 +29,10 @@ const sortLabels: Record<ProductSort, string> = {
 }
 
 export default function ProductListView() {
-  const [filters, setFilters] = useQueryStates(
-    productListSearchParams,
-    productListUrlOptions,
-  )
-  // URL 조건이 그대로 query key와 요청이 된다. 기본 정렬도 API에 명시된다.
+  const { condition, setFilters } = useProductListCondition()
+  // 조립된 조건 하나가 그대로 query key와 요청이 된다. 기본 정렬도 API에 명시된다.
   const { data, isPending, isError, refetch } = useQuery(
-    commerceQueries.products.list({
-      ...filters,
-      pageSize: PRODUCT_PAGE_SIZE,
-    }),
+    commerceQueries.products.list(condition),
   )
 
   // 검색, 카테고리, 정렬이 바뀌면 보던 페이지는 의미가 없다. 1페이지로 되돌린다.
@@ -71,7 +62,7 @@ export default function ProductListView() {
   }
 
   const totalPages = data
-    ? Math.max(1, Math.ceil(data.totalCount / PRODUCT_PAGE_SIZE))
+    ? Math.max(1, Math.ceil(data.totalCount / condition.pageSize))
     : 1
 
   let results: React.ReactNode
@@ -111,18 +102,18 @@ export default function ProductListView() {
         <nav className="week05-pagination" aria-label="페이지 이동">
           <button
             type="button"
-            disabled={filters.page <= 1}
-            onClick={() => handlePageChange(filters.page - 1)}
+            disabled={condition.page <= 1}
+            onClick={() => handlePageChange(condition.page - 1)}
           >
             이전
           </button>
           <span>
-            {filters.page} / {totalPages}
+            {condition.page} / {totalPages}
           </span>
           <button
             type="button"
-            disabled={filters.page >= totalPages}
-            onClick={() => handlePageChange(filters.page + 1)}
+            disabled={condition.page >= totalPages}
+            onClick={() => handlePageChange(condition.page + 1)}
           >
             다음
           </button>
@@ -137,15 +128,15 @@ export default function ProductListView() {
         <h1>상품 목록</h1>
         <div className="week05-filters">
           <SearchForm
-            key={filters.q}
-            initialQuery={filters.q}
+            key={condition.q}
+            initialQuery={condition.q}
             onSearch={handleSearch}
           />
           <label>
             카테고리
             <select
               name="category"
-              value={filters.category}
+              value={condition.category}
               onChange={handleCategoryChange}
             >
               {categoryFilterValues.map((value) => (
@@ -159,7 +150,7 @@ export default function ProductListView() {
             정렬
             <select
               name="sort"
-              value={filters.sort}
+              value={condition.sort}
               onChange={handleSortChange}
             >
               {sortFilterValues.map((value) => (
