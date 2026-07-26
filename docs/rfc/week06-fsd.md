@@ -574,7 +574,9 @@ key와 캐시 정책, `useProductListCondition.ts`가 URL 조건 조립을 맡�
 - `fetchProducts`와 `fetchHome`의 소비 지점은 각각 `queries.ts` 하나다.
 - query key는 `['products', 'list', condition]`이고 `condition`은 검색어, 카테고리, 정렬,
   페이지, pageSize다. 상품 자체가 아니라 목록 탐색 조건을 나타낸다.
-- `condition` 타입은 URL parser에서 파생된다. 화면의 조회 정책에 묶여 있다.
+- `condition` 타입은 API 요청 타입 `ProductListQuery`(`types/commerce.ts`)를 `Required`로
+  감싼 것이다. 의존 방향은 반대여서, `searchParams.ts`가 `CategoryId`와 `ProductSort`를 도메인
+  타입에서 가져와 파서 값을 제약한다. `queries.ts`는 nuqs도 `searchParams`도 import하지 않는다.
 - **저장소 전체에 `invalidateQueries`, `setQueryData`, `useMutation`이 하나도 없다.**
   key 계층이 제공하는 fuzzy 무효화 범위를 현재 사용하는 코드가 없다.
 - `Product` 타입은 카드, 목록 화면, mock API, 테스트 등 여러 곳에서 쓰인다. 전송 함수와 달리
@@ -592,21 +594,18 @@ key와 캐시 정책, `useProductListCondition.ts`가 URL 조건 조립을 맡�
 | `fetchProducts` 위치 | `entities/product/api` | `_pages/product-list/api` | `entities/product/api` |
 | queryOptions 위치 | `entities/product/api` | `_pages/product-list/api` | `_pages/product-list/api` |
 | key 계층 | entity가 전부 | page가 전부 | 루트는 entity, `list` 이하는 page |
-| entity가 URL 조건을 아는가 | 안다 | 모른다 | 모른다 |
+| 목록 전용 캐시 정책 소유 | entity | page | page |
 | 한 조회 계약이 갈리는가 | 아니다 | 아니다 | 갈린다 |
 
 ### Evidence
 
-현재 근거는 세 가지를 가리킨다.
+현재 근거는 두 가지를 가리킨다.
 
 첫째, **재사용이 없다.** 목록 queryOptions도 홈 queryOptions도 소비 지점이 하나씩이다. FSD
 v2.1의 pages first는 재사용되지 않는 로직을 페이지 슬라이스에 두고 실제 공유가 생길 때 분리하라고
 한다.
 
-둘째, **key가 화면 조건을 나타낸다.** `['products', 'list', condition]`의 `condition`은 URL에서
-읽은 탐색 조건이다. 이것을 entity가 소유하면 도메인 개념 레이어가 화면의 URL 계약을 알게 된다.
-
-셋째, **key 계층의 사용처가 아직 없다.** 계층을 둔 이유는 무효화 범위를 조준하기 위해서인데,
+둘째, **key 계층의 사용처가 아직 없다.** 계층을 둔 이유는 무효화 범위를 조준하기 위해서인데,
 저장소에 무효화 코드가 하나도 없다. entity가 루트를 소유해야 한다는 논거는 상품 상세나
 mutation이 생긴 뒤에 성립하며, 그것은 가상 스트레스 시나리오다.
 
@@ -628,9 +627,12 @@ B를 채택한다.
 
 #### A. entity가 전부 소유
 
-목록 queryOptions는 URL 조건 타입에 의존한다. entity가 이를 소유하면 도메인 개념 레이어가
-화면의 URL 계약을 알게 되고, 목록 전용 staleTime과 key 정책까지 도메인에 들어간다. 재사용
-근거도 없다.
+entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.ts`는 `api.ts`만 참조하고
+`condition` 타입은 API 요청 타입에서 나온다. 이 근거로는 A를 반려할 수 없다.
+
+반려 근거는 소비처 수다. 목록 전용 staleTime 30초와 `list` 이하 key 정책은 한 화면의 조회
+정책이고 그 화면이 지금 하나뿐이다. 여러 화면이 공유하지 않는 정책을 도메인 개념 레이어에
+올릴 근거가 없다.
 
 #### C. 전송과 조회 정책 분리
 
@@ -653,7 +655,7 @@ B를 채택한다.
 
 ### Validation
 
-- `entities/product`가 URL 조건 타입이나 nuqs를 import하지 않는다.
+- `entities/product`가 nuqs와 `productListSearchParams`를 import하지 않는다.
 - `_pages/product-list`가 `entities/product`와 `shared`만 import한다.
 - `_pages/home`과 `_pages/product-list`가 서로를 import하지 않는다.
 - 조회 조건을 바꿀 때 수정 파일이 `_pages/product-list` 안에 모인다.
