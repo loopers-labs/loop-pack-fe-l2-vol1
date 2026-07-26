@@ -369,14 +369,26 @@ B안은 기존 구조보다 11줄 증가하지만 다음을 함께 만족한다.
 
 #### 선택과 무관하게 나온 결과
 
-위시리스트 capability를 삭제한 뒤 typecheck에서 깨진 파일은 두 안 모두 정확히 두 개였다.
+위시리스트 capability를 삭제한 뒤 깨지는 파일은 두 안이 같았다. spike 기록에는 두 개로
+적었으나 Header를 실험 범위에서 빠뜨린 결과다. 목표 구조에서 살아남아 수정해야 하는 생산 코드
+경계는 최소 세 곳이다.
 
 - 공통 Zustand runtime 조립부
-- 상위 조합부
+- 상위 조합부 (Decision 3 이후 `widgets/product-grid`)
+- Header 조합부 (`HeaderCounts`)
 
-cart 관련 파일은 어느 쪽에서도 나타나지 않았다. Decision 1의 capability 분리가 이 결정의
-선택과 독립적으로 Validation 조건을 만족한다는 뜻이다. 따라서 이 결정은 삭제 반경이 아니라
-구조 비용으로 판단해야 한다.
+`entities/wishlist/ui`는 폴더째 지우므로 "깨지는 생존 파일"에 넣지 않는다. 세 곳 모두
+[Decision 1](#decision-1-cartwishlist-capability-boundary)의 Validation이 이미 삭제하거나
+수정할 수 있는 대상으로 열거한 항목이므로, 이 정정은 Decision 1의 결론을 바꾸지 않는다.
+
+Header가 위시리스트 개수를 소비하는 것은 경계 누수가 아니다. 개수 표시는 정당한 외부 소비이고
+현재도 `useWishlistCount`라는 의도 기반 selector만 쓴다. 다만 wishlist 슬라이스에 조합부 밖의
+외부 소비자가 있다는 뜻이므로 Decision 5의 입력이 된다.
+
+cart 모델과 cart가 공개하는 계약은 어느 쪽에서도 수정 대상에 나타나지 않았다. Header는 두
+capability를 함께 소비하지만 위시리스트 줄만 제거하면 되고 cart 계약은 그대로다. Decision 1의
+capability 분리가 이 결정의 선택과 독립적으로 Validation 조건을 만족한다는 뜻이다. 따라서 이
+결정은 삭제 반경이 아니라 구조 비용으로 판단해야 한다.
 
 #### 측정값
 
@@ -384,7 +396,6 @@ cart 관련 파일은 어느 쪽에서도 나타나지 않았다. Decision 1의 
 | --- | --- | --- |
 | 파일 수 | 9 | 13 |
 | 줄 수 | 176 | 187 |
-| `index.ts` 수 | 0 | 4 |
 | 조합부가 import하는 슬라이스 | entity 3개 | entity 1개와 feature 2개 |
 | 위시리스트 삭제 시 지울 폴더 | `entities/wishlist` 한 곳 | `entities/wishlist`와 `features/toggle-wishlist-item` 두 곳, 두 레이어 |
 | 조합 코드 | 32줄 | 31줄 |
@@ -401,8 +412,8 @@ A를 채택한다.
 토글 UI를 각 capability의 entity 슬라이스 안 `ui` 세그먼트에 두고, 같은 슬라이스의 `model`을
 소비한다. feature 레이어는 이 결정으로 열지 않는다.
 
-정책이 없는 상태에서 feature 슬라이스를 여는 비용이 얻는 것보다 크다. 슬라이스 2개, `index.ts`
-4개, 파일 4개가 늘고 위시리스트 삭제 대상이 두 레이어로 흩어지는데, 그 대가로 얻는 것은
+정책이 없는 상태에서 feature 슬라이스를 여는 비용이 얻는 것보다 크다. 슬라이스 2개와 파일
+4개가 늘고 위시리스트 삭제 대상이 두 레이어로 흩어지는데, 그 대가로 얻는 것은
 `ui` 세그먼트 하나뿐인 빈 슬라이스다. FSD v2.1이 "처음부터 잘게 나누지 않고 실제로 여러 곳에서
 쓸 때 분리한다"고 정한 방향과도 맞다.
 
@@ -486,7 +497,6 @@ FSD 정의상 토글은 사용자 행위이므로 feature가 개념적으로 더
 | 전체 줄 수 | 88 | 83 |
 | page 두 개의 합계 | 88줄 | 46줄 |
 | widget 파일 | 없음 | 37줄 |
-| `index.ts` 수 | 0 | 1 |
 
 #### 중복의 성격
 
@@ -574,7 +584,9 @@ key와 캐시 정책, `useProductListCondition.ts`가 URL 조건 조립을 맡�
 - `fetchProducts`와 `fetchHome`의 소비 지점은 각각 `queries.ts` 하나다.
 - query key는 `['products', 'list', condition]`이고 `condition`은 검색어, 카테고리, 정렬,
   페이지, pageSize다. 상품 자체가 아니라 목록 탐색 조건을 나타낸다.
-- `condition` 타입은 URL parser에서 파생된다. 화면의 조회 정책에 묶여 있다.
+- `condition` 타입은 API 요청 타입 `ProductListQuery`(`types/commerce.ts`)를 `Required`로
+  감싼 것이다. 의존 방향은 반대여서, `searchParams.ts`가 `CategoryId`와 `ProductSort`를 도메인
+  타입에서 가져와 파서 값을 제약한다. `queries.ts`는 nuqs도 `searchParams`도 import하지 않는다.
 - **저장소 전체에 `invalidateQueries`, `setQueryData`, `useMutation`이 하나도 없다.**
   key 계층이 제공하는 fuzzy 무효화 범위를 현재 사용하는 코드가 없다.
 - `Product` 타입은 카드, 목록 화면, mock API, 테스트 등 여러 곳에서 쓰인다. 전송 함수와 달리
@@ -592,21 +604,18 @@ key와 캐시 정책, `useProductListCondition.ts`가 URL 조건 조립을 맡�
 | `fetchProducts` 위치 | `entities/product/api` | `_pages/product-list/api` | `entities/product/api` |
 | queryOptions 위치 | `entities/product/api` | `_pages/product-list/api` | `_pages/product-list/api` |
 | key 계층 | entity가 전부 | page가 전부 | 루트는 entity, `list` 이하는 page |
-| entity가 URL 조건을 아는가 | 안다 | 모른다 | 모른다 |
+| 목록 전용 캐시 정책 소유 | entity | page | page |
 | 한 조회 계약이 갈리는가 | 아니다 | 아니다 | 갈린다 |
 
 ### Evidence
 
-현재 근거는 세 가지를 가리킨다.
+현재 근거는 두 가지를 가리킨다.
 
 첫째, **재사용이 없다.** 목록 queryOptions도 홈 queryOptions도 소비 지점이 하나씩이다. FSD
 v2.1의 pages first는 재사용되지 않는 로직을 페이지 슬라이스에 두고 실제 공유가 생길 때 분리하라고
 한다.
 
-둘째, **key가 화면 조건을 나타낸다.** `['products', 'list', condition]`의 `condition`은 URL에서
-읽은 탐색 조건이다. 이것을 entity가 소유하면 도메인 개념 레이어가 화면의 URL 계약을 알게 된다.
-
-셋째, **key 계층의 사용처가 아직 없다.** 계층을 둔 이유는 무효화 범위를 조준하기 위해서인데,
+둘째, **key 계층의 사용처가 아직 없다.** 계층을 둔 이유는 무효화 범위를 조준하기 위해서인데,
 저장소에 무효화 코드가 하나도 없다. entity가 루트를 소유해야 한다는 논거는 상품 상세나
 mutation이 생긴 뒤에 성립하며, 그것은 가상 스트레스 시나리오다.
 
@@ -628,9 +637,12 @@ B를 채택한다.
 
 #### A. entity가 전부 소유
 
-목록 queryOptions는 URL 조건 타입에 의존한다. entity가 이를 소유하면 도메인 개념 레이어가
-화면의 URL 계약을 알게 되고, 목록 전용 staleTime과 key 정책까지 도메인에 들어간다. 재사용
-근거도 없다.
+entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.ts`는 `api.ts`만 참조하고
+`condition` 타입은 API 요청 타입에서 나온다. 이 근거로는 A를 반려할 수 없다.
+
+반려 근거는 소비처 수다. 목록 전용 staleTime 30초와 `list` 이하 key 정책은 한 화면의 조회
+정책이고 그 화면이 지금 하나뿐이다. 여러 화면이 공유하지 않는 정책을 도메인 개념 레이어에
+올릴 근거가 없다.
 
 #### C. 전송과 조회 정책 분리
 
@@ -653,7 +665,7 @@ B를 채택한다.
 
 ### Validation
 
-- `entities/product`가 URL 조건 타입이나 nuqs를 import하지 않는다.
+- `entities/product`가 nuqs와 `productListSearchParams`를 import하지 않는다.
 - `_pages/product-list`가 `entities/product`와 `shared`만 import한다.
 - `_pages/home`과 `_pages/product-list`가 서로를 import하지 않는다.
 - 조회 조건을 바꿀 때 수정 파일이 `_pages/product-list` 안에 모인다.
@@ -779,6 +791,8 @@ cart와 wishlist는 capability 모델을 분리하고 하나의 Zustand runtime�
 #### 미정
 
 - 각 슬라이스에 Public API가 필요한가 (Decision 5)
+- Decision 5의 확인된 입력: `entities/wishlist`와 `entities/cart`는 조합부 밖에 Header라는
+  외부 소비자를 가진다. 소비 형태는 개수 selector 하나다.
 
 ### O — Optimization
 
