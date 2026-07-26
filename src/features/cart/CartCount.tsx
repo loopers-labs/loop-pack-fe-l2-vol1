@@ -1,9 +1,14 @@
 'use client';
 
-import { useBoundStore } from '@/shared/store';
+import { useSavedStore } from '@/shared/store';
 
 export function CartCount() {
-  const count = useBoundStore((state) => state.cartProductIds.length);
+  const count = useSavedStore((state) => state.cartProductIds.length);
 
-  return <span>장바구니 {count}</span>;
+  // 복원 전에는 담아둔 게 있어도 0으로 보이므로, 숫자 자리를 비워두고 폭만 남긴다
+  return (
+    <span>
+      장바구니 <span className="week05-count">{count}</span>
+    </span>
+  );
 }
