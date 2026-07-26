@@ -3,6 +3,7 @@
 import { useQueryStates } from 'nuqs'
 import type { ProductListCondition } from '@/lib/commerce/api'
 import {
+  hasNonDefaultFilters,
   PRODUCT_PAGE_SIZE,
   productListSearchParams,
   productListUrlOptions,
@@ -22,5 +23,10 @@ export const useProductListCondition = () => {
     pageSize: PRODUCT_PAGE_SIZE,
   }
 
-  return { condition, setFilters }
+  // 조건 초기화가 실제로 무언가를 바꾸는 상태인지 화면이 알아야 한다.
+  return {
+    condition,
+    setFilters,
+    canResetFilters: hasNonDefaultFilters(filters),
+  }
 }

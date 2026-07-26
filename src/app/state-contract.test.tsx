@@ -203,6 +203,32 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     expect(lastUrlUpdate(onUrlUpdate).queryString).toBe('')
   })
+
+  it('되돌릴 조건이 없으면 초기화 대신 화면 밖으로 나가는 길을 준다', async () => {
+    // 조건이 이미 기본값이면 초기화해도 query key가 그대로라 아무 일도 일어나지 않는다.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400),
+        ),
+      ),
+    )
+
+    renderApp(<ProductListView />)
+
+    expect(
+      await screen.findByText('요청 조건을 확인해주세요.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: '검색 조건 초기화' }),
+    ).toBeNull()
+    expect(screen.getByRole('link', { name: '홈으로' })).toHaveAttribute(
+      'href',
+      '/',
+    )
+  })
 })
 
 describe('목록 조건의 원본은 URL이다', () => {

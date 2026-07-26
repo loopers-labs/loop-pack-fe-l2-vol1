@@ -23,11 +23,14 @@ export default function HomePage() {
     return (
       <main className="week05-section">
         <p>{errorMessageOf(error, '홈 데이터를 불러오지 못했습니다.')}</p>
-        {/* 400대는 같은 요청을 다시 보내도 같은 실패다. 재시도 출구를 주지 않는다. */}
-        {isRetryable(error) && (
+        {/* 400대는 같은 요청을 다시 보내도 같은 실패다. 홈에는 되돌릴 조건이 없으므로
+            재시도 대신 다른 화면으로 나가는 길을 준다. */}
+        {isRetryable(error) ? (
           <button type="button" onClick={() => refetch()}>
             다시 시도
           </button>
+        ) : (
+          <Link href="/products">상품 목록으로</Link>
         )}
       </main>
     )
