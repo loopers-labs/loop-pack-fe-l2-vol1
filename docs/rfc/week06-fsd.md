@@ -1,6 +1,6 @@
 # RFC: Week 06 FSD Migration
 
-> 문서 상태: Architecture Preflight, capability 경계와 toggle UI 레이어 결정 완료. Decision 3~6과 목표 트리 확정 진행 중.
+> 문서 상태: Preflight와 Decision 1~3 완료. Decision 4~6과 목표 트리 확정 진행 중.
 
 ## 0. Architecture Preflight
 
@@ -127,7 +127,7 @@ cart capability의 외부 계약은 다음 중 외부 슬라이스가 실제로 
 | --- | --- | --- | --- |
 | 1 | cart와 wishlist capability 경계와 runtime 조립 방식 | 없음 | 완료. [Decision 1](#decision-1-cartwishlist-capability-boundary) |
 | 2 | 단순 toggle UI를 entity의 공개 UI로 볼 것인가, 별도 정책을 가진 feature로 볼 것인가 | Decision 1 | 완료. [Decision 2](#decision-2-toggle-ui의-레이어) |
-| 3 | `ProductCard`와 행위를 page에서 조합할 것인가, widget으로 승격할 것인가 | Decision 2 | 두 안을 폐기용 spike로 실측 |
+| 3 | `ProductCard`와 행위를 page에서 조합할 것인가, widget으로 승격할 것인가 | Decision 2 | 완료. [Decision 3](#decision-3-productcard-조합-위치) |
 | 4 | 상품 목록 queryOptions의 소유자 | Decision 3의 트리 형태 | 소비 관계와 key가 표현하는 대상으로 판단 |
 | 5 | 어떤 슬라이스에 Public API를 둘 것인가 | Decision 2~4 | 슬라이스별 외부 소비자를 세어 판단 |
 | 6 | API 실패, 렌더링 실패, 이벤트 행위 실패의 전파와 복구 경계 | 구조 결정과 독립 | 실패 종류별로 생존 범위를 정의 |
@@ -443,6 +443,123 @@ FSD 정의상 토글은 사용자 행위이므로 feature가 개념적으로 더
 - 실패 시 되돌리기나 사용자 안내가 필요한 부수효과가 생긴다.
 - cart 상태를 바꾸는 다른 진입점이 생겨 변경 경로가 둘 이상이 된다.
 
+## Decision 3. ProductCard 조합 위치
+
+### Context
+
+[Decision 2](#decision-2-toggle-ui의-레이어)에서 토글 UI를 각 capability의 entity에 두기로
+했다. 상품 표현과 두 토글을 실제로 붙이는 자리를 정한다.
+
+이 결정에 필요한 현재 사실은 다음과 같다.
+
+- `ProductCard` 소비 지점은 두 곳이다. `src/app/page.tsx`와
+  `src/app/products/ProductListView.tsx`. 홈은 `productSections.map` 안에서 그리드 코드
+  하나를 인기 상품과 신상품 두 섹션에 재사용한다.
+- 두 소비 지점이 카드에 넘기는 값은 `Product` 하나로 같다. 그리드 클래스와 카드 레이아웃도 같다.
+- 빈 상태 처리는 두 곳이 다르다. 홈은 섹션별 안내 문구 하나, 목록은 조건 불일치와 범위 밖
+  페이지 두 종류에 총 개수 표시와 페이지네이션이 붙는다.
+
+### Question
+
+`ProductCard`와 토글 행위를 각 page에서 직접 조합할 것인가, 공통 조합을 widget으로 승격할
+것인가.
+
+### Options
+
+| 기준 | A. page에서 직접 조합 | B. widget으로 승격 |
+| --- | --- | --- |
+| 새로 여는 레이어 | 없음 | widgets 1개 |
+| 조합 규칙의 소유자 | 각 page | `widgets/product-grid` |
+| 화면별 차이 수용 | 자유롭다 | widget이 고정하는 만큼 제약된다 |
+| 조합 규칙 변경 시 | 두 곳을 함께 고친다 | 한 곳만 고친다 |
+
+### Experiment
+
+두 안을 폐기용 spike로 작성해 TypeScript strict 설정과 `eslint --max-warnings=0`으로
+검증했다. 두 안 모두 통과했다.
+
+#### 측정값
+
+| 기준 | A | B |
+| --- | --- | --- |
+| 파일 수 | 2 | 4 |
+| 전체 줄 수 | 88 | 83 |
+| page 두 개의 합계 | 88줄 | 46줄 |
+| widget 파일 | 없음 | 37줄 |
+| `index.ts` 수 | 0 | 1 |
+
+#### 중복의 성격
+
+들여쓰기를 무시하고 A의 두 page를 비교하면 비어 있지 않은 82줄 중 30줄이 공통이고, 그중
+20줄이 연속된 한 블록이다. 그리드 컨테이너, 카드 매핑, 두 토글 주입이 통째로 반복된다.
+
+이 20줄은 단순 반복이 아니라 같은 변경 이유를 가진 블록이다. 액션이 하나 늘거나, 그리드
+레이아웃이 바뀌거나, 액션 배치 순서 정책이 바뀌면 두 곳을 함께 고쳐야 한다.
+
+#### 화면 정책의 경계
+
+widget이 고정하는 것은 그리드 레이아웃, 액션 순서, 두 액션이 항상 함께 붙는다는 정책이다.
+
+빈 상태 처리는 widget이 가져가지 않는다. 홈과 목록의 빈 상태가 다르기 때문에 page가 소유하고,
+widget은 비어 있지 않은 목록만 그린다. spike에서 이 경계로 나누자 홈의 빈 배열 분기가 page에
+그대로 남았다. widget이 화면 정책을 침범하지 않는 선이 실제로 존재한다.
+
+### Decision
+
+B를 채택한다.
+
+`widgets/product-grid`가 상품 표현과 담기, 찜 행위의 조합을 소유한다. 빈 상태와 총 개수,
+페이지네이션은 각 page가 소유한다.
+
+이 결정으로 widgets 레이어를 연다. Decision 2에서 features를 열지 않은 것과 반대 방향이지만
+기준은 같다. **레이어를 여는 근거는 슬라이스 개수가 아니라 담을 책임이 있는가다.** Decision 2의
+feature 슬라이스는 `ui` 파일 하나뿐이고 담을 정책이 없었다. 이 widget은 20줄짜리 조합 규칙을
+가지며, 두 소비 지점이 그 규칙을 같은 이유로 함께 바꾼다.
+
+### Rejected
+
+#### A. page에서 직접 조합
+
+소비 지점이 두 곳뿐이므로 추상화를 미룰 근거가 있다. 그러나 반복되는 블록이 20줄이고 두
+소비처가 같은 이유로 함께 변한다. page 두 개가 88줄에서 46줄로 줄고, 조합 규칙 변경이 한
+곳으로 모인다. 반려한다.
+
+#### 두 번째 사용이라는 사실만으로 추상화하지 않는다는 원칙과의 관계
+
+Decision 1에서 `toggleId`를 shared로 올리지 않기로 하면서, 두 번째 사용이 생겼다는 사실만으로
+추상화하지 않는다고 적었다. 여기서 반대 결론이 나오는 이유는 기준이 사용 횟수가 아니기 때문이다.
+
+| | `toggleId` | 그리드 조합 |
+| --- | --- | --- |
+| 크기 | 3줄 | 20줄 |
+| 변경 이유 | 두 capability의 토글 정책이 갈릴 수 있다 | 두 화면이 같은 이유로 함께 변한다 |
+| 이름 비용 | 이름과 계약을 새로 만들어야 한다 | `ProductGrid`라는 자명한 단위가 이미 있다 |
+
+기준은 사용 횟수가 아니라 **두 사용처가 같은 이유로 변하는가**다.
+
+### Consequences
+
+- widgets 레이어가 열린다. 현재 슬라이스는 `product-grid` 하나다.
+- widget이 그리드 레이아웃과 액션 배치 순서를 고정한다. 화면별로 다르게 하려면 widget을
+  수정하거나 props를 열어야 한다.
+- page는 데이터 상태와 빈 상태만 다루게 되어 얇아진다.
+- 위시리스트를 제거하면 이 widget도 수정 대상이 된다. Decision 1의 Validation이 정의한
+  UI composition 수정에 해당하며 응집 실패가 아니다.
+
+### Validation
+
+- `entities/product`가 `entities/cart`, `entities/wishlist`, `widgets` 중 어느 것도
+  import하지 않는다.
+- widget이 세 entity를 import하고, page는 widget과 자기 데이터만 import한다.
+- 홈과 목록의 빈 상태 문구가 각 page에 남아 있다.
+- 조합 규칙을 바꿀 때 수정하는 파일이 widget 하나다.
+
+### Revisit
+
+- 홈과 목록의 카드 레이아웃이나 액션 구성이 서로 달라진다.
+- 한 화면만 액션을 숨기거나 다른 액션을 추가해야 한다.
+- widget이 화면별 분기를 props로 받기 시작해 조건이 두 개를 넘는다.
+
 ## 1. RADIO
 
 전체 구조를 빠르게 이해하기 위한 본문이다. 논쟁이 있었던 항목의 선택 근거와 반려 이유는
@@ -513,10 +630,10 @@ Decision 2~5의 결과를 반영해 확정한다. 현재 시점의 상태는 다
 - 두 capability를 하나의 Zustand runtime에서 조립한다.
 - `ProductCard` 내부에서 행위 조합을 제거한다.
 - 토글 UI는 각 capability의 entity 슬라이스에 두고 features 레이어를 열지 않는다.
+- 상품 표현과 행위의 조합은 `widgets/product-grid`가 소유한다. 빈 상태는 page가 소유한다.
 
 아직 열려 있는 경계
 
-- `ProductCard` 조합 위치
 - 상품 목록 query의 소유자
 - Public API 적용 범위
 
@@ -555,7 +672,6 @@ cart와 wishlist는 capability 모델을 분리하고 하나의 Zustand runtime�
 
 #### 미정
 
-- page 조합인가 widget 조합인가 (Decision 3)
 - 각 슬라이스에 Public API가 필요한가 (Decision 5)
 
 ### O — Optimization
