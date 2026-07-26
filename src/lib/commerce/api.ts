@@ -28,7 +28,7 @@ export const REQUEST_TIMEOUT_MS = 10_000
 
 const TIMEOUT_MESSAGE = '요청이 지연되어 중단했습니다. 다시 시도해주세요.'
 
-// 타임아웃은 AbortSignal.timeout이 TimeoutError로 알린다.
+// 타임아웃은 fetchJson이 TimeoutError라는 이름으로 중단시킨 경우다.
 // 사용자가 화면을 떠나 발생하는 AbortError와 달리 실패로 보여줘야 한다.
 export const isTimeout = (error: unknown) =>
   error instanceof DOMException && error.name === 'TimeoutError'

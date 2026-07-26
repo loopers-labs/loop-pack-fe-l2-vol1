@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { categories } from '@/app/api/_data/commerce'
 import {
   categoryFilterValues,
   categoryIds,
@@ -12,13 +11,9 @@ import {
 import { PRODUCT_PAGE_SIZE } from './searchParams'
 
 // 이 모듈의 존재 이유는 클라이언트 정규화와 서버 검증이 같은 기준을 쓰게 하는 것이다.
-// 따라서 판정 규칙뿐 아니라 허용값이 mock 데이터와 어긋나지 않는지도 함께 고정한다.
+// 허용값이 mock 데이터와 어긋나지 않는지는 데이터를 소유한 route 테스트에서 고정한다.
 
 describe('허용값', () => {
-  it('카테고리 허용값이 mock API 데이터와 일치한다', () => {
-    expect(categories.map((category) => category.id)).toEqual([...categoryIds])
-  })
-
   it('필터 허용값은 카테고리 ID에 all을 더한 것이다', () => {
     expect([...categoryFilterValues]).toEqual(['all', ...categoryIds])
     expect(isCategoryFilter('all')).toBe(true)
@@ -59,6 +54,8 @@ describe('parsePageValue', () => {
     expect(parsePageValue('1e2')).toBeNull()
     expect(parsePageValue(' 1')).toBeNull()
     expect(parsePageValue('+1')).toBeNull()
+    expect(parsePageValue('007')).toBeNull()
+    expect(parsePageValue('01')).toBeNull()
   })
 })
 

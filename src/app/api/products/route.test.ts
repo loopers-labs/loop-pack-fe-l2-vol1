@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server'
 import { describe, expect, it } from 'vitest'
+import { categories } from '@/app/api/_data/commerce'
+import { categoryIds } from '@/lib/commerce/productListContract'
 import { GET } from './route'
 
 const request = (query = '') =>
@@ -21,6 +23,11 @@ const allProductIds = async (sort: string) => {
 const hugePositiveInteger = '9'.repeat(400)
 
 describe('GET /api/products', () => {
+  it('mock 데이터의 카테고리가 계약 허용값과 일치한다', () => {
+    // 데이터에만 카테고리를 추가하면 route는 통과시키고 URL parser는 all로 되돌린다.
+    expect(categories.map((category) => category.id)).toEqual([...categoryIds])
+  })
+
   it('preserves Week 04 field shape while using the mapped source identity', async () => {
     const response = await request()
     const body = await response.json()
@@ -348,6 +355,9 @@ describe('GET /api/products', () => {
     '?page=0',
     '?page=-1',
     '?page=1.5',
+    // 선행 0을 허용하면 007과 7이 같은 페이지의 다른 URL이 된다.
+    '?page=007',
+    '?pageSize=012',
     '?pageSize=0',
     '?pageSize=25',
     '?pageSize=1.5',
