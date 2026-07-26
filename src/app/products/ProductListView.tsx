@@ -5,9 +5,9 @@ import ProductCard from '@/components/commerce/ProductCard'
 import { commerceQueries } from '@/lib/commerce/queries'
 import {
   categoryFilterValues,
-  sortFilterValues,
+  sortValues,
   type CategoryFilter,
-} from '@/lib/commerce/searchParams'
+} from '@/lib/commerce/productListContract'
 import { useProductListCondition } from '@/lib/commerce/useProductListCondition'
 import type { ProductSort } from '@/types/commerce'
 import SearchForm from './SearchForm'
@@ -60,7 +60,7 @@ export default function ProductListView() {
   }
 
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const next = sortFilterValues.find((value) => value === event.target.value)
+    const next = sortValues.find((value) => value === event.target.value)
     if (!next) return
     setFilters({ sort: next, page: 1 })
   }
@@ -162,7 +162,7 @@ export default function ProductListView() {
               value={condition.sort}
               onChange={handleSortChange}
             >
-              {sortFilterValues.map((value) => (
+              {sortValues.map((value) => (
                 <option key={value} value={value}>
                   {sortLabels[value]}
                 </option>
