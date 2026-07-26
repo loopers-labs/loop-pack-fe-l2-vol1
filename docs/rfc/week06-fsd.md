@@ -369,14 +369,26 @@ B안은 기존 구조보다 11줄 증가하지만 다음을 함께 만족한다.
 
 #### 선택과 무관하게 나온 결과
 
-위시리스트 capability를 삭제한 뒤 typecheck에서 깨진 파일은 두 안 모두 정확히 두 개였다.
+위시리스트 capability를 삭제한 뒤 깨지는 파일은 두 안이 같았다. spike 기록에는 두 개로
+적었으나 Header를 실험 범위에서 빠뜨린 결과다. 목표 구조에서 살아남아 수정해야 하는 생산 코드
+경계는 최소 세 곳이다.
 
 - 공통 Zustand runtime 조립부
-- 상위 조합부
+- 상위 조합부 (Decision 3 이후 `widgets/product-grid`)
+- Header 조합부 (`HeaderCounts`)
 
-cart 관련 파일은 어느 쪽에서도 나타나지 않았다. Decision 1의 capability 분리가 이 결정의
-선택과 독립적으로 Validation 조건을 만족한다는 뜻이다. 따라서 이 결정은 삭제 반경이 아니라
-구조 비용으로 판단해야 한다.
+`entities/wishlist/ui`는 폴더째 지우므로 "깨지는 생존 파일"에 넣지 않는다. 세 곳 모두
+[Decision 1](#decision-1-cartwishlist-capability-boundary)의 Validation이 이미 삭제하거나
+수정할 수 있는 대상으로 열거한 항목이므로, 이 정정은 Decision 1의 결론을 바꾸지 않는다.
+
+Header가 위시리스트 개수를 소비하는 것은 경계 누수가 아니다. 개수 표시는 정당한 외부 소비이고
+현재도 `useWishlistCount`라는 의도 기반 selector만 쓴다. 다만 wishlist 슬라이스에 조합부 밖의
+외부 소비자가 있다는 뜻이므로 Decision 5의 입력이 된다.
+
+cart 모델과 cart가 공개하는 계약은 어느 쪽에서도 수정 대상에 나타나지 않았다. Header는 두
+capability를 함께 소비하지만 위시리스트 줄만 제거하면 되고 cart 계약은 그대로다. Decision 1의
+capability 분리가 이 결정의 선택과 독립적으로 Validation 조건을 만족한다는 뜻이다. 따라서 이
+결정은 삭제 반경이 아니라 구조 비용으로 판단해야 한다.
 
 #### 측정값
 
@@ -779,6 +791,8 @@ cart와 wishlist는 capability 모델을 분리하고 하나의 Zustand runtime�
 #### 미정
 
 - 각 슬라이스에 Public API가 필요한가 (Decision 5)
+- Decision 5의 확인된 입력: `entities/wishlist`와 `entities/cart`는 조합부 밖에 Header라는
+  외부 소비자를 가진다. 소비 형태는 개수 selector 하나다.
 
 ### O — Optimization
 
