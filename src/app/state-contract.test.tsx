@@ -48,15 +48,16 @@ const listPayload = {
   pageSize: 12,
 }
 
+// 응답은 실제 Response로 만든다. 부분 객체를 캐스팅하면 본문 파싱 경로가 실물과 달라진다.
+// Response는 본문을 한 번만 읽을 수 있어서 호출마다 새로 만든다.
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status })
+
 const stubCommerceApi = (listOverrides: Partial<typeof listPayload> = {}) => {
   const list = { ...listPayload, ...listOverrides }
-  const fetchMock = vi.fn((input: RequestInfo | URL) => {
-    const url = String(input)
-    const payload = url.startsWith('/api/home') ? homePayload : list
-    return Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve(payload),
-    } as Response)
+  const fetchMock = vi.fn<typeof fetch>((input) => {
+    const payload = String(input).startsWith('/api/home') ? homePayload : list
+    return Promise.resolve(jsonResponse(payload))
   })
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
@@ -139,16 +140,13 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
   })
 })
 
-describe('요청 실패는 전용 화면과 재시도 출구를 가진다', () => {
+describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다', () => {
   it('목록 실패 시 에러 화면을 보여주고, 재시도가 성공하면 목록으로 복귀한다', async () => {
     // 첫 요청만 500, 재시도부터 성공하는 스텁
     const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: false, status: 500 } as Response)
-      .mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(listPayload),
-      } as Response)
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 500 }))
+      .mockImplementation(() => Promise.resolve(jsonResponse(listPayload)))
     vi.stubGlobal('fetch', fetchMock)
 
     renderApp(<ProductListView />)
@@ -164,7 +162,9 @@ describe('요청 실패는 전용 화면과 재시도 출구를 가진다', () =
   it('홈 실패 시 에러 화면과 재시도 버튼을 보여준다', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response),
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(new Response(null, { status: 500 })),
+      ),
     )
 
     renderApp(<HomePage />)
@@ -175,6 +175,33 @@ describe('요청 실패는 전용 화면과 재시도 출구를 가진다', () =
     expect(
       screen.getByRole('button', { name: '다시 시도' }),
     ).toBeInTheDocument()
+  })
+
+  it('조건이 거절되면 서버 메시지를 보여주고 재시도 대신 조건 초기화를 준다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400),
+        ),
+      ),
+    )
+    const onUrlUpdate = vi.fn()
+
+    renderApp(<ProductListView />, {
+      searchParams: '?category=casual&page=3',
+      onUrlUpdate,
+    })
+
+    // 화면이 정한 기본 문구가 아니라 서버가 보낸 메시지를 보여준다.
+    expect(
+      await screen.findByText('요청 조건을 확인해주세요.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: '검색 조건 초기화' }))
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
+    expect(lastUrlUpdate(onUrlUpdate).queryString).toBe('')
   })
 })
 
