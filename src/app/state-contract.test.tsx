@@ -293,7 +293,7 @@ describe('목록 조건의 원본은 URL이다', () => {
     fireEvent.change(input, { target: { value: '가디건' } })
     expect(onUrlUpdate).not.toHaveBeenCalled()
 
-    fireEvent.submit(input.closest('form') as HTMLFormElement)
+    fireEvent.click(screen.getByRole('button', { name: '검색' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     const updated = lastUrlUpdate(onUrlUpdate).searchParams
     expect(updated.get('q')).toBe('가디건')
