@@ -1,6 +1,6 @@
 # RFC: Week 06 FSD Migration
 
-> 문서 상태: Architecture Preflight 및 cart/wishlist capability 경계 결정 완료. RADIO 상세 설계 진행 중.
+> 문서 상태: Architecture Preflight, capability 경계와 toggle UI 레이어 결정 완료. Decision 3~6과 목표 트리 확정 진행 중.
 
 ## 0. Architecture Preflight
 
@@ -126,7 +126,7 @@ cart capability의 외부 계약은 다음 중 외부 슬라이스가 실제로 
 | # | 결정 | 선행 조건 | 판단 방법 |
 | --- | --- | --- | --- |
 | 1 | cart와 wishlist capability 경계와 runtime 조립 방식 | 없음 | 완료. [Decision 1](#decision-1-cartwishlist-capability-boundary) |
-| 2 | 단순 toggle UI를 entity의 공개 UI로 볼 것인가, 별도 정책을 가진 feature로 볼 것인가 | Decision 1 | 두 안을 폐기용 spike로 실측 |
+| 2 | 단순 toggle UI를 entity의 공개 UI로 볼 것인가, 별도 정책을 가진 feature로 볼 것인가 | Decision 1 | 완료. [Decision 2](#decision-2-toggle-ui의-레이어) |
 | 3 | `ProductCard`와 행위를 page에서 조합할 것인가, widget으로 승격할 것인가 | Decision 2 | 두 안을 폐기용 spike로 실측 |
 | 4 | 상품 목록 queryOptions의 소유자 | Decision 3의 트리 형태 | 소비 관계와 key가 표현하는 대상으로 판단 |
 | 5 | 어떤 슬라이스에 Public API를 둘 것인가 | Decision 2~4 | 슬라이스별 외부 소비자를 세어 판단 |
@@ -333,6 +333,116 @@ B안은 기존 구조보다 11줄 증가하지만 다음을 함께 만족한다.
 - 공통 runtime 조립부가 capability의 독립 변경을 반복적으로 방해한다.
 - 통합 store 때문에 한 capability의 테스트가 다른 capability 설정을 필요로 한다.
 
+## Decision 2. Toggle UI의 레이어
+
+### Context
+
+[Decision 1](#decision-1-cartwishlist-capability-boundary)에서 cart와 wishlist의 capability
+모델을 분리했다. 그 모델을 소비해 담기와 찜 버튼을 그리는 UI를 어느 레이어에 둘지 정한다.
+
+이 결정에 필요한 현재 사실은 다음과 같다.
+
+- `ShoppingToggleButtons.tsx` 하나가 담기와 찜 두 행위를 함께 그린다. Decision 1이 두
+  capability를 분리했으므로 이 컴포넌트도 갈라진다.
+- 현재 토글에는 정책이 없다. 조건 판단, 부수효과, 실패 경로가 모두 없고 `set` 한 번으로 끝난다.
+- 토글 UI는 홈과 상품 목록 양쪽에서 쓰인다. 한 페이지에 갇힌 UI가 아니다.
+
+### Question
+
+정책이 없는 토글 UI를 entity의 공개 UI로 둘 것인가, 사용자 행위를 나타내는 별도 feature
+슬라이스로 올릴 것인가.
+
+### Options
+
+| 기준 | A. entity의 공개 UI | B. 별도 feature 슬라이스 |
+| --- | --- | --- |
+| 배치 | `entities/cart/ui`, `entities/wishlist/ui` | `features/toggle-cart-item`, `features/toggle-wishlist-item` |
+| model 접근 | 같은 슬라이스 안 세그먼트 협력 | 하위 entity의 Public API 소비 |
+| FSD 정의와의 거리 | 행위를 도메인 개념 레이어에 둔다 | 행위를 행위 레이어에 둔다 |
+| 정책이 생겼을 때 | feature로 승격하며 소비처 import가 바뀐다 | 자리 이동 없이 model과 api 세그먼트를 채운다 |
+
+### Experiment
+
+두 안을 폐기용 spike로 작성해 TypeScript strict 설정과 `eslint --max-warnings=0`으로
+검증했다. 두 안 모두 통과했고, 어느 쪽도 의존 규칙을 어기지 않는다. A의 `ui`가 `model`을
+참조하는 것은 같은 슬라이스 안 세그먼트 협력이므로 허용된다.
+
+#### 선택과 무관하게 나온 결과
+
+위시리스트 capability를 삭제한 뒤 typecheck에서 깨진 파일은 두 안 모두 정확히 두 개였다.
+
+- 공통 Zustand runtime 조립부
+- 상위 조합부
+
+cart 관련 파일은 어느 쪽에서도 나타나지 않았다. Decision 1의 capability 분리가 이 결정의
+선택과 독립적으로 Validation 조건을 만족한다는 뜻이다. 따라서 이 결정은 삭제 반경이 아니라
+구조 비용으로 판단해야 한다.
+
+#### 측정값
+
+| 기준 | A | B |
+| --- | --- | --- |
+| 파일 수 | 9 | 13 |
+| 줄 수 | 176 | 187 |
+| `index.ts` 수 | 0 | 4 |
+| 조합부가 import하는 슬라이스 | entity 3개 | entity 1개와 feature 2개 |
+| 위시리스트 삭제 시 지울 폴더 | `entities/wishlist` 한 곳 | `entities/wishlist`와 `features/toggle-wishlist-item` 두 곳, 두 레이어 |
+| 조합 코드 | 32줄 | 31줄 |
+| feature 슬라이스의 세그먼트 | 해당 없음 | `ui` 하나. `model`과 `api`는 비어 있다 |
+
+조합 코드가 32줄과 31줄로 사실상 같다. 이 결정은 상위 조합의 모양을 바꾸지 않는다.
+
+B의 두 feature 슬라이스는 각각 `ui` 세그먼트에 파일 하나만 가진다. 담을 정책이 없기 때문이다.
+
+### Decision
+
+A를 채택한다.
+
+토글 UI를 각 capability의 entity 슬라이스 안 `ui` 세그먼트에 두고, 같은 슬라이스의 `model`을
+소비한다. feature 레이어는 이 결정으로 열지 않는다.
+
+정책이 없는 상태에서 feature 슬라이스를 여는 비용이 얻는 것보다 크다. 슬라이스 2개, `index.ts`
+4개, 파일 4개가 늘고 위시리스트 삭제 대상이 두 레이어로 흩어지는데, 그 대가로 얻는 것은
+`ui` 세그먼트 하나뿐인 빈 슬라이스다. FSD v2.1이 "처음부터 잘게 나누지 않고 실제로 여러 곳에서
+쓸 때 분리한다"고 정한 방향과도 맞다.
+
+### Rejected
+
+#### B. 별도 feature 슬라이스
+
+FSD 정의상 토글은 사용자 행위이므로 feature가 개념적으로 더 정확하다. 그러나 현재 토글에는
+정책이 없어 슬라이스가 `ui` 파일 하나로 비어 있고, 이는 "파일 하나를 위한 레이어"에 해당한다.
+
+정책이 생길 가능성을 근거로 지금 B를 선택할 수는 있다. 다만 그 가능성은 가상 스트레스
+시나리오이며, Decision Priority에서 가장 낮은 순위다. 현재 근거로 정당화되지 않으므로 반려한다.
+
+### Consequences
+
+- entity 슬라이스가 상호작용 UI를 포함한다. 도메인 개념 레이어에 행위 UI가 들어간 상태다.
+- cart 상태를 바꿀 수 있는 진입점이 entity 안에 생긴다. 정책을 가진 다른 진입점이 추가되면
+  변경 경로가 둘이 된다.
+- 정책이 생겨 feature로 승격할 때 소비처의 import 경로가 함께 바뀐다. 이 비용을 지금 내지
+  않고 미룬 것이다.
+- 이 결정으로 features 레이어를 열지 않으므로, 목표 트리에서 features는 사용하지 않는 레이어로
+  기록한다.
+
+### Validation
+
+- 조합부가 `ProductCard`와 토글 버튼을 연결하고, `ProductCard`는 토글의 존재를 알지 않는다.
+- `entities/product`가 `entities/cart`나 `entities/wishlist`를 import하지 않는다.
+- cart와 wishlist의 `ui`는 자기 슬라이스의 `model`만 참조하고 서로를 참조하지 않는다.
+- 위시리스트 삭제 시 지울 대상이 `entities/wishlist` 한 곳에 모여 있다.
+
+### Revisit
+
+토글에 다음 중 하나가 붙으면 feature로 승격한다.
+
+- 로그인 확인이나 권한 판단이 필요해진다.
+- 재고나 수량처럼 서버 검증이 필요해진다.
+- 서버 동기화와 낙관적 업데이트가 필요해진다.
+- 실패 시 되돌리기나 사용자 안내가 필요한 부수효과가 생긴다.
+- cart 상태를 바꾸는 다른 진입점이 생겨 변경 경로가 둘 이상이 된다.
+
 ## 1. RADIO
 
 전체 구조를 빠르게 이해하기 위한 본문이다. 논쟁이 있었던 항목의 선택 근거와 반려 이유는
@@ -402,10 +512,10 @@ Decision 2~5의 결과를 반영해 확정한다. 현재 시점의 상태는 다
 - cart와 wishlist의 capability 모델을 분리한다.
 - 두 capability를 하나의 Zustand runtime에서 조립한다.
 - `ProductCard` 내부에서 행위 조합을 제거한다.
+- 토글 UI는 각 capability의 entity 슬라이스에 두고 features 레이어를 열지 않는다.
 
 아직 열려 있는 경계
 
-- toggle UI가 속할 레이어
 - `ProductCard` 조합 위치
 - 상품 목록 query의 소유자
 - Public API 적용 범위
@@ -445,7 +555,6 @@ cart와 wishlist는 capability 모델을 분리하고 하나의 Zustand runtime�
 
 #### 미정
 
-- toggle UI가 entity의 공개 UI인가 별도 feature인가 (Decision 2)
 - page 조합인가 widget 조합인가 (Decision 3)
 - 각 슬라이스에 Public API가 필요한가 (Decision 5)
 
