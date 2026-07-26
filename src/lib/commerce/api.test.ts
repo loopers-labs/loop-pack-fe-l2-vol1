@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, errorMessageOf, fetchProducts, isRetryable } from './api'
+import {
+  ApiError,
+  errorMessageOf,
+  fetchProducts,
+  isRetryable,
+  isTimeout,
+  REQUEST_TIMEOUT_MS,
+} from './api'
 
 // 요청 URL이 조건 객체와 어긋나지 않는지, 실패가 throw로 승격되는지 검증한다.
 // 실패는 status와 서버 메시지를 구조로 남겨야 소비자가 문자열을 파싱하지 않는다.
@@ -17,6 +24,9 @@ const stubFetch = (response: Partial<Response>) => {
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
 }
+
+const signalOf = (fetchMock: ReturnType<typeof vi.fn>) =>
+  (fetchMock.mock.calls[0][1] as { signal: AbortSignal }).signal
 
 const emptyListResponse = {
   ok: true,
@@ -68,6 +78,49 @@ describe('fetchProducts', () => {
     expect(requestedUrl).toContain('category=casual')
     expect(requestedUrl).toContain('sort=price-asc')
     expect(requestedUrl).toContain('page=2')
+  })
+
+  it('쿼리 취소 신호를 fetch까지 전달한다', async () => {
+    const fetchMock = stubFetch(emptyListResponse)
+    const controller = new AbortController()
+
+    await fetchProducts(defaultCondition, controller.signal)
+
+    // 타임아웃과 합쳐진 신호라 동일 객체는 아니다. 취소가 전달되는지로 검증한다.
+    const passedSignal = signalOf(fetchMock)
+    expect(passedSignal.aborted).toBe(false)
+    controller.abort()
+    expect(passedSignal.aborted).toBe(true)
+  })
+
+  it('호출자가 신호를 주지 않아도 타임아웃 신호를 건다', async () => {
+    const fetchMock = stubFetch(emptyListResponse)
+
+    await fetchProducts(defaultCondition)
+
+    expect(signalOf(fetchMock).aborted).toBe(false)
+  })
+
+  it('응답이 오지 않으면 타임아웃으로 요청을 끊는다', async () => {
+    const fetchMock = vi.fn(
+      (_url: string, init: { signal: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          init.signal.addEventListener('abort', () => {
+            reject(init.signal.reason as Error)
+          })
+        }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    vi.useFakeTimers()
+    const pending = fetchProducts(defaultCondition).catch(
+      (thrown: unknown) => thrown,
+    )
+    await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS)
+    const error = await pending
+    vi.useRealTimers()
+
+    expect(isTimeout(error)).toBe(true)
   })
 
   it('HTTP 실패는 throw로 승격된다. 쿼리가 에러 상태를 알 수 있는 유일한 길이다', async () => {
@@ -133,25 +186,5 @@ describe('실패 분류', () => {
     expect(errorMessageOf(new TypeError('Failed to fetch'), '기본')).toBe(
       '기본',
     )
-  })
-
-  it('쿼리 취소 신호를 fetch까지 전달한다', async () => {
-    const fetchMock = stubFetch(emptyListResponse)
-    const controller = new AbortController()
-
-    await fetchProducts(
-      {
-        q: '',
-        category: 'all',
-        sort: 'latest',
-        page: 1,
-        pageSize: 12,
-      },
-      controller.signal,
-    )
-
-    expect(fetchMock).toHaveBeenCalledWith(expect.any(String), {
-      signal: controller.signal,
-    })
   })
 })
