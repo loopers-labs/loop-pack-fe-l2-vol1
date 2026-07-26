@@ -3,10 +3,13 @@
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import ProductCard from '@/components/commerce/ProductCard'
+import { errorMessageOf, isRetryable } from '@/lib/commerce/api'
 import { commerceQueries } from '@/lib/commerce/queries'
 
 export default function HomePage() {
-  const { data, isPending, isError, refetch } = useQuery(commerceQueries.home())
+  const { data, isPending, isError, error, refetch } = useQuery(
+    commerceQueries.home(),
+  )
 
   if (isPending) {
     return (
@@ -19,10 +22,13 @@ export default function HomePage() {
   if (isError) {
     return (
       <main className="week05-section">
-        <p>홈 데이터를 불러오지 못했습니다.</p>
-        <button type="button" onClick={() => refetch()}>
-          다시 시도
-        </button>
+        <p>{errorMessageOf(error, '홈 데이터를 불러오지 못했습니다.')}</p>
+        {/* 400대는 같은 요청을 다시 보내도 같은 실패다. 재시도 출구를 주지 않는다. */}
+        {isRetryable(error) && (
+          <button type="button" onClick={() => refetch()}>
+            다시 시도
+          </button>
+        )}
       </main>
     )
   }
