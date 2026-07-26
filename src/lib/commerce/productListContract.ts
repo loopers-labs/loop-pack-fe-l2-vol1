@@ -26,22 +26,22 @@ export const sortValues = [
 export type CategoryFilter = (typeof categoryFilterValues)[number]
 
 // route가 허용하는 상한이다. 화면이 실제로 쓰는 기본값은 URL 계약 쪽에 둔다.
-export const MAX_PAGE_SIZE = 24
+const MAX_PAGE_SIZE = 24
 
 // isSafeInteger인 이유: isInteger는 1e20 같은 거대 수를 통과시키는데 API는 거절한다.
-export const isValidPage = (page: number) =>
-  Number.isSafeInteger(page) && page >= 1
+const isValidPage = (page: number) => Number.isSafeInteger(page) && page >= 1
 
 export const isValidPageSize = (pageSize: number) =>
   Number.isSafeInteger(pageSize) && pageSize >= 1 && pageSize <= MAX_PAGE_SIZE
 
-// 값뿐 아니라 표기까지 본다. Number()만 쓰면 '0x10', ' 1', '1e2'가 통과해
-// 같은 페이지를 가리키는 URL이 여러 개가 되고 query key도 그만큼 갈라진다.
+// 값뿐 아니라 표기까지 본다. Number()만 쓰면 '0x10', ' 1', '1e2'가 통과하고,
+// 선행 0을 허용하면 '007'과 '7'이 같은 페이지의 다른 URL이 된다.
+// 표기가 갈리는 만큼 query key도 갈려서 같은 목록이 여러 캐시 엔트리를 차지한다.
 const parsePositiveIntegerValue = (
   raw: string,
   isValid: (value: number) => boolean,
 ) => {
-  if (!/^\d+$/.test(raw)) return null
+  if (!/^[1-9]\d*$/.test(raw)) return null
   const value = Number(raw)
   return isValid(value) ? value : null
 }

@@ -1,4 +1,4 @@
-import { createParser, parseAsStringLiteral } from 'nuqs'
+import { createParser, parseAsStringLiteral, type inferParserType } from 'nuqs'
 import {
   categoryFilterValues,
   parsePageValue,
@@ -27,6 +27,16 @@ export const productListSearchParams = {
   sort: parseAsStringLiteral(sortValues).withDefault('latest'),
   page: parseAsPageNumber.withDefault(1),
 }
+
+export type ProductListFilters = inferParserType<typeof productListSearchParams>
+
+// 기본값의 원본은 parser다. 화면이 기본값을 다시 적으면 두 곳이 갈린다.
+// 조건이 이미 기본값이면 초기화해도 URL과 query key가 그대로여서 아무 일도 일어나지 않는다.
+export const hasNonDefaultFilters = (filters: ProductListFilters) =>
+  filters.q !== productListSearchParams.q.defaultValue ||
+  filters.category !== productListSearchParams.category.defaultValue ||
+  filters.sort !== productListSearchParams.sort.defaultValue ||
+  filters.page !== productListSearchParams.page.defaultValue
 
 // 조건 변경마다 히스토리에 남겨 뒤로가기와 앞으로가기로 복원되게 한다.
 export const productListUrlOptions = { history: 'push' as const }

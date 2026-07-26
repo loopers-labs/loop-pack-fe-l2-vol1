@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import ProductCard from '@/components/commerce/ProductCard'
 import { errorMessageOf, isRetryable } from '@/lib/commerce/api'
@@ -34,7 +35,7 @@ const sortLabels: Record<ProductSort, string> = {
 }
 
 export default function ProductListView() {
-  const { condition, setFilters } = useProductListCondition()
+  const { condition, setFilters, canResetFilters } = useProductListCondition()
   // 조립된 조건 하나가 그대로 query key와 요청이 된다. 기본 정렬도 API에 명시된다.
   const { data, isPending, isError, error, refetch } = useQuery(
     commerceQueries.products.list(condition),
@@ -79,19 +80,31 @@ export default function ProductListView() {
   if (isPending) {
     results = <p>상품 목록을 불러오는 중입니다.</p>
   } else if (isError) {
+    // 실패 종류마다 열려 있는 길이 다르다. 셋 중 하나는 반드시 실제로 동작해야 한다.
+    // 재시도는 서버 오류에만 의미가 있고, 조건이 거절된 실패는 조건을 되돌려야 벗어난다.
+    // 조건이 이미 기본값이면 초기화해도 URL과 query key가 그대로라 화면이 변하지 않으므로,
+    // 그때는 결과 영역 밖으로 나가는 길을 준다.
+    let exit: React.ReactNode
+    if (isRetryable(error)) {
+      exit = (
+        <button type="button" onClick={() => refetch()}>
+          다시 시도
+        </button>
+      )
+    } else if (canResetFilters) {
+      exit = (
+        <button type="button" onClick={() => setFilters(null)}>
+          검색 조건 초기화
+        </button>
+      )
+    } else {
+      exit = <Link href="/">홈으로</Link>
+    }
+
     results = (
       <>
         <p>{errorMessageOf(error, '상품 목록을 불러오지 못했습니다.')}</p>
-        {isRetryable(error) ? (
-          <button type="button" onClick={() => refetch()}>
-            다시 시도
-          </button>
-        ) : (
-          // 조건이 거절된 실패다. 재시도는 같은 결과를 부르므로 조건을 되돌리는 출구를 준다.
-          <button type="button" onClick={() => setFilters(null)}>
-            검색 조건 초기화
-          </button>
-        )}
+        {exit}
       </>
     )
   } else if (data.products.length === 0 && data.totalCount > 0) {
