@@ -1,6 +1,6 @@
 # RFC: Week 06 FSD Migration
 
-> 문서 상태: Preflight와 Decision 1~3 완료. Decision 4~6과 목표 트리 확정 진행 중.
+> 문서 상태: Preflight와 Decision 1~4 완료. Decision 5~6과 목표 트리 확정 진행 중.
 
 ## 0. Architecture Preflight
 
@@ -128,7 +128,7 @@ cart capability의 외부 계약은 다음 중 외부 슬라이스가 실제로 
 | 1 | cart와 wishlist capability 경계와 runtime 조립 방식 | 없음 | 완료. [Decision 1](#decision-1-cartwishlist-capability-boundary) |
 | 2 | 단순 toggle UI를 entity의 공개 UI로 볼 것인가, 별도 정책을 가진 feature로 볼 것인가 | Decision 1 | 완료. [Decision 2](#decision-2-toggle-ui의-레이어) |
 | 3 | `ProductCard`와 행위를 page에서 조합할 것인가, widget으로 승격할 것인가 | Decision 2 | 완료. [Decision 3](#decision-3-productcard-조합-위치) |
-| 4 | 상품 목록 queryOptions의 소유자 | Decision 3의 트리 형태 | 소비 관계와 key가 표현하는 대상으로 판단 |
+| 4 | 상품 목록 queryOptions의 소유자 | Decision 3의 트리 형태 | 완료. [Decision 4](#decision-4-상품-조회-계약의-소유자) |
 | 5 | 어떤 슬라이스에 Public API를 둘 것인가 | Decision 2~4 | 슬라이스별 외부 소비자를 세어 판단 |
 | 6 | API 실패, 렌더링 실패, 이벤트 행위 실패의 전파와 복구 경계 | 구조 결정과 독립 | 실패 종류별로 생존 범위를 정의 |
 
@@ -560,6 +560,112 @@ Decision 1에서 `toggleId`를 shared로 올리지 않기로 하면서, 두 번�
 - 한 화면만 액션을 숨기거나 다른 액션을 추가해야 한다.
 - widget이 화면별 분기를 props로 받기 시작해 조건이 두 개를 넘는다.
 
+## Decision 4. 상품 조회 계약의 소유자
+
+### Context
+
+상품 목록 조회는 현재 `lib/commerce`의 세 파일에 나뉘어 있다. `api.ts`가 전송, `queries.ts`가
+key와 캐시 정책, `useProductListCondition.ts`가 URL 조건 조립을 맡는다. 이 셋의 소유자를 정한다.
+
+이 결정에 필요한 현재 사실은 다음과 같다.
+
+- `commerceQueries.products.list()`의 소비 지점은 상품 목록 화면 하나다.
+- `commerceQueries.home()`의 소비 지점은 홈 화면 하나다.
+- `fetchProducts`와 `fetchHome`의 소비 지점은 각각 `queries.ts` 하나다.
+- query key는 `['products', 'list', condition]`이고 `condition`은 검색어, 카테고리, 정렬,
+  페이지, pageSize다. 상품 자체가 아니라 목록 탐색 조건을 나타낸다.
+- `condition` 타입은 URL parser에서 파생된다. 화면의 조회 정책에 묶여 있다.
+- **저장소 전체에 `invalidateQueries`, `setQueryData`, `useMutation`이 하나도 없다.**
+  key 계층이 제공하는 fuzzy 무효화 범위를 현재 사용하는 코드가 없다.
+- `Product` 타입은 카드, 목록 화면, mock API, 테스트 등 여러 곳에서 쓰인다. 전송 함수와 달리
+  타입은 실제로 공유된다.
+
+### Question
+
+상품 목록의 전송, query key, 캐시 정책을 product entity가 소유할 것인가, 상품 목록 page가
+소유할 것인가, 전송과 조회 정책을 나눌 것인가.
+
+### Options
+
+| 기준 | A. entity가 전부 소유 | B. page가 전부 소유 | C. 전송과 조회 정책 분리 |
+| --- | --- | --- | --- |
+| `fetchProducts` 위치 | `entities/product/api` | `_pages/product-list/api` | `entities/product/api` |
+| queryOptions 위치 | `entities/product/api` | `_pages/product-list/api` | `_pages/product-list/api` |
+| key 계층 | entity가 전부 | page가 전부 | 루트는 entity, `list` 이하는 page |
+| entity가 URL 조건을 아는가 | 안다 | 모른다 | 모른다 |
+| 한 조회 계약이 갈리는가 | 아니다 | 아니다 | 갈린다 |
+
+### Evidence
+
+현재 근거는 세 가지를 가리킨다.
+
+첫째, **재사용이 없다.** 목록 queryOptions도 홈 queryOptions도 소비 지점이 하나씩이다. FSD
+v2.1의 pages first는 재사용되지 않는 로직을 페이지 슬라이스에 두고 실제 공유가 생길 때 분리하라고
+한다.
+
+둘째, **key가 화면 조건을 나타낸다.** `['products', 'list', condition]`의 `condition`은 URL에서
+읽은 탐색 조건이다. 이것을 entity가 소유하면 도메인 개념 레이어가 화면의 URL 계약을 알게 된다.
+
+셋째, **key 계층의 사용처가 아직 없다.** 계층을 둔 이유는 무효화 범위를 조준하기 위해서인데,
+저장소에 무효화 코드가 하나도 없다. entity가 루트를 소유해야 한다는 논거는 상품 상세나
+mutation이 생긴 뒤에 성립하며, 그것은 가상 스트레스 시나리오다.
+
+### Decision
+
+B를 채택한다.
+
+상품 목록의 전송, query key, 캐시 정책, URL 조건 parser와 조립 훅을 모두
+`_pages/product-list`가 소유한다. 홈 조회도 같은 이유로 `_pages/home`이 소유한다.
+
+`entities/product`는 `model`에 도메인 타입, `ui`에 `ProductCard`만 둔다. `api` 세그먼트를
+만들지 않는다. 두 fetch 함수가 공유하는 `fetchJson`은 도메인을 모르는 HTTP 헬퍼이므로
+`shared/api`에 둔다.
+
+이 결정으로 상품 목록 화면은 URL 조건, 조건 조립, 조회 계약, 캐시 정책을 한 슬라이스 안에서
+소유한다. 조회 조건이 바뀔 때 고칠 파일이 한 슬라이스에 모인다.
+
+### Rejected
+
+#### A. entity가 전부 소유
+
+목록 queryOptions는 URL 조건 타입에 의존한다. entity가 이를 소유하면 도메인 개념 레이어가
+화면의 URL 계약을 알게 되고, 목록 전용 staleTime과 key 정책까지 도메인에 들어간다. 재사용
+근거도 없다.
+
+#### C. 전송과 조회 정책 분리
+
+전송을 entity에 남기면 다른 화면이 상품을 조회할 때 재사용할 수 있다. 그러나 지금 그 화면이
+없다.
+
+더 큰 비용은 **하나의 조회 계약이 두 레이어로 갈리는 것**이다. key 루트가 entity에, `list`
+이하가 page에 있으면 무효화 범위를 읽으려고 두 곳을 봐야 한다. Decision 1에서 확인한 것과 같은
+종류의 결합이다. 재사용 근거가 실제로 생기기 전까지는 계약을 한 곳에 둔다.
+
+### Consequences
+
+- `entities/product`에 `api` 세그먼트가 없다. 필요한 세그먼트만 만든다는 규칙에 따른 결과다.
+- 두 페이지가 각각 query key 문자열을 소유한다. 현재 서로 겹치지 않으므로 충돌하지 않지만,
+  나중에 무효화가 생기면 범위를 조준할 자리를 다시 정해야 한다.
+- 상품 목록 화면의 슬라이스가 커진다. URL parser, 조건 조립, 전송, queryOptions가 한 슬라이스에
+  들어간다. 세그먼트로 나누어 목적을 드러낸다.
+- `fetchJson`이 `shared/api`로 내려가면서 HTTP 실패를 일반 `Error`로 바꾸는 현재 구현도 함께
+  이동한다. 실패 종류 구분은 Decision 6에서 다룬다.
+
+### Validation
+
+- `entities/product`가 URL 조건 타입이나 nuqs를 import하지 않는다.
+- `_pages/product-list`가 `entities/product`와 `shared`만 import한다.
+- `_pages/home`과 `_pages/product-list`가 서로를 import하지 않는다.
+- 조회 조건을 바꿀 때 수정 파일이 `_pages/product-list` 안에 모인다.
+- query key와 요청이 같은 조건 객체에서 파생된다는 5주차 불변 조건이 유지된다.
+
+### Revisit
+
+- 상품 목록 조회를 쓰는 화면이 둘 이상이 된다.
+- 상품 상세처럼 같은 도메인의 다른 조회가 생겨 key 루트를 공유해야 한다.
+- mutation이 생겨 `['products']` 범위의 무효화가 필요해진다.
+- 홈과 목록이 같은 상품 데이터를 서로 다른 캐시로 들고 있어 화면 간 불일치가 드러난다.
+
 ## 1. RADIO
 
 전체 구조를 빠르게 이해하기 위한 본문이다. 논쟁이 있었던 항목의 선택 근거와 반려 이유는
@@ -631,10 +737,10 @@ Decision 2~5의 결과를 반영해 확정한다. 현재 시점의 상태는 다
 - `ProductCard` 내부에서 행위 조합을 제거한다.
 - 토글 UI는 각 capability의 entity 슬라이스에 두고 features 레이어를 열지 않는다.
 - 상품 표현과 행위의 조합은 `widgets/product-grid`가 소유한다. 빈 상태는 page가 소유한다.
+- 상품 목록과 홈의 조회 계약은 각 page 슬라이스가 소유한다. `entities/product`에는 `api` 세그먼트를 만들지 않는다.
 
 아직 열려 있는 경계
 
-- 상품 목록 query의 소유자
 - Public API 적용 범위
 
 #### 마이그레이션 원칙
