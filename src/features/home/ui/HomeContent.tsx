@@ -66,8 +66,8 @@ export const HomeContent = () => {
     <main className="page">
       <Header />
       <section className="hero">
-        <p>배너 설명</p>
-        <h1>홈 배너 제목</h1>
+        <p>{data?.banner.description}</p>
+        <h1>{data?.banner.title}</h1>
       </section>
       <section className="section">
         <h2>카테고리</h2>
