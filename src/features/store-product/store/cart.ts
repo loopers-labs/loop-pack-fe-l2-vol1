@@ -39,7 +39,7 @@ export const useCartStore = create<CartState>()(
     {
       name: 'loopers-cart-v1',
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 3,
       // [AI] persist는 클라이언트에서 비동기로 hydration을 수행한다.
       // rehydrate 완료 시점에 플래그를 켜야 서버 렌더(항상 0)와 충돌하지 않는다.
       partialize: (state) => ({ items: state.items }),

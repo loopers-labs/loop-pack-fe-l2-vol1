@@ -1,8 +1,8 @@
 // [AI] persist로 불러온 값은 사용자 브라우저에서 변조됐거나, 옛날 스키마로 남아있을 수 있다.
 // CartItem과 WishListItem이 같은 모양(id/name/price/image)이라 하나의 가드로 공용한다.
-import type { CartItem, WishListItem } from '@/types/commerce';
+import type { CartItem, WishlistItem } from '@/types/commerce';
 
-type StoredItem = CartItem | WishListItem;
+type StoredItem = CartItem | WishlistItem;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;

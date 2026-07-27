@@ -11,9 +11,6 @@ export const WishlistButton = ({ product }: { product: Product }) => {
   const handleClick = () => {
     toggle({
       id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
     });
   };
 

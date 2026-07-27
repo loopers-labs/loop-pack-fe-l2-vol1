@@ -58,5 +58,5 @@ export type ApiErrorResponse = {
 };
 
 // Product 객체 전체를 저장한은 게 아니라 최소 정보만 저장한다.
-export type WishListItem = Pick<Product, 'id' | 'name' | 'price' | 'image'>;
-export type CartItem = Pick<Product, 'id' | 'name' | 'price' | 'image'>;
+export type WishlistItem = Pick<Product, 'id'>;
+export type CartItem = Pick<Product, 'id'>;
