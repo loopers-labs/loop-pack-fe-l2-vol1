@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type ChangeEvent,
-  type SyntheticEvent,
-} from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
 import {
   CATEGORY_LABELS,
@@ -75,7 +70,7 @@ export function ProductListFilters() {
     }
   };
 
-  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     // 라이브 검색이라 제출로 URL 을 또 쓸 필요는 없다 — 폼 기본 새로고침만 막고 draft 세션을 닫는다.
     event.preventDefault();
     setIsEditingDraft(false);
