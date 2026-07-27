@@ -1,45 +1,70 @@
-import SizeSelect from './_components/SizeSelect'
-import ProductOptionSelect from './_components/ProductOptionSelect'
-import BundleOptionSelect from './_components/BundleOptionSelect'
-import DialogShowcase from './_components/DialogShowcase'
+'use client'
 
-export default function Home() {
+import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
+import ProductCard from '@/components/commerce/ProductCard'
+import { commerceQueries } from '@/lib/commerce/queries'
+
+export default function HomePage() {
+  const { data, isPending, isError, refetch } = useQuery(commerceQueries.home())
+
+  if (isPending) {
+    return (
+      <main className="week05-section">
+        <p>홈을 불러오는 중입니다.</p>
+      </main>
+    )
+  }
+
+  if (isError) {
+    return (
+      <main className="week05-section">
+        <p>홈 데이터를 불러오지 못했습니다.</p>
+        <button type="button" onClick={() => refetch()}>
+          다시 시도
+        </button>
+      </main>
+    )
+  }
+
+  const productSections = [
+    { title: '인기 상품', products: data.popularProducts },
+    { title: '신상품', products: data.newProducts },
+  ]
+
   return (
-    <main style={{ maxWidth: 640, margin: '0 auto', padding: '48px 24px' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
-        Commerce
-      </h1>
-      <p style={{ color: '#5a6675', lineHeight: 1.7, marginBottom: 32 }}>
-        4주차 — 같은 <code>useSelect</code> 로직 한 벌로 서로 다른 옵션 UI 3종을
-        렌더한다. 품절 옵션은 키보드 이동(↑↓)에서 건너뛴다.
-      </p>
+    <main>
+      <section className="week05-hero">
+        <p>{data.banner.description}</p>
+        <h1>{data.banner.title}</h1>
+      </section>
 
-      <section style={{ display: 'grid', gap: 28 }}>
-        <div>
-          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-            1. 사이즈 선택 — mock API 재고 연동
-          </h2>
-          <SizeSelect />
-        </div>
-        <div>
-          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-            2. 상품 옵션 — 썸네일·할인가
-          </h2>
-          <ProductOptionSelect />
-        </div>
-        <div>
-          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-            3. 묶음 옵션 — 개당가·무료배송 계산
-          </h2>
-          <BundleOptionSelect />
-        </div>
-        <div>
-          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-            4. Dialog — compound + controlled/uncontrolled 이중 API
-          </h2>
-          <DialogShowcase />
+      <section className="week05-section">
+        <h2>카테고리</h2>
+        <div className="week05-categories">
+          {data.categories.map((category) => (
+            <Link key={category.id} href={`/products?category=${category.id}`}>
+              {category.name}
+            </Link>
+          ))}
         </div>
       </section>
+
+      {/* 상품이 비어도 배너와 카테고리는 그대로 둔다. 빈 것은 상품 섹션뿐이다. */}
+      {productSections.map(({ title, products }) => (
+        <section className="week05-section" key={title}>
+          <h2>{title}</h2>
+          {products.length === 0 ? (
+            <p>아직 보여줄 상품이 없습니다.</p>
+          ) : (
+            <div className="week05-grid">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
     </main>
   )
 }
