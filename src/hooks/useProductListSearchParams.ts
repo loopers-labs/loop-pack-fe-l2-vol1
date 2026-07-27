@@ -45,7 +45,7 @@ export function useProductListSearchParams() {
       const clamped = hasPages ? upperBounded : lowerBounded;
 
       if (clamped !== queryState.page) {
-        setQueryState({ page: clamped }, { history: "replace" });
+        setQueryState({ page: clamped }, REPLACE_HISTORY);
       }
     },
     [queryState.page, setQueryState],
@@ -53,7 +53,14 @@ export function useProductListSearchParams() {
 
   // setQueryState 는 nuqs 가 안정적으로 유지하므로, hook을 사용하는 측에서(effect deps 등) 안심하고
   // 의존할 수 있도록 핸들러도 안정적인 참조로 노출한다.
-  const setSearch = useCallback(
+
+  // 새 검색을 시작한다 — push 로 새 히스토리 엔트리를 연다. 뒤로가기로 이전 확정 검색어로 돌아갈 수 있게.
+  const beginSearch = useCallback(
+    (q: string) => setQueryState({ q, page: FIRST_PAGE }, PUSH_TO_HISTORY),
+    [setQueryState],
+  );
+  // 진행 중인 검색어를 실시간 갱신한다 — replace 로 현재 엔트리만 덮어 히스토리를 늘리지 않는다(도배 방지).
+  const updateSearch = useCallback(
     (q: string) => setQueryState({ q, page: FIRST_PAGE }, REPLACE_HISTORY),
     [setQueryState],
   );
@@ -67,5 +74,12 @@ export function useProductListSearchParams() {
     [setQueryState],
   );
 
-  return { query, setSearch, setFilter, setPage, clampPageToRange };
+  return {
+    query,
+    beginSearch,
+    updateSearch,
+    setFilter,
+    setPage,
+    clampPageToRange,
+  };
 }

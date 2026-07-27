@@ -1,18 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { productQueries } from "@/queries/products";
 import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ProductListResult } from "./ProductListResult";
+import { SEARCH_DEBOUNCE_MS } from "./ProductListFilters";
 import styles from "./commerce.module.css";
 
 export function ProductList() {
   const { query, setPage, clampPageToRange } = useProductListSearchParams();
   const queryClient = useQueryClient();
 
+  // query.q 는 타이핑마다 실시간(replace)으로 바뀐다. 조회는 디바운스로 유지해야 하므로
+  // q 만 디바운스한 조건으로 fetch 한다 — 타이핑 중엔 요청이 나가지 않고 멈춘 뒤에만 나간다.
+  const debouncedSearch = useDebouncedValue(query.q, SEARCH_DEBOUNCE_MS);
+  const activeQuery = useMemo(
+    () => ({ ...query, q: debouncedSearch }),
+    [query, debouncedSearch],
+  );
+
   const { data, isPending, isPlaceholderData } = useQuery(
-    productQueries.list(query),
+    productQueries.list(activeQuery),
   );
 
   const totalPages = data ? Math.ceil(data.totalCount / data.pageSize) : 0;
@@ -30,9 +40,9 @@ export function ProductList() {
     if (isPlaceholderData || !data || !hasNextPage) return;
 
     queryClient.prefetchQuery(
-      productQueries.list({ ...query, page: query.page + 1 }),
+      productQueries.list({ ...activeQuery, page: activeQuery.page + 1 }),
     );
-  }, [queryClient, query, data, hasNextPage, isPlaceholderData]);
+  }, [queryClient, activeQuery, data, hasNextPage, isPlaceholderData]);
 
   return (
     <>

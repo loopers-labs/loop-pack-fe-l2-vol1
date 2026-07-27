@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useState, type SyntheticEvent } from "react";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type SyntheticEvent,
+} from "react";
 import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
 import {
   CATEGORY_LABELS,
@@ -16,42 +20,65 @@ import styles from "./commerce.module.css";
 export const SEARCH_DEBOUNCE_MS = 300;
 
 export function ProductListFilters() {
-  const { query, setSearch, setFilter } = useProductListSearchParams();
+  const { query, beginSearch, updateSearch, setFilter } =
+    useProductListSearchParams();
   const searchTerm = query.q;
 
   const [inputValue, setInputValue] = useState(searchTerm);
 
-  // 같은 라우트(/products) 안에서 URL 만 바뀌면(예: 헤더 "상품" 링크로 검색어 제거) React 는 이 컴포넌트를
-  // "같은 자리의 같은 컴포넌트"로 보고 인스턴스를 재사용한다 → unmount 가 없어 로컬 state 인 inputValue 가
-  // 초기화되지 않고 옛 검색어가 그대로 남는다(입력창이 URL 과 어긋남).
-  // 그래서 prevSearchTerm 은 "직전 검색어(URL)"를 기억해 그 순간을 감지하는 마커다.
-  // (searchTerm 마다 컴포넌트를 key로 remount 하면 초기화되지만, 입력 디바운스후 다시 fetch될 때도 remount 돼 입력 포커스가 날아간다.)
+  // 현재 URL 엔트리가 '진행 중인 검색 draft'인지 여부.
+  //  - false(직전 검색이 확정됐거나 외부에서 진입) → 다음 타이핑은 새 검색이므로 push(새 히스토리 엔트리).
+  //  - true(이미 이 검색을 치는 중)             → 다음 타이핑은 replace(그 엔트리만 실시간 갱신).
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+
+  // 같은 라우트(/products) 안에서 URL 이 '외부에서' 바뀌면(헤더 "상품" 링크·뒤로가기) 이 컴포넌트는
+  // unmount 없이 재사용돼 로컬 inputValue 가 옛 검색어로 남는다. prevSearchTerm 으로 그 변경을 감지한다.
   const [prevSearchTerm, setPrevSearchTerm] = useState(searchTerm);
 
-  // 위 이유로 어긋난 입력창을 URL 검색어에 다시 동기화한다: searchTerm 이 바뀐 렌더에서만 inputValue 를 그 값으로 맞춘다.
+  // 외부 변경일 때만(=우리 draft 가 아닐 때) 입력창을 맞추고 draft 세션을 닫는다 → 다음 타이핑이 새 검색(push)이 된다.
+  // (우리 draft 로 바뀐 경우엔 inputValue.trim() === searchTerm 이라 이 블록을 건너뛴다.)
   if (searchTerm !== prevSearchTerm) {
     setPrevSearchTerm(searchTerm);
-    setInputValue(searchTerm);
+
+    if (inputValue.trim() !== searchTerm) {
+      setInputValue(searchTerm);
+      setIsEditingDraft(false);
+    }
   }
 
-  const debouncedInputValue = useDebouncedValue(inputValue, SEARCH_DEBOUNCE_MS);
-
-  // 디바운스된 입력값을 URL(검색어)에 커밋한다.
-  // `debouncedInputValue === inputValue` 가드가 필요한 이유: setInputValue 는 두 곳에서 불린다 —
-  //  (1) 타이핑(onChange)은 debounce 를 거치지만, (2) 위 if문 안에서는 inputValue 를
-  //  debounce 없이 '즉시' 바꾼다. (2)가 일어난 순간 debouncedInputValue 는 아직 옛 값이라 inputValue 와
-  //  어긋나는데, 그때 커밋하면 방금 외부에서 바뀐 검색어(예: 헤더 "상품"으로 지움)를 그 낡은 값으로
-  //  되돌려버린다. 그래서 debounce 가 '현재' inputValue 까지 따라잡았을 때(===)만 커밋한다.
+  // 타이핑이 멈추면(디바운스 시간만큼 입력이 없으면) draft 세션을 닫는다 → 이어서 치면 새 검색(push)으로 잡힌다.
+  // setState 는 타이머 콜백 안에서만 호출한다(effect 본문에서 직접 호출 아님 — 연쇄 렌더 방지).
   useEffect(() => {
-    const next = debouncedInputValue.trim();
+    if (!isEditingDraft) return;
 
-    if (debouncedInputValue === inputValue && next !== searchTerm)
-      setSearch(next);
-  }, [debouncedInputValue, inputValue, searchTerm, setSearch]);
+    const timer = setTimeout(
+      () => setIsEditingDraft(false),
+      SEARCH_DEBOUNCE_MS,
+    );
+
+    return () => clearTimeout(timer);
+  }, [inputValue, isEditingDraft]);
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const trimmed = value.trim();
+
+    setInputValue(value);
+
+    // 새 검색의 첫 입력은 push 로 새 엔트리를 열고, 이후 입력은 replace 로 그 엔트리만 실시간 갱신한다.
+    // (조회 자체는 ProductList 가 URL q 를 디바운스해서 멈춘 뒤에만 요청한다 — 타이핑마다 요청 X)
+    if (isEditingDraft) {
+      updateSearch(trimmed);
+    } else {
+      beginSearch(trimmed);
+      setIsEditingDraft(true);
+    }
+  };
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+    // 라이브 검색이라 제출로 URL 을 또 쓸 필요는 없다 — 폼 기본 새로고침만 막고 draft 세션을 닫는다.
     event.preventDefault();
-    setSearch(inputValue.trim());
+    setIsEditingDraft(false);
   };
 
   return (
@@ -62,7 +89,7 @@ export function ProductListFilters() {
           type="search"
           name="q"
           value={inputValue}
-          onChange={(event) => setInputValue(event.target.value)}
+          onChange={handleChange}
           placeholder="상품명 또는 브랜드"
         />
       </label>

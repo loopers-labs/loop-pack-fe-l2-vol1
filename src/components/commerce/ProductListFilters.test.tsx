@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Advanced C — 검색어 debounce(항목 1)
+// Advanced C — 검색 히스토리: 새 검색 첫 입력은 push(beginSearch), 이후 입력은 replace(updateSearch)
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
@@ -12,25 +12,35 @@ import {
 import { ProductListFilters, SEARCH_DEBOUNCE_MS } from "./ProductListFilters";
 import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
 
-// URL 배선 hook 을 mock 해 debounce/커밋 로직만 격리 검증한다(실제 nuqs·URL 없이).
+// URL 배선 hook 을 mock 해 push/replace 분기 로직만 격리 검증한다(실제 nuqs·URL 없이).
 vi.mock("@/hooks/useProductListSearchParams", () => ({
   useProductListSearchParams: vi.fn(),
 }));
 
 const useSearchParamsMock = vi.mocked(useProductListSearchParams);
 
-type SetSearch = ReturnType<typeof useProductListSearchParams>["setSearch"];
+type Handlers = Pick<
+  ReturnType<typeof useProductListSearchParams>,
+  "beginSearch" | "updateSearch"
+>;
 
-function renderFilters(setSearch: SetSearch, searchTerm = "") {
+function makeHandlers(): Handlers {
+  return { beginSearch: vi.fn(), updateSearch: vi.fn() };
+}
+
+function mockHook(handlers: Handlers, searchTerm = "") {
   useSearchParamsMock.mockReturnValue({
     query: { q: searchTerm, category: "all", sort: "latest", page: 1 },
-    setSearch,
+    beginSearch: handlers.beginSearch,
+    updateSearch: handlers.updateSearch,
     setFilter: vi.fn(),
     setPage: vi.fn(),
     clampPageToRange: vi.fn(),
   });
+}
 
-  return render(<ProductListFilters />);
+function type(value: string) {
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value } });
 }
 
 beforeEach(() => {
@@ -43,46 +53,55 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("ProductListFilters 검색어 debounce", () => {
-  test("입력 후 디바운스 시간이 지나면 setSearch 를 호출한다", () => {
-    const setSearch = vi.fn();
-    renderFilters(setSearch);
+describe("ProductListFilters 검색 히스토리(push/replace)", () => {
+  test("새 검색의 첫 입력은 beginSearch(push)로 새 엔트리를 연다", () => {
+    const handlers = makeHandlers();
+    mockHook(handlers);
+    render(<ProductListFilters />);
 
-    fireEvent.change(screen.getByRole("searchbox"), {
-      target: { value: "stanley" },
-    });
-    expect(setSearch).not.toHaveBeenCalled();
+    type("s");
 
+    expect(handlers.beginSearch).toHaveBeenCalledWith("s");
+    expect(handlers.updateSearch).not.toHaveBeenCalled();
+  });
+
+  test("이어지는 입력은 updateSearch(replace)로 현재 엔트리만 갱신한다", () => {
+    const handlers = makeHandlers();
+    mockHook(handlers);
+    render(<ProductListFilters />);
+
+    type("s");
+    type("st");
+
+    expect(handlers.beginSearch).toHaveBeenCalledTimes(1);
+    expect(handlers.updateSearch).toHaveBeenCalledWith("st");
+  });
+
+  test("타이핑이 멈춰 draft 세션이 닫히면 다음 입력은 다시 beginSearch 다", () => {
+    const handlers = makeHandlers();
+    mockHook(handlers);
+    render(<ProductListFilters />);
+
+    type("s");
     act(() => {
       vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
     });
-    expect(setSearch).toHaveBeenCalledWith("stanley");
+    type("a");
+
+    expect(handlers.beginSearch).toHaveBeenCalledTimes(2);
+    expect(handlers.beginSearch).toHaveBeenLastCalledWith("a");
   });
 
-  test("디바운스 시간 전에는 setSearch 를 호출하지 않는다", () => {
-    const setSearch = vi.fn();
-    renderFilters(setSearch);
+  test("외부 URL 변경(뒤로가기 등)은 커밋 없이 입력창만 맞춘다", () => {
+    const handlers = makeHandlers();
+    mockHook(handlers, "");
+    const { rerender } = render(<ProductListFilters />);
 
-    fireEvent.change(screen.getByRole("searchbox"), {
-      target: { value: "sta" },
-    });
-    act(() => {
-      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS - 1);
-    });
+    mockHook(handlers, "nike"); // 타이핑 없이 URL 검색어만 외부에서 바뀐 상황
+    rerender(<ProductListFilters />);
 
-    expect(setSearch).not.toHaveBeenCalled();
-  });
-
-  test("Enter 제출은 디바운스를 우회해 즉시(trim 후) setSearch 를 호출한다", () => {
-    const setSearch = vi.fn();
-    renderFilters(setSearch);
-
-    fireEvent.change(screen.getByRole("searchbox"), {
-      target: { value: "  nike  " },
-    });
-    // 타이머를 진행시키지 않는다 — form submit(Enter)은 debounce 를 기다리지 않고 즉시 커밋해야 한다.
-    fireEvent.submit(screen.getByRole("search"));
-
-    expect(setSearch).toHaveBeenCalledWith("nike");
+    expect(handlers.beginSearch).not.toHaveBeenCalled();
+    expect(handlers.updateSearch).not.toHaveBeenCalled();
+    expect(screen.getByRole<HTMLInputElement>("searchbox").value).toBe("nike");
   });
 });
