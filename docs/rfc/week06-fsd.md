@@ -39,12 +39,17 @@
   - 홈과 상품 목록이 같은 `ProductCard`를 소비한다.
   - 상품 표현과 cart/wishlist 행위를 어디서 조합할지는 아직 별도 책임으로 드러나 있지 않다.
 - `src/lib/commerce/api.ts`
-  - HTTP 실패를 status 정보가 없는 일반 `Error`로 변환한다.
+  - HTTP 실패를 status와 서버 메시지를 가진 `ApiError`로 변환한다. 재시도 가능 여부와
+    표시 문구 판단도 여기서 공개한다. 요청에 취소 신호와 타임아웃을 함께 건다.
+- `src/lib/commerce/productListContract.ts`
+  - 목록 조건의 허용값과 유효성 판정. 클라이언트 parser와 서버 route가 함께 소비하는
+    유일한 모듈이다. `app/api`의 route handler가 `lib`을 참조하는 유일한 지점이기도 하다.
 - `src/app`
   - 조회 실패는 현재 각 화면에서 인라인으로 처리한다.
   - route-level `error.tsx`는 아직 없다.
 - 자동 기준선
-  - 현재 `pnpm check`는 테스트 111건, lint, typecheck, production build까지 통과한다.
+  - 현재 `pnpm check`는 테스트 134건, lint, typecheck, production build까지 통과한다.
+    5주차 피드백 반영 전에는 111건이었다. 구조 이동 후에도 이 기준선을 유지한다.
   - `package.json`은 Node `>=22.12.0`을 요구하지만 확인 환경은 Node `20.19.0`이었다.
 - 수동 기준선
   - URL 공유, 새로고침, 뒤로/앞으로 가기와 실제 `Link` 이동은 문서에 수동 확인 필요 항목으로 남아 있다.
@@ -574,8 +579,9 @@ Decision 1에서 `toggleId`를 shared로 올리지 않기로 하면서, 두 번�
 
 ### Context
 
-상품 목록 조회는 현재 `lib/commerce`의 세 파일에 나뉘어 있다. `api.ts`가 전송, `queries.ts`가
-key와 캐시 정책, `useProductListCondition.ts`가 URL 조건 조립을 맡는다. 이 셋의 소유자를 정한다.
+상품 목록 조회는 현재 `lib/commerce`의 네 파일에 나뉘어 있다. `api.ts`가 전송, `queries.ts`가
+key와 캐시 정책, `useProductListCondition.ts`가 URL 조건 조립, `productListContract.ts`가
+허용값과 유효성 판정을 맡는다. 이 넷의 소유자를 정한다.
 
 이 결정에 필요한 현재 사실은 다음과 같다.
 
@@ -660,8 +666,12 @@ entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.
   나중에 무효화가 생기면 범위를 조준할 자리를 다시 정해야 한다.
 - 상품 목록 화면의 슬라이스가 커진다. URL parser, 조건 조립, 전송, queryOptions가 한 슬라이스에
   들어간다. 세그먼트로 나누어 목적을 드러낸다.
-- `fetchJson`이 `shared/api`로 내려가면서 HTTP 실패를 일반 `Error`로 바꾸는 현재 구현도 함께
-  이동한다. 실패 종류 구분은 Decision 6에서 다룬다.
+- `fetchJson`과 `ApiError`가 `shared/api`로 내려간다. 실패를 어디까지 전파할지는 Decision 6에서
+  다룬다.
+- `productListContract.ts`는 `_pages/product-list`가 소유할 수 없다. mock API route가 이
+  모듈을 함께 소비하는데, 서버 route가 페이지 슬라이스를 참조하면 의존 방향이 뒤집힌다.
+  그래서 이 모듈만 `shared`로 내리고, 목록 화면 소유에서 뺀다. mock API route 자체의 자리는
+  아래 열린 항목으로 남긴다.
 
 ### Validation
 
@@ -670,6 +680,13 @@ entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.
 - `_pages/home`과 `_pages/product-list`가 서로를 import하지 않는다.
 - 조회 조건을 바꿀 때 수정 파일이 `_pages/product-list` 안에 모인다.
 - query key와 요청이 같은 조건 객체에서 파생된다는 5주차 불변 조건이 유지된다.
+- `app/api`의 route handler가 `shared`만 참조하고 `_pages`나 `entities`를 참조하지 않는다.
+
+### 열린 항목
+
+mock API route(`src/app/api`)의 레이어 소속을 이 결정에서 정하지 못했다. Next의 route
+handler라 FSD 레이어 밖 서버 코드인데, `productListContract.ts`를 화면과 공유하면서 의존
+방향을 따지게 되는 첫 지점이 됐다. Decision 5에서 Public API 경계를 정할 때 함께 다룬다.
 
 ### Revisit
 
@@ -720,8 +737,10 @@ Decision Card에 두고, 여기서는 결론과 참조만 적는다.
    `stores`, `types`, `app/products`에 나뉘어 있고, 폴더 이름이 도메인을 말해주지 않는다.
 4. **도메인 타입의 소유자가 없다.** `types/commerce.ts` 한 파일에 상품 도메인 타입, API 응답
    형태, mock 제어값이 함께 있다.
-5. **실패의 종류를 구분할 수 없다.** `api.ts`가 HTTP 실패를 status 정보 없는 일반 `Error`로
-   바꾼다. 어떤 실패를 어디까지 전파할지 정하려면 이 정보가 필요하다.
+5. **실패를 구분할 수는 있으나 경계가 없다.** 5주차 피드백 반영으로 `ApiError`가 status와
+   서버 메시지를 들고 오고 재시도 여부까지 판단한다. 남은 문제는 정보가 아니라 자리다.
+   어떤 실패를 화면이 삼키고 어떤 실패를 위로 올릴지는 아직 각 화면의 인라인 분기에 흩어져
+   있다.
 
 #### 적용할 의존 규칙
 
@@ -793,6 +812,8 @@ cart와 wishlist는 capability 모델을 분리하고 하나의 Zustand runtime�
 - 각 슬라이스에 Public API가 필요한가 (Decision 5)
 - Decision 5의 확인된 입력: `entities/wishlist`와 `entities/cart`는 조합부 밖에 Header라는
   외부 소비자를 가진다. 소비 형태는 개수 selector 하나다.
+- Decision 5의 확인된 입력: `shared`의 목록 조건 계약은 화면과 mock API route 양쪽이
+  소비한다. FSD 레이어 밖 서버 코드가 소비자로 들어오는 유일한 경우다.
 
 ### O — Optimization
 
