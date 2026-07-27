@@ -49,38 +49,6 @@ const restrictedSyntaxReactRendering = [
     selector:
       "JSXMemberExpression[object.name='React'][property.name='Suspense']",
   },
-  {
-    message:
-      'Use <Show /> from @ilokesto/utilinent instead of inline logical conditional rendering in JSX children.',
-    selector: 'JSXElement > JSXExpressionContainer > LogicalExpression',
-  },
-  {
-    message:
-      'Use <Show /> from @ilokesto/utilinent instead of inline logical conditional rendering in JSX children.',
-    selector: 'JSXFragment > JSXExpressionContainer > LogicalExpression',
-  },
-  {
-    message:
-      'Use <Show /> from @ilokesto/utilinent instead of inline ternary conditional rendering in JSX children.',
-    selector: 'JSXElement > JSXExpressionContainer > ConditionalExpression',
-  },
-  {
-    message:
-      'Use <Show /> from @ilokesto/utilinent instead of inline ternary conditional rendering in JSX children.',
-    selector: 'JSXFragment > JSXExpressionContainer > ConditionalExpression',
-  },
-  {
-    message:
-      'Use <For /> from @ilokesto/utilinent instead of inline array.map rendering in JSX children.',
-    selector:
-      "JSXElement > JSXExpressionContainer > CallExpression[callee.property.name='map']",
-  },
-  {
-    message:
-      'Use <For /> from @ilokesto/utilinent instead of inline array.map rendering in JSX children.',
-    selector:
-      "JSXFragment > JSXExpressionContainer > CallExpression[callee.property.name='map']",
-  },
 ]
 
 const restrictedSyntaxExplicitIndexExports = [

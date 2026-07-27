@@ -7,6 +7,10 @@ export function useDialog(props: DialogProps): DialogContextValue {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(
     props.defaultOpen === true,
   )
+  const [titleId, setTitleId] = useState<string | undefined>(undefined)
+  const [descriptionId, setDescriptionId] = useState<string | undefined>(
+    undefined,
+  )
   const controlled = Object.hasOwn(props, 'open')
 
   function requestOpenChange(nextOpen: boolean) {
@@ -22,5 +26,9 @@ export function useDialog(props: DialogProps): DialogContextValue {
   return {
     open: controlled ? props.open === true : uncontrolledOpen,
     requestOpenChange,
+    titleId,
+    descriptionId,
+    registerTitleId: setTitleId,
+    registerDescriptionId: setDescriptionId,
   }
 }

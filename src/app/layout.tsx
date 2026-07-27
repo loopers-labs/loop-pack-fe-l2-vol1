@@ -4,6 +4,10 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import type { ReactNode } from 'react'
 
+import { Header } from '@/widgets/header/ui/Header'
+
+import { Providers } from './providers'
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -26,7 +30,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Providers>
+          <Header />
+          {children}
+        </Providers>
+      </body>
     </html>
   )
 }

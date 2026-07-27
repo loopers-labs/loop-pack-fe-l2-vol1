@@ -25,9 +25,13 @@ export function SelectItem<TOption extends SelectOption>({
   const content = children?.(state) ?? option.label
 
   function handlePointerEnter(event: PointerEvent<HTMLDivElement>) {
+    if (state.disabled) {
+      return
+    }
+
     onPointerEnter?.(event)
 
-    if (!event.defaultPrevented && !state.disabled) {
+    if (!event.defaultPrevented) {
       select.setHighlighted(option)
     }
   }
@@ -46,6 +50,10 @@ export function SelectItem<TOption extends SelectOption>({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (state.disabled) {
+      return
+    }
+
     onKeyDown?.(event)
 
     if (event.defaultPrevented) {

@@ -5,10 +5,15 @@ Loopers 프론트엔드 과정(TypeScript · React · Next.js)의 과제 제출 
 
 ## 시작하기
 
+필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`는 현재 권장 LTS를 고정하고, `package.json`의 Node.js 범위(`>=22.12.0`)는 지원 가능한 Node.js 22 이상을 허용합니다.
+
 ```bash
+nvm use
 pnpm install
 pnpm dev
 ```
+
+`pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 테스트, lint, 타입 검사, 프로덕션 빌드를 순서대로 실행하며 네 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
 
 > Next.js(App Router) + React 19 + TypeScript. 1~3주차 React+Vite 산출물은 개인 브랜치 히스토리에 남아 있습니다.
 
@@ -108,93 +113,91 @@ pnpm build
 
 > PR은 **메인 레포(upstream)로** 올립니다 — 모두의 PR이 한곳에 모여 서로 리뷰할 수 있습니다. (협력자 추가는 필요 없습니다.)
 
-## 4주차 과제 기록
+## 5주차 과제 기록 — 상태관리 아키텍처
 
-이번 주에는 브라우저가 제공하는 네이티브 `<select>` 동작을 빌리지 않고, 옵션 객체와 상태 전이를 직접 관리하는 Headless Select를 구현했습니다. 같은 상태 로직으로 텍스트, 사이즈, 상품형 옵션을 렌더하고, 표시 방식은 사용처의 render function이 결정하도록 분리했습니다.
+> 홈과 상품 목록을 만들며 서버·URL·클라이언트 상태의 경계를 직접 정의합니다.
 
-### Select 구조와 책임
+### 상태 분류 표
 
-| 구성 요소                              | 책임                                                                              | 설계 근거                                                                     |
-| -------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `SelectRoot` / `useSelect`             | 열림, 선택값, highlight와 선택 상태 전이를 관리                                   | 모든 사용처가 동일한 상태 전이 규칙을 공유하도록 로직을 한곳에 모았습니다.    |
-| `SelectTrigger`                        | click과 키보드 입력을 상태 전이로 연결                                            | 옵션 UI와 입력 처리 규칙을 분리하고 consumer event를 먼저 실행합니다.         |
-| `SelectContent`                        | listbox DOM, Native Popover, React 상태 동기화와 inline fallback을 관리           | 위치와 top layer 처리는 선택 로직과 무관한 presentation infrastructure입니다. |
-| `SelectItem`                           | `selected` / `highlighted` / `disabled` 상태를 render function과 data 속성에 노출 | 사용처가 상태에 따라 자유롭게 생김새를 결정할 수 있게 했습니다.               |
-| `OptionNavigation` / `TriggerKeyboard` | 활성 옵션 탐색과 Arrow/Home/End/Enter/Space/Escape/Tab 처리                       | DOM 렌더링과 무관한 탐색 규칙을 독립적으로 읽고 검토할 수 있게 했습니다.      |
+| 상태                                                     | 소유자                                         | 수명                                      | 공유 범위                            | 선택 이유                                                                                                 |
+| -------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| 홈 데이터(banner·categories·popularProducts·newProducts) | TanStack Query(서버 상태)                      | staleTime 동안 캐시, 이후 재조회          | 홈 화면                              | 원본은 서버. 내가 소유하지 않는 스냅샷이므로 Query 캐시에 맡기고 staleTime으로 신선도를 관리한다          |
+| 상품 목록(products·totalCount·page·pageSize)             | TanStack Query(서버 상태)                      | query key별로 캐시, staleTime 이후 재조회 | 목록 화면                            | 검색·카테고리·정렬·페이지 조건이 query key에 반영되어 조건별 캐시를 재사용한다                            |
+| 카테고리 목록                                            | TanStack Query(서버 상태, 홈·목록 쿼리에 포함) | 홈·목록 쿼리 캐시 안에서 함께 보관        | 홈·목록                              | 별도 쿼리로 분리하지 않고 응답에 포함된 값을 사용한다. 독립 쿼리로 두면 홈·목록이 각각 중복 조회하게 된다 |
+| 검색어(q)                                                | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 검색 조건의 원본은 URL. 공유·새로고침·뒤로 가기로 같은 결과가 복원되어야 한다                             |
+| 카테고리(category)                                       | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 홈의 카테고리 링크로 진입하거나 공유 링크로 복원되어야 한다                                               |
+| 정렬(sort)                                               | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 정렬 조건도 공유·복원 대상. 기본값 `latest`를 URL에 명시해 API 요청과 항상 일치시킨다                     |
+| 페이지(page)                                             | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 페이지 위치도 복원 대상. 검색·카테고리·정렬이 바뀌면 1로 돌아간다                                         |
+| 비로그인 장바구니(cart)                                  | Zustand(전역 클라이언트 상태)                  | 세션 수명, persist로 새로고침 후 복원     | 홈·목록(헤더 카운트, 상품 담기 버튼) | 여러 페이지에서 함께 쓰는 비로그인 사용자의 로컬 상태. 서버 원본이 없는 동안 Zustand가 임시 소유자다      |
+| 비로그인 위시리스트(wishlist)                            | Zustand(전역 클라이언트 상태)                  | 세션 수명, persist로 새로고침 후 복원     | 홈·목록(헤더 카운트, 상품 찜 버튼)   | 장바구니와 동일한 근거. 서버 동기화가 생기면 소유권이 서버로 이동한다                                     |
+| 모달·드롭다운 열림 여부                                  | React 로컬 상태                                | 컴포넌트 수명                             | 해당 컴포넌트                        | 한 화면에서만 쓰는 일시적 UI 상태. 공유·복원 필요가 없으므로 전역에 두지 않는다                           |
+| 제출 전 입력 초안(검색 input 값 등)                      | React 로컬 상태 또는 nuqs                      | 컴포넌트 수명 또는 URL 수명               | 해당 화면                            | URL 상태와 동기화해야 하는 값은 nuqs로, 일시적 초안은 React 로컬 상태로 둔다                              |
 
-### 옵션 객체를 value로 사용한 이유
+### 책임 분담 기준
 
-`SelectRoot<TOption>`은 `value`와 `onChange`에서 옵션 객체 전체를 주고받습니다. 문자열 id만 반환하면 사용처가 가격, 배송 정보, 사이즈 설명을 다시 조회해야 하지만, 객체를 반환하면 선택 직후 필요한 데이터를 그대로 사용할 수 있습니다. 공통 로직은 `id`, `label`, `disabled`만 알고, 각 사용처는 자신의 추가 필드를 유지합니다.
+- **TanStack Query** — 서버에서 온 데이터의 조회 상태와 캐시 수명. 서버 응답을 Zustand에 복사하지 않는다. `queryOptions`로 query key·queryFn·staleTime을 한곳에 모아 재사용한다.
+- **nuqs** — 검색·카테고리·정렬·페이지처럼 공유·새로고침·앞뒤 이동으로 복원해야 하는 조건. `NuqsAdapter`로 App Router를 감싸고 `useQueryStates`와 parser로 관리한다. `history: "push"`로 각 변경을 앞뒤 이동에서 복원한다.
+- **Zustand** — 여러 페이지에서 함께 쓰는 비로그인 장바구니·위시리스트. 컴포넌트는 필요한 값과 action만 selector로 선택해 구독한다. 헤더 개수는 별도 저장하지 않고 파생한다.
+- **React 로컬 상태** — 모달 열림 여부·입력 초안처럼 한 화면·컴포넌트 수명에 머무는 일시적 UI 상태. 전역에 올리지 않는다.
 
-### 비활성 옵션 처리
+### 캐시 정책(staleTime · gcTime)
 
-- `OptionNavigation`은 활성 옵션만 대상으로 다음 항목을 계산해 품절 옵션을 건너뜁니다.
-- pointer highlight와 click selection에서도 `disabled`를 다시 확인합니다.
-- 모든 옵션이 비활성인 경우에는 highlight 없이 열리며 Enter를 눌러도 선택이 발생하지 않습니다.
+- **홈 쿼리** — `staleTime: 60_000`(1분). 홈은 여러 섹션을 묶어 한 번에 가져오고 갱신 주기가 짧지 않아 1분 정도 신선도를 유지한다. `gcTime`은 기본값(5분)으로 두어 컴포넌트 언마운트 후 재방문 시 캐시를 재사용한다.
+- **목록 쿼리** — `staleTime: 30_000`(30초). 검색·카테고리·정렬·페이지 조건이 query key에 들어가 조건별 캐시가 만들어진다. 30초면 사용자가 같은 조건으로 돌아올 때 최신 결과를 다시 보여주면서도 짧은 시간 내 재방문은 캐시로 처리한다. `gcTime`은 기본값으로 두어 앞뒤 이동 중 캐시가 유지되도록 한다.
+- **scenario** — mock API 검증 전용 제어값. 사용자가 관리하는 URL 상태나 `ProductListQuery`에 포함하지 않는다. 서버에서 `MockApiScenario`로 구분한다.
 
-### Native Popover와 Anchor Positioning을 선택한 이유
+### 전역으로 올리지 않은 상태
 
-Base UI처럼 옵션 목록이 주변 레이아웃을 밀지 않고 trigger를 기준으로 떠야 한다고 판단했습니다. 다만 이번 과제에서 직접 설계해야 하는 부분은 선택 상태와 키보드 탐색이므로, popup infrastructure에는 브라우저 표준 기능을 사용했습니다.
+- **모달·드롭다운 열림 여부** — 한 화면에서만 쓰는 일시적 UI 상태는 React 로컬 상태로 둔다. 전역 store에 넣으면 불필요한 리렌더와 store 복잡도만 증가한다.
+- **검색 입력 초안** — URL 상태와 동기화해야 하는 최종 검색어는 nuqs로 두되, 타이핑 중인 초안은 컴포넌트 로컬 상태로 다루어 매 입력마다 URL이 바뀌지 않게 한다(필요 시 debounce 적용).
+- **계산 가능한 값** — 헤더의 장바구니/위시리스트 개수, 할인 여부, 품절 여부 등은 별도 상태로 중복 저장하지 않고 파생한다.
 
-- `popover="auto"`: top layer 렌더링, 바깥 클릭과 Escape dismiss를 브라우저에 맡깁니다.
-- CSS Anchor Positioning: `position-area`, `anchor-size()`, `position-try-fallbacks`로 trigger 아래 배치, 동일 너비와 위쪽 flip을 처리합니다.
-- `toggle` 이벤트: 브라우저가 닫은 상태를 React의 `open` 상태로 되돌립니다.
-- `useLayoutEffect`: React에서 요청한 상태와 실제 `:popover-open` 상태가 다를 때만 `showPopover()`/`hidePopover()`를 호출합니다.
-- Progressive enhancement: Popover 또는 필요한 Anchor Positioning을 지원하지 않으면 기존 inline listbox로 동작합니다.
+### Zustand store 데이터 형태와 selector 경계
 
-직접 좌표를 계산하거나 scroll/resize listener를 두지 않았고, `@floating-ui/react`도 추가하지 않았습니다. 추후 임의 clipping boundary, 정교한 shift/size 계산, 중첩 popup처럼 브라우저 기본 기능을 넘어서는 요구가 생기면 현재 popup infrastructure와 `SelectContent`의 positioning layer를 다른 구현으로 교체할 수 있습니다.
+- **데이터 형태** — `cart: Record<productId, true>`, `wishlist: Record<productId, true>`로 productId 집합만 저장한다. 상품 상세 정보는 TanStack Query 캐시에서 가져오고 store에 복사하지 않는다.
+- **selector 경계** — Header는 `cartCount`, `wishlistCount` 파생값만 구독한다. 상품 버튼은 `useIsInCart(productId)`, `useIsInWishlist(productId)`로 해당 상품 포함 여부만 구독하고 action(`addToCart`, `removeFromCart`, `toggleWishlist`)은 별도 selector로 가져온다.
 
-### 접근성 상태
+### 로그인·서버 동기화가 생기면
 
-- Trigger는 `combobox`, Content는 `listbox`, Item은 `option` 역할을 사용합니다.
-- Trigger에 `aria-controls`, `aria-expanded`, `aria-haspopup`를 연결했습니다.
-- 열려 있는 동안에만 `aria-activedescendant`를 노출하고, 닫을 때 highlight를 초기화해 제거된 option id를 가리키지 않게 했습니다.
-- focus는 Trigger에 유지하고 실제 option focus 이동 대신 `aria-activedescendant`로 현재 항목을 알립니다.
+위시리스트 소유권이 서버로 이동한다. 이때 로컬 익명 위시리스트를 계정 데이터에 합칠지, 버릴지, 충돌을 어떻게 처리할지 정한 뒤 Zustand의 역할을 서버 상태의 임시 입력 또는 UI 상태로 다시 제한한다. 장바구니도 같은 기준으로 서버 동기화 시점을 설계한다.
 
-### 렌더링 예시
+### Advanced A — 상태 영속화
 
-- 텍스트 옵션: 설명과 tone을 표시합니다.
-- 사이즈 옵션: fit과 size guide를 표시합니다.
-- 상품형 옵션: thumbnail, 가격과 배송 상태를 표시합니다.
+기본 과제의 장바구니·위시리스트는 새로고침 시 초기화되어도 됐지만, 이번엔 Zustand `persist`로 localStorage에 저장하고 복원한다. 두 store 모두 `zustand-middleware-pipe`의 `pipe.use(devtools(...)).use(persist(...))` 순서로 middleware를 조립한다.
 
-세 예시는 같은 Select 상태 로직을 사용하지만 `SelectItem`의 render state를 받아 서로 다른 UI를 그립니다.
+- **저장 대상** — `partialize`로 `items`만 영속화한다. actions과 selector는 store 인스턴스에 묶여있어 저장할 필요 없다.
+- **저장 키·버전** — `commerce-cart` / `commerce-wishlist`, `version: 1`. 버전이 바뀌면 `migrate`가 실행된다.
+- **복구 전략** — `migrate`는 `unknown`을 받아 Zod(`z.record(z.string(), z.literal(true))`)로 검증한다. 스키마를 통과하면 저장값을 그대로 쓰고, 깨지거나 오래된 값이면 빈 상태(`{ items: {} }`)로 폴백한다. 사용자가 손으로 localStorage를 바꿔도 앱이 깨지지 않는다.
+- **Hydration mismatch** — `skipHydration: true`로 두고, 클라이언트에서만 `useHydratePersistedStore` 훅이 `store.persist.rehydrate()`를 호출한다. SSR 시점엔 항상 빈 상태를 렌더하고 클라이언트 마운트 후 영속 상태를 끌어올려 Next.js hydration 불일치를 회피한다. 이 훅은 `hasHydrated()`로 idempotent하게 동작한다.
+- **호출 지점** — Header(root layout에 있음)에서 cart·wishlist 두 store를 한 번씩 hydrate한다. ProductCard는 hydration 후 selector가 자동 리렌더하므로 별도 호출이 필요 없다.
+- **로그인·서버 동기화와의 관계** — 영속화는 어디까지나 비로그인 사용자의 로컬 익명 상태를 보존하기 위한 임시 수단이다. 서버가 위시리스트 원본을 소유하게 되면 persist를 걷어내고 TanStack Query로 대체한다. 이때 마이그레이션은 "로컬 익명 상태를 계정 데이터에 합칠지 버릴지"라는 정책 결정으로 바뀐다.
 
-### Dialog Compound API와 상태 소유권
+### Advanced D — 테스트
 
-`Dialog`는 callable root에 `Trigger`, `Overlay`, `Content`, `Title`, `Description`, `Close`를 조합하는 Compound API입니다. 사용처는 `@/shared/ui/dialog`에서 `Dialog` 하나만 import하고 필요한 part를 같은 상태 계약 위에서 배치합니다.
+과제의 핵심 상태 계약 4가지를 자동화 테스트로 보호한다. `vitest` 환경은 `environment: 'node'`로 두고, DOM·React 렌더링·실제 URL hydration이 필요한 검증은 Playwright 영역으로 분리했다.
 
-- 비제어 모드는 `defaultOpen`을 초기값으로 사용하고 Dialog 내부가 열린 상태를 관리합니다.
-- 제어 모드는 own `open` key의 존재로 판별하며, 상태를 직접 바꾸지 않고 `onOpenChange`로 변경을 요청합니다.
-- Trigger, Close, Overlay는 consumer click handler를 먼저 실행하고 `preventDefault()`된 요청은 내부 상태 전이로 이어가지 않습니다.
-- public `DialogHandle`은 `open()`, `close()`, `toggle()`만 노출하며, ref 호출도 같은 상태 변경 요청 경로를 사용해 제어 모드의 부모 소유권을 유지합니다.
+- **Zustand action + selector** — `src/features/cart/model/CartStore.test.ts`, `src/features/wishlist/model/WishlistStore.test.ts`. addToCart·removeFromCart·clearCart·toggleWishlist 액션이 items 집합을 의도대로 변경하는지, cartSelectors.count·isInCart·wishlistSelectors.count·isInWishlist가 store state에서 올바르게 파생되는지 검증한다. 개수를 별도 상태로 저장하지 않고 파생한다는 과제 계약을 테스트가 보호한다.
+- **Header 개수 파생** — count selector가 items 길이를 반환하고 추가·제거에 따라 정확히 증감하는지 검증한다. Header가 별도 count 상태를 두지 않는다는 계약을 보호.
+- **nuqs URL 조건 ↔ query key 일치** — `src/features/product-filter/model/useProductFilters.test.ts`에서 `productFilterParsers`의 기본값(q='', category='all', sort='latest', page=1)과 enum을 검증하고, `src/entities/product/api/ProductService.test.ts`에서 `queryKeyFactory.product.list(query)`가 ProductListQuery 전체를 key에 반영하는지, q·category·sort·page·pageSize 각 변경이 key를 바꾸는지, 동일 쿼리는 동일 key를 반환하는지, scenario가 key에 들어가지 않는지 검증한다.
+- **홈·목록 store 동기화** — `src/features/store-sync.test.ts`에서 `useCartStore`/`useWishlistStore`가 모듈 싱글톤임을 검증하고, 한 곳에서 변경하면 같은 인스턴스를 읽는 다른 곳에서 즉시 반영됨을 확인한다. 두 view가 같은 store를 공유한다는 계약을 보호.
 
-### Portal, 닫기 요청과 scroll lock
+**테스트 경계** — 단위 테스트는 순수 로직과 타입 계약만 검증한다. React 렌더링 결과, nuqs의 실제 URL 동기화, hydration 시점의 store 값 변화, 페이지 전환 중 카운트 유지는 Playwright로 검증한다(`검증 결과` 섹션). 이 경계를 둔 이유는 단위 테스트가 DOM·Next.js 라우터 없이 빠르게 돌고 상태 계약 자체를 명확히 검증하며, UI 흐름은 실제 브라우저에서 확인하는 쪽이 신뢰도가 높기 때문이다.
 
-Overlay와 Content는 서로 독립된 portal로 `document.body` 아래에 렌더링합니다. 서버 렌더와 초기 hydration에서는 portal을 만들지 않아 브라우저 전역 접근을 피합니다. Escape는 가장 위에 열린 Dialog만 닫고, 실제 Overlay button을 누른 경우에만 해당 레이어가 닫기를 요청합니다.
+`productFilterParsers`를 useProductFilters.ts에서 export하도록 리팩터링한 이유는, 훅이 아닌 parser 객체 자체를 단위 테스트에서 직접 검증하기 위해서다. 훅은 DOM/React가 필요하지만 parser 계약(기본값·enum)은 순수 객체 검증으로 충분하다.
 
-열린 Dialog는 `document.body.style.overflow`의 기존 inline 값을 보존한 뒤 `hidden`으로 바꿉니다. 중첩된 Dialog는 문서별 reference count를 공유하므로 자식만 닫힐 때는 잠금을 유지하고, 마지막 Dialog가 닫힐 때만 정확한 이전 값을 복원합니다.
+### 검증 결과
 
-### Dialog 접근성 범위
-
-Trigger, Close, Overlay는 native button과 visible focus style을 사용하고 Overlay에는 한국어 sr-only 닫기 문구를 제공합니다. 이번 과제 범위에는 자동 focus 이동, focus trap/복원, `role="dialog"`, `aria-modal`, `aria-labelledby`, `aria-describedby`를 포함하지 않았습니다. 실제 서비스 적용 전에는 별도의 승인된 접근성 확장이 필요합니다.
-
-### 검증
-
-- `pnpm format:check`
-- `pnpm lint`
-- `pnpm typecheck`
-- `pnpm build`
-- Chromium에서 click, 바깥 클릭, Escape, Tab, Arrow/Home/End, Enter/Space와 disabled skip을 확인했습니다.
-- 375px, 768px, 1280px viewport에서 trigger 너비 일치, 8px 간격, viewport 하단의 위쪽 flip과 레이아웃 비이동을 확인했습니다.
-- Anchor Positioning 지원을 강제로 끈 환경에서 inline fallback을 확인했습니다.
-- 개발/프로덕션 Chromium에서 Dialog의 비제어·제어 흐름, body portal, Escape, Overlay/Close 동작과 정확한 overflow 복원을 확인했습니다.
-- Dialog가 열린 375x812, 768x1024, 1280x800 viewport에서 Content와 Close가 화면 안에 있고 가로 overflow가 없는지 확인했습니다.
-
-### 남은 작업
-
-- 별도 test runner가 없어 현재 상호작용 검증은 브라우저 QA에 의존합니다.
+- **URL 공유**: `?category=fashion&q=stan&page=2` 링크를 새 탭에서 열면 같은 검색·카테고리·정렬·페이지 조건이 복원되고 동일한 상품 목록이 표시된다. ✅
+- **새로고침**: 현재 URL의 검색·카테고리·정렬·페이지가 모두 유지된다. nuqs가 URL에서 상태를 재수신(hydrate)한다. ✅
+- **앞뒤 이동**: `?q=sta` → `?q=stanley` 순으로 변경한 뒤 뒤로 가면 `?q=sta`로 URL과 input 값이 모두 복원된다(Playwright로 확인). ✅
+- **검색 debounce**: 3글자를 100ms 안에 빠르게 입력하면 입력 직후엔 URL이 바뀌지 않고, 멈춘 뒤 300ms 후 `?q=sta`로 한 번만 갱신된다. 매 키스트로크마다 URL이 바뀌지 않는다(Playwright로 확인). ✅
+- **페이지네이션**: totalCount=30, pageSize=12일 때 `1 / 3`에서 다음 버튼 활성, `2 / 3`에서 양쪽 활성, `3 / 3`에서 다음 비활성. URL `?page=N`이 동기화된다(Playwright로 확인). ✅
+- **store 일관성**: 홈에서 담은 상품이 목록의 헤더 카운트와 상품 버튼 상태에 즉시 반영된다. Zustand store가 단일 인스턴스이므로 두 화면이 같은 상태를 공유한다. ✅
+- **클라이언트 페이지 이동**: 홈→목록→홈 이동 중 장바구니·위시리스트 상태와 헤더 개수가 유지된다. Header를 root layout으로 옮겨 라우트 전환에도 카운트가 초기화되지 않는다. ✅
+- **영속화(persist)**: 상품을 담거나 찜한 뒤 새로고침하면 헤더 카운트와 상품 버튼 상태가 그대로 복원된다. localStorage를 직접 지우면 빈 상태로 돌아간다. 잘못된 값(예: `items`에 `false` 또는 객체)을 주입해도 `migrate`의 Zod 검증이 빈 상태로 폴백해 앱이 깨지지 않는다. ✅
+- **hydration 일치**: SSR HTML은 항상 빈 카운트로 렌더하고, 클라이언트 마운트 후 `useHydratePersistedStore`가 `rehydrate()`를 호출해 영속 상태를 반영한다. React hydration 경고가 발생하지 않는다. ✅
 
 ### AI 활용
 
-- Native Popover와 React 상태 동기화 방식, Anchor Positioning 적용 범위와 Base UI 비교에 AI 도움을 받았습니다.
-- 최종 코드는 직접 검토하며 disabled 탐색, browser/React open 상태 동기화, 닫힌 popover 표시 여부, ARIA lifecycle, supported/fallback 경로와 품질 게이트를 확인했습니다.
+- 상태 분류와 캐시 정책 설계, FSD 레이어 배치, persist·hydration 전략에 AI 도움을 받았습니다.
+- 최종 설계는 과제 명세의 checklist와 `docs/rules/fsd-architecture.md`를 기준으로 직접 검토했습니다.

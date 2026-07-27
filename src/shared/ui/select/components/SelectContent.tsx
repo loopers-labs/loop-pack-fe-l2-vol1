@@ -1,29 +1,18 @@
-import { type ToggleEvent, useLayoutEffect, useSyncExternalStore } from 'react'
+import type { ToggleEvent } from 'react'
+import {
+  type Ref,
+  useImperativeHandle,
+  useRef,
+  useSyncExternalStore,
+} from 'react'
 
+import { PopoverCapability } from '../lib/popoverCapability'
 import { useSelectContext } from '../lib/SelectContext'
+import { useNativePopoverSync } from '../lib/useNativePopoverSync'
 import type { SelectContentProps } from '../types'
 
-function subscribeToPopoverCapability() {
-  return () => undefined
-}
-
-function getPopoverCapabilitySnapshot() {
-  return (
-    typeof HTMLElement !== 'undefined' &&
-    typeof HTMLButtonElement !== 'undefined' &&
-    'popover' in HTMLElement.prototype &&
-    typeof HTMLElement.prototype.showPopover === 'function' &&
-    typeof HTMLElement.prototype.hidePopover === 'function' &&
-    'popoverTargetElement' in HTMLButtonElement.prototype &&
-    typeof CSS !== 'undefined' &&
-    CSS.supports('position-area: block-end') &&
-    CSS.supports('width: anchor-size(width)') &&
-    CSS.supports('position-try-fallbacks: flip-block')
-  )
-}
-
-function getServerPopoverCapabilitySnapshot() {
-  return false
+type SelectContentComponentProps = SelectContentProps & {
+  readonly ref?: Ref<HTMLDivElement>
 }
 
 export function SelectContent({
@@ -32,67 +21,25 @@ export function SelectContent({
   onBeforeToggle,
   onToggle,
   popover: consumerPopover,
+  ref,
   ...contentProps
-}: SelectContentProps) {
+}: SelectContentComponentProps) {
   const select = useSelectContext('Content')
-  const highlightedOptionElementId = select.highlightedOptionElementId
-  const listboxId = select.listboxId
-  const open = select.open
+  const contentRef = useRef<HTMLDivElement | null>(null)
   const supportsNativePopover = useSyncExternalStore(
-    subscribeToPopoverCapability,
-    getPopoverCapabilitySnapshot,
-    getServerPopoverCapabilitySnapshot,
+    () => PopoverCapability.subscribe(),
+    () => PopoverCapability.getSnapshot(),
+    () => PopoverCapability.getServerSnapshot(),
   )
 
-  useLayoutEffect(() => {
-    if (!supportsNativePopover) {
-      return
-    }
+  useImperativeHandle(ref, () => contentRef.current as HTMLDivElement, [])
 
-    const contentElement = document.getElementById(listboxId)
-
-    if (!(contentElement instanceof HTMLDivElement)) {
-      return
-    }
-
-    const nativeOpen = contentElement.matches(':popover-open')
-
-    if ((!open || consumerHidden === true) && nativeOpen) {
-      contentElement.hidePopover()
-      return
-    }
-
-    if (!open || consumerHidden === true || nativeOpen) {
-      return
-    }
-
-    const triggerElement = Array.from(
-      document.querySelectorAll('[aria-controls]'),
-    ).find((candidate) => candidate.getAttribute('aria-controls') === listboxId)
-
-    if (!(triggerElement instanceof HTMLButtonElement)) {
-      return
-    }
-
-    triggerElement.popoverTargetElement = contentElement
-    contentElement.showPopover({ source: triggerElement })
-  }, [consumerHidden, listboxId, open, supportsNativePopover])
-
-  useLayoutEffect(() => {
-    if (!open || highlightedOptionElementId === undefined) {
-      return
-    }
-
-    const highlightedElement = document.getElementById(
-      highlightedOptionElementId,
-    )
-
-    if (!(highlightedElement instanceof HTMLElement)) {
-      return
-    }
-
-    highlightedElement.scrollIntoView({ block: 'nearest' })
-  }, [highlightedOptionElementId, open])
+  useNativePopoverSync({
+    contentRef,
+    consumerHidden,
+    select,
+    supportsNativePopover,
+  })
 
   function handleBeforeToggle(event: ToggleEvent<HTMLDivElement>) {
     onBeforeToggle?.(event)
@@ -106,7 +53,7 @@ export function SelectContent({
       return
     }
 
-    if (!open) {
+    if (!select.open) {
       select.openSelected()
     }
   }
@@ -127,14 +74,17 @@ export function SelectContent({
   return (
     <div
       {...contentProps}
-      id={listboxId}
+      id={select.listboxId}
+      ref={contentRef}
       role="listbox"
+      hidden={
+        consumerHidden === true || (!supportsNativePopover && !select.open)
+      }
+      onBeforeToggle={handleBeforeToggle}
+      onToggle={handleToggle}
       popover={
         supportsNativePopover ? (consumerPopover ?? 'auto') : consumerPopover
       }
-      hidden={consumerHidden === true || (!supportsNativePopover && !open)}
-      onBeforeToggle={handleBeforeToggle}
-      onToggle={handleToggle}
     >
       {children}
     </div>

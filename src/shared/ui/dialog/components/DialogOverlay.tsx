@@ -3,17 +3,18 @@ import type { ComponentProps, MouseEvent } from 'react'
 import { useDialogContext } from '../lib/DialogContext'
 import { DialogPortal } from './DialogPortal'
 
-type DialogOverlayProps = ComponentProps<'button'>
+type DialogOverlayProps = Omit<ComponentProps<'div'>, 'onClick'> & {
+  readonly onClick?: (event: MouseEvent<HTMLDivElement>) => void
+}
 
 export function DialogOverlay({
   children,
   onClick,
-  type = 'button',
-  ...buttonProps
+  ...divProps
 }: DialogOverlayProps) {
   const dialog = useDialogContext('Overlay')
 
-  function handleClick(event: MouseEvent<HTMLButtonElement>) {
+  function handleClick(event: MouseEvent<HTMLDivElement>) {
     onClick?.(event)
 
     if (event.defaultPrevented) {
@@ -29,9 +30,9 @@ export function DialogOverlay({
 
   return (
     <DialogPortal>
-      <button {...buttonProps} type={type} onClick={handleClick}>
+      <div {...divProps} role="presentation" onClick={handleClick}>
         {children}
-      </button>
+      </div>
     </DialogPortal>
   )
 }

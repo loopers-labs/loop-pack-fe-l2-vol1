@@ -1,4 +1,7 @@
+import { useRef } from 'react'
+
 import { SelectContext } from '../lib/SelectContext'
+import { SelectTriggerRefContext } from '../lib/SelectTriggerRefContext'
 import { useSelect } from '../lib/useSelect'
 import type { SelectOption, SelectRootProps } from '../types'
 
@@ -9,6 +12,11 @@ export function SelectRoot<TOption extends SelectOption>({
   onChange,
 }: SelectRootProps<TOption>) {
   const contextValue = useSelect({ options, value, onChange })
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
 
-  return <SelectContext value={contextValue}>{children}</SelectContext>
+  return (
+    <SelectTriggerRefContext value={triggerRef}>
+      <SelectContext value={contextValue}>{children}</SelectContext>
+    </SelectTriggerRefContext>
+  )
 }

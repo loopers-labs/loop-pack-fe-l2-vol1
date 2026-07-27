@@ -1,11 +1,25 @@
-import type { ComponentProps } from 'react'
+import { type ComponentProps, useId, useLayoutEffect } from 'react'
 
 import { useDialogContext } from '../lib/DialogContext'
 
 type DialogTitleProps = ComponentProps<'h2'>
 
-export function DialogTitle({ children, ...titleProps }: DialogTitleProps) {
-  useDialogContext('Title')
+export function DialogTitle({ id, children, ...titleProps }: DialogTitleProps) {
+  const dialog = useDialogContext('Title')
+  const generatedId = useId()
+  const titleId = id ?? generatedId
 
-  return <h2 {...titleProps}>{children}</h2>
+  useLayoutEffect(() => {
+    dialog.registerTitleId(titleId)
+
+    return () => {
+      dialog.registerTitleId(undefined)
+    }
+  }, [dialog, titleId])
+
+  return (
+    <h2 {...titleProps} id={titleId}>
+      {children}
+    </h2>
+  )
 }

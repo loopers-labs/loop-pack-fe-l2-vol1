@@ -3,7 +3,10 @@ import type { ComponentProps } from 'react'
 import { useDialogContext } from '../lib/DialogContext'
 import { DialogPortal } from './DialogPortal'
 
-type DialogContentProps = ComponentProps<'div'>
+type DialogContentProps = Omit<
+  ComponentProps<'div'>,
+  'aria-describedby' | 'aria-labelledby' | 'aria-modal' | 'role'
+>
 
 export function DialogContent({
   children,
@@ -17,7 +20,15 @@ export function DialogContent({
 
   return (
     <DialogPortal>
-      <div {...contentProps}>{children}</div>
+      <div
+        {...contentProps}
+        aria-describedby={dialog.descriptionId}
+        aria-labelledby={dialog.titleId}
+        aria-modal="true"
+        role="dialog"
+      >
+        {children}
+      </div>
     </DialogPortal>
   )
 }
