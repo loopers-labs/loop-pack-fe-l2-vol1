@@ -1,31 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { categories, products, waitForMockApi } from '@/app/api/_data/commerce'
+import {
+  isCategoryFilter,
+  isProductSort,
+  parsePageSizeValue,
+  parsePageValue,
+} from '@/lib/commerce/productListContract'
 import type {
   ApiErrorResponse,
   MockApiScenario,
   ProductListResponse,
-  ProductSort,
 } from '@/types/commerce'
 
-const sortValues = [
-  'latest',
-  'popular',
-  'price-asc',
-  'price-desc',
-] as const satisfies readonly ProductSort[]
+// scenario는 mock API 전용 제어값이라 목록 조건 계약에 넣지 않는다.
 const scenarioValues = [
   'empty',
   'error',
 ] as const satisfies readonly MockApiScenario[]
 
-const isProductSort = (value: string): value is ProductSort =>
-  sortValues.some((sort) => sort === value)
-
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value)
-
-const isPositiveInteger = (value: string | null) =>
-  value !== null && /^[1-9]\d*$/.test(value)
 
 export async function GET(
   request: NextRequest,
@@ -35,36 +29,18 @@ export async function GET(
   const q = params.get('q')?.trim().toLocaleLowerCase('ko') ?? ''
   const category = params.get('category')
   const sort = params.get('sort')
-  const pageValue = params.get('page') ?? '1'
-  const pageSizeValue = params.get('pageSize') ?? '12'
-  const page = Number(pageValue)
-  const pageSize = Number(pageSizeValue)
+  const page = parsePageValue(params.get('page') ?? '1')
+  const pageSize = parsePageSizeValue(params.get('pageSize') ?? '12')
 
-  if (scenario !== null && !isMockApiScenario(scenario)) {
-    return NextResponse.json(
-      { message: '요청 조건을 확인해주세요.' },
-      { status: 400 },
-    )
-  }
-
-  if (sort !== null && !isProductSort(sort)) {
-    return NextResponse.json(
-      { message: '요청 조건을 확인해주세요.' },
-      { status: 400 },
-    )
-  }
-
-  const validCategory =
-    category === null ||
-    category === 'all' ||
-    categories.some((item) => item.id === category)
-  const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page)
-  const validPageSize =
-    isPositiveInteger(pageSizeValue) &&
-    Number.isSafeInteger(pageSize) &&
-    pageSize <= 24
-
-  if (!validCategory || !validPage || !validPageSize) {
+  // 검증은 지연 이전에 끝낸다. 잘못된 요청은 scenario보다 먼저 400으로 거절한다.
+  // 조건을 한 식에 모아 page와 pageSize가 이 블록 뒤에서 number로 좁혀지게 한다.
+  if (
+    (scenario !== null && !isMockApiScenario(scenario)) ||
+    (sort !== null && !isProductSort(sort)) ||
+    (category !== null && !isCategoryFilter(category)) ||
+    page === null ||
+    pageSize === null
+  ) {
     return NextResponse.json(
       { message: '요청 조건을 확인해주세요.' },
       { status: 400 },

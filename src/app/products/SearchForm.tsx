@@ -31,6 +31,9 @@ export default function SearchForm({
           placeholder="상품명 또는 브랜드"
         />
       </label>
+      {/* 입력 하나짜리 폼은 Enter로도 제출되지만, 제출 수단이 보이지 않으면
+          터치 환경과 보조 기술 사용자는 제출 방법을 찾을 수 없다. */}
+      <button type="submit">검색</button>
     </form>
   )
 }
