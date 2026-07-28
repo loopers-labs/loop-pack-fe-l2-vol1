@@ -1,16 +1,15 @@
 {
-  "name": "loop-pack-fe-l2-vol1",
+  "name": "commerce",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "packageManager": "pnpm@10.15.1",
+  "packageManager": "pnpm@10.28.0",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "next dev",
+    "build": "next build",
     "format": "prettier . -w --cache",
     "lint": "eslint --cache --fix",
     "type": "tsc --noEmit",
-    "preview": "vite preview",
+    "start": "next start",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -23,17 +22,20 @@
     ]
   },
   "dependencies": {
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "@floating-ui/react": "^0.27.19",
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@tailwindcss/postcss": "^4.3.2",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.5.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -42,9 +44,9 @@
     "husky": "^9.1.7",
     "jiti": "^2.7.0",
     "lint-staged": "^17.0.7",
+    "postcss": "^8.5.16",
     "prettier": "^3.8.4",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.61.1",
-    "vite": "^8.0.12"
+    "tailwindcss": "^4.3.2",
+    "typescript": "^5"
   }
 }
