@@ -84,6 +84,7 @@ describe("commerce fixture", () => {
       const image = readFileSync(imagePath);
       expect(image.length).toBeGreaterThan(0);
       expect([...image.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+
       return createHash("sha256").update(image).digest("hex");
     });
 

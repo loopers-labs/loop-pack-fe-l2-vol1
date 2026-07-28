@@ -75,6 +75,7 @@ export async function GET(
     const matchesCategory =
       category === null || category === "all" || product.category === category;
     const searchable = `${product.brand} ${product.name}`.toLocaleLowerCase("ko");
+
     return matchesCategory && searchable.includes(q);
   });
 
