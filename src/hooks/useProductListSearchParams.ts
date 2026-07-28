@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { useQueryStates } from "nuqs";
+import { useCallback, useEffect, useMemo } from "react";
+import { createLoader, useQueryStates } from "nuqs";
 import {
   clampPageToLowerBound,
   FIRST_PAGE,
@@ -12,6 +12,8 @@ import type { CategoryId, ProductSort } from "@/types/commerce";
 
 const PUSH_TO_HISTORY = { history: "push" } as const;
 const REPLACE_HISTORY = { history: "replace" } as const;
+
+const loadProductListParams = createLoader(productListParsers);
 
 type ProductListFilter = {
   category?: CategoryId | "all";
@@ -34,6 +36,21 @@ export function useProductListSearchParams() {
     () => resolveProductListQuery(queryState),
     [queryState],
   );
+
+  // 하드 리로드를 한 번 거친 뒤 뒤로/앞으로가기(popstate)로 돌아오면, Next 가 그 URL 변경을 nuqs 로
+  // 전파하지 못해 조건(queryState)이 옛 값에 얼어붙는 경우가 있다 — 주소창·서버 HTML 은 새 URL 인데
+  // 입력창·조회 조건만 옛 값으로 남는다(브라우저로 확인). window.location 은 항상 진실이므로, popstate 때
+  // 그 값을 읽어 nuqs 상태를 URL 에 다시 맞춘다(새로고침 없이 클라에서 재동기화).
+  useEffect(() => {
+    const syncStateFromUrl = () =>
+      setQueryState(loadProductListParams(window.location.search), {
+        history: "replace",
+      });
+
+    window.addEventListener("popstate", syncStateFromUrl);
+
+    return () => window.removeEventListener("popstate", syncStateFromUrl);
+  }, [setQueryState]);
 
   // URL 의 page 를 유효 범위 [FIRST_PAGE, totalPages] 로 교정한다 — 상한(totalPages)는 사용하는 곳에서 넘긴다.
   // 사용자 네비가 아닌 교정이라 replace 로 덮어 뒤로가기가 무효 page 로 돌아가지 않게 한다.
