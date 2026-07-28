@@ -17,7 +17,8 @@ html {
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
+  /* clip 은 가로 넘침을 막되 스크롤 컨테이너를 만들지 않는다 — hidden 이면 자식의 position:sticky 가 깨진다 */
+  overflow-x: clip;
 }
 
 body {
