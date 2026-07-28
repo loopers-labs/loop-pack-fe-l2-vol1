@@ -2,60 +2,50 @@
   "name": "commerce",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "husky"
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.101.2",
     "next": "16.2.10",
+    "nuqs": "^2.9.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zod": "^4.4.3"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint",
-      "prettier --write"
-    ],
-    "*.{js,json,css,md}": "prettier --write"
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^10.0.1",
-    "@tailwindcss/postcss": "^4.3.2",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "husky": "^9.1.7",
+    "eslint-plugin-react-refresh": "^0.5.3",
     "jsdom": "^29.1.1",
-    "lint-staged": "^17.0.8",
-    "postcss": "^8.5.16",
-    "prettier": "^3.9.4",
-    "tailwindcss": "^4.3.2",
     "typescript": "^5",
-    "typescript-eslint": "^8.62.1",
+    "typescript-eslint": "^8.65.0",
     "vitest": "^4.1.10"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint",
-      "prettier --write"
-    ],
-    "*.{js,json,css,md}": "prettier --write"
   }
 }

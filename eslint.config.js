@@ -8,7 +8,7 @@ import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
 import react from 'eslint-plugin-react';
 
 export default tseslint.config(
-  { ignores: ['dist', 'eslint.config.js'] },
+  { ignores: ['dist', '.next', 'eslint.config.js'] },
 
   js.configs.recommended,
   tseslint.configs.strict, // strict이 async/any 전파까지 잡아줌, strictTypeChecked보다 빠름
@@ -59,13 +59,21 @@ export default tseslint.config(
     },
   },
 
+  // Next.js App Router의 layout/page는 metadata 등 non-component export가 정상 패턴
+  {
+    files: ['src/app/**/layout.tsx', 'src/app/**/page.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+
   // no-floating-promises는 타입 정보가 있어야 작동
   // 전체 파일에 걸면 느려지니까 src만 대상으로 범위 좁힘
   {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.app.json'],
+        project: ['./tsconfig.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
