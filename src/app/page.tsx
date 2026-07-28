@@ -1,29 +1,24 @@
-export default function Home() {
+// [AI] 홈 서버 prefetch: 요청마다 QueryClient를 만들어 /api/home을 미리 불러오고,
+// dehydrate/HydrationBoundary로 클라이언트에 전달한다.
+// 첫 페인트부터 상품이 노출되어 스피너를 없애고 LCP를 개선한다.
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+
+import { homeQueries } from '@/features/home/api/queries';
+import { HomeContent } from '@/features/home/ui/HomeContent';
+import { makeQueryClient } from '@/lib/queryClient';
+
+const Home = async () => {
+  // [AI] 요청마다 새 QueryClient. 모듈 스코프 싱글턴을 쓰면 요청 간 캐시가 섞인다.
+  const queryClient = makeQueryClient();
+
+  // 클라이언트 useQuery와 같은 팩토리를 써야 query key가 일치해 캐시가 적중한다.
+  await queryClient.prefetchQuery(homeQueries.home());
+
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
-        Commerce
-      </h1>
-      <p style={{ color: "#5a6675", lineHeight: 1.7, marginBottom: 24 }}>
-        4주차부터 여기에 커머스를 쌓아갑니다. 이번 주는 디자인 시스템의 뼈대
-        <b> Select</b>와 <b>Dialog</b>를 직접 만드는 것부터 시작해요.
-      </p>
-      <ul style={{ lineHeight: 2, color: "#18212e", paddingLeft: 18 }}>
-        <li>
-          컴포넌트 자리: <code>src/components/ui/select</code> ·{" "}
-          <code>src/components/ui/dialog</code>
-        </li>
-        <li>
-          mock 백엔드: <code>GET /api/products</code> (
-          <code>src/app/api/products/route.ts</code>)
-        </li>
-        <li>
-          과제 명세: <code>docs/assignments/week-04.md</code>
-        </li>
-      </ul>
-      <p style={{ color: "#8794a3", marginTop: 24, fontSize: 14 }}>
-        구조는 최소 골격만 있어요. 폴더 구성은 각자 근거를 대고 바꾸면 돼요.
-      </p>
-    </main>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <HomeContent />
+    </HydrationBoundary>
   );
-}
+};
+
+export default Home;
