@@ -1,0 +1,18 @@
+.hero {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 32px;
+  background: #ececec;
+  background-size: cover;
+  background-position: top;
+}
+
+@media (max-width: 480px) {
+  .hero {
+    min-height: 180px;
+    padding: 24px;
+  }
+}

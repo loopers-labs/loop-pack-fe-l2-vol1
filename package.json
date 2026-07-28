@@ -23,7 +23,10 @@
     "*.{ts,tsx}": [
       "eslint --max-warnings=0"
     ],
-    "*.{ts,tsx,json,css,md}": [
+    "*.{ts,tsx,json,css}": [
+      "prettier --write"
+    ],
+    "!(CLAUDE).md": [
       "prettier --write"
     ]
   },

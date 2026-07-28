@@ -1,0 +1,13 @@
+.container {
+  width: min(100% - 32px, 1200px);
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+.container a:focus-visible,
+.container button:focus-visible,
+.container input:focus-visible,
+.container select:focus-visible {
+  outline: 3px solid #2557a7;
+  outline-offset: 3px;
+}

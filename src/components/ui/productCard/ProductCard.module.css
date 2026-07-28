@@ -1,0 +1,36 @@
+.card {
+  display: grid;
+  gap: 8px;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  background: #ececec;
+  object-fit: cover;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* 찜/담기된 상태를 색으로 표시한다. aria-pressed에 걸어 접근성 상태와 시각을 함께 맞춘다.
+   위시리스트/장바구니 페이지가 아직 없어, 담김 여부를 이 버튼 색으로 확인한다.
+   ponytail: primary는 팔레트 토큰이 없어 임시 값. 브랜드 색이 정해지면 이 색만 교체한다. */
+.actions button[aria-pressed='true'] {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}

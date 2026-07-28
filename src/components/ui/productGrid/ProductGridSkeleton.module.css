@@ -1,0 +1,32 @@
+.card {
+  display: grid;
+  gap: 8px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.image {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.line {
+  height: 12px;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.short {
+  width: 60%;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

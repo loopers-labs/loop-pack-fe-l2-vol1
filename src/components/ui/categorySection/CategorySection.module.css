@@ -1,0 +1,25 @@
+.section {
+  margin-top: 40px;
+}
+
+.section > h2 {
+  margin-bottom: 16px;
+}
+
+.categories {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.categories a {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+}
+
+.categories a:focus-visible {
+  outline: 3px solid #2557a7;
+  outline-offset: 3px;
+}

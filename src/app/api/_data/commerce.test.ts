@@ -90,13 +90,17 @@ describe('commerce fixture', () => {
     }
 
     const manifest = readFileSync(imageManifestPath, 'utf8')
-    const imageRows = manifest.split('\n').filter((line) => /^\| p\d+ \|/.test(line))
-    const p1Row = imageRows.find((line) => line.startsWith('| p1 |'))
+    // prettier가 마크다운 표를 컬럼 정렬 padding으로 포맷하므로(`| p1            |`),
+    // 공백 1칸을 고정 가정하는 정규식 대신 \s*로 padding을 허용한다.
+    const imageRows = manifest.split('\n').filter((line) => /^\| p\d+\s*\|/.test(line))
+    const p1Row = imageRows.find((line) => /^\| p1\s*\|/.test(line))
 
     expect(imageRows).toHaveLength(30)
     expect(manifest).not.toMatch(/29\s*cm/i)
     expect(manifest).not.toContain('http')
-    expect(p1Row).toContain('| `p1.jpg` |')
-    expect(p1Row).toContain('| [11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG |')
+    expect(p1Row).toMatch(/\|\s*`p1\.jpg`\s*\|/)
+    expect(p1Row).toMatch(
+      /\|\s*\[11월 20일 예약배송\] Winter Rocky Pants 2color 윈터 로키팬츠 OG\s*\|/,
+    )
   })
 })

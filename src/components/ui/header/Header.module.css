@@ -1,0 +1,30 @@
+.header,
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header {
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+/* 메뉴 링크의 현재 페이지 활성 표시. 로고는 내비 항목이 아니므로 .navigation 안으로 한정해 제외한다.
+   (로고의 aria-current는 정보 제공용으로 두되 시각 스타일은 주지 않는다.) */
+.navigation a[aria-current='page'] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .header {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .navigation {
+    width: 100%;
+  }
+}
