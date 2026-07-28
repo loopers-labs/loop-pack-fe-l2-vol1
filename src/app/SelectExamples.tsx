@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useSelect } from "@/components/ui/select/useSelect";
+import { useSelect } from "@/shared/ui/select/useSelect";
 
 type BundleOption = {
   id: string;

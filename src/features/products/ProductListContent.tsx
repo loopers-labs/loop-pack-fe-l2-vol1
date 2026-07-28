@@ -1,7 +1,7 @@
 import { ProductResultSummary } from "./ProductResultSummary";
 import type { ReactNode } from "react";
 import { ProductGridSkeleton } from "@/components/commerce/ProductGridSkeleton";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/shared/ui/Skeleton";
 
 type ProductListContentProps = {
   isLoading: boolean;

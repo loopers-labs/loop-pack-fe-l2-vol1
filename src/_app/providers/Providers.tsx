@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { CommerceStoreHydrator } from "@/stores/commerce/CommerceStoreHydrator";
-import { getQueryClient } from "./get-query-client";
+import { getQueryClient } from "@/_app/config/getQueryClient";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();

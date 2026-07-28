@@ -1,4 +1,4 @@
-import { createApiUrl, parseApiError, setSearchParam } from "@/lib/apiUtils";
+import { createApiUrl, parseApiError, setSearchParam } from "@/shared/api/apiUtils";
 import type { Category, Product } from "@/types/commerce";
 import type { ProductCategoryFilter, ProductSort } from "../types";
 

@@ -1,4 +1,4 @@
-import { createApiUrl, parseApiError } from "@/lib/apiUtils";
+import { createApiUrl, parseApiError } from "@/shared/api/apiUtils";
 import type { Category, Product } from "@/types/commerce";
 
 export type HomeResponse = {

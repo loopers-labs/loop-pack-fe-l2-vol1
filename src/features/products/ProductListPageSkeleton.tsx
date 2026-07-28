@@ -1,5 +1,5 @@
 import { ProductGridSkeleton } from "@/components/commerce/ProductGridSkeleton";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/shared/ui/Skeleton";
 import { PRODUCT_LIST_PAGE_SIZE } from "./constants";
 
 export function ProductListPageSkeleton() {

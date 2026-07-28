@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog } from "@/shared/ui/dialog";
 
 export function DialogExamples() {
   return (

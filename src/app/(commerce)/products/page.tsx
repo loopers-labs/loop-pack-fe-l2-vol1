@@ -1,6 +1,6 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { getQueryClient } from "../../get-query-client";
+import { getQueryClient } from "@/_app/config/getQueryClient";
 import { ProductListPageClient } from "@/features/products/ProductListPageClient";
 import { ProductListPageSkeleton } from "@/features/products/ProductListPageSkeleton";
 import { PRODUCT_LIST_PAGE_SIZE } from "@/features/products/constants";

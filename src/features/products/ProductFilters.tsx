@@ -1,8 +1,8 @@
 import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
 import type { ProductCategoryFilter, ProductSort } from "./types";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { useSelect } from "@/components/ui/select/useSelect";
+import { useDebouncedValue } from "@/shared/lib/debounce/useDebouncedValue";
+import { useSelect } from "@/shared/ui/select/useSelect";
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300;
 

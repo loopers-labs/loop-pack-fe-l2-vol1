@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/shared/ui/Skeleton";
 
 type ProductGridSkeletonProps = {
   count?: number;

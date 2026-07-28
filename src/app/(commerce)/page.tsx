@@ -1,6 +1,6 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { getQueryClient } from "../get-query-client";
+import { getQueryClient } from "@/_app/config/getQueryClient";
 import { HomeErrorBoundary } from "@/features/home/HomeErrorBoundary";
 import { HomeLoading } from "@/features/home/HomeLoading";
 import { HomePageClient } from "@/features/home/HomePageClient";
