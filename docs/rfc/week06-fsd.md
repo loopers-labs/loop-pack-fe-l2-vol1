@@ -1,6 +1,6 @@
 # RFC: Week 06 FSD Migration
 
-> 문서 상태: Preflight와 Decision 1~4 완료. Decision 5~6과 목표 트리 확정 진행 중.
+> 문서 상태: Preflight, Decision 1~5, 목표 트리와 파일 매핑 완료. Decision 6과 마이그레이션 진행 중.
 
 ## 0. Architecture Preflight
 
@@ -128,7 +128,7 @@ cart capability의 외부 계약은 다음 중 외부 슬라이스가 실제로 
 | 2 | 단순 toggle UI를 entity의 공개 UI로 볼 것인가, 별도 정책을 가진 feature로 볼 것인가 | Decision 1 | 완료. [Decision 2](#decision-2-toggle-ui의-레이어) |
 | 3 | `ProductCard`와 행위를 page에서 조합할 것인가, widget으로 승격할 것인가 | Decision 2 | 완료. [Decision 3](#decision-3-productcard-조합-위치) |
 | 4 | 상품 목록 queryOptions의 소유자 | Decision 3의 트리 형태 | 완료. [Decision 4](#decision-4-상품-조회-계약의-소유자) |
-| 5 | 어떤 슬라이스에 Public API를 둘 것인가 | Decision 2~4 | 슬라이스별 외부 소비자를 세어 판단 |
+| 5 | 어떤 슬라이스에 Public API를 둘 것인가 | Decision 2~4와 목표 트리 | 완료. [Decision 5](#decision-5-public-api-경계) |
 | 6 | API 실패, 렌더링 실패, 이벤트 행위 실패의 전파와 복구 경계 | 구조 결정과 독립 | 실패 종류별로 생존 범위를 정의 |
 
 레이어 개수는 독립 결정으로 다루지 않는다. 개수를 먼저 정하면 그 수를 맞추려고 파일을 끼워
@@ -790,6 +790,110 @@ handler라 FSD 레이어 밖 서버 코드인데, `productListContract.ts`를 �
   경쟁안이며, 이번 전환에서 비교하지 않았다. 캐시 원본은 그대로 두고 파생만 바꾸는 방식이라
   소유자 결정과 직교하지만, 홈에 소비 화면이 하나 더 생기면 실익이 달라진다.
 
+## Decision 5. Public API 경계
+
+### Context
+
+목표 트리로 슬라이스와 그 안의 파일이 확정됐다. 이제 슬라이스마다 외부 소비자를 셀 수 있다.
+
+먼저 두 가지를 구분한다.
+
+- **barrel file**은 경로를 줄이려고 내부를 습관적으로 재수출하는 파일이다. 숨기려는 의도가
+  없고, `export *`가 쌓이면 이름 충돌과 순환 의존과 번들 비용만 남는다.
+- **Public API**는 "외부가 알아도 되는 것은 이것뿐"이라는 계약이다. 같은 `index.ts`라도
+  **무엇을 숨기려고 만들었는지**가 다르다.
+
+따라서 판단 기준은 "슬라이스마다 하나씩 두는가"가 아니라 **숨길 내부가 실제로 있는가**다.
+
+### 현재 사실
+
+목표 트리 기준 슬라이스별 외부 소비자와 숨길 대상은 다음과 같다.
+
+| 슬라이스 | 외부 소비자 | 외부가 쓰는 것 | 숨길 내부 |
+| --- | --- | --- | --- |
+| `shared/api` | `_pages/home/api`, `_pages/product-list/api`, `app/providers.tsx`, mock 백엔드 | `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf`, `ApiErrorResponse` | 없음. `readServerMessage`는 이미 모듈 비공개다 |
+| `shared/lib` | `entities/product/ui` | `formatWon` | 없음 |
+| `shared/ui` | playground | `useSelect`, dialog | 이미 `select/index.ts`가 컴포넌트를 감추고 훅만 공개한다 |
+| `entities/product` | `_pages` 둘, `widgets/product-grid`, mock 백엔드 | 타입, 허용값, 판정, `ProductCard` | 없음. `parsePositiveIntegerValue`는 이미 모듈 비공개다 |
+| `entities/cart` | `widgets/header`, `widgets/product-grid` | selector 훅, `CartToggleButton` | 없음. store 인스턴스는 이미 export하지 않는다 |
+| `entities/wishlist` | 같음 | 같음 | 없음 |
+| `widgets/product-grid` | `_pages` 둘 | `ProductGrid` | 없음. 파일이 하나다 |
+| `widgets/header` | `app/layout.tsx` | `Header` | `HeaderCounts` 하나 |
+| `_pages/home` | `app/page.tsx` | `HomePage` | `api` 세그먼트 전체 |
+| `_pages/product-list` | `app/products/page.tsx`, mock 백엔드 | `ProductListView`, `ProductListResponse` | `model`과 `api` 세그먼트 전체 |
+
+### Question
+
+어느 슬라이스에 Public API를 두는가. 두지 않는 슬라이스는 무엇으로 경계를 지키는가.
+
+### Decision
+
+**`_pages/home`과 `_pages/product-list` 두 곳에만 `index.ts`를 둔다.** 나머지 슬라이스에는
+만들지 않는다.
+
+기준은 숨길 대상의 개수다.
+
+숨길 것이 **여럿이고 여러 세그먼트에 걸쳐 있으면** Public API를 만든다. `_pages/product-list`는
+`model`에 URL parser와 조건 조립 훅이, `api`에 fetch와 queryOptions와 응답 타입이 있다.
+Decision 4는 "조회 조건을 바꿀 때 고칠 파일이 한 슬라이스에 모인다"를 이 결정의 이득으로
+적었는데, 외부가 `_pages/product-list/model/searchParams`를 직접 참조하기 시작하면 그 이득이
+사라진다. 막을 대상이 여섯 개가 넘어 규칙으로 열거하기 어렵다.
+
+숨길 것이 **하나면** 검증 항목으로 처리한다. `widgets/header`가 그렇다. 감추고 싶은 것은
+`HeaderCounts` 하나이고 소비자도 `app/layout.tsx` 하나다. 파일을 만들어 막는 대신 Validation에
+한 줄로 적는다.
+
+숨길 것이 **없으면** 아무것도 만들지 않는다. `entities` 셋과 `shared`가 여기 해당한다.
+이 슬라이스들은 이미 파일 단위 export로 경계를 지키고 있다. `entities/cart/model`이 Zustand
+store 인스턴스를 export하지 않고 selector 훅만 내보내는 것이 그 예다. 이것이 `index.ts`
+없이도 성립하는 Public API이며, 5주차에 이미 그렇게 쓰고 있었다.
+
+### Rejected
+
+#### A. 모든 슬라이스에 `index.ts`를 둔다
+
+FSD 문서에서 가장 흔히 보는 형태다. 반려하는 이유는 우리 슬라이스 여덟 개 중 여섯 개에 숨길
+내부가 없기 때문이다. 그 여섯 개의 `index.ts`는 내부를 그대로 재수출하는 파일이 되고, 그것이
+정확히 barrel이다. 경계 의도가 없는 재수출은 이름 충돌과 순환 의존의 입구가 된다.
+
+Decision 2에서 이미 같은 판단을 했다. `index.ts` 개수는 슬라이스 개수의 함수라서 그 자체로는
+아무 정보도 아니고, 레이어를 여는 근거가 개수가 아니라 담을 책임이듯 Public API를 만드는
+근거도 개수가 아니라 숨길 내부다.
+
+#### B. 아무 데도 두지 않는다
+
+파일 단위 export만으로 충분하다는 입장이다. 다른 슬라이스에서는 실제로 충분하지만
+`_pages` 둘에서는 부족하다. 페이지 슬라이스는 목적상 여러 세그먼트를 가지고, 그중 외부가
+알아도 되는 것은 화면 컴포넌트 하나뿐이다. 이 비대칭을 파일 없이 지키려면 규칙을 여섯 줄
+넘게 적어야 하고, 규칙이 길어질수록 지켜지지 않는다.
+
+### Consequences
+
+- `index.ts`가 둘 생긴다. 각각 한 줄이 아니라 "무엇을 공개하는가"를 적은 계약이 된다.
+- mock 백엔드가 `_pages/product-list`의 `ProductListResponse`를 참조한다. 이 타입은
+  Public API에 포함해야 한다. 프론트엔드 소비자가 아닌 쪽 때문에 공개 표면이 하나 늘어난다.
+  예외 규칙 표에 이미 적힌 항목이므로 새 예외는 아니다.
+- 나머지 슬라이스는 deep import가 가능한 상태로 남는다. 파일을 옮기면 소비자가 깨진다.
+  대신 슬라이스가 작아서 옮길 일이 적다는 것에 기대고 있다. 이 기대가 틀리면 Revisit한다.
+- 경계를 기계가 아니라 사람이 지킨다. Advanced A(의존성 하네스)를 하면 이 부담이 도구로
+  옮겨간다.
+
+### Validation
+
+- `app/page.tsx`와 `app/products/page.tsx`가 각 페이지 슬라이스의 `index.ts`만 import한다.
+- 어느 슬라이스도 `_pages/*/model`이나 `_pages/*/api`를 직접 import하지 않는다.
+- `app/layout.tsx`가 `HeaderCounts`를 직접 import하지 않는다.
+- 새로 만든 `index.ts`에 `export *`가 없다. 무엇을 공개하는지 이름으로 적혀 있다.
+- 소비자가 없는 `index.ts`가 없다.
+
+### Revisit
+
+- 한 슬라이스의 내부 파일을 옮겼는데 다른 슬라이스가 깨진다. deep import가 실제 비용이 된
+  시점이다.
+- `entities` 슬라이스에 외부가 알면 안 되는 내부가 생긴다. cart에 서버 동기화가 붙어
+  낙관적 업데이트용 내부 상태가 생기는 경우가 그렇다.
+- 슬라이스가 늘어 "무엇이 공개인가"를 파일을 열어야 알 수 있게 된다.
+
 ## 1. RADIO
 
 전체 구조를 빠르게 이해하기 위한 본문이다. 논쟁이 있었던 항목의 선택 근거와 반려 이유는
@@ -1045,14 +1149,12 @@ cart와 wishlist는 capability 모델과 store를 모두 분리한다. 대안 �
 - `ProductCard`는 cart와 wishlist 구현을 직접 import하지 않는다.
 - 상위 조합부가 `ProductCard`와 사용자 행위를 연결한다.
 - 각 capability는 selector hook과 action hook만 공개하고 store 구현체는 공개하지 않는다.
+- Public API는 `_pages` 두 슬라이스에만 둔다. 나머지는 파일 단위 export로 경계를 지킨다.
+  근거와 반려한 대안은 [Decision 5](#decision-5-public-api-경계)를 따른다.
 
 #### 미정
 
-- 각 슬라이스에 Public API가 필요한가 (Decision 5)
-- Decision 5의 확인된 입력: `entities/wishlist`와 `entities/cart`는 조합부 밖에 Header라는
-  외부 소비자를 가진다. 소비 형태는 개수 selector 하나다.
-- Decision 5의 확인된 입력: `shared`의 목록 조건 계약은 화면과 mock API route 양쪽이
-  소비한다. FSD 레이어 밖 서버 코드가 소비자로 들어오는 유일한 경우다.
+- 실패 종류별 전파와 복구 경계 (Decision 6)
 
 ### O — Optimization
 
