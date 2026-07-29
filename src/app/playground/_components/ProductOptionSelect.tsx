@@ -4,8 +4,8 @@
 // 같은 useSelect 훅, 생김새만 다르다. 선택된 "객체"의 가격으로 결제 금액을 계산한다.
 
 import { useState } from 'react'
-import { useSelect } from '@/components/ui/select'
-import { formatWon } from '@/lib/formatWon'
+import { useSelect } from '@/shared/ui/select'
+import { formatWon } from '@/shared/lib/formatWon'
 
 interface AmpouleOption {
   id: string

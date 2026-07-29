@@ -1,23 +1,8 @@
-import {
-  afterEach,
-  describe,
-  expect,
-  it,
-  vi,
-  type MockedFunction,
-} from 'vitest'
-import {
-  ApiError,
-  errorMessageOf,
-  fetchProducts,
-  isRetryable,
-  isTimeout,
-  REQUEST_TIMEOUT_MS,
-} from './api'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { fetchProducts } from './api'
 
-// 요청 URL이 조건 객체와 어긋나지 않는지, 실패가 throw로 승격되는지 검증한다.
-// 실패는 status와 서버 메시지를 구조로 남겨야 소비자가 문자열을 파싱하지 않는다.
-// 응답은 실제 Response로 만든다. 부분 객체를 캐스팅하면 본문 파싱 경로가 실물과 달라진다.
+// 조건 객체가 요청 URL로 어떻게 펼쳐지는지만 검증한다.
+// 실패 표현과 타임아웃은 전송 계층의 책임이라 shared/api/http.test.ts가 맡는다.
 
 const defaultCondition = {
   q: '',
@@ -27,50 +12,23 @@ const defaultCondition = {
   pageSize: 12,
 } as const
 
-const emptyListBody = {
-  products: [],
-  categories: [],
-  totalCount: 0,
-  page: 1,
-  pageSize: 12,
-}
-
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status })
-
-const stubFetch = (response: Response) => {
-  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(response)
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
-}
-
-const requestedUrlOf = (fetchMock: MockedFunction<typeof fetch>) =>
-  String(fetchMock.mock.calls[0][0])
-
-const signalOf = (fetchMock: MockedFunction<typeof fetch>) => {
-  const signal = fetchMock.mock.calls[0][1]?.signal
-  if (!signal) throw new Error('요청에 중단 신호가 걸리지 않았다')
-  return signal
-}
-
-// AbortSignal.reason은 DOM 타입 정의상 any다. 이 함수 하나로 가두고 밖으로는 unknown만 낸다.
-const abortReasonOf = (signal: AbortSignal): unknown => signal.reason
-
-// 실패를 기대하는 테스트가 매번 캐스팅하지 않도록, 여기서 타입을 좁혀서 돌려준다.
-const rejectionOf = async (pending: Promise<unknown>): Promise<unknown> =>
-  pending.then(
-    () => {
-      throw new Error('실패를 기대했지만 요청이 성공했다')
-    },
-    (thrown: unknown) => thrown,
+const emptyListResponse = () =>
+  new Response(
+    JSON.stringify({
+      products: [],
+      categories: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 12,
+    }),
   )
 
-const apiErrorOf = async (pending: Promise<unknown>): Promise<ApiError> => {
-  const thrown = await rejectionOf(pending)
-  if (!(thrown instanceof ApiError)) {
-    throw new Error(`ApiError를 기대했지만 ${String(thrown)}를 받았다`)
-  }
-  return thrown
+const stubFetch = () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockImplementation(() => Promise.resolve(emptyListResponse()))
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
 }
 
 afterEach(() => {
@@ -79,17 +37,17 @@ afterEach(() => {
 
 describe('fetchProducts', () => {
   it('기본 정렬을 포함한 모든 조건을 명시해 요청한다', async () => {
-    const fetchMock = stubFetch(jsonResponse(emptyListBody))
+    const fetchMock = stubFetch()
 
     await fetchProducts(defaultCondition)
 
-    expect(requestedUrlOf(fetchMock)).toBe(
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
       '/api/products?category=all&sort=latest&page=1&pageSize=12',
     )
   })
 
   it('검색어가 있으면 q를 포함하고, 비어 있으면 뺀다', async () => {
-    const fetchMock = stubFetch(jsonResponse(emptyListBody))
+    const fetchMock = stubFetch()
 
     await fetchProducts({
       q: '니트',
@@ -99,109 +57,10 @@ describe('fetchProducts', () => {
       pageSize: 12,
     })
 
-    const requestedUrl = requestedUrlOf(fetchMock)
+    const requestedUrl = String(fetchMock.mock.calls[0][0])
     expect(requestedUrl).toContain('q=%EB%8B%88%ED%8A%B8')
     expect(requestedUrl).toContain('category=casual')
     expect(requestedUrl).toContain('sort=price-asc')
     expect(requestedUrl).toContain('page=2')
-  })
-
-  it('쿼리 취소 신호를 fetch까지 전달한다', async () => {
-    const fetchMock = stubFetch(jsonResponse(emptyListBody))
-    const controller = new AbortController()
-
-    await fetchProducts(defaultCondition, controller.signal)
-
-    // 타임아웃과 합쳐진 신호라 동일 객체는 아니다. 취소가 전달되는지로 검증한다.
-    const passedSignal = signalOf(fetchMock)
-    expect(passedSignal.aborted).toBe(false)
-    controller.abort()
-    expect(passedSignal.aborted).toBe(true)
-  })
-
-  it('호출자가 신호를 주지 않아도 타임아웃 신호를 건다', async () => {
-    const fetchMock = stubFetch(jsonResponse(emptyListBody))
-
-    await fetchProducts(defaultCondition)
-
-    expect(signalOf(fetchMock).aborted).toBe(false)
-  })
-
-  it('응답이 오지 않으면 타임아웃으로 요청을 끊는다', async () => {
-    const neverResolving = vi.fn<typeof fetch>((_input, init) => {
-      const signal = init?.signal
-      return new Promise<Response>((_resolve, reject) => {
-        signal?.addEventListener('abort', () => {
-          reject(abortReasonOf(signal))
-        })
-      })
-    })
-    vi.stubGlobal('fetch', neverResolving)
-
-    vi.useFakeTimers()
-    const pending = rejectionOf(fetchProducts(defaultCondition))
-    await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS)
-    const error = await pending
-    vi.useRealTimers()
-
-    expect(isTimeout(error)).toBe(true)
-  })
-
-  it('HTTP 실패는 throw로 승격된다. 쿼리가 에러 상태를 알 수 있는 유일한 길이다', async () => {
-    stubFetch(new Response(null, { status: 500 }))
-
-    const error = await apiErrorOf(fetchProducts(defaultCondition))
-
-    expect(error.status).toBe(500)
-  })
-
-  it('실패 응답의 status와 서버 메시지를 구조로 전달한다', async () => {
-    stubFetch(jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400))
-
-    const error = await apiErrorOf(fetchProducts(defaultCondition))
-
-    expect(error.status).toBe(400)
-    expect(error.serverMessage).toBe('요청 조건을 확인해주세요.')
-  })
-
-  it('본문이 JSON이 아니면 status만 남기고 원래 실패를 가리지 않는다', async () => {
-    // 프록시 오류 페이지나 빈 본문이 여기 해당한다.
-    stubFetch(new Response('<html>Bad Gateway</html>', { status: 502 }))
-
-    const error = await apiErrorOf(fetchProducts(defaultCondition))
-
-    expect(error.status).toBe(502)
-    expect(error.serverMessage).toBeUndefined()
-    expect(error.message).toContain('HTTP 502')
-  })
-})
-
-describe('실패 분류', () => {
-  it('400대는 재시도해도 결과가 같으므로 재시도 대상이 아니다', () => {
-    expect(isRetryable(new ApiError(400))).toBe(false)
-    expect(isRetryable(new ApiError(404))).toBe(false)
-  })
-
-  it('서버 오류와 네트워크 실패는 재시도 대상이다', () => {
-    expect(isRetryable(new ApiError(500))).toBe(true)
-    expect(isRetryable(new TypeError('Failed to fetch'))).toBe(true)
-  })
-
-  it('서버 메시지가 있으면 화면 문구 대신 그것을 쓴다', () => {
-    expect(
-      errorMessageOf(new ApiError(400, '조건을 확인해주세요.'), '기본'),
-    ).toBe('조건을 확인해주세요.')
-    expect(errorMessageOf(new ApiError(500), '기본')).toBe('기본')
-    expect(errorMessageOf(new TypeError('Failed to fetch'), '기본')).toBe(
-      '기본',
-    )
-  })
-
-  it('타임아웃은 서버 메시지가 없어도 전용 안내를 쓴다', () => {
-    const timeout = new DOMException('timed out', 'TimeoutError')
-
-    expect(isTimeout(timeout)).toBe(true)
-    expect(isRetryable(timeout)).toBe(true)
-    expect(errorMessageOf(timeout, '기본')).toContain('지연')
   })
 })

@@ -4,8 +4,8 @@
 // 같은 useSelect 훅. 선택된 객체의 수량·가격·배송 정보로 개당가와 배송비를 계산한다.
 
 import { useState } from 'react'
-import { useSelect } from '@/components/ui/select'
-import { formatWon } from '@/lib/formatWon'
+import { useSelect } from '@/shared/ui/select'
+import { formatWon } from '@/shared/lib/formatWon'
 
 interface BundleOption {
   id: string

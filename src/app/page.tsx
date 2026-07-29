@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import ProductCard from '@/components/commerce/ProductCard'
-import { errorMessageOf, isRetryable } from '@/lib/commerce/api'
+import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { commerceQueries } from '@/lib/commerce/queries'
 
 export default function HomePage() {

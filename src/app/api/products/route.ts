@@ -6,11 +6,8 @@ import {
   parsePageSizeValue,
   parsePageValue,
 } from '@/lib/commerce/productListContract'
-import type {
-  ApiErrorResponse,
-  MockApiScenario,
-  ProductListResponse,
-} from '@/types/commerce'
+import type { ApiErrorResponse } from '@/shared/api/http'
+import type { MockApiScenario, ProductListResponse } from '@/types/commerce'
 
 // scenario는 mock API 전용 제어값이라 목록 조건 계약에 넣지 않는다.
 const scenarioValues = [
