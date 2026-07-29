@@ -16,7 +16,7 @@ function getScrollbarWidth(page: Page) {
 test('다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫히면 풀린다', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/demos');
 
   // 전제: 페이지가 뷰포트보다 길어 스크롤 가능하다
   await page.evaluate(() => window.scrollTo(0, 200));
@@ -28,26 +28,29 @@ test('다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫�
     page.getByRole('heading', { name: '배송·교환 안내' }),
   ).toBeVisible();
 
+  const lockedScrollY = await getScrollY(page);
+
   // overflow hidden은 프로그램 스크롤(scrollTo)은 막지 않으므로 유저 입력(휠)으로 검증한다
   await page.mouse.move(10, 10);
   await page.mouse.wheel(0, 500);
   await page.waitForTimeout(200);
-  expect(await getScrollY(page)).toBe(0);
+  expect(await getScrollY(page)).toBe(lockedScrollY);
 
   await page.getByRole('button', { name: '확인' }).click();
   await expect(
     page.getByRole('heading', { name: '배송·교환 안내' }),
   ).toBeHidden();
 
+  const unlockedScrollY = await getScrollY(page);
   await page.mouse.move(10, 10);
   await page.mouse.wheel(0, 500);
-  await expect.poll(() => getScrollY(page)).toBeGreaterThan(0);
+  await expect.poll(() => getScrollY(page)).toBeGreaterThan(unlockedScrollY);
 });
 
 test('스크롤바 폭만큼 body padding이 보상되어 컨텐츠가 밀리지 않는다', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/demos');
 
   // config의 ignoreDefaultArgs로 스크롤바를 살렸으므로 폭이 있어야 정상. 0이면 검증 불가 환경이다
   const scrollbarWidth = await getScrollbarWidth(page);
@@ -82,7 +85,7 @@ test('스크롤바 폭만큼 body padding이 보상되어 컨텐츠가 밀리지
 test('열린 다이얼로그(포탈)가 페이지 컨텐츠 위를 실제로 덮는다', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/demos');
 
   const trigger = page.getByRole('button', { name: '배송·교환 안내 보기' });
   await trigger.click();

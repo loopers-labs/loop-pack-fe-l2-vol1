@@ -1,0 +1,178 @@
+.week05-page {
+  width: min(100% - 32px, 1200px);
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+.week05-header,
+.week05-header-actions,
+.week05-header nav,
+.week05-product-actions,
+.week05-filters,
+.week05-pagination,
+.week05-categories,
+.week05-price {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.week05-header {
+  justify-content: space-between;
+  padding-bottom: 24px;
+  font-weight: 700;
+}
+
+/* 복원 전 빈 자리와 숫자의 폭을 같게 해 헤더가 밀리지 않게 한다.
+   상품이 30개라 개수가 두 자리까지 가므로 2ch(숫자 두 칸)를 예약한다. */
+.week05-count {
+  display: inline-block;
+  min-width: 2ch;
+  font-variant-numeric: tabular-nums;
+}
+
+.week05-hero {
+  position: relative;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 32px;
+  background-color: #ececec;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+}
+
+.week05-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.55));
+}
+
+.week05-hero > * {
+  position: relative;
+}
+
+.week05-hero h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.week05-section {
+  margin-top: 40px;
+}
+
+.week05-section > h2 {
+  margin-bottom: 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.week05-categories a {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  border-radius: 999px;
+}
+
+.week05-filters {
+  margin-bottom: 20px;
+}
+
+.week05-filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.week05-filters input,
+.week05-filters select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+.week05-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.week05-product {
+  display: grid;
+  gap: 6px;
+}
+
+.week05-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  background: #ececec;
+  object-fit: cover;
+}
+
+.week05-brand {
+  font-size: 0.8125rem;
+  color: #8794a3;
+}
+
+.week05-name {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.week05-price strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.week05-original {
+  font-size: 0.8125rem;
+  color: #8794a3;
+  text-decoration: line-through;
+}
+
+.week05-pagination {
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.week05-product-actions button,
+.week05-pagination button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+}
+
+.week05-product-actions button[aria-pressed='true'] {
+  border-color: #2557a7;
+  color: #2557a7;
+}
+
+.week05-pagination button:disabled {
+  color: #8794a3;
+  cursor: not-allowed;
+}
+
+.week05-status,
+.week05-empty {
+  padding: 48px 0;
+  text-align: center;
+  color: #5a6675;
+}
+
+.week05-page a:focus-visible {
+  outline: 3px solid #2557a7;
+  outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .week05-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

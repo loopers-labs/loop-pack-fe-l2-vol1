@@ -5,10 +5,15 @@ Loopers 프론트엔드 과정(TypeScript · React · Next.js)의 과제 제출 
 
 ## 시작하기
 
+필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`는 현재 권장 LTS를 고정하고, `package.json`의 Node.js 범위(`>=22.12.0`)는 지원 가능한 Node.js 22 이상을 허용합니다.
+
 ```bash
+nvm use
 pnpm install
 pnpm dev
 ```
+
+`pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 테스트, lint, 타입 검사, 프로덕션 빌드를 순서대로 실행하며 네 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
 
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
 
@@ -16,10 +21,14 @@ pnpm dev
 
 ```
 src/
-  app/                     # Next App Router
+  app/                     # Next App Router — 라우트와 화면 조립
+    (home)/                # 홈 화면 (route group, URL에는 안 드러남)
+    products/              # 상품 목록 화면
     api/products/route.ts  # mock 백엔드 (route handler)
-    layout.tsx  page.tsx
-  components/
+    layout.tsx
+  features/                # 도메인 단위 기능
+    products/              # 홈·상품 목록 — 5주차
+  shared/                  # 여러 기능이 공유하는 것만
     ui/
       select/              # Select (Headless) — 4주차 1단계
       dialog/              # Dialog (Compound) — 4주차 2단계
