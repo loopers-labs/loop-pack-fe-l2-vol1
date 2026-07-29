@@ -1,6 +1,6 @@
 import { ProductCard } from "@/entities/product";
 import type { ProductCardItem } from "@/entities/product";
-import { useCommerceStore } from "@/stores/commerce/store";
+import { useCommerceStore } from "@/_app/model/commerceStore";
 
 type CommerceProductCardProps = {
   product: ProductCardItem;

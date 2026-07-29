@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommerceHeader } from "@/components/commerce/CommerceHeader";
 import { ProductListPageClient } from "./ProductListPageClient";
 import { getProducts } from "./api/productApi";
-import { useCommerceStore } from "@/stores/commerce/store";
+import { useCommerceStore } from "@/_app/model/commerceStore";
 import type { Product } from "@/entities/product";
 
 vi.mock("./api/productApi", async (importOriginal) => ({

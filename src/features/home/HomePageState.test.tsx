@@ -8,7 +8,7 @@ import { HomeErrorBoundary } from "./HomeErrorBoundary";
 import { HomeLoading } from "./HomeLoading";
 import { HomePageClient } from "./HomePageClient";
 import { getHome } from "./api/homeApi";
-import { useCommerceStore } from "@/stores/commerce/store";
+import { useCommerceStore } from "@/_app/model/commerceStore";
 import type { Product } from "@/entities/product";
 
 vi.mock("./api/homeApi", () => ({

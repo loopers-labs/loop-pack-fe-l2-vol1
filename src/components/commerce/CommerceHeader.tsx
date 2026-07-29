@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCommerceStore } from "@/stores/commerce/store";
+import { useCommerceStore } from "@/_app/model/commerceStore";
 
 export function CommerceHeader() {
   const hasHydrated = useCommerceStore((state) => state.hasHydrated);

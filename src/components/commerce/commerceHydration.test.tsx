@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommerceHeader } from "./CommerceHeader";
 import { CommerceProductCard } from "./CommerceProductCard";
 import type { ProductCardItem } from "@/entities/product";
-import { COMMERCE_STORE_STORAGE_KEY } from "@/stores/commerce/persistence";
-import { useCommerceStore } from "@/stores/commerce/store";
-import { CommerceStoreHydrator } from "@/stores/commerce/CommerceStoreHydrator";
+import { COMMERCE_STORE_STORAGE_KEY } from "@/_app/model/commercePersistence";
+import { useCommerceStore } from "@/_app/model/commerceStore";
+import { CommerceStoreHydrator } from "@/_app/providers/CommerceStoreHydrator";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),

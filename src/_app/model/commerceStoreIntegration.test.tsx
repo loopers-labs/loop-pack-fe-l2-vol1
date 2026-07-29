@@ -7,7 +7,7 @@ import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListPageClient } from "@/features/products/ProductListPageClient";
 import { getProducts } from "@/features/products/api/productApi";
-import { useCommerceStore } from "@/stores/commerce/store";
+import { useCommerceStore } from "@/_app/model/commerceStore";
 import type { Product } from "@/entities/product";
 import { ProductSection } from "@/components/commerce/ProductSection";
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useCommerceStore } from "./store";
-import type { CommerceStore } from "./store";
+import { useCommerceStore } from "./commerceStore";
+import type { CommerceStore } from "./commerceStore";
 
 describe("useCommerceStore", () => {
   beforeEach(() => {

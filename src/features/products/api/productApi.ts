@@ -1,6 +1,6 @@
 import { createApiUrl, parseApiError, setSearchParam } from "@/shared/api/apiUtils";
 import type { Category } from "@/entities/category";
-import type { CategoryId } from "@/entities/category/@x/product";
+import type { CategoryId } from "@/entities/category";
 import type { Product, ProductSort } from "@/entities/product";
 
 export type ProductListQuery = {

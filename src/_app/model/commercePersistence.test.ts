@@ -4,8 +4,8 @@ import {
   COMMERCE_STORE_VERSION,
   normalizePersistedCommerceState,
   selectPersistedCommerceState,
-} from "./persistence";
-import type { CommerceStore } from "./store";
+} from "./commercePersistence";
+import type { CommerceStore } from "./commerceStore";
 
 describe("commerce persistence", () => {
   it("저장소 이름과 version을 고정한다", () => {

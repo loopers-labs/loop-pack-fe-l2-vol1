@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useCommerceStore } from "./store";
+import { useCommerceStore } from "@/_app/model/commerceStore";
 
 export function CommerceStoreHydrator() {
   useEffect(() => {

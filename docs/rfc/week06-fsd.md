@@ -106,7 +106,7 @@ src/features/toggle-wishlist    # 위시리스트 토글 행위
 src/entities/product            # 상품 타입, 상품 표시 UI
 src/entities/cart               # 장바구니 상태/model
 src/entities/wishlist           # 위시리스트 상태/model
-src/entities/category           # 카테고리 타입/상수, product 전용 @x 공개 API
+src/entities/category           # 카테고리 타입/상수
 
 src/shared                      # 비즈니스에 종속되지 않는 UI/lib/api/config
 ```
@@ -129,12 +129,12 @@ API query param, `Product.category` 필드에 모두 걸쳐 있는 도메인 식
 따라서 `_pages/products`나 `features/filter-products`가 아니라 `entities/category`가 `CategoryId`,
 `Category`, 카테고리 상수를 소유한다.
 
-다만 `Product.category`는 `CategoryId`를 참조하므로 product entity와 category entity 사이에
-cross-import 후보가 생긴다.
-이 관계를 일반 Public API import로 숨기지 않고 `entities/category/@x/product`를 통해
-product entity에 필요한 타입만 공개한다.
-`@x`는 entity 간 관계를 명시하기 위한 예외 통로이므로 `CategoryId` 같은 타입 공개로 제한하고,
-category 내부 parser나 화면별 정책은 노출하지 않는다.
+다만 `Product.category`와 `Category.id`는 같은 literal union 값을 공유하므로
+product entity와 category entity 사이에 cross-import 후보가 생긴다.
+이번 전환에서는 `@x`를 만들지 않고, product entity 안에 `ProductCategoryId`를 별도로 둔다.
+두 타입은 같은 문자열 집합을 반복하지만 TypeScript의 구조적 타입 호환으로 함께 사용할 수 있다.
+카테고리 값이 바뀔 때 product/category 양쪽 타입을 같이 수정해야 하는 trade-off는 있지만,
+현재 규모에서는 entity 간 cross-import를 열어두는 비용보다 단순한 중복이 낫다고 판단한다.
 
 ### 사용할 레이어와 사용하지 않을 레이어
 
@@ -184,15 +184,10 @@ import { AddToCartButton } from "@/features/add-to-cart";
 import { getProductBadges } from "@/shared/lib";
 ```
 
-예외:
-
-```ts
-// product entity가 Product.category 타입을 표현하기 위해 category entity의 product 전용 공개 API를 참조한다.
-import type { CategoryId } from "@/entities/category/@x/product";
-```
-
-이 예외는 `Product.category`와 `CategoryId` 사이의 도메인 관계를 코드 구조에 드러내기 위한 것이다.
-같은 entity layer 간 일반 import를 넓게 허용하지 않고, product 전용 `@x` entry만 열어 변경 영향을 좁힌다.
+entity 간 cross-import는 이번 기본 전환에서는 만들지 않는다.
+`Product.category`는 `entities/product`의 `ProductCategoryId`를 사용하고,
+`Category.id`는 `entities/category`의 `CategoryId`를 사용한다.
+두 타입은 동일한 literal union을 의도적으로 중복해 entity 경계를 단순하게 유지한다.
 
 ### 마이그레이션 계획
 
@@ -211,17 +206,17 @@ import type { CategoryId } from "@/entities/category/@x/product";
 
 ## D — Data Model
 
-| 상태                        | Source of Truth             | 소유 슬라이스/레이어                                   | 소비하는 곳                        | 이동 후에도 중복 저장하지 않는 방법                                                                               |
-| --------------------------- | --------------------------- | ------------------------------------------------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| 홈 배너, 인기 상품, 신상품  | 서버/TanStack Query         | `_pages/home` query 조합, `entities/product` 상품 타입 | 홈                                 | 서버 응답을 Zustand에 복사하지 않고 Query 캐시만 사용한다.                                                        |
-| 상품 목록 조회 결과         | 서버/TanStack Query         | `_pages/products/api`, `entities/product` 상품 타입    | 상품 목록                          | 상품 목록 API는 page aggregate로 두고, 상품 객체는 Query 응답으로만 소비하며 cart/wishlist에는 ID만 저장한다.     |
-| 카테고리 목록/카테고리 타입 | 서버 응답 + category entity | `entities/category`                                    | 홈, 상품 목록 필터, product entity | 카테고리 타입과 상수는 category entity가 소유하고, product entity에는 `@x/product`로 `CategoryId`만 공개한다.     |
-| 검색, 정렬, 페이지          | URL/nuqs                    | `_pages/products/model`                                | 상품 목록                          | URL parser 결과를 query key와 API 요청에 사용하고 별도 전역 상태로 복사하지 않는다.                               |
-| 검색 input draft            | React 로컬 상태             | `_pages/products/ui`                                   | 상품 필터                          | debounce 전 입력값만 로컬 state로 두고 확정 조건은 URL에 둔다. 현재 한 page 전용이므로 feature로 승격하지 않는다. |
-| 장바구니                    | Zustand persist             | `entities/cart/model`                                  | 헤더, 상품 행위 UI                 | 상품 ID map만 저장하고 상품 응답을 복사하지 않는다.                                                               |
-| 위시리스트                  | Zustand persist             | `entities/wishlist/model`                              | 헤더, 상품 행위 UI                 | 상품 ID map만 저장하고 상품 응답을 복사하지 않는다.                                                               |
-| 헤더 개수                   | 파생값                      | `widgets/header`에서 selector로 소비                   | 헤더                               | cart/wishlist map key 개수로 계산한다.                                                                            |
-| Dialog 열림 여부            | React 로컬 상태             | 해당 UI                                                | Dialog 예시/사용처                 | 전역 상태로 올리지 않는다.                                                                                        |
+| 상태                        | Source of Truth             | 소유 슬라이스/레이어                                   | 소비하는 곳                        | 이동 후에도 중복 저장하지 않는 방법                                                                                    |
+| --------------------------- | --------------------------- | ------------------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 홈 배너, 인기 상품, 신상품  | 서버/TanStack Query         | `_pages/home` query 조합, `entities/product` 상품 타입 | 홈                                 | 서버 응답을 Zustand에 복사하지 않고 Query 캐시만 사용한다.                                                             |
+| 상품 목록 조회 결과         | 서버/TanStack Query         | `_pages/products/api`, `entities/product` 상품 타입    | 상품 목록                          | 상품 목록 API는 page aggregate로 두고, 상품 객체는 Query 응답으로만 소비하며 cart/wishlist에는 ID만 저장한다.          |
+| 카테고리 목록/카테고리 타입 | 서버 응답 + category entity | `entities/category`, `entities/product`의 중복 id 타입 | 홈, 상품 목록 필터, product entity | category entity는 `CategoryId`를, product entity는 `ProductCategoryId`를 각각 소유해 entity 간 import를 만들지 않는다. |
+| 검색, 정렬, 페이지          | URL/nuqs                    | `_pages/products/model`                                | 상품 목록                          | URL parser 결과를 query key와 API 요청에 사용하고 별도 전역 상태로 복사하지 않는다.                                    |
+| 검색 input draft            | React 로컬 상태             | `_pages/products/ui`                                   | 상품 필터                          | debounce 전 입력값만 로컬 state로 두고 확정 조건은 URL에 둔다. 현재 한 page 전용이므로 feature로 승격하지 않는다.      |
+| 장바구니                    | Zustand persist             | `entities/cart/model`                                  | 헤더, 상품 행위 UI                 | 상품 ID map만 저장하고 상품 응답을 복사하지 않는다.                                                                    |
+| 위시리스트                  | Zustand persist             | `entities/wishlist/model`                              | 헤더, 상품 행위 UI                 | 상품 ID map만 저장하고 상품 응답을 복사하지 않는다.                                                                    |
+| 헤더 개수                   | 파생값                      | `widgets/header`에서 selector로 소비                   | 헤더                               | cart/wishlist map key 개수로 계산한다.                                                                                 |
+| Dialog 열림 여부            | React 로컬 상태             | 해당 UI                                                | Dialog 예시/사용처                 | 전역 상태로 올리지 않는다.                                                                                             |
 
 ### Zustand store 조합 결정
 
@@ -245,18 +240,18 @@ Zustand 공식 Slices Pattern도 개별 slice를 조합해 하나의 bounded sto
 
 ### 슬라이스 공개 API 초안
 
-| 슬라이스                   | 공개할 값                                                             | 숨길 구현 세부                                           |
-| -------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- |
-| `entities/product`         | `Product`, `ProductSort`, `PRODUCT_SORTS`, `ProductCard`              | ProductCard adapter 세부, 화면별 상품 목록 조회 정책     |
-| `entities/category`        | `Category`, `CategoryId`, `CATEGORY_IDS`, `@x/product`의 `CategoryId` | parser 구현 세부, 화면별 필터 옵션                       |
-| `entities/cart`            | cart selector/action hook                                             | Zustand store shape, persist storage key, migration 세부 |
-| `entities/wishlist`        | wishlist selector/action hook                                         | Zustand store shape, persist storage key, migration 세부 |
-| `features/add-to-cart`     | `AddToCartButton` 또는 `useAddToCart`                                 | Zustand map 구조, cart entity 연결 세부                  |
-| `features/toggle-wishlist` | `ToggleWishlistButton` 또는 `useToggleWishlist`                       | Zustand map 구조, wishlist entity 연결 세부              |
-| `widgets/product-card`     | `CommerceProductCard`                                                 | product UI와 cart/wishlist feature 조합 세부             |
-| `widgets/header`           | `CommerceHeader`                                                      | cart/wishlist count 구독 및 표시 조합                    |
-| `_pages/products`          | `ProductListPage`, loading/error UI                                   | 내부 query/result/filter/url 조합                        |
-| `_pages/home`              | `HomePage`, loading/error UI                                          | 내부 query/section 조합                                  |
+| 슬라이스                   | 공개할 값                                                                                             | 숨길 구현 세부                                            |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `entities/product`         | `Product`, `ProductCategoryId`, `ProductSort`, `PRODUCT_CATEGORY_IDS`, `PRODUCT_SORTS`, `ProductCard` | ProductCard adapter 세부, 화면별 상품 목록 조회 정책      |
+| `entities/category`        | `Category`, `CategoryId`, `CATEGORY_IDS`                                                              | parser 구현 세부, 화면별 필터 옵션                        |
+| `entities/cart`            | `CartSlice`, `createCartSlice`                                                                        | root store 조합 방식, persist storage key, migration 세부 |
+| `entities/wishlist`        | `WishlistSlice`, `createWishlistSlice`                                                                | root store 조합 방식, persist storage key, migration 세부 |
+| `features/add-to-cart`     | `AddToCartButton` 또는 `useAddToCart`                                                                 | Zustand map 구조, cart entity 연결 세부                   |
+| `features/toggle-wishlist` | `ToggleWishlistButton` 또는 `useToggleWishlist`                                                       | Zustand map 구조, wishlist entity 연결 세부               |
+| `widgets/product-card`     | `CommerceProductCard`                                                                                 | product UI와 cart/wishlist feature 조합 세부              |
+| `widgets/header`           | `CommerceHeader`                                                                                      | cart/wishlist count 구독 및 표시 조합                     |
+| `_pages/products`          | `ProductListPage`, loading/error UI                                                                   | 내부 query/result/filter/url 조합                         |
+| `_pages/home`              | `HomePage`, loading/error UI                                                                          | 내부 query/section 조합                                   |
 
 ### ProductCard와 장바구니/위시리스트 행위 조합
 
@@ -370,7 +365,7 @@ Public API는 사용할 예정이다.
 | `src/lib/apiUtils.ts`                                 | `src/shared/api/apiUtils.ts`                                                  | `shared/api`                 | HTTP 응답 처리 helper이며 화면 문구를 소유하지 않는다.                                                            |
 | `src/constants/commerce.ts`                           | `src/entities/category/model/constants.ts`                                    | `entities/category/model`    | 카테고리 ID와 상품 정렬 값의 소유자를 분리한다.                                                                   |
 | `src/types/commerce.ts`                               | `src/entities/product/model/types.ts`, `src/entities/category/model/types.ts` | `entities/*/model`           | 통짜 타입 파일을 도메인 소유자 기준으로 분해한다.                                                                 |
-| `Product.category`의 `CategoryId` 참조                | `src/entities/category/@x/product.ts`                                         | `entities/category/@x`       | product entity가 참조해도 되는 category 타입만 좁게 공개한다.                                                     |
+| `Product.category`의 카테고리 id 타입                 | `src/entities/product/model/types.ts`의 `ProductCategoryId`                   | `entities/product/model`     | product entity 안에 별도 literal union을 둬 category entity와 cross-import하지 않는다.                            |
 | `src/components/commerce/ProductCard.tsx`             | `src/entities/product/ui/ProductCard.tsx`                                     | `entities/product/ui`        | 상품 표시 UI는 product entity의 표현이다.                                                                         |
 | `src/components/commerce/productCardAdapter.ts`       | `src/entities/product/ui/mapProductToCardItem.ts`                             | `entities/product/ui`        | Product를 ProductCard 표시 props로 변환하는 UI adapter다. API DTO mapper가 아니므로 ProductCard 표현 근처에 둔다. |
 | `src/components/commerce/ProductGrid.tsx`             | `src/widgets/product-grid/ui/ProductGrid.tsx`                                 | `widgets/product-grid/ui`    | 상품 카드 목록을 화면 단위로 배치한다.                                                                            |
@@ -382,6 +377,7 @@ Public API는 사용할 예정이다.
 | `src/stores/commerce/wishlistSlice.ts`                | `src/entities/wishlist/model/wishlistSlice.ts`                                | `entities/wishlist/model`    | 위시리스트 상태와 action의 소유자는 wishlist entity다.                                                            |
 | `src/stores/commerce/persistence.ts`                  | `src/_app/model/commercePersistence.ts`                                       | `_app/model`                 | cart/wishlist가 공유하는 persist, version, migration 정책이므로 root store 생명주기와 함께 둔다.                  |
 | `src/stores/commerce/store.ts`                        | `src/_app/model/commerceStore.ts`                                             | `_app/model`                 | cart/wishlist slice를 조합하고 persist/hydration middleware를 한 번만 적용하는 root store다.                      |
+| `src/stores/commerce/CommerceStoreHydrator.tsx`       | `src/_app/providers/CommerceStoreHydrator.tsx`                                | `_app/providers`             | Zustand persist 복원 시점을 Provider tree에서 앱 마운트 이후로 제한하는 app-level hydration 조각이다.             |
 | `src/features/home/*`                                 | `src/_pages/home/*`                                                           | `_pages/home`                | 현재 홈 전용 page 조합이다.                                                                                       |
 | `src/features/home/api/homeApi.ts`                    | `src/_pages/home/api/homeApi.ts`                                              | `_pages/home/api`            | `/api/home`은 홈 화면용 aggregate 응답이다.                                                                       |
 | `src/features/home/queries/homeQueries.ts`            | `src/_pages/home/api/homeQueries.ts`                                          | `_pages/home/api`            | 홈 page 전용 query factory다.                                                                                     |
@@ -402,21 +398,22 @@ Public API는 사용할 예정이다.
 
 ## 애매한 파일 결정표
 
-| 대상                                | 후보 A                                                  | 후보 B                                       | 최종 결정                           | 기준                                                                                                                                                                                                                                                                                |
-| ----------------------------------- | ------------------------------------------------------- | -------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ProductCard`                       | `entities/product/ui`                                   | `widgets/product-card/ui`                    | `entities/product/ui`               | widgets에 두면 찜/담기 조합까지 한 번에 다루기 쉽지만 상품 표시 UI까지 상위 조합 레이어에 묶인다. 상품 정보 표시와 카드 내부 버튼 위치/접근성 표현은 product entity의 UI로 두고, 버튼 상태 계산과 cart/wishlist action 연결은 직접 import하지 않는다.                               |
-| `CommerceProductCard`               | `features`                                              | `widgets/product-card/ui`                    | `widgets/product-card/ui`           | feature에 두면 특정 사용자 행위처럼 보이지만 실제로는 상품 표시, 장바구니, 위시리스트를 함께 배치하는 조합 UI다. `useAddToCart`, `useToggleWishlist` 공개 API를 통해 상태와 action을 소비하고 root store shape는 숨기므로 widget이 맞다.                                            |
-| 상품 목록 queryOptions              | `entities/product/api`                                  | `_pages/products/api`                        | `_pages/products/api`               | `/api/products`는 Product만 조회하지 않고 Category, pagination meta, 검색 조건을 함께 다루는 상품 목록 aggregate다. `entities/product/api`에 두면 product entity가 category와 page 정책까지 알게 되므로 `_pages/products/api`가 소유한다.                                           |
-| 홈 queryOptions                     | `entities/product/api`                                  | `_pages/home/api`                            | `_pages/home/api`                   | product entity에 두면 인기 상품/신상품 배열을 상품 조회의 한 종류처럼 다룰 수 있지만, `/api/home`은 배너, 카테고리, 인기 상품, 신상품을 묶은 홈 aggregate 응답이다. 홈 page 전용 API로 둔다.                                                                                        |
-| 장바구니 store                      | `entities/cart/model`                                   | `features/add-to-cart/model`                 | `entities/cart/model`               | feature에 두면 담기 버튼 구현과 가깝지만 장바구니 상태는 헤더와 여러 상품 카드가 공유하는 도메인 상태다. cart slice의 상태와 action은 `entities/cart/model`이 소유하고, cart/wishlist를 합치는 root store와 persist/hydration 설정은 `_app/model`에서 조합한다.                     |
-| 위시리스트 store                    | `entities/wishlist/model`                               | `features/toggle-wishlist/model`             | `entities/wishlist/model`           | feature에 두면 토글 버튼과 가깝지만 위시리스트 상태는 여러 화면에서 공유된다. wishlist slice의 상태와 action은 `entities/wishlist/model`이 소유하고, cart/wishlist를 합치는 root store와 persist/hydration 설정은 `_app/model`에서 조합한다.                                        |
-| root commerce store                 | `entities/cart`와 `entities/wishlist`에 각각 store 생성 | `_app/model/commerceStore.ts`에서 slice 조합 | `_app/model/commerceStore.ts`       | entity별 store로 완전히 쪼개면 소유권은 선명하지만 persist/hydration 설정이 중복된다. Zustand 공식 slice pattern처럼 cart/wishlist slice는 entity가 소유하고, middleware는 combined root store에 한 번만 적용한다.                                                                  |
-| commerce persistence                | 각 entity의 `model/persistence.ts`                      | `_app/model/commercePersistence.ts`          | `_app/model/commercePersistence.ts` | entity별 persistence로 나누면 삭제 반경은 줄지만 storage version, migration, skipHydration 정책이 중복된다. 현재는 cart/wishlist를 같은 익명 로컬 저장소 생명주기로 복원하므로 root store persistence로 묶는다.                                                                     |
-| `src/types/commerce.ts`의 `Product` | `entities/product/model`                                | `shared/types`                               | `entities/product/model`            | shared에 두면 import는 쉬워지지만 도메인 타입 창고가 되어 소유자가 흐려진다. Product는 소유자가 명확한 도메인 타입이므로 product entity가 소유한다.                                                                                                                                 |
-| `Product.category`와 `CategoryId`   | `shared/api/commerce`에 contract 타입으로 분리          | `entities/category/@x/product`               | `entities/category/@x/product`      | `CategoryId`는 API query param이기도 하지만 category 도메인의 식별자다. shared로 빼면 category 소유권이 흐려지고, 일반 Public API import는 entity 간 cross-import 의도가 덜 드러난다. product 전용 `@x` Public API로 `CategoryId` 타입만 노출해 `Product.category` 관계를 명시한다. |
-| `ProductFilters`                    | `features/filter-products/ui`                           | `_pages/products/ui`                         | `_pages/products/ui`                | feature로 분리하면 재사용 가능성은 열리지만 현재는 상품 목록 페이지 전용이고 URL parser/page 보정 정책과 함께 움직인다. 다른 상품 탐색 화면에서 재사용될 때 feature로 승격한다.                                                                                                     |
-| `useDebouncedValue`                 | `shared/lib/debounce`                                   | `_pages/products/lib`                        | `shared/lib/debounce`               | page 내부에 두면 현재 사용처와 가깝지만 debounce 자체는 비즈니스 정책이 없는 일반 hook이다. 다만 `shared/lib` 루트에 쌓지 않고 목적이 드러나는 `debounce` 하위 경로에 둔다. URL 반영 시점과 delay 정책은 page가 소유한다.                                                           |
-| `formatPrice`가 생기는 경우         | `shared/lib/format`                                     | `entities/product/lib`                       | 정책 포함 여부로 결정               | 단순 숫자 포맷은 `shared/lib/format`에 둘 수 있다. 상품 할인, 회원 등급, 배송 정책이 섞이면 product/pricing 도메인 규칙이므로 `entities/product/lib` 또는 별도 pricing entity로 승격한다.                                                                                           |
+| 대상                                | 후보 A                                                  | 후보 B                                       | 최종 결정                           | 기준                                                                                                                                                                                                                                                            |
+| ----------------------------------- | ------------------------------------------------------- | -------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProductCard`                       | `entities/product/ui`                                   | `widgets/product-card/ui`                    | `entities/product/ui`               | widgets에 두면 찜/담기 조합까지 한 번에 다루기 쉽지만 상품 표시 UI까지 상위 조합 레이어에 묶인다. 상품 정보 표시와 카드 내부 버튼 위치/접근성 표현은 product entity의 UI로 두고, 버튼 상태 계산과 cart/wishlist action 연결은 직접 import하지 않는다.           |
+| `CommerceProductCard`               | `features`                                              | `widgets/product-card/ui`                    | `widgets/product-card/ui`           | feature에 두면 특정 사용자 행위처럼 보이지만 실제로는 상품 표시, 장바구니, 위시리스트를 함께 배치하는 조합 UI다. `useAddToCart`, `useToggleWishlist` 공개 API를 통해 상태와 action을 소비하고 root store shape는 숨기므로 widget이 맞다.                        |
+| 상품 목록 queryOptions              | `entities/product/api`                                  | `_pages/products/api`                        | `_pages/products/api`               | `/api/products`는 Product만 조회하지 않고 Category, pagination meta, 검색 조건을 함께 다루는 상품 목록 aggregate다. `entities/product/api`에 두면 product entity가 category와 page 정책까지 알게 되므로 `_pages/products/api`가 소유한다.                       |
+| 홈 queryOptions                     | `entities/product/api`                                  | `_pages/home/api`                            | `_pages/home/api`                   | product entity에 두면 인기 상품/신상품 배열을 상품 조회의 한 종류처럼 다룰 수 있지만, `/api/home`은 배너, 카테고리, 인기 상품, 신상품을 묶은 홈 aggregate 응답이다. 홈 page 전용 API로 둔다.                                                                    |
+| 장바구니 store                      | `entities/cart/model`                                   | `features/add-to-cart/model`                 | `entities/cart/model`               | feature에 두면 담기 버튼 구현과 가깝지만 장바구니 상태는 헤더와 여러 상품 카드가 공유하는 도메인 상태다. cart slice의 상태와 action은 `entities/cart/model`이 소유하고, cart/wishlist를 합치는 root store와 persist/hydration 설정은 `_app/model`에서 조합한다. |
+| 위시리스트 store                    | `entities/wishlist/model`                               | `features/toggle-wishlist/model`             | `entities/wishlist/model`           | feature에 두면 토글 버튼과 가깝지만 위시리스트 상태는 여러 화면에서 공유된다. wishlist slice의 상태와 action은 `entities/wishlist/model`이 소유하고, cart/wishlist를 합치는 root store와 persist/hydration 설정은 `_app/model`에서 조합한다.                    |
+| root commerce store                 | `entities/cart`와 `entities/wishlist`에 각각 store 생성 | `_app/model/commerceStore.ts`에서 slice 조합 | `_app/model/commerceStore.ts`       | entity별 store로 완전히 쪼개면 소유권은 선명하지만 persist/hydration 설정이 중복된다. Zustand 공식 slice pattern처럼 cart/wishlist slice는 entity가 소유하고, middleware는 combined root store에 한 번만 적용한다.                                              |
+| commerce persistence                | 각 entity의 `model/persistence.ts`                      | `_app/model/commercePersistence.ts`          | `_app/model/commercePersistence.ts` | entity별 persistence로 나누면 삭제 반경은 줄지만 storage version, migration, skipHydration 정책이 중복된다. 현재는 cart/wishlist를 같은 익명 로컬 저장소 생명주기로 복원하므로 root store persistence로 묶는다.                                                 |
+| `src/types/commerce.ts`의 `Product` | `entities/product/model`                                | `shared/types`                               | `entities/product/model`            | shared에 두면 import는 쉬워지지만 도메인 타입 창고가 되어 소유자가 흐려진다. Product는 소유자가 명확한 도메인 타입이므로 product entity가 소유한다.                                                                                                             |
+| `Product.category`와 `CategoryId`   | `entities/category/@x/product`                          | product/category 각각 literal union 중복     | product/category 각각 id 타입 소유  | `@x`로 cross-import를 명시할 수도 있지만 현재는 같은 문자열 집합을 각 entity가 반복 정의하는 쪽을 택한다. 중복 수정 비용은 생기지만 entity 간 import 예외가 없어지고 구조가 단순해진다.                                                                         |
+| `ProductFilters`                    | `features/filter-products/ui`                           | `_pages/products/ui`                         | `_pages/products/ui`                | feature로 분리하면 재사용 가능성은 열리지만 현재는 상품 목록 페이지 전용이고 URL parser/page 보정 정책과 함께 움직인다. 다른 상품 탐색 화면에서 재사용될 때 feature로 승격한다.                                                                                 |
+| `useDebouncedValue`                 | `shared/lib/debounce`                                   | `_pages/products/lib`                        | `shared/lib/debounce`               | page 내부에 두면 현재 사용처와 가깝지만 debounce 자체는 비즈니스 정책이 없는 일반 hook이다. 다만 `shared/lib` 루트에 쌓지 않고 목적이 드러나는 `debounce` 하위 경로에 둔다. URL 반영 시점과 delay 정책은 page가 소유한다.                                       |
+| `IdSet`, `normalizeIdSet`           | `shared/lib/id-set`                                     | `entities/cart` 또는 `entities/wishlist`     | `shared/lib/id-set`                 | `Record<string, true>` 형태를 안전하게 정규화하는 일반 자료구조 helper다. cart/wishlist/persistence가 함께 쓰지만 특정 도메인의 정책은 아니므로 shared에 두되, `shared/lib` 루트가 아니라 목적이 드러나는 `id-set` 하위 경로에 둔다.                            |
+| `formatPrice`가 생기는 경우         | `shared/lib/format`                                     | `entities/product/lib`                       | 정책 포함 여부로 결정               | 단순 숫자 포맷은 `shared/lib/format`에 둘 수 있다. 상품 할인, 회원 등급, 배송 정책이 섞이면 product/pricing 도메인 규칙이므로 `entities/product/lib` 또는 별도 pricing entity로 승격한다.                                                                       |
 
 ## 에러 처리 경계
 

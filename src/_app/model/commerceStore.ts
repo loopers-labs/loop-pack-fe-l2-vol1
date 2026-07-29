@@ -1,15 +1,15 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createCartSlice } from "./cartSlice";
-import type { CartSlice } from "./cartSlice";
+import { createCartSlice } from "@/entities/cart";
+import type { CartSlice } from "@/entities/cart";
+import { createWishlistSlice } from "@/entities/wishlist";
+import type { WishlistSlice } from "@/entities/wishlist";
 import {
   COMMERCE_STORE_STORAGE_KEY,
   COMMERCE_STORE_VERSION,
   normalizePersistedCommerceState,
   selectPersistedCommerceState,
-} from "./persistence";
-import { createWishlistSlice } from "./wishlistSlice";
-import type { WishlistSlice } from "./wishlistSlice";
+} from "./commercePersistence";
 
 type CommerceHydrationState = {
   hasHydrated: boolean;
@@ -24,8 +24,8 @@ export const useCommerceStore = create<CommerceStore>()(
       const [set] = args;
 
       return {
-        ...createCartSlice(...args),
-        ...createWishlistSlice(...args),
+        ...createCartSlice<CommerceStore>()(...args),
+        ...createWishlistSlice<CommerceStore>()(...args),
         hasHydrated: false,
         setHasHydrated: (hasHydrated) => {
           set({ hasHydrated });

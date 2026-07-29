@@ -1,13 +1,13 @@
-import type { CommerceStore } from "./store";
+import { normalizeIdSet } from "@/shared/lib/id-set/idSet";
+import type { IdSet } from "@/shared/lib/id-set/idSet";
+import type { CommerceStore } from "./commerceStore";
 
 export const COMMERCE_STORE_STORAGE_KEY = "commerce-anonymous-store";
 export const COMMERCE_STORE_VERSION = 1;
 
-export type ProductIdMap = Record<string, true>;
-
 export type PersistedCommerceStore = {
-  cartProductIdMap: ProductIdMap;
-  wishlistProductIdMap: ProductIdMap;
+  cartProductIdMap: IdSet;
+  wishlistProductIdMap: IdSet;
 };
 
 export function selectPersistedCommerceState(state: CommerceStore): PersistedCommerceStore {
@@ -23,25 +23,9 @@ export function normalizePersistedCommerceState(value: unknown): PersistedCommer
   }
 
   return {
-    cartProductIdMap: normalizeProductIdMap(value.cartProductIdMap),
-    wishlistProductIdMap: normalizeProductIdMap(value.wishlistProductIdMap),
+    cartProductIdMap: normalizeIdSet(value.cartProductIdMap),
+    wishlistProductIdMap: normalizeIdSet(value.wishlistProductIdMap),
   };
-}
-
-export function normalizeProductIdMap(value: unknown): ProductIdMap {
-  if (!isObjectRecord(value)) {
-    return {};
-  }
-
-  const productIdMap: ProductIdMap = {};
-
-  Object.entries(value).forEach(([productId, included]) => {
-    if (productId.trim().length > 0 && included === true) {
-      productIdMap[productId] = true;
-    }
-  });
-
-  return productIdMap;
 }
 
 function createEmptyPersistedCommerceState(): PersistedCommerceStore {

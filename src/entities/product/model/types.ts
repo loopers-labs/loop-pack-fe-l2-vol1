@@ -1,13 +1,13 @@
-import type { PRODUCT_SORTS } from "./constants";
-import type { CategoryId } from "@/entities/category/@x/product";
+import type { PRODUCT_CATEGORY_IDS, PRODUCT_SORTS } from "./constants";
 
+export type ProductCategoryId = (typeof PRODUCT_CATEGORY_IDS)[number];
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
 export type Product = {
   id: string;
   brand: string;
   name: string;
-  category: CategoryId;
+  category: ProductCategoryId;
   price: number;
   originalPrice: number | null;
   image: string;
