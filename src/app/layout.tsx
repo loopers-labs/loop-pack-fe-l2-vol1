@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Providers } from "@/app/providers";
+import { HeaderActions } from "@/app/_components/header-actions";
 import "./globals.css";
+import "./week-05-layout.css";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +28,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Providers>
+          <div className="week05-page">
+            <header className="week05-header">
+              <Link href="/">Commerce</Link>
+              <nav aria-label="주요 메뉴">
+                <Link href="/products">상품</Link>
+                <HeaderActions />
+              </nav>
+            </header>
+            <main>{children}</main>
+          </div>
+        </Providers>
+      </body>
     </html>
   );
 }

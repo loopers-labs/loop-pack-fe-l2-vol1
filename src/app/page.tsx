@@ -1,29 +1,52 @@
-export default function Home() {
+"use client";
+
+import { HomeBanner } from "@/app/_components/home-banner";
+import { HomeCategoryLinks } from "@/app/_components/home-category-links";
+import { HomeProductSection } from "@/app/_components/home-product-section";
+import { Placeholder } from "@/app/_components/placeholder";
+import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
+import { commerceQueries } from "@/queries/commerce";
+import { CommerceApiError } from "@/services/commerce";
+import { useQuery } from "@tanstack/react-query";
+
+export default function HomePage() {
+  const { data: home, isLoading, isError, error, refetch } = useQuery(commerceQueries.home());
+
+  if (isLoading) {
+    return (
+      <section className="week05-section" aria-busy="true" aria-label="홈 불러오는 중">
+        <ProductGridSkeleton />
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Placeholder
+        role="alert"
+        title="상품을 불러오지 못했어요"
+        description={
+          error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요."
+        }
+        action={
+          <button type="button" onClick={() => refetch()}>
+            다시 시도
+          </button>
+        }
+      />
+    );
+  }
+
+  if (home === undefined) {
+    return null;
+  }
+
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "64px 24px" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
-        Commerce
-      </h1>
-      <p style={{ color: "#5a6675", lineHeight: 1.7, marginBottom: 24 }}>
-        4주차부터 여기에 커머스를 쌓아갑니다. 이번 주는 디자인 시스템의 뼈대
-        <b> Select</b>와 <b>Dialog</b>를 직접 만드는 것부터 시작해요.
-      </p>
-      <ul style={{ lineHeight: 2, color: "#18212e", paddingLeft: 18 }}>
-        <li>
-          컴포넌트 자리: <code>src/components/ui/select</code> ·{" "}
-          <code>src/components/ui/dialog</code>
-        </li>
-        <li>
-          mock 백엔드: <code>GET /api/products</code> (
-          <code>src/app/api/products/route.ts</code>)
-        </li>
-        <li>
-          과제 명세: <code>docs/assignments/week-04.md</code>
-        </li>
-      </ul>
-      <p style={{ color: "#8794a3", marginTop: 24, fontSize: 14 }}>
-        구조는 최소 골격만 있어요. 폴더 구성은 각자 근거를 대고 바꾸면 돼요.
-      </p>
-    </main>
+    <>
+      <HomeBanner banner={home.banner} />
+      <HomeCategoryLinks categories={home.categories} />
+      <HomeProductSection title="인기 상품" products={home.popularProducts} />
+      <HomeProductSection title="신상품" products={home.newProducts} />
+    </>
   );
 }
