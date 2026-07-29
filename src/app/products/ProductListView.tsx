@@ -2,9 +2,7 @@
 
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import CartToggleButton from '@/entities/cart/ui/CartToggleButton'
-import ProductCard from '@/entities/product/ui/ProductCard'
-import WishlistToggleButton from '@/entities/wishlist/ui/WishlistToggleButton'
+import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { commerceQueries } from '@/lib/commerce/queries'
 import {
@@ -126,28 +124,7 @@ export default function ProductListView() {
     results = (
       <>
         <p>총 {data.totalCount}개</p>
-        <div className="week05-grid">
-          {/* Phase 2의 임시 조합이다. 홈 화면과 같은 코드가 반복되며,
-              Phase 3에서 widgets/product-grid로 올라간다. */}
-          {data.products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              actions={
-                <>
-                  <WishlistToggleButton
-                    productId={product.id}
-                    productName={product.name}
-                  />
-                  <CartToggleButton
-                    productId={product.id}
-                    productName={product.name}
-                  />
-                </>
-              }
-            />
-          ))}
-        </div>
+        <ProductGrid products={data.products} />
         <nav className="week05-pagination" aria-label="페이지 이동">
           <button
             type="button"
