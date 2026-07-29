@@ -60,5 +60,16 @@ export default tseslint.config(
     },
   },
 
+  // 스타터 API 테스트 한정: Response.json()이 any를 반환한다(NextResponse<Body>의 Body가
+  // json()에 안 이어짐). 검증은 expect가 하므로 no-unsafe-*만 끈다. 내 코드는 엄격도 유지.
+  {
+    files: ['src/app/api/**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+    },
+  },
+
   eslintConfigPrettier,
 );

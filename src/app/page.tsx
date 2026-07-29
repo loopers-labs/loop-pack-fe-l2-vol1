@@ -1,29 +1,68 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import { homeQueries } from '@/features/home/home.queries';
+import { SiteHeader } from '@/components/SiteHeader';
+import { ProductGrid } from '@/components/ProductGrid';
+import '@/examples/week-05-layout/week-05-layout.css';
+
 export default function Home() {
+  const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
+
+  if (isPending) return <p>불러오는 중…</p>;
+
+  if (isError)
+    return (
+      <div role="alert">
+        <p>홈 데이터를 불러오지 못했어요.</p>
+        <button type="button" onClick={() => void refetch()}>
+          다시 시도
+        </button>
+      </div>
+    );
+
   return (
-    <main style={{ maxWidth: 640, margin: '0 auto', padding: '64px 24px' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
-        Commerce
-      </h1>
-      <p style={{ color: '#5a6675', lineHeight: 1.7, marginBottom: 24 }}>
-        4주차부터 여기에 커머스를 쌓아갑니다. 이번 주는 디자인 시스템의 뼈대
-        <b> Select</b>와 <b>Dialog</b>를 직접 만드는 것부터 시작해요.
-      </p>
-      <ul style={{ lineHeight: 2, color: '#18212e', paddingLeft: 18 }}>
-        <li>
-          컴포넌트 자리: <code>src/components/ui/select</code> ·{' '}
-          <code>src/components/ui/dialog</code>
-        </li>
-        <li>
-          mock 백엔드: <code>GET /api/products</code> (
-          <code>src/app/api/products/route.ts</code>)
-        </li>
-        <li>
-          과제 명세: <code>docs/assignments/week-04.md</code>
-        </li>
-      </ul>
-      <p style={{ color: '#8794a3', marginTop: 24, fontSize: 14 }}>
-        구조는 최소 골격만 있어요. 폴더 구성은 각자 근거를 대고 바꾸면 돼요.
-      </p>
+    <main className="week05-page">
+      <SiteHeader />
+
+      <section
+        className="week05-hero"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.85)), url(${data.banner.image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <p>{data.banner.description}</p>
+        <h1>{data.banner.title}</h1>
+      </section>
+
+      <section className="week05-section" aria-label="카테고리">
+        <h2>카테고리</h2>
+        <ul>
+          {data.categories.map((category) => (
+            <li key={category.id}>{category.name}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="week05-section" aria-label="인기 상품">
+        <h2>인기 상품</h2>
+        {data.popularProducts.length === 0 ? (
+          <p>인기 상품이 없어요.</p>
+        ) : (
+          <ProductGrid products={data.popularProducts} />
+        )}
+      </section>
+
+      <section className="week05-section" aria-label="신상품">
+        <h2>신상품</h2>
+        {data.newProducts.length === 0 ? (
+          <p>신상품이 없어요.</p>
+        ) : (
+          <ProductGrid products={data.newProducts} />
+        )}
+      </section>
     </main>
   );
 }
