@@ -401,3 +401,86 @@ Phase 5에서 다음을 회귀로 고정한다.
 
 또 하나 포기한 것은 `error.tsx`의 실효성 검증이다. 평소에 비어 있는 경계라 회귀 테스트로
 지키기 어렵고 수동 검증에 의존한다.
+
+---
+
+## 6. Phase 1 — shared 레이어 구성
+
+**커밋**: `refactor: 도메인을 모르는 코드를 shared로 내린다`
+
+### 인과
+
+Phase를 아래에서 위로 잡았다. `shared`가 먼저 자리를 잡아야 위 레이어가 이동하면서 그것을
+참조할 수 있다. 반대로 하면 상위가 아직 옮기지 않은 하위를 임시 경로로 참조하는 구간이 생기고,
+그 구간에서 `pnpm check`가 통과해도 트리는 일관되지 않다.
+
+멘토링의 "`shared`를 먼저 강화하고 경계부터 지킨다"와 같은 방향이다.
+
+### 옮긴 것
+
+| 대상 | 위치 | 판단 |
+| --- | --- | --- |
+| `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf`, `isTimeout` | `shared/api/http.ts` | 도메인을 모르는 전송과 실패 표현 |
+| `ApiErrorResponse` | `shared/api/http.ts` | 실패 본문 계약이라 `fetchJson`이 읽는 대상이다 |
+| `formatWon` | `shared/lib/formatWon.ts` | 통화 표기 한 벌. 상품 정책이 아직 붙지 않았다 |
+| dialog, select | `shared/ui/` | 도메인을 모르는 headless UI |
+
+`lib/commerce/api.ts`에는 `fetchHome`, `fetchProducts`, `ProductListCondition`만 남았다.
+이 셋은 Phase 4에서 각 page 슬라이스로 간다. 지금 함께 옮기지 않은 이유는 한 커밋이 여러
+레이어를 동시에 만들지 않는다는 원칙 때문이다.
+
+### 성능
+
+번들 영향 없음. 파일 위치만 바뀌었고 모듈 그래프의 모양은 같다. `shared/ui`는 playground만
+소비하므로 홈과 목록 번들에 들어가지 않는 것도 그대로다.
+
+전송 계층이 한 파일로 모이면서 `lib/commerce/api.ts`가 112줄에서 26줄로 줄었다. 목록 화면이
+`fetchProducts`를 import할 때 따라오던 실패 분류 코드가 이제 `shared/api`에서 온다. 두 화면이
+모두 그것을 쓰므로 중복 로드는 아니다.
+
+### 엣지케이스
+
+테스트를 옮기면서 경계가 어긋날 뻔했다. 기존 `api.test.ts`는 타임아웃과 취소 신호와 실패
+분류를 전부 `fetchProducts`를 통해 검증했다. 그대로 두면 상품 목록 전송 테스트가 전송 계층의
+책임까지 검증하게 된다. `fetchJson`을 직접 부르는 테스트로 다시 써서 `shared/api/http.test.ts`로
+옮기고, `api.test.ts`에는 조건 객체가 URL로 펼쳐지는지만 남겼다.
+
+그 결과 테스트가 하나 늘었다. 전송 계층에 "성공 응답의 본문을 그대로 돌려준다"가 새로 생겼다.
+`fetchProducts`를 통해 검증할 때는 응답 파싱이 목록 응답 형태에 묻혀 있어 따로 확인하지
+않았다.
+
+### 테스트
+
+134건에서 135건이 됐다. 파일은 14개에서 15개다. 옮긴 테스트가 같은 것을 검증하는지는 이름과
+단언 내용을 그대로 옮겨 확인했다.
+
+`shared`가 상위 레이어를 참조하지 않는지 grep으로 확인했다. `@/app`, `@/lib`, `@/components`,
+`@/stores`, `@/types`, `_pages`, `widgets`, `entities` 어느 것도 나오지 않는다.
+
+### 장애 영향도
+
+변화 없음. 실패 경로와 처리 위치가 그대로다. 다만 `ApiErrorResponse`가 `types/commerce.ts`에서
+`shared/api`로 옮겨가면서, mock 백엔드의 두 route가 프론트엔드 `shared`를 참조하게 됐다.
+이는 목표 트리에서 예외 규칙으로 이미 열거한 넷 중 하나다.
+
+### 인프라 비용
+
+없음. 의존성 변화 없고 `tsconfig`의 `@/*` alias가 `src/*`를 그대로 가리켜 경로 설정도
+바뀌지 않았다.
+
+### 과잉설계 점검
+
+`shared`에 `index.ts`를 만들지 않았다. Decision 5의 결론대로 숨길 내부가 없기 때문이다.
+`shared/ui/select/index.ts`는 이미 있었고, 그것은 barrel이 아니라 "컴포넌트를 공개하지 않고
+훅만 공개한다"는 계약이다. 파일 안 주석에 그 의도가 적혀 있어 그대로 뒀다.
+
+`shared/lib`에 `formatWon` 하나만 있다. 유틸 창고가 되지 않도록 이름 있는 파일 하나로 두고,
+두 번째 유틸이 생길 때 폴더 구조를 다시 본다.
+
+### 트레이드오프
+
+얻은 것은 전송 계층의 독립과, 그것을 검증하는 테스트가 도메인 없이 서는 것이다.
+
+포기한 것은 한 번에 끝내는 것이다. `lib/commerce`가 아직 남아 있어 지금 트리에는 `lib`과
+`shared`가 공존한다. 중간 상태가 보기 좋지 않지만, 되돌릴 수 있는 단위를 유지하는 대가로
+받아들였다.

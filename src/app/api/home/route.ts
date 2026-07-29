@@ -5,11 +5,8 @@ import {
   products,
   waitForMockApi,
 } from '@/app/api/_data/commerce'
-import type {
-  ApiErrorResponse,
-  HomeResponse,
-  MockApiScenario,
-} from '@/types/commerce'
+import type { ApiErrorResponse } from '@/shared/api/http'
+import type { HomeResponse, MockApiScenario } from '@/types/commerce'
 
 const scenarioValues = [
   'empty',

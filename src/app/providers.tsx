@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { isRetryable } from '@/lib/commerce/api'
+import { isRetryable } from '@/shared/api/http'
 
 interface ProvidersProps {
   children: React.ReactNode

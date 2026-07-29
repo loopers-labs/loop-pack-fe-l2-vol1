@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ApiError } from '@/lib/commerce/api'
+import { ApiError } from '@/shared/api/http'
 import { createBrowserQueryClient, MAX_QUERY_RETRIES } from './providers'
 
 // 재시도 정책은 함수라 값 비교로는 의도를 확인할 수 없다. 실패 종류를 넣어 판단을 검증한다.

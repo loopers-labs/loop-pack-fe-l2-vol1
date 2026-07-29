@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import ShoppingToggleButtons from '@/components/commerce/ShoppingToggleButtons'
-import { formatWon } from '@/lib/formatWon'
+import { formatWon } from '@/shared/lib/formatWon'
 import type { Product } from '@/types/commerce'
 
 interface ProductCardProps {

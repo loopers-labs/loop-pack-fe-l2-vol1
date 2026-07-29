@@ -46,7 +46,3 @@ export type ProductListResponse = {
   page: number
   pageSize: number
 }
-
-export type ApiErrorResponse = {
-  message: string
-}
