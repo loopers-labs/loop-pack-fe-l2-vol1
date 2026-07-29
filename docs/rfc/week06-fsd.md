@@ -852,22 +852,149 @@ _app  ->  _pages  ->  widgets  ->  features  ->  entities  ->  shared
 - 세그먼트는 목적(`ui`, `model`, `api`, `lib`, `config`)을 드러낸다. 파일 종류를 반복하지 않는다.
 - 빈 폴더와 소비자가 없는 `index.ts`는 만들지 않는다.
 
+#### 현재 트리
+
+```
+src/
+├── app/                 layout, page, products/, playground/, api/, css
+├── components/
+│   ├── commerce/        Header, HeaderCounts, ProductCard, ShoppingToggleButtons
+│   └── ui/              dialog, select
+├── examples/            week-05-layout (어디서도 import하지 않는다)
+├── lib/
+│   ├── commerce/        api, queries, searchParams, productListContract, useProductListCondition
+│   └── formatWon.ts
+├── stores/              shopping.ts
+├── test/                setup.ts
+└── types/               commerce.ts
+```
+
+폴더 이름 여섯 개 중 도메인을 말하는 것은 `commerce` 하나뿐이고, 그마저 상품과 장바구니와
+위시리스트를 함께 담는다.
+
 #### 목표 트리
 
-Decision 2~5의 결과를 반영해 확정한다. 현재 시점의 상태는 다음과 같다.
+```
+src/
+├── app/                                  Next 라우팅 디렉터리. FSD 레이어가 아니다
+│   ├── layout.tsx                        Header와 Providers를 붙이는 진입점
+│   ├── providers.tsx                     QueryClient와 nuqs 어댑터 조립
+│   ├── page.tsx                          _pages/home을 렌더
+│   ├── products/page.tsx                 _pages/product-list를 렌더
+│   ├── playground/                       4주차 쇼케이스. 전환 범위 밖
+│   ├── api/                              mock 백엔드. FSD 의존 그래프 밖
+│   └── *.css
+│
+├── _pages/
+│   ├── home/
+│   │   ├── api/                          fetchHome, HomeResponse, queryOptions
+│   │   └── ui/                           HomePage
+│   └── product-list/
+│       ├── api/                          fetchProducts, ProductListResponse, queryOptions
+│       ├── model/                        URL parser, 조건 조립 훅, 화면 기본 pageSize
+│       └── ui/                           ProductListView, SearchForm
+│
+├── widgets/
+│   ├── header/ui/                        Header, HeaderCounts
+│   └── product-grid/ui/                  ProductGrid
+│
+├── entities/
+│   ├── product/
+│   │   ├── model/                        Product 계열 타입, 목록 조건 허용값과 판정
+│   │   └── ui/                           ProductCard
+│   ├── cart/
+│   │   ├── model/                        store, selector, action, reset
+│   │   └── ui/                           CartToggleButton
+│   └── wishlist/
+│       ├── model/                        store, selector, action, reset
+│       └── ui/                           WishlistToggleButton
+│
+├── shared/
+│   ├── api/                              fetchJson, ApiError, 실패 분류, 실패 본문 타입
+│   ├── lib/                              formatWon
+│   └── ui/                               dialog, select
+│
+├── examples/                             참조 자료. 트리 밖
+└── test/                                 vitest setup
+```
 
-고정된 경계
+#### 사용하는 레이어와 사용하지 않는 레이어
 
-- cart와 wishlist의 capability 모델을 분리한다.
-- 두 capability를 하나의 Zustand runtime에서 조립한다.
-- `ProductCard` 내부에서 행위 조합을 제거한다.
-- 토글 UI는 각 capability의 entity 슬라이스에 두고 features 레이어를 열지 않는다.
-- 상품 표현과 행위의 조합은 `widgets/product-grid`가 소유한다. 빈 상태는 page가 소유한다.
-- 상품 목록과 홈의 조회 계약은 각 page 슬라이스가 소유한다. `entities/product`에는 `api` 세그먼트를 만들지 않는다.
+| 레이어 | 사용 | 근거 |
+| --- | --- | --- |
+| `shared` | 사용 | 도메인을 모르는 전송, 실패 표현, 포맷, headless UI가 실제로 있다 |
+| `entities` | 사용 | product, cart, wishlist 세 도메인 개념이 각각 모델과 UI를 가진다 |
+| `features` | **사용하지 않음** | [Decision 2](#decision-2-toggle-ui의-레이어). 토글에 담을 정책이 없어 `ui` 파일 하나짜리 슬라이스가 된다 |
+| `widgets` | 사용 | [Decision 3](#decision-3-productcard-조합-위치). 조합 규칙 20줄을 두 화면이 같은 이유로 함께 바꾼다. Header도 두 entity를 조합한다 |
+| `_pages` | 사용 | [Decision 4](#decision-4-상품-조회-계약의-소유자). 조회 계약과 URL 조건의 소유자가 필요하다 |
+| `_app` | **사용하지 않음** | 아래 참조 |
+| `processes` | 사용하지 않음 | FSD v2.1에서 제외된 레이어다 |
 
-아직 열려 있는 경계
+`_app`을 열지 않는 이유는 담을 것이 `providers.tsx` 하나이기 때문이다. Providers는 QueryClient와
+nuqs 어댑터를 붙이는 라이브러리 조립일 뿐 비즈니스 판단이 없고, Next의 `layout.tsx`가 이미
+그 조립의 진입점이다. 파일 하나를 위해 레이어를 여는 것은 Decision 2에서 feature를 반려한
+기준과 같다. `src/app/providers.tsx`에 그대로 둔다.
 
-- Public API 적용 범위
+#### 파일 매핑표
+
+| 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이유 |
+| --- | --- | --- | --- |
+| `lib/commerce/api.ts`의 `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf`, `isTimeout` | `shared/api/http.ts` | shared / - / api | 도메인을 모르는 전송과 실패 표현이다. 두 page가 함께 쓴다 |
+| `types/commerce.ts`의 `ApiErrorResponse` | `shared/api/http.ts` | shared / - / api | 실패 본문 계약이라 `fetchJson`이 읽는 대상이다 |
+| `lib/formatWon.ts` | `shared/lib/formatWon.ts` | shared / - / lib | 통화 표기 한 벌. 상품 정책이 붙지 않았다 |
+| `components/ui/dialog`, `components/ui/select` | `shared/ui/dialog`, `shared/ui/select` | shared / - / ui | 도메인을 모르는 headless UI |
+| `types/commerce.ts`의 `Product`, `Category`, `CategoryId`, `ProductSort` | `entities/product/model/product.ts` | entities / product / model | 상품 도메인 개념. 카드, 목록, 홈, mock이 함께 쓴다 |
+| `lib/commerce/productListContract.ts` | `entities/product/model/productListContract.ts` | entities / product / model | 카테고리와 정렬 허용값은 상품 도메인 어휘다 |
+| `components/commerce/ProductCard.tsx` | `entities/product/ui/ProductCard.tsx` | entities / product / ui | 상품 표현. 토글 import를 제거해 행위를 알지 않게 한다 |
+| `stores/shopping.ts`의 cart 절반 | `entities/cart/model/cart.ts` | entities / cart / model | [Decision 1 개정](#개정--b에서-c로). capability가 자기 store를 소유한다 |
+| `stores/shopping.ts`의 wishlist 절반 | `entities/wishlist/model/wishlist.ts` | entities / wishlist / model | 같음 |
+| `components/commerce/ShoppingToggleButtons.tsx` | `entities/cart/ui/CartToggleButton.tsx` + `entities/wishlist/ui/WishlistToggleButton.tsx` | entities / cart, wishlist / ui | [Decision 2](#decision-2-toggle-ui의-레이어). 두 행위를 그리던 한 컴포넌트가 capability를 따라 갈라진다 |
+| `components/commerce/Header.tsx`, `HeaderCounts.tsx` | `widgets/header/ui/` | widgets / header / ui | 두 entity의 개수를 함께 조합한다 |
+| (신규) | `widgets/product-grid/ui/ProductGrid.tsx` | widgets / product-grid / ui | [Decision 3](#decision-3-productcard-조합-위치). 홈과 목록이 반복하던 조합 20줄 |
+| `lib/commerce/api.ts`의 `fetchHome`, `types/commerce.ts`의 `HomeResponse`, `lib/commerce/queries.ts`의 `home()` | `_pages/home/api/` | _pages / home / api | [Decision 4](#decision-4-상품-조회-계약의-소유자). 소비 지점이 홈 하나다 |
+| `app/page.tsx`의 본문 | `_pages/home/ui/HomePage.tsx` | _pages / home / ui | 라우팅 진입점과 화면 조합을 나눈다 |
+| `lib/commerce/api.ts`의 `fetchProducts`, `ProductListCondition`, `types/commerce.ts`의 `ProductListQuery`, `ProductListResponse`, `lib/commerce/queries.ts`의 `products` | `_pages/product-list/api/` | _pages / product-list / api | 같음. 소비 지점이 목록 하나다 |
+| `lib/commerce/searchParams.ts`, `useProductListCondition.ts` | `_pages/product-list/model/` | _pages / product-list / model | URL 조건은 이 화면의 정책이다 |
+| `app/products/ProductListView.tsx`, `SearchForm.tsx` | `_pages/product-list/ui/` | _pages / product-list / ui | 같음 |
+| `types/commerce.ts`의 `MockApiScenario` | `app/api/_data/commerce.ts` | (FSD 밖) | mock 전용 제어값이라 프론트엔드 타입이 아니다 |
+| `app/providers.tsx` | 그대로 | (FSD 밖) | 위의 `_app` 판단 |
+| `app/playground/**` | 그대로 | (FSD 밖) | 전환 범위 밖. `components/ui` import 경로만 바뀐다 |
+| `app/api/**` | 그대로 | (FSD 밖) | mock 백엔드 |
+| `examples/week-05-layout/**` | 그대로 | (트리 밖) | 아래 결정표 참조 |
+| `test/setup.ts` | 그대로 | (트리 밖) | vitest 설정이 경로로 참조한다 |
+
+테스트 파일은 대상 파일을 따라간다. `stores/shopping.test.ts`는 capability를 따라 둘로 갈리고,
+`state-contract.test.tsx`는 여러 레이어를 가로지르는 통합 테스트라 `src/app` 쪽에 남긴다.
+
+#### 애매한 파일 결정표
+
+| 대상 | 후보 A | 후보 B | 최종 결정 | 기준 |
+| --- | --- | --- | --- | --- |
+| `ProductCard` | `entities/product/ui` | `widgets/product-card` | A | 카드가 담는 것은 상품 표현뿐이다. 행위는 Decision 2로 분리했고 조합은 Decision 3의 widget이 가져갔다. 남은 책임이 도메인 표현 하나라 entity가 맞다 |
+| 상품 목록 queryOptions | `entities/product/api` | `_pages/product-list/api` | B | 소비 지점이 하나다. 목록 전용 staleTime과 key 정책을 도메인 레이어에 올릴 근거가 없다. [Decision 4](#decision-4-상품-조회-계약의-소유자) |
+| 장바구니 store | `entities/cart/model` | 장바구니 행위 feature의 `model` | A | features를 열지 않기로 했다. 상태가 나타내는 것은 행위가 아니라 "담긴 상품 ID"라는 도메인 사실이다 |
+| `types/commerce.ts` | 통째로 `shared/types` 유지 | 소유자별로 분해 | 분해 | 한 파일에 도메인 개념, 화면별 응답 형태, mock 제어값이 섞여 있다. 그대로 두면 mock 제어값을 바꿀 때 상품 도메인 파일이 열린다. 분해 후 각 타입의 소유자가 생긴다 |
+| `productListContract.ts` | `shared/api` | `entities/product/model` | B | 카테고리와 정렬 허용값은 상품 도메인 어휘다. `shared`에 두면 도메인을 모르는 레이어가 카테고리를 알게 된다. mock 백엔드가 이 모듈을 참조하지만, 아래 예외 규칙으로 다룬다 |
+| `Header`, `HeaderCounts` | `widgets/header` | `app/layout.tsx`에 인라인 | A | 두 entity의 개수를 함께 조합한다. 조합 지점은 widget이다. layout에 인라인하면 라우팅 진입점이 도메인을 알게 된다 |
+| `providers.tsx` | `_app/providers.tsx` | `app/providers.tsx` 유지 | B | 담을 것이 파일 하나다. 레이어를 여는 근거는 개수가 아니라 담을 책임인데, 라이브러리 어댑터 조립에는 비즈니스 판단이 없다 |
+| `examples/week-05-layout` | 삭제 | 제자리 유지 | 유지 (삭제 후보로 기록) | 322줄이고 `src` 어디서도 import하지 않는다. Next 번들에는 들어가지 않고 typecheck 대상으로만 남는다. 참조 자료로 의도된 것인지 확인이 필요해 이번 범위에서 지우지 않는다 |
+
+#### mock 백엔드의 예외 규칙
+
+`src/app/api/**`는 FSD 의존 그래프의 대상이 아니다. 실제 서버로 대체되면 사라질 코드이므로
+프론트엔드 슬라이스를 참조하는 것을 허용하되, 참조를 다음 넷으로 제한하고 여기에 열거한다.
+
+| mock이 참조하는 것 | 이유 | 실제 서버가 되면 |
+| --- | --- | --- |
+| `entities/product/model` | 상품 타입과 목록 조건 허용값 | 서버가 자기 스키마를 소유하고 클라이언트는 생성된 타입을 받는다 |
+| `_pages/product-list/api`의 `ProductListResponse` | 목록 응답 형태 | 같음 |
+| `_pages/home/api`의 `HomeResponse` | 홈 응답 형태 | 같음 |
+| `shared/api`의 `ApiErrorResponse` | 실패 본문 형태 | 같음 |
+
+이 넷을 공유하는 대신 계약 테스트로 양쪽을 맞추는 방법도 있다. 실제 서버라면 그래야 한다.
+지금 공유를 택한 이유는 5주차 피드백 반영에서 두 벌로 갈린 검증 규칙이 실제로 어긋나 있던 것을
+고쳤기 때문이고, 그 결정을 구조 이동 커밋에서 되돌리지 않기 위해서다. Revisit 조건은
+"mock을 실제 서버나 별도 프로세스로 옮긴다"이다.
 
 #### 마이그레이션 원칙
 
@@ -875,6 +1002,23 @@ Decision 2~5의 결과를 반영해 확정한다. 현재 시점의 상태는 다
 - 각 단계마다 `pnpm check`가 통과해야 다음 단계로 간다.
 - 되돌릴 수 있는 단위로 나눈다. 한 커밋이 여러 레이어를 동시에 만들지 않는다.
 - 커밋마다 하위가 상위를 참조하지 않는지 확인한 뒤 다음으로 넘어간다.
+
+#### Phase 계획
+
+아래에서 위로 올라간다. 하위 레이어가 먼저 자리를 잡아야 상위가 그것을 참조하며 이동할 수
+있고, 반대로 하면 상위가 아직 옮기지 않은 하위를 임시 경로로 참조하는 구간이 생긴다.
+멘토링에서 받은 "`shared`를 먼저 강화하고 경계부터 지킨다"와도 같은 방향이다.
+
+| Phase | 범위 | 검증 |
+| --- | --- | --- |
+| 1 | `shared` 구성. 전송, 실패 표현, 포맷, headless UI | `pnpm check`. `shared`가 어떤 상위 레이어도 import하지 않는다 |
+| 2 | `entities` 구성. product 모델과 카드, cart와 wishlist의 store 분리와 토글 UI | `pnpm check`. `entities`가 `shared`만 참조한다. cart와 wishlist가 서로를 참조하지 않는다 |
+| 3 | `widgets` 구성. product-grid와 header | `pnpm check`. widget이 `entities`와 `shared`만 참조한다 |
+| 4 | `_pages` 구성. 조회 계약, URL 조건, 화면. `src/app`을 진입점으로 축소 | `pnpm check`. page가 자기 아래만 참조하고 두 page가 서로를 참조하지 않는다 |
+| 5 | Decision 6 구현. `error.tsx`와 전파 기준 | 실패 재현. 에러 처리 표와 구현이 일치한다 |
+
+각 Phase가 끝나면 삭제 시나리오를 다시 묻지 않는다. 마지막에 한 번 전체로 확인한다. 중간
+상태는 트리가 반쯤 옮겨진 상태라 응집도를 판정할 수 없다.
 
 ### D — Data Model
 
