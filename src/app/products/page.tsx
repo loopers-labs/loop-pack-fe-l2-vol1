@@ -9,11 +9,11 @@ import {
 } from '@/features/product/hooks/useProductListFilters';
 import { Header } from '@/widgets/Header';
 import { ProductCard } from '@/features/product/ui/ProductCard';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useProductPage } from './products.hook';
 
 // [AI] nuqs URL 상태 + productQueries로 검색·카테고리·정렬·페이지네이션을 구동.
-const ProductsPage = () => {
+const ProductsView = () => {
   const {
     category,
     sort,
@@ -132,5 +132,13 @@ const ProductsPage = () => {
     </main>
   );
 };
+
+// [AI] useQueryStates(nuqs)가 내부적으로 useSearchParams()를 호출하므로
+// 빌드 시 정적 프리렌더에는 Suspense 경계가 필요하다(CSR bailout 방지).
+const ProductsPage = () => (
+  <Suspense>
+    <ProductsView />
+  </Suspense>
+);
 
 export default ProductsPage;

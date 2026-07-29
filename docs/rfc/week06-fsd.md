@@ -5,6 +5,45 @@
 
 ---
 
+## 0단계 — 동작 기준선 검증 결과
+
+폴더를 옮기기 전 기준선을 고정했다. API 계약은 단위 테스트(78개)와 dev 서버 런타임 curl로, URL/상태 로직은 훅 단위 테스트로, 빌드는 `pnpm check`로 확인했다.
+
+### 항목별 결과
+
+| 검증 항목                       | 방법                                                      | 결과                                                                                                                                                                                                                                                                                |
+| ------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 홈·목록 정상·로딩·에러·빈       | API 단위 테스트 + dev 서버 curl + 렌더링 분기 코드 점검   | 정상(`/api/home` 200, popular 6/new 6/categories 5), 빈(`/products?scenario=empty` → products `[]`, total 0, categories 유지), 에러(`/home?scenario=error`→500, `/products?scenario=error`→500) 모두 확인. 로딩/에러/빈 렌더링 분기는 `HomeContent.tsx`, `products/page.tsx`에 존재 |
+| 홈 서버 prefetch                | dev 서버 로그                                             | SSR 중 `GET /api/home 200 in 504ms`(500ms 고정 지연) 확인 → `HydrationBoundary` 정상                                                                                                                                                                                                |
+| 검색·카테고리·정렬·페이지네이션 | API curl + `useProductListFilters` 테스트                 | 검색 `q=스탠리`→p16,17,19,20 / `category=digital&sort=popular`→p21,22,30,23,25,24 / `page=3`→잔여 6개. 단위 테스트로 전 sort 순서·페이지 검증                                                                                                                                       |
+| URL 공유·새로고침·뒤로/앞으로   | `useProductListFilters` 단위 테스트(nuqs testing adapter) | URL→state 복원, 한글 round-trip, 리터럴 외값 기본값 폴백, `history:'push'` 기록, 필터 변경 시 page 1 리셋 검증                                                                                                                                                                      |
+| 장바구니·위시리스트 동기화      | store 코드 점검 + selector 파생 확인                      | toggle/remove/clear, persist(`hasHydrated` hydration mismatch 방지, `version`/`migrate`), 헤더 개수는 `useCartCount`/`useWishlistCount`로 파생(별도 저장 X). **자동화 테스트 없음**(아래 권장)                                                                                      |
+| `pnpm check`                    | `pnpm check` 실행                                         | **수정 후 전체 통과**(test 78 / lint / typecheck / build). 아래 결함 참고                                                                                                                                                                                                           |
+
+### 발견된 기준선 결함 (수정 완료)
+
+`pnpm build`가 `/products` 정적 프리렌더에서 실패했다.
+
+- **재현**: `pnpm build` → `useSearchParams() should be wrapped in a suspense boundary at page "/products"`
+- **원인**: nuqs `useQueryStates`가 내부적으로 `useSearchParams()`를 호출하는데, `/products` 페이지 컴포넌트 최상위에서 사용해 Suspense 경계 없이 정적 프리렌더가 불가능(CSR bailout).
+- **수정 위치**: `src/app/products/page.tsx` — useQueryStates를 쓰는 본문을 `ProductsView`로 분리하고 `ProductsPage`에서 `<Suspense>`로 래핑. 구조 변경(기능 변경 아님)이라 0단계에서 단독 처리.
+- **검증 결과**: 재실행 시 build 통과, `/`·`/products` 정적 프리렌더 성공(`/api/*`는 동적). test 78개·lint·typecheck 영향 없음.
+
+### 수동(브라우저) 검증이 남은 항목
+
+UI 시각 렌더링·버튼 클릭 동기화·브라우저 뒤로/앞으로 버튼은 브라우저가 필요해 자동화 범위 밖이다. API 계약·코드 분기·단위 테스트로 기반을 검증했으므로, 리팩토링 후 아래를 브라우저로 최종 확인한다.
+
+- 4종 상태(로딩 스피너/에러 메시지+재시도/빈 결과)의 실제 렌더
+- 홈·목록 양쪽 찜·담기 토글 시 헤더 개수·버튼 상태 동기화
+- 장바구니·위시리스트 persist 새로고침 복원 + hydration mismatch 없음
+- 브라우저 뒤로/앞으로 버튼으로 URL 조건 복원
+
+### 권장(0단계는 아니나 기록)
+
+장바구니·위시리스트 store에 자동화 테스트가 없다(week-05 Advanced D 미적용). FSD 전환 중 store 슬라이스가 이동하므로, 전환 전후로 `toggle/remove/clear`, `useCartCount`/`useWishlistCount` 파생, persist `migrate` 계약을 테스트로 보호하면 회귀를 빨리 잡는다.
+
+---
+
 ## R — Requirements
 
 ### 기능 요구사항 (5주차까지, 반드시 보존)
