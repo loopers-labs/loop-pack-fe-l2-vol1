@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog } from "@/shared/ui/dialog";
 
 const buttonStyle = {
   padding: "10px 16px",

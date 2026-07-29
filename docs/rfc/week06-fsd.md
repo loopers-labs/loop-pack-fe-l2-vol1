@@ -470,3 +470,16 @@ route `loading.tsx`는 만들지 않는다. 현재 인라인 스켈레톤이 `pa
 **반려**
 
 1. Playwright smoke 테스트 — "CI 이미 지원"은 조건부 설치 훅(quality.yml)만 있는 상태로, 실제로는 의존성+config+테스트 작성의 새 인프라 구축이다. 과제 범위 밖이므로 반려하고 두 가지로 대체: ① `actions` required가 최대 리스크(버튼 증발)를 컴파일 타임으로 제거 ② 기준선 핵심 3행(토글·이동 간 유지·URL 직접 진입)을 Phase 4 직후에도 수동 재실행(§2.7). 구조 안정화 후 별도 작업으로 재검토
+
+### 하네스 검증 기록 (Phase 1 — §2.9 의도적 위반 재현)
+
+의도적 위반 4종을 임시 파일로 작성해 `pnpm lint`(--max-warnings=0)가 실패하는지 확인하고 원복했다. 4건 모두 `@typescript-eslint/no-restricted-imports`가 의도한 메시지로 차단했고, 원복 후 lint는 다시 통과했다.
+
+| #   | 위반 시나리오                       | 임시 파일                                                                                                  | 결과                                                      |
+| --- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 1   | entities → features 역방향          | `src/entities/product/__violation-reverse.ts`에서 `@/features/toggle-cart/ui/cart-button` import           | ❌ "entities에서 같은/상위 레이어를 import할 수 없습니다" |
+| 2   | 같은 레이어 슬라이스 간 직접 import | `src/features/toggle-cart/__violation-cross.ts`에서 `@/features/toggle-wishlist/ui/wishlist-button` import | ❌ "features에서 같은/상위 레이어를 import할 수 없습니다" |
+| 3   | Public API 우회 딥 임포트           | `src/widgets/header/__violation-deep.ts`에서 `@/entities/product/ui/product-card` import                   | ❌ "Public API(슬라이스 루트)로만 import하세요"           |
+| 4   | `../../` 상대경로로 슬라이스 탈출   | `src/entities/product/__violation-relative.ts`에서 `../../shared/api/commerce-client` import               | ❌ "상대경로로 슬라이스 경계를 넘을 수 없습니다"          |
+
+구현 노트: 아직 존재하지 않는 레이어 폴더(entities·features·widgets)에 대한 규칙도 즉시 작동함을 확인 — 이 규칙은 모듈 해석이 아니라 import 문자열 패턴 기반이기 때문(§2.9 "Phase 1 도입, 폴더 생성 즉시 작동" 전제 실증). mock 존에는 §2.9 규칙 3에 더해 딥 임포트 차단(규칙 4)도 함께 적용했다 — entities 루트는 타입 한정 허용, 세그먼트 딥 임포트는 타입이라도 차단.

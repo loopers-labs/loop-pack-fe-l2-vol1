@@ -1,3 +1,3 @@
-import { createSelectionStore } from "@/stores/create-selection-store";
+import { createSelectionStore } from "@/shared/lib/create-selection-store";
 
 export const useCartStore = createSelectionStore();

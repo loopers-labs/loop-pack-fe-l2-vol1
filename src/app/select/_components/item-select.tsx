@@ -1,6 +1,6 @@
 "use client";
 
-import { useSelect, type SelectOption } from "@/components/ui/select";
+import { useSelect, type SelectOption } from "@/shared/ui/select";
 import Image from "next/image";
 
 export interface ItemOption extends SelectOption {

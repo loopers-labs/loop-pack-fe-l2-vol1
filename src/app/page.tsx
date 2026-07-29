@@ -6,7 +6,7 @@ import { HomeProductSection } from "@/app/_components/home-product-section";
 import { Placeholder } from "@/app/_components/placeholder";
 import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
 import { commerceQueries } from "@/queries/commerce";
-import { CommerceApiError } from "@/services/commerce";
+import { CommerceApiError } from "@/shared/api/commerce-client";
 import { useQuery } from "@tanstack/react-query";
 
 export default function HomePage() {

@@ -6,7 +6,7 @@ import { ProductFilters } from "@/app/products/_components/product-filters";
 import { ProductListResults } from "@/app/products/_components/product-list-results";
 import { productSearchParsers } from "@/app/products/_lib/search-params";
 import { commerceQueries } from "@/queries/commerce";
-import { CommerceApiError } from "@/services/commerce";
+import { CommerceApiError } from "@/shared/api/commerce-client";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import { Suspense } from "react";

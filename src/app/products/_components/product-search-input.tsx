@@ -1,6 +1,6 @@
 "use client";
 
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import { useDebouncedCallback } from "@/shared/lib/use-debounced-callback";
 import { useEffect, useRef, useState } from "react";
 
 type ProductSearchInputProps = {
