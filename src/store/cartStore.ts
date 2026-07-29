@@ -2,33 +2,27 @@ import { create } from 'zustand';
 
 interface CartItem {
   id: string;
-  name: string;
-  image: string;
-  price: number;
   quantity: number;
 }
 
 interface CartState {
   items: Map<string, CartItem>;
-  lastAddedItem: Omit<CartItem, 'quantity'> | null;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  lastAddedId: string | null;
+  addItem: (id: string) => void;
   removeItem: (id: string) => void;
   clearLastAdded: () => void;
 }
 
 export const useCartStore = create<CartState>((set) => ({
   items: new Map(),
-  lastAddedItem: null,
+  lastAddedId: null,
 
-  addItem: (item) =>
+  addItem: (id) =>
     set((state) => {
       const next = new Map(state.items);
-      const existing = next.get(item.id);
-      next.set(item.id, {
-        ...item,
-        quantity: existing ? existing.quantity + 1 : 1,
-      });
-      return { items: next, lastAddedItem: item };
+      const existing = next.get(id);
+      next.set(id, { id, quantity: existing ? existing.quantity + 1 : 1 });
+      return { items: next, lastAddedId: id };
     }),
 
   removeItem: (id) =>
@@ -38,5 +32,5 @@ export const useCartStore = create<CartState>((set) => ({
       return { items: next };
     }),
 
-  clearLastAdded: () => set({ lastAddedItem: null }),
+  clearLastAdded: () => set({ lastAddedId: null }),
 }));

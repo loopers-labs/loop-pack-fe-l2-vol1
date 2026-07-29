@@ -176,14 +176,7 @@ export function ProductDetailContent() {
             </button>
             <button
               type="button"
-              onClick={() =>
-                addItem({
-                  id: product.id,
-                  name: product.name,
-                  image: product.image,
-                  price: product.price,
-                })
-              }
+              onClick={() => addItem(product.id)}
               className="flex h-[52px] flex-1 items-center justify-center rounded-xl bg-text text-[15px] font-semibold text-bg-card transition-colors hover:bg-text/90"
             >
               장바구니 담기

@@ -34,14 +34,7 @@ function ProductActions({ product }: { product: Product }) {
       </button>
       <button
         type="button"
-        onClick={() =>
-          addItem({
-            id: product.id,
-            name: product.name,
-            image: product.image,
-            price: product.price,
-          })
-        }
+        onClick={() => addItem(product.id)}
         className="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary transition-colors hover:bg-bg"
       >
         담기
