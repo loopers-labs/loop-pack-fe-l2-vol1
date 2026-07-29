@@ -1,10 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
-import { PRODUCT_LIST_DEFAULTS } from '@/app/api/_data/productService';
-import type {
-  Product,
-  ProductListQuery,
-  ProductListResponse,
-} from '@/types/commerce';
+import { PRODUCT_LIST_DEFAULTS, getProductList, getProductById } from '@/app/api/_data/productService';
+import type { ProductListQuery } from '@/types/commerce';
 
 export function productListQueryOptions(params: ProductListQuery) {
   const {
@@ -17,19 +13,7 @@ export function productListQueryOptions(params: ProductListQuery) {
 
   return queryOptions({
     queryKey: ['products', { q, category, sort, page, pageSize }],
-    queryFn: async (): Promise<ProductListResponse> => {
-      const searchParams = new URLSearchParams();
-      if (q) searchParams.set('q', q);
-      if (category && category !== 'all')
-        searchParams.set('category', category);
-      searchParams.set('sort', sort);
-      searchParams.set('page', String(page));
-      searchParams.set('pageSize', String(pageSize));
-
-      const response = await fetch(`/api/products?${searchParams}`);
-      if (!response.ok) throw new Error('상품 목록을 불러오지 못했습니다.');
-      return response.json();
-    },
+    queryFn: () => getProductList({ q, category, sort, page, pageSize }),
     staleTime: 0,
   });
 }
@@ -37,11 +21,10 @@ export function productListQueryOptions(params: ProductListQuery) {
 export function productDetailQueryOptions(id: string) {
   return queryOptions({
     queryKey: ['products', 'detail', id],
-    queryFn: async (): Promise<Product> => {
-      const response = await fetch(`/api/products?id=${id}`);
-      if (!response.ok) throw new Error('상품을 찾을 수 없습니다.');
-      const data: ProductListResponse = await response.json();
-      return data.products[0];
+    queryFn: () => {
+      const product = getProductById(id);
+      if (!product) throw new Error('상품을 찾을 수 없습니다.');
+      return product;
     },
     staleTime: 0,
     gcTime: 10 * 60 * 1000,
