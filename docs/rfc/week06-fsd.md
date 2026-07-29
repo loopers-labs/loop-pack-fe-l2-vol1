@@ -77,26 +77,20 @@
 외부 계약, 테스트에 영향을 주지 않는 **모델 독립**을 설계 성공 기준으로 채택한다. 이는 외부에서
 주어진 정답이 아니라 본 설계에서 추가로 선택한 검증 기준이다.
 
-공통 Zustand runtime 조립부와 상위 UI 조합부는 기능의 연결점을 명시하는 composition
-root이므로 수정 대상이 될 수 있다.
+상위 UI 조합부는 기능의 연결점을 명시하는 composition root이므로 수정 대상이 될 수 있다.
 
 #### Capability model
 
-각 capability가 소유하는 데이터, selector, action과 그 전용 테스트다.
+각 capability가 소유하는 데이터, selector, action, store 생성과 그 전용 테스트다.
+[Decision 1의 개정](#개정--b에서-c로)으로 store 생성이 여기에 포함됐다. 개정 전에는 아래에
+별도의 Runtime composition 경계를 두고 두 capability를 한 store에 조립했는데, 그 조립부가
+레이어 방향과 충돌해 없앴다.
 
 - cart capability model
 - wishlist capability model
 
-#### Runtime composition
-
-여러 capability를 하나의 인메모리 Zustand runtime에 조립하는 경계다. 현재 persist나 세션
-복원 정책은 없다.
-
-- store 생성과 존속
-- capability state/action 조립
-- 공통 초기 상태
-- 테스트 격리용 전체 reset
-- 조립 결과에 대한 통합 테스트
+현재 persist나 세션 복원 정책은 없다. 테스트 격리용 reset은 capability마다 하나씩 두고,
+테스트 헬퍼가 둘을 함께 부른다.
 
 #### UI composition
 
@@ -120,7 +114,7 @@ cart capability의 외부 계약은 다음 중 외부 슬라이스가 실제로 
 - Zustand `set`과 `get`
 - capability를 runtime에 조립하는 방식
 - 외부에서 import하지 않는 selector 함수
-- 공통 store 생성 코드
+- store 생성 코드
 
 위시리스트를 제거해도 cart 외부 계약의 이름, 입력, 반환 타입과 의미가 바뀌지 않아야 한다.
 
@@ -165,12 +159,12 @@ Public API도 독립 결정이 아니라 슬라이스 경계가 정해진 뒤 �
 - **Decision 3은 지지받는다.** "여러 경로가 만나는 조합 지점은 widget"은 `ProductCard`와 두
   토글을 `widgets/product-grid`에서 조합하기로 한 결론과 같다. 다만 이 조언은 결론을 만든
   근거가 아니라 사후 확인이다. Decision 3의 근거는 여전히 20줄짜리 공통 조합 블록이다.
-- **Decision 1은 유지한다.** "라이브러리와 충돌하면 내 설계를 의심하라"를 적용해 다시 봤다.
-  충돌한 것은 Zustand의 canonical slices 관례이고, 그 관례가 요구한 것은 슬라이스 생성자가
-  전체 store 타입을 아는 것이다. 우리가 세운 경계는 "cart가 wishlist를 알지 않는다"이고,
-  이는 위시리스트 삭제라는 필수 변경 시나리오에서 나왔다. 라이브러리 관례를 따르면 이
-  시나리오에서 cart 타입 계약이 함께 바뀐다. 도메인 경계를 우선한다는 조언과 같은 방향이므로
-  결론을 바꾸지 않는다.
+- **Decision 1은 이 시점에는 유지로 판정했고, 이후 개정했다.** "라이브러리와 충돌하면 내
+  설계를 의심하라"를 처음 적용했을 때는 충돌 지점을 Zustand의 canonical slices 관례 하나로
+  봤고, 우리 factory가 그 관례를 우회해 도메인 경계를 지키므로 조언과 같은 방향이라고
+  판단했다. 목표 트리를 그리면서 두 번째 충돌을 발견했다. 관례를 우회한 그 factory가 이번에는
+  레이어 방향과 부딪힌다. 조언이 가리키던 것이 하나가 아니었다.
+  [Decision 1의 개정](#개정--b에서-c로)에 경위와 판단을 적었다.
 - **Decision 4에는 검토하지 않은 경쟁안이 생겼다.** 홈은 배너, 카테고리, 인기 상품, 신상품을
   한 응답으로 받는 다중 도메인 응답이다. 조언은 entity가 공통 응답을 받고 `select`로 자기
   모델만 꺼내는 방식을 제시한다. Decision 4는 이 선택지를 놓고 비교하지 않았다.
@@ -197,6 +191,9 @@ Public API도 독립 결정이 아니라 슬라이스 경계가 정해진 뒤 �
 아니기 때문이다. 조언과 우리 코드의 사실이 어긋나면 사실을 따르고 그 차이를 기록한다.
 
 ## Decision 1. Cart/Wishlist Capability Boundary
+
+> 이 결정은 [개정](#개정--b에서-c로)되어 최종 선택이 B에서 C로 바뀌었다. 아래 Context부터
+> Validation까지는 개정 전 기록이며, 판단이 어떻게 바뀌었는지 보이도록 지우지 않고 남긴다.
 
 ### Context
 
@@ -366,15 +363,69 @@ B안은 기존 구조보다 11줄 증가하지만 다음을 함께 만족한다.
 삭제 후에도 장바구니의 동작, 데이터 구조, 외부 계약은 유지되고, cart 전용 테스트는 수정 없이
 통과해야 한다. 상위 composition 수정은 응집 실패가 아니라 명시적인 연결 제거로 분류한다.
 
+### 개정 — B에서 C로
+
+목표 트리를 그리다 이 결정이 레이어 방향과 충돌하는 것을 발견했다. Decision 1을 내릴 때는
+각 조각이 어느 레이어에 앉을지 아직 정하지 않았기 때문에 보이지 않던 문제다.
+
+#### 발견한 충돌
+
+B의 "공통 runtime 조립부"는 두 capability를 함께 import한다. 두 capability가 `entities`에
+있으므로 조립부는 그보다 위 레이어에 있어야 한다. 그런데 Decision 2가 토글 UI를
+`entities/cart/ui`에 두기로 했고, 그 UI는 `useIsInCart` 같은 selector를 소비한다. selector는
+store 인스턴스를 읽으므로 조립부에 있다. 결과는 `entities` → 상위 레이어 import, 즉 역방향
+의존이다.
+
+빠져나갈 길을 셋 검토했다.
+
+| 방법 | 결과 |
+| --- | --- |
+| store 인스턴스를 `shared`에 둔다 | 합쳐진 store 타입이 두 capability 상태를 알아야 해서 `shared` → `entities` 의존이 생긴다 |
+| 조립부가 store를 props로 내려준다 | 조합부부터 leaf까지 store를 들고 내려가야 한다. Decision 3의 조합 코드가 커진다 |
+| 토글 UI를 조립부와 같은 레이어로 올린다 | Decision 2를 뒤집는다. 정책이 없는 UI를 위해 레이어를 여는 것과 같아진다 |
+
+셋 다 원래 결정 하나를 깨거나 더 큰 결합을 만든다.
+
+#### 판단
+
+C(모델과 store 모두 분리)로 바꾼다. 근거는 두 가지다.
+
+첫째, 원래 C를 반려한 근거가 약해졌다. 반려 사유는 "runtime을 분리해야 할 근거가 없고 reset
+조율과 소비 방식의 복잡도만 증가한다"였다. 그런데 B를 유지하려면 위 표의 비용 중 하나를 내야
+하고, 그 비용이 reset 조율보다 크다. 비교 대상이 "복잡도 증가 대 0"에서 "복잡도 증가 대
+역방향 의존"으로 바뀌었다.
+
+둘째, [멘토링 입력](#멘토링-세션-입력)의 "도메인 경계를 우선하고 라이브러리 경계와 충돌하면 내
+설계를 의심한다"가 여기에 정확히 걸린다. 하나의 store에 슬라이스를 모으는 것은 Zustand의
+관례이지 도메인의 요구가 아니다. cart와 wishlist는 서로를 모르는 독립 capability로 정했고,
+그 경계를 지키려고 라이브러리 관례를 우회하는 factory를 만들었는데, 그 우회가 이제 레이어
+규칙까지 건드리고 있다. 관례를 지키려고 설계를 비트는 중이라는 신호로 읽는다.
+
+#### 바뀌는 것
+
+- capability마다 자기 Zustand store를 만든다. Zustand 비인지 factory와 setter 계약이 필요
+  없어져 Decision 1의 Consequences 첫 항목과 넷째 항목이 사라진다.
+- `resetShoppingState` 하나가 capability별 reset 둘로 나뉜다. 테스트 격리는 둘을 함께 부르는
+  헬퍼로 처리한다. 이것이 C를 반려했던 "reset 조율" 비용이며, 실제 크기는 헬퍼 한 줄이다.
+- 위시리스트 삭제 반경이 세 곳에서 두 곳으로 줄어든다. 공통 runtime 조립부가 없어지므로
+  `widgets/product-grid` 조합부와 Header만 남는다. [Decision 2의 삭제 반경 기록](#선택과-무관하게-나온-결과)이
+  이 개정으로 갱신된다.
+- Decision 2와 Decision 3은 그대로 성립한다. 오히려 `entities/*/ui`가 같은 슬라이스의
+  `model`만 참조하면 되므로 Decision 2의 근거가 단순해진다.
+
+#### 바뀌지 않는 것
+
+모델 독립이라는 설계 성공 기준과, 위시리스트 삭제가 cart 모델과 계약과 테스트에 전파되지
+않아야 한다는 Validation은 그대로다. C는 이 기준을 B보다 강하게 만족한다.
+
 ### Revisit
 
-다음 변화가 확인되면 runtime store 분리를 다시 검토한다.
+개정으로 store가 이미 분리됐으므로, 반대 방향인 통합을 다시 검토할 조건을 적는다.
 
-- cart와 wishlist의 생성, 초기화, reset 정책이 달라진다.
-- 한 capability만 persist 또는 세션 복원이 필요해진다.
-- 두 capability가 서로 다른 서버 동기화 및 만료 정책을 가진다.
-- 공통 runtime 조립부가 capability의 독립 변경을 반복적으로 방해한다.
-- 통합 store 때문에 한 capability의 테스트가 다른 capability 설정을 필요로 한다.
+- 두 capability가 항상 함께 초기화되고 함께 비워져야 하는 정책이 생긴다.
+- 한쪽을 바꿀 때 다른 쪽도 같은 이유로 바뀌는 일이 반복된다.
+- 두 store를 함께 다뤄야 하는 조합 코드가 늘어 조합부가 store 조립처럼 보이기 시작한다.
+- persist가 생기고 두 capability가 같은 저장 키와 만료 정책을 공유해야 한다.
 
 ## Decision 2. Toggle UI의 레이어
 
@@ -414,15 +465,18 @@ B안은 기존 구조보다 11줄 증가하지만 다음을 함께 만족한다.
 
 위시리스트 capability를 삭제한 뒤 깨지는 파일은 두 안이 같았다. spike 기록에는 두 개로
 적었으나 Header를 실험 범위에서 빠뜨린 결과다. 목표 구조에서 살아남아 수정해야 하는 생산 코드
-경계는 최소 세 곳이다.
+경계는 두 곳이다.
 
-- 공통 Zustand runtime 조립부
 - 상위 조합부 (Decision 3 이후 `widgets/product-grid`)
 - Header 조합부 (`HeaderCounts`)
 
-`entities/wishlist/ui`는 폴더째 지우므로 "깨지는 생존 파일"에 넣지 않는다. 세 곳 모두
-[Decision 1](#decision-1-cartwishlist-capability-boundary)의 Validation이 이미 삭제하거나
-수정할 수 있는 대상으로 열거한 항목이므로, 이 정정은 Decision 1의 결론을 바꾸지 않는다.
+기록이 두 번 바뀌었다. 처음 spike는 "공통 Zustand runtime 조립부와 상위 조합부" 두 개로
+적었고, Header를 빠뜨린 것을 찾아 세 개로 고쳤다. 이후 [Decision 1의 개정](#개정--b에서-c로)으로
+공통 runtime 조립부 자체가 없어져 다시 두 개가 됐다. 숫자는 처음과 같지만 내용은 다르다.
+
+`entities/wishlist/ui`와 `entities/wishlist/model`은 폴더째 지우므로 "깨지는 생존 파일"에
+넣지 않는다. 두 곳 모두 [Decision 1](#decision-1-cartwishlist-capability-boundary)의 Validation이
+이미 삭제하거나 수정할 수 있는 대상으로 열거한 항목이다.
 
 Header가 위시리스트 개수를 소비하는 것은 경계 누수가 아니다. 개수 표시는 정당한 외부 소비이고
 현재도 `useWishlistCount`라는 의도 기반 selector만 쓴다. 다만 wishlist 슬라이스에 조합부 밖의
@@ -832,12 +886,12 @@ Decision 2~5의 결과를 반영해 확정한다. 현재 시점의 상태는 다
 | 검색어, 카테고리, 정렬, 페이지 | URL | 목록 조건 parser와 조립 훅 | 상품 목록 | URL에서 읽어 조건 객체 하나로 만들고 query key와 요청이 그 객체를 공유한다 |
 | 장바구니에 담긴 상품 ID | Zustand | cart capability model | 헤더, 상품 행위 UI | 개수와 포함 여부를 저장하지 않고 selector에서 파생한다 |
 | 위시리스트에 담긴 상품 ID | Zustand | wishlist capability model | 헤더, 상품 행위 UI | 같은 방식 |
-| store 생성, 초기화, reset | 인메모리 Zustand runtime | 공통 runtime 조립부 | 두 capability | capability가 runtime 생성 방식을 알지 않는다 |
+| store 생성, 초기화, reset | 인메모리 Zustand store | 각 capability model | 자기 capability만 | capability마다 자기 store를 만들고 서로의 생성 방식을 알지 않는다 |
 | 제출 전 검색어 | React local state | 검색 폼 | 검색 폼 하나 | 제출 시점에만 URL로 승격한다 |
 | 로딩, 에러, 빈 결과 | 파생 | 없음 | 각 화면 | 쿼리 상태에서 렌더 중 계산한다 |
 
-cart와 wishlist는 capability 모델을 분리하고 하나의 Zustand runtime에서 조립한다. 구현
-방식과 대안 비교는 [Decision 1](#decision-1-cartwishlist-capability-boundary)을 따른다.
+cart와 wishlist는 capability 모델과 store를 모두 분리한다. 대안 비교와 이 결론에 이른 경위는
+[Decision 1](#decision-1-cartwishlist-capability-boundary)과 그 [개정](#개정--b에서-c로)을 따른다.
 
 ### I — Interface
 
