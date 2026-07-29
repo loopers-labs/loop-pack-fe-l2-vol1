@@ -4,7 +4,7 @@ import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommerceHeader } from "./CommerceHeader";
 import { CommerceProductCard } from "./CommerceProductCard";
-import type { ProductCardItem } from "./ProductCard";
+import type { ProductCardItem } from "@/entities/product";
 import { COMMERCE_STORE_STORAGE_KEY } from "@/stores/commerce/persistence";
 import { useCommerceStore } from "@/stores/commerce/store";
 import { CommerceStoreHydrator } from "@/stores/commerce/CommerceStoreHydrator";

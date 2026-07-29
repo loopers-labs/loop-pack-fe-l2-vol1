@@ -8,10 +8,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListPageClient } from "@/features/products/ProductListPageClient";
 import { getProducts } from "@/features/products/api/productApi";
 import { useCommerceStore } from "@/stores/commerce/store";
-import type { Product } from "@/types/commerce";
+import type { Product } from "@/entities/product";
 import { ProductSection } from "@/components/commerce/ProductSection";
 
-vi.mock("@/features/products/api/productApi", () => ({
+vi.mock("@/features/products/api/productApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/products/api/productApi")>()),
   getProducts: vi.fn(),
 }));
 

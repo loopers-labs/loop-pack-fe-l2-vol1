@@ -1,5 +1,5 @@
-import { ProductCard } from "./ProductCard";
-import type { ProductCardItem } from "./ProductCard";
+import { ProductCard } from "@/entities/product";
+import type { ProductCardItem } from "@/entities/product";
 import { useCommerceStore } from "@/stores/commerce/store";
 
 type CommerceProductCardProps = {

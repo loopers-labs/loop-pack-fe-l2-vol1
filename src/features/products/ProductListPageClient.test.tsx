@@ -10,9 +10,10 @@ import { ProductListPageClient } from "./ProductListPageClient";
 import { getProducts } from "./api/productApi";
 import type { ProductListResponse } from "./api/productApi";
 import { useCommerceStore } from "@/stores/commerce/store";
-import type { Product } from "@/types/commerce";
+import type { Product } from "@/entities/product";
 
-vi.mock("./api/productApi", () => ({
+vi.mock("./api/productApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./api/productApi")>()),
   getProducts: vi.fn(),
 }));
 

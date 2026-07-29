@@ -1,6 +1,6 @@
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { CommerceHeader } from "@/components/commerce/CommerceHeader";
-import type { ProductCardItem } from "@/components/commerce/ProductCard";
+import type { ProductCardItem } from "@/entities/product";
 import { Pagination } from "@/features/products/Pagination";
 import { ProductFilters } from "@/features/products/ProductFilters";
 import { ProductResultSummary } from "@/features/products/ProductResultSummary";

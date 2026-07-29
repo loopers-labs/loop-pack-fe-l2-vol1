@@ -1,10 +1,11 @@
 import { createApiUrl, parseApiError, setSearchParam } from "@/shared/api/apiUtils";
-import type { Category, Product } from "@/types/commerce";
-import type { ProductCategoryFilter, ProductSort } from "../types";
+import type { Category } from "@/entities/category";
+import type { CategoryId } from "@/entities/category/@x/product";
+import type { Product, ProductSort } from "@/entities/product";
 
 export type ProductListQuery = {
   q?: string;
-  category?: ProductCategoryFilter;
+  category?: CategoryId | "all";
   sort?: ProductSort;
   page?: number;
   pageSize?: number;

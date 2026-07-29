@@ -1,6 +1,6 @@
-import { CATEGORY_IDS } from "@/constants/commerce";
+import { CATEGORY_IDS } from "@/entities/category";
 
-export const PRODUCT_SORTS = ["latest", "popular", "price-asc", "price-desc"] as const;
+export { PRODUCT_SORTS } from "@/entities/product";
 
 export const PRODUCT_CATEGORY_FILTERS = ["all", ...CATEGORY_IDS] as const;
 

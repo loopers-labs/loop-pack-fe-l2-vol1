@@ -1,6 +1,6 @@
 import { ProductGrid } from "./ProductGrid";
-import { mapProductToCardItem } from "./productCardAdapter";
-import type { Product } from "@/types/commerce";
+import { mapProductToCardItem } from "@/entities/product";
+import type { Product } from "@/entities/product";
 
 type ProductSectionProps = {
   title: string;

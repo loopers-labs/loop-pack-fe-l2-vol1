@@ -1,5 +1,6 @@
 import { createApiUrl, parseApiError } from "@/shared/api/apiUtils";
-import type { Category, Product } from "@/types/commerce";
+import type { Category } from "@/entities/category";
+import type { Product } from "@/entities/product";
 
 export type HomeResponse = {
   banner: { title: string; description: string; image: string };

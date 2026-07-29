@@ -1,5 +1,5 @@
 import { CommerceProductCard } from "./CommerceProductCard";
-import type { ProductCardItem } from "./ProductCard";
+import type { ProductCardItem } from "@/entities/product";
 
 type ProductGridProps = {
   products: ProductCardItem[];

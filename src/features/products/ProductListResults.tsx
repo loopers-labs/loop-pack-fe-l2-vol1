@@ -3,11 +3,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
-import { mapProductToCardItem } from "@/components/commerce/productCardAdapter";
+import { mapProductToCardItem } from "@/entities/product";
 import { Pagination } from "./Pagination";
 import { PRODUCT_LIST_PAGE_SIZE } from "./constants";
-import { ProductListContent } from "./ProductListContent";
 import { productQueries } from "./queries/productQueries";
+import { ProductListContent } from "./ProductListContent";
 import type { ProductCategoryFilter, ProductSort } from "./types";
 
 type ProductListParams = {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Category } from "@/types/commerce";
+import type { Category } from "@/entities/category";
 
 type CategoryNavProps = {
   categories: Category[];

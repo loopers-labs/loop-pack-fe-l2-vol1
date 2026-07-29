@@ -1,11 +1,7 @@
-import type { CATEGORY_IDS } from "@/constants/commerce";
+import type { PRODUCT_SORTS } from "./constants";
+import type { CategoryId } from "@/entities/category/@x/product";
 
-export type CategoryId = (typeof CATEGORY_IDS)[number];
-
-export type Category = {
-  id: CategoryId;
-  name: string;
-};
+export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
 export type Product = {
   id: string;
@@ -16,7 +12,7 @@ export type Product = {
   originalPrice: number | null;
   image: string;
   freeShipping: boolean;
-  sizes: Array<{ value: number; stock: number }>;
+  sizes: { value: number; stock: number }[];
   rating: number;
   reviewCount: number;
   createdAt: string;

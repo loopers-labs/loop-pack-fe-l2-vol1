@@ -9,7 +9,7 @@ import { HomeLoading } from "./HomeLoading";
 import { HomePageClient } from "./HomePageClient";
 import { getHome } from "./api/homeApi";
 import { useCommerceStore } from "@/stores/commerce/store";
-import type { Product } from "@/types/commerce";
+import type { Product } from "@/entities/product";
 
 vi.mock("./api/homeApi", () => ({
   getHome: vi.fn(),

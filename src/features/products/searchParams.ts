@@ -1,6 +1,7 @@
 import { createLoader, createParser, parseAsString, parseAsStringEnum } from "nuqs/server";
 import { PRODUCT_CATEGORY_FILTERS, PRODUCT_SORTS } from "./constants";
-import type { ProductCategoryFilter, ProductSort } from "./types";
+import type { ProductSort } from "@/entities/product";
+import type { ProductCategoryFilter } from "./types";
 
 const parseAsPageNumber = createParser({
   parse(value) {
