@@ -159,6 +159,35 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     expect(await screen.findByText('총 2개')).toBeInTheDocument()
   })
 
+  it('목록 조회가 실패해도 조건을 바꿀 수 있는 UI는 화면에 남는다', async () => {
+    // Decision 6의 핵심이다. 조회 실패를 Error Boundary로 올리면 필터까지 사라져
+    // 사용자가 조건을 바꿔 벗어날 길이 닫힌다. 그래서 결과 영역 안에서 처리한다.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(new Response(null, { status: 500 })),
+      ),
+    )
+    const onUrlUpdate = vi.fn()
+
+    renderApp(<ProductListView />, { onUrlUpdate })
+
+    await screen.findByText('상품 목록을 불러오지 못했습니다.')
+
+    expect(screen.getByLabelText('검색')).toBeInTheDocument()
+    expect(screen.getByLabelText('카테고리')).toBeInTheDocument()
+    expect(screen.getByLabelText('정렬')).toBeInTheDocument()
+
+    // 남아 있기만 한 것이 아니라 조작되어야 한다.
+    fireEvent.change(screen.getByLabelText('카테고리'), {
+      target: { value: 'digital' },
+    })
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
+    expect(lastUrlUpdate(onUrlUpdate).searchParams.get('category')).toBe(
+      'digital',
+    )
+  })
+
   it('홈 실패 시 에러 화면과 재시도 버튼을 보여준다', async () => {
     vi.stubGlobal(
       'fetch',
