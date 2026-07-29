@@ -12,7 +12,7 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { useProductSearchParams } from '../_hooks/useProductSearchParams';
 import { formatWon } from '@/utils/format';
-import type { Product, ProductListResponse } from '@/types/commerce';
+import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/types/commerce';
 
 function ProductActions({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
@@ -214,7 +214,7 @@ export function ProductListContent() {
         />
         <select
           value={params.category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => setCategory(e.target.value as CategoryOption)}
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
         >
           <option value="all">전체</option>
@@ -226,7 +226,7 @@ export function ProductListContent() {
         </select>
         <select
           value={params.sort}
-          onChange={(e) => setSort(e.target.value)}
+          onChange={(e) => setSort(e.target.value as ProductSort)}
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
         >
           <option value="latest">최신순</option>
