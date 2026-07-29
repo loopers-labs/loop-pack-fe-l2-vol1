@@ -1,6 +1,10 @@
+"use client";
+
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { ProductGrid } from "./ProductGrid";
 import { PrefetchCategoryLink } from "./PrefetchCategoryLink";
-import type { HomeResponse, Product } from "@/types/commerce";
+import { homeQueries } from "@/queries/home";
+import type { Product } from "@/types/commerce";
 import styles from "./commerce.module.css";
 
 function ProductSection({
@@ -22,7 +26,9 @@ function ProductSection({
   );
 }
 
-export function HomeContent({ home }: { home: HomeResponse }) {
+export function HomeContent() {
+  const { data: home } = useSuspenseQuery(homeQueries.detail());
+
   return (
     <>
       <section className={styles.hero}>

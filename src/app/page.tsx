@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { getHome } from "@/services/commerce";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { CommerceHeader } from "@/components/commerce/CommerceHeader";
 import { HomeContent } from "@/components/commerce/HomeContent";
+import { getQueryClient } from "@/lib/queryClient";
+import { homeQueries } from "@/queries/home";
 import styles from "@/components/commerce/commerce.module.css";
 
 export default function HomePage() {
@@ -24,7 +26,13 @@ export default function HomePage() {
 // https://nextjs.org/docs/app/api-reference/functions/connection
 async function HomeData() {
   await connection();
-  const home = await getHome();
 
-  return <HomeContent home={home} />;
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(homeQueries.detail());
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <HomeContent />
+    </HydrationBoundary>
+  );
 }
