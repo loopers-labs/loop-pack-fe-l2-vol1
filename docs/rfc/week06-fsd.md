@@ -121,7 +121,7 @@ FSD v2.1의 pages first 관점을 적용해 한 페이지에서만 쓰는 UI, �
 
 반면 장바구니 담기와 위시리스트 토글은 홈과 상품 목록 두 page에서 모두 사용되는 사용자 행위다.
 따라서 상태 자체는 `entities/cart`, `entities/wishlist`가 소유하고,
-버튼 행위는 `features/add-to-cart`, `features/toggle-wishlist`로 분리한다.
+버튼에 연결할 상태와 action 조합은 `features/add-to-cart`, `features/toggle-wishlist`의 hook으로 분리한다.
 상품 카드에서 product UI와 두 feature를 함께 보여주는 조합은 `widgets/product-card`에서 담당한다.
 
 카테고리는 상품 목록 필터 UI에만 쓰이는 값이 아니라 홈 카테고리 탐색, 상품 목록 URL 조건,
@@ -164,11 +164,11 @@ Shared와 App은 layer이면서 동시에 slice처럼 동작하는 예외로 설
 import { ProductListPage } from "@/_pages/products";
 
 // widget은 feature와 entity를 조합할 수 있다.
-import { AddToCartButton } from "@/features/add-to-cart";
+import { useAddToCart } from "@/features/add-to-cart";
 import { ProductCard } from "@/entities/product";
 
 // feature는 entity와 shared를 사용할 수 있다.
-import { useCartStore } from "@/entities/cart";
+import { selectIsProductInCart } from "@/entities/cart";
 ```
 
 금지:
@@ -178,7 +178,7 @@ import { useCartStore } from "@/entities/cart";
 import { ToggleWishlistButton } from "@/features/toggle-wishlist";
 
 // feature끼리 직접 import하지 않는다. 상위 레이어에서 조합한다.
-import { AddToCartButton } from "@/features/add-to-cart";
+import { useAddToCart } from "@/features/add-to-cart";
 
 // shared에 상품 정책이 들어가면 비즈니스 로직이 새는 것이다.
 import { getProductBadges } from "@/shared/lib";
@@ -244,10 +244,10 @@ Zustand 공식 Slices Pattern도 개별 slice를 조합해 하나의 bounded sto
 | -------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | `entities/product`         | `Product`, `ProductCategoryId`, `ProductSort`, `PRODUCT_CATEGORY_IDS`, `PRODUCT_SORTS`, `ProductCard` | ProductCard adapter 세부, 화면별 상품 목록 조회 정책      |
 | `entities/category`        | `Category`, `CategoryId`, `CATEGORY_IDS`                                                              | parser 구현 세부, 화면별 필터 옵션                        |
-| `entities/cart`            | `CartSlice`, `createCartSlice`                                                                        | root store 조합 방식, persist storage key, migration 세부 |
-| `entities/wishlist`        | `WishlistSlice`, `createWishlistSlice`                                                                | root store 조합 방식, persist storage key, migration 세부 |
-| `features/add-to-cart`     | `AddToCartButton` 또는 `useAddToCart`                                                                 | Zustand map 구조, cart entity 연결 세부                   |
-| `features/toggle-wishlist` | `ToggleWishlistButton` 또는 `useToggleWishlist`                                                       | Zustand map 구조, wishlist entity 연결 세부               |
+| `entities/cart`            | `CartSlice`, `createCartSlice`, cart count/포함 여부/action selector                                  | root store 조합 방식, persist storage key, migration 세부 |
+| `entities/wishlist`        | `WishlistSlice`, `createWishlistSlice`, wishlist count/포함 여부/action selector                      | root store 조합 방식, persist storage key, migration 세부 |
+| `features/add-to-cart`     | `useAddToCart`                                                                                        | Zustand map 구조, hydration flag 처리 세부                |
+| `features/toggle-wishlist` | `useToggleWishlist`                                                                                   | Zustand map 구조, hydration flag 처리 세부                |
 | `widgets/product-card`     | `CommerceProductCard`                                                                                 | product UI와 cart/wishlist feature 조합 세부              |
 | `widgets/header`           | `CommerceHeader`                                                                                      | cart/wishlist count 구독 및 표시 조합                     |
 | `_pages/products`          | `ProductListPage`, loading/error UI                                                                   | 내부 query/result/filter/url 조합                         |
@@ -292,7 +292,7 @@ function CommerceProductCard({ product }: CommerceProductCardProps) {
 
 다만 `CommerceProductCard`가 root store 내부 shape에 직접 의존하지는 않는다.
 `cartProductIdMap` 같은 저장 구조를 직접 읽지 않고, `features/add-to-cart`, `features/toggle-wishlist`
-또는 cart/wishlist entity의 공개 API를 통해 필요한 상태와 action만 소비한다.
+hook을 통해 필요한 상태와 action만 소비한다.
 `ProductCard`는 찜/담기 버튼의 위치, 접근성 속성, disabled 표현을 계속 담당하되,
 상태 계산과 action 연결은 `CommerceProductCard`가 하위 slice의 공개 API로 조합한다.
 `hasHydrated` 같은 persist 복원 상태도 `CommerceProductCard`에 직접 노출하지 않는다.
@@ -300,15 +300,8 @@ function CommerceProductCard({ product }: CommerceProductCardProps) {
 두 feature hook에서 같은 hydration flag를 읽는 중복은 허용한다.
 중요한 기준은 widget이 root store의 내부 shape나 persist 생명주기를 직접 알지 않게 하는 것이다.
 
-나중에 화면마다 상품 카드 action 구성이 달라지면 `ProductCard`에 위치별 slot을 여는 방식으로 전환한다.
-
-```tsx
-<ProductCard
-  product={product}
-  imageOverlay={<ToggleWishlistButton productId={product.id} />}
-  footerAction={<AddToCartButton productId={product.id} />}
-/>
-```
+나중에 화면마다 상품 카드 action 구성이 달라지면 버튼 UI 자체를 feature로 분리하거나,
+`ProductCard`에 위치별 slot을 여는 방식으로 전환한다.
 
 ### Public API 사용 여부
 

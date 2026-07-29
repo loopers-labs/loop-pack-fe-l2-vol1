@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { selectCartCount } from "@/entities/cart";
+import { selectWishlistCount } from "@/entities/wishlist";
 import { useCommerceStore } from "@/_app/model/commerceStore";
 
 export function CommerceHeader() {
   const hasHydrated = useCommerceStore((state) => state.hasHydrated);
-  const wishlistCount = useCommerceStore((state) => Object.keys(state.wishlistProductIdMap).length);
-  const cartCount = useCommerceStore((state) => Object.keys(state.cartProductIdMap).length);
+  const wishlistCount = useCommerceStore(selectWishlistCount);
+  const cartCount = useCommerceStore(selectCartCount);
   const visibleWishlistCount = hasHydrated ? String(wishlistCount) : "-";
   const visibleCartCount = hasHydrated ? String(cartCount) : "-";
 
