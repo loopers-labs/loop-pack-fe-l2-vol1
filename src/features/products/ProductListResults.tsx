@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { ProductGrid } from "@/components/commerce/ProductGrid";
+import { ProductGrid } from "@/widgets/product-card";
 import { mapProductToCardItem } from "@/entities/product";
 import { Pagination } from "./Pagination";
 import { PRODUCT_LIST_PAGE_SIZE } from "./constants";

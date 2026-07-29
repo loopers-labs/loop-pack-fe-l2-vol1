@@ -5,7 +5,7 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CommerceHeader } from "@/components/commerce/CommerceHeader";
+import { CommerceHeader } from "@/widgets/header";
 import { ProductListPageClient } from "./ProductListPageClient";
 import { getProducts } from "./api/productApi";
 import { useCommerceStore } from "@/_app/model/commerceStore";

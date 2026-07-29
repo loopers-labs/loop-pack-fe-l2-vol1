@@ -1,7 +1,7 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ProductSection } from "@/components/commerce/ProductSection";
+import { ProductSection } from "@/widgets/product-card";
 import { CategoryNav } from "./CategoryNav";
 import { HomeHero } from "./HomeHero";
 import { homeQueries } from "./queries/homeQueries";

@@ -1,4 +1,4 @@
-import { CommerceProductCard } from "@/widgets/product-card";
+import { CommerceProductCard } from "./CommerceProductCard";
 import type { ProductCardItem } from "@/entities/product";
 
 type ProductGridProps = {

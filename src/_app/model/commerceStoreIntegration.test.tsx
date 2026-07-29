@@ -9,7 +9,7 @@ import { ProductListPageClient } from "@/features/products/ProductListPageClient
 import { getProducts } from "@/features/products/api/productApi";
 import { useCommerceStore } from "@/_app/model/commerceStore";
 import type { Product } from "@/entities/product";
-import { ProductSection } from "@/components/commerce/ProductSection";
+import { ProductSection } from "@/widgets/product-card";
 
 vi.mock("@/features/products/api/productApi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/products/api/productApi")>()),

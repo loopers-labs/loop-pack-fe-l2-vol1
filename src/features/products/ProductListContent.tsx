@@ -1,6 +1,6 @@
 import { ProductResultSummary } from "./ProductResultSummary";
 import type { ReactNode } from "react";
-import { ProductGridSkeleton } from "@/components/commerce/ProductGridSkeleton";
+import { ProductGridSkeleton } from "@/widgets/product-card";
 import { Skeleton } from "@/shared/ui/Skeleton";
 
 type ProductListContentProps = {
