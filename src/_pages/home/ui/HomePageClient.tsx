@@ -4,7 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { ProductSection } from "@/widgets/product-card";
 import { CategoryNav } from "./CategoryNav";
 import { HomeHero } from "./HomeHero";
-import { homeQueries } from "./queries/homeQueries";
+import { homeQueries } from "../queries/homeQueries";
 
 export function HomePageClient() {
   const { data } = useSuspenseQuery(homeQueries.main());
