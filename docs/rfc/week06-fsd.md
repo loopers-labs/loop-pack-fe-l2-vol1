@@ -1041,6 +1041,93 @@ capability의 action 안에서 잡아 상태로 바꿔야 한다. 버튼 옆에 
 - 토글에 서버 동기화가 붙어 이벤트 핸들러 실패가 생긴다.
 - 실패 UI가 세 화면 이상에서 같은 모양으로 반복된다.
 
+## 삭제 시나리오 자가 검증
+
+마이그레이션이 끝난 트리에서 코드를 고치지 않고 확인했다. Preflight에서 예측한 목록과
+실제를 대조한다.
+
+### 위시리스트를 통째로 제거한다면
+
+**폴더째 지울 것** — `src/entities/wishlist/` 하나다. 안에 model, ui, 전용 테스트가 함께 있다.
+
+**살아남아 수정할 생산 코드** — 두 곳이다.
+
+| 파일 | 고칠 것 |
+| --- | --- |
+| `widgets/product-grid/ui/ProductGrid.tsx` | `WishlistToggleButton` import와 `actions`에서 제거 |
+| `widgets/header/ui/HeaderCounts.tsx` | `useWishlistCount` 구독과 배지 하나 제거 |
+
+**살아남아 수정할 테스트와 도구** — 세 곳이다.
+
+| 파일 | 고칠 것 |
+| --- | --- |
+| `test/resetStores.ts` | `resetWishlist` 호출 한 줄 |
+| `test/resetStores.test.ts` | 위시리스트 관련 단언 |
+| `app/state-contract.test.tsx` | 위시리스트 토글 통합 검증 |
+
+**수정하지 않는 것** — `entities/cart` 전체, `entities/product` 전체, `shared` 전체,
+`_pages` 둘 전체다. cart의 모델과 외부 계약과 전용 테스트가 그대로이므로 Preflight에서 채택한
+모델 독립 기준을 만족한다.
+
+#### 예측과 실제의 차이
+
+Preflight는 생산 코드 경계를 두 곳으로 예측했고 실제도 두 곳이다.
+[Decision 2의 삭제 반경 기록](#선택과-무관하게-나온-결과)이 예측한 `widgets/product-grid`와
+Header 조합부가 정확히 그 둘이다.
+
+예측하지 않았던 것이 하나 있다. `entities/cart`의 파일 셋이 위시리스트를 **주석으로** 언급한다.
+
+```
+cart/model/cart.ts:4    // wishlist를 알지 않으므로 위시리스트를 지울 때 이 파일은 열리지 않는다.
+cart/model/cart.ts:15   // wishlist에도 같은 모양의 함수가 있다.
+cart/model/cart.test.ts:6  // 이 파일은 wishlist를 import하지 않는다.
+```
+
+import가 아니라 주석이므로 컴파일도 테스트도 깨지지 않는다. 다만 위시리스트를 지운 뒤 이
+주석들은 존재하지 않는 것을 가리키게 된다. grep으로 `wishlist`를 찾으면 이 파일들이 나오므로,
+"수정 대상이 두 곳"이라는 판정과 "검색하면 다섯 곳이 나온다"는 사실이 어긋난다.
+
+이것을 파편화로 보지 않는다. 삭제 반경은 **고치지 않으면 깨지는 것**의 범위이고 주석은 거기
+들지 않는다. 다만 삭제를 실행할 때 grep 결과를 그대로 수정 목록으로 쓰면 안 된다는 점은
+기록해둔다.
+
+`examples/week-05-layout` 두 파일도 위시리스트를 언급한다. 어디서도 import하지 않는 참조
+자료이고 Next 번들에 들어가지 않는다. 삭제 후보로 따로 기록했다.
+
+#### 판정
+
+응집 성공으로 본다. 삭제 대상이 한 폴더에 모여 있고, 살아남아 고칠 생산 코드가 둘이며 둘 다
+조합부다. Preflight가 "상위 UI 조합부는 기능의 연결점을 명시하는 composition root이므로 수정
+대상이 될 수 있다"고 미리 인정한 자리와 같다.
+
+### 신상품 뱃지를 상품 카드에 추가한다면
+
+**터치할 파일** — 둘이다.
+
+| 파일 | 할 일 |
+| --- | --- |
+| `entities/product/model/product.ts` | 신상품 판정을 추가한다. `Product`에 이미 `createdAt`이 있어 타입은 바뀌지 않는다 |
+| `entities/product/ui/ProductCard.tsx` | 판정 결과로 뱃지를 그린다 |
+
+**터치하지 않는 것** — `widgets`, `_pages`, `shared`, mock 백엔드다. 카드가 받는 props가
+`Product` 하나 그대로이고, 판정에 필요한 값이 이미 그 안에 있기 때문이다.
+
+#### 예측의 근거
+
+이 예측이 자신 있는 이유는 신상품 여부가 **상품 자체의 성질**이기 때문이다. 화면이 정하는
+것이 아니라 상품 데이터에서 나온다. 그래서 `entities/product` 밖으로 나갈 이유가 없다.
+
+반대 경우도 생각해봤다. 뱃지를 붙일지 말지를 화면이 정한다면(홈에서만 보인다면) `ProductCard`가
+`showNewBadge` 같은 props를 받아야 하고, 그것을 넘기는 `ProductGrid`도 바뀌고, 그것을 부르는
+두 page도 바뀐다. 둘에서 다섯으로 늘어난다. 이 차이가 "상품의 성질인가, 화면의 정책인가"를
+먼저 물어야 하는 이유다.
+
+#### 판정
+
+경계 설계가 이 변경을 감당한다. 다만 위 반대 경우처럼 화면마다 다른 뱃지 정책이 생기면
+`ProductGrid`가 props를 받기 시작하고, 그것이 Decision 3의 Revisit 조건 세 번째
+("widget이 화면별 분기를 props로 받기 시작해 조건이 두 개를 넘는다")에 걸린다.
+
 ## 1. RADIO
 
 전체 구조를 빠르게 이해하기 위한 본문이다. 논쟁이 있었던 항목의 선택 근거와 반려 이유는
