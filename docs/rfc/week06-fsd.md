@@ -43,9 +43,27 @@
 
 > vitest(단위)와 분리: `vitest.config.ts`의 `exclude`에 `e2e/**` 추가, `tsconfig.json` `exclude`에 `e2e`/`playwright.config.ts` 추가. 단위 78개·lint·typecheck·build·e2e 11개 모두 통과.
 
-### 권장(0단계는 아니나 기록)
+### store 자동화 테스트 적용 (0단계 권장 → 완료)
 
-장바구니·위시리스트 store에 자동화 테스트가 없다(week-05 Advanced D 미적용). FSD 전환 중 store 슬라이스가 이동하므로, 전환 전후로 `toggle/remove/clear`, `useCartCount`/`useWishlistCount` 파생, persist `migrate` 계약을 테스트로 보호하면 회귀를 빨리 잡는다.
+장바구니·위시리스트 store에 자동화 테스트가 없어(week-05 Advanced D 미적용), FSD 전환 전에 계약을 테스트로 보호했다. 단위 테스트 25개를 추가해 전체 103개 통과.
+
+| 테스트 파일                                         | 검증 내용                                                                                                      |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `src/features/store-product/store/cart.test.ts`     | `toggle`(추가/제거/독립), `remove`(id/없는id), `clear`, `useCartCount`/`useIsInCart`/`useCartHasHydrated` 파생 |
+| `src/features/store-product/store/wishlist.test.ts` | 위와 대칭                                                                                                      |
+| `src/features/store-product/store/migrate.test.ts`  | `isStoredItem`(정상/거른다), `migrateStoredItems`(필터링/폴백/fromVersion 무관)                                |
+
+### 테스트 적용 중 발견한 migrate 결함 (수정 완료)
+
+`migrate.test.ts`를 작성하며 잠재 결함이 드러났다.
+
+- **재현**: `isStoredItem({ id: 'p1' })` → `false`. version이 다를 때 `migrateStoredItems`가 모든 아이템을 빈 배열로 만든다.
+- **원인**: `isStoredItem`이 `name/price/image`를 요구했지만, 실제 저장값은 `CartItem = Pick<Product, 'id'>`로 `{ id }`만 갖는다. 저장 shape과 검증이 불일치.
+- **왜 지금까지 안 드러났나**: persist `version`이 현재 값과 같으면 `migrate`가 아예 실행되지 않아 일반 새로고침에선 복원이 정상 동작했다(e2e도 통과). version을 올리는 스키마 업그레이드 순간에만 모든 항목이 삭제될 잠재 결함.
+- **수정 위치**: `src/features/store-product/store/migrate.ts` — `isStoredItem`을 저장 shape에 맞게 `id`(비어있지 않은 문자열)만 검증하도록 좁힘. 동작 변경(구조 변경 아님)이라 0단계에서 단독 처리.
+- **검증 결과**: migrate 테스트 7개 통과, 단위 103개·lint·typecheck 영향 없음.
+
+> 새 단위 테스트 파일(`*.test.ts`)은 `.gitignore`의 `*.test.*` 규칙으로 무시된다(기존 테스트는 이미 추적돼 예외). 제출 시 `git add -f`로 강제 추가하거나 규칙을 조정해야 한다.
 
 ---
 

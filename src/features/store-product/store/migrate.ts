@@ -1,5 +1,6 @@
 // [AI] persist로 불러온 값은 사용자 브라우저에서 변조됐거나, 옛날 스키마로 남아있을 수 있다.
-// CartItem과 WishListItem이 같은 모양(id/name/price/image)이라 하나의 가드로 공용한다.
+// CartItem/WishlistItem = Pick<Product, 'id'> 이므로 저장값은 { id } 만 갖는다.
+// id 가 비어있지 않은 문자열인지 검증해 변조/옛날 스키마를 걸러낸다.
 import type { CartItem, WishlistItem } from '@/types/commerce';
 
 type StoredItem = CartItem | WishlistItem;
@@ -7,15 +8,11 @@ type StoredItem = CartItem | WishlistItem;
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-// [AI] id/name/image는 문자열, price는 0 이상의 유한수여야 한다.
+// [AI] id 가 비어있지 않은 문자열이면 정상 아이템으로 본다.
+// (이전엔 name/price/image 도 요구했으나, 저장값은 { id } 뿐이라 버전 업그레이드 시
+//  migrate가 모든 아이템을 지워버리는 잠재 결함이었다. 저장 shape에 맞게 id만 검증한다.)
 export const isStoredItem = (value: unknown): value is StoredItem =>
-  isRecord(value) &&
-  typeof value.id === 'string' &&
-  typeof value.name === 'string' &&
-  typeof value.price === 'number' &&
-  Number.isFinite(value.price) &&
-  value.price >= 0 &&
-  typeof value.image === 'string';
+  isRecord(value) && typeof value.id === 'string' && value.id.length > 0;
 
 // [AI] raw가 배열이 아니면 빈 배열로 폴백하고, 배열이면 통과한 항목만 살린다.
 const filterStoredItems = (raw: unknown): StoredItem[] => {
