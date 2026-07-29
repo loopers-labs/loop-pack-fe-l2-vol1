@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
+import { waitForMockApi } from "@/app/api/_data/commerce";
+import { getProductById, getProductList } from "@/app/api/_data/productService";
 import type {
   ApiErrorResponse,
   MockApiScenario,
@@ -50,7 +51,7 @@ export async function GET(
   const validCategory =
     category === null ||
     category === "all" ||
-    categories.some((item) => item.id === category);
+    ["casual", "fashion", "goods", "home", "digital"].includes(category);
   const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page);
   const validPageSize =
     isPositiveInteger(pageSizeValue) && Number.isSafeInteger(pageSize) && pageSize <= 24;
@@ -67,7 +68,7 @@ export async function GET(
   await waitForMockApi();
 
   if (id) {
-    const product = products.find((p) => p.id === id);
+    const product = getProductById(id);
     if (!product) {
       return NextResponse.json(
         { message: "상품을 찾을 수 없습니다." },
@@ -76,7 +77,7 @@ export async function GET(
     }
     return NextResponse.json({
       products: [product],
-      categories,
+      categories: [],
       totalCount: 1,
       page: 1,
       pageSize: 1,
@@ -90,40 +91,17 @@ export async function GET(
     );
   }
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      category === null || category === "all" || product.category === category;
-    const searchable = `${product.brand} ${product.name}`.toLocaleLowerCase("ko");
-    return matchesCategory && searchable.includes(q);
-  });
-
-  const sortedProducts = [...filteredProducts];
-
-  if (sort !== null) {
-    sortedProducts.sort((a, b) => {
-      switch (sort) {
-        case "popular":
-          return b.reviewCount - a.reviewCount || b.rating - a.rating;
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "latest":
-          return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-      }
-    });
-  }
-
-  const start = (page - 1) * pageSize;
-  const pagedProducts = sortedProducts.slice(start, start + pageSize);
-  const responseProducts = scenario === "empty" ? [] : pagedProducts;
-  const totalCount = scenario === "empty" ? 0 : filteredProducts.length;
-
-  return NextResponse.json({
-    products: responseProducts,
-    categories,
-    totalCount,
+  const data = getProductList({
+    q,
+    category: category as 'all',
+    sort: sort as ProductSort,
     page,
     pageSize,
   });
+
+  if (scenario === "empty") {
+    return NextResponse.json({ ...data, products: [], totalCount: 0 });
+  }
+
+  return NextResponse.json(data);
 }

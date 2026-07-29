@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
+import { PRODUCT_LIST_DEFAULTS } from '@/app/api/_data/productService';
 import type {
   Product,
   ProductListQuery,
@@ -6,14 +7,21 @@ import type {
 } from '@/types/commerce';
 
 export function productListQueryOptions(params: ProductListQuery) {
-  const { q, category, sort = 'latest', page = 1, pageSize = 12 } = params;
+  const {
+    q,
+    category,
+    sort = PRODUCT_LIST_DEFAULTS.sort,
+    page = PRODUCT_LIST_DEFAULTS.page,
+    pageSize = PRODUCT_LIST_DEFAULTS.pageSize,
+  } = params;
 
   return queryOptions({
     queryKey: ['products', { q, category, sort, page, pageSize }],
     queryFn: async (): Promise<ProductListResponse> => {
       const searchParams = new URLSearchParams();
       if (q) searchParams.set('q', q);
-      if (category && category !== 'all') searchParams.set('category', category);
+      if (category && category !== 'all')
+        searchParams.set('category', category);
       searchParams.set('sort', sort);
       searchParams.set('page', String(page));
       searchParams.set('pageSize', String(pageSize));

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { categories, homeBanner, products, waitForMockApi } from "@/app/api/_data/commerce";
+import { waitForMockApi } from "@/app/api/_data/commerce";
+import { getHomeData } from "@/app/api/_data/homeService";
 import type { ApiErrorResponse, HomeResponse, MockApiScenario } from "@/types/commerce";
 
 const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
@@ -28,17 +29,15 @@ export async function GET(
     );
   }
 
-  const popularProducts = [...products]
-    .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating)
-    .slice(0, 6);
-  const newProducts = [...products]
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    .slice(0, 6);
+  const data = getHomeData();
 
-  return NextResponse.json({
-    banner: homeBanner,
-    categories,
-    popularProducts: scenario === "empty" ? [] : popularProducts,
-    newProducts: scenario === "empty" ? [] : newProducts,
-  });
+  if (scenario === "empty") {
+    return NextResponse.json({
+      ...data,
+      popularProducts: [],
+      newProducts: [],
+    });
+  }
+
+  return NextResponse.json(data);
 }

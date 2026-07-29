@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '../getQueryClient';
 import { productListQueryOptions } from '@/queries/productQueries';
+import { getProductList } from '@/app/api/_data/productService';
 import { ProductListContent } from './_components/ProductListContent';
 
 interface ProductListPageProps {
@@ -14,13 +15,16 @@ export default async function ProductListPage({
   const params = await searchParams;
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchQuery(
-    productListQueryOptions({
-      q: params.q,
-      category: (params.category ?? 'all') as 'all',
-      sort: (params.sort ?? 'latest') as 'latest',
-      page: params.page ? Number(params.page) : 1,
-    }),
+  const query = {
+    q: params.q,
+    category: (params.category ?? 'all') as 'all',
+    sort: (params.sort ?? 'latest') as 'latest',
+    page: params.page ? Number(params.page) : 1,
+  };
+
+  queryClient.setQueryData(
+    productListQueryOptions(query).queryKey,
+    getProductList(query),
   );
 
   return (
