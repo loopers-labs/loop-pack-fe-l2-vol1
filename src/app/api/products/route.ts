@@ -5,7 +5,7 @@ import {
   isProductSort,
   parsePageSizeValue,
   parsePageValue,
-} from '@/lib/commerce/productListContract'
+} from '@/entities/product/model/productListContract'
 import type { ApiErrorResponse } from '@/shared/api/http'
 import type { MockApiScenario, ProductListResponse } from '@/types/commerce'
 

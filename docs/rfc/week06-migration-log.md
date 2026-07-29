@@ -484,3 +484,102 @@ Phase를 아래에서 위로 잡았다. `shared`가 먼저 자리를 잡아야 �
 포기한 것은 한 번에 끝내는 것이다. `lib/commerce`가 아직 남아 있어 지금 트리에는 `lib`과
 `shared`가 공존한다. 중간 상태가 보기 좋지 않지만, 되돌릴 수 있는 단위를 유지하는 대가로
 받아들였다.
+
+---
+
+## 7. Phase 2 — entities 구성과 store 분리
+
+**커밋**: `refactor: 도메인 개념을 entity 슬라이스로 나눈다`
+
+### 인과
+
+`shared`가 자리를 잡았으니 그 위 레이어가 올라갈 수 있다. `entities`는 `shared`만 참조하므로
+바로 다음 순서다.
+
+이 Phase에서 [Decision 1의 개정](./week06-fsd.md#개정--b에서-c로)이 실제 코드가 된다. 문서에서
+"capability마다 자기 store를 만든다"고 정한 것을 여기서 구현한다.
+
+### 중간 상태를 어떻게 다뤘는가
+
+`ProductCard`에서 토글 import를 제거하면 조합할 자리가 사라진다. 그 자리는 Phase 3의 widget인데
+아직 없다. 세 가지 길이 있었다.
+
+| 방법 | 문제 |
+| --- | --- |
+| Phase 2와 3을 한 커밋으로 | 한 커밋이 두 레이어를 동시에 만든다. 되돌릴 단위가 커진다 |
+| `ProductCard`가 토글을 계속 import | Phase 2가 끝나도 역방향 의존이 남는다. 이 Phase의 목적 자체가 안 된다 |
+| 두 page가 임시로 인라인 조합 | 같은 코드가 두 곳에 반복된다 |
+
+세 번째를 택했다. 반복이 생기지만 그 반복이 정확히 Decision 3이 측정한 20줄이고, Phase 3에서
+widget으로 올리며 사라진다. Decision 3의 A안(page에서 조합)을 한 커밋 동안 실제로 통과하는
+셈이라, 반려한 안이 어떤 모양인지 코드로 남는다. 임시임을 두 곳 주석에 적었다.
+
+`ProductCard`는 `actions` 슬롯을 받는다. 카드가 무엇이 들어오는지 알지 않으므로 행위가 늘어도
+이 파일은 바뀌지 않는다.
+
+### 성능
+
+구독 단위가 좁아졌다. 개정 전에는 cart와 wishlist가 한 store를 공유해서 어느 쪽이 바뀌든 모든
+구독자가 알림을 받고 각자 selector 결과를 비교했다. 이제 cart 변경은 wishlist 구독자에게
+도달하지 않는다. 다만 selector가 이미 원시값을 반환해 실제 리렌더는 전에도 막히고 있었으므로,
+줄어든 것은 비교 횟수이지 렌더 횟수가 아니다. 측정하지 않았고 개선으로 주장하지 않는다.
+
+`ProductCard`가 `'use client'` 컴포넌트를 직접 import하지 않게 되면서, 카드 자체는 서버
+컴포넌트로 남을 수 있는 형태가 됐다. 지금은 두 page가 클라이언트 컴포넌트라 실익이 없다.
+
+### 엣지케이스
+
+`resetShoppingState` 하나가 `resetCart`와 `resetWishlist` 둘로 나뉘었다. 호출부가 한쪽을
+빠뜨리면 테스트 사이로 상태가 새고, 그 증상은 실패가 아니라 **실행 순서에 따라 달라지는 결과**로
+나타난다. 찾기 어려운 종류의 버그다.
+
+`src/test/resetStores.ts` 헬퍼로 묶고, 헬퍼 자체에 테스트를 붙였다. capability가 늘면 헬퍼에
+한 줄이 붙고 호출부는 바뀌지 않는다.
+
+`productListContract.test.ts`가 `PRODUCT_PAGE_SIZE`를 참조하고 있었다. entity 테스트가 page의
+상수를 아는 형태라 방향이 뒤집힌다. "화면 기본값이 서버 상한 안에 있다"는 검증은 화면 쪽
+관심사이므로 `searchParams.test.ts`로 옮겼다. 검증은 살아 있고 방향만 바로잡았다.
+
+### 테스트
+
+135건에서 139건이 됐다. 늘어난 넷의 내역이다.
+
+- `shopping.test.ts` 5건이 `cart.test.ts` 4건과 `wishlist.test.ts` 3건으로 갈렸다.
+  "장바구니와 위시리스트는 서로 영향을 주지 않는다"와 "함께 초기화된다" 두 건은 한 capability
+  안에서 검증할 수 없어 `resetStores.test.ts`로 옮겼다.
+- `resetStores.test.ts` 2건이 새로 생겼다. 격리 헬퍼가 새 실패 지점이라 회귀로 고정했다.
+- `searchParams.test.ts`에 화면 기본값과 서버 상한의 관계 1건이 옮겨 왔다.
+
+의존 방향을 grep으로 확인했다. `entities`가 `@/app`, `@/lib`, `@/components`, `@/stores`,
+`@/types`, `_pages`, `widgets` 중 어느 것도 import하지 않는다. cart와 wishlist 사이에도
+import가 없다. 서로를 언급하는 것은 주석뿐이다.
+
+### 장애 영향도
+
+실패 모드는 그대로다. 두 store 모두 인메모리이고 예외 경로가 없다.
+
+삭제 반경이 실제로 줄었는지는 Phase 4가 끝난 뒤 전체로 확인한다. 지금은 두 page에 임시 조합이
+있어 위시리스트를 지우면 그 두 곳을 고쳐야 하고, 이것은 Phase 3에서 widget 한 곳으로 합쳐진다.
+
+### 인프라 비용
+
+없음. Zustand `create()` 호출이 하나 늘었고 번들 증가는 무시할 수준이다.
+
+### 과잉설계 점검
+
+`toggleId`가 cart와 wishlist에 각각 있다. 같은 모양의 6줄이 두 벌이다. `shared/lib`으로
+올리지 않은 이유는 Decision 1의 Consequences에 적은 그대로다. 두 번째 사용이 생겼다는 사실만으로
+공통 추상화를 만들지 않는다. 두 행위의 토글 정책이 계속 같으리라는 근거가 아직 없다.
+
+각 entity 슬라이스에 `index.ts`를 만들지 않았다. Decision 5의 결론이다.
+
+`ProductCard`의 `actions`를 optional로 뒀다. 필수로 하면 행위가 없는 카드를 그릴 수 없는데,
+그런 화면이 생길지는 모른다. optional이 더 적은 가정이다.
+
+### 트레이드오프
+
+얻은 것은 세 도메인 개념이 각자 폴더를 가지는 것과, 위시리스트를 폴더째 지울 수 있는 형태다.
+`entities/wishlist`를 지우면 model과 ui와 테스트가 함께 사라진다.
+
+포기한 것은 두 가지다. 첫째, 한 커밋 동안 두 page에 같은 조합 코드가 반복된다. 둘째,
+`toggleId` 중복을 그대로 뒀다. 둘 다 의도한 것이고 첫째는 다음 Phase에서 사라진다.

@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import ProductCard from '@/components/commerce/ProductCard'
+import CartToggleButton from '@/entities/cart/ui/CartToggleButton'
+import ProductCard from '@/entities/product/ui/ProductCard'
+import WishlistToggleButton from '@/entities/wishlist/ui/WishlistToggleButton'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { commerceQueries } from '@/lib/commerce/queries'
 
@@ -67,8 +69,25 @@ export default function HomePage() {
             <p>아직 보여줄 상품이 없습니다.</p>
           ) : (
             <div className="week05-grid">
+              {/* Phase 2의 임시 조합이다. 목록 화면과 같은 코드가 반복되며,
+                  Phase 3에서 widgets/product-grid로 올라간다. */}
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  actions={
+                    <>
+                      <WishlistToggleButton
+                        productId={product.id}
+                        productName={product.name}
+                      />
+                      <CartToggleButton
+                        productId={product.id}
+                        productName={product.name}
+                      />
+                    </>
+                  }
+                />
               ))}
             </div>
           )}

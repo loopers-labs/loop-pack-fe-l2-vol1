@@ -2,16 +2,18 @@
 
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import ProductCard from '@/components/commerce/ProductCard'
+import CartToggleButton from '@/entities/cart/ui/CartToggleButton'
+import ProductCard from '@/entities/product/ui/ProductCard'
+import WishlistToggleButton from '@/entities/wishlist/ui/WishlistToggleButton'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { commerceQueries } from '@/lib/commerce/queries'
 import {
   categoryFilterValues,
   sortValues,
   type CategoryFilter,
-} from '@/lib/commerce/productListContract'
+} from '@/entities/product/model/productListContract'
 import { useProductListCondition } from '@/lib/commerce/useProductListCondition'
-import type { ProductSort } from '@/types/commerce'
+import type { ProductSort } from '@/entities/product/model/product'
 import SearchForm from './SearchForm'
 
 // 허용값 목록은 URL 계약이라 상수로 고정한다. parser가 컴파일 타임 유니온을 요구해서
@@ -125,8 +127,25 @@ export default function ProductListView() {
       <>
         <p>총 {data.totalCount}개</p>
         <div className="week05-grid">
+          {/* Phase 2의 임시 조합이다. 홈 화면과 같은 코드가 반복되며,
+              Phase 3에서 widgets/product-grid로 올라간다. */}
           {data.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              actions={
+                <>
+                  <WishlistToggleButton
+                    productId={product.id}
+                    productName={product.name}
+                  />
+                  <CartToggleButton
+                    productId={product.id}
+                    productName={product.name}
+                  />
+                </>
+              }
+            />
           ))}
         </div>
         <nav className="week05-pagination" aria-label="페이지 이동">
