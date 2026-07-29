@@ -5,8 +5,8 @@ import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
 import HeaderCounts from '@/widgets/header/ui/HeaderCounts'
 import { resetStores } from '@/test/resetStores'
 import type { Product } from '@/entities/product/model/product'
-import HomePage from './page'
-import ProductListView from './products/ProductListView'
+import { HomePage } from '@/_pages/home'
+import { ProductListView } from '@/_pages/product-list'
 
 // 구현이 아니라 사용자에게 보이는 상태 계약을 검증한다.
 // 홈과 목록이 같은 store를 보는지, URL 조건이 화면과 요청에 일치하는지.
