@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { waitForMockApi } from "@/app/api/_data/commerce";
 import { getProductById, getProductList } from "@/app/api/_data/productService";
+import {
+  PRODUCT_SORTS,
+  CATEGORY_OPTIONS,
+} from "@/types/commerce";
 import type {
   ApiErrorResponse,
   MockApiScenario,
@@ -8,12 +12,10 @@ import type {
   ProductSort,
 } from "@/types/commerce";
 
-const sortValues = ["latest", "popular", "price-asc", "price-desc"] as const satisfies
-  readonly ProductSort[];
 const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
 
 const isProductSort = (value: string): value is ProductSort =>
-  sortValues.some((sort) => sort === value);
+  (PRODUCT_SORTS as readonly string[]).includes(value);
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);
@@ -50,8 +52,7 @@ export async function GET(
 
   const validCategory =
     category === null ||
-    category === "all" ||
-    ["casual", "fashion", "goods", "home", "digital"].includes(category);
+    (CATEGORY_OPTIONS as readonly string[]).includes(category);
   const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page);
   const validPageSize =
     isPositiveInteger(pageSizeValue) && Number.isSafeInteger(pageSize) && pageSize <= 24;
