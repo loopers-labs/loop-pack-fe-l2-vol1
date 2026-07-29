@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { describe, expect, it } from 'vitest'
 import { categories } from '@/app/api/_data/commerce'
-import { categoryIds } from '@/lib/commerce/productListContract'
+import { categoryIds } from '@/entities/product/model/productListContract'
 import { GET } from './route'
 
 const request = (query = '') =>

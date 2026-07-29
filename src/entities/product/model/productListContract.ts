@@ -1,4 +1,4 @@
-import type { CategoryId, ProductSort } from '@/types/commerce'
+import type { CategoryId, ProductSort } from './product'
 
 // URL parser와 mock API route가 같은 허용값과 판정 규칙을 쓰게 하는 단일 원본이다.
 // 두 처리의 책임은 다르다. 클라이언트 정규화는 잘못된 입력을 요청 전에 되돌려 불필요한 400

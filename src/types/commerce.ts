@@ -1,11 +1,13 @@
-export type CategoryId = 'casual' | 'fashion' | 'goods' | 'home' | 'digital'
+import type {
+  Category,
+  CategoryId,
+  Product,
+  ProductSort,
+} from '@/entities/product/model/product'
 
-export type Category = {
-  id: CategoryId
-  name: string
-}
-
-export type ProductSort = 'latest' | 'popular' | 'price-asc' | 'price-desc'
+// 화면별 응답 봉투와 mock 제어값이다. 상품 도메인 어휘는
+// entities/product/model/product.ts로 옮겼다.
+// 이 파일은 Phase 4에서 각 page 슬라이스와 mock 백엔드로 흩어지며 사라진다.
 
 export type MockApiScenario = 'empty' | 'error'
 
@@ -15,21 +17,6 @@ export type ProductListQuery = {
   sort?: ProductSort
   page?: number
   pageSize?: number
-}
-
-export type Product = {
-  id: string
-  brand: string
-  name: string
-  category: CategoryId
-  price: number
-  originalPrice: number | null
-  image: string
-  freeShipping: boolean
-  sizes: Array<{ value: number; stock: number }>
-  rating: number
-  reviewCount: number
-  createdAt: string
 }
 
 export type HomeResponse = {

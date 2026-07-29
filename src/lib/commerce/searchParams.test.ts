@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { productListSearchParams } from './searchParams'
+import { isValidPageSize } from '@/entities/product/model/productListContract'
+import { PRODUCT_PAGE_SIZE, productListSearchParams } from './searchParams'
 
 // parser는 잘못된 URL이 API 계약을 벗어나지 않게 막는 관문이다.
 // parse가 null을 돌려주면 nuqs가 기본값을 쓴다.
@@ -47,5 +48,12 @@ describe('category, sort parser', () => {
     expect(productListSearchParams.category.defaultValue).toBe('all')
     expect(productListSearchParams.sort.defaultValue).toBe('latest')
     expect(productListSearchParams.page.defaultValue).toBe(1)
+  })
+})
+
+describe('화면 기본값', () => {
+  it('화면이 쓰는 기본 pageSize는 서버가 허용하는 상한 안에 있다', () => {
+    // 기본값은 화면 정책이고 상한은 계약이다. 둘이 어긋나면 첫 요청부터 400이 된다.
+    expect(isValidPageSize(PRODUCT_PAGE_SIZE)).toBe(true)
   })
 })

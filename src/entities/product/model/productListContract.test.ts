@@ -4,11 +4,9 @@ import {
   categoryIds,
   isCategoryFilter,
   isProductSort,
-  isValidPageSize,
   parsePageSizeValue,
   parsePageValue,
 } from './productListContract'
-import { PRODUCT_PAGE_SIZE } from './searchParams'
 
 // 이 모듈의 존재 이유는 클라이언트 정규화와 서버 검증이 같은 기준을 쓰게 하는 것이다.
 // 허용값이 mock 데이터와 어긋나지 않는지는 데이터를 소유한 route 테스트에서 고정한다.
@@ -23,10 +21,6 @@ describe('허용값', () => {
   it('정렬 허용값 밖의 값은 거부한다', () => {
     expect(isProductSort('price-asc')).toBe(true)
     expect(isProductSort('cheapest')).toBe(false)
-  })
-
-  it('화면이 쓰는 기본 pageSize는 서버 상한 안에 있다', () => {
-    expect(isValidPageSize(PRODUCT_PAGE_SIZE)).toBe(true)
   })
 })
 

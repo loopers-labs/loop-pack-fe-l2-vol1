@@ -3,8 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
 import HeaderCounts from '@/components/commerce/HeaderCounts'
-import { resetShoppingState } from '@/stores/shopping'
-import type { Product } from '@/types/commerce'
+import { resetStores } from '@/test/resetStores'
+import type { Product } from '@/entities/product/model/product'
 import HomePage from './page'
 import ProductListView from './products/ProductListView'
 
@@ -90,7 +90,7 @@ const renderApp = (
 }
 
 beforeEach(() => {
-  resetShoppingState()
+  resetStores()
 })
 
 afterEach(() => {

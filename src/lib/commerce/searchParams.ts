@@ -3,7 +3,7 @@ import {
   categoryFilterValues,
   parsePageValue,
   sortValues,
-} from '@/lib/commerce/productListContract'
+} from '@/entities/product/model/productListContract'
 
 // page=0, 음수, 소수, 안전 정수 초과는 API가 400으로 거절하는 값이다.
 // parser가 관문이 되어 잘못된 URL을 기본값 1로 되돌린다. 판정 규칙은 route와 공유한다.
