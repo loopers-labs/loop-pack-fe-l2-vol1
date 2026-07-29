@@ -2,7 +2,11 @@
 // HTTP 실패를 상위가 판단할 수 있는 형태로 바꿔 올리는 것까지만 한다.
 // 실패 문구와 복구 행위는 화면의 몫이므로 여기 두지 않는다.
 
-// 서버가 실패 본문으로 내려주는 형태다. mock 백엔드와 공유하는 계약이다.
+// 서버가 실패 본문으로 내려주는 형태다.
+// 실제 소비자는 mock 백엔드의 route handler뿐이다. `readServerMessage`는 이 타입을 쓰지 않고
+// `unknown`을 구조로 확인한다. 신뢰할 수 없는 입력을 타입 단언으로 받으면 안 되기 때문이다.
+// 그럼에도 여기 두는 이유는 이것이 응답 본문의 형태를 규정하는 전송 계약이고,
+// 클라이언트와 mock 백엔드가 어긋나지 않아야 하는 유일한 실패 계약이기 때문이다.
 export type ApiErrorResponse = {
   message: string
 }
@@ -32,10 +36,22 @@ const TIMEOUT_MESSAGE = '요청이 지연되어 중단했습니다. 다시 시�
 export const isTimeout = (error: unknown) =>
   error instanceof DOMException && error.name === 'TimeoutError'
 
-// 400대는 같은 요청을 다시 보내도 결과가 같다. 재시도는 서버 오류와 네트워크 실패에만 쓴다.
-// ApiError가 아닌 실패는 네트워크 단절이나 타임아웃이므로 재시도 대상으로 둔다.
-export const isRetryable = (error: unknown) =>
-  !(error instanceof ApiError) || error.status >= 500
+// 전송 계층이 설명할 수 있는 실패인가.
+// status를 받았거나(ApiError), 우리가 끊었거나(타임아웃), 요청이 나가지 못한(네트워크) 경우다.
+// 이 셋은 화면이 무엇이 잘못됐는지 알 수 있어 인라인으로 다룰 수 있다.
+//
+// 그 밖의 오류는 예상 밖이다. 200 응답의 본문이 계약을 어겨 파싱이 깨지는 경우가 대표적이다.
+// 화면은 그것이 무엇인지도 어떻게 복구하는지도 모르므로 위로 올려야 한다.
+export const isExpectedFailure = (error: unknown) =>
+  error instanceof ApiError || isTimeout(error) || error instanceof TypeError
+
+// 재시도가 의미 있는 실패인가.
+// 400대는 같은 요청을 다시 보내도 결과가 같다. 계약 위반도 다시 받아도 같은 본문이 온다.
+// 다시 보내면 달라질 수 있는 것은 서버 오류, 타임아웃, 네트워크 단절뿐이다.
+export const isRetryable = (error: unknown) => {
+  if (error instanceof ApiError) return error.status >= 500
+  return isTimeout(error) || error instanceof TypeError
+}
 
 // 서버가 보낸 메시지가 있으면 그대로 보여주고, 없으면 화면이 정한 문구를 쓴다.
 // 화면 문구를 인자로 받는 이유는 shared가 특정 화면의 문구를 알지 않기 위해서다.

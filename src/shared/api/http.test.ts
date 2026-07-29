@@ -10,6 +10,7 @@ import {
   ApiError,
   errorMessageOf,
   fetchJson,
+  isExpectedFailure,
   isRetryable,
   isTimeout,
   REQUEST_TIMEOUT_MS,
@@ -136,14 +137,38 @@ describe('fetchJson', () => {
 })
 
 describe('실패 분류', () => {
+  it('status, 타임아웃, 네트워크 단절은 전송 계층이 설명할 수 있는 실패다', () => {
+    expect(isExpectedFailure(new ApiError(400))).toBe(true)
+    expect(isExpectedFailure(new ApiError(500))).toBe(true)
+    expect(
+      isExpectedFailure(new DOMException('timed out', 'TimeoutError')),
+    ).toBe(true)
+    expect(isExpectedFailure(new TypeError('Failed to fetch'))).toBe(true)
+  })
+
+  it('계약을 어긴 200 응답은 예상 밖 오류다', () => {
+    // 화면은 이것이 무엇인지도 어떻게 복구하는지도 모른다. 위로 올라가야 한다.
+    expect(isExpectedFailure(new SyntaxError('Unexpected token <'))).toBe(false)
+    expect(
+      isExpectedFailure(new Error('cannot read property of undefined')),
+    ).toBe(false)
+  })
+
   it('400대는 재시도해도 결과가 같으므로 재시도 대상이 아니다', () => {
     expect(isRetryable(new ApiError(400))).toBe(false)
     expect(isRetryable(new ApiError(404))).toBe(false)
   })
 
-  it('서버 오류와 네트워크 실패는 재시도 대상이다', () => {
+  it('계약 위반도 다시 받아도 같은 본문이 오므로 재시도 대상이 아니다', () => {
+    expect(isRetryable(new SyntaxError('Unexpected token <'))).toBe(false)
+  })
+
+  it('서버 오류와 네트워크 실패와 타임아웃은 재시도 대상이다', () => {
     expect(isRetryable(new ApiError(500))).toBe(true)
     expect(isRetryable(new TypeError('Failed to fetch'))).toBe(true)
+    expect(isRetryable(new DOMException('timed out', 'TimeoutError'))).toBe(
+      true,
+    )
   })
 
   it('서버 메시지가 있으면 화면 문구 대신 그것을 쓴다', () => {
