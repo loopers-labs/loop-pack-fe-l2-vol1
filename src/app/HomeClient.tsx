@@ -113,10 +113,9 @@ export function HomeClient() {
 
   if (!data) return null;
 
-  const { banner, categories, popularProducts, newProducts } = data;
+  const { banner, categories, categoryThumbnails, popularProducts, newProducts } = data;
 
   const isProductsEmpty = popularProducts.length === 0 && newProducts.length === 0;
-  const allProducts = [...popularProducts, ...newProducts];
 
   return (
     <>
@@ -155,18 +154,16 @@ export function HomeClient() {
           Shop by Categories
         </h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          {categories.map((cat) => {
-            const catProduct = allProducts.find((p) => p.category === cat.id);
-            return (
+          {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/products?category=${cat.id}`}
                 className="group flex flex-col items-center gap-3"
               >
                 <div className="aspect-square w-full overflow-hidden rounded-xl bg-bg">
-                  {catProduct && (
+                  {categoryThumbnails[cat.id] && (
                     <img
-                      src={catProduct.image}
+                      src={categoryThumbnails[cat.id]}
                       alt={cat.name}
                       className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -176,8 +173,7 @@ export function HomeClient() {
                   {cat.name}
                 </span>
               </Link>
-            );
-          })}
+          ))}
         </div>
       </section>
 

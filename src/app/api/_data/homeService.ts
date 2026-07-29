@@ -1,4 +1,4 @@
-import type { HomeResponse } from '@/types/commerce';
+import type { CategoryId, HomeResponse } from '@/types/commerce';
 import { categories, homeBanner, products } from './commerce';
 
 export function getHomeData(): HomeResponse {
@@ -10,9 +10,17 @@ export function getHomeData(): HomeResponse {
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, 6);
 
+  const categoryThumbnails = Object.fromEntries(
+    categories.map((cat) => [
+      cat.id,
+      products.find((p) => p.category === cat.id)?.image ?? '',
+    ]),
+  ) as Record<CategoryId, string>;
+
   return {
     banner: homeBanner,
     categories,
+    categoryThumbnails,
     popularProducts,
     newProducts,
   };
