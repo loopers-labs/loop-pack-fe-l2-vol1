@@ -29,14 +29,19 @@
 - **수정 위치**: `src/app/products/page.tsx` — useQueryStates를 쓰는 본문을 `ProductsView`로 분리하고 `ProductsPage`에서 `<Suspense>`로 래핑. 구조 변경(기능 변경 아님)이라 0단계에서 단독 처리.
 - **검증 결과**: 재실행 시 build 통과, `/`·`/products` 정적 프리렌더 성공(`/api/*`는 동적). test 78개·lint·typecheck 영향 없음.
 
-### 수동(브라우저) 검증이 남은 항목
+### 브라우저 검증 (Playwright E2E 자동화)
 
-UI 시각 렌더링·버튼 클릭 동기화·브라우저 뒤로/앞으로 버튼은 브라우저가 필요해 자동화 범위 밖이다. API 계약·코드 분기·단위 테스트로 기반을 검증했으므로, 리팩토링 후 아래를 브라우저로 최종 확인한다.
+브라우저 구동이 필요한 테스트 항목은 Playwright E2E로 자동화했다. `pnpm test:e2e`로 dev 서버를 자동 시작해 chromium로 검증한다(11개 케이스 전부 통과). 로딩/에러/빈 상태는 페이지가 `scenario`를 URL로 넘기지 않으므로 `page.route`로 `/api/products` 응답을 제어해 유발한다.
 
-- 4종 상태(로딩 스피너/에러 메시지+재시도/빈 결과)의 실제 렌더
-- 홈·목록 양쪽 찜·담기 토글 시 헤더 개수·버튼 상태 동기화
-- 장바구니·위시리스트 persist 새로고침 복원 + hydration mismatch 없음
-- 브라우저 뒤로/앞으로 버튼으로 URL 조건 복원
+| 항목                        | 스펙 파일                   | 검증 내용                                                                                                                     |
+| --------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 4종 상태(정상·로딩·에러·빈) | `e2e/states.spec.ts`        | 정상(카드+총개수), 로딩(route 지연→"불러오는 중..."), 에러(500→메시지+"다시 시도"), 빈(`products:[]`→"검색 결과가 없습니다.") |
+| 찜·담기 동기화              | `e2e/cart-wishlist.spec.ts` | 토글 즉시 버튼 라벨·헤더 개수 반영, 홈↔목록 이동 시 헤더 개수·같은 상품 토글 상태 유지                                        |
+| persist 새로고침 복원       | `e2e/cart-wishlist.spec.ts` | 토글 후 `reload()` → 상태 복원(`hasHydrated` 비동기 rehydrate 대기)                                                           |
+| hydration 안전성            | `e2e/cart-wishlist.spec.ts` | persist 보유 상태에서 새로고침 시 `hydrat`/`did not match` 콘솔·pageerror 부재                                                |
+| URL 뒤로/앞으로 복원        | `e2e/navigation.spec.ts`    | 검색어·카테고리 push 후 `goBack`/`goForward`로 URL·입력값 복원, 필터 변경 시 page 1 리셋                                      |
+
+> vitest(단위)와 분리: `vitest.config.ts`의 `exclude`에 `e2e/**` 추가, `tsconfig.json` `exclude`에 `e2e`/`playwright.config.ts` 추가. 단위 78개·lint·typecheck·build·e2e 11개 모두 통과.
 
 ### 권장(0단계는 아니나 기록)
 
