@@ -1,13 +1,13 @@
 'use client'
 
 import { useQueryStates } from 'nuqs'
-import type { ProductListCondition } from '@/lib/commerce/api'
+import type { ProductListCondition } from '@/_pages/product-list/api/productList'
 import {
   hasNonDefaultFilters,
   PRODUCT_PAGE_SIZE,
   productListSearchParams,
   productListUrlOptions,
-} from '@/lib/commerce/searchParams'
+} from './searchParams'
 
 // URL 조건을 API 요청 조건으로 조립하는 유일한 자리다.
 // pageSize는 URL이 아니라 여기서 붙는다. 화면이 직접 끼워 넣으면 호출자마다

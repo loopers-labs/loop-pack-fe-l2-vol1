@@ -4,13 +4,13 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
-import { commerceQueries } from '@/lib/commerce/queries'
+import { productListQueries } from '@/_pages/product-list/api/productList'
 import {
   categoryFilterValues,
   sortValues,
   type CategoryFilter,
 } from '@/entities/product/model/productListContract'
-import { useProductListCondition } from '@/lib/commerce/useProductListCondition'
+import { useProductListCondition } from '../model/useProductListCondition'
 import type { ProductSort } from '@/entities/product/model/product'
 import SearchForm from './SearchForm'
 
@@ -38,7 +38,7 @@ export default function ProductListView() {
   const { condition, setFilters, canResetFilters } = useProductListCondition()
   // 조립된 조건 하나가 그대로 query key와 요청이 된다. 기본 정렬도 API에 명시된다.
   const { data, isPending, isError, error, refetch } = useQuery(
-    commerceQueries.products.list(condition),
+    productListQueries.list(condition),
   )
 
   // 표시 이름은 서버 응답에서 찾고, 없으면 폴백을 쓴다.
