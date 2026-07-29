@@ -115,14 +115,7 @@ export function HomeClient() {
 
   const { banner, categories, popularProducts, newProducts } = data;
 
-  if (popularProducts.length === 0 && newProducts.length === 0) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">표시할 상품이 없습니다.</p>
-      </div>
-    );
-  }
-
+  const isProductsEmpty = popularProducts.length === 0 && newProducts.length === 0;
   const allProducts = [...popularProducts, ...newProducts];
 
   return (
@@ -189,7 +182,11 @@ export function HomeClient() {
       </section>
 
       {/* 인기 상품 */}
-      {popularProducts.length > 0 && (
+      {isProductsEmpty ? (
+        <div className="flex min-h-[30vh] items-center justify-center">
+          <p className="text-sm text-text-secondary">표시할 상품이 없습니다.</p>
+        </div>
+      ) : popularProducts.length > 0 && (
         <section className="bg-bg-card py-14">
           <div className="mx-auto max-w-5xl px-8">
             <h2 className="mb-8 font-family-display text-xl font-normal text-text">
@@ -205,7 +202,7 @@ export function HomeClient() {
       )}
 
       {/* 신상품 */}
-      {newProducts.length > 0 && (
+      {!isProductsEmpty && newProducts.length > 0 && (
         <section className="mx-auto max-w-5xl px-8 py-14">
           <h2 className="mb-8 font-family-display text-xl font-normal text-text">
             신상품
