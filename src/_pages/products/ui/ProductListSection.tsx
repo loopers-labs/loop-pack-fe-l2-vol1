@@ -3,7 +3,7 @@ import { createLoader, type SearchParams } from "nuqs/server";
 import { ProductList } from "./ProductList";
 import { productListParsers } from "../model/productListParsers";
 import { resolveProductListQuery } from "@/entities/product";
-import { getQueryClient } from "@/_app/queryClient";
+import { getQueryClient } from "@/shared/api";
 import { productQueries } from "@/entities/product";
 
 const loadProductListParams = createLoader(productListParsers);

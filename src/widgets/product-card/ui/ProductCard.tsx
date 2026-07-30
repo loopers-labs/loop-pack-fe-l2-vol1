@@ -3,7 +3,7 @@ import type { Product } from "@/entities/product";
 import { formatPrice } from "@/shared/lib";
 import { AddToCartButton } from "@/features/add-to-cart";
 import { WishlistButton } from "@/features/toggle-wishlist";
-import styles from "@/components/commerce/commerce.module.css";
+import styles from "./ProductCard.module.css";
 
 const CARD_IMAGE_SIZE = 300;
 

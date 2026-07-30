@@ -1,0 +1,7 @@
+/* PC 우선: 하한을 크게 잡아 넓은 화면에서 4열 안팎으로, 6개짜리 섹션이 한눈에 스캔되게.
+   card-min-width 토큰은 조상 .page 에서 상속받는다. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+  gap: 28px;
+}

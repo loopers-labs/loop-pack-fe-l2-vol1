@@ -10,7 +10,7 @@ import {
   useQuery,
   type DehydratedState,
 } from "@tanstack/react-query";
-import { getQueryClient, makeQueryClient } from "@/_app/queryClient";
+import { getQueryClient, makeQueryClient } from "./queryClient";
 import { productQueries } from "@/entities/product";
 import { getProducts } from "@/entities/product/api/fetchProducts";
 import type { ProductListParams } from "@/entities/product";

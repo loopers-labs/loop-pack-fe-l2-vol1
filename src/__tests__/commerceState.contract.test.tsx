@@ -20,7 +20,7 @@ import { CommerceHeaderCounts } from "@/widgets/commerce/ui/CommerceHeaderCounts
 import { ProductList } from "@/_pages/products/ui/ProductList";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
-import { makeQueryClient } from "@/_app/queryClient";
+import { makeQueryClient } from "@/shared/api";
 import {
   normalizeProductListQuery,
   productQueries,

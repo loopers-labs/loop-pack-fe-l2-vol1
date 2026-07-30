@@ -4,7 +4,7 @@ import { useProductListSearchParams } from "../model/useProductListSearchParams"
 import { SearchInput } from "@/features/search";
 import { CategorySelect } from "@/features/category-select";
 import { SortSelect } from "@/features/sort-select";
-import styles from "@/components/commerce/commerce.module.css";
+import styles from "./ProductListFilters.module.css";
 
 export function ProductListFilters() {
   const { query, beginSearch, updateSearch, setFilter } =

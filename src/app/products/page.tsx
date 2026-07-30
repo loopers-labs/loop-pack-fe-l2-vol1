@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { type SearchParams } from "nuqs/server";
 import { ProductListSection } from "@/_pages/products";
-import styles from "@/components/commerce/commerce.module.css";
+import styles from "@/shared/ui/layout.module.css";
 
 export default function ProductListPage({
   searchParams,

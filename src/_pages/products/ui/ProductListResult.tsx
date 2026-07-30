@@ -1,7 +1,8 @@
 import { ProductGrid } from "@/widgets/product-card";
-import { Pagination } from "@/components/commerce/Pagination";
+import { Pagination } from "@/shared/ui/pagination";
 import type { ProductListResponse } from "@/entities/product";
-import styles from "@/components/commerce/commerce.module.css";
+import layout from "@/shared/ui/layout.module.css";
+import styles from "./ProductListResult.module.css";
 
 export function ProductListResult({
   result,
@@ -11,7 +12,7 @@ export function ProductListResult({
   onPageChange: (page: number) => void;
 }) {
   if (result.totalCount === 0) {
-    return <p className={styles.status}>검색 결과가 없습니다.</p>;
+    return <p className={layout.status}>검색 결과가 없습니다.</p>;
   }
 
   const totalPages = Math.ceil(result.totalCount / result.pageSize);
@@ -20,7 +21,7 @@ export function ProductListResult({
     <div>
       <p className={styles.resultCount}>총 {result.totalCount}개</p>
       {result.products.length === 0 ? (
-        <p className={styles.status}>이 페이지에는 상품이 없습니다.</p>
+        <p className={layout.status}>이 페이지에는 상품이 없습니다.</p>
       ) : (
         <ProductGrid products={result.products} />
       )}

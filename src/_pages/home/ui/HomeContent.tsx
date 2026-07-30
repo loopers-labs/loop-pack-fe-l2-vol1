@@ -5,7 +5,8 @@ import { ProductGrid } from "@/widgets/product-card";
 import { PrefetchCategoryLink } from "@/features/category-select";
 import { homeQueries } from "../api/home";
 import type { Product } from "@/entities/product";
-import styles from "@/components/commerce/commerce.module.css";
+import layout from "@/shared/ui/layout.module.css";
+import styles from "./HomeContent.module.css";
 
 function ProductSection({
   title,
@@ -15,10 +16,10 @@ function ProductSection({
   products: Product[];
 }) {
   return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
+    <section className={layout.section}>
+      <h2 className={layout.sectionTitle}>{title}</h2>
       {products.length === 0 ? (
-        <p className={styles.status}>표시할 상품이 없습니다.</p>
+        <p className={layout.status}>표시할 상품이 없습니다.</p>
       ) : (
         <ProductGrid products={products} />
       )}
@@ -36,8 +37,8 @@ export function HomeContent() {
         <h1>{home.banner.title}</h1>
       </section>
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>카테고리</h2>
+      <section className={layout.section}>
+        <h2 className={layout.sectionTitle}>카테고리</h2>
         <div className={styles.categories}>
           {home.categories.map((category) => (
             <PrefetchCategoryLink

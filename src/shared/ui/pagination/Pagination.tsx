@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "./commerce.module.css";
+import styles from "./Pagination.module.css";
 
 type PaginationProps = {
   page: number;

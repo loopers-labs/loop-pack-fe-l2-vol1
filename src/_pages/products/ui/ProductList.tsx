@@ -7,7 +7,8 @@ import { useProductListSearchParams } from "../model/useProductListSearchParams"
 import { useDebouncedValue } from "@/shared/lib";
 import { ProductListResult } from "./ProductListResult";
 import { SEARCH_DEBOUNCE_MS } from "@/features/search";
-import styles from "@/components/commerce/commerce.module.css";
+import layout from "@/shared/ui/layout.module.css";
+import styles from "./ProductList.module.css";
 
 export function ProductList() {
   const { query, setPage, clampPageToRange } = useProductListSearchParams();
@@ -49,7 +50,7 @@ export function ProductList() {
       {/* keepPreviousData 라 페이지 전환 중엔 isPending 이 false 다 → 첫 로드에만 로딩을 띄운다.
           isOverRange 면 곧 교정되니 빈 화면 대신 로딩을 유지한다. */}
       {(isPending || isOverRange) && (
-        <p className={styles.status}>상품 목록을 불러오는 중…</p>
+        <p className={layout.status}>상품 목록을 불러오는 중…</p>
       )}
       {data && !isOverRange && (
         // 전환 중(isPlaceholderData)엔 이전 목록을 흐리게 유지해 "갱신 중"을 표시(언마운트 금지)

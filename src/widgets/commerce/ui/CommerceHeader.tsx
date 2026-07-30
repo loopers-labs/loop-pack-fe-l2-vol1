@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CommerceHeaderCounts } from "./CommerceHeaderCounts";
 import { PrefetchCategoryLink } from "@/features/category-select";
-import styles from "@/components/commerce/commerce.module.css";
+import styles from "./CommerceHeader.module.css";
 
 export function CommerceHeader() {
   return (

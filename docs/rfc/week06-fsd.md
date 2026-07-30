@@ -164,19 +164,25 @@ src
 │   └── page.tsx
 ├── _app/                            ← FSD app 레이어 (전역 설정 관련)
 │   ├── providers.tsx                ← 현재: app/providers.tsx
-│   ├── queryClient.ts               ← 현재: lib/queryClient.ts
-│   └── styles/globals.css           ← 현재: app/globals.css
+│   └── styles/
+│       ├── globals.css              ← 현재: app/globals.css
+│       └── app.module.css      ← commerce.module.css 의 .page(+토큰)·.error·.retryButton
 ├── _pages/                          ← FSD pages, app/**/page.tsx 에서 렌더 (src/pages 금지: Pages Router 충돌)
 │   ├── home/
-│   │   ├── ui/HomeContent.tsx       ← 현재: components/commerce/HomeContent.tsx
+│   │   ├── ui/
+│   │   │   ├── HomeContent.tsx         ← 현재: components/commerce/HomeContent.tsx
+│   │   │   └── HomeContent.module.css  ← commerce.module.css 의 .hero·.categories·.categoryChip
 │   │   ├── api/home.ts              ← 현재: queries/home.ts + services/commerce.ts 의 getHome + HomeResponse 타입
 │   │   └── index.ts
 │   └── products/
 │       ├── ui/
-│       │   ├── ProductList.tsx          ← 현재: components/commerce/ProductList.tsx
-│       │   ├── ProductListSection.tsx   ← 현재: app/products/ProductListSection.tsx
-│       │   ├── ProductListResult.tsx    ← 현재: components/commerce/ProductListResult.tsx
-│       │   └── ProductListFilters.tsx   ← 현재: components/commerce/ProductListFilters.tsx (검색·카테고리·정렬 feature 조합점)
+│       │   ├── ProductList.tsx              ← 현재: components/commerce/ProductList.tsx
+│       │   ├── ProductList.module.css       ← commerce.module.css 의 .updating
+│       │   ├── ProductListSection.tsx       ← 현재: app/products/ProductListSection.tsx (서버 컴포넌트, 스타일 없음)
+│       │   ├── ProductListResult.tsx        ← 현재: components/commerce/ProductListResult.tsx
+│       │   ├── ProductListResult.module.css ← commerce.module.css 의 .resultCount
+│       │   ├── ProductListFilters.tsx       ← 현재: components/commerce/ProductListFilters.tsx (검색·카테고리·정렬 feature 조합점)
+│       │   └── ProductListFilters.module.css ← commerce.module.css 의 .filters(+후손 input·select)
 │       ├── model/
 │       │   ├── productListParsers.ts           ← 현재: hooks/productListSearchParams.ts 의 nuqs 파서만
 │       │   └── useProductListSearchParams.ts   ← 현재: hooks/useProductListSearchParams.ts
@@ -184,13 +190,17 @@ src
 ├── widgets/                         ← FSD widgets 레이어 (독립적 UI 블록)
 │   ├── commerce/
 │   │   ├── ui/
-│   │   │   ├── CommerceHeader.tsx        ← 현재: components/commerce/CommerceHeader.tsx
-│   │   │   └── CommerceHeaderCounts.tsx  ← 현재: components/commerce/CommerceHeaderCounts.tsx
+│   │   │   ├── CommerceHeader.tsx              ← 현재: components/commerce/CommerceHeader.tsx
+│   │   │   ├── CommerceHeader.module.css       ← commerce.module.css 의 .header·.brandLink·.nav
+│   │   │   ├── CommerceHeaderCounts.tsx        ← 현재: components/commerce/CommerceHeaderCounts.tsx
+│   │   │   └── CommerceHeaderCounts.module.css ← commerce.module.css 의 .headerCounts
 │   │   └── index.ts
 │   └── product-card/
 │       ├── ui/
-│       │   ├── ProductCard.tsx     ← 현재: components/commerce/ProductCard.tsx (features 버튼 직접 조합)
-│       │   └── ProductGrid.tsx     ← 현재: components/commerce/ProductGrid.tsx (ProductCard 그리드 — 홈·목록 공유라 widget 계층으로)
+│       │   ├── ProductCard.tsx        ← 현재: components/commerce/ProductCard.tsx (features 버튼 직접 조합)
+│       │   ├── ProductCard.module.css ← commerce.module.css 의 .card*·.cardActions(+후손 button)
+│       │   ├── ProductGrid.tsx        ← 현재: components/commerce/ProductGrid.tsx (ProductCard 그리드 — 홈·목록 공유라 widget 계층으로)
+│       │   └── ProductGrid.module.css ← commerce.module.css 의 .grid
 │       └── index.ts
 ├── features/                        ← FSD features 레이어 (사용자 인터랙션)
 │   ├── add-to-cart/
@@ -203,7 +213,9 @@ src
 │   │   ├── ui/SearchInput.tsx       ← 현재: components/commerce/ProductListFilters.tsx 에서 분리
 │   │   └── index.ts
 │   ├── category-select/
-│   │   ├── ui/CategorySelect.tsx    ← 현재: components/commerce/PrefetchCategoryLink.tsx + ProductListFilters.tsx 에서 분리
+│   │   ├── ui/
+│   │   │   ├── CategorySelect.tsx       ← 현재: components/commerce/ProductListFilters.tsx 의 카테고리 셀렉트에서 분리
+│   │   │   └── PrefetchCategoryLink.tsx ← 현재: components/commerce/PrefetchCategoryLink.tsx (홈·헤더 카테고리 링크 prefetch)
 │   │   └── index.ts
 │   └── sort-select/
 │       ├── ui/SortSelect.tsx        ← 현재: components/commerce/ProductListFilters.tsx 에서 분리
@@ -226,18 +238,23 @@ src
 │       └── index.ts
 └── shared/                          ← FSD shared 레이어 (도메인과 무관한 공통 코드)
     ├── ui/
-    │   ├── dialog/                  ← 현재: components/ui/dialog/
-    │   ├── select/                  ← 현재: components/ui/select/
-    │   └── pagination/
-    │       ├── Pagination.tsx           ← 현재: components/commerce/Pagination.tsx
-    │       └── Pagination.module.css    ← commerce.module.css 에서 분리 (도메인 스타일 결합 제거)
+    │   ├── dialog/                  ← 현재: components/ui/dialog/ (index.tsx + demos)
+    │   ├── select/                  ← 현재: components/ui/select/ (index.ts + useSelect.ts + demos)
+    │   ├── pagination/
+    │   │   ├── Pagination.tsx           ← 현재: components/commerce/Pagination.tsx
+    │   │   ├── Pagination.module.css    ← commerce.module.css 에서 분리 (도메인 스타일 결합 제거)
+    │   │   └── index.ts
+    │   └── layout.module.css        ← commerce.module.css 의 .status·.section·.sectionTitle (app·페이지 공유 레이아웃 유틸)
     ├── lib/
     │   ├── useDebouncedValue.ts     ← 현재: hooks/useDebouncedValue.ts
     │   ├── formatPrice.ts           ← 현재: utils/index.ts
-    │   └── createIdSetStore.ts      ← cart·wishlist 공용 id 집합 영속 store 팩토리(중복 persist 로직 추출)
+    │   ├── createIdSetStore.ts      ← cart·wishlist 공용 id 집합 영속 store 팩토리(중복 persist 로직 추출)
+    │   └── index.ts
     └── api/
         ├── requestJson.ts           ← 현재: services/requestJson.ts
-        └── getBaseUrl.ts            ← 현재: services/getBaseUrl.ts
+        ├── getBaseUrl.ts            ← 현재: services/getBaseUrl.ts
+        ├── queryClient.ts           ← 현재: lib/queryClient.ts (앱·페이지가 함께 쓰는 데이터 인프라라 shared 로)
+        └── index.ts
 ```
 
 #### 허용/금지 import 예시
@@ -246,17 +263,17 @@ src
 
 ```ts
 // ✅ _pages/products(pages) → widgets·entities (하위 레이어, public API)
-//    파일: _pages/products/ui/ProductGrid.tsx
-import { ProductCard } from "@/widgets/product-card";
-import { productQueries } from "@/entities/product";
+//    파일: _pages/products/ui/ProductListResult.tsx
+import { ProductGrid } from "@/widgets/product-card";
+import type { ProductListResponse } from "@/entities/product";
 
 // ✅ 같은 slice 안 segment 끼리는 상대경로 (ui → 같은 slice 의 model)
 //    파일: _pages/products/ui/ProductListFilters.tsx
 import { useProductListSearchParams } from "../model/useProductListSearchParams";
 
 // ❌ 내부 파일 직접 import (public API 우회) — index.ts 를 거쳐야 함
-//    파일: _pages/products/ui/ProductGrid.tsx
-import { ProductCard } from "@/widgets/product-card/ui/ProductCard";
+//    파일: _pages/products/ui/ProductListResult.tsx
+import { ProductGrid } from "@/widgets/product-card/ui/ProductGrid";
 
 // ❌ 아래→위 (features → pages)
 //    파일: features/category-select/ui/CategorySelect.tsx
@@ -289,7 +306,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 - URL 공유·새로고침·뒤로/앞으로 가기 후 조건 복원
 - 장바구니·위시리스트 상태 동기화와 헤더 개수 유지 (페이지 이동 포함)
 
-마이그레이션 완료후 FSD 레이어 규칙·import 경계는 공식 FSD 린터 **Steiger** 로 검증한다.
+마이그레이션 완료후 FSD 레이어 규칙·import 경계는 공식 FSD 린터 **Steiger** 로 검증한다. (완료: `steiger src` → **No problems found**. 오탐·의도 규칙은 근거 주석과 함께 `steiger.config.ts` 에서 off. 9단계 기록 참조.)
 
 ###### 단계별 검증 기록
 
@@ -310,13 +327,21 @@ import { useWishlistStore } from "@/entities/wishlist";
 
 **7단계 (widgets/features 분리)** — 통과(테스트 69개·build). `widgets/commerce`(CommerceHeader+내부 CommerceHeaderCounts), `widgets/product-card`(ProductCard가 add-to-cart·toggle-wishlist feature 버튼 조합), `ProductCardActions`→`features/add-to-cart`·`features/toggle-wishlist`, `ProductListFilters`→`features/search`·`category-select`·`sort-select`. 설계: feature 컨트롤이 page 훅(`useProductListSearchParams`)을 import 하면 **feature→page 상향 import** 라, 컨트롤은 `value`+`onChange` **props 순수 컨트롤**로 만들고 page 의 `ProductListFilters`(조합점)가 URL 을 배선. 검색 draft(push/replace) 로직은 `SearchInput` 로컬로 이동, `SEARCH_DEBOUNCE_MS`는 `features/search`로. **3단계에서 미룬 `HomeContent→ProductGrid` cross-import 해소**: `ProductGrid`를 `widgets/product-card`(ProductCard 옆)로 올려 홈·목록이 하향 import. `PrefetchCategoryLink`→`features/category-select`. 특이사항: `commerce.module.css`는 아직 공유(components/commerce 에 잔존), Pagination 과 함께 8단계에서 분해.
 
+**8단계 (shared/ui 정리 + CSS 분해)** — 통과(테스트 69개·build). `dialog`·`select` 헤드리스 UI(외부 미사용, 자족적)·`Pagination`→`shared/ui`. `commerce.module.css` 를 컴포넌트별 co-located 모듈로 분해. **디자인 토큰은 `.page` 에 유지**(사용자의 :root 오염 방지 설계 보존) — 쪼갠 각 모듈은 `var(--*)` 를 조상 `.page` 에서 런타임 상속. 분배: `.page`(+토큰)·`.error`·`.retryButton`→`_app/styles/app.module.css`, 여러 레이어 공유 `.status`·`.section`·`.sectionTitle`→`shared/ui/layout.module.css`, 나머지는 각 컴포넌트 옆(`ProductCard`·`ProductGrid`·`CommerceHeader`·`CommerceHeaderCounts`·`ProductListFilters`·`ProductListResult`·`ProductList`·`HomeContent`·`Pagination`.module.css). `.filters`/`​.cardActions` 는 feature 가 클래스 없이 렌더한 컨트롤/버튼을 후손 선택자로 스타일. **기술 폴더 전부 제거 완료**(`components`·`hooks`·`queries`·`services`·`stores`·`types`·`utils`·`lib`). 교차 슬라이스 계약 테스트는 `src/__tests__/` 로. 브라우저: 홈·목록 스타일 픽셀 동일 확인.
+
+**9단계 (Steiger 검증 + 커밋 강제)** — 통과(`steiger src` → **No problems found**). 발견·조치:
+- **진짜 위반 1건**: `ProductListSection`(pages)이 `_app/queryClient`(app) 를 SSR prefetch 로 import → pages→app 상향. `queryClient.ts` 는 도메인 무관 데이터 인프라라 `shared/api` 로 내려 하향 import 로 정정(규칙 억제 아님).
+- **실수정 1건**: `shared/ui/select` public API(`index.ts`) 추가.
+- **오탐·의도 규칙은 근거 주석과 함께 off**(`steiger.config.ts`): `typo-in-layer-name`(파서는 `_app`/`_pages` 프리픽스를 처리하나 이 규칙만 raw 이름을 Levenshtein 비교해 오탐), `insignificant-slice`(RADIO 가 의도적으로 분리한 단일소비 feature + Next app router 만 쓰는 헤더 위젯), `no-segmentless-slices`@`_app`(app 레이어의 `styles` 세그먼트 오탐). 테스트·`src/app`·`examples` 는 ignore.
+- **커밋 강제**: husky `pre-commit` = `lint-staged`(스테이징 파일 `eslint --fix`·`prettier --write`, `.lintstagedrc`) + `pnpm lint:fsd`(steiger, 전체 구조라 파일 단위가 아니라 훅에서 직접). 위반 시 커밋 차단. 타입·테스트·빌드는 `pre-push`(`pnpm test && pnpm build` — build 가 tsc 수행).
+
 #### 파일 매핑표 (이동하는 파일 + 그 자리에 남기는 파일)
 
 | 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이동 또는 유지하는 이유 |
 | --- | --- | --- | --- |
 | `app/providers.tsx` | `_app/providers.tsx` | app / — / — | 앱 전역 프로바이더 |
 | `app/globals.css` | `_app/styles/globals.css` | app / — / styles | 앱 전역 스타일 |
-| `lib/queryClient.ts` | `_app/queryClient.ts` | app / — / — | 앱 전역 QueryClient 생성·설정 |
+| `lib/queryClient.ts` | `shared/api/queryClient.ts` | shared / — / api | QueryClient 팩토리(도메인 무관 데이터 인프라). 페이지 SSR prefetch(`ProductListSection`)도 `getQueryClient` 를 쓰므로 `_app`(상위 레이어)에 두면 pages→app 상향 import — Steiger `forbidden-imports` 로 확인됨 → shared 로 내림 |
 | `components/commerce/HomeContent.tsx` | `_pages/home/ui/HomeContent.tsx` | pages / home / ui | 홈 전용 조합 UI |
 | `queries/home.ts` | `_pages/home/api/home.ts` | pages / home / api | 홈 전용 queryOptions |
 | `app/products/ProductListSection.tsx` | `_pages/products/ui/ProductListSection.tsx` | pages / products / ui | 상품 목록 페이지 서버 조합 |
@@ -347,7 +372,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `services/commerce.ts` 의 `getHome` | `_pages/home/api/home.ts` | pages / home / api | 홈 전용 조합 응답 조회 → 홈 페이지가 소유 |
 | `services/getBaseUrl.ts` | `shared/api/getBaseUrl.ts` | shared / — / api | API 인프라 |
 | `services/requestJson.ts` | `shared/api/requestJson.ts` | shared / — / api | API 인프라 |
-| `components/commerce/commerce.module.css` | 각 컴포넌트 옆으로 해체 | (분산) | 10개 컴포넌트 공유 CSS 를 컴포넌트별 co-locate 로 분산 |
+| `components/commerce/commerce.module.css` | 각 컴포넌트 옆으로 해체 | (분산) | 공유 CSS 를 컴포넌트별 co-locate 로 분산. 토큰은 `.page`(→`_app/styles/app.module.css`)에 유지하고 각 모듈은 `var(--*)` 를 조상 `.page` 에서 상속. 여러 레이어 공유(`.status`·`.section`·`.sectionTitle`) → `shared/ui/layout.module.css` |
 | `app/page.tsx`·`layout.tsx`·`error.tsx` | 유지 | app (Next 라우팅) | Next 라우팅 진입점 |
 | `app/products/{page,layout,error}.tsx` | 유지 | app (Next 라우팅) | Next 라우팅 진입점 |
 | `app/api/**` (`home`·`products/route.ts`, `_data/commerce.ts`) | 유지 | app / api | Route Handler·mock, 전환 범위 밖 |
@@ -381,7 +406,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 
 ### I — Interface
 
-**각 슬라이스가 공개할 값과 숨길 구현 세부**
+**Public API - 각 슬라이스가 공개할 값과 숨길 구현 세부(과제 3단계)**
 
 
 | 슬라이스 | 공개(`index.ts` 가 export) | 숨기는 구현 세부 |

@@ -1,0 +1,6 @@
+/* 상품 목록 결과 헤더의 총 개수 표기. 색상·간격 토큰은 조상 .page 에서 상속받는다. */
+.resultCount {
+  color: var(--color-muted);
+  font-size: 15px;
+  margin-bottom: var(--space-md);
+}
