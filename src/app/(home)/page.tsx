@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
 
+import { productQueries } from '@/entities/product';
 import { CartCount } from '@/features/cart/CartCount';
 import { HomeContent } from '@/features/products/HomeContent';
-import { productQueries } from '@/features/products/queries';
 import { WishlistCount } from '@/features/wishlist/WishlistCount';
 import { getQueryClient } from '@/shared/get-query-client';
 

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
+import { productQueries } from '@/entities/product';
 import { CartCount } from '@/features/cart/CartCount';
 import { ProductList } from '@/features/products/ProductList';
 import { ProductListFilters } from '@/features/products/ProductListFilters';
@@ -11,7 +12,6 @@ import {
   loadProductListConditions,
   toProductListQuery,
 } from '@/features/products/product-list-params';
-import { productQueries } from '@/features/products/queries';
 import { WishlistCount } from '@/features/wishlist/WishlistCount';
 import { getQueryClient } from '@/shared/get-query-client';
 

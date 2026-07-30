@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
 import { ProductCard } from './ProductCard';
-import { productQueries } from './queries';
+
+import { productQueries } from '@/entities/product';
 
 export function HomeContent() {
   const { data, isPending, isError, error, isFetching, refetch } = useQuery(

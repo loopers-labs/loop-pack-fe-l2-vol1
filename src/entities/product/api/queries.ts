@@ -1,8 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { getHome, getProducts } from './api';
-
-import type { ProductListQuery, ProductListResponse } from '@/entities/product';
+import { getHome, getProducts } from './fetch-product';
+import type { ProductListQuery, ProductListResponse } from './types';
 
 type ProductListConditions = Required<ProductListQuery>;
 

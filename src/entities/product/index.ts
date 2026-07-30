@@ -11,3 +11,4 @@ export type {
   ProductListQuery,
   ProductListResponse,
 } from './api/types';
+export { productQueries } from './api/queries';

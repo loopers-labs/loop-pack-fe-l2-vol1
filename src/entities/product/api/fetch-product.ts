@@ -2,7 +2,8 @@ import type {
   HomeResponse,
   ProductListQuery,
   ProductListResponse,
-} from '@/entities/product';
+} from './types';
+
 import { apiClient } from '@/shared/api-client';
 
 export function getHome() {

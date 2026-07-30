@@ -8,8 +8,9 @@ import {
   type ProductListConditions,
   toProductListQuery,
 } from './product-list-params';
-import { productQueries } from './queries';
 import { useProductListUrlState } from './search-params';
+
+import { productQueries } from '@/entities/product';
 
 const listQueryKey = (conditions: ProductListConditions) =>
   productQueries.list(toProductListQuery(conditions)).queryKey;

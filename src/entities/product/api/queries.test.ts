@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { keepPreviousPage, productQueries } from './queries';
-
-import type { ProductListQuery, ProductListResponse } from '@/entities/product';
+import type { ProductListQuery, ProductListResponse } from './types';
 
 const CONDITIONS = {
   q: '의자',
