@@ -1,7 +1,8 @@
 "use client";
 
 import { Placeholder } from "@/app/_components/placeholder";
-import { CartButton, WishlistButton } from "@/app/_components/product-actions";
+import { CartButton } from "@/features/toggle-cart/ui/cart-button";
+import { WishlistButton } from "@/features/toggle-wishlist/ui/wishlist-button";
 import { ProductCard } from "@/entities/product";
 import type { ProductListResponse } from "@/services/commerce";
 

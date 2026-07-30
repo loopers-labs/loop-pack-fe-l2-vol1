@@ -1,6 +1,7 @@
 import { Placeholder } from "@/app/_components/placeholder";
-import { CartButton, WishlistButton } from "@/app/_components/product-actions";
 import { ProductCard, type Product } from "@/entities/product";
+import { CartButton } from "@/features/toggle-cart/ui/cart-button";
+import { WishlistButton } from "@/features/toggle-wishlist/ui/wishlist-button";
 
 type HomeProductSectionProps = {
   title: string;
