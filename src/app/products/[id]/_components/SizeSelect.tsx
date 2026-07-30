@@ -4,7 +4,7 @@ import { useSelect } from '@/shared/ui/select';
 import { ChevronIcon } from '@/shared/ui/icons/ChevronIcon';
 import { DeliveryIcon } from '@/shared/ui/icons/DeliveryIcon';
 import type { SelectOption } from '@/shared/ui/select';
-import type { SizeValue } from '@/types/commerce';
+import type { SizeValue } from '@/entities/product/model/types';
 
 interface SizeSelectProps {
   options: SelectOption<SizeValue>[];

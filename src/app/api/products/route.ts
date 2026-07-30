@@ -4,12 +4,14 @@ import { getProductById, getProductList } from "@/app/api/_data/productService";
 import {
   PRODUCT_SORTS,
   CATEGORY_OPTIONS,
-} from "@/types/commerce";
+} from "@/entities/product/model/types";
+import type {
+  ProductListResponse,
+  ProductSort,
+} from "@/entities/product/model/types";
 import type {
   ApiErrorResponse,
   MockApiScenario,
-  ProductListResponse,
-  ProductSort,
 } from "@/types/commerce";
 
 const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];

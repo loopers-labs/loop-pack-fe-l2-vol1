@@ -4,11 +4,11 @@ import { useCallback } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/queries/homeQueries';
-import { productListQueryOptions } from '@/queries/productQueries';
+import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { formatWon, calcDiscount } from '@/shared/lib/format';
-import type { Product } from '@/types/commerce';
+import type { Product } from '@/entities/product/model/types';
 
 function ProductCard({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));

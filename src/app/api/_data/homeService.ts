@@ -1,4 +1,5 @@
-import type { CategoryId, HomeResponse } from '@/types/commerce';
+import type { CategoryId } from '@/entities/product/model/types';
+import type { HomeResponse } from '@/types/commerce';
 import { categories, homeBanner, products } from './commerce';
 
 export function getHomeData(): HomeResponse {

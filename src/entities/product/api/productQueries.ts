@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 import { PRODUCT_LIST_DEFAULTS, getProductList, getProductById } from '@/app/api/_data/productService';
-import type { ProductListQuery } from '@/types/commerce';
+import type { ProductListQuery } from '@/entities/product/model/types';
 
 export function productListQueryOptions(params: ProductListQuery) {
   const {

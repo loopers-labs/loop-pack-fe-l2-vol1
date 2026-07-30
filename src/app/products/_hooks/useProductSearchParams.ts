@@ -9,8 +9,8 @@ import {
 import {
   CATEGORY_OPTIONS,
   PRODUCT_SORTS,
-} from '@/types/commerce';
-import type { CategoryOption, ProductListQuery, ProductSort } from '@/types/commerce';
+} from '@/entities/product/model/types';
+import type { CategoryOption, ProductListQuery, ProductSort } from '@/entities/product/model/types';
 
 const searchParamsParsers = {
   q: parseAsString.withDefault(''),

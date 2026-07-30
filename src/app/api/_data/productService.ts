@@ -2,7 +2,7 @@ import type {
   Product,
   ProductListQuery,
   ProductListResponse,
-} from '@/types/commerce';
+} from '@/entities/product/model/types';
 import { categories, products } from './commerce';
 
 export const PRODUCT_LIST_DEFAULTS = {

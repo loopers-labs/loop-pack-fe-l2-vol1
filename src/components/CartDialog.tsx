@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/shared/ui/dialog';
 import { useCartStore } from '@/store/cartStore';
-import { productDetailQueryOptions } from '@/queries/productQueries';
+import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
 import { formatWon } from '@/shared/lib/format';
 
 export function CartDialog() {

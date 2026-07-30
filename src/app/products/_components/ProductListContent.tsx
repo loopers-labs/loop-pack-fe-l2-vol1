@@ -7,12 +7,12 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query';
-import { productListQueryOptions } from '@/queries/productQueries';
+import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { useProductSearchParams } from '../_hooks/useProductSearchParams';
 import { formatWon } from '@/shared/lib/format';
-import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/types/commerce';
+import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/entities/product/model/types';
 
 function ProductActions({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));

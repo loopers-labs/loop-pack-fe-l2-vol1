@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '../getQueryClient';
-import { productListQueryOptions } from '@/queries/productQueries';
-import { CATEGORY_OPTIONS, PRODUCT_SORTS } from '@/types/commerce';
-import type { CategoryOption, ProductSort } from '@/types/commerce';
+import { productListQueryOptions } from '@/entities/product/api/productQueries';
+import { CATEGORY_OPTIONS, PRODUCT_SORTS } from '@/entities/product/model/types';
+import type { CategoryOption, ProductSort } from '@/entities/product/model/types';
 import { ProductListContent } from './_components/ProductListContent';
 
 interface ProductListPageProps {
