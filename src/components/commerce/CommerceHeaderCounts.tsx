@@ -1,17 +1,18 @@
 "use client";
 
-import { useCommerceStore } from "@/stores/commerceStore";
+import { useCartCount, useCartHasHydrated } from "@/entities/cart";
+import { useWishlistCount, useWishlistHasHydrated } from "@/entities/wishlist";
 import styles from "./commerce.module.css";
 
 const PENDING_COUNT = "–";
 
 export function CommerceHeaderCounts() {
-  const hasHydrated = useCommerceStore((state) => state.hasHydrated);
-  const cartCount = useCommerceStore((state) => state.cartIds.size);
-  const wishlistCount = useCommerceStore((state) => state.wishlistIds.size);
+  const cartCount = useCartCount();
+  const wishlistCount = useWishlistCount();
 
-  const cart = hasHydrated ? cartCount : PENDING_COUNT;
-  const wishlist = hasHydrated ? wishlistCount : PENDING_COUNT;
+  // 각 store 는 독립 복원이라 각자의 hasHydrated 로 placeholder/실제값을 가른다.
+  const cart = useCartHasHydrated() ? cartCount : PENDING_COUNT;
+  const wishlist = useWishlistHasHydrated() ? wishlistCount : PENDING_COUNT;
 
   return (
     <div className={styles.headerCounts}>

@@ -16,7 +16,8 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { ProductCardActions } from "./ProductCardActions";
 import { CommerceHeaderCounts } from "./CommerceHeaderCounts";
 import { ProductList } from "@/_pages/products/ui/ProductList";
-import { useCommerceStore } from "@/stores/commerceStore";
+import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 import { makeQueryClient } from "@/_app/queryClient";
 import {
   normalizeProductListQuery,
@@ -57,11 +58,8 @@ function makeResponse(page: number, products: Product[]): ProductListResponse {
 beforeEach(() => {
   getProductsMock.mockReset();
   localStorage.clear();
-  useCommerceStore.setState({
-    cartIds: new Set(),
-    wishlistIds: new Set(),
-    hasHydrated: true,
-  });
+  useCartStore.setState({ ids: new Set(), hasHydrated: true });
+  useWishlistStore.setState({ ids: new Set(), hasHydrated: true });
 });
 
 afterEach(cleanup);
@@ -101,7 +99,8 @@ describe("헤더 개수 파생", () => {
   test("복원 전엔 실제 개수를 감추고, 복원 후엔 store 개수를 파생해 보이며 담기에 즉시 반응한다", () => {
     // 개수 element 는 role 이 없어(단순 표시값) data-testid 로 잡고, 보이는 숫자만 assert 한다
     // → 헤더 label 텍스트·포맷·i18n 이 바뀌어도 안 깨진다.
-    useCommerceStore.setState({ hasHydrated: false });
+    useCartStore.setState({ hasHydrated: false });
+    useWishlistStore.setState({ hasHydrated: false });
     render(
       <>
         <CommerceHeaderCounts />
@@ -114,7 +113,8 @@ describe("헤더 개수 파생", () => {
 
     // 복원 후: store 의 개수(size)를 그대로 파생해 드러낸다
     act(() => {
-      useCommerceStore.setState({ hasHydrated: true });
+      useCartStore.setState({ hasHydrated: true });
+      useWishlistStore.setState({ hasHydrated: true });
     });
     expect(screen.getByTestId("cart-count").textContent).toBe("0");
 

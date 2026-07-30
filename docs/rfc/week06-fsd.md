@@ -232,7 +232,8 @@ src
     │       └── Pagination.module.css    ← commerce.module.css 에서 분리 (도메인 스타일 결합 제거)
     ├── lib/
     │   ├── useDebouncedValue.ts     ← 현재: hooks/useDebouncedValue.ts
-    │   └── formatPrice.ts           ← 현재: utils/index.ts
+    │   ├── formatPrice.ts           ← 현재: utils/index.ts
+    │   └── createIdSetStore.ts      ← cart·wishlist 공용 id 집합 영속 store 팩토리(중복 persist 로직 추출)
     └── api/
         ├── requestJson.ts           ← 현재: services/requestJson.ts
         └── getBaseUrl.ts            ← 현재: services/getBaseUrl.ts
@@ -303,6 +304,8 @@ import { useWishlistStore } from "@/entities/wishlist";
 - 특이사항: RFC 원안(`_pages/products` lib/model 로)이 3단계 entity 결정과 충돌해 entity→page·feature→page 상향 import 를 유발 → **엔티티 중심으로 보정**(트리·매핑표·결정표·Interface·본 계획서 함께 갱신). `getProducts` 는 `services↔entities` 순환을 피하려 4단계에 함께 이동.
 
 **5단계 (segment 정리)** — 통과(테스트 69개·build). `queries/`·`services/`·`hooks/`·`utils/`·`types/` 5개 기술 폴더 제거: home api(`_pages/home/api/home.ts` = homeQueries+getHome+`HomeResponse`), `shared/api`(getBaseUrl·requestJson·`ApiErrorResponse`), `shared/lib`(useDebouncedValue·formatPrice), `entities/product/model`(`product.ts` 도메인 타입·productListOptions), `productListOptions`→entity. 배치 결정: `MockApiScenario`→`app/api/_data/commerce.ts`(mock 전용), `ProductListResponse`→`api/fetchProducts.ts`(DTO를 fetch 옆), 미사용 `getErrorMessage` 삭제. 특이사항: `stores/`(6)·`components/**`(7·8)·`commerce.module.css` 분해는 컴포넌트 최종 위치 확정 후라야 해서 **6·7·8단계로 미룸**.
+
+**6단계 (공유 상태 → entities)** — 통과(테스트 69개·build). `commerceStore`(단일)를 `entities/cart`·`entities/wishlist` 독립 store 로 분리. persist 로직이 동일해 `shared/lib/createIdSetStore.ts`(id 집합 영속 store 팩토리)로 추출하고 각 entity 가 자기 키로 인스턴스화(`cart-store`·`wishlist-store`). 각 entity 는 store 훅 + 파생 셀렉터(`useIsInCart`·`useCartCount`·`useCartHasHydrated`·`useToggleCart` 등)만 공개(id `Set` 구조 은닉). 소비처: providers(각각 rehydrate), `ProductCardActions`·`CommerceHeaderCounts`(각 hasHydrated 로 placeholder). 특이사항: 저장 키가 `commerce-store`(단일)→`cart-store`+`wishlist-store`(2개)로 바뀌어 **기존 `commerce-store` 저장값은 1회 유실**(복원 *능력*은 보존 — 세션 내 토글→새로고침 복원 확인). 실앱이면 구키 마이그레이션이 필요하나 학습 범위라 생략.
 
 #### 파일 매핑표 (이동하는 파일 + 그 자리에 남기는 파일)
 
@@ -381,8 +384,8 @@ import { useWishlistStore } from "@/entities/wishlist";
 | 슬라이스 | 공개(`index.ts` 가 export) | 숨기는 구현 세부 |
 | --- | --- | --- |
 | `entities/product` | `Product`·`Category`·`CategoryId`·`ProductSort` 타입(`model/product.ts`), `CATEGORY_VALUES`·`SORT_VALUES`·`*_LABELS`·`isCategoryValue`·`isSortValue`(`model/productListOptions.ts`), 목록 조회 조건 정의·정규화 로직 `PRODUCT_LIST_DEFAULTS`·`FIRST_PAGE`·`ProductListParams`·`normalizeProductListQuery`·`resolveProductListQuery`·`buildDefaultProductListQuery`·`clampPageToLowerBound`(`model/productListQuery.ts`), `productQueries`(`api/productQueries.ts`) | `getProducts` fetch 구현(`api/fetchProducts.ts` 내부, `productQueries` 만 사용), `buildProductListSearchParams`(로직 내부용) |
-| `entities/cart` | cart store 훅(`useCartStore`)과 파생 셀렉터(`isInCart`, 개수)(`model/store.ts`) | store 내부가 id `Set<string>` 이라는 구조 |
-| `entities/wishlist` | wishlist store 훅(`useWishlistStore`)과 셀렉터(`isWishlisted`, 개수)(`model/store.ts`) | 〃 (cart 를 모름) |
+| `entities/cart` | `useCartStore`(rehydrate 용)과 파생 셀렉터 훅 `useIsInCart`·`useCartCount`·`useCartHasHydrated`·`useToggleCart`(`model/store.ts`) | store 내부가 id `Set<string>` 이라는 구조(`shared/lib/createIdSetStore` 로 생성) |
+| `entities/wishlist` | `useWishlistStore`과 `useIsWishlisted`·`useWishlistCount`·`useWishlistHasHydrated`·`useToggleWishlist`(`model/store.ts`) | 〃 (cart 를 모름) |
 | `widgets/product-card` | `ProductCard`(`ui/ProductCard.tsx`) | 내부에서 조합하는 feature 버튼(`AddToCartButton`·`WishlistButton`) |
 | `widgets/commerce` | `CommerceHeader`(`ui/CommerceHeader.tsx`) | 개수 파생 `CommerceHeaderCounts`(`ui`, 내부) |
 | `features/add-to-cart` | `AddToCartButton`(`ui/AddToCartButton.tsx`) | `useCartStore` 갱신 방식 |
@@ -394,7 +397,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `_pages/products` | 상품 목록 진입 컴포넌트(`ui/ProductListSection.tsx`) | `ui` 하위 컴포넌트, `model`(nuqs 파서 `productListParsers`·URL 훅 `useProductListSearchParams`) — 조회 조건 정의·정규화 로직은 `entities/product` 소유 |
 | `shared/ui` | `dialog`·`select`·`pagination` 컴포넌트·헤드리스 훅(세그먼트 `index`) | 내부 상태/DOM 처리 |
 | `shared/api` | `requestJson`·`getBaseUrl`(http 클라이언트) | — |
-| `shared/lib` | `useDebouncedValue`·`formatPrice` | — |
+| `shared/lib` | `useDebouncedValue`·`formatPrice`·`perUnitPrice`·`createIdSetStore`(cart·wishlist 공용 store 팩토리) | — |
 
 **`ProductCard` 와 장바구니·위시리스트 행위의 조합 방법**
 
