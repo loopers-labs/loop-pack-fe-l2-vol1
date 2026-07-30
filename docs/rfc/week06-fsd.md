@@ -40,6 +40,7 @@
 ### 동작 기준선 검증
 
 폴더를 옮기기 전에 아래 기준선을 먼저 확인한다.
+아래 표는 브라우저 수동 검증용이며, 실제 실행 후 `확인 예정`을 `통과` 또는 실패 내용으로 갱신한다.
 
 | 시작 URL                                                | 행동                                  | 기대값                                 | 실제 결과 |
 | ------------------------------------------------------- | ------------------------------------- | -------------------------------------- | --------- |
@@ -161,7 +162,7 @@ Shared와 App은 layer이면서 동시에 slice처럼 동작하는 예외로 설
 
 ```ts
 // page는 widget, feature, entity, shared를 조합할 수 있다.
-import { ProductListPage } from "@/_pages/products";
+import { ProductListPageClient } from "@/_pages/products";
 
 // widget은 feature와 entity를 조합할 수 있다.
 import { useAddToCart } from "@/features/add-to-cart";
@@ -256,8 +257,8 @@ store 접근 hook을 `shared`로 우회해야 하는 문제가 남는다.
 | `features/toggle-wishlist` | `useToggleWishlist`                                                                                                   | Zustand map 구조, hydration flag 처리 세부           |
 | `widgets/product-card`     | `CommerceProductCard`                                                                                                 | product UI와 cart/wishlist feature 조합 세부         |
 | `widgets/header`           | `CommerceHeader`                                                                                                      | cart/wishlist count 구독 및 표시 조합                |
-| `_pages/products`          | `ProductListPage`, loading/error UI                                                                                   | 내부 query/result/filter/url 조합                    |
-| `_pages/home`              | `HomePage`, loading/error UI                                                                                          | 내부 query/section 조합                              |
+| `_pages/products`          | `ProductListPageClient`, `ProductListPageSkeleton`, `productQueries`, `loadProductListSearchParams`                   | 내부 result/filter/url 조합                          |
+| `_pages/home`              | `HomePageClient`, `HomeLoading`, `HomeErrorBoundary`, `homeQueries`                                                   | 내부 section 조합                                    |
 
 ### ProductCard와 장바구니/위시리스트 행위 조합
 
@@ -456,20 +457,26 @@ Query `isPending`은 클라이언트 refetch나 결과 영역 로딩 범위를 �
 
 - `src/entities/wishlist/**`
 - `src/features/toggle-wishlist/**`
-- `src/widgets/product-card` 안의 wishlist action 조합
-- `src/widgets/header` 안의 wishlist count 표시
-- wishlist 관련 테스트
+- `src/widgets/product-card/ui/CommerceProductCard.tsx` 안의 wishlist action 조합
+- `src/widgets/header/ui/CommerceHeader.tsx` 안의 wishlist count 표시
+- `src/_app/providers/CommerceStoreHydrator.tsx` 안의 wishlist store rehydrate 호출
+- wishlist store, hydration, 홈/목록 동기화 관련 테스트
 
 예상 수정 파일:
 
-- `src/_app/providers/CommerceStoreHydrator.tsx`에서 wishlist store rehydrate 호출을 제거한다.
-- `ProductCard`의 시각적 계약에 wishlist 버튼이 포함되어 있다면 해당 props와 버튼 UI를 제거한다.
+- `src/entities/product/ui/ProductCard.tsx`에서 wishlist 버튼 props와 버튼 UI를 제거한다.
+- `src/entities/product/ui/ProductCard.test.tsx`에서 wishlist 버튼 표현 테스트를 제거한다.
+- `src/widgets/product-card/ui/ProductGrid.tsx`에서 wishlist label 전달을 제거한다.
+- `src/entities/product/ui/ProductCard.tsx`가 wishlist 버튼을 시각적 계약으로 갖고 있으므로 product entity UI 수정은 필요하다.
 
 판정:
 
 - `ProductCard`가 wishlist feature나 wishlist store를 직접 import하지 않으면 의존 방향은 지킨다.
 - 다만 상품 카드의 시각적 계약에 wishlist 버튼이 포함되어 있으면 wishlist 제거 시 product UI 수정은 필요하다.
 - widget에서 wishlist action 상태를 조합하고 feature 공개 API로 연결하면 삭제 반경을 더 예측하기 쉽다.
+- 현재 코드 기준으로 wishlist store/action 로직은 `entities/wishlist`, `features/toggle-wishlist`,
+  `widgets/product-card`, `widgets/header`, `_app/providers`에 모인다.
+  page가 wishlist store shape를 직접 알지 않으므로 삭제 반경은 예측 가능하다고 판정한다.
 
 ### 신상품 뱃지를 상품 카드에 추가한다면
 
@@ -478,11 +485,16 @@ Query `isPending`은 클라이언트 refetch나 결과 영역 로딩 범위를 �
 - `src/entities/product/model/types.ts`
 - `src/entities/product/ui/mapProductToCardItem.ts`
 - `src/entities/product/ui/ProductCard.tsx`
-- 상품 카드 테스트
+- `src/entities/product/ui/ProductCard.test.tsx`
 
 판정:
 
-- 상품 표시 정책이 product entity 안에서 끝나면 응집이 좋다.
+- 홈의 `newProducts` 섹션은 이미 API에서 `createdAt` 기준으로 내려주는 홈 aggregate다.
+  여기서 말하는 신상품 뱃지는 "상품 카드에 신상품 표시를 추가하는 UI 정책"으로 본다.
+- 신상품 뱃지는 상품 표시 정책이므로 `ProductCard`가 직접 날짜 계산을 하지 않는다.
+- Product 응답에 `isNew` 같은 표시 필드가 추가되면 `Product` 타입, `mapProductToCardItem`,
+  `ProductCard`와 해당 테스트만 수정한다.
+- `createdAt`으로 프론트에서 직접 판정한다면 날짜 기준이 상품 정책이므로 `entities/product/lib`에 둔다.
 - cart/wishlist feature나 page까지 수정해야 한다면 경계가 새고 있는 것이다.
 
 ## FSD 이해 확인
