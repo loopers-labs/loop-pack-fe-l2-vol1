@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 
 import { ProductCard, productQueries } from '@/entities/product';
 import { CartToggleButton } from '@/features/cart';
@@ -17,15 +18,8 @@ const countTotalPages = (totalCount: number, pageSize: number) =>
 export function ProductList() {
   const { conditions, changePage } = useProductListUrlState();
 
-  const {
-    data,
-    isPending,
-    isError,
-    error,
-    isPlaceholderData,
-    isFetching,
-    refetch,
-  } = useQuery(productQueries.list(toProductListQuery(conditions)));
+  const { data, isError, error, isPlaceholderData, isFetching, refetch } =
+    useQuery(productQueries.list(toProductListQuery(conditions)));
 
   const totalPages = data
     ? countTotalPages(data.totalCount, data.pageSize)
@@ -42,15 +36,7 @@ export function ProductList() {
     );
   }
 
-  if (isPending) {
-    return (
-      <p className="week05-status" role="status">
-        상품 목록을 불러오는 중입니다…
-      </p>
-    );
-  }
-
-  if (isError) {
+  if (!data && isError) {
     return (
       <p className="week05-status" role="alert">
         {error.message}
@@ -62,12 +48,33 @@ export function ProductList() {
         >
           다시 시도
         </button>
+        <Link href="/">홈으로 가기</Link>
+      </p>
+    );
+  }
+
+  if (!data) {
+    return (
+      <p className="week05-status" role="status">
+        상품 목록을 불러오는 중입니다…
       </p>
     );
   }
 
   return (
     <>
+      {isError && (
+        <p className="week05-status" role="alert">
+          새 목록을 불러오지 못했습니다.
+          <button
+            type="button"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </button>
+        </p>
+      )}
       <p>총 {data.totalCount}개</p>
       {isPlaceholderData && (
         <p className="week05-status" role="status">

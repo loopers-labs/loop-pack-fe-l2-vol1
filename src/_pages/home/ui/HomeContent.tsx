@@ -8,19 +8,11 @@ import { CartToggleButton } from '@/features/cart';
 import { WishlistToggleButton } from '@/features/wishlist';
 
 export function HomeContent() {
-  const { data, isPending, isError, error, isFetching, refetch } = useQuery(
+  const { data, isError, error, isFetching, refetch } = useQuery(
     productQueries.home(),
   );
 
-  if (isPending) {
-    return (
-      <p className="week05-status" role="status">
-        홈을 불러오는 중입니다…
-      </p>
-    );
-  }
-
-  if (isError) {
+  if (!data && isError) {
     return (
       <p className="week05-status" role="alert">
         {error.message}
@@ -36,10 +28,31 @@ export function HomeContent() {
     );
   }
 
+  if (!data) {
+    return (
+      <p className="week05-status" role="status">
+        홈을 불러오는 중입니다…
+      </p>
+    );
+  }
+
   const { banner, categories, popularProducts, newProducts } = data;
 
   return (
     <>
+      {isError && (
+        <p className="week05-status" role="alert">
+          새 내용을 불러오지 못했습니다.
+          <button
+            type="button"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </button>
+        </p>
+      )}
+
       <section
         className="week05-hero"
         style={{ backgroundImage: `url(${banner.image})` }}
