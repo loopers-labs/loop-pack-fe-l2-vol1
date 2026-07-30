@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PrefetchCategoryLink } from "./PrefetchCategoryLink";
 import { buildDefaultProductListQuery } from "@/hooks/productListSearchParams";
-import { productQueries } from "@/queries/products";
+import { productQueries } from "@/entities/product";
 
 afterEach(cleanup);
 

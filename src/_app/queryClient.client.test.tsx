@@ -11,9 +11,9 @@ import {
   type DehydratedState,
 } from "@tanstack/react-query";
 import { getQueryClient, makeQueryClient } from "@/_app/queryClient";
-import { productQueries } from "@/queries/products";
+import { productQueries } from "@/entities/product";
 import { getProducts } from "@/services/commerce";
-import type { ProductListParams } from "@/queries/products";
+import type { ProductListParams } from "@/entities/product";
 import type { ProductListResponse } from "@/types/commerce";
 
 // fetcher 를 목으로 대체 — 실제 HTTP 대신 호출 횟수만 관찰한다.

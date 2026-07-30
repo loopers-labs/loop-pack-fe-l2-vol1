@@ -295,6 +295,8 @@ import { useWishlistStore } from "@/entities/wishlist";
 
 **2단계 (페이지 외부 코드 → `_app`)** — 통과. `providers.tsx`·`queryClient.ts`(+테스트 2)·`globals.css`(→`styles/`) 이동. `lib/` 가 비워지게 되므로 디렉토리째 제거.
 
+**3단계 (페이지 간 cross-import 해결)** — 통과. 상품 queryOptions(`queries/products.ts`) → `entities/product/api`, 소비처 8개를 `@/entities/product` 로. 특이사항: `HomeContent → ProductGrid` cross-import 는 미해소 — ProductGrid 는 widget 계층 아래로 못 내려가므로 7단계에서 `widgets/product-card` 로 co-locate 해 해소(목표 트리 ProductGrid 위치 보정 필요).
+
 #### 파일 매핑표 (이동하는 파일 + 그 자리에 남기는 파일)
 
 | 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이동 또는 유지하는 이유 |

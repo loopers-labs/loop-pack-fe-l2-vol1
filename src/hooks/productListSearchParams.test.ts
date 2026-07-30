@@ -4,7 +4,7 @@ import {
   resolveProductListQuery,
 } from "@/hooks/productListSearchParams";
 import { PRODUCT_LIST_DEFAULTS } from "@/utils/productList";
-import type { ProductListParams } from "@/queries/products";
+import type { ProductListParams } from "@/entities/product";
 
 const BASE: ProductListParams = {
   q: "",

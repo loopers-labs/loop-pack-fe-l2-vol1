@@ -20,7 +20,7 @@ import { useCommerceStore } from "@/stores/commerceStore";
 import { makeQueryClient } from "@/_app/queryClient";
 import { resolveProductListQuery } from "@/hooks/productListSearchParams";
 import { normalizeProductListQuery } from "@/utils/productList";
-import { productQueries } from "@/queries/products";
+import { productQueries } from "@/entities/product";
 import { getProducts } from "@/services/commerce";
 import type { Product, ProductListResponse } from "@/types/commerce";
 

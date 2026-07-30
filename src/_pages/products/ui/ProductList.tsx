@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { productQueries } from "@/queries/products";
+import { productQueries } from "@/entities/product";
 import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ProductListResult } from "./ProductListResult";

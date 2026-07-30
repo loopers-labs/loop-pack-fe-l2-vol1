@@ -9,7 +9,7 @@ import {
   CATEGORY_VALUES,
   SORT_VALUES,
 } from "@/components/commerce/productListOptions";
-import type { ProductListParams } from "@/queries/products";
+import type { ProductListParams } from "@/entities/product";
 
 export const FIRST_PAGE = 1;
 

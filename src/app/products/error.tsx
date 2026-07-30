@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { productQueries } from "@/queries/products";
+import { productQueries } from "@/entities/product";
 import styles from "@/components/commerce/commerce.module.css";
 
 // 목록 조회에서 render 중 throw 된 에러를 잡는 세그먼트 경계.
