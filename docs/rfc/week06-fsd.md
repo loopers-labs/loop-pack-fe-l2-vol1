@@ -63,8 +63,8 @@ src/
 ├── _pages/
 │   ├── home/
 │   │   ├── ui/             # HomeClient
-│   │   └── api/            # homeQueries, HomeResponse 타입
-│   ├── products/
+│   │   └── api/            # homeQueries
+│   ├── product-list/
 │   │   ├── ui/             # ProductListContent
 │   │   └── lib/            # useProductSearchParams
 │   └── product-detail/
@@ -229,7 +229,7 @@ shared/ui          → entities/product    (하위 → 상위 역방향)
 |------|------|------|
 | `Product`, `SizeValue`, `CategoryId`, `Category`, `CATEGORY_IDS` | `entities/product/model` | product 도메인 본질 |
 | `ProductSort`, `PRODUCT_SORTS`, `CategoryOption`, `CATEGORY_OPTIONS`, `ProductListQuery`, `ProductListResponse` | `entities/product/model` | product 조회 파라미터. `CategoryOption`은 `CategoryId`에서 파생되는 UI 필터용 확장 타입이지만, 소유자는 여전히 product 도메인. 슬라이스가 작으므로 세그먼트 분리 불필요 |
-| `HomeResponse` | `_pages/home/api` | 홈 전용 집계 응답 |
+| `HomeResponse` | `types/commerce.ts` 잔류 | 홈 전용 집계 응답이지만 Category, CategoryId, Product를 참조하므로 entities/product에서 import 필요. route handler 전환 시 함께 정리 |
 | `ApiErrorResponse`, `MockApiScenario` | `types/commerce.ts` 잔류 | route handler(`app/api/`)에서만 사용. route handler를 전환 범위에서 제외했으므로 함께 남겨두고, route handler 전환 시 `shared/api`로 이동 |
 
 #### homeQueries — entities/product vs _pages/home
@@ -252,9 +252,9 @@ homeQueries가 반환하는 데이터를 분석한 결과:
 
 | 상태 | Source of Truth | 소유 슬라이스/레이어 | 소비하는 곳 | 이동 후에도 중복 저장하지 않는 방법 |
 |------|----------------|---------------------|------------|-----------------------------------|
-| 상품 조회 결과 | 서버 / TanStack Query 캐시 | `entities/product/api` | _pages/home, _pages/products, _pages/product-detail | Query 캐시가 유일한 저장소. Zustand에 복사하지 않음 |
+| 상품 조회 결과 | 서버 / TanStack Query 캐시 | `entities/product/api` | _pages/home, _pages/product-list, _pages/product-detail | Query 캐시가 유일한 저장소. Zustand에 복사하지 않음 |
 | 홈 집계 데이터 (배너, 카테고리) | 서버 / TanStack Query 캐시 | `_pages/home/api` | _pages/home | homeQueries가 관리. product entity와 분리 |
-| 검색·카테고리·정렬·페이지 | URL / nuqs | `_pages/products/lib` (useProductSearchParams) | _pages/products | URL이 유일한 저장소. useState에 동기화하지 않음 |
+| 검색·카테고리·정렬·페이지 | URL / nuqs | `_pages/product-list/lib` (useProductSearchParams) | _pages/product-list | URL이 유일한 저장소. useState에 동기화하지 않음 |
 | 장바구니 (id + quantity) | Zustand (클라이언트) | `entities/cart/model` | features/cart, _pages 전체 (헤더) | id+quantity만 저장. 상품 정보는 렌더 시 Query 캐시에서 조회 |
 | 위시리스트 (id Set) | Zustand (클라이언트) | `entities/wishlist/model` | _pages 전체 (헤더, 상품 UI) | id만 저장 |
 | Dialog 열림 여부 | React 로컬 상태 | 해당 UI 컴포넌트 | 해당 컴포넌트만 | 컴포넌트 수명과 동일 |
@@ -332,10 +332,10 @@ import { productListQueryOptions } from '@/entities/product/api/productQueries';
 
 | 실패 유형 | 처리 위치 | Error Boundary로 전파하는가 | 사용자 UI | 재시도 방법 | 이 경계를 선택한 이유 |
 |-----------|-----------|---------------------------|-----------|------------|----------------------|
-| 상품 목록 조회 실패 (5xx) | `_pages/products` | ✅ `throwOnError: true` | `error.tsx` fallback — 에러 메시지 + 다시 시도 버튼 | `reset()` → Query 재요청 | 서버 장애 시 목록 데이터 자체를 신뢰할 수 없으므로 전체 fallback이 적절 |
-| 홈 조회 실패 (5xx) | `_pages/home` | ✅ `throwOnError: true` | `error.tsx` fallback | `reset()` | 배너·카테고리·상품이 모두 한 API에서 오므로 부분 표시가 의미 없음 |
-| 상품 상세 조회 실패 (5xx/404) | `_pages/product-detail` | ✅ `throwOnError: true` | 기존 `error.tsx` — 다시 시도 + 목록으로 돌아가기 | `reset()` 또는 목록 이동 | 상품 하나의 조회 실패이므로 상세 영역 전체를 fallback으로 대체 |
-| 잘못된 검색 조건 (4xx) | `_pages/products` 인라인 | ❌ | 해당 없음 — 현재 nuqs `parseAsStringLiteral`로 유효하지 않은 파라미터를 런타임에 차단하고 있어 잘못된 조건이 API까지 도달하지 않음 | — | URL 파라미터 검증을 클라이언트에서 이미 처리. 향후 사용자 직접 입력(자유 텍스트 검색)이 추가되면 인라인 에러 표시 검토 |
+| 상품 목록 조회 실패 (5xx) | `_pages/product-list` 인라인 | ❌ (useQuery 유지) | 컴포넌트 인라인 에러 메시지 | 검색·필터 변경으로 재요청 | `placeholderData: keepPreviousData`가 필요하므로 useSuspenseQuery 전환 불가. useQuery의 isError 분기로 인라인 처리. route `error.tsx`는 예상 밖 렌더링 오류용 fallback |
+| 홈 조회 실패 (5xx) | `_pages/home` | ✅ useSuspenseQuery가 자동 throw | `error.tsx` fallback | `reset()` | 배너·카테고리·상품이 모두 한 API에서 오므로 부분 표시가 의미 없음 |
+| 상품 상세 조회 실패 (5xx/404) | `_pages/product-detail` | ✅ useSuspenseQuery가 자동 throw | 기존 `error.tsx` — 다시 시도 + 목록으로 돌아가기 | `reset()` 또는 목록 이동 | 상품 하나의 조회 실패이므로 상세 영역 전체를 fallback으로 대체 |
+| 잘못된 검색 조건 (4xx) | `_pages/product-list` 인라인 | ❌ | 해당 없음 — 현재 nuqs `parseAsStringLiteral`로 유효하지 않은 파라미터를 런타임에 차단하고 있어 잘못된 조건이 API까지 도달하지 않음 | — | URL 파라미터 검증을 클라이언트에서 이미 처리. 향후 사용자 직접 입력(자유 텍스트 검색)이 추가되면 인라인 에러 표시 검토 |
 | 예상하지 못한 렌더링 오류 | route segment `error.tsx` | ✅ 자동 (React Error Boundary) | `error.tsx` fallback | `reset()` | 런타임 에러는 예측 불가하므로 가장 가까운 Error Boundary에서 catch |
 | 장바구니 행위의 비즈니스 오류 | 해당 없음 | — | — | — | 현재 장바구니는 클라이언트 Zustand만 사용 (서버 통신 없음). 비로그인 로컬 상태이므로 네트워크 실패가 발생하지 않음. 로그인·서버 동기화가 추가되면 features/cart에서 에러 처리 필요 |
 
@@ -364,6 +364,15 @@ return <ProductList products={data.products} />;
 ```
 
 **전환 이유**: 컴포넌트가 로딩·에러·데이터 세 가지 상태를 직접 분기하면 모든 컴포넌트에 같은 패턴이 반복된다. `useSuspenseQuery`를 쓰면 컴포넌트는 "데이터가 있다"는 전제로 렌더만 하고, 로딩과 에러는 경계(Suspense/Error Boundary)에 위임해서 역할이 분리된다.
+
+**전환 대상과 예외:**
+
+| 컴포넌트 | 전환 | 이유 |
+|----------|------|------|
+| HomeClient | ✅ useSuspenseQuery | SSR prefetch로 초기 데이터 보장, 로딩/에러 분기 제거 |
+| ProductDetailContent | ✅ useSuspenseQuery | 동일 |
+| ProductListContent | ❌ useQuery 유지 | `placeholderData: keepPreviousData`가 필요. 페이지네이션 시 이전 데이터를 보여주면서 새 데이터를 fetch하는 UX에 필수인데, `useSuspenseQuery`는 `placeholderData`를 지원하지 않음 |
+| CartDialog | ❌ useQuery 유지 | `enabled: !!lastAddedId` 조건부 fetch. useSuspenseQuery는 `enabled`를 지원하지 않음 |
 
 ### Suspense fallback 범위 — 컴포넌트 단위 (`<Suspense>`)
 
@@ -477,9 +486,9 @@ FSD 전환 후 목표 구조 기준으로 분석. 기능별 응집이 됐는지 
 | **2** | `entities/product` — model(타입·상수), api(productQueries) | `pnpm typecheck` |
 | **3** | `entities/cart`, `entities/wishlist` — model(store) | `pnpm typecheck` |
 | **4** | `features/cart` — ui(CartDialog) | `pnpm typecheck` |
-| **5** | `_pages` — home, products, product-detail (페이지 컴포넌트 + 훅 이동) | `pnpm typecheck` |
+| **5** | `_pages` — home, product-list, product-detail (페이지 컴포넌트 + 훅 이동) | `pnpm typecheck` |
 | **6** | `useSuspenseQuery` 전환 + `error.tsx` 추가 + `<Suspense>` 적용 | `pnpm typecheck` + `pnpm test` + 수동 에러 재현 (`?scenario=error`) |
-| **7** | 빈 디렉토리·미사용 파일 정리 | `pnpm check` + 전체 동작 수동 확인 |
+| **7** | 빈 디렉토리·미사용 파일 정리, 세그먼트명 수정 (`hooks` → `lib`) | `pnpm typecheck` + `pnpm build` |
 
 ### 테스트 전략
 
@@ -487,3 +496,16 @@ FSD 전환 후 목표 구조 기준으로 분석. 기능별 응집이 됐는지 
 - 기존 테스트(Dialog, useSelect)는 `shared/ui/`로 co-locate 이동 → import 경로 수정 필요
 - API route 테스트 3개는 전환 범위 제외이므로 그대로 유지
 - 6단계(useSuspenseQuery) 전환은 수동 에러 재현으로 검증 (`?scenario=error`, `?scenario=empty`)
+
+### 단계별 검증 결과
+
+| 단계 | 커밋 | typecheck | lint | build | 비고 |
+|------|------|-----------|------|-------|------|
+| **0** | `4a974ae` | — | — | — | RFC 작성 |
+| **1** | `b801e78` | ✅ | ✅ | — | shared 이동 완료 |
+| **2** | `5433bc0` | ✅ | ✅ | — | entities/product 이동. route.ts, commerce.ts 데이터 파일도 import 수정 필요했음 |
+| **3** | `e443b28` | ✅ | ✅ | — | cart/wishlist store 이동 |
+| **4** | `7f8dfb1` | ✅ | ✅ | — | CartDialog → features/cart |
+| **5** | `8d6f3c5` | ✅ | ✅ | — | _pages 이동 + homeQueries staleTime 5분→1분 |
+| **6** | `32bf919` | ✅ | ✅ | — | useSuspenseQuery 전환. ProductListContent는 `placeholderData` 필요로 useQuery 유지 |
+| **7** | — | ✅ | ✅ | ✅ | 빈 디렉토리 6개 삭제, `hooks` → `lib` 세그먼트명 수정 |
