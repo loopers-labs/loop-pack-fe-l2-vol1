@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
+import { useProductListSearchParams } from "../model/useProductListSearchParams";
 import {
   CATEGORY_LABELS,
   CATEGORY_VALUES,

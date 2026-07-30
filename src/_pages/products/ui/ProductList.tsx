@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { productQueries } from "@/entities/product";
-import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
+import { useProductListSearchParams } from "../model/useProductListSearchParams";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ProductListResult } from "./ProductListResult";
 import { SEARCH_DEBOUNCE_MS } from "./ProductListFilters";

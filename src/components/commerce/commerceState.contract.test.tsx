@@ -18,13 +18,17 @@ import { CommerceHeaderCounts } from "./CommerceHeaderCounts";
 import { ProductList } from "@/_pages/products/ui/ProductList";
 import { useCommerceStore } from "@/stores/commerceStore";
 import { makeQueryClient } from "@/_app/queryClient";
-import { resolveProductListQuery } from "@/hooks/productListSearchParams";
-import { normalizeProductListQuery } from "@/utils/productList";
-import { productQueries } from "@/entities/product";
-import { getProducts } from "@/services/commerce";
+import {
+  normalizeProductListQuery,
+  productQueries,
+  resolveProductListQuery,
+} from "@/entities/product";
+import { getProducts } from "@/entities/product/api/fetchProducts";
 import type { Product, ProductListResponse } from "@/types/commerce";
 
-vi.mock("@/services/commerce", () => ({ getProducts: vi.fn() }));
+vi.mock("@/entities/product/api/fetchProducts", () => ({
+  getProducts: vi.fn(),
+}));
 
 const getProductsMock = vi.mocked(getProducts);
 

@@ -179,9 +179,8 @@ src
 │       │   ├── ProductListFilters.tsx   ← 현재: components/commerce/ProductListFilters.tsx (검색·카테고리·정렬 feature 조합점)
 │       │   └── ProductGrid.tsx          ← 현재: components/commerce/ProductGrid.tsx
 │       ├── model/
-│       │   ├── productListSearchParams.ts      ← 현재: hooks/productListSearchParams.ts
+│       │   ├── productListParsers.ts           ← 현재: hooks/productListSearchParams.ts 의 nuqs 파서만
 │       │   └── useProductListSearchParams.ts   ← 현재: hooks/useProductListSearchParams.ts
-│       ├── lib/productList.ts       ← 현재: utils/productList.ts (normalize)
 │       └── index.ts
 ├── widgets/                         ← FSD widgets 레이어 (독립적 UI 블록)
 │   ├── commerce/
@@ -212,8 +211,11 @@ src
 │   ├── product/
 │   │   ├── model/
 │   │   │   ├── product.ts               ← 현재: types/commerce.ts 의 Product·Category
-│   │   │   └── productListOptions.ts    ← 현재: components/commerce/productListOptions.ts (카테고리·정렬 값/라벨/타입가드)
-│   │   ├── api/products.ts          ← 현재: queries/products.ts + services/commerce.ts 의 getProducts
+│   │   │   ├── productListOptions.ts    ← 현재: components/commerce/productListOptions.ts (카테고리·정렬 값/라벨/타입가드)
+│   │   │   └── productListQuery.ts      ← 현재: utils/productList.ts + hooks/productListSearchParams.ts 의 목록 조회 조건 정의·정규화 로직(defaults·normalize·buildSearchParams·resolve·buildDefault·clamp·ProductListParams)
+│   │   ├── api/
+│   │   │   ├── productQueries.ts    ← 현재: queries/products.ts (TanStack Query queryOptions)
+│   │   │   └── fetchProducts.ts     ← 현재: services/commerce.ts 의 getProducts (HTTP fetch, productQueries 내부용)
 │   │   └── index.ts
 │   ├── cart/                        ← 장바구니 (변경 이유가 wishlist 와 달라 분리)
 │   │   ├── model/store.ts           ← 현재: stores/commerceStore.ts 의 cartIds Set
@@ -270,8 +272,8 @@ import { useWishlistStore } from "@/entities/wishlist";
 1. **페이지 단위로 분리** — `_pages/home`·`_pages/products` 슬라이스를 만들고 페이지 컴포넌트를 옮긴다. 각 슬라이스에 `index.ts` 진입점 구성, `app/**/page.tsx` 는 이를 렌더만 한다. 이 단계에선 페이지 간 import 를 잠시 허용한다.
 2. **페이지 외부 코드 분리** — 페이지를 import 하지 않는 코드는 `shared` 후보로, 페이지를 import 하고 전역 설정·프로바이더를 담는 코드는 `_app`(`providers.tsx`·`queryClient.ts`·`globals.css`)로 모은다.
 3. **페이지 간 cross-import 해결** — 로직이 페이지마다 다르면 복사, 여러 페이지가 실제 공유하면 아래 레이어로 내린다. 이 프로젝트: 상품 queryOptions 는 category-select(feature)가 (홈·헤더의 카테고리 링크에서) prefetch 하려고 **import** 하므로, 그 feature 보다 아래인 `entities/product/api` 로 내려 하향 import 로 만든다(`_pages/products` 에 두면 feature→page upward import 위반).
-4. **shared 최소화** — 단일 페이지에서만 쓰는 코드는 그 페이지 슬라이스로 되돌린다. shared 를 최소로 유지하는 게 변경 위험을 줄이는 핵심.
-5. **segment 정리** — 남은 코드를 `ui`·`api`·`model`·`lib` 로 가른다. 기술 역할로 나뉜 최상위 폴더(`components`·`hooks`·`services`·`queries`·`utils`·`stores`·`types`, `lib` 은 2단계에서 비움)를 제거한다. 10개 컴포넌트가 공유하던 `commerce.module.css` 는 각 컴포넌트 옆으로 쪼갠다.
+4. **shared 최소화 / 소유 계층 정리** — 단일 페이지 전용 코드는 페이지 슬라이스로 되돌리고, 아래 계층이 쓰는 코드는 그 계층으로 내린다. 이 프로젝트: 상품 **목록 조회 조건 정의·정규화 로직**(`utils/productList.ts` 의 defaults·normalize·buildSearchParams + `hooks/productListSearchParams.ts` 의 resolve·buildDefault·clamp·`ProductListParams`)은 페이지뿐 아니라 entity(`productQueries`)·category-select feature(prefetch)도 써서, 페이지에 두면 상향 import 가 된다 → `entities/product/model/productListQuery.ts` 로 내린다. `getProducts` 도 `buildSearchParams` 를 써서 `services↔entities` 순환을 피하려 함께 `entities/product/api/fetchProducts.ts` 로 옮긴다(어차피 상품 fetch = entity 소유). 페이지에는 순수 페이지 전용인 nuqs 파서(`productListParsers.ts`)와 URL 바인딩 훅(`useProductListSearchParams.ts`)만 `_pages/products/model` 로 남는다.
+5. **segment 정리** — 남은 코드를 `ui`·`api`·`model`·`lib` 로 가른다. 기술 역할로 나뉜 최상위 폴더(`components`·`hooks`·`services`·`queries`·`utils`·`stores`·`types`, `lib` 은 2단계에서 비움)를 제거한다. (`getProducts` 는 원래 이 단계에서 `services→entities/product/api` 로 옮길 대상이나, 4단계에서 목록 조회 조건 정의·정규화 로직을 entity 로 내리면서 함께 앞당겼다 — `getProducts` 가 `buildProductListSearchParams`(이 로직)를 쓰는데 이 로직만 entity 로 가면 `getProducts`(services)→로직(entity)→`getProducts`(services) 식으로 `services↔entities` 순환 참조가 생기므로, 둘을 같은 단계에 함께 옮겨 순환을 애초에 만들지 않았다.) 10개 컴포넌트가 공유하던 `commerce.module.css` 는 각 컴포넌트 옆으로 쪼갠다.
 6. **공유 상태를 entities 로** — `commerceStore` 를 변경 이유가 다른 두 도메인으로 쪼개 `entities/cart/model`·`entities/wishlist/model` 로 내린다(각자 독립 store). `cart` 는 `wishlist` 를 모르고, 헤더 위젯만 둘을 함께 읽는다 — 세 소비처(각 feature + 헤더)가 하향 import 하게 된다.
 7. **widgets/features 분리** — 헤더는 `widgets/commerce` 로, `ProductCardActions`·`ProductListFilters` 는 add-to-cart·toggle-wishlist·search·category-select·sort-select feature 로 쪼갠다. `ProductCard` 는 `widgets/product-card` 로 올려 장바구니·위시리스트 feature 버튼을 직접 조합한다(slot 불필요).
 8. **shared/ui 정리** — `dialog`·`select` 헤드리스 UI 는 비즈니스 로직 없이 순수 UI 만 남긴다. `Pagination`(도메인·URL 모르는 순수 컴포넌트)은 `shared/ui/pagination` 으로 옮기고 스타일을 `commerce.module.css` 에서 분리한다.
@@ -297,6 +299,9 @@ import { useWishlistStore } from "@/entities/wishlist";
 
 **3단계 (페이지 간 cross-import 해결)** — 통과. 상품 queryOptions(`queries/products.ts`) → `entities/product/api`, 소비처 8개를 `@/entities/product` 로. 특이사항: `HomeContent → ProductGrid` cross-import 는 미해소 — ProductGrid 는 widget 계층 아래로 못 내려가므로 7단계에서 `widgets/product-card` 로 co-locate 해 해소(목표 트리 ProductGrid 위치 보정 필요).
 
+**4단계 (shared 최소화 / 소유 계층 정리)** — 통과. `entities/product/model/productListQuery.ts`, `getProducts` → `entities/product/api/fetchProducts.ts`, 페이지엔 `productListParsers`·`useProductListSearchParams`. 
+- 특이사항: RFC 원안(`_pages/products` lib/model 로)이 3단계 entity 결정과 충돌해 entity→page·feature→page 상향 import 를 유발 → **엔티티 중심으로 보정**(트리·매핑표·결정표·Interface·본 계획서 함께 갱신). `getProducts` 는 `services↔entities` 순환을 피하려 4단계에 함께 이동.
+
 #### 파일 매핑표 (이동하는 파일 + 그 자리에 남기는 파일)
 
 | 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이동 또는 유지하는 이유 |
@@ -311,9 +316,10 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `components/commerce/ProductListResult.tsx` | `_pages/products/ui/ProductListResult.tsx` | pages / products / ui | 상품 목록 전용 |
 | `components/commerce/ProductGrid.tsx` | `_pages/products/ui/ProductGrid.tsx` | pages / products / ui | 상품 목록 레이아웃 |
 | `components/commerce/ProductListFilters.tsx` | `_pages/products/ui/ProductListFilters.tsx` | pages / products / ui | 필터 조합점만 남김(컨트롤은 features로 분리) |
-| `hooks/productListSearchParams.ts` | `_pages/products/model/productListSearchParams.ts` | pages / products / model | 상품 목록 URL 상태 파싱 |
-| `hooks/useProductListSearchParams.ts` | `_pages/products/model/useProductListSearchParams.ts` | pages / products / model | 상품 목록 URL 상태 훅 |
-| `utils/productList.ts` | `_pages/products/lib/productList.ts` | pages / products / lib | 상품 목록 query normalize |
+| `hooks/productListSearchParams.ts` (nuqs 파서) | `_pages/products/model/productListParsers.ts` | pages / products / model | 페이지 URL 스키마 바인딩(페이지 전용) |
+| `hooks/productListSearchParams.ts` (resolve·buildDefault·clamp·`ProductListParams`) | `entities/product/model/productListQuery.ts` | entities / product / model | entity·feature 도 쓰는 목록 조회 조건 정의·정규화 로직이라 페이지에 두면 상향 import |
+| `hooks/useProductListSearchParams.ts` | `_pages/products/model/useProductListSearchParams.ts` | pages / products / model | 상품 목록 URL 상태 훅(페이지 전용) |
+| `utils/productList.ts` (defaults·normalize·buildSearchParams) | `entities/product/model/productListQuery.ts` | entities / product / model | 이 조회 조건 정의·정규화 로직을 entity·feature 가 소비 → 페이지 아래 entity 로 |
 | `components/commerce/CommerceHeader.tsx` | `widgets/commerce/ui/CommerceHeader.tsx` | widgets / commerce / ui | 독립 UI 블록(헤더) |
 | `components/commerce/CommerceHeaderCounts.tsx` | `widgets/commerce/ui/CommerceHeaderCounts.tsx` | widgets / commerce / ui | 헤더 개수 표시 |
 | `components/commerce/ProductCard.tsx` | `widgets/product-card/ui/ProductCard.tsx` | widgets / product-card / ui | 장바구니·위시리스트 feature 를 직접 조합하는 UI |
@@ -321,7 +327,8 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `components/commerce/PrefetchCategoryLink.tsx` | `features/category-select/ui/` | features / category-select / ui | 카테고리 선택 인터랙션 |
 | `components/commerce/ProductListFilters.tsx` (검색·카테고리·정렬 컨트롤) | `features/search·category-select·sort-select/ui/` | features / … / ui | 필터 내 각 컨트롤을 feature 로 분리 |
 | `components/commerce/productListOptions.ts` | `entities/product/model/productListOptions.ts` | entities / product / model | 카테고리·정렬 도메인 상수(두 셀렉트 feature 공유) |
-| `queries/products.ts` | `entities/product/api/products.ts` | entities / product / api | 상품 도메인 조회 설정인데, 상품 목록 페이지 밖의 카테고리 링크(홈·헤더)가 prefetch 로 import 해서 product entity 소유로 |
+| `queries/products.ts` | `entities/product/api/productQueries.ts` | entities / product / api | 상품 도메인 조회 설정인데, 상품 목록 페이지 밖의 카테고리 링크(홈·헤더)가 prefetch 로 import 해서 product entity 소유로 |
+| `services/commerce.ts` 의 `getProducts` | `entities/product/api/fetchProducts.ts` | entities / product / api | 상품 fetch = entity 소유. `buildSearchParams`(조회 조건 로직, entity/model)를 써서 4단계에 함께 이동 — services 유지 시 `services↔entities` 순환 |
 | `stores/commerceStore.ts` | `entities/cart/model/store.ts` + `entities/wishlist/model/store.ts` | entities / cart·wishlist / model | 변경 이유가 다른 두 도메인이라 store 를 각자로 분리 |
 | `types/commerce.ts` | 도메인 타입 → `entities/product/model`, 응답 DTO → 각 api 옆 | entities / product / model 외 | 소유자별로 분해: `Product`·`Category`·`ProductSort` → `entities/product/model`, `HomeResponse` → `_pages/home/api`, `ProductListResponse` → `entities/product/api`, `ApiErrorResponse` → `shared/api`(공통 에러 규약) |
 | `components/ui/dialog/` | `shared/ui/dialog/` | shared / — / ui | 도메인 무관 헤드리스 UI |
@@ -329,7 +336,6 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `components/commerce/Pagination.tsx` | `shared/ui/pagination/Pagination.tsx` | shared / — / ui | 도메인 없는 범용 UI(props 만 받는 순수 컴포넌트) |
 | `hooks/useDebouncedValue.ts` | `shared/lib/useDebouncedValue.ts` | shared / — / lib | 도메인 무관 유틸 훅 |
 | `utils/index.ts` (`formatPrice`) | `shared/lib/formatPrice.ts` | shared / — / lib | 도메인 무관 포맷 유틸 |
-| `services/commerce.ts` 의 `getProducts` | `entities/product/api/products.ts` | entities / product / api | 상품 도메인 조회 → 해당 entity 가 소유 |
 | `services/commerce.ts` 의 `getHome` | `_pages/home/api/home.ts` | pages / home / api | 홈 전용 조합 응답 조회 → 홈 페이지가 소유 |
 | `services/getBaseUrl.ts` | `shared/api/getBaseUrl.ts` | shared / — / api | API 인프라 |
 | `services/requestJson.ts` | `shared/api/requestJson.ts` | shared / — / api | API 인프라 |
@@ -346,6 +352,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `ProductCard` | `entities/product/ui` (slot 패턴) | `widgets/product-card` | **`widgets/product-card`** | 장바구니·위시리스트 feature 를 조합하는 UI — 여러 경로가 만나는 조합 지점이자 행위까지 포함한 완성된 카드이므로 widget |
 | `Pagination` | `_pages/products/ui` (페이지 전용) | `shared/ui` | **`shared/ui/pagination`** | 도메인·URL 을 모르는 순수 컴포넌트(`page`·`onPageChange` props 만)이므로  범용 UI로 결정. |
 | 상품 queryOptions (`queries/products.ts`) | `_pages/products/api` | `entities/product/api` | **`entities/product/api`** | category-select(feature)가 홈·헤더의 카테고리 링크에서 상품 목록을 prefetch 하려고 import — 페이지 slice(`_pages/products`)에 두면 feature→page upward import 위반이라 한 층 아래 entities 로 내림 |
+| 상품 목록 조회 조건 정의·정규화 로직 (`utils/productList.ts` + `productListSearchParams.ts` 의 순수 함수) | `_pages/products`(lib/model) | `entities/product/model` | **`entities/product/model`**(`productListQuery.ts`) | defaults·normalize·buildSearchParams·resolve·buildDefault 를 entity(`productQueries`·`getProducts`)와 category-select feature(prefetch)가 소비 → 페이지에 두면 상향 import. nuqs 파서·URL 훅만 페이지 전용으로 남김 |
 | 장바구니·위시리스트 store (`commerceStore`) | 한 entity 로 합침 (`entities/commerce`, 같은 Zustand store) | `entities/cart` + `entities/wishlist` 분리 | **`cart`·`wishlist` 분리** | 저장 방식이 같아도 변경 이유가 다르면 나눈다. 위치가 entities 인 것은 두 feature + 헤더 위젯이 함께 소비 → feature 에 두면 cross-import 라 한 층 아래로 |
 | 카테고리 셀렉트 / 정렬 셀렉트 | 하나의 feature 로 합침 | `category-select`·`sort-select` 분리 | **분리** | 하는 일은 비슷해도 바꾸는 URL 상태와 값 집합이 서로 달라 다른 기능 |
 | `productListOptions.ts`| `entities/product/config` | `entities/product/model` | **`entities/product/model`** | FSD `config` 는 설정 파일·feature flag 자리. 카테고리·정렬 값은 도메인 관련, 타입가드=검증이라 `model`이 정의에 맞다고 판단. |
@@ -371,7 +378,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 
 | 슬라이스 | 공개(`index.ts` 가 export) | 숨기는 구현 세부 |
 | --- | --- | --- |
-| `entities/product` | `Product`·`Category`·`CategoryId`·`ProductSort` 타입(`model/product.ts`), `CATEGORY_VALUES`·`SORT_VALUES`·`*_LABELS`·`isCategoryValue`·`isSortValue`(`model/productListOptions.ts`), `productQueries`(`api/products.ts`) | `getProducts` fetch 구현(`api` 내부, `productQueries` 만 사용) |
+| `entities/product` | `Product`·`Category`·`CategoryId`·`ProductSort` 타입(`model/product.ts`), `CATEGORY_VALUES`·`SORT_VALUES`·`*_LABELS`·`isCategoryValue`·`isSortValue`(`model/productListOptions.ts`), 목록 조회 조건 정의·정규화 로직 `PRODUCT_LIST_DEFAULTS`·`FIRST_PAGE`·`ProductListParams`·`normalizeProductListQuery`·`resolveProductListQuery`·`buildDefaultProductListQuery`·`clampPageToLowerBound`(`model/productListQuery.ts`), `productQueries`(`api/productQueries.ts`) | `getProducts` fetch 구현(`api/fetchProducts.ts` 내부, `productQueries` 만 사용), `buildProductListSearchParams`(로직 내부용) |
 | `entities/cart` | cart store 훅(`useCartStore`)과 파생 셀렉터(`isInCart`, 개수)(`model/store.ts`) | store 내부가 id `Set<string>` 이라는 구조 |
 | `entities/wishlist` | wishlist store 훅(`useWishlistStore`)과 셀렉터(`isWishlisted`, 개수)(`model/store.ts`) | 〃 (cart 를 모름) |
 | `widgets/product-card` | `ProductCard`(`ui/ProductCard.tsx`) | 내부에서 조합하는 feature 버튼(`AddToCartButton`·`WishlistButton`) |
@@ -382,7 +389,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `features/category-select` | `CategorySelect`·prefetch 카테고리 링크(`ui/`) | `productQueries` prefetch·URL 반영 방식 |
 | `features/sort-select` | `SortSelect`(`ui/SortSelect.tsx`) | URL 반영 방식 |
 | `_pages/home` | 홈 진입 컴포넌트(`ui/HomeContent.tsx`) | `api/home.ts`(`homeQueries`)·서버 prefetch 배선 |
-| `_pages/products` | 상품 목록 진입 컴포넌트(`ui/ProductListSection.tsx`) | `ui` 하위 컴포넌트, `model`(URL 파서), `lib`(normalize) |
+| `_pages/products` | 상품 목록 진입 컴포넌트(`ui/ProductListSection.tsx`) | `ui` 하위 컴포넌트, `model`(nuqs 파서 `productListParsers`·URL 훅 `useProductListSearchParams`) — 조회 조건 정의·정규화 로직은 `entities/product` 소유 |
 | `shared/ui` | `dialog`·`select`·`pagination` 컴포넌트·헤드리스 훅(세그먼트 `index`) | 내부 상태/DOM 처리 |
 | `shared/api` | `requestJson`·`getBaseUrl`(http 클라이언트) | — |
 | `shared/lib` | `useDebouncedValue`·`formatPrice` | — |

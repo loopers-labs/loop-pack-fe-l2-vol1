@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { createLoader, useQueryStates } from "nuqs";
+import { productListParsers } from "./productListParsers";
 import {
   clampPageToLowerBound,
   FIRST_PAGE,
-  productListParsers,
   resolveProductListQuery,
-} from "./productListSearchParams";
+} from "@/entities/product";
 import type { CategoryId, ProductSort } from "@/types/commerce";
 
 const PUSH_TO_HISTORY = { history: "push" } as const;

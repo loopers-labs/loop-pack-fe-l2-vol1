@@ -10,10 +10,10 @@ import {
   screen,
 } from "@testing-library/react";
 import { ProductListFilters, SEARCH_DEBOUNCE_MS } from "./ProductListFilters";
-import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
+import { useProductListSearchParams } from "../model/useProductListSearchParams";
 
 // URL 배선 hook 을 mock 해 push/replace 분기 로직만 격리 검증한다(실제 nuqs·URL 없이).
-vi.mock("@/hooks/useProductListSearchParams", () => ({
+vi.mock("../model/useProductListSearchParams", () => ({
   useProductListSearchParams: vi.fn(),
 }));
 

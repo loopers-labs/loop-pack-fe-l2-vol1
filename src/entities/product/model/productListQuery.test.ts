@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
   buildDefaultProductListQuery,
+  PRODUCT_LIST_DEFAULTS,
   resolveProductListQuery,
-} from "@/hooks/productListSearchParams";
-import { PRODUCT_LIST_DEFAULTS } from "@/utils/productList";
-import type { ProductListParams } from "@/entities/product";
+  type ProductListParams,
+} from "./productListQuery";
 
 const BASE: ProductListParams = {
   q: "",

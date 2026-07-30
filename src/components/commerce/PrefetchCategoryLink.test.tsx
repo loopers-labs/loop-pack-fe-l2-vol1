@@ -5,8 +5,10 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PrefetchCategoryLink } from "./PrefetchCategoryLink";
-import { buildDefaultProductListQuery } from "@/hooks/productListSearchParams";
-import { productQueries } from "@/entities/product";
+import {
+  buildDefaultProductListQuery,
+  productQueries,
+} from "@/entities/product";
 
 afterEach(cleanup);
 

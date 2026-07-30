@@ -14,10 +14,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { ProductList } from "./ProductList";
 import { makeQueryClient } from "@/_app/queryClient";
-import { getProducts } from "@/services/commerce";
+import { getProducts } from "@/entities/product/api/fetchProducts";
 import type { Product, ProductListResponse } from "@/types/commerce";
 
-vi.mock("@/services/commerce", () => ({ getProducts: vi.fn() }));
+vi.mock("@/entities/product/api/fetchProducts", () => ({
+  getProducts: vi.fn(),
+}));
 
 const getProductsMock = vi.mocked(getProducts);
 

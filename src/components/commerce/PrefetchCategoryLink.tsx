@@ -3,8 +3,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { buildDefaultProductListQuery } from "@/hooks/productListSearchParams";
-import { productQueries } from "@/entities/product";
+import {
+  buildDefaultProductListQuery,
+  productQueries,
+} from "@/entities/product";
 import type { CategoryId } from "@/types/commerce";
 
 type PrefetchCategoryLinkProps = {
