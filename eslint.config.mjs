@@ -4,6 +4,7 @@ import next from '@next/eslint-plugin-next';
 import stylistic from '@stylistic/eslint-plugin';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+import boundaries from 'eslint-plugin-boundaries';
 import importX from 'eslint-plugin-import-x';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
@@ -42,12 +43,26 @@ export default tseslint.config(
       'import-x': importX,
       '@eslint-community/eslint-comments': comments,
       '@stylistic': stylistic,
+      boundaries,
     },
     settings: {
       'import-x/resolver-next': [createTypeScriptImportResolver()],
       'import-x/parsers': {
         '@typescript-eslint/parser': ['.ts', '.tsx'],
       },
+      // boundaries가 @ alias를 해석할 때 쓰는 레거시 resolver 설정
+      'import/resolver': {
+        typescript: { alwaysTryTypes: true },
+      },
+
+      // FSD 레이어와 슬라이스 정의
+      'boundaries/elements': [
+        { type: 'entities', pattern: 'src/entities/*', capture: ['slice'] },
+        { type: 'features', pattern: 'src/features/*', capture: ['slice'] },
+        { type: 'pages', pattern: 'src/_pages/*', capture: ['slice'] },
+        { type: 'app', pattern: 'src/app' },
+        { type: 'shared', pattern: 'src/shared' },
+      ],
     },
     rules: {
       // type, interface 등을 인식하는 ts 버전으로 교체
@@ -100,14 +115,120 @@ export default tseslint.config(
         'error',
         { blankLine: 'always', prev: '*', next: 'return' },
       ],
+
+      // FSD 의존 규칙 하네스
+      // NOTE: 마이그레이션 동안 warn으로 위반 감소를 관찰하고, 이동 완료 후 error로 승격한다.
+      // 레이어는 자기보다 아래만 import하고, 같은 레이어의 다른 슬라이스를 직접 import하지 않는다(같은 슬라이스 내부는 검사 대상 아님).
+      // 슬라이스는 루트 진입점으로만 연다. 예외는 entities 간 @x 공인 통로뿐이다.
+      'no-restricted-imports': [
+        'warn',
+        {
+          patterns: [
+            {
+              group: ['@/_pages/*/*'],
+              message:
+                '슬라이스 내부는 상대 경로, 외부는 루트 진입점을 사용합니다.',
+            },
+            {
+              group: ['@/features/*/*', '!@/features/*/index.server'],
+              message:
+                '슬라이스 내부는 상대 경로, 외부는 루트 진입점을 사용합니다.',
+            },
+            {
+              group: [
+                '@/entities/*/model/**',
+                '@/entities/*/ui/**',
+                '@/entities/*/api/**',
+                '@/entities/*/lib/**',
+                '@/entities/*/config/**',
+              ],
+              message:
+                '슬라이스 내부는 상대 경로, 외부는 루트 진입점을 사용합니다.',
+            },
+          ],
+        },
+      ],
+
+      'boundaries/dependencies': [
+        'warn',
+        {
+          default: 'disallow',
+          message: 'FSD 의존 규칙을 위반한 import입니다.',
+          policies: [
+            {
+              from: { element: { type: 'app' } },
+              allow: {
+                to: [
+                  { element: { type: 'pages', fileInternalPath: 'index.ts' } },
+                  {
+                    element: {
+                      type: 'features',
+                      fileInternalPath: ['index.ts', 'index.server.ts'],
+                    },
+                  },
+                  {
+                    element: { type: 'entities', fileInternalPath: 'index.ts' },
+                  },
+                  { element: { type: 'shared' } },
+                ],
+              },
+            },
+            {
+              from: { element: { type: 'pages' } },
+              allow: {
+                to: [
+                  {
+                    element: {
+                      type: 'features',
+                      fileInternalPath: ['index.ts', 'index.server.ts'],
+                    },
+                  },
+                  {
+                    element: { type: 'entities', fileInternalPath: 'index.ts' },
+                  },
+                  { element: { type: 'shared' } },
+                ],
+              },
+            },
+            {
+              from: { element: { type: 'features' } },
+              allow: {
+                to: [
+                  {
+                    element: { type: 'entities', fileInternalPath: 'index.ts' },
+                  },
+                  { element: { type: 'shared' } },
+                ],
+              },
+            },
+            {
+              from: { element: { type: 'entities' } },
+              allow: {
+                to: [
+                  {
+                    element: {
+                      type: 'entities',
+                      fileInternalPath:
+                        '@x/{{ from.element.captured.slice }}.ts',
+                    },
+                  },
+                  { element: { type: 'shared' } },
+                ],
+              },
+            },
+          ],
+        },
+      ],
     },
   },
   {
-    // 스타터가 제공한 mock 백엔드는 과제 판별 대상이라 수정하지 않고 스타일 룰만 끈다
+    // 스타터가 제공한 mock 백엔드는 과제 판별 대상이라 수정하지 않고 스타일 룰만 끈다.
     files: ['src/app/api/**'],
     rules: {
       'import-x/order': 'off',
       '@stylistic/padding-line-between-statements': 'off',
+      'boundaries/dependencies': 'off',
+      'no-restricted-imports': 'off',
     },
   },
 );

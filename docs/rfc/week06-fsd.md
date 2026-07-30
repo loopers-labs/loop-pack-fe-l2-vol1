@@ -147,9 +147,7 @@ import { useProductListUrlState }
 import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 ```
 
-ESLint(`eslint-plugin-import-x`의 `no-restricted-paths`)로 강제한다. 마이그레이션 중에는 warn, 이동 완료 후 error로 승격한다.
-
-_하네스 위반 재현과 통과 증거: 구현 후 기록_
+이 규칙은 ESLint 하네스로 강제한다.
 
 ### 파일 매핑표 (이동하는 파일 + 남기는 파일)
 
@@ -200,7 +198,7 @@ _하네스 위반 재현과 통과 증거: 구현 후 기록_
 
 | 단계 | 작업 | 추가 검증 |
 | --- | --- | --- |
-| 0 | 하네스(ESLint 의존 규칙, warn)와 architecture-review SKILL 작성 | 위반 코드를 일부러 넣어 규칙이 잡는지 확인(재현 증거 기록) |
+| 0 | 하네스(ESLint 의존 규칙, warn)와 architecture-review SKILL 작성 | 위반 코드를 일부러 넣어 규칙이 잡는지 확인 |
 | 1 | 타입 분해: `types/commerce.ts`를 entities/product의 model과 api, mock으로 나누고 참조 12개 파일 경로 갱신 | typecheck |
 | 2 | `entities/product` 신설: api, queries 이동 | queries 테스트 |
 | 3 | store 재배치: slice는 entities/cart, wishlist로, 조합과 persist는 client-state로, `@x` 신설, 도메인별 selector 훅 공개 | store 테스트, localStorage 키와 기존 저장값 복원 확인 |
