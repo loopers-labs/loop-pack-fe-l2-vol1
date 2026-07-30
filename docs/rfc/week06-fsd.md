@@ -509,3 +509,43 @@ FSD 전환 후 목표 구조 기준으로 분석. 기능별 응집이 됐는지 
 | **5** | `8d6f3c5` | ✅ | ✅ | — | _pages 이동 + homeQueries staleTime 5분→1분 |
 | **6** | `32bf919` | ✅ | ✅ | — | useSuspenseQuery 전환. ProductListContent는 `placeholderData` 필요로 useQuery 유지 |
 | **7** | — | ✅ | ✅ | ✅ | 빈 디렉토리 6개 삭제, `hooks` → `lib` 세그먼트명 수정 |
+
+---
+
+## FSD 이해 확인 질문
+
+### 1. `ProductCard`가 찜 버튼을 직접 import하면 어떤 의존 규칙을 어기며, 어디에서 조합해야 하는가?
+
+`ProductCard`가 `entities/product`에서 `wishlist`를 직접 참조하면 같은 레이어 간 의존(cross-slice import)이 생겨 슬라이스 독립성이 깨질 수 있다고 생각했습니다.
+
+다만 제 프로젝트는 화면마다 카드 구조가 달라 공통 `ProductCard`를 만들지 않았고, 각 페이지에서 `product`와 `wishlist`를 함께 조합했습니다. 이후 공통화가 필요해진다면 `ProductCard`는 순수 UI만 담당하고, 찜 같은 행위는 slot이나 `children`으로 상위에서 주입하는 구조를 고려하고 있습니다.
+
+### 2. 한 페이지에서만 쓰는 검색 로직도 반드시 feature여야 하는가?
+`useProductSearchParams`는 URL 파라미터를 다루는 페이지 전용 로직이라 feature보다는 `_pages/product-list/lib`에 두었습니다. 아직 여러 도메인을 엮는 독립적인 기능으로 보기 어렵고, 현재 사용처도 하나뿐이라 사용처 가까이에 두는 편이 응집도 측면에서 적절하다고 판단했습니다. 
+
+이후 다른 페이지에서도 재사용하게 되면 그때 feature로 리팩토링하는 것이 자연스럽다고 생각합니다.
+
+### 3. `formatPrice`는 항상 `shared/lib`인가? 통화·회원 등급·상품 정책이 포함되면 결정이 어떻게 달라지는가?
+
+`formatWon`은 도메인과 무관한 원화 포맷 함수이므로 `shared/lib`에 둡니다. 여기에 할인이나 상품별 가격 정책이 포함되면 비즈니스 로직이 되므로 해당 도메인으로 옮깁니다. 여기서 배치 기준은 함수의 변경 이유라 생각했습니다.
+
+### 4. 두 feature가 협력해야 할 때 직접 import하지 않고 어떤 상위 레이어에서 조합했는가?
+
+현재 features에는 cart 하나뿐이라 feature 간 협력하는 경우는 아직 없습니다. 하지만 CartDialog를 어디에 둘지 결정하면서 비슷한 고민을 거쳤습니다. CartDialog는 cart store에서 담긴 상품 id를 가져오고, product query로 해당 상품의 이름/가격/이미지를 조회하여 보여줍니다. cart와 product 두 엔티티의 데이터를 동시에 사용하는 조합 로직인데, 이를 한쪽 entity에 넣으면 다른 entity에 대한 의존이 생겨 슬라이스 격리가 깨진다고 생각했습니다.
+
+그래서 상위 레이어인 `features/cart`에서 둘을 조합하도록 배치했습니다.
+
+이후 위시리스트에 담긴 상품을 한 번에 장바구니로 옮기기 등의 기능이 생겨 feature가 늘어날 경우 wishlist feature와 cart feature가 서로를 알아야 하는 상황이 될 경우 feature끼리 직접 참조하지 않고 `_pages`나 `widgets` 같은 상위 레이어에서 조합하려 합니다.
+
+### 5. 폴더 이동 후에도 TanStack Query 데이터와 Zustand 데이터를 서로 복사하지 않은 이유는 무엇인가?
+
+폴더 구조가 바뀌어도 데이터의 소유권까지 바뀌는 것은 아니라고 생각했습니다. 상품 데이터의 원본은 TanStack Query 캐시에 두고, Zustand에는 장바구니 상태에 필요한 `productId`와 `quantity`만 저장했습니다.
+
+상품명이나 가격까지 Zustand에 복사하면 같은 데이터가 Query 캐시와 Zustand 두 곳에 존재하게 됩니다. 이후 가격이 변경되었을 때 두 값이 달라질 수 있고, 어느 쪽을 기준으로 해야 하는지도 모호해집니다. 따라서 CartDialog에서도 상품 정보는 Query 캐시에서 조회하고, Zustand는 장바구니에 어떤 상품이 몇 개 담겼는지만 관리하도록 역할을 분리했습니다.
+
+
+### 6. barrel file과 Public API는 무엇이 다른가? 내 프로젝트에서는 어느 쪽을 선택했고 그 의도는 무엇인가?
+
+배럴 파일은 import 경로를 단순화하기 위한 것이고, Public API는 외부에 공개할 대상을 제한하는 경계입니다.
+
+제 프로젝트는 슬라이스당 파일 수가 적어 둘 다 도입하지 않았습니다. 현재는 index.ts가 오히려 불필요한 한 단계가 된다고 판단했고, 슬라이스가 커져 공개 범위를 관리할 필요가 생기면 Public API를 도입할 계획입니다.
