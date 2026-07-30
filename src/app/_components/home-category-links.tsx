@@ -1,4 +1,4 @@
-import type { Category } from "@/types/commerce";
+import type { Category } from "@/entities/product";
 import Link from "next/link";
 
 type HomeCategoryLinksProps = {

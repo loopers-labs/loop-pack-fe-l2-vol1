@@ -4,7 +4,7 @@ import { HomeBanner } from "@/app/_components/home-banner";
 import { HomeCategoryLinks } from "@/app/_components/home-category-links";
 import { HomeProductSection } from "@/app/_components/home-product-section";
 import { Placeholder } from "@/app/_components/placeholder";
-import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
+import { ProductGridSkeleton } from "@/entities/product";
 import { commerceQueries } from "@/queries/commerce";
 import { CommerceApiError } from "@/shared/api/commerce-client";
 import { useQuery } from "@tanstack/react-query";

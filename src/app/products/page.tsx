@@ -1,7 +1,7 @@
 "use client";
 
 import { Placeholder } from "@/app/_components/placeholder";
-import { ProductGridSkeleton } from "@/app/_components/product-grid-skeleton";
+import { ProductGridSkeleton } from "@/entities/product";
 import { ProductFilters } from "@/app/products/_components/product-filters";
 import { ProductListResults } from "@/app/products/_components/product-list-results";
 import { productSearchParsers } from "@/app/products/_lib/search-params";

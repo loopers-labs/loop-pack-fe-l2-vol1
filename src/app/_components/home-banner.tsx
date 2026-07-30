@@ -1,4 +1,4 @@
-import type { HomeResponse } from "@/types/commerce";
+import type { HomeResponse } from "@/services/commerce";
 
 type HomeBannerProps = {
   banner: HomeResponse["banner"];

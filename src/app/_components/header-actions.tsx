@@ -1,7 +1,7 @@
 "use client";
 
-import { useCartStore } from "@/stores/cart";
-import { useWishlistStore } from "@/stores/wishlist";
+import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 
 export function HeaderActions(): React.JSX.Element {
   const wishlistCount = useWishlistStore((state) => state.ids.size);

@@ -1,5 +1,29 @@
+import type { Category, CategoryId, Product, ProductSort } from "@/entities/product";
 import { fetchCommerceApi } from "@/shared/api/commerce-client";
-import type { HomeResponse, ProductListQuery, ProductListResponse } from "@/types/commerce";
+
+// Phase 5에서 _pages/home/api·_pages/products/api로 분리 예정인 페이지 API 계약
+export type HomeResponse = {
+  banner: { title: string; description: string; image: string };
+  categories: Category[];
+  popularProducts: Product[];
+  newProducts: Product[];
+};
+
+export type ProductListQuery = {
+  q?: string;
+  category?: CategoryId | "all";
+  sort?: ProductSort;
+  page?: number;
+  pageSize?: number;
+};
+
+export type ProductListResponse = {
+  products: Product[];
+  categories: Category[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
 
 export type ProductListParams = Required<ProductListQuery>;
 

@@ -1,4 +1,4 @@
-import type { CategoryId } from "@/types/commerce";
+import type { CategoryId } from "@/entities/product";
 import {
   createParser,
   parseAsNumberLiteral,

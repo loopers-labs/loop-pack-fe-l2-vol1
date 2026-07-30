@@ -1,13 +1,14 @@
-import { CartButton, WishlistButton } from "@/app/_components/product-actions";
-import type { Product } from "@/types/commerce";
 import Image from "next/image";
+import { ReactNode } from "react";
+import { Product } from "../model/types";
 
 type ProductCardProps = {
   product: Product;
   titleAs?: "h2" | "h3";
+  actions: ReactNode;
 };
 
-export function ProductCard({ product, titleAs = "h3" }: ProductCardProps) {
+export function ProductCard({ product, titleAs = "h3", actions }: ProductCardProps) {
   const Title = titleAs;
 
   return (
@@ -22,10 +23,7 @@ export function ProductCard({ product, titleAs = "h3" }: ProductCardProps) {
       <p>{product.brand}</p>
       <Title>{product.name}</Title>
       <strong>{product.price.toLocaleString()}원</strong>
-      <div>
-        <WishlistButton productId={product.id} label={product.name} />
-        <CartButton productId={product.id} label={product.name} />
-      </div>
+      <div>{actions}</div>
     </article>
   );
 }

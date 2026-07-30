@@ -1,6 +1,6 @@
 import { Placeholder } from "@/app/_components/placeholder";
-import { ProductCard } from "@/app/_components/product-card";
-import type { Product } from "@/types/commerce";
+import { CartButton, WishlistButton } from "@/app/_components/product-actions";
+import { ProductCard, type Product } from "@/entities/product";
 
 type HomeProductSectionProps = {
   title: string;
@@ -16,7 +16,16 @@ export function HomeProductSection({ title, products }: HomeProductSectionProps)
       ) : (
         <div className="week05-grid">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              actions={
+                <>
+                  <WishlistButton productId={product.id} label={product.name} />
+                  <CartButton productId={product.id} label={product.name} />
+                </>
+              }
+            />
           ))}
         </div>
       )}

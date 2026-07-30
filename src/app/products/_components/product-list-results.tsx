@@ -1,8 +1,9 @@
 "use client";
 
 import { Placeholder } from "@/app/_components/placeholder";
-import { ProductCard } from "@/app/_components/product-card";
-import type { ProductListResponse } from "@/types/commerce";
+import { CartButton, WishlistButton } from "@/app/_components/product-actions";
+import { ProductCard } from "@/entities/product";
+import type { ProductListResponse } from "@/services/commerce";
 
 type ProductListResultsProps = {
   result: ProductListResponse;
@@ -35,7 +36,17 @@ export function ProductListResults({ result, page, onPageChange }: ProductListRe
         <>
           <div className="week05-grid">
             {result.products.map((product) => (
-              <ProductCard key={product.id} product={product} titleAs="h2" />
+              <ProductCard
+                key={product.id}
+                product={product}
+                titleAs="h2"
+                actions={
+                  <>
+                    <WishlistButton productId={product.id} label={product.name} />
+                    <CartButton productId={product.id} label={product.name} />
+                  </>
+                }
+              />
             ))}
           </div>
           <nav className="week05-pagination" aria-label="페이지 이동">
