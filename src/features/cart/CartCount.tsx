@@ -1,9 +1,9 @@
 'use client';
 
-import { useSavedStore } from '@/shared/store';
+import { useCart } from '@/entities/client-state';
 
 export function CartCount() {
-  const count = useSavedStore((state) => state.cartProductIds.length);
+  const count = useCart((cart) => cart.count);
 
   // 복원 전에는 담아둔 게 있어도 0으로 보이므로, 숫자 자리를 비워두고 폭만 남긴다
   return (

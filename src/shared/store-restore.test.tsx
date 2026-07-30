@@ -1,11 +1,14 @@
 import { act, render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
 
+import {
+  STORAGE_KEY,
+  useBoundStore,
+} from '@/entities/client-state/model/store';
 import { CartCount } from '@/features/cart/CartCount';
 import { CartToggleButton } from '@/features/cart/CartToggleButton';
 import { WishlistCount } from '@/features/wishlist/WishlistCount';
 import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
-import { STORAGE_KEY, useBoundStore } from '@/shared/store';
 
 const PRODUCT_NAME = '사이드 테이블';
 

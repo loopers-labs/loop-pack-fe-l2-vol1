@@ -2,11 +2,14 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { persist, type PersistStorage } from 'zustand/middleware';
 
-import { createCartSlice, type CartSlice } from '@/features/cart/cart-slice';
+import {
+  createCartSlice,
+  type CartSlice,
+} from '@/entities/cart/@x/client-state';
 import {
   createWishlistSlice,
   type WishlistSlice,
-} from '@/features/wishlist/wishlist-slice';
+} from '@/entities/wishlist/@x/client-state';
 
 type BoundState = CartSlice & WishlistSlice;
 type PersistedState = Pick<BoundState, 'cartProductIds' | 'wishlistProductIds'>;
@@ -124,7 +127,7 @@ export const useRestoreSavedStore = () => {
 /**
  * persist store가 주는 값을 구독해 복원이 끝났는지 여부를 반환
  */
-const useRestored = () =>
+export const useRestored = () =>
   useSyncExternalStore(
     useBoundStore.persist.onFinishHydration,
     useBoundStore.persist.hasHydrated,

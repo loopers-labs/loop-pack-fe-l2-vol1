@@ -3,11 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { Profiler } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import {
+  STORAGE_KEY,
+  useBoundStore,
+} from '@/entities/client-state/model/store';
 import type { Product } from '@/entities/product';
 import { CartCount } from '@/features/cart/CartCount';
 import { ProductCard } from '@/features/products/ProductCard';
 import { WishlistCount } from '@/features/wishlist/WishlistCount';
-import { STORAGE_KEY, useBoundStore } from '@/shared/store';
 
 const PRODUCT: Product = {
   id: 'p9',

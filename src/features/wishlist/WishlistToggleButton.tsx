@@ -1,6 +1,6 @@
 'use client';
 
-import { useBoundStore, useSavedStore } from '@/shared/store';
+import { useWishlist } from '@/entities/client-state';
 
 export function WishlistToggleButton({
   productId,
@@ -9,10 +9,8 @@ export function WishlistToggleButton({
   productId: string;
   productName: string;
 }) {
-  const isWishlisted = useSavedStore((state) =>
-    state.wishlistProductIds.includes(productId),
-  );
-  const toggleWishlist = useBoundStore((state) => state.toggleWishlist);
+  const isWishlisted = useWishlist((wishlist) => wishlist.isIn(productId));
+  const toggle = useWishlist((wishlist) => wishlist.toggle);
 
   // 복원 직전에 누른 클릭은 뒤이은 복원값에 덮이므로, 아직 모르는 동안은 잠근다
   return (
@@ -22,7 +20,7 @@ export function WishlistToggleButton({
       aria-pressed={isWishlisted}
       disabled={isWishlisted === undefined}
       onClick={() => {
-        toggleWishlist(productId);
+        toggle(productId);
       }}
     >
       찜

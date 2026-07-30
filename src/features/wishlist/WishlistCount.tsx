@@ -1,9 +1,9 @@
 'use client';
 
-import { useSavedStore } from '@/shared/store';
+import { useWishlist } from '@/entities/client-state';
 
 export function WishlistCount() {
-  const count = useSavedStore((state) => state.wishlistProductIds.length);
+  const count = useWishlist((wishlist) => wishlist.count);
 
   // 복원 전에는 담아둔 게 있어도 0으로 보이므로, 숫자 자리를 비워두고 폭만 남긴다
   return (

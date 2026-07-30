@@ -222,6 +222,13 @@ export default tseslint.config(
     },
   },
   {
+    // 테스트 인프라는 레이어 밖이라 슬라이스 진입점 규칙을 적용하지 않는다
+    files: ['vitest.setup.ts', 'tests/**'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+  {
     // 스타터가 제공한 mock 백엔드는 과제 판별 대상이라 수정하지 않고 스타일 룰만 끈다.
     files: ['src/app/api/**'],
     rules: {
