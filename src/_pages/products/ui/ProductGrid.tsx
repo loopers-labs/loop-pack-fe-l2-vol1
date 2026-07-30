@@ -1,6 +1,6 @@
 import type { Product } from "@/types/commerce";
-import { ProductCard } from "./ProductCard";
-import styles from "./commerce.module.css";
+import { ProductCard } from "@/components/commerce/ProductCard";
+import styles from "@/components/commerce/commerce.module.css";
 
 export function ProductGrid({ products }: { products: Product[] }) {
   return (

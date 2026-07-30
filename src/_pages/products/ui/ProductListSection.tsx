@@ -1,6 +1,6 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { createLoader, type SearchParams } from "nuqs/server";
-import { ProductList } from "@/components/commerce/ProductList";
+import { ProductList } from "./ProductList";
 import {
   productListParsers,
   resolveProductListQuery,

@@ -9,8 +9,8 @@ import {
   isSortValue,
   SORT_LABELS,
   SORT_VALUES,
-} from "./productListOptions";
-import styles from "./commerce.module.css";
+} from "@/components/commerce/productListOptions";
+import styles from "@/components/commerce/commerce.module.css";
 
 export const SEARCH_DEBOUNCE_MS = 300;
 

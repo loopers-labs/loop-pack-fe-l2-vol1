@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { CommerceHeader } from "@/components/commerce/CommerceHeader";
-import { HomeContent } from "@/components/commerce/HomeContent";
+import { HomeContent } from "@/_pages/home";
 import { getQueryClient } from "@/lib/queryClient";
 import { homeQueries } from "@/queries/home";
 import styles from "@/components/commerce/commerce.module.css";

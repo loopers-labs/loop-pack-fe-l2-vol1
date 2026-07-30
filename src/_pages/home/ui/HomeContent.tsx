@@ -1,11 +1,12 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ProductGrid } from "./ProductGrid";
-import { PrefetchCategoryLink } from "./PrefetchCategoryLink";
+// ProductGrid 는 목록 페이지 slice 에 있으나 홈도 재사용한다 — 페이지 간 임시 import(3단계에서 해소).
+import { ProductGrid } from "@/_pages/products/ui/ProductGrid";
+import { PrefetchCategoryLink } from "@/components/commerce/PrefetchCategoryLink";
 import { homeQueries } from "@/queries/home";
 import type { Product } from "@/types/commerce";
-import styles from "./commerce.module.css";
+import styles from "@/components/commerce/commerce.module.css";
 
 function ProductSection({
   title,

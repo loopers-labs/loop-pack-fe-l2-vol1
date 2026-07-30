@@ -15,7 +15,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { ProductCardActions } from "./ProductCardActions";
 import { CommerceHeaderCounts } from "./CommerceHeaderCounts";
-import { ProductList } from "./ProductList";
+import { ProductList } from "@/_pages/products/ui/ProductList";
 import { useCommerceStore } from "@/stores/commerceStore";
 import { makeQueryClient } from "@/lib/queryClient";
 import { resolveProductListQuery } from "@/hooks/productListSearchParams";

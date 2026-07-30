@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { CommerceHeader } from "@/components/commerce/CommerceHeader";
-import { ProductListFilters } from "@/components/commerce/ProductListFilters";
+import { ProductListFilters } from "@/_pages/products";
 import styles from "@/components/commerce/commerce.module.css";
 
 // 목록 조회 실패 시 error.tsx 는 이 layout 안(= {children} 자리)에서 렌더된다 →

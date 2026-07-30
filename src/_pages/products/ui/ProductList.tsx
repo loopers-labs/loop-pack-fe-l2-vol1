@@ -7,7 +7,7 @@ import { useProductListSearchParams } from "@/hooks/useProductListSearchParams";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ProductListResult } from "./ProductListResult";
 import { SEARCH_DEBOUNCE_MS } from "./ProductListFilters";
-import styles from "./commerce.module.css";
+import styles from "@/components/commerce/commerce.module.css";
 
 export function ProductList() {
   const { query, setPage, clampPageToRange } = useProductListSearchParams();
