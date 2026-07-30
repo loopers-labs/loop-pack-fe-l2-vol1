@@ -190,6 +190,30 @@ entity 간 cross-import는 이번 기본 전환에서는 만들지 않는다.
 `Category.id`는 `entities/category`의 `CategoryId`를 사용한다.
 두 타입은 동일한 literal union을 의도적으로 중복해 entity 경계를 단순하게 유지한다.
 
+### 의존성 하네스
+
+Advanced A는 외부 ESLint plugin 대신 Vitest 기반 아키텍처 테스트로 구현한다.
+FSD plugin은 `_app`, `_pages`, `src/app/api` 같은 프로젝트별 예외를 맞추는 설정 비용이 있고,
+이번 과제에서는 규칙을 코드로 명시하는 편이 더 직접적이라고 판단했다.
+
+자동 검증 규칙:
+
+- 하위 레이어가 상위 레이어를 import하지 않는다.
+- 같은 레이어의 다른 slice를 직접 import하지 않는다.
+
+검사 대상:
+
+- `src/**/*.ts`, `src/**/*.tsx`의 정적 import/export와 동적 import 문자열을 검사한다.
+- `@/` alias와 상대 경로 import를 내부 파일 경로로 해석한다.
+- `src/app/api/**` mock backend는 FSD 프론트엔드 전환 범위에서 제외한다.
+- `shared`와 `_app`은 slice 개념이 없으므로 같은 레이어 cross-slice 검사에서 제외한다.
+
+실행 명령:
+
+```bash
+pnpm architecture:check
+```
+
 ### 마이그레이션 계획
 
 | 단계 | 작업                                                    | 검증                                    | 되돌림 기준                                                                                 |
@@ -537,6 +561,7 @@ Public API는 외부가 알아도 되는 값만 열고 내부 구현을 숨기�
 코드 이동 전후 아래 명령을 실행한다.
 
 ```bash
+pnpm architecture:check
 pnpm test
 pnpm lint
 pnpm format:check
