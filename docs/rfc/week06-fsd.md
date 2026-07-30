@@ -497,10 +497,14 @@ Query `isPending`은 클라이언트 refetch나 결과 영역 로딩 범위를 �
 
 - `ProductCard`가 wishlist feature나 wishlist store를 직접 import하지 않으면 의존 방향은 지킨다.
 - 다만 상품 카드의 시각적 계약에 wishlist 버튼이 포함되어 있으면 wishlist 제거 시 product UI 수정은 필요하다.
-- widget에서 wishlist action 상태를 조합하고 feature 공개 API로 연결하면 삭제 반경을 더 예측하기 쉽다.
-- 현재 코드 기준으로 wishlist store/action 로직은 `entities/wishlist`, `features/toggle-wishlist`,
-  `widgets/product-card`, `widgets/header`, `_app/providers`에 모인다.
-  page가 wishlist store shape를 직접 알지 않으므로 삭제 반경은 예측 가능하다고 판정한다.
+- 따라서 위시리스트 제거는 단일 폴더 삭제로 끝나지는 않는다.
+  상태, 행위, 화면 조합, 상품 카드의 시각적 계약이 각 레이어에 역할별로 나뉘어 있기 때문이다.
+- 현재 코드 기준으로 변경 위치는 상태(`entities/wishlist`), 행위(`features/toggle-wishlist`),
+  조합(`widgets/product-card`, `widgets/header`), persist 복원 연결(`_app/providers`),
+  상품 카드의 시각적 계약(`entities/product/ui/ProductCard`)으로 예측할 수 있다.
+- page, URL 상태, 상품 목록 query, 서버 응답 캐시까지 변경이 퍼지지 않고,
+  `ProductCard`도 wishlist feature/store를 직접 import하지 않는다.
+  따라서 물리적으로 한 폴더에만 모인 구조는 아니지만 삭제 반경은 역할별로 응집되어 있다고 판정한다.
 
 ### 신상품 뱃지를 상품 카드에 추가한다면
 
