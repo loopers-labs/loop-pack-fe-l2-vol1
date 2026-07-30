@@ -256,6 +256,19 @@ import type { Product } from "@/entities/product"; // in shared/*
 
 이동과 옛 파일 삭제는 같은 커밋에 묶는다(두 경로가 동시에 살아있으면 typecheck가 불일치를 못 잡는다). 각 Phase에서 아직 이동하지 않은 상위 코드는 새 경로를 import하도록 그 커밋에서 함께 갱신한다.
 
+#### 실행 기록 (Phase 7에서 실측 기입)
+
+| Phase | 커밋                  | 검증 결과                                                                                                                                              |
+| ----- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0     | `b719875d`            | RFC 커밋 (코드 변경 없음)                                                                                                                              |
+| 1     | `173f59f3`            | `pnpm check` 통과. 하네스 의도적 위반 4종 재현 → 원복 (§9 검증 기록)                                                                                   |
+| 2     | `3a7dabd2`            | `pnpm check` 통과. `actions` **required** 설계가 미주입 소비처 2곳을 typecheck로 즉시 차단 — §4.2의 "침묵 버그 방지"가 실제로 작동한 첫 사례           |
+| 3     | `cca5b82f`            | `pnpm check` 통과. 분해 이동 중 소실된 `"use client"` 지시어 3건을 리뷰에서 발견·복원 (원본 보존 원칙)                                                 |
+| 4     | `667f347d`            | `pnpm check` + 기준선 핵심 3행(URL 직접 진입·토글→카운트·이동 간 유지) 브라우저 재실행 통과. 목록에서 토글한 카드가 홈에서 "찜됨"으로 표시됨을 확인    |
+| 5     | `9157fba8` `a43971fd` | `pnpm check` + 기준선 전체 재실행 통과(검색 디바운스→URL, 정렬, 페이지네이션, 뒤로가기 복원, 빈 상태). 진행 중 mock 계약 역수입 발견 → 하네스 보강(§9) |
+| 6     | `fe5b662d`            | `pnpm check` + `scenario=error` 임시 주입 재현 통과 (§5.3 재현 결과), 임시 코드 제거 확인                                                              |
+| 7     | (이 문서 갱신)        | 삭제 시나리오 실측 (§7)                                                                                                                                |
+
 ### 2.8 mock 백엔드와의 경계 — 2단 경계
 
 `src/app/api/**`는 FSD 레이어 시스템 **밖**의 "서버"로 간주하고, 프론트 레이어와의 결합을 두 단계로 나눈다.
@@ -276,6 +289,7 @@ import type { Product } from "@/entities/product"; // in shared/*
    - `src/entities/**` → `@/features/*`, `@/widgets/*`, `@/_pages/*` 금지
    - `src/features/**` → `@/widgets/*`, `@/_pages/*` 금지
    - `src/widgets/**` → `@/_pages/*` 금지
+   - 모든 FSD 레이어 → `@/app/*` 금지 (Phase 5 실측 보강 — `_pages`가 mock의 `_contract`를 역수입한 사례가 이 갭을 드러냄, §9 기록)
 2. **같은 레이어 슬라이스 간 직접 import 금지** — "같은 슬라이스 내부는 상대경로"(§2.4) 규칙 덕분에, 레이어 폴더 안에서 자기 레이어의 alias 전체를 금지하는 것으로 구현된다
    - `src/entities/**` 안에서 `@/entities/*` 금지(cart→wishlist 차단), `features`·`widgets`·`_pages`도 동일
 3. **mock 존 규칙(§2.8 강제)** — `src/app/api/**` → `@/_pages/*`·`@/widgets/*`·`@/features/*`·`@/shared/*` 금지, `@/entities/*`는 `allowTypeImports: true`로 타입만 허용
@@ -377,6 +391,17 @@ route `loading.tsx`는 만들지 않는다. 현재 인라인 스켈레톤이 `pa
 - **Error Boundary가 못 잡는 것**: 이벤트 핸들러·비동기 콜백의 오류는 렌더 밖이라 경계에 도달하지 않는다. 이런 오류는 발생 지점의 핸들러 내부에서 처리한다(현재 toggle은 실패 경로 없음 — 위 표 4행).
 - **재현 방법**: 검증 시에만 fetch URL에 `scenario=error`를 임시 하드코딩해 5xx 전파를 확인하고 **커밋 전 제거**한다. `scenario`는 mock 전용 제어값이므로 사용자 URL 상태나 `ProductListQuery`에 포함하지 않는다(타입도 mock 폴더로 이동해 구조적으로 차단).
 
+#### 재현 결과 (Phase 6 실측)
+
+`scenario=error` 임시 주입(get-home·get-products 2곳, 검증 후 제거 확인)으로 재현했다.
+
+1. **5xx → 경계 전파** ✅ — `/products`에서 `ProductListContent`가 언마운트되고 `app/products/error.tsx` fallback이 렌더(제목 + `CommerceApiError.message`). 홈은 루트 `app/error.tsx`로 전파. 인라인 분기가 아니라 경계로 갔음을 콘텐츠 언마운트로 확인.
+2. **나머지 화면 생존** ✅ — 에러 중에도 layout(헤더·장바구니/위시리스트 카운트)이 유지됨. 요구사항 "조회 실패가 화면 전체를 가리지 않는다" 충족.
+3. **전체 새로고침 없는 재시도** ✅ — fallback의 "다시 시도" 클릭 시 네트워크 로그에 새 `/api/products` 요청이 발생(`resetQueryErrors()` → Next `reset()` → 리마운트 refetch). mock이 계속 500이면 다시 경계로 — 루프 완결.
+4. **빈 결과·4xx 인라인 유지** ✅ — `q=zzzzzz`는 200+빈 배열로 `Placeholder(role="status")` 인라인 렌더(Phase 5 기준선 재실행에서 확인). 4xx는 UI 도달 불가 경로임을 mock 직접 호출(400)로만 확인 — 표 2행의 "도달 불가하나 정책 고정" 그대로.
+
+재현 중 환경 특이사항: 브라우저 탭이 숨겨진 상태에서는 Chrome이 타이머를 동결해 TanStack Query의 재시도 백오프(기본 3회, 1s→2s→4s)가 진행되지 않는다. 검증 시에만 임시 `retry: false`를 함께 사용해 타이머 없이 에러 상태에 도달시켰고 역시 제거했다(운영 재시도 정책 무변경).
+
 ### 5.4 이번 주에 하지 않을 최적화
 
 - 리스트 가상화, `React.memo` 일괄 적용 — 30개 상품 규모에서 근거 없는 복잡도
@@ -397,19 +422,41 @@ route `loading.tsx`는 만들지 않는다. 현재 인라인 스켈레톤이 `pa
 - FSD 학습 곡선: 레이어·세그먼트 배치 판단 비용이 든다 (이 RFC의 결정표가 판례 역할)
 - 파일 수 증가: `product-actions.tsx` 1개가 4개 파일(feature 2 + shared 1 + widget 1)로 늘어난다 — 응집을 위해 수용. 단 이 구조가 개선하는 지표는 "터치 파일 수"가 아니라 **"기능과 무관한 파일을 건드리는 횟수 = 0"**이다(§7 기능 추가 시나리오 표): 현재 구조에서는 행위 하나를 추가하면 다른 기능과 동거하는 파일을 수정해야 하지만, 새 구조에서는 신규 파일 + 조합 지점 1줄 편집으로 끝난다
 
-## 7. 삭제 시나리오 (사전 예측 — Phase 7에서 실측 후 갱신)
+## 7. 삭제 시나리오 (예측 → Phase 7 실측 완료)
 
 ### "위시리스트 기능을 통째로 제거한다면"
+
+**사전 예측**
 
 - **삭제**: `entities/wishlist/` 폴더, `features/toggle-wishlist/` 폴더 — 2개 폴더로 끝
 - **수정**: `widgets/header/ui/header-actions.tsx`(카운트 span 제거), `widgets/product-card-actions/ui/product-card-actions.tsx`(버튼 1줄 제거) — 2개 파일
 - `entities/product`, `_pages/*`, `shared/*`는 무변경 (`ProductCard`는 불투명한 `actions` 노드만 받으므로)
 
+**실측 (마이그레이션 완료 후 `wishlist` 대소문자 무시 grep — src 전체)**
+
+```
+src/entities/wishlist/index.ts            ← 삭제 대상 폴더 1
+src/entities/wishlist/model/store.ts
+src/features/toggle-wishlist/ui/wishlist-button.tsx   ← 삭제 대상 폴더 2
+src/widgets/header/ui/header-actions.tsx              ← 수정 (카운트 1줄 + import)
+src/widgets/product-card-actions/ui/product-card-actions.tsx  ← 수정 (버튼 1줄 + import)
+```
+
+**예측과 정확히 일치** — 5개 파일 전부가 삭제 2폴더 + 수정 2파일 안에 있고, `app/`·`shared/`·`entities/product`·`_pages/*`에는 위시리스트의 흔적이 0건이다. grep 없이도 삭제 범위를 폴더 이름만으로 예측할 수 있는 구조 = 응집 성공. (비교: 마이그레이션 전에는 `stores/wishlist.ts` + cart와 동거하는 `product-actions.tsx` + `header-actions.tsx` + 카드의 직접 import까지 4곳에 파편화되어 있었다.)
+
 ### "신상품 뱃지를 상품 카드에 추가한다면"
+
+**사전 예측**
 
 - **수정**: `entities/product/ui/product-card.tsx` (뱃지 렌더)
 - **신규(필요시)**: `entities/product/lib/is-new-product.ts` (`createdAt` 기반 순수 판정 — 이때 처음 lib 세그먼트 생성), CSS 클래스
 - 상위 레이어(`_pages`, `widgets`, `features`)는 무변경 — 카드 표현의 유일한 소유자가 entities이기 때문
+
+**실측 (구조 확인)**
+
+- 판정 재료 `Product.createdAt`은 `entities/product/model/types.ts`에 이미 존재 — 새 데이터·API 변경 불필요
+- 카드 마크업의 소유자는 `entities/product/ui/product-card.tsx` 한 곳뿐(홈·목록은 `<ProductCard>`를 Public API로만 소비) — 뱃지 렌더 추가가 이 파일 밖으로 번질 경로가 없음
+- 터치 파일 확정: `product-card.tsx` 1개 (+판정 함수를 분리하면 `lib/is-new-product.ts` 신규 1개, 스타일이 필요하면 `week-05-layout.css`) — 예측 그대로
 
 ### 기능 추가 시나리오 (삭제 시나리오의 대칭 검증 — 2차 리뷰 실측)
 
@@ -483,3 +530,10 @@ route `loading.tsx`는 만들지 않는다. 현재 인라인 스켈레톤이 `pa
 | 4   | `../../` 상대경로로 슬라이스 탈출   | `src/entities/product/__violation-relative.ts`에서 `../../shared/api/commerce-client` import               | ❌ "상대경로로 슬라이스 경계를 넘을 수 없습니다"          |
 
 구현 노트: 아직 존재하지 않는 레이어 폴더(entities·features·widgets)에 대한 규칙도 즉시 작동함을 확인 — 이 규칙은 모듈 해석이 아니라 import 문자열 패턴 기반이기 때문(§2.9 "Phase 1 도입, 폴더 생성 즉시 작동" 전제 실증). mock 존에는 §2.9 규칙 3에 더해 딥 임포트 차단(규칙 4)도 함께 적용했다 — entities 루트는 타입 한정 허용, 세그먼트 딥 임포트는 타입이라도 차단.
+
+### 마이그레이션 중 발견·보강 기록 (Phase 2~6)
+
+1. **mock 계약 역수입 → 하네스 갭 보강 (Phase 5)** — `_pages/home/api`가 `HomeResponse`를 자기 슬라이스에 정의하는 대신 `@/app/api/_contract`에서 역수입하는 실수가 나왔다(§2.8의 2단 경계가 정반대로 뚫린 형태). 이때 lint가 침묵한 이유는 `@/app/*`이 어떤 금지 패턴에도 없었기 때문 — FSD 레이어 목록에 app이 빠져 있었다. 규칙 1에 "모든 FSD 레이어 → `@/app/*` 금지"를 보강했고, 이후 같은 실수는 lint가 차단한다. 규칙의 구멍은 설계 시점이 아니라 실전 위반이 알려준다는 사례.
+2. **`actions` required의 실증 (Phase 2)** — 카드 이동 시 소비처 2곳이 `actions` 주입 없이 호출되는 상태가 나왔고, required 설계 덕에 typecheck가 즉시 실패했다. optional이었다면 찜/담기 버튼이 조용히 사라진 채 build까지 통과했을 것 — 2차 리뷰 수용 2번이 방어한 정확히 그 시나리오.
+3. **`"use client"` 소실 (Phase 3)** — `product-actions.tsx`를 3파일로 분해하는 과정에서 원본 1행의 지시어가 새 파일 전부에서 누락됐다. 소비처가 전부 클라이언트 트리라 우연히 동작하는 상태였고 리뷰에서 복원했다. "이동 시 지시어 보존"을 기계가 못 잡는 항목으로 인지 — 분해 이동의 체크리스트 항목으로 남긴다.
+4. **숨김 탭의 타이머 동결 (Phase 6)** — 브라우저 탭이 숨겨진 상태에서는 재시도 백오프가 진행되지 않아 에러 상태 도달을 관찰할 수 없었다(§5.3 재현 결과의 환경 특이사항).
