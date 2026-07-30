@@ -82,8 +82,7 @@ src/
 │       └── model/          # wishlistStore
 └── shared/
     ├── ui/                 # Dialog, Select, icons
-    ├── lib/                # formatPrice 등
-    └── api/                # ApiErrorResponse, MockApiScenario
+    └── lib/                # formatPrice 등
 ```
 
 ### 사용할 레이어와 선택 근거
@@ -231,7 +230,7 @@ shared/ui          → entities/product    (하위 → 상위 역방향)
 | `Product`, `SizeValue`, `CategoryId`, `Category`, `CATEGORY_IDS` | `entities/product/model` | product 도메인 본질 |
 | `ProductSort`, `PRODUCT_SORTS`, `CategoryOption`, `CATEGORY_OPTIONS`, `ProductListQuery`, `ProductListResponse` | `entities/product/model` | product 조회 파라미터. `CategoryOption`은 `CategoryId`에서 파생되는 UI 필터용 확장 타입이지만, 소유자는 여전히 product 도메인. 슬라이스가 작으므로 세그먼트 분리 불필요 |
 | `HomeResponse` | `_pages/home/api` | 홈 전용 집계 응답 |
-| `ApiErrorResponse`, `MockApiScenario` | `shared/api` | 도메인 무관 |
+| `ApiErrorResponse`, `MockApiScenario` | `types/commerce.ts` 잔류 | route handler(`app/api/`)에서만 사용. route handler를 전환 범위에서 제외했으므로 함께 남겨두고, route handler 전환 시 `shared/api`로 이동 |
 
 #### homeQueries — entities/product vs _pages/home
 
