@@ -142,6 +142,8 @@ src/
 
 세그먼트는 목적 기준: `ui`(표현) / `model`(상태·타입) / `api`(서버 통신 — fetch 함수, queryOptions, DTO) / `lib`(슬라이스 내부 유틸). queryOptions는 쿼리키 팩토리라 로직처럼 보이지만 본질이 서버 통신 계약이므로 `api` 세그먼트에 둔다.
 
+> **컨벤션 계보 주석 (Phase 7 추가)**: FSD 공식 문서 신판(fsd.how)의 Next.js 가이드는 라우팅 `app/`을 프로젝트 루트로 빼고 `src/` 안에 표준 이름(`src/app`, `src/pages`)을 유지하는 방식을 제시한다. 이 프로젝트는 과제 공통 규칙("`src/pages`는 만들지 않는다 — Pages Router 오인")에 따라 구판 공식 가이드의 `src/_pages` 리네임 방식을 채택했다. 신판의 이식 가능한 권장사항(라우팅 파일은 재수출만, 캐시 정책은 쿼리 정의와 동거, Route Handler의 FSD 외부 격리)은 현 구조가 이미 충족한다.
+
 ### 2.4 의존 방향 규칙
 
 ```
@@ -277,6 +279,8 @@ import type { Product } from "@/entities/product"; // in shared/*
 2. **도메인 모델 타입은 entities에서 type-only로 가져온다** — `Product`(13필드)·`Category`·`CategoryId`·`ProductSort`는 fixture 30개가 쓰는 타입이라 중복하면 드리프트 위험이 독립성의 실익보다 크다. entities는 가장 안정적인 최하위 도메인 레이어이므로 `import type`에 한해 참조를 허용하고, §2.9의 하네스(`allowTypeImports`)로 강제한다. 값 import를 금지하는 이유: 라우트 핸들러의 모듈 그래프에 클라이언트 모듈이 끌려 들어가는 사고를 차단하기 위함.
 
 `MockApiScenario`는 검증 전용 제어값이므로 `app/api/_contract.ts`에 두어 프론트가 import할 수 없게 한다.
+
+> **`_contract.ts`의 위치가 `_pages`가 아닌 이유 (Phase 7 추가)**: "실사용처 옆"이라는 기준으로 보면 프론트 몫의 계약은 이미 사용처인 `_pages/*/api`에 있다. `_contract.ts`는 사용처용 타입이 아니라 **mock 서버 자신의 계약**이므로 mock 코드가 사는 `app/api/**`에 동거한다. `_pages`로 옮기면 ① mock 라우트가 상위 레이어(`@/_pages`)를 아는 역방향 결합이 생기고 ② 실제 백엔드 도입 시 `app/api` 폴더째 삭제하는 시나리오가 깨진다(계약이 프론트 폴더에 남음).
 
 ### 2.9 의존성 하네스 (Advanced A — Phase 1에서 도입)
 
