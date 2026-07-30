@@ -13,7 +13,7 @@ import {
 import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { ProductList } from "./ProductList";
-import { makeQueryClient } from "@/lib/queryClient";
+import { makeQueryClient } from "@/_app/queryClient";
 import { getProducts } from "@/services/commerce";
 import type { Product, ProductListResponse } from "@/types/commerce";
 

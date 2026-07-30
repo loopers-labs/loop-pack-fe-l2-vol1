@@ -17,7 +17,7 @@ import { ProductCardActions } from "./ProductCardActions";
 import { CommerceHeaderCounts } from "./CommerceHeaderCounts";
 import { ProductList } from "@/_pages/products/ui/ProductList";
 import { useCommerceStore } from "@/stores/commerceStore";
-import { makeQueryClient } from "@/lib/queryClient";
+import { makeQueryClient } from "@/_app/queryClient";
 import { resolveProductListQuery } from "@/hooks/productListSearchParams";
 import { normalizeProductListQuery } from "@/utils/productList";
 import { productQueries } from "@/queries/products";

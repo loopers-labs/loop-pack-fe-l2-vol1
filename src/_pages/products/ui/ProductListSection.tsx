@@ -5,7 +5,7 @@ import {
   productListParsers,
   resolveProductListQuery,
 } from "@/hooks/productListSearchParams";
-import { getQueryClient } from "@/lib/queryClient";
+import { getQueryClient } from "@/_app/queryClient";
 import { productQueries } from "@/queries/products";
 
 const loadProductListParams = createLoader(productListParsers);

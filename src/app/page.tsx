@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { CommerceHeader } from "@/components/commerce/CommerceHeader";
 import { HomeContent } from "@/_pages/home";
-import { getQueryClient } from "@/lib/queryClient";
+import { getQueryClient } from "@/_app/queryClient";
 import { homeQueries } from "@/queries/home";
 import styles from "@/components/commerce/commerce.module.css";
 
