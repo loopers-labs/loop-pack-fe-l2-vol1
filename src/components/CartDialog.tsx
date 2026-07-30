@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/shared/ui/dialog';
-import { useCartStore } from '@/store/cartStore';
+import { useCartStore } from '@/entities/cart/model/cartStore';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
 import { formatWon } from '@/shared/lib/format';
 

@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/queries/homeQueries';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
-import { useWishlistStore } from '@/store/wishlistStore';
-import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
+import { useCartStore } from '@/entities/cart/model/cartStore';
 import { formatWon, calcDiscount } from '@/shared/lib/format';
 import type { Product } from '@/entities/product/model/types';
 
