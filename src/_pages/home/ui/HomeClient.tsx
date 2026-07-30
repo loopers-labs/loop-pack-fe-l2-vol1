@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import Link from 'next/link';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
@@ -75,36 +75,13 @@ function ProductCard({ product }: { product: Product }) {
 
 export function HomeClient() {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery(homeQueryOptions());
+  const { data } = useSuspenseQuery(homeQueryOptions());
 
   const prefetchProducts = useCallback(() => {
     void queryClient.prefetchQuery(
       productListQueryOptions({ category: 'all', sort: 'latest', page: 1 }),
     );
   }, [queryClient]);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="size-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-          <p className="text-sm text-text-secondary">불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">
-          {error?.message ?? '오류가 발생했습니다.'}
-        </p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
 
   const { banner, categories, categoryThumbnails, popularProducts, newProducts } = data;
 
