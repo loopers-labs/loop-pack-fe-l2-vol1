@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import { CommerceHeader } from "@/components/commerce/CommerceHeader";
+import { CommerceHeader } from "@/widgets/commerce";
 import { HomeContent } from "@/_pages/home";
 import { getQueryClient } from "@/_app/queryClient";
 import { homeQueries } from "@/_pages/home";

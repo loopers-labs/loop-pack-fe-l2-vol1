@@ -13,8 +13,10 @@ import {
 } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
-import { ProductCardActions } from "./ProductCardActions";
-import { CommerceHeaderCounts } from "./CommerceHeaderCounts";
+import { AddToCartButton } from "@/features/add-to-cart";
+import { WishlistButton } from "@/features/toggle-wishlist";
+// 위젯 내부 컴포넌트라 public API 로 노출하지 않으나, 이 계약 테스트는 헤더 개수 파생을 직접 검증하려 내부를 집는다.
+import { CommerceHeaderCounts } from "@/widgets/commerce/ui/CommerceHeaderCounts";
 import { ProductList } from "@/_pages/products/ui/ProductList";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
@@ -32,6 +34,16 @@ vi.mock("@/entities/product/api/fetchProducts", () => ({
 }));
 
 const getProductsMock = vi.mocked(getProducts);
+
+// ProductCardActions 를 대체 — 담기·위시 버튼을 함께 렌더하는 테스트용 조합(실제로는 ProductCard 가 조합).
+function ProductActions({ productId }: { productId: string }) {
+  return (
+    <>
+      <AddToCartButton productId={productId} />
+      <WishlistButton productId={productId} />
+    </>
+  );
+}
 
 function makeProduct(id: string): Product {
   return {
@@ -67,7 +79,7 @@ afterEach(cleanup);
 // 요구사항 1 — 계약: action 으로 담고/빼면, 그 상태를 selector 로 구독한 버튼이 즉시 바뀐다.
 describe("Zustand action 과 selector", () => {
   test("담기·위시 토글 action 이 selector 로 구독한 버튼 상태를 바꾼다", () => {
-    render(<ProductCardActions productId="p1" />);
+    render(<ProductActions productId="p1" />);
 
     // 아래 테스트들은 aria-label="장바구니"난 aria-label="위시리스트"로 잡힐텐데...
     // 이래도 괜찮을지? 아니라면 어떻게 잡아야 할지? 만약 i18n이라던가등의 케이스에는?
@@ -104,7 +116,7 @@ describe("헤더 개수 파생", () => {
     render(
       <>
         <CommerceHeaderCounts />
-        <ProductCardActions productId="p1" />
+        <ProductActions productId="p1" />
       </>,
     );
 
@@ -166,10 +178,10 @@ describe("홈과 목록이 같은 store 상태를 표시하는지", () => {
     render(
       <>
         <div data-testid="home-surface">
-          <ProductCardActions productId="p1" />
+          <ProductActions productId="p1" />
         </div>
         <div data-testid="list-surface">
-          <ProductCardActions productId="p1" />
+          <ProductActions productId="p1" />
         </div>
         <CommerceHeaderCounts />
       </>,

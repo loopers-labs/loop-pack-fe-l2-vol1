@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import { CommerceHeader } from "@/components/commerce/CommerceHeader";
+import { CommerceHeader } from "@/widgets/commerce";
 import { ProductListFilters } from "@/_pages/products";
 import styles from "@/components/commerce/commerce.module.css";
 

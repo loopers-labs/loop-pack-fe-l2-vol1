@@ -176,8 +176,7 @@ src
 │       │   ├── ProductList.tsx          ← 현재: components/commerce/ProductList.tsx
 │       │   ├── ProductListSection.tsx   ← 현재: app/products/ProductListSection.tsx
 │       │   ├── ProductListResult.tsx    ← 현재: components/commerce/ProductListResult.tsx
-│       │   ├── ProductListFilters.tsx   ← 현재: components/commerce/ProductListFilters.tsx (검색·카테고리·정렬 feature 조합점)
-│       │   └── ProductGrid.tsx          ← 현재: components/commerce/ProductGrid.tsx
+│       │   └── ProductListFilters.tsx   ← 현재: components/commerce/ProductListFilters.tsx (검색·카테고리·정렬 feature 조합점)
 │       ├── model/
 │       │   ├── productListParsers.ts           ← 현재: hooks/productListSearchParams.ts 의 nuqs 파서만
 │       │   └── useProductListSearchParams.ts   ← 현재: hooks/useProductListSearchParams.ts
@@ -189,7 +188,9 @@ src
 │   │   │   └── CommerceHeaderCounts.tsx  ← 현재: components/commerce/CommerceHeaderCounts.tsx
 │   │   └── index.ts
 │   └── product-card/
-│       ├── ui/ProductCard.tsx       ← 현재: components/commerce/ProductCard.tsx (features 버튼 직접 조합)
+│       ├── ui/
+│       │   ├── ProductCard.tsx     ← 현재: components/commerce/ProductCard.tsx (features 버튼 직접 조합)
+│       │   └── ProductGrid.tsx     ← 현재: components/commerce/ProductGrid.tsx (ProductCard 그리드 — 홈·목록 공유라 widget 계층으로)
 │       └── index.ts
 ├── features/                        ← FSD features 레이어 (사용자 인터랙션)
 │   ├── add-to-cart/
@@ -307,6 +308,8 @@ import { useWishlistStore } from "@/entities/wishlist";
 
 **6단계 (공유 상태 → entities)** — 통과(테스트 69개·build). `commerceStore`(단일)를 `entities/cart`·`entities/wishlist` 독립 store 로 분리. persist 로직이 동일해 `shared/lib/createIdSetStore.ts`(id 집합 영속 store 팩토리)로 추출하고 각 entity 가 자기 키로 인스턴스화(`cart-store`·`wishlist-store`). 각 entity 는 store 훅 + 파생 셀렉터(`useIsInCart`·`useCartCount`·`useCartHasHydrated`·`useToggleCart` 등)만 공개(id `Set` 구조 은닉). 소비처: providers(각각 rehydrate), `ProductCardActions`·`CommerceHeaderCounts`(각 hasHydrated 로 placeholder). 특이사항: 저장 키가 `commerce-store`(단일)→`cart-store`+`wishlist-store`(2개)로 바뀌어 **기존 `commerce-store` 저장값은 1회 유실**(복원 *능력*은 보존 — 세션 내 토글→새로고침 복원 확인). 실앱이면 구키 마이그레이션이 필요하나 학습 범위라 생략.
 
+**7단계 (widgets/features 분리)** — 통과(테스트 69개·build). `widgets/commerce`(CommerceHeader+내부 CommerceHeaderCounts), `widgets/product-card`(ProductCard가 add-to-cart·toggle-wishlist feature 버튼 조합), `ProductCardActions`→`features/add-to-cart`·`features/toggle-wishlist`, `ProductListFilters`→`features/search`·`category-select`·`sort-select`. 설계: feature 컨트롤이 page 훅(`useProductListSearchParams`)을 import 하면 **feature→page 상향 import** 라, 컨트롤은 `value`+`onChange` **props 순수 컨트롤**로 만들고 page 의 `ProductListFilters`(조합점)가 URL 을 배선. 검색 draft(push/replace) 로직은 `SearchInput` 로컬로 이동, `SEARCH_DEBOUNCE_MS`는 `features/search`로. **3단계에서 미룬 `HomeContent→ProductGrid` cross-import 해소**: `ProductGrid`를 `widgets/product-card`(ProductCard 옆)로 올려 홈·목록이 하향 import. `PrefetchCategoryLink`→`features/category-select`. 특이사항: `commerce.module.css`는 아직 공유(components/commerce 에 잔존), Pagination 과 함께 8단계에서 분해.
+
 #### 파일 매핑표 (이동하는 파일 + 그 자리에 남기는 파일)
 
 | 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이동 또는 유지하는 이유 |
@@ -319,7 +322,7 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `app/products/ProductListSection.tsx` | `_pages/products/ui/ProductListSection.tsx` | pages / products / ui | 상품 목록 페이지 서버 조합 |
 | `components/commerce/ProductList.tsx` | `_pages/products/ui/ProductList.tsx` | pages / products / ui | 상품 목록 전용 |
 | `components/commerce/ProductListResult.tsx` | `_pages/products/ui/ProductListResult.tsx` | pages / products / ui | 상품 목록 전용 |
-| `components/commerce/ProductGrid.tsx` | `_pages/products/ui/ProductGrid.tsx` | pages / products / ui | 상품 목록 레이아웃 |
+| `components/commerce/ProductGrid.tsx` | `widgets/product-card/ui/ProductGrid.tsx` | widgets / product-card / ui | ProductCard 그리드 — 홈·목록이 공유하니 widget 계층에서 하향 import(페이지 두면 page↔page cross-import) |
 | `components/commerce/ProductListFilters.tsx` | `_pages/products/ui/ProductListFilters.tsx` | pages / products / ui | 필터 조합점만 남김(컨트롤은 features로 분리) |
 | `hooks/productListSearchParams.ts` (nuqs 파서) | `_pages/products/model/productListParsers.ts` | pages / products / model | 페이지 URL 스키마 바인딩(페이지 전용) |
 | `hooks/productListSearchParams.ts` (resolve·buildDefault·clamp·`ProductListParams`) | `entities/product/model/productListQuery.ts` | entities / product / model | entity·feature 도 쓰는 목록 조회 조건 정의·정규화 로직이라 페이지에 두면 상향 import |
@@ -386,13 +389,13 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `entities/product` | `Product`·`Category`·`CategoryId`·`ProductSort` 타입(`model/product.ts`), `CATEGORY_VALUES`·`SORT_VALUES`·`*_LABELS`·`isCategoryValue`·`isSortValue`(`model/productListOptions.ts`), 목록 조회 조건 정의·정규화 로직 `PRODUCT_LIST_DEFAULTS`·`FIRST_PAGE`·`ProductListParams`·`normalizeProductListQuery`·`resolveProductListQuery`·`buildDefaultProductListQuery`·`clampPageToLowerBound`(`model/productListQuery.ts`), `productQueries`(`api/productQueries.ts`) | `getProducts` fetch 구현(`api/fetchProducts.ts` 내부, `productQueries` 만 사용), `buildProductListSearchParams`(로직 내부용) |
 | `entities/cart` | `useCartStore`(rehydrate 용)과 파생 셀렉터 훅 `useIsInCart`·`useCartCount`·`useCartHasHydrated`·`useToggleCart`(`model/store.ts`) | store 내부가 id `Set<string>` 이라는 구조(`shared/lib/createIdSetStore` 로 생성) |
 | `entities/wishlist` | `useWishlistStore`과 `useIsWishlisted`·`useWishlistCount`·`useWishlistHasHydrated`·`useToggleWishlist`(`model/store.ts`) | 〃 (cart 를 모름) |
-| `widgets/product-card` | `ProductCard`(`ui/ProductCard.tsx`) | 내부에서 조합하는 feature 버튼(`AddToCartButton`·`WishlistButton`) |
+| `widgets/product-card` | `ProductCard`·`ProductGrid`(`ui/`) | 내부에서 조합하는 feature 버튼(`AddToCartButton`·`WishlistButton`) |
 | `widgets/commerce` | `CommerceHeader`(`ui/CommerceHeader.tsx`) | 개수 파생 `CommerceHeaderCounts`(`ui`, 내부) |
 | `features/add-to-cart` | `AddToCartButton`(`ui/AddToCartButton.tsx`) | `useCartStore` 갱신 방식 |
 | `features/toggle-wishlist` | `WishlistButton`(`ui/WishlistButton.tsx`) | `useWishlistStore` 갱신 방식 |
-| `features/search` | `SearchInput`(`ui/SearchInput.tsx`) | debounce·URL 반영 방식 |
-| `features/category-select` | `CategorySelect`·prefetch 카테고리 링크(`ui/`) | `productQueries` prefetch·URL 반영 방식 |
-| `features/sort-select` | `SortSelect`(`ui/SortSelect.tsx`) | URL 반영 방식 |
+| `features/search` | `SearchInput`(`searchTerm`+push/replace 콜백 props)·`SEARCH_DEBOUNCE_MS` | 검색 draft(push/replace) 세션 로컬 관리 — URL 쓰기 자체는 page 가 콜백으로 배선 |
+| `features/category-select` | `CategorySelect`(`value`+`onChange` props)·`PrefetchCategoryLink`(`ui/`) | 링크의 `productQueries` prefetch·셀렉트의 값 집합(entity 옵션) — URL 반영은 page |
+| `features/sort-select` | `SortSelect`(`value`+`onChange` props) | 값 집합(entity 옵션) — URL 반영은 page |
 | `_pages/home` | 홈 진입 컴포넌트(`ui/HomeContent.tsx`) | `api/home.ts`(`homeQueries`)·서버 prefetch 배선 |
 | `_pages/products` | 상품 목록 진입 컴포넌트(`ui/ProductListSection.tsx`) | `ui` 하위 컴포넌트, `model`(nuqs 파서 `productListParsers`·URL 훅 `useProductListSearchParams`) — 조회 조건 정의·정규화 로직은 `entities/product` 소유 |
 | `shared/ui` | `dialog`·`select`·`pagination` 컴포넌트·헤드리스 훅(세그먼트 `index`) | 내부 상태/DOM 처리 |

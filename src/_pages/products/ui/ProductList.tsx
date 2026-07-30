@@ -6,7 +6,7 @@ import { productQueries } from "@/entities/product";
 import { useProductListSearchParams } from "../model/useProductListSearchParams";
 import { useDebouncedValue } from "@/shared/lib";
 import { ProductListResult } from "./ProductListResult";
-import { SEARCH_DEBOUNCE_MS } from "./ProductListFilters";
+import { SEARCH_DEBOUNCE_MS } from "@/features/search";
 import styles from "@/components/commerce/commerce.module.css";
 
 export function ProductList() {

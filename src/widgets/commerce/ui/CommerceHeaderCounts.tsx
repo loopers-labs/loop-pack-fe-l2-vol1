@@ -2,7 +2,7 @@
 
 import { useCartCount, useCartHasHydrated } from "@/entities/cart";
 import { useWishlistCount, useWishlistHasHydrated } from "@/entities/wishlist";
-import styles from "./commerce.module.css";
+import styles from "@/components/commerce/commerce.module.css";
 
 const PENDING_COUNT = "–";
 
