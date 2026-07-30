@@ -8,9 +8,11 @@ import {
   useBoundStore,
 } from '@/entities/client-state/model/store';
 import type { Product } from '@/entities/product';
+import { ProductCard } from '@/entities/product';
 import { CartCount } from '@/features/cart/CartCount';
-import { ProductCard } from '@/features/products/ProductCard';
+import { CartToggleButton } from '@/features/cart/CartToggleButton';
 import { WishlistCount } from '@/features/wishlist/WishlistCount';
+import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
 
 const PRODUCT: Product = {
   id: 'p9',
@@ -37,6 +39,12 @@ beforeAll(async () => {
  */
 function renderBothScreens() {
   const onCartCountRender = vi.fn();
+  const cardActions = (
+    <>
+      <WishlistToggleButton productId={PRODUCT.id} productName={PRODUCT.name} />
+      <CartToggleButton productId={PRODUCT.id} productName={PRODUCT.name} />
+    </>
+  );
 
   render(
     <>
@@ -45,10 +53,18 @@ function renderBothScreens() {
       </Profiler>
       <WishlistCount />
       <section aria-label="홈">
-        <ProductCard product={PRODUCT} headingLevel="h2" />
+        <ProductCard
+          product={PRODUCT}
+          headingLevel="h2"
+          actions={cardActions}
+        />
       </section>
       <section aria-label="목록">
-        <ProductCard product={PRODUCT} headingLevel="h3" />
+        <ProductCard
+          product={PRODUCT}
+          headingLevel="h3"
+          actions={cardActions}
+        />
       </section>
     </>,
   );

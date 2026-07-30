@@ -12,3 +12,4 @@ export type {
   ProductListResponse,
 } from './api/types';
 export { productQueries } from './api/queries';
+export { ProductCard } from './ui/ProductCard';

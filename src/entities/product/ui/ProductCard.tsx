@@ -1,15 +1,16 @@
 import Image from 'next/image';
+import type { ReactNode } from 'react';
 
-import type { Product } from '@/entities/product';
-import { CartToggleButton } from '@/features/cart/CartToggleButton';
-import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
+import type { Product } from '../model/types';
 
 export function ProductCard({
   product,
   headingLevel: Heading,
+  actions,
 }: {
   product: Product;
   headingLevel: 'h2' | 'h3';
+  actions?: ReactNode;
 }) {
   return (
     <article className="week05-product">
@@ -30,13 +31,9 @@ export function ProductCard({
           </span>
         )}
       </div>
-      <div className="week05-product-actions">
-        <WishlistToggleButton
-          productId={product.id}
-          productName={product.name}
-        />
-        <CartToggleButton productId={product.id} productName={product.name} />
-      </div>
+      {actions !== undefined && (
+        <div className="week05-product-actions">{actions}</div>
+      )}
     </article>
   );
 }

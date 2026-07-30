@@ -2,14 +2,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { ProductCard } from './ProductCard';
-
-import { productQueries } from '@/entities/product';
+import { ProductCard, productQueries } from '@/entities/product';
+import { CartToggleButton } from '@/features/cart/CartToggleButton';
 import {
   toProductListQuery,
   usePageClamp,
   useProductListUrlState,
 } from '@/features/product';
+import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
 
 const countTotalPages = (totalCount: number, pageSize: number) =>
   Math.max(1, Math.ceil(totalCount / pageSize));
@@ -84,6 +84,18 @@ export function ProductList() {
                 key={product.id}
                 product={product}
                 headingLevel="h2"
+                actions={
+                  <>
+                    <WishlistToggleButton
+                      productId={product.id}
+                      productName={product.name}
+                    />
+                    <CartToggleButton
+                      productId={product.id}
+                      productName={product.name}
+                    />
+                  </>
+                }
               />
             ))}
           </div>

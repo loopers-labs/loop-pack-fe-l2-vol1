@@ -3,9 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
-import { ProductCard } from './ProductCard';
-
-import { productQueries } from '@/entities/product';
+import { ProductCard, productQueries } from '@/entities/product';
+import { CartToggleButton } from '@/features/cart/CartToggleButton';
+import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
 
 export function HomeContent() {
   const { data, isPending, isError, error, isFetching, refetch } = useQuery(
@@ -70,6 +70,18 @@ export function HomeContent() {
                 key={product.id}
                 product={product}
                 headingLevel="h3"
+                actions={
+                  <>
+                    <WishlistToggleButton
+                      productId={product.id}
+                      productName={product.name}
+                    />
+                    <CartToggleButton
+                      productId={product.id}
+                      productName={product.name}
+                    />
+                  </>
+                }
               />
             ))}
           </div>
@@ -87,6 +99,18 @@ export function HomeContent() {
                 key={product.id}
                 product={product}
                 headingLevel="h3"
+                actions={
+                  <>
+                    <WishlistToggleButton
+                      productId={product.id}
+                      productName={product.name}
+                    />
+                    <CartToggleButton
+                      productId={product.id}
+                      productName={product.name}
+                    />
+                  </>
+                }
               />
             ))}
           </div>
