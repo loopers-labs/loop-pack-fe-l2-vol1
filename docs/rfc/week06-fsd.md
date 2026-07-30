@@ -368,6 +368,7 @@ Public API는 사용할 예정이다.
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/app/providers.tsx`                               | `src/_app/providers/Providers.tsx`                                                                 | `_app/providers`             | 앱 전체 Provider 조합이다.                                                                                                                   |
 | `src/app/get-query-client.ts`                         | `src/_app/config/getQueryClient.ts`                                                                | `_app/config`                | QueryClient 생성 정책은 앱 설정이다.                                                                                                         |
+| `src/app/(commerce)/error.tsx`                        | 유지                                                                                               | Next route segment           | 예상하지 못한 렌더링 오류를 commerce route segment 안에서 복구한다.                                                                          |
 | `src/components/ui/Skeleton.tsx`                      | `src/shared/ui/Skeleton.tsx`                                                                       | `shared/ui`                  | 비즈니스 의미가 없는 UI primitive다.                                                                                                         |
 | `src/components/ui/select/useSelect.ts`               | `src/shared/ui/select/useSelect.ts`                                                                | `shared/ui`                  | 특정 도메인에 묶이지 않는 headless UI hook이다.                                                                                              |
 | `src/components/ui/dialog/*`                          | `src/shared/ui/dialog/*`                                                                           | `shared/ui`                  | 특정 도메인에 묶이지 않는 compound UI다.                                                                                                     |
@@ -431,7 +432,7 @@ Public API는 사용할 예정이다.
 | 홈 조회 실패                       | `_pages/home` error boundary                                     | 예                          | 홈 데이터를 불러오지 못했다는 fallback        | `QueryErrorResetBoundary` + boundary `reset` | 홈 aggregate 데이터가 없으면 홈 본문 전체를 렌더하기 어렵다.                                 |
 | 상품 목록 조회 실패                | `_pages/products` 결과 영역                                      | 아니오                      | 목록 영역 안의 에러와 다시 시도 버튼          | query `refetch`                              | 필터와 헤더는 유지하고 결과 영역만 복구 가능하게 한다.                                       |
 | 잘못된 검색 조건 4xx               | `_pages/products/model` URL parser, API 응답 방어 처리           | 아니오                      | 내부 기본값 조회 또는 결과 영역 인라인 메시지 | 조건 변경                                    | 사용자가 고칠 수 있는 입력 문제라 전체 라우트 경계로 올리지 않는다.                          |
-| 예상하지 못한 렌더링 오류          | route segment `error.tsx`                                        | 예                          | 라우트 fallback                               | `reset`                                      | 코드 버그나 예측 못한 오류는 라우트 경계에서 복구한다.                                       |
+| 예상하지 못한 렌더링 오류          | `src/app/(commerce)/error.tsx`                                   | 예                          | commerce route fallback                       | `reset`                                      | 코드 버그나 예측 못한 오류는 라우트 경계에서 복구한다.                                       |
 | 장바구니/위시리스트 로컬 행위 오류 | `features/add-to-cart`, `features/toggle-wishlist` action 호출부 | 아니오                      | 현재 해당 없음                                | 향후 toast 또는 inline message               | 현재 로컬 map toggle은 실패 가능성이 낮다. 서버 동기화가 붙으면 mutation error로 재설계한다. |
 
 Error Boundary는 이벤트 핸들러와 비동기 콜백 오류를 자동으로 잡지 못한다.
@@ -440,6 +441,12 @@ Error Boundary는 이벤트 핸들러와 비동기 콜백 오류를 자동으로
 route `loading.tsx`/Suspense는 서버 prefetch 또는 page shell 로딩 범위를 맡고,
 Query `isPending`은 클라이언트 refetch나 결과 영역 로딩 범위를 맡는다.
 하나로 합치지 않는 이유는 라우트 진입 로딩과 목록 조건 변경 로딩의 사용자 영향 범위가 다르기 때문이다.
+
+검증:
+
+- 홈 조회 실패는 `HomeErrorBoundary` 테스트에서 fallback과 `QueryErrorResetBoundary` 기반 재시도를 확인한다.
+- 상품 목록 조회 실패는 `ProductListContent` 결과 영역에서 inline error와 query `refetch` 재시도를 확인한다.
+- 예상하지 못한 렌더링 오류는 `src/app/(commerce)/error.tsx` 테스트에서 route fallback과 `reset` 호출을 확인한다.
 
 ## 삭제 시나리오 자가 검증
 
