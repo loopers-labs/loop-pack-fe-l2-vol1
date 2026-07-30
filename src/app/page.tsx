@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from './getQueryClient';
-import { homeQueryOptions } from '@/queries/homeQueries';
-import { HomeClient } from './HomeClient';
+import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
+import { HomeClient } from '@/_pages/home/ui/HomeClient';
 
 export default async function HomePage() {
   const queryClient = getQueryClient();

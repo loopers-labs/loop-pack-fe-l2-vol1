@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { homeQueryOptions } from '@/queries/homeQueries';
+import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/cartStore';

@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '../../getQueryClient';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
-import { ProductDetailContent } from './_components/ProductDetailContent';
+import { ProductDetailContent } from '@/_pages/product-detail/ui/ProductDetailContent';
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;

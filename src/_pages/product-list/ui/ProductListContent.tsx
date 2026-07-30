@@ -10,7 +10,7 @@ import {
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/cartStore';
-import { useProductSearchParams } from '../_hooks/useProductSearchParams';
+import { useProductSearchParams } from '../hooks/useProductSearchParams';
 import { formatWon } from '@/shared/lib/format';
 import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/entities/product/model/types';
 

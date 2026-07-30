@@ -4,7 +4,7 @@ import { getQueryClient } from '../getQueryClient';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { CATEGORY_OPTIONS, PRODUCT_SORTS } from '@/entities/product/model/types';
 import type { CategoryOption, ProductSort } from '@/entities/product/model/types';
-import { ProductListContent } from './_components/ProductListContent';
+import { ProductListContent } from '@/_pages/product-list/ui/ProductListContent';
 
 interface ProductListPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
