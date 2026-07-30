@@ -8,7 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommerceHeader } from "@/widgets/header";
 import { ProductListPageClient } from "./ProductListPage";
 import { getProducts } from "../api/productApi";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
 
 vi.mock("../api/productApi", async (importOriginal) => ({
@@ -43,8 +44,11 @@ function renderProductListWithHeader() {
 
 describe("ProductListCommerceState", () => {
   beforeEach(() => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: {},
+      hasHydrated: true,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: {},
       hasHydrated: true,
     });

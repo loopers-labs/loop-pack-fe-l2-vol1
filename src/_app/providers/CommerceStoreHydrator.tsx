@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 
 export function CommerceStoreHydrator() {
   useEffect(() => {
-    void useCommerceStore.persist.rehydrate();
+    void useCartStore.persist.rehydrate();
+    void useWishlistStore.persist.rehydrate();
   }, []);
 
   return null;

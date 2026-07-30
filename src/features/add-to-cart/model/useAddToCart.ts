@@ -1,10 +1,14 @@
-import { selectIsProductInCart, selectToggleCart } from "@/entities/cart";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import {
+  selectCartHasHydrated,
+  selectIsProductInCart,
+  selectToggleCart,
+  useCartStore,
+} from "@/entities/cart";
 
 export function useAddToCart(productId: string) {
-  const hasHydrated = useCommerceStore((state) => state.hasHydrated);
-  const isInCart = useCommerceStore(selectIsProductInCart(productId));
-  const toggleCart = useCommerceStore(selectToggleCart);
+  const hasHydrated = useCartStore(selectCartHasHydrated);
+  const isInCart = useCartStore(selectIsProductInCart(productId));
+  const toggleCart = useCartStore(selectToggleCart);
 
   return {
     isPressed: hasHydrated ? isInCart : false,

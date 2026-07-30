@@ -1,9 +1,11 @@
-import type { WishlistSlice } from "./wishlistSlice";
+import type { WishlistStore } from "./wishlistStore";
 
-export const selectWishlistCount = (state: WishlistSlice) =>
+export const selectWishlistCount = (state: WishlistStore) =>
   Object.keys(state.wishlistProductIdMap).length;
 
-export const selectIsProductInWishlist = (productId: string) => (state: WishlistSlice) =>
+export const selectIsProductInWishlist = (productId: string) => (state: WishlistStore) =>
   state.wishlistProductIdMap[productId] === true;
 
-export const selectToggleWishlist = (state: WishlistSlice) => state.toggleWishlist;
+export const selectToggleWishlist = (state: WishlistStore) => state.toggleWishlist;
+
+export const selectWishlistHasHydrated = (state: WishlistStore) => state.hasHydrated;

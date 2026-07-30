@@ -8,7 +8,8 @@ import { HomeErrorBoundary } from "./HomeErrorBoundary";
 import { HomeLoading } from "./HomeLoading";
 import { HomePageClient } from "./HomePageClient";
 import { getHome } from "../api/homeApi";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
 
 vi.mock("../api/homeApi", () => ({
@@ -43,8 +44,10 @@ function renderHomePageClient() {
 
 describe("HomePageClient", () => {
   beforeEach(() => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: {},
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: {},
     });
     mockedGetHome.mockReset();

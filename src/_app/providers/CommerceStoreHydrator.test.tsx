@@ -2,11 +2,11 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CART_STORE_STORAGE_KEY, useCartStore } from "@/entities/cart";
 import type { ProductCardItem } from "@/entities/product";
+import { useWishlistStore, WISHLIST_STORE_STORAGE_KEY } from "@/entities/wishlist";
 import { CommerceHeader } from "@/widgets/header";
 import { CommerceProductCard } from "@/widgets/product-card";
-import { COMMERCE_STORE_STORAGE_KEY } from "@/_app/model/commercePersistence";
-import { useCommerceStore } from "@/_app/model/commerceStore";
 import { CommerceStoreHydrator } from "@/_app/providers/CommerceStoreHydrator";
 
 vi.mock("next/image", () => ({
@@ -25,8 +25,11 @@ const product: ProductCardItem = {
 describe("commerce hydration", () => {
   beforeEach(() => {
     localStorage.clear();
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: {},
+      hasHydrated: false,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: {},
       hasHydrated: false,
     });
@@ -38,8 +41,11 @@ describe("commerce hydration", () => {
   });
 
   it("store 복원 전에는 헤더 개수를 확정값처럼 렌더링하지 않는다", () => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: { p1: true },
+      hasHydrated: false,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: { p2: true },
       hasHydrated: false,
     });
@@ -51,8 +57,11 @@ describe("commerce hydration", () => {
   });
 
   it("store 복원 전후에 헤더 메뉴 폭이 바뀌지 않도록 개수 영역 폭을 예약한다", () => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: { p1: true },
+      hasHydrated: false,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: { p2: true },
       hasHydrated: false,
     });
@@ -64,8 +73,11 @@ describe("commerce hydration", () => {
   });
 
   it("store 복원 후에는 헤더 개수를 저장값 기준으로 렌더링한다", () => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: { p1: true },
+      hasHydrated: true,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: { p2: true },
       hasHydrated: true,
     });
@@ -77,8 +89,11 @@ describe("commerce hydration", () => {
   });
 
   it("store 복원 전에는 상품 버튼 상태를 서버 기준 기본값으로 렌더링한다", () => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: { p1: true },
+      hasHydrated: false,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: { p1: true },
       hasHydrated: false,
     });
@@ -102,8 +117,11 @@ describe("commerce hydration", () => {
   });
 
   it("store 복원 전에는 상품 액션 버튼을 비활성화한다", () => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: { p1: true },
+      hasHydrated: false,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: { p1: true },
       hasHydrated: false,
     });
@@ -121,8 +139,11 @@ describe("commerce hydration", () => {
   });
 
   it("store 복원 후에는 상품 버튼 상태를 저장값 기준으로 렌더링한다", () => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: { p1: true },
+      hasHydrated: true,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: { p1: true },
       hasHydrated: true,
     });
@@ -145,23 +166,36 @@ describe("commerce hydration", () => {
     );
   });
 
-  it("저장값 파싱에 실패해도 복원 완료 상태로 전환한다", async () => {
-    localStorage.setItem(COMMERCE_STORE_STORAGE_KEY, "not-json");
+  it("장바구니 저장값 파싱에 실패해도 복원 완료 상태로 전환한다", async () => {
+    localStorage.setItem(CART_STORE_STORAGE_KEY, "not-json");
 
-    await useCommerceStore.persist.rehydrate();
+    await useCartStore.persist.rehydrate();
 
-    expect(useCommerceStore.getState().hasHydrated).toBe(true);
+    expect(useCartStore.getState().hasHydrated).toBe(true);
+  });
+
+  it("위시리스트 저장값 파싱에 실패해도 복원 완료 상태로 전환한다", async () => {
+    localStorage.setItem(WISHLIST_STORE_STORAGE_KEY, "not-json");
+
+    await useWishlistStore.persist.rehydrate();
+
+    expect(useWishlistStore.getState().hasHydrated).toBe(true);
   });
 
   it("persist 자동 복원을 건너뛰도록 설정한다", () => {
-    expect(useCommerceStore.persist.getOptions().skipHydration).toBe(true);
+    expect(useCartStore.persist.getOptions().skipHydration).toBe(true);
+    expect(useWishlistStore.persist.getOptions().skipHydration).toBe(true);
   });
 
-  it("hydrator가 마운트되면 store 복원을 명시적으로 실행한다", () => {
-    const rehydrateSpy = vi.spyOn(useCommerceStore.persist, "rehydrate").mockResolvedValue();
+  it("hydrator가 마운트되면 장바구니와 위시리스트 store 복원을 명시적으로 실행한다", () => {
+    const cartRehydrateSpy = vi.spyOn(useCartStore.persist, "rehydrate").mockResolvedValue();
+    const wishlistRehydrateSpy = vi
+      .spyOn(useWishlistStore.persist, "rehydrate")
+      .mockResolvedValue();
 
     render(<CommerceStoreHydrator />);
 
-    expect(rehydrateSpy).toHaveBeenCalledOnce();
+    expect(cartRehydrateSpy).toHaveBeenCalledOnce();
+    expect(wishlistRehydrateSpy).toHaveBeenCalledOnce();
   });
 });

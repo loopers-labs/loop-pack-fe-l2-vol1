@@ -9,7 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListPageClient } from "./ProductListPage";
 import { getProducts } from "../api/productApi";
 import type { ProductListResponse } from "../api/productApi";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
 
 vi.mock("../api/productApi", async (importOriginal) => ({
@@ -59,8 +60,10 @@ function renderProductListPageClient({
 describe("ProductListPageClient", () => {
   beforeEach(() => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: {},
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: {},
     });
     mockedGetProducts.mockReset();

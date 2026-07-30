@@ -1,7 +1,9 @@
-export { createWishlistSlice } from "./model/wishlistSlice";
 export {
   selectIsProductInWishlist,
   selectToggleWishlist,
+  selectWishlistHasHydrated,
   selectWishlistCount,
 } from "./model/selectors";
-export type { WishlistSlice } from "./model/wishlistSlice";
+export { useWishlistStore } from "./model/wishlistStore";
+export { WISHLIST_STORE_STORAGE_KEY, WISHLIST_STORE_VERSION } from "./model/wishlistPersistence";
+export type { WishlistStore } from "./model/wishlistStore";

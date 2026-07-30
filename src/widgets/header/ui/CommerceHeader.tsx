@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { selectCartCount } from "@/entities/cart";
-import { selectWishlistCount } from "@/entities/wishlist";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import { selectCartCount, selectCartHasHydrated, useCartStore } from "@/entities/cart";
+import {
+  selectWishlistCount,
+  selectWishlistHasHydrated,
+  useWishlistStore,
+} from "@/entities/wishlist";
 
 export function CommerceHeader() {
-  const hasHydrated = useCommerceStore((state) => state.hasHydrated);
-  const wishlistCount = useCommerceStore(selectWishlistCount);
-  const cartCount = useCommerceStore(selectCartCount);
-  const visibleWishlistCount = hasHydrated ? String(wishlistCount) : "-";
-  const visibleCartCount = hasHydrated ? String(cartCount) : "-";
+  const cartHasHydrated = useCartStore(selectCartHasHydrated);
+  const wishlistHasHydrated = useWishlistStore(selectWishlistHasHydrated);
+  const wishlistCount = useWishlistStore(selectWishlistCount);
+  const cartCount = useCartStore(selectCartCount);
+  const visibleWishlistCount = wishlistHasHydrated ? String(wishlistCount) : "-";
+  const visibleCartCount = cartHasHydrated ? String(cartCount) : "-";
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-gds-gray-200 bg-gds-gray-100/95 pb-5 max-[480px]:items-start">

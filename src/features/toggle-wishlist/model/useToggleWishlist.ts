@@ -1,10 +1,14 @@
-import { selectIsProductInWishlist, selectToggleWishlist } from "@/entities/wishlist";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import {
+  selectIsProductInWishlist,
+  selectToggleWishlist,
+  selectWishlistHasHydrated,
+  useWishlistStore,
+} from "@/entities/wishlist";
 
 export function useToggleWishlist(productId: string) {
-  const hasHydrated = useCommerceStore((state) => state.hasHydrated);
-  const isInWishlist = useCommerceStore(selectIsProductInWishlist(productId));
-  const toggleWishlist = useCommerceStore(selectToggleWishlist);
+  const hasHydrated = useWishlistStore(selectWishlistHasHydrated);
+  const isInWishlist = useWishlistStore(selectIsProductInWishlist(productId));
+  const toggleWishlist = useWishlistStore(selectToggleWishlist);
 
   return {
     isPressed: hasHydrated ? isInWishlist : false,

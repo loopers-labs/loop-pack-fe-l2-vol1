@@ -7,7 +7,8 @@ import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListPageClient } from "@/_pages/products";
 import { getProducts } from "@/_pages/products/api/productApi";
-import { useCommerceStore } from "@/_app/model/commerceStore";
+import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
 import { ProductSection } from "@/widgets/product-card";
 
@@ -48,8 +49,11 @@ function renderHomeSectionWithProductList() {
 
 describe("CommerceStoreIntegration", () => {
   beforeEach(() => {
-    useCommerceStore.setState({
+    useCartStore.setState({
       cartProductIdMap: {},
+      hasHydrated: true,
+    });
+    useWishlistStore.setState({
       wishlistProductIdMap: {},
       hasHydrated: true,
     });
