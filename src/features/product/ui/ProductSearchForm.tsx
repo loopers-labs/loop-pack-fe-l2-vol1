@@ -2,7 +2,7 @@
 
 import type { SubmitEvent } from 'react';
 
-import { useProductListUrlState } from './search-params';
+import { useProductListUrlState } from '../model/search-params';
 
 // 입력 중 검색어는 native input이 소유하고, 제출한 값만 URL로 확정한다.
 // 확정 q를 key로 써서 뒤로·앞으로 가기로 q가 바뀌면 폼이 다시 만들어져 입력값이 복원된다.

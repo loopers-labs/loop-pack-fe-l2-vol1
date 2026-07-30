@@ -5,8 +5,8 @@ import {
   CATEGORY_FILTERS,
   PRODUCT_SORT_LABEL,
   type CategoryFilter,
-} from './constants';
-import { useProductListUrlState } from './search-params';
+} from '../model/constants';
+import { useProductListUrlState } from '../model/search-params';
 
 import { PRODUCT_SORTS, type ProductSort } from '@/entities/product';
 

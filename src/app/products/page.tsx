@@ -5,13 +5,13 @@ import { Suspense } from 'react';
 
 import { productQueries } from '@/entities/product';
 import { CartCount } from '@/features/cart/CartCount';
-import { ProductList } from '@/features/products/ProductList';
-import { ProductListFilters } from '@/features/products/ProductListFilters';
-import { ProductSearchForm } from '@/features/products/ProductSearchForm';
 import {
-  loadProductListConditions,
+  ProductListFilters,
+  ProductSearchForm,
   toProductListQuery,
-} from '@/features/products/product-list-params';
+} from '@/features/product';
+import { loadProductListConditions } from '@/features/product/index.server';
+import { ProductList } from '@/features/products/ProductList';
 import { WishlistCount } from '@/features/wishlist/WishlistCount';
 import { getQueryClient } from '@/shared/get-query-client';
 

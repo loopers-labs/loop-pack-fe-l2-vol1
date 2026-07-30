@@ -3,10 +3,13 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { ProductCard } from './ProductCard';
-import { toProductListQuery } from './product-list-params';
-import { usePageClamp, useProductListUrlState } from './search-params';
 
 import { productQueries } from '@/entities/product';
+import {
+  toProductListQuery,
+  usePageClamp,
+  useProductListUrlState,
+} from '@/features/product';
 
 const countTotalPages = (totalCount: number, pageSize: number) =>
   Math.max(1, Math.ceil(totalCount / pageSize));

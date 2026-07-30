@@ -1,3 +1,5 @@
+'use client';
+
 import { useQueryStates } from 'nuqs';
 import { useEffect, useEffectEvent } from 'react';
 
