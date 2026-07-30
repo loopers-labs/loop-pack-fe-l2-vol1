@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog } from '@/shared/ui/dialog';
 import { useCartStore } from '@/store/cartStore';
 import { productDetailQueryOptions } from '@/queries/productQueries';
-import { formatWon } from '@/utils/format';
+import { formatWon } from '@/shared/lib/format';
 
 export function CartDialog() {
   const lastAddedId = useCartStore((s) => s.lastAddedId);

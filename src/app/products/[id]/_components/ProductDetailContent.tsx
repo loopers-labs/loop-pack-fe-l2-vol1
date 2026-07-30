@@ -6,11 +6,11 @@ import { useQuery } from '@tanstack/react-query';
 import { productDetailQueryOptions } from '@/queries/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
-import { BackIcon } from '@/components/icons/BackIcon';
-import { StarIcon } from '@/components/icons/StarIcon';
-import { formatWon, calcDiscount } from '@/utils/format';
+import { BackIcon } from '@/shared/ui/icons/BackIcon';
+import { StarIcon } from '@/shared/ui/icons/StarIcon';
+import { formatWon, calcDiscount } from '@/shared/lib/format';
 import { SizeSelect } from './SizeSelect';
-import type { SelectOption } from '@/components/ui/select';
+import type { SelectOption } from '@/shared/ui/select';
 import type { SizeValue } from '@/types/commerce';
 
 const CATEGORY_NAME: Record<string, string> = {

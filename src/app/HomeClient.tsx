@@ -7,7 +7,7 @@ import { homeQueryOptions } from '@/queries/homeQueries';
 import { productListQueryOptions } from '@/queries/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
-import { formatWon, calcDiscount } from '@/utils/format';
+import { formatWon, calcDiscount } from '@/shared/lib/format';
 import type { Product } from '@/types/commerce';
 
 function ProductCard({ product }: { product: Product }) {

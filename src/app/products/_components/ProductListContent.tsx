@@ -11,7 +11,7 @@ import { productListQueryOptions } from '@/queries/productQueries';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { useProductSearchParams } from '../_hooks/useProductSearchParams';
-import { formatWon } from '@/utils/format';
+import { formatWon } from '@/shared/lib/format';
 import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/types/commerce';
 
 function ProductActions({ product }: { product: Product }) {
