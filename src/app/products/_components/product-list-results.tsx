@@ -1,10 +1,9 @@
 "use client";
 
 import { Placeholder } from "@/app/_components/placeholder";
-import { CartButton } from "@/features/toggle-cart/ui/cart-button";
-import { WishlistButton } from "@/features/toggle-wishlist/ui/wishlist-button";
 import { ProductCard } from "@/entities/product";
 import type { ProductListResponse } from "@/services/commerce";
+import { ProductCardActions } from "@/widgets/product-card-actions/ui/product-card-actions";
 
 type ProductListResultsProps = {
   result: ProductListResponse;
@@ -41,12 +40,7 @@ export function ProductListResults({ result, page, onPageChange }: ProductListRe
                 key={product.id}
                 product={product}
                 titleAs="h2"
-                actions={
-                  <>
-                    <WishlistButton productId={product.id} label={product.name} />
-                    <CartButton productId={product.id} label={product.name} />
-                  </>
-                }
+                actions={<ProductCardActions productId={product.id} label={product.name} />}
               />
             ))}
           </div>

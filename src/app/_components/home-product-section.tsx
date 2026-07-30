@@ -1,7 +1,6 @@
 import { Placeholder } from "@/app/_components/placeholder";
 import { ProductCard, type Product } from "@/entities/product";
-import { CartButton } from "@/features/toggle-cart/ui/cart-button";
-import { WishlistButton } from "@/features/toggle-wishlist/ui/wishlist-button";
+import { ProductCardActions } from "@/widgets/product-card-actions/ui/product-card-actions";
 
 type HomeProductSectionProps = {
   title: string;
@@ -20,12 +19,7 @@ export function HomeProductSection({ title, products }: HomeProductSectionProps)
             <ProductCard
               key={product.id}
               product={product}
-              actions={
-                <>
-                  <WishlistButton productId={product.id} label={product.name} />
-                  <CartButton productId={product.id} label={product.name} />
-                </>
-              }
+              actions={<ProductCardActions productId={product.id} label={product.name} />}
             />
           ))}
         </div>
