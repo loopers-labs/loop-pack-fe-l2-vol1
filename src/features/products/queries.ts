@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 import { getHome, getProducts } from './api';
 
-import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
+import type { ProductListQuery, ProductListResponse } from '@/entities/product';
 
 type ProductListConditions = Required<ProductListQuery>;
 

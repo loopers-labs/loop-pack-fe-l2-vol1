@@ -1,9 +1,9 @@
-import { apiClient } from '@/shared/api-client';
 import type {
   HomeResponse,
   ProductListQuery,
   ProductListResponse,
-} from '@/types/commerce';
+} from '@/entities/product';
+import { apiClient } from '@/shared/api-client';
 
 export function getHome() {
   return apiClient<HomeResponse>('/api/home');

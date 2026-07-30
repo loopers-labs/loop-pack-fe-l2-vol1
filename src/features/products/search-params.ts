@@ -4,7 +4,7 @@ import { useEffect, useEffectEvent } from 'react';
 import type { CategoryFilter } from './constants';
 import { conditionParsers, normalizeSearchQuery } from './product-list-params';
 
-import type { ProductSort } from '@/types/commerce';
+import type { ProductSort } from '@/entities/product';
 
 /**
  * 상품 목록 조건.

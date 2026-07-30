@@ -1,5 +1,5 @@
-import { CATEGORY_IDS } from '@/types/commerce';
-import type { ProductSort } from '@/types/commerce';
+import { CATEGORY_IDS } from '@/entities/product';
+import type { ProductSort } from '@/entities/product';
 
 export const PRODUCT_PAGE_SIZE = 12;
 

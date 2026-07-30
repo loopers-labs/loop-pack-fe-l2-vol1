@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { keepPreviousPage, productQueries } from './queries';
 
-import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
+import type { ProductListQuery, ProductListResponse } from '@/entities/product';
 
 const CONDITIONS = {
   q: '의자',

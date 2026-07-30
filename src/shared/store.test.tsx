@@ -3,11 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { Profiler } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import type { Product } from '@/entities/product';
 import { CartCount } from '@/features/cart/CartCount';
 import { ProductCard } from '@/features/products/ProductCard';
 import { WishlistCount } from '@/features/wishlist/WishlistCount';
 import { STORAGE_KEY, useBoundStore } from '@/shared/store';
-import type { Product } from '@/types/commerce';
 
 const PRODUCT: Product = {
   id: 'p9',

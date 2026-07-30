@@ -22,16 +22,6 @@ export const PRODUCT_SORTS = [
 
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
-export type MockApiScenario = 'empty' | 'error';
-
-export type ProductListQuery = {
-  q?: string;
-  category?: CategoryId | 'all';
-  sort?: ProductSort;
-  page?: number;
-  pageSize?: number;
-};
-
 export type Product = {
   id: string;
   brand: string;
@@ -45,23 +35,4 @@ export type Product = {
   rating: number;
   reviewCount: number;
   createdAt: string;
-};
-
-export type HomeResponse = {
-  banner: { title: string; description: string; image: string };
-  categories: Category[];
-  popularProducts: Product[];
-  newProducts: Product[];
-};
-
-export type ProductListResponse = {
-  products: Product[];
-  categories: Category[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-};
-
-export type ApiErrorResponse = {
-  message: string;
 };

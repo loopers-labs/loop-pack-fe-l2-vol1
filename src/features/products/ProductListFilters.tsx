@@ -8,7 +8,7 @@ import {
 } from './constants';
 import { useProductListUrlState } from './search-params';
 
-import { PRODUCT_SORTS, type ProductSort } from '@/types/commerce';
+import { PRODUCT_SORTS, type ProductSort } from '@/entities/product';
 
 export function ProductListFilters() {
   const {
