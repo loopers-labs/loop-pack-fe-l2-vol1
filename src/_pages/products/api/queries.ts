@@ -1,8 +1,8 @@
-import { getProducts, type ProductListParams } from "@/services/commerce";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { getProducts, type ProductListParams } from "./get-products";
 
-export const commerceQueries = {
-  products: (params: ProductListParams) => {
+export const productListQueries = {
+  list: (params: ProductListParams) => {
     const normalized = { ...params, q: params.q.trim() };
     return queryOptions({
       queryKey: ["products", normalized] as const,

@@ -1,4 +1,4 @@
-import type { CategoryId } from "@/entities/product";
+import type { CategoryId, ProductSort } from "@/entities/product";
 import {
   createParser,
   parseAsNumberLiteral,
@@ -34,9 +34,12 @@ const categoryFilterValues = categoryFilterOptions.map((option) => option.value)
 export const productSearchParsers = {
   q: parseAsString.withDefault(""),
   category: parseAsStringLiteral(categoryFilterValues).withDefault("all"),
-  sort: parseAsStringLiteral(["latest", "popular", "price-asc", "price-desc"] as const).withDefault(
+  sort: parseAsStringLiteral([
     "latest",
-  ),
+    "popular",
+    "price-asc",
+    "price-desc",
+  ] as const satisfies readonly ProductSort[]).withDefault("latest"),
   page: parseAsPositiveInteger.withDefault(1),
   pageSize: parseAsNumberLiteral(pageSizeValues).withDefault(12),
 };

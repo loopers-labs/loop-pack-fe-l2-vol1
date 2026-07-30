@@ -1,11 +1,11 @@
 "use client";
 
-import { ProductSearchInput } from "@/app/products/_components/product-search-input";
 import {
   categoryFilterOptions,
   pageSizeValues,
   type ProductSearchState,
-} from "@/app/products/_lib/search-params";
+} from "../lib/search-params";
+import { ProductSearchInput } from "./product-search-input";
 
 type ProductFiltersProps = {
   search: ProductSearchState;
