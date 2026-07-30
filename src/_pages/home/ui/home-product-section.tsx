@@ -1,5 +1,5 @@
-import { Placeholder } from "@/app/_components/placeholder";
 import { ProductCard, type Product } from "@/entities/product";
+import { Placeholder } from "@/shared/ui/placeholder";
 import { ProductCardActions } from "@/widgets/product-card-actions/ui/product-card-actions";
 
 type HomeProductSectionProps = {

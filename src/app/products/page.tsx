@@ -1,6 +1,6 @@
 "use client";
 
-import { Placeholder } from "@/app/_components/placeholder";
+import { Placeholder } from "@/shared/ui/placeholder";
 import { ProductGridSkeleton } from "@/entities/product";
 import { ProductFilters } from "@/app/products/_components/product-filters";
 import { ProductListResults } from "@/app/products/_components/product-list-results";

@@ -1,14 +1,7 @@
 import type { Category, CategoryId, Product, ProductSort } from "@/entities/product";
 import { fetchCommerceApi } from "@/shared/api/commerce-client";
 
-// Phase 5에서 _pages/home/api·_pages/products/api로 분리 예정인 페이지 API 계약
-export type HomeResponse = {
-  banner: { title: string; description: string; image: string };
-  categories: Category[];
-  popularProducts: Product[];
-  newProducts: Product[];
-};
-
+// Phase 5에서 _pages/products/api로 분리 예정인 페이지 API 계약
 export type ProductListQuery = {
   q?: string;
   category?: CategoryId | "all";
@@ -26,10 +19,6 @@ export type ProductListResponse = {
 };
 
 export type ProductListParams = Required<ProductListQuery>;
-
-export function getHome(): Promise<HomeResponse> {
-  return fetchCommerceApi<HomeResponse>("/api/home");
-}
 
 export function getProducts(params: ProductListParams): Promise<ProductListResponse> {
   const searchParams = new URLSearchParams({

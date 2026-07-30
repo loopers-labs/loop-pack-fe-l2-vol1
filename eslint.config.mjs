@@ -25,7 +25,11 @@ const fsdHarness = [
               // 상위 레이어 금지 + 자기 레이어 포함 = 같은 레이어 슬라이스 간 직접 import 차단
               // (같은 슬라이스 내부는 상대경로 규칙이라 alias 전체 금지로 구현 가능)
               // shared는 비즈니스 슬라이스가 없으므로 자기 레이어 제외
-              group: FSD_LAYERS.slice(layer === "shared" ? 1 : rank).map((l) => `@/${l}/*`),
+              // app(라우팅·mock)은 최상위이므로 모든 FSD 레이어에서 import 금지
+              group: [
+                ...FSD_LAYERS.slice(layer === "shared" ? 1 : rank).map((l) => `@/${l}/*`),
+                "@/app/*",
+              ],
               message: `FSD: ${layer}에서 같은/상위 레이어를 import할 수 없습니다`,
             },
             {
