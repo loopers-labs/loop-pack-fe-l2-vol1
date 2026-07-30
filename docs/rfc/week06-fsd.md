@@ -321,6 +321,16 @@ Public API는 사용할 예정이다.
 - 같은 slice 내부 파일은 상대 경로 import를 허용한다.
 - 공개 API가 없는 slice에는 index.ts를 만들지 않는다.
 
+현재 점검 결과:
+
+- `src/app/api` mock API를 제외한 프론트엔드 레이어에서 상위 레이어를 import하는 역방향 의존은 없다.
+- 같은 레이어의 다른 slice를 직접 import하는 cross-import도 없다.
+- `src/app/api`는 이번 전환 범위에서 제외한 mock 백엔드이므로 별도 기준으로 본다.
+  현재 route handler가 `_pages/*/api`의 응답 타입을 참조하지만, 이는 mock API 계약 검증을 위한 임시 결합으로 남긴다.
+- 각 slice의 `index.ts`는 `export *` 없이 외부가 소비할 값만 명시적으로 공개한다.
+- cart/wishlist의 storage key와 version은 persist 복구 테스트에서 localStorage fixture를 만들기 위해 공개했다.
+  운영 코드가 직접 소비하는 값은 store hook과 selector이며, persistence normalize/migrate 구현은 slice 내부에 숨긴다.
+
 ## O — Optimization
 
 ### TanStack Query 캐시 정책
