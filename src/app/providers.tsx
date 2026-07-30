@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState, type ReactNode } from "react";
 
@@ -22,7 +22,9 @@ export function Providers({ children }: ProvidersProps): React.JSX.Element {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NuqsAdapter>{children}</NuqsAdapter>
+      <QueryErrorResetBoundary>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </QueryErrorResetBoundary>
     </QueryClientProvider>
   );
 }
