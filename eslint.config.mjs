@@ -117,11 +117,10 @@ export default tseslint.config(
       ],
 
       // FSD 의존 규칙 하네스
-      // NOTE: 마이그레이션 동안 warn으로 위반 감소를 관찰하고, 이동 완료 후 error로 승격한다.
       // 레이어는 자기보다 아래만 import하고, 같은 레이어의 다른 슬라이스를 직접 import하지 않는다(같은 슬라이스 내부는 검사 대상 아님).
       // 슬라이스는 루트 진입점으로만 연다. 예외는 entities 간 @x 공인 통로뿐이다.
       'no-restricted-imports': [
-        'warn',
+        'error',
         {
           patterns: [
             {
@@ -150,7 +149,7 @@ export default tseslint.config(
       ],
 
       'boundaries/dependencies': [
-        'warn',
+        'error',
         {
           default: 'disallow',
           message: 'FSD 의존 규칙을 위반한 import입니다.',

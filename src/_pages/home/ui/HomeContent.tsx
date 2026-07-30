@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
 import { ProductCard, productQueries } from '@/entities/product';
-import { CartToggleButton } from '@/features/cart/CartToggleButton';
-import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
+import { CartToggleButton } from '@/features/cart';
+import { WishlistToggleButton } from '@/features/wishlist';
 
 export function HomeContent() {
   const { data, isPending, isError, error, isFetching, refetch } = useQuery(

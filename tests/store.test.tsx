@@ -9,10 +9,10 @@ import {
 } from '@/entities/client-state/model/store';
 import type { Product } from '@/entities/product';
 import { ProductCard } from '@/entities/product';
-import { CartCount } from '@/features/cart/CartCount';
-import { CartToggleButton } from '@/features/cart/CartToggleButton';
-import { WishlistCount } from '@/features/wishlist/WishlistCount';
-import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
+import { CartCount } from '@/features/cart';
+import { CartToggleButton } from '@/features/cart';
+import { WishlistCount } from '@/features/wishlist';
+import { WishlistToggleButton } from '@/features/wishlist';
 
 const PRODUCT: Product = {
   id: 'p9',

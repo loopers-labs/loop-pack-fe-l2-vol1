@@ -5,10 +5,10 @@ import {
   STORAGE_KEY,
   useBoundStore,
 } from '@/entities/client-state/model/store';
-import { CartCount } from '@/features/cart/CartCount';
-import { CartToggleButton } from '@/features/cart/CartToggleButton';
-import { WishlistCount } from '@/features/wishlist/WishlistCount';
-import { WishlistToggleButton } from '@/features/wishlist/WishlistToggleButton';
+import { CartCount } from '@/features/cart';
+import { CartToggleButton } from '@/features/cart';
+import { WishlistCount } from '@/features/wishlist';
+import { WishlistToggleButton } from '@/features/wishlist';
 
 const PRODUCT_NAME = '사이드 테이블';
 
