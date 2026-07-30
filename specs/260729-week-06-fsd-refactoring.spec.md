@@ -32,7 +32,7 @@ FSD 이해가 쌓여 프로젝트 적용 방식이 정해지는 시점에 그 �
 - `src/features/cart/`, `src/features/wishlist/` — slice + Count + ToggleButton (행위 feature 후보)
 - `src/shared/ui/dialog·select/` — 4주차 공통 UI. 이미 FSD `shared/ui` 세그먼트 위치에 부합
 - `src/shared/` — api-client, get-query-client (도메인 무관, shared 부합)
-- `src/types/commerce.ts` — 통짜 도메인 타입 파일, **10개 파일이 import** (최다 참조). 결정표 대상
+- `src/types/commerce.ts` — 통짜 도메인 타입 파일, **12개 파일이 import** (최다 참조). 결정표 대상
 - `src/app/` — Next 라우팅 + demos(4주차 데모 페이지) + providers
 - `src/examples/week-05-layout/` — 스타터 참고용 예제
 
@@ -64,10 +64,10 @@ FSD 이해가 쌓여 프로젝트 적용 방식이 정해지는 시점에 그 �
 ## 완료 조건
 
 - [ ] `docs/rfc/week06-fsd.md`가 **파일 이동 전 커밋**에 존재하고 RADIO 5절·0단계 기준선 결과·상태 분류표·파일 매핑표·애매한 파일 5개 이상 결정표·에러 표·Public API 결정을 포함한다
-- [ ] src가 RFC에서 결정한 FSD 레이어 구조로 재배치되고, 하위→상위 import 0건·같은 레이어 슬라이스 간 직접 import 0건이다 (하네스 통과로 증명)
+- [ ] src가 RFC에서 결정한 FSD 레이어 구조로 재배치되고, 하위→상위 import 0건·같은 레이어 슬라이스 간 직접 import 0건이다 (entities 간 `@x` 공인 통로만 예외, 하네스 통과로 증명)
 - [ ] `ProductCard`가 cart/wishlist 코드를 import하지 않고 action 주입을 받으며, 조합은 상위 레이어에 있다
 - [ ] `import-x/no-restricted-paths` 규칙 2개 이상이 켜져 있고, 위반 코드 재현 시 lint가 실패하는 증거와 최종 통과 증거가 기록된다
-- [ ] 에러 표의 "전파하는가" 열과 `throwOnError` 구현이 일치하고, route `error.tsx` + `reset`이 동작하며, 인라인 재시도가 유지되고, 검증용 임시 throw가 제거됐다
+- [ ] 에러 표의 "전파하는가" 열과 `throwOnError` 구현이 일치하고, route `error.tsx`의 재시도가 동작하며, 인라인 재시도가 유지되고, 검증용 임시 throw가 제거됐다
 - [ ] `loading.tsx`/Suspense와 `isPending`의 로딩 범위 구분(또는 하나만 쓰는 이유)이 기록된다
 - [ ] 삭제 시나리오 2건(위시리스트 제거·신상품 뱃지)의 파일 목록 답변이 RFC에 있고 grep 대조와 일치한다
 - [ ] FSD 이해 확인 질문 6개에 RFC 또는 PR에서 각 2~4문장으로 답한다
