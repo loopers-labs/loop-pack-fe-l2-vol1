@@ -6,14 +6,14 @@ import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProductListPageClient } from "./ProductListPageClient";
-import { getProducts } from "./api/productApi";
-import type { ProductListResponse } from "./api/productApi";
+import { ProductListPageClient } from "./ProductListPage";
+import { getProducts } from "../api/productApi";
+import type { ProductListResponse } from "../api/productApi";
 import { useCommerceStore } from "@/_app/model/commerceStore";
 import type { Product } from "@/entities/product";
 
-vi.mock("./api/productApi", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("./api/productApi")>()),
+vi.mock("../api/productApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../api/productApi")>()),
   getProducts: vi.fn(),
 }));
 

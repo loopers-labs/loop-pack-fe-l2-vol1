@@ -3,7 +3,7 @@
 import { useCallback, useRef } from "react";
 import { ProductFilters } from "./ProductFilters";
 import { ProductListResults } from "./ProductListResults";
-import { useProductListSearchParams } from "./useProductListSearchParams";
+import { useProductListSearchParams } from "../model/useProductListSearchParams";
 
 export function ProductListPageClient() {
   const productListTopRef = useRef<HTMLElement>(null);

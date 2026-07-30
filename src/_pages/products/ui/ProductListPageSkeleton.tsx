@@ -1,6 +1,6 @@
 import { ProductGridSkeleton } from "@/widgets/product-card";
 import { Skeleton } from "@/shared/ui/Skeleton";
-import { PRODUCT_LIST_PAGE_SIZE } from "./constants";
+import { PRODUCT_LIST_PAGE_SIZE } from "../model/constants";
 
 export function ProductListPageSkeleton() {
   return (

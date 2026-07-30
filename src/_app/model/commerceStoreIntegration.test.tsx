@@ -5,14 +5,14 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProductListPageClient } from "@/features/products/ProductListPageClient";
-import { getProducts } from "@/features/products/api/productApi";
+import { ProductListPageClient } from "@/_pages/products";
+import { getProducts } from "@/_pages/products/api/productApi";
 import { useCommerceStore } from "@/_app/model/commerceStore";
 import type { Product } from "@/entities/product";
 import { ProductSection } from "@/widgets/product-card";
 
-vi.mock("@/features/products/api/productApi", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/features/products/api/productApi")>()),
+vi.mock("@/_pages/products/api/productApi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/_pages/products/api/productApi")>()),
   getProducts: vi.fn(),
 }));
 

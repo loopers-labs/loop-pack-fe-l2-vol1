@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
 import { PRODUCT_SORTS } from "@/entities/product";
 import type { ProductSort } from "@/entities/product";
-import type { ProductListResponse } from "@/features/products/api/productApi";
+import type { ProductListResponse } from "@/_pages/products/api/productApi";
 import type { ApiErrorResponse, MockApiScenario } from "@/types/api";
 
 const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];

@@ -5,10 +5,10 @@ import { useEffect } from "react";
 import { ProductGrid } from "@/widgets/product-card";
 import { mapProductToCardItem } from "@/entities/product";
 import { Pagination } from "./Pagination";
-import { PRODUCT_LIST_PAGE_SIZE } from "./constants";
-import { productQueries } from "./queries/productQueries";
 import { ProductListContent } from "./ProductListContent";
-import type { ProductCategoryFilter, ProductSort } from "./types";
+import { PRODUCT_LIST_PAGE_SIZE } from "../model/constants";
+import { productQueries } from "../queries/productQueries";
+import type { ProductCategoryFilter, ProductSort } from "../model/types";
 
 type ProductListParams = {
   q: string;
