@@ -4,11 +4,11 @@ import {
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs/server";
-import { PRODUCT_LIST_DEFAULTS } from "@/entities/product";
 import {
   CATEGORY_VALUES,
+  PRODUCT_LIST_DEFAULTS,
   SORT_VALUES,
-} from "@/components/commerce/productListOptions";
+} from "@/entities/product";
 
 export const productListParsers = {
   q: parseAsString.withDefault(PRODUCT_LIST_DEFAULTS.q),

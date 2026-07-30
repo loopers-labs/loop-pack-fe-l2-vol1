@@ -9,7 +9,7 @@ import {
   isSortValue,
   SORT_LABELS,
   SORT_VALUES,
-} from "@/components/commerce/productListOptions";
+} from "@/entities/product";
 import styles from "@/components/commerce/commerce.module.css";
 
 export const SEARCH_DEBOUNCE_MS = 300;

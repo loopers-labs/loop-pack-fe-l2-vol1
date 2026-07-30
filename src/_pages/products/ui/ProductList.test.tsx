@@ -15,7 +15,7 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { ProductList } from "./ProductList";
 import { makeQueryClient } from "@/_app/queryClient";
 import { getProducts } from "@/entities/product/api/fetchProducts";
-import type { Product, ProductListResponse } from "@/types/commerce";
+import type { Product, ProductListResponse } from "@/entities/product";
 
 vi.mock("@/entities/product/api/fetchProducts", () => ({
   getProducts: vi.fn(),

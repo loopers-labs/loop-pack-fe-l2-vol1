@@ -1,7 +1,14 @@
-import type { ProductListQuery, ProductListResponse } from "@/types/commerce";
-import { getBaseUrl } from "@/services/getBaseUrl";
-import { requestJson } from "@/services/requestJson";
+import { getBaseUrl, requestJson } from "@/shared/api";
+import type { Category, Product, ProductListQuery } from "../model/product";
 import { buildProductListSearchParams } from "../model/productListQuery";
+
+export type ProductListResponse = {
+  products: Product[];
+  categories: Category[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
 
 export function getProducts(
   query: ProductListQuery,

@@ -1,6 +1,6 @@
 import { ProductGrid } from "./ProductGrid";
 import { Pagination } from "@/components/commerce/Pagination";
-import type { ProductListResponse } from "@/types/commerce";
+import type { ProductListResponse } from "@/entities/product";
 import styles from "@/components/commerce/commerce.module.css";
 
 export function ProductListResult({

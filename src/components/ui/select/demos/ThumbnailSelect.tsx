@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useSelect } from "../useSelect";
 import { SelectStateProbe } from "./SelectStateProbe";
 import { SHOE_PRODUCTS, type ShoeProduct } from "./sampleData";
-import { formatPrice } from "@/utils";
+import { formatPrice } from "@/shared/lib";
 import styles from "./demos.module.css";
 
 const shoeToKey = (product: ShoeProduct) => product.id;

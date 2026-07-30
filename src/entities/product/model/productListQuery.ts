@@ -1,4 +1,4 @@
-import type { ProductListQuery } from "@/types/commerce";
+import type { ProductListQuery } from "./product";
 
 export const PRODUCT_LIST_DEFAULTS = {
   q: "",

@@ -7,7 +7,7 @@ import {
   buildDefaultProductListQuery,
   productQueries,
 } from "@/entities/product";
-import type { CategoryId } from "@/types/commerce";
+import type { CategoryId } from "@/entities/product";
 
 type PrefetchCategoryLinkProps = {
   category: CategoryId | "all";

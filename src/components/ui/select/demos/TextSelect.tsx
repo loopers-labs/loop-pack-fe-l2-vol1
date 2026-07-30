@@ -4,7 +4,7 @@ import { type ReactNode } from "react";
 import { useSelect } from "../useSelect";
 import { SelectStateProbe } from "./SelectStateProbe";
 import { BAGEL_PACKS, type BagelPack } from "./sampleData";
-import { formatPrice, perUnitPrice } from "@/utils";
+import { formatPrice, perUnitPrice } from "@/shared/lib";
 import styles from "./demos.module.css";
 
 function renderTextTrailing(pack: BagelPack): ReactNode {

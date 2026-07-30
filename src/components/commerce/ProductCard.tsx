@@ -1,6 +1,6 @@
 import Image from "next/image";
-import type { Product } from "@/types/commerce";
-import { formatPrice } from "@/utils";
+import type { Product } from "@/entities/product";
+import { formatPrice } from "@/shared/lib";
 import { ProductCardActions } from "./ProductCardActions";
 import styles from "./commerce.module.css";
 

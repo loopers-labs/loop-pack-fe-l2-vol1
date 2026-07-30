@@ -169,7 +169,7 @@ src
 ├── _pages/                          ← FSD pages, app/**/page.tsx 에서 렌더 (src/pages 금지: Pages Router 충돌)
 │   ├── home/
 │   │   ├── ui/HomeContent.tsx       ← 현재: components/commerce/HomeContent.tsx
-│   │   ├── api/home.ts              ← 현재: queries/home.ts + services/commerce.ts 의 getHome
+│   │   ├── api/home.ts              ← 현재: queries/home.ts + services/commerce.ts 의 getHome + HomeResponse 타입
 │   │   └── index.ts
 │   └── products/
 │       ├── ui/
@@ -210,7 +210,7 @@ src
 ├── entities/                        ← FSD entities 레이어 (도메인 개념)
 │   ├── product/
 │   │   ├── model/
-│   │   │   ├── product.ts               ← 현재: types/commerce.ts 의 Product·Category
+│   │   │   ├── product.ts               ← 현재: types/commerce.ts 의 Product·Category·CategoryId·ProductSort·ProductListQuery
 │   │   │   ├── productListOptions.ts    ← 현재: components/commerce/productListOptions.ts (카테고리·정렬 값/라벨/타입가드)
 │   │   │   └── productListQuery.ts      ← 현재: utils/productList.ts + hooks/productListSearchParams.ts 의 목록 조회 조건 정의·정규화 로직(defaults·normalize·buildSearchParams·resolve·buildDefault·clamp·ProductListParams)
 │   │   ├── api/
@@ -302,6 +302,8 @@ import { useWishlistStore } from "@/entities/wishlist";
 **4단계 (shared 최소화 / 소유 계층 정리)** — 통과. `entities/product/model/productListQuery.ts`, `getProducts` → `entities/product/api/fetchProducts.ts`, 페이지엔 `productListParsers`·`useProductListSearchParams`. 
 - 특이사항: RFC 원안(`_pages/products` lib/model 로)이 3단계 entity 결정과 충돌해 entity→page·feature→page 상향 import 를 유발 → **엔티티 중심으로 보정**(트리·매핑표·결정표·Interface·본 계획서 함께 갱신). `getProducts` 는 `services↔entities` 순환을 피하려 4단계에 함께 이동.
 
+**5단계 (segment 정리)** — 통과(테스트 69개·build). `queries/`·`services/`·`hooks/`·`utils/`·`types/` 5개 기술 폴더 제거: home api(`_pages/home/api/home.ts` = homeQueries+getHome+`HomeResponse`), `shared/api`(getBaseUrl·requestJson·`ApiErrorResponse`), `shared/lib`(useDebouncedValue·formatPrice), `entities/product/model`(`product.ts` 도메인 타입·productListOptions), `productListOptions`→entity. 배치 결정: `MockApiScenario`→`app/api/_data/commerce.ts`(mock 전용), `ProductListResponse`→`api/fetchProducts.ts`(DTO를 fetch 옆), 미사용 `getErrorMessage` 삭제. 특이사항: `stores/`(6)·`components/**`(7·8)·`commerce.module.css` 분해는 컴포넌트 최종 위치 확정 후라야 해서 **6·7·8단계로 미룸**.
+
 #### 파일 매핑표 (이동하는 파일 + 그 자리에 남기는 파일)
 
 | 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이동 또는 유지하는 이유 |
@@ -330,12 +332,12 @@ import { useWishlistStore } from "@/entities/wishlist";
 | `queries/products.ts` | `entities/product/api/productQueries.ts` | entities / product / api | 상품 도메인 조회 설정인데, 상품 목록 페이지 밖의 카테고리 링크(홈·헤더)가 prefetch 로 import 해서 product entity 소유로 |
 | `services/commerce.ts` 의 `getProducts` | `entities/product/api/fetchProducts.ts` | entities / product / api | 상품 fetch = entity 소유. `buildSearchParams`(조회 조건 로직, entity/model)를 써서 4단계에 함께 이동 — services 유지 시 `services↔entities` 순환 |
 | `stores/commerceStore.ts` | `entities/cart/model/store.ts` + `entities/wishlist/model/store.ts` | entities / cart·wishlist / model | 변경 이유가 다른 두 도메인이라 store 를 각자로 분리 |
-| `types/commerce.ts` | 도메인 타입 → `entities/product/model`, 응답 DTO → 각 api 옆 | entities / product / model 외 | 소유자별로 분해: `Product`·`Category`·`ProductSort` → `entities/product/model`, `HomeResponse` → `_pages/home/api`, `ProductListResponse` → `entities/product/api`, `ApiErrorResponse` → `shared/api`(공통 에러 규약) |
+| `types/commerce.ts` | 도메인 타입 → `entities/product/model`, 응답 DTO → 각 api 옆 | entities / product / model 외 | 소유자별로 분해: `Product`·`Category`·`CategoryId`·`ProductSort`·`ProductListQuery` → `entities/product/model/product.ts`, `HomeResponse` → `_pages/home/api/home.ts`, `ProductListResponse` → `entities/product/api/fetchProducts.ts`, `ApiErrorResponse` → `shared/api/requestJson.ts`(공통 에러 규약), `MockApiScenario` → `app/api/_data/commerce.ts`(mock 라우트 전용) |
 | `components/ui/dialog/` | `shared/ui/dialog/` | shared / — / ui | 도메인 무관 헤드리스 UI |
 | `components/ui/select/` | `shared/ui/select/` | shared / — / ui | 도메인 무관 헤드리스 UI |
 | `components/commerce/Pagination.tsx` | `shared/ui/pagination/Pagination.tsx` | shared / — / ui | 도메인 없는 범용 UI(props 만 받는 순수 컴포넌트) |
 | `hooks/useDebouncedValue.ts` | `shared/lib/useDebouncedValue.ts` | shared / — / lib | 도메인 무관 유틸 훅 |
-| `utils/index.ts` (`formatPrice`) | `shared/lib/formatPrice.ts` | shared / — / lib | 도메인 무관 포맷 유틸 |
+| `utils/index.ts` (`formatPrice`·`perUnitPrice`) | `shared/lib/formatPrice.ts` | shared / — / lib | 도메인 무관 포맷 유틸 (미사용 `getErrorMessage` 는 삭제) |
 | `services/commerce.ts` 의 `getHome` | `_pages/home/api/home.ts` | pages / home / api | 홈 전용 조합 응답 조회 → 홈 페이지가 소유 |
 | `services/getBaseUrl.ts` | `shared/api/getBaseUrl.ts` | shared / — / api | API 인프라 |
 | `services/requestJson.ts` | `shared/api/requestJson.ts` | shared / — / api | API 인프라 |

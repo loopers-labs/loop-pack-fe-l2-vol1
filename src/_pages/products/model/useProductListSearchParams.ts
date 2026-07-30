@@ -8,7 +8,7 @@ import {
   FIRST_PAGE,
   resolveProductListQuery,
 } from "@/entities/product";
-import type { CategoryId, ProductSort } from "@/types/commerce";
+import type { CategoryId, ProductSort } from "@/entities/product";
 
 const PUSH_TO_HISTORY = { history: "push" } as const;
 const REPLACE_HISTORY = { history: "replace" } as const;

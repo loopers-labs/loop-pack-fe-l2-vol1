@@ -24,7 +24,7 @@ import {
   resolveProductListQuery,
 } from "@/entities/product";
 import { getProducts } from "@/entities/product/api/fetchProducts";
-import type { Product, ProductListResponse } from "@/types/commerce";
+import type { Product, ProductListResponse } from "@/entities/product";
 
 vi.mock("@/entities/product/api/fetchProducts", () => ({
   getProducts: vi.fn(),

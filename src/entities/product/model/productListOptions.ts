@@ -1,4 +1,4 @@
-import type { CategoryId, ProductSort } from "@/types/commerce";
+import type { CategoryId, ProductSort } from "./product";
 
 export const CATEGORY_VALUES = [
   "all",
