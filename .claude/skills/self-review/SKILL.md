@@ -41,6 +41,8 @@ AI가 짠 코드에서 사람이 놓치기 쉬운 함정을, 커밋·PR 전에 �
 
 각각은 "도구가 경고하려다 막힌 자리"다. 정당한 사유가 주석으로 없으면 `blocking` 또는 `important`로 보고한다.
 
+- **암묵적 `any` 흐름**: `fetch` 응답을 반환하는 함수에 명시적 반환 타입이 없는 경우. `res.json()`은 `Promise<any>`를 반환하므로, 반드시 `Promise<T>` 형태로 타입을 명시해야 한다. `grep`으로 `res.json()`을 찾아 반환 타입 어노테이션이 있는지 확인한다. 없으면 `important`로 보고한다.
+
 ### 3) XSS 표면적
 
 - `dangerouslySetInnerHTML` 사용처가 있는가. 있으면 입력이 신뢰 가능한지/sanitize됐는지 확인한다.
@@ -54,6 +56,7 @@ happy path만 처리하고 빠진 분기가 없는지 **코드 구조 기준으�
 - 상태 전이의 반대 방향이 처리됐나. (있다→없다, 성공→실패)
 - early return 없이 정상 경로만 가정하고 있지 않은가.
 - 빈 catch 블록(`catch (e) {}`)이 없는가. 에러를 잡아놓고 아무것도 안 하면 에러를 삼키는 것이다.
+- `aria-pressed`, `aria-checked`, `aria-selected` 등 aria 상태 속성을 쓴 경우, 대응하는 CSS 스타일(`[aria-pressed="true"]` 등)이 존재하는가. 속성은 있는데 CSS가 없으면 스크린리더만 상태를 알고 시각적으로는 구분이 안 된다. `grep`으로 aria 상태 속성을 찾고, CSS 파일에서 대응 선택자를 확인한다. 없으면 `important`로 보고한다.
 
 ### 5) 명세·체크리스트 대조
 
