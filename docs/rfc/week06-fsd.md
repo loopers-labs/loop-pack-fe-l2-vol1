@@ -122,6 +122,29 @@ FSD로 옮기면 이게 그대로 `entities/product → features/add-to-cart` **
 **④ 화면 구현이 라우팅 디렉터리 안에 있다.**
 `app/products/ProductsView.tsx` 116줄, `app/page.tsx` 70줄이 라우팅 진입점과 화면 구현을 겸한다. 라우트 파일을 열지 않으면 화면 구조를 알 수 없고, 화면 로직을 고치려면 `app/`을 건드려야 한다.
 
+### 기준 스펙 — FSD 2.1 "pages first"
+
+이 설계는 **FSD 2.1**을 기준으로 한다. v2.0 대비 핵심 변화는 decomposition 방향이다.
+
+- **pages first** — entity를 먼저 뽑지 않는다. **다른 페이지에서 재사용하지 않는 UI·폼·데이터 로직은 그 페이지 슬라이스에 남긴다.**
+- **speculative reuse 금지** — "나중에 재사용할 것 같아서" 하위 레이어로 내리지 않는다. 레이어 네임스페이스는 전역 스코프와 같아서, 단발성 코드로 오염시키지 않는다.
+- 공식 린터 **Steiger**에 이를 잡는 룰이 있다 — `insignificant-slice`(한 페이지에서만 쓰는 entity/feature를 그 페이지로 합치라고 경고), `excessive-slicing`(슬라이스 과다).
+- **`processes` 레이어는 deprecated** (과제 금지와 일치).
+- entity 간 cross-import는 **`@x` 표기**로 표준화되었다(entity 전용): `import type { Product } from "entities/product/@x/cart"`.
+
+**이 기준을 현재 코드의 실사용처에 적용한 결과** — 아래 트리는 "1페이지에서만 쓰이는가"로 배치를 갈랐다.
+
+| 대상                          | 실제 사용처            | 배치                       |
+| ----------------------------- | ---------------------- | -------------------------- |
+| `ProductCard` (표현)          | 홈 + 목록 **2페이지**  | `entities/product/ui`      |
+| `Product` 등 도메인 타입      | 홈 · 목록 · API 라우트 | `entities/product/model`   |
+| cart · wishlist store         | 헤더(전 페이지) + 행위 | `entities/{cart,wishlist}` |
+| 담기 · 찜 버튼                | product-card widget → 2페이지 | `features/*`        |
+| 헤더 · 상품카드 조합          | 2페이지 이상           | `widgets/*`                |
+| **목록 queryOptions**         | **목록 1페이지**       | **`_pages/product-list/api`** |
+| **검색·필터(nuqs·SearchForm)** | **목록 1페이지**      | **`_pages/product-list/*`** |
+| 홈 queryOptions               | 홈 1페이지             | `_pages/home/api`          |
+
 ### 목표 폴더 트리
 
 ```
@@ -140,22 +163,20 @@ src/
 │   ├── home/
 │   │   ├── api/homeQuery.ts              홈 조립 응답 전용 queryOptions
 │   │   └── ui/HomePage.tsx
-│   └── product-list/
-│       └── ui/ProductListPage.tsx        (현 ProductsView)
+│   └── product-list/                     ← 목록 전용 로직은 전부 여기 (pages first)
+│       ├── api/productListQuery.ts       목록 queryOptions
+│       ├── model/useProductListQuery.ts  nuqs parsers + history:push
+│       ├── config/options.ts             categoryOptions · sortOptions
+│       └── ui/{ProductListPage,SearchForm}.tsx
 ├── widgets/
 │   ├── header/ui/Header.tsx              cart·wishlist 개수 구독
 │   └── product-card/ui/ProductCardWithActions.tsx   ← 표현 + 행위 조합 지점
 ├── features/
 │   ├── add-to-cart/ui/AddToCartButton.tsx
-│   ├── toggle-wishlist/ui/ToggleWishlistButton.tsx
-│   └── filter-products/
-│       ├── model/useProductListQuery.ts  nuqs parsers + history:push
-│       ├── config/options.ts             categoryOptions · sortOptions
-│       └── ui/SearchForm.tsx
+│   └── toggle-wishlist/ui/ToggleWishlistButton.tsx
 ├── entities/
 │   ├── product/
 │   │   ├── model/types.ts                Product · CategoryId · ProductSort · Category
-│   │   ├── api/productListQuery.ts       목록 queryOptions
 │   │   └── ui/ProductCard.tsx            표현만 · actions 슬롯을 받는다
 │   ├── cart/model/store.ts
 │   └── wishlist/model/store.ts
@@ -167,21 +188,26 @@ src/
 
 ### 사용할 레이어와 근거
 
-| 레이어      | 사용 | 근거                                                                                                                              |
-| ----------- | ---- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `_app`      | ✓    | provider 배선과 전역 스타일. 라우팅(`app/`)과 분리해야 layout이 얇아진다.                                                          |
-| `_pages`    | ✓    | 문제 ④를 직접 해결. 화면 구현을 라우팅 밖으로 뺀다.                                                                               |
-| `widgets`   | ✓    | 문제 ②의 해법이 여기 산다. `entities`와 `features`를 조합하는 자리가 없으면 역방향 의존을 피할 방법이 없다.                       |
-| `features`  | ✓    | 담기·찜·필터는 "사용자가 하는 행위"라 표현과 분리된다.                                                                            |
-| `entities`  | ✓    | product·cart·wishlist 세 도메인이 실재한다.                                                                                       |
-| `shared`    | ✓    | dialog·select·fetchJson처럼 도메인을 모르는 코드가 실재한다.                                                                      |
-| `processes` | ✗    | 과제가 사용 금지.                                                                                                                 |
+| 레이어      | 사용 | 근거                                                                                                                        |
+| ----------- | ---- | --------------------------------------------------------------------------------------------------------------------------- |
+| `_app`      | ✓    | provider 배선과 전역 스타일. 라우팅(`app/`)과 분리해야 layout이 얇아진다.                                                    |
+| `_pages`    | ✓    | 문제 ④를 직접 해결. **그리고 pages-first의 기본 착지점이다** — 재사용 근거가 없는 코드는 전부 여기 남는다.                   |
+| `widgets`   | ✓    | 문제 ②의 해법이 여기 산다. `entities`와 `features`를 조합하는 자리가 없으면 역방향 의존을 피할 방법이 없다. 둘 다 2페이지 이상에서 쓰인다. |
+| `features`  | ✓    | 담기·찜은 표현과 분리되는 사용자 행위이고, product-card widget을 통해 2페이지에서 쓰인다.                                    |
+| `entities`  | ✓    | product·cart·wishlist 세 도메인이 실재하고 **전부 2곳 이상에서 쓰인다**.                                                     |
+| `shared`    | ✓    | dialog·select·fetchJson처럼 도메인을 모르는 코드가 실재한다.                                                                 |
+| `processes` | ✗    | v2.1에서 deprecated이고 과제도 금지.                                                                                        |
 
 **만들지 않기로 한 것**
 
-- **`entities/category`** — Category는 서버 응답에 딸려오고 필터 옵션은 정적 상수다. 자체 상태·조회·행위가 없어 슬라이스로 만들면 타입 하나짜리 빈 껍데기가 된다. 타입은 `entities/product/model`에, 옵션 목록은 `features/filter-products/config`에 둔다.
+- **`features/filter-products`** — 검색·카테고리·정렬은 사용자 행위라 feature로 보이지만 **목록 페이지에서만 쓴다.** v2.1 기준 `insignificant-slice`에 걸린다. `_pages/product-list` 안에 `model`·`config`·`ui` 세그먼트로 둔다. 다른 페이지(예: 카테고리 전용 화면)가 같은 조건 UI를 쓰게 되면 그때 올린다.
+- **`entities/product/api`** — 목록 조회는 Product 도메인 행위로 보이지만 지금 부르는 곳이 목록 페이지 하나다. 같은 이유로 `_pages/product-list/api`에 둔다. **"재사용할 것 같아서" 내리는 것이 v2.1이 경고하는 speculative reuse다.**
+- **`entities/category`** — Category는 서버 응답에 딸려오고 필터 옵션은 정적 상수다. 슬라이스로 만들면 타입 하나짜리 빈 껍데기가 된다. 타입은 `entities/product/model`, 옵션 목록은 `_pages/product-list/config`.
 - **`shared/config`** — 현재 넣을 것이 QueryClient 기본값뿐인데 그건 `_app/providers`가 소유한다.
-- **`entities/*/lib`, `features/*/api`** 등 빈 세그먼트 — 규칙대로 필요한 것만 만든다.
+- 빈 세그먼트·미사용 `index.ts` — 규칙대로 필요한 것만 만든다.
+
+> **올릴 때의 신호**: 두 번째 페이지가 같은 것을 필요로 할 때. 그전에는 페이지 안에 둔다.
+> 반대 방향(과다 추출) 점검은 Steiger를 붙이면 자동화된다 — Advanced A의 후보.
 
 ### 허용/금지 import 예시
 
@@ -189,13 +215,17 @@ src/
 ✅ widgets/product-card  → entities/product, features/add-to-cart, features/toggle-wishlist
 ✅ features/add-to-cart  → entities/cart, shared/lib
 ✅ entities/product      → shared/api
-✅ _pages/product-list   → widgets/product-card, features/filter-products, entities/product
+✅ _pages/product-list   → widgets/product-card, entities/product, shared/api
+   (검색·필터·목록 쿼리는 같은 슬라이스 내부 세그먼트끼리 — 레이어 규칙과 무관)
 
 ❌ entities/product      → features/add-to-cart        (하위가 상위를 앎 — 문제 ②의 현재 상태)
 ❌ entities/cart         → entities/wishlist           (같은 레이어 슬라이스 직접 참조)
 ❌ features/add-to-cart  → widgets/header              (하위 → 상위)
 ❌ shared/ui             → entities/product            (shared는 도메인을 몰라야 함)
+❌ _pages/home           → _pages/product-list         (같은 레이어 슬라이스 직접 참조)
 ```
+
+entity 간 참조가 정말 필요해지면(예: cart가 Product 타입을 알아야 할 때) ad-hoc import 대신 **`@x` public API**를 쓴다 — `entities/product/@x/cart`에 cart용 계약만 노출한다. 현재는 필요 없다.
 
 ### 단계별 마이그레이션 계획
 
@@ -204,11 +234,12 @@ src/
 | 단계 | 내용                                                                 | 회귀 확인            |
 | ---- | -------------------------------------------------------------------- | -------------------- |
 | 1    | `shared` — `fetchJson`·`HttpError` 추출, `ui/{dialog,select}` 이동     | `pnpm check`         |
-| 2    | `entities/product` — types·목록 queryOptions·표현 전용 ProductCard    | #1 #5 #8             |
+| 2    | `entities/product` — types·표현 전용 ProductCard                       | #1 #5                |
 | 3    | `entities/{cart,wishlist}` — store 2개로 분리                          | #9 #10               |
-| 4    | `features` — add-to-cart · toggle-wishlist · filter-products          | #1 #3 #7 #9          |
+| 4    | `features` — add-to-cart · toggle-wishlist                            | #1 #9                |
 | 5    | `widgets` — header · product-card 조합 (문제 ② 해소)                   | #1 #9 #10            |
-| 6    | `_pages` + `_app`, `app/`을 얇은 진입점으로                            | **0단계 전체 재실행** |
+| 5.5  | `_pages/product-list` — 목록 쿼리·nuqs·옵션·SearchForm을 페이지 슬라이스로 | #1 #3 #5 #7 **#8** |
+| 6    | `_pages/home` + `_app`, `app/`을 얇은 진입점으로                        | **0단계 전체 재실행** |
 | 7    | Public API `index.ts` 추가                                            | `pnpm check`         |
 | 8    | 에러 경계 (**기능 변경 — 별도 커밋**)                                  | #4 + 홈 error·empty  |
 
@@ -224,12 +255,12 @@ src/
 | `app/products/ProductsView.tsx`        | `_pages/product-list/ui/ProductListPage.tsx`     | `_pages/product-list/ui`             | 문제 ④                                                               |
 | `components/commerce/Header.tsx`       | `widgets/header/ui/Header.tsx`                   | `widgets/header/ui`                  | 두 entity(cart·wishlist)를 조합해 보여주는 독립 블록                 |
 | `components/commerce/ProductCard.tsx`  | **분할** → `entities/product/ui/ProductCard.tsx` + `widgets/product-card/ui/ProductCardWithActions.tsx` | `entities` + `widgets` | 문제 ②. 표현과 행위를 나누고 widget에서 조합                         |
-| `components/commerce/SearchForm.tsx`   | `features/filter-products/ui/SearchForm.tsx`     | `features/filter-products/ui`        | 조건 확정이라는 사용자 행위                                          |
+| `components/commerce/SearchForm.tsx`   | `_pages/product-list/ui/SearchForm.tsx`          | `_pages/product-list/ui`             | 조건 확정이라는 사용자 행위지만 **목록 1페이지에서만 쓴다** — pages first |
 | `components/commerce/commerce.css`     | `_app/styles/commerce.css`                       | `_app`                               | 전역 클래스(`shop-*`) 기반이라 슬라이스로 쪼갤 수 없다. 분해는 이번 범위 밖 |
 | `components/ui/dialog/index.tsx`       | `shared/ui/dialog/`                              | `shared/ui`                          | 도메인을 모르는 재사용 UI                                            |
 | `components/ui/select/index.tsx`       | `shared/ui/select/`                              | `shared/ui`                          | 〃                                                                   |
-| `features/commerce/queries.ts`         | **분할** → `entities/product/api/productListQuery.ts` + `_pages/home/api/homeQuery.ts` + `shared/api/fetchJson.ts` | 3곳 | 문제 ①. 한 파일에 세 관심사                                          |
-| `features/commerce/searchParams.ts`    | **분할** → `features/filter-products/model/` + `config/options.ts` | `features/filter-products` | parser(동작)와 표시용 옵션(설정)을 나눈다                            |
+| `features/commerce/queries.ts`         | **분할** → `_pages/product-list/api/productListQuery.ts` + `_pages/home/api/homeQuery.ts` + `shared/api/fetchJson.ts` | 3곳 | 문제 ①. 한 파일에 세 관심사. 두 쿼리 모두 **각자 1페이지 전용** |
+| `features/commerce/searchParams.ts`    | **분할** → `_pages/product-list/model/` + `config/options.ts` | `_pages/product-list` | parser(동작)와 표시용 옵션(설정)을 나누되, 둘 다 목록 페이지 전용     |
 | `features/commerce/store.ts`           | **분할** → `entities/cart/model/store.ts` + `entities/wishlist/model/store.ts` | `entities` ×2 | 문제 ①. 삭제 시나리오에서 폴더 삭제로 끝나게                         |
 | `types/commerce.ts`                    | **분할** (아래 결정표 참조)                      | `entities/product/model` 외          | 문제 ③                                                               |
 | `app/globals.css` · `page.module.css`  | `_app/styles/`                                   | `_app`                               | 전역 스타일                                                          |
@@ -242,8 +273,9 @@ src/
 | 대상                            | 후보 A                   | 후보 B                          | 최종 결정                                                     | 기준                                                                                                          |
 | ------------------------------- | ------------------------ | ------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `ProductCard`                   | `entities/product/ui`    | `widgets/product-card`          | **둘 다** — 표현은 entity, 행위 조합은 widget                 | 재사용 범위가 다르다. 표현은 상품이 나오는 모든 화면이 쓰고, 행위 조합은 담기·찜이 필요한 화면만 쓴다. 하나로 두면 문제 ② |
-| 상품 목록 queryOptions          | `entities/product/api`   | 목록 페이지의 `api`             | **`entities/product/api`**                                    | 조회 대상이 Product 도메인이고 조건(q·category·sort·page)도 상품 속성이다. 카테고리 전용 페이지 등 다른 화면이 같은 조회를 재사용할 형태 |
-| 홈 queryOptions                 | `entities/product/api`   | `_pages/home/api`               | **`_pages/home/api`** (직접 추가한 항목)                      | 응답이 `banner + categories + popularProducts + newProducts` **화면 조립본**이다. 홈 화면이 사라지면 같이 사라진다 |
+| 상품 목록 queryOptions          | `entities/product/api`   | 목록 페이지의 `api`             | **목록 페이지의 `api`**                                       | 도메인만 보면 A가 맞아 보이지만 **부르는 곳이 목록 1페이지뿐**이다. FSD 2.1 `insignificant-slice` — "재사용할 것 같아서" 내리는 건 speculative reuse다. 두 번째 페이지가 생기면 그때 `entities`로 올린다 |
+| 홈 queryOptions                 | `entities/product/api`   | `_pages/home/api`               | **`_pages/home/api`** (직접 추가한 항목)                      | 위와 같은 기준 + 응답이 `banner + categories + popularProducts + newProducts` **화면 조립본**이라 애초에 entity의 것이 아니다 |
+| 검색·필터 (nuqs + SearchForm)   | `features/filter-products` | 목록 페이지 세그먼트          | **목록 페이지 세그먼트** (직접 추가한 항목)                   | "조건을 바꾼다"는 사용자 행위라 feature로 보이지만 목록 1페이지 전용이다. feature로 뽑으면 `insignificant-slice` |
 | 장바구니 store                  | `entities/cart/model`    | 장바구니 행위 feature의 `model` | **`entities/cart/model`**                                     | "무엇이 담겼나"는 상태(명사), "담는다"는 행위(동사). 헤더는 행위 없이 상태만 필요하다 — feature에 두면 헤더가 feature를 의존하게 된다 |
 | `types/commerce.ts`의 `Product` | `entities/product/model` | `shared/types` 유지             | **`entities/product/model`**, 단 `MockApiScenario`는 API 라우트로 | 도메인 타입을 shared에 두면 shared가 도메인을 알게 되어 "아무나 의존해도 되는 층"이 도메인 변경에 흔들린다     |
 | `MockApiScenario`               | `entities/product/model` | `app/api/` 내부                 | **`app/api/` 내부** (직접 추가한 항목)                        | mock 백엔드 전용 제어값이다. 프론트는 이 타입을 몰라야 한다 — 알면 `scenario`를 사용자 상태에 넣고 싶어진다(4단계 금지 사항) |
@@ -257,8 +289,8 @@ src/
 
 | 상태                | Source of Truth     | 소유 슬라이스/레이어                                       | 소비하는 곳                                                | 이동 후에도 중복 저장하지 않는 방법                                                                                     |
 | ------------------- | ------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 상품 조회 결과      | 서버/TanStack Query | 목록 `entities/product/api` · 홈 `_pages/home/api`         | `_pages/home`, `_pages/product-list`                        | 슬라이스는 `queryOptions` 팩토리만 공개하고 응답 데이터는 공개하지 않는다. 화면은 `useQuery(...)` 반환값을 그대로 읽고 store·state로 복사하지 않는다 |
-| 검색·정렬·페이지    | URL/nuqs            | `features/filter-products/model`                            | `_pages/product-list`                                       | `useProductListQuery()` 훅 하나만 공개. 조건을 `useState`로 미러링하지 않는다. 제출 전 검색 초안만 `SearchForm` 내부 `useState`에 두고 `key={q}`로 리셋 |
+| 상품 조회 결과      | 서버/TanStack Query | 목록 `_pages/product-list/api` · 홈 `_pages/home/api`      | 각자 자기 페이지                                            | `queryOptions` 팩토리만 두고 응답 데이터를 밖으로 내보내지 않는다. 화면은 `useQuery(...)` 반환값을 그대로 읽고 store·state로 복사하지 않는다 |
+| 검색·정렬·페이지    | URL/nuqs            | `_pages/product-list/model`                                 | `_pages/product-list`                                       | `useProductListQuery()` 훅 하나로 읽고 쓴다. 조건을 `useState`로 미러링하지 않는다. 제출 전 검색 초안만 `SearchForm` 내부 `useState`에 두고 `key={q}`로 리셋 |
 | 장바구니·위시리스트 | Zustand             | `entities/cart/model` · `entities/wishlist/model`            | `widgets/header`, `features/add-to-cart`, `features/toggle-wishlist` | id 집합(`Record<id,true>`)만 저장. 개수는 selector에서 파생(`Object.keys().length`). 상품 상세는 서버 소유라 저장하지 않고 필요 시 id로 조회 |
 | Dialog 열림 여부    | React 로컬 상태     | `shared/ui/dialog` 내부                                     | 해당 UI                                                     | 컴파운드 컴포넌트 내부 `useState`. 전역으로 올리지 않는다                                                              |
 
@@ -273,10 +305,10 @@ src/
 
 | 슬라이스                   | 공개                                                                       | 숨김                                                              | 숨기는 이유                                                                     |
 | -------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `entities/product`         | `Product`·`CategoryId`·`ProductSort` 타입, `productListQueryOptions`, `ProductCard` | `fetchJson` 호출 상세, URL 조립(`URLSearchParams`)         | 엔드포인트 모양이 바뀌어도 외부가 안 흔들린다                                   |
+| `entities/product`         | `Product`·`CategoryId`·`ProductSort` 타입, `ProductCard`                    | —                                                                 | 표현과 타입만 남는다. 조회는 페이지가 소유하므로 여기서 숨길 API 상세가 없다     |
 | `entities/cart`            | `useCartCount`·`useIsInCart`·`useToggleCart`                                | **`useCollectionStore` raw store**                                | raw store를 공개하면 외부가 store 전체를 구독해 selector 리렌더 경계가 무너진다 |
 | `entities/wishlist`        | `useWishlistCount`·`useIsInWishlist`·`useToggleWishlist`                    | raw store                                                         | 〃                                                                              |
-| `features/filter-products` | `useProductListQuery`, `SearchForm`, `categoryOptions`·`sortOptions`        | nuqs parser 정의, `history:"push"` 설정                           | URL 직렬화 방식은 내부 구현. 바깥은 "조건을 읽고 쓴다"만 알면 된다              |
+| `_pages/product-list`      | 페이지 컴포넌트만                                                          | 목록 queryOptions, nuqs parser·`history:"push"`, 옵션 목록, SearchForm | 전부 이 페이지 내부 사정이다. 밖에서 쓸 일이 생기는 순간이 곧 승격 신호        |
 | `features/add-to-cart`     | `AddToCartButton`                                                          | cart store 접근 방식                                              | 버튼이 곧 계약. 어떤 store를 쓰는지는 내부 사정                                 |
 | `widgets/product-card`     | `ProductCardWithActions`                                                   | 어떤 feature를 조합했는지                                         | 행위가 늘어도 소비자 코드가 안 바뀐다                                           |
 | `shared/api`               | `fetchJson`, `HttpError`                                                   | —                                                                 | 도메인을 모르는 층이라 숨길 것이 없다                                           |
@@ -326,10 +358,10 @@ barrel과 Public API를 가르는 건 파일 이름이 아니라 **무엇을 숨
 | 슬라이스                                          | `index.ts` | 판단                                                                                                    |
 | ------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
 | `entities/cart` · `entities/wishlist`             | **둔다**   | raw store를 숨기는 **진짜 계약**이다. selector만 공개해 리렌더 경계를 보존한다                          |
-| `entities/product`                                | **둔다**   | 타입·쿼리·표현 UI 중 외부가 쓸 것만 고른다. `fetchJson` 호출부와 URL 조립은 숨긴다                      |
-| `features/*`                                      | **둔다**   | 각 feature는 컴포넌트 1개가 계약이다. 내부 model/config는 숨긴다                                        |
+| `entities/product`                                | **둔다**   | 타입과 `ProductCard`만 공개한다. `actions` 슬롯 계약이 외부와의 접점이라 이걸 명시하는 값이 있다        |
+| `features/*`                                      | **둔다**   | 각 feature는 버튼 컴포넌트 1개가 계약이다. 어떤 store를 쓰는지는 숨긴다                                 |
 | `widgets/*`                                       | **둔다**   | 조합 결과만 공개하고 어떤 feature를 썼는지 숨긴다                                                       |
-| `_pages/*`                                        | **두지 않는다** | `app/*/page.tsx` 한 곳에서만 import한다. 숨길 대상이 없어 경로만 줄이는 **barrel**이 된다           |
+| `_pages/*`                                        | **두지 않는다** | `app/*/page.tsx` 한 곳에서만 import한다. 숨길 대상이 없어 경로만 줄이는 **barrel**이 된다. 페이지 내부 세그먼트(api·model·config)는 애초에 밖에서 부르지 않는다 |
 | `shared/*`                                        | **두지 않는다** | 도메인을 모르는 층이라 숨길 것이 없다. 파일 경로로 직접 import한다                                  |
 
 규칙: `index.ts`에 `export *`를 쓰지 않는다. `export *`는 "무엇을 공개할지 고르지 않았다"는 뜻이라 Public API가 아니라 barrel로 되돌아간다.
@@ -493,6 +525,14 @@ B(변경 반경 실험)는 5단계 예측을 실제로 검증하는 값이 있�
 > 시간 제약으로 설계 판단까지 AI 초안에 의존했다. **제출 전 각 결정을 검토하고, 근거에 동의하지 않는 항목은 직접 고친 뒤 이 표를 갱신한다.**
 > 특히 다음 셋은 트레이드오프가 갈리는 지점이라 본인 판단이 필요하다.
 >
-> 1. 홈 queryOptions를 `_pages/home/api`에 둔 것 — `entities/product/api`로 볼 여지도 있다
+> 1. **목록 쿼리·검색 필터를 페이지 슬라이스에 남긴 것** — FSD 2.1 pages-first를 따른 결정이다. 강의 자료가 entity-first(v2.0)를 기준으로 설명한다면 근거를 어느 쪽에 둘지 정해야 한다. 트리를 바꾸지 않더라도 **"왜 안 내렸는가"를 설명할 수 있으면 된다.**
 > 2. cart·wishlist store를 2개로 나눈 것 — 한 store 유지 + 슬라이스만 분리도 가능하다
 > 3. `app/api/**`가 프론트 entity 타입을 참조하게 한 방향
+
+### 참고한 FSD 스펙
+
+- [Layers | Feature-Sliced Design](https://feature-sliced.design/docs/reference/layers) — 레이어 순서, import 규칙, 같은 레이어 cross-import
+- [Migration from v2.0 to v2.1](https://feature-sliced.design/docs/guides/migration/from-v2-0) — pages-first, `processes` deprecated, `@x` cross-import 표준화
+- [Release v2.1: Pages come first!](https://github.com/feature-sliced/documentation/releases/tag/v2.1)
+
+초안 1차(`ad1b0cd`)는 v2.0식 entity-first로 작성해 목록 쿼리와 검색 필터를 `entities`·`features`로 내렸다가, v2.1 확인 후 페이지 슬라이스로 되돌렸다.
