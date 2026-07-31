@@ -31,15 +31,15 @@
 - Node.js 24.17.0 (`.nvmrc`, 지원 범위 `>=22.12.0`)
 - pnpm 10.15.1 (`package.json`의 `packageManager`)
 - Before와 After 모두 production build
+- `APP_ORIGIN`은 build와 runtime에 같은 값으로 설정하고 서버가 접근할 수 있는 origin 사용
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-측정할 때 아래 조건을 Before와 After에서 같게 유지합니다.
+Before와 After의 commit SHA는 각각 기록합니다. SHA를 제외한 아래 조건은 같게 유지합니다.
 
-- commit SHA
 - URL과 query string
 - 사용자가 한 행동
 - viewport
@@ -68,8 +68,8 @@ pnpm start
 
 1. 데이터가 없는 최초 진입과 기존 목록이 있는 갱신을 각각 녹화합니다.
 2. 검색·카테고리·정렬·페이지를 빠르게 연속 변경합니다.
-3. 마지막 URL, 마지막으로 완료된 요청, 화면에 표시된 상품이 일치하는지 확인합니다.
-4. Network에서 이전 요청이 남는지, 취소되는지 확인합니다.
+3. 현재 URL의 active query와 화면에 표시된 상품이 일치하는지 확인합니다.
+4. 이전 요청이 늦게 끝나도 현재 화면을 덮지 않는지 확인하고, Network에서 취소 여부를 별도로 관찰합니다.
 
 변경 전 관찰한 사실, 원인 가설, 가설을 반증할 방법, 먼저 시도할 가장 작은 변경을 각각 한 문장으로 기록합니다.
 
@@ -114,13 +114,22 @@ Hero가 준비되기 전 fallback은 실제 Hero와 같은 공간을 차지해�
 JavaScript가 실행되기 전에도 홈과 상품 목록의 의미와 이동 경로를 확인할 수 있어야 합니다.
 
 - 페이지마다 의미 있는 `title`과 `description`을 제공합니다.
+- 루트 layout의 title template·공통 Open Graph와 페이지 metadata가 어떻게 합성되는지 확인합니다. Next metadata의 shallow merge로 페이지 `openGraph`가 루트 `openGraph` 전체를 덮을 수 있으므로, 페이지에서 공통 필드를 완성해 제공하거나 공통 객체를 명시적으로 재사용해 `siteName`·`locale`·`type` 등이 유지되는지 확인합니다.
+- 홈은 본문 prefetch와 같은 query factory가 조회한 배너의 title·description·image를 title·description·Open Graph에 사용합니다. 상품 목록은 정규화한 URL 조건과 본문 prefetch와 같은 query factory가 조회한 응답의 카테고리명·전체 개수·첫 상품 이미지를 사용합니다. 검색어가 있으면 title에 우선 반영하고, category·sort는 description에 반영하며, 2페이지 이상이면 title에 페이지 번호를 덧붙입니다.
+- 정상 empty는 요청 성공과 결과 0건을 설명하는 페이지 title·description과 Open Graph fallback image를 제공합니다. metadata 조회가 실패하면 페이지별 빈 metadata를 만들지 않고 root 공통 metadata를 유지합니다.
+- metadata와 본문은 같은 URL 정규화와 query factory를 사용해 같은 GET URL·options를 만들고 최종 요청 URL이 갈라지지 않게 합니다.
+- 서버에서는 `getQueryClient()`를 호출할 때마다 새 QueryClient를 만듭니다. metadata와 본문이 QueryClient 캐시를 공유하게 만들려고 singleton이나 영속 캐시로 바꾸지 않습니다.
+- 중복 방지는 한 document 또는 RSC render/request 범위에서 URL·options가 같은 native fetch에 적용되는 React/Next server request memoization으로 확인합니다. Browser Network만으로 Route Handler 실행 횟수를 판정하지 않습니다.
+- `robots: noindex`를 추가하지 않습니다. 모든 페이지는 기본 색인 가능 상태를 유지합니다.
 - 초기 응답에 하나의 명확한 `h1`과 페이지 설명을 둡니다.
 - 주요 콘텐츠, 탐색, 상품 영역의 역할이 마크업에 드러나야 합니다.
 - 주요 이동 경로는 `href`가 있는 링크로 제공합니다.
 - 의미 있는 이미지에는 내용을 설명하는 대체 텍스트를 제공합니다.
 - 느린 데이터가 준비되기 전에도 제목, 설명, 구조, 링크를 확인할 수 있어야 합니다.
 
-Elements 패널만 확인하지 않습니다. Network의 document Response, View Source, JavaScript를 끈 새 요청 중 하나 이상으로 초기 HTML을 확인합니다.
+Elements 패널만 확인하지 않습니다. Network의 document/RSC 경계와 최종 요청 URL을 확인하고, document Response·View Source·JavaScript를 끈 새 요청 중 하나 이상으로 초기 HTML을 확인합니다. Route Handler의 실제 호출 횟수는 Network 추정이 아니라 임시 서버 로그 같은 서버 측 계수로 확인한 뒤 계측 변경은 되돌립니다.
+
+같은 `APP_ORIGIN`의 slow URL에 일반 document 요청과 `facebookexternalhit` User-Agent 요청을 보내 `time_starttransfer`와 `time_total`을 비교합니다. 로컬 origin으로 응답 시점과 HTML을 측정할 수 있지만, localhost Open Graph URL은 배포 증거로 사용하지 않습니다.
 
 ### 5. 같은 조건의 After와 기능 회귀를 확인합니다
 
@@ -188,6 +197,12 @@ Performance의 시간과 profiling build의 commit 시간을 직접 비교하지
 - 선택한 렌더링 경계와 선택하지 않은 경로
 - fallback이 실제 Hero와 같은 공간을 갖는 근거
 - 목록의 최초 pending과 갱신 UI를 나눈 기준
+- 루트 metadata와 페이지 metadata를 합성한 방법, shallow merge에도 `siteName`·`locale`·`type` 등 공통 Open Graph 필드를 유지한 근거, 홈 배너와 상품 목록의 실제 데이터·빈 결과·조회 실패 fallback
+- 검색어 우선 title, category·sort를 반영한 description, 2페이지 이상 page 번호를 포함한 상품 목록 metadata 문구의 근거
+- metadata와 본문이 같은 query factory·최종 GET URL·options를 사용한 근거, `getQueryClient()`마다 서버 QueryClient가 별도임을 전제로 React/Next server fetch request memoization의 document/RSC render/request 범위를 구분한 설명
+- 같은 slow URL에서 일반 document 요청과 `facebookexternalhit` User-Agent 요청의 metadata 응답 시점 비교 (`time_starttransfer`, `time_total`)
+- Network로 document/RSC 경계와 URL을 확인한 결과, 임시 서버 로그 같은 서버 측 계수로 한 document 또는 RSC 요청 안에서 동일 slow Route Handler가 한 번만 실행되는지 확인한 결과
+- metadata가 API를 기다리는 비용과 실제 공유 정보의 이점을 함께 판단한 이유
 - 적용한 최적화와 적용하지 않은 최적화의 이유
 - 성능 외 기능·접근성·이미지 품질 회귀 확인 결과
 
@@ -212,9 +227,19 @@ Performance의 시간과 profiling build의 commit 시간을 직접 비교하지
 **목록 / 초기 HTML**
 
 - [ ] 최초 pending과 기존 목록 갱신 UI를 구분했는가
-- [ ] 마지막 URL·요청·화면 결과가 일치하는가
+- [ ] 현재 URL의 active query와 화면 결과가 일치하고, 이전 요청의 늦은 완료가 화면을 덮지 않는가
 - [ ] 서버 응답을 Zustand나 로컬 상태에 복사하지 않았는가
 - [ ] JavaScript 실행 전에도 제목·설명·주요 링크를 확인할 수 있는가
+- [ ] 루트 title template·공통 Open Graph와 페이지 metadata가 의도대로 합성되고, shallow merge에도 `siteName`·`locale`·`type` 등 공통 Open Graph 필드가 유지되는가
+- [ ] document 응답에서 `title`, `description`, `og:title`, `og:description`, `og:image`를 확인했는가
+- [ ] 홈은 본문 prefetch와 같은 query factory가 조회한 배너의 title·description·image를 사용했는가
+- [ ] 상품 목록은 정규화된 URL 조건과 카테고리명·전체 개수·첫 상품 이미지를 사용하고, 검색어 우선 title·category/sort description·2페이지 이상 page 번호 규칙을 지켰는가
+- [ ] 정상 empty는 URL 조건·0건을 설명하고 fallback image를 유지하며, metadata 조회 실패는 root 공통 metadata를 유지하는가
+- [ ] metadata와 본문이 같은 query factory·GET URL·options를 사용하는가
+- [ ] `getQueryClient()`마다 서버 QueryClient가 별도임을 전제로, singleton·영속 캐시를 추가하지 않고 React/Next server fetch request memoization의 document/RSC render/request 범위를 설명했는가
+- [ ] 모든 페이지가 기본 색인 가능 상태를 유지하는가
+- [ ] Network는 document/RSC 경계와 URL 확인에만 사용하고, 동일 slow Route Handler의 실제 호출 횟수는 임시 서버 로그 같은 서버 측 계수로 확인했는가
+- [ ] 일반 document 요청과 `facebookexternalhit` 요청의 metadata 응답 시점을 같은 slow URL에서 비교했는가
 - [ ] 누적 기능과 FSD 의존 방향을 보존했는가
 
 **Advanced A를 선택한 경우에만**
