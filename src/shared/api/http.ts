@@ -2,11 +2,6 @@
 // HTTP 실패를 상위가 판단할 수 있는 형태로 바꿔 올리는 것까지만 한다.
 // 실패 문구와 복구 행위는 화면의 몫이므로 여기 두지 않는다.
 
-// 서버가 실패 본문으로 내려주는 형태다. mock 백엔드와 공유하는 계약이다.
-export type ApiErrorResponse = {
-  message: string
-}
-
 // HTTP 실패를 status와 서버 메시지를 가진 타입으로 승격한다.
 // status를 메시지 문자열에 섞으면 소비자가 문자열을 다시 파싱해야 하고,
 // 재시도 가능 여부처럼 status로 갈리는 판단을 문자열 비교로 하게 된다.
@@ -21,6 +16,13 @@ export class ApiError extends Error {
   }
 }
 
+export class NetworkError extends Error {
+  constructor(cause: unknown) {
+    super('네트워크 요청을 보내지 못했습니다.', { cause })
+    this.name = 'NetworkError'
+  }
+}
+
 // 응답이 오지 않는 요청을 무한정 pending으로 두지 않는다. 화면이 로딩에서 멈추면
 // 사용자는 재시도 출구조차 얻지 못한다. mock API의 고정 지연 500ms와 겹치지 않는 여유를 둔다.
 export const REQUEST_TIMEOUT_MS = 10_000
@@ -32,10 +34,22 @@ const TIMEOUT_MESSAGE = '요청이 지연되어 중단했습니다. 다시 시�
 export const isTimeout = (error: unknown) =>
   error instanceof DOMException && error.name === 'TimeoutError'
 
-// 400대는 같은 요청을 다시 보내도 결과가 같다. 재시도는 서버 오류와 네트워크 실패에만 쓴다.
-// ApiError가 아닌 실패는 네트워크 단절이나 타임아웃이므로 재시도 대상으로 둔다.
-export const isRetryable = (error: unknown) =>
-  !(error instanceof ApiError) || error.status >= 500
+// 전송 계층이 설명할 수 있는 실패인가.
+// status를 받았거나(ApiError), 우리가 끊었거나(타임아웃), 요청이 나가지 못한(네트워크) 경우다.
+// 이 셋은 화면이 무엇이 잘못됐는지 알 수 있어 인라인으로 다룰 수 있다.
+//
+// 그 밖의 오류는 예상 밖이다. 200 응답의 본문이 계약을 어겨 파싱이 깨지는 경우가 대표적이다.
+// 화면은 그것이 무엇인지도 어떻게 복구하는지도 모르므로 위로 올려야 한다.
+export const isExpectedFailure = (error: unknown) =>
+  error instanceof ApiError || error instanceof NetworkError || isTimeout(error)
+
+// 재시도가 의미 있는 실패인가.
+// 400대는 같은 요청을 다시 보내도 결과가 같다. 계약 위반도 다시 받아도 같은 본문이 온다.
+// 다시 보내면 달라질 수 있는 것은 서버 오류, 타임아웃, 네트워크 단절뿐이다.
+export const isRetryable = (error: unknown) => {
+  if (error instanceof ApiError) return error.status >= 500
+  return isTimeout(error) || error instanceof NetworkError
+}
 
 // 서버가 보낸 메시지가 있으면 그대로 보여주고, 없으면 화면이 정한 문구를 쓴다.
 // 화면 문구를 인자로 받는 이유는 shared가 특정 화면의 문구를 알지 않기 위해서다.
@@ -83,11 +97,20 @@ export const fetchJson = async <T>(
   }, REQUEST_TIMEOUT_MS)
 
   try {
-    const response = await fetch(url, {
-      signal: signal
-        ? AbortSignal.any([signal, timeout.signal])
-        : timeout.signal,
-    })
+    let response: Response
+    try {
+      response = await fetch(url, {
+        signal: signal
+          ? AbortSignal.any([signal, timeout.signal])
+          : timeout.signal,
+      })
+    } catch (error) {
+      // 타임아웃과 Query가 요청을 취소한 AbortError의 의미는 보존한다.
+      // fetch 호출 자체가 실패한 경우만 NetworkError로 승격해, 다른 코드에서 발생한
+      // TypeError를 네트워크 실패로 잘못 삼키지 않는다.
+      if (isTimeout(error) || isAbort(error)) throw error
+      throw new NetworkError(error)
+    }
     if (!response.ok) {
       throw new ApiError(response.status, await readServerMessage(response))
     }
@@ -96,3 +119,6 @@ export const fetchJson = async <T>(
     clearTimeout(timer)
   }
 }
+
+const isAbort = (error: unknown) =>
+  error instanceof DOMException && error.name === 'AbortError'

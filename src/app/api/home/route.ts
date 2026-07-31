@@ -5,8 +5,6 @@ import {
   products,
   waitForMockApi,
 } from '@/app/api/_data/commerce'
-import type { ApiErrorResponse } from '@/shared/api/http'
-import type { HomeResponse } from '@/_pages/home'
 import type { MockApiScenario } from '@/app/api/_data/commerce'
 
 const scenarioValues = [
@@ -17,9 +15,7 @@ const scenarioValues = [
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value)
 
-export async function GET(
-  request: NextRequest,
-): Promise<NextResponse<HomeResponse | ApiErrorResponse>> {
+export async function GET(request: NextRequest) {
   const scenario = request.nextUrl.searchParams.get('scenario')
 
   if (scenario !== null && !isMockApiScenario(scenario)) {

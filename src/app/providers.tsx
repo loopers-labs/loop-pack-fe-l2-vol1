@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { isRetryable } from '@/shared/api/http'
+import { isExpectedFailure, isRetryable } from '@/shared/api/http'
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -21,6 +21,11 @@ export const createBrowserQueryClient = () =>
         // 시간만 늘린다. 서버 오류, 네트워크 실패, 타임아웃에만 한 번 더 시도한다.
         retry: (failureCount, error) =>
           isRetryable(error) && failureCount < MAX_QUERY_RETRIES,
+        // 전파 기준은 status가 아니라 "화면이 설명할 수 있는 실패인가"다.
+        // 예측한 조회 실패는 화면이 인라인으로 다룬다. 필터를 남긴 채 조건을 바꿔
+        // 벗어날 수 있어야 하기 때문이다. 예상 밖 오류는 화면이 복구 방법을 모르므로
+        // 가장 가까운 Error Boundary로 올린다. 근거는 RFC Decision 6에 있다.
+        throwOnError: (error) => !isExpectedFailure(error),
         staleTime: 20_000,
       },
     },

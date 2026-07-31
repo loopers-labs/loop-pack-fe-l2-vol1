@@ -20,7 +20,10 @@
 
 ### Current Evidence
 
-아래는 목표 구조에 대한 제안이 아니라 현재 코드에서 확인한 사실이다.
+아래는 목표 구조에 대한 제안이 아니라 **전환 전 코드에서 확인한 사실**이다. 모든 결정이 이
+사실 위에 서 있으므로 마이그레이션이 끝난 뒤에도 갱신하지 않고 그대로 둔다. 지금 트리와
+대조하려면 [목표 트리](#목표-트리)를, 각 파일이 어디로 갔는지는
+[파일 매핑표](#파일-매핑표)를 본다.
 
 - `src/stores/shopping.ts`
   - `cartIds`와 `wishlistIds`가 하나의 Zustand store에 있다.
@@ -50,7 +53,11 @@
 - 자동 기준선
   - 현재 `pnpm check`는 테스트 134건, lint, typecheck, production build까지 통과한다.
     5주차 피드백 반영 전에는 111건이었다. 구조 이동 후에도 이 기준선을 유지한다.
-  - `package.json`은 Node `>=22.12.0`을 요구하지만 확인 환경은 Node `20.19.0`이었다.
+  - `package.json`은 Node `>=22.12.0`을 요구한다. 개발 환경은 Node `20.19.0`이라 경고가
+    나지만 `pnpm check`는 통과한다. 외부 리뷰가 Node `24.17.0`에서 돌린 결과도 통과였다.
+    요구 버전을 만족하는 환경에서도 같은 결과라는 증거가 생겼다.
+  - 최종 개정은 `.nvmrc`의 Node `24.17.0`에서 테스트 154건, lint, typecheck,
+    production build를 포함한 `pnpm check`로 다시 검증한다.
 - 수동 기준선
   - URL 공유, 새로고침, 뒤로/앞으로 가기와 실제 `Link` 이동은 문서에 수동 확인 필요 항목으로 남아 있다.
 
@@ -760,10 +767,10 @@ entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.
   들어간다. 세그먼트로 나누어 목적을 드러낸다.
 - `fetchJson`과 `ApiError`가 `shared/api`로 내려간다. 실패를 어디까지 전파할지는 Decision 6에서
   다룬다.
-- `productListContract.ts`는 `_pages/product-list`가 소유할 수 없다. mock API route가 이
-  모듈을 함께 소비하는데, 서버 route가 페이지 슬라이스를 참조하면 의존 방향이 뒤집힌다.
-  그래서 이 모듈만 `shared`로 내리고, 목록 화면 소유에서 뺀다. mock API route 자체의 자리는
-  아래 열린 항목으로 남긴다.
+- 상품 카테고리와 정렬 어휘만 `entities/product`가 소유한다. `'all'`, URL의 정규형,
+  page와 pageSize는 상품 자체의 속성이 아니므로 각각 page model과 mock route로 분리한다.
+- 숫자 문자열의 정규형 판정은 도메인을 모르는 `shared/lib/parsePositiveInteger.ts`에 둔다.
+  클라이언트와 mock 서버가 같은 알고리즘을 사용하되 서로의 레이어를 import하지 않는다.
 
 ### Validation
 
@@ -772,13 +779,14 @@ entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.
 - `_pages/home`과 `_pages/product-list`가 서로를 import하지 않는다.
 - 조회 조건을 바꿀 때 수정 파일이 `_pages/product-list` 안에 모인다.
 - query key와 요청이 같은 조건 객체에서 파생된다는 5주차 불변 조건이 유지된다.
-- `app/api`의 route handler가 `shared`만 참조하고 `_pages`나 `entities`를 참조하지 않는다.
+- `app/api`의 route handler가 `_pages`를 참조하지 않는다. 상품 도메인 어휘는 entity에서,
+  도메인 없는 숫자 파싱은 shared에서 참조한다.
 
 ### 열린 항목
 
-mock API route(`src/app/api`)의 레이어 소속을 이 결정에서 정하지 못했다. Next의 route
-handler라 FSD 레이어 밖 서버 코드인데, `productListContract.ts`를 화면과 공유하면서 의존
-방향을 따지게 되는 첫 지점이 됐다. Decision 5에서 Public API 경계를 정할 때 함께 다룬다.
+mock API route(`src/app/api`)는 FSD 프론트엔드 그래프 밖에 있지만 page 타입을 역참조하지
+않는다. 응답 형태는 route 구현과 route 테스트로 검증하고, 프론트엔드는 자기 page의 조회
+계약을 소유한다. 실제 서버로 분리되면 스키마 생성이나 계약 테스트를 도입한다.
 
 ### Revisit
 
@@ -811,16 +819,16 @@ handler라 FSD 레이어 밖 서버 코드인데, `productListContract.ts`를 �
 
 | 슬라이스 | 외부 소비자 | 외부가 쓰는 것 | 숨길 내부 |
 | --- | --- | --- | --- |
-| `shared/api` | `_pages/home/api`, `_pages/product-list/api`, `app/providers.tsx`, mock 백엔드 | `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf`, `ApiErrorResponse` | 없음. `readServerMessage`는 이미 모듈 비공개다 |
-| `shared/lib` | `entities/product/ui` | `formatWon` | 없음 |
+| `shared/api` | `_pages/home/api`, `_pages/product-list/api`, `app/providers.tsx` | `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf` | 없음. `readServerMessage`는 이미 모듈 비공개다 |
+| `shared/lib` | `entities/product/ui`, `_pages/product-list/model`, mock 백엔드 | `formatWon`, `parsePositiveInteger` | 없음 |
 | `shared/ui` | playground | `useSelect`, dialog | 이미 `select/index.ts`가 컴포넌트를 감추고 훅만 공개한다 |
-| `entities/product` | `_pages` 둘, `widgets/product-grid`, mock 백엔드 | 타입, 허용값, 판정, `ProductCard` | 없음. `parsePositiveIntegerValue`는 이미 모듈 비공개다 |
+| `entities/product` | `_pages` 둘, `widgets/product-grid`, mock 백엔드 | 타입, 상품 카테고리·정렬 어휘, `ProductCard` | 없음 |
 | `entities/cart` | `widgets/header`, `widgets/product-grid` | selector 훅, `CartToggleButton` | 없음. store 인스턴스는 이미 export하지 않는다 |
 | `entities/wishlist` | 같음 | 같음 | 없음 |
 | `widgets/product-grid` | `_pages` 둘 | `ProductGrid` | 없음. 파일이 하나다 |
-| `widgets/header` | `app/layout.tsx` | `Header` | `HeaderCounts` 하나 |
+| `widgets/header` | `app/layout.tsx` | `Header` | `HeaderCounts`. 클라이언트 경계 분리를 지탱한다 |
 | `_pages/home` | `app/page.tsx` | `HomePage` | `api` 세그먼트 전체 |
-| `_pages/product-list` | `app/products/page.tsx`, mock 백엔드 | `ProductListView`, `ProductListResponse` | `model`과 `api` 세그먼트 전체 |
+| `_pages/product-list` | `app/products/page.tsx` | `ProductListView` | `model`과 `api` 세그먼트 전체 |
 
 ### Question
 
@@ -828,20 +836,23 @@ handler라 FSD 레이어 밖 서버 코드인데, `productListContract.ts`를 �
 
 ### Decision
 
-**`_pages/home`과 `_pages/product-list` 두 곳에만 `index.ts`를 둔다.** 나머지 슬라이스에는
-만들지 않는다.
+**숨길 내부가 있는 슬라이스에만 `index.ts`를 둔다.** `_pages/home`, `_pages/product-list`,
+`widgets/header` 셋이다. 나머지 다섯에는 만들지 않는다.
 
-기준은 숨길 대상의 개수다.
+기준은 숨길 대상의 **유무**다. 개수가 아니다. 처음에는 "여럿이면 파일, 하나면 검증 항목"으로
+정했다가 외부 리뷰에서 반박을 받고 바꿨다. 숨길 계약이 하나라도 명확하면 경계는 성립하고,
+검증 항목은 사람이 지키는 규칙일 뿐 deep import를 기술적으로 막지 못한다. 임계값을 1과 2
+사이에 두는 것에는 근거가 없었다.
 
-숨길 것이 **여럿이고 여러 세그먼트에 걸쳐 있으면** Public API를 만든다. `_pages/product-list`는
+숨길 것이 **있으면** Public API를 만든다. `_pages/product-list`는
 `model`에 URL parser와 조건 조립 훅이, `api`에 fetch와 queryOptions와 응답 타입이 있다.
 Decision 4는 "조회 조건을 바꿀 때 고칠 파일이 한 슬라이스에 모인다"를 이 결정의 이득으로
 적었는데, 외부가 `_pages/product-list/model/searchParams`를 직접 참조하기 시작하면 그 이득이
 사라진다. 막을 대상이 여섯 개가 넘어 규칙으로 열거하기 어렵다.
 
-숨길 것이 **하나면** 검증 항목으로 처리한다. `widgets/header`가 그렇다. 감추고 싶은 것은
-`HeaderCounts` 하나이고 소비자도 `app/layout.tsx` 하나다. 파일을 만들어 막는 대신 Validation에
-한 줄로 적는다.
+`widgets/header`도 같은 기준으로 만든다. 감추고 싶은 것은 `HeaderCounts` 하나뿐이지만,
+그 하나가 "개수 배지만 클라이언트 컴포넌트로 두고 `Header`는 서버 컴포넌트로 남긴다"는 분리를
+지탱한다. 외부가 `HeaderCounts`를 직접 쓰면 그 분리가 깨진다.
 
 숨길 것이 **없으면** 아무것도 만들지 않는다. `entities` 셋과 `shared`가 여기 해당한다.
 이 슬라이스들은 이미 파일 단위 export로 경계를 지키고 있다. `entities/cart/model`이 Zustand
@@ -852,8 +863,8 @@ store 인스턴스를 export하지 않고 selector 훅만 내보내는 것이 �
 
 #### A. 모든 슬라이스에 `index.ts`를 둔다
 
-FSD 문서에서 가장 흔히 보는 형태다. 반려하는 이유는 우리 슬라이스 여덟 개 중 여섯 개에 숨길
-내부가 없기 때문이다. 그 여섯 개의 `index.ts`는 내부를 그대로 재수출하는 파일이 되고, 그것이
+FSD 문서에서 가장 흔히 보는 형태다. 반려하는 이유는 우리 슬라이스 여덟 개 중 다섯 개에 숨길
+내부가 없기 때문이다. 그 다섯 개의 `index.ts`는 내부를 그대로 재수출하는 파일이 되고, 그것이
 정확히 barrel이다. 경계 의도가 없는 재수출은 이름 충돌과 순환 의존의 입구가 된다.
 
 Decision 2에서 이미 같은 판단을 했다. `index.ts` 개수는 슬라이스 개수의 함수라서 그 자체로는
@@ -869,10 +880,11 @@ Decision 2에서 이미 같은 판단을 했다. `index.ts` 개수는 슬라이�
 
 ### Consequences
 
-- `index.ts`가 둘 생긴다. 각각 한 줄이 아니라 "무엇을 공개하는가"를 적은 계약이 된다.
-- mock 백엔드가 `_pages/product-list`의 `ProductListResponse`를 참조한다. 이 타입은
-  Public API에 포함해야 한다. 프론트엔드 소비자가 아닌 쪽 때문에 공개 표면이 하나 늘어난다.
-  예외 규칙 표에 이미 적힌 항목이므로 새 예외는 아니다.
+- `index.ts`가 셋 생긴다. 각각 한 줄이 아니라 "무엇을 공개하는가"를 적은 계약이 된다.
+  `shared/ui/select/index.ts`는 5주차부터 있던 것이라 이 셋에 넣지 않았다. 최종적으로
+  저장소에 존재하는 Public API는 넷이다.
+- mock 백엔드는 `_pages`를 참조하지 않는다. 따라서 page Public API는 화면 컴포넌트 하나만
+  공개하고 응답 타입과 조회 구현을 숨긴다.
 - 나머지 슬라이스는 deep import가 가능한 상태로 남는다. 파일을 옮기면 소비자가 깨진다.
   대신 슬라이스가 작아서 옮길 일이 적다는 것에 기대고 있다. 이 기대가 틀리면 Revisit한다.
 - 경계를 기계가 아니라 사람이 지킨다. Advanced A(의존성 하네스)를 하면 이 부담이 도구로
@@ -882,7 +894,7 @@ Decision 2에서 이미 같은 판단을 했다. `index.ts` 개수는 슬라이�
 
 - `app/page.tsx`와 `app/products/page.tsx`가 각 페이지 슬라이스의 `index.ts`만 import한다.
 - 어느 슬라이스도 `_pages/*/model`이나 `_pages/*/api`를 직접 import하지 않는다.
-- `app/layout.tsx`가 `HeaderCounts`를 직접 import하지 않는다.
+- `app/layout.tsx`가 `widgets/header`의 `index.ts`만 import하고 `HeaderCounts`에 닿지 않는다.
 - 새로 만든 `index.ts`에 `export *`가 없다. 무엇을 공개하는지 이름으로 적혀 있다.
 - 소비자가 없는 `index.ts`가 없다.
 
@@ -939,8 +951,11 @@ Decision 2에서 이미 같은 판단을 했다. `index.ts` 개수는 슬라이�
 
 ### Decision
 
-**조회 실패는 Error Boundary로 전파하지 않는다.** `throwOnError`를 쓰지 않고 각 화면이
-인라인으로 처리한다. `error.tsx`는 루트 세그먼트 하나만 두고 예상 밖 렌더링 오류만 받는다.
+**예측한 조회 실패는 Error Boundary로 전파하지 않는다.** 각 화면이 인라인으로 처리한다.
+`error.tsx`는 루트 세그먼트 하나만 두고 예상 밖 오류를 받는다.
+(이 결정은 아래 [개정](#개정--전파-대상을-없음에서-예상-밖-오류로)에서 전파 대상을 한 겹 더
+갈랐다. 원래는 전파 대상을 렌더링 오류로만 봤고, 조회 중에도 예상 밖 오류가 난다는 것을
+빠뜨렸다.)
 
 전파하지 않는 근거는 셋이다.
 
@@ -972,6 +987,7 @@ Decision 2에서 이미 같은 판단을 했다. `index.ts` 개수는 슬라이�
 | 상품 목록 조회 5xx, 네트워크 단절, 타임아웃 | `_pages/product-list/ui`의 결과 영역 | 안 함 | 서버 메시지 또는 화면 문구와 "다시 시도" | `refetch()` | 필터가 살아 있어야 조건을 바꿔 벗어날 수 있다. 결과 영역만 실패한다 |
 | 상품 목록 조회 4xx | 같은 자리 | 안 함 | 서버 메시지와 "검색 조건 초기화". 조건이 이미 기본값이면 "홈으로" | 조건 변경 | 재시도가 의미 없다. `reset()`은 재시도뿐이라 전파하면 죽은 버튼이 된다 |
 | 홈 조회 실패 | `_pages/home/ui`의 `main` | 안 함 | 문구와 "다시 시도". 재시도 불가면 "상품 목록으로" | `refetch()` | 한 응답에 화면 전체가 강결합이다. `Header`는 `layout`에 있어 산다 |
+| 조회 응답이 계약을 어김 (200인데 파싱 실패) | `src/app/error.tsx` | 전파됨 | 전용 화면과 "다시 시도", "홈으로" | `reset()` | 화면이 무엇이 잘못됐는지 모른다. 다시 받아도 같은 본문이라 인라인 재시도는 죽은 버튼이 된다 |
 | 예상 밖 렌더링 오류 | `src/app/error.tsx` | 전파됨 | 전용 화면과 "다시 시도", "홈으로" | `reset()` | 계약 위반이나 버그라 화면이 복구 방법을 모른다. 최후 방어선이 필요하다 |
 | cart, wishlist 토글 실패 | 해당 없음 | 해당 없음 | 해당 없음 | 해당 없음 | 순수 인메모리 토글이라 실패 경로가 없다. 아래 조건이 생기면 필요해진다 |
 | 잘못된 URL 조건 | `_pages/product-list/model`의 parser | 안 함 | 없음. 기본값으로 조용히 수렴한다 | 해당 없음 | 실패가 아니라 정규화다. 요청 전에 처리해 400 왕복을 만들지 않는다 |
@@ -1015,9 +1031,9 @@ capability의 action 안에서 잡아 상태로 바꿔야 한다. 버튼 옆에 
 
 ### Consequences
 
-- `throwOnError`를 쓰지 않는다. 조회 실패가 Error Boundary에 도달하지 않는다.
-- `src/app/error.tsx` 하나가 생긴다. `useSuspenseQuery`를 쓰지 않으므로 이 경계는 평소에
-  비어 있고, 실제로 동작하는지 확인하려면 의도적으로 오류를 던져봐야 한다.
+- `throwOnError`가 예상 밖 오류만 통과시킨다. 예측한 조회 실패는 화면에 남는다.
+- `src/app/error.tsx` 하나가 생긴다. 계약을 어긴 응답이 실제로 이 경계에 도달하므로
+  비어 있는 경계가 아니다.
 - 실패 UI 문구와 출구 판단이 두 페이지 슬라이스에 각각 있다. 공통 컴포넌트로 묶지 않았다.
   홈과 목록의 출구가 다르기 때문이며, 세 번째 화면이 생겨 같은 모양이 반복되면 그때 묶는다.
 - `shared/api`는 실패를 분류만 하고 문구와 행위를 갖지 않는다. 화면 문구는 각 페이지가 준다.
@@ -1029,25 +1045,218 @@ capability의 action 안에서 잡아 상태로 바꿔야 한다. 버튼 옆에 
 - 홈 조회를 실패시켜도 `Header`가 남는다.
 - 렌더링 중 오류를 의도적으로 던지면 `src/app/error.tsx`가 보이고 `reset()`이 동작한다.
   검증 후 임시 `throw`는 제거한다.
-- 어느 쿼리에도 `throwOnError`가 없다.
+- `throwOnError`가 `ApiError`, 타임아웃, 네트워크 실패에 `false`를, 그 밖의 오류에 `true`를
+  돌려준다.
 - 표의 "전파" 열과 실제 코드가 일치한다.
+
+### 개정 — 전파 대상을 "없음"에서 "예상 밖 오류"로
+
+외부 리뷰에서 두 가지 지적을 받고 다시 봤다. 결론의 방향은 유지하되 경계를 한 겹 더 갈랐다.
+
+#### 지적과 확인
+
+첫째, **`throwOnError`를 아예 쓰지 않은 것이 범위 요구를 비껴간다.** 4단계 요구 2번은
+`throwOnError`로 전파 기준을 정하라고 명시한다. "전파하지 않는다"도 기준이라고 볼 수 있지만,
+그 판단이 옳은지 다시 확인할 필요가 있었다.
+
+둘째, **`isRetryable`이 예상 밖 오류를 재시도 대상으로 삼킨다.** 확인해보니 사실이었다.
+`isRetryable`은 `ApiError`가 아닌 모든 실패를 재시도 가능으로 봤다. 200 응답의 본문이 계약을
+어겨 파싱이 깨지면 `SyntaxError`가 나는데, 이것이 네트워크 단절과 같은 취급을 받아 결과 영역에
+"다시 시도" 버튼이 붙는다. 다시 받아도 같은 본문이 오므로 눌러도 같은 실패다. 5주차에 없앤
+죽은 버튼이 다른 경로로 되살아나 있었다.
+
+두 지적이 같은 곳을 가리킨다. 원래 결정은 실패를 "조회 실패"와 "렌더링 오류" 둘로 나눴는데,
+**조회 중에도 예상 밖 오류가 난다**는 것을 빠뜨렸다.
+
+#### 다시 그은 선
+
+전파 여부를 가르는 축을 status도, 조회인지 렌더인지도 아닌 **전송 계층이 설명할 수 있는
+실패인가**로 정한다.
+
+| 분류 | 무엇 | 처리 |
+| --- | --- | --- |
+| 예측한 실패 | status를 받았거나(`ApiError`), 우리가 끊었거나(타임아웃), 요청이 나가지 못한(네트워크) 경우 | 화면이 인라인으로 다룬다. 필터를 남기고 실패 종류에 맞는 출구를 준다 |
+| 예상 밖 오류 | 그 밖의 전부. 계약을 어긴 200 응답, 렌더 중 버그 | `error.tsx`로 올린다. 화면은 무엇인지도 복구 방법도 모른다 |
+
+구현은 `throwOnError: (error) => !isExpectedFailure(error)` 한 줄이다. `providers.tsx`의
+전역 기본값에 둔다. 이 기준은 화면별 정책이 아니라 앱 전체에 하나여야 하기 때문이다.
+
+`isRetryable`도 함께 좁혔다. 이제 서버 오류, 타임아웃, 네트워크 단절만 재시도 대상이다.
+계약 위반은 재시도 대상이 아니면서 동시에 전파 대상이므로, 인라인 화면에 도달하지 않는다.
+
+#### 원래 결론과 무엇이 같고 무엇이 다른가
+
+같은 것은 **목록 조회가 5xx로 실패해도 필터가 살아 있어야 한다**는 핵심이다. `ApiError`는
+예측한 실패이므로 여전히 전파하지 않는다. 강결합 판정과 에러 처리 표의 여섯 행이 그대로다.
+
+다른 것은 `error.tsx`가 이제 **실제로 도달 가능한 경계**라는 점이다. 원래 결정에서
+"평소에 비어 있는 경계라 회귀로 지키기 어렵다"고 적었는데, 그 약점이 사실은 분류가 거칠어서
+생긴 것이었다. 예상 밖 오류가 인라인으로 새고 있었을 뿐 없었던 게 아니다.
+
+#### 남은 확인
+
+`error.tsx`의 `reset()`이 TanStack Query의 에러 상태까지 되돌리는지는 확인하지 않았다.
+같은 캐시 오류가 다시 throw되면 "다시 시도"가 동작하지 않을 수 있다. `QueryErrorResetBoundary`
+연계가 필요한지 판단하려면 실제 재현이 필요하고, 이는 `error.tsx`의 route 경계 동작 확인과
+같은 수동 항목에 묶인다.
 
 ### Revisit
 
 - `useSuspenseQuery`를 도입한다. 그 순간 조회 실패가 Error Boundary로 강제 전파되므로 이
   결정 전체를 다시 본다.
+- `error.tsx`의 `reset()`이 쿼리 에러 상태를 되돌리지 못하는 것이 재현된다.
 - 한 화면이 서로 다른 여러 요청을 조합하기 시작한다. 그때는 요청마다 다른 실패 범위가 생겨
   경계를 쪼갤 근거가 생긴다.
 - 토글에 서버 동기화가 붙어 이벤트 핸들러 실패가 생긴다.
 - 실패 UI가 세 화면 이상에서 같은 모양으로 반복된다.
+
+## 삭제 시나리오 자가 검증
+
+마이그레이션이 끝난 트리에서 코드를 고치지 않고 확인했다. Preflight에서 예측한 목록과
+실제를 대조한다.
+
+### 위시리스트를 통째로 제거한다면
+
+**폴더째 지울 것** — `src/entities/wishlist/` 하나다. 안에 model, ui, 전용 테스트가 함께 있다.
+
+**살아남아 수정할 생산 코드** — 두 곳이다.
+
+| 파일 | 고칠 것 |
+| --- | --- |
+| `widgets/product-grid/ui/ProductGrid.tsx` | `WishlistToggleButton` import와 `actions`에서 제거 |
+| `widgets/header/ui/HeaderCounts.tsx` | `useWishlistCount` 구독과 배지 하나 제거 |
+
+**살아남아 수정할 테스트와 도구** — 세 곳이다.
+
+| 파일 | 고칠 것 |
+| --- | --- |
+| `test/resetStores.ts` | `resetWishlist` 호출 한 줄 |
+| `test/resetStores.test.ts` | 위시리스트 관련 단언 |
+| `app/state-contract.test.tsx` | 위시리스트 토글 통합 검증 |
+
+**수정하지 않는 것** — `entities/cart` 전체, `entities/product` 전체, `shared` 전체,
+`_pages` 둘 전체다. cart의 모델과 외부 계약과 전용 테스트가 그대로이므로 Preflight에서 채택한
+모델 독립 기준을 만족한다.
+
+#### 예측과 실제의 차이
+
+Preflight는 생산 코드 경계를 두 곳으로 예측했고 실제도 두 곳이다.
+[Decision 2의 삭제 반경 기록](#선택과-무관하게-나온-결과)이 예측한 `widgets/product-grid`와
+Header 조합부가 정확히 그 둘이다.
+
+예측하지 않았던 것이 하나 있다. `entities/cart`의 파일 셋이 위시리스트를 **주석으로** 언급한다.
+
+```
+cart/model/cart.ts:4    // wishlist를 알지 않으므로 위시리스트를 지울 때 이 파일은 열리지 않는다.
+cart/model/cart.ts:15   // wishlist에도 같은 모양의 함수가 있다.
+cart/model/cart.test.ts:6  // 이 파일은 wishlist를 import하지 않는다.
+```
+
+import가 아니라 주석이므로 컴파일도 테스트도 깨지지 않는다. 다만 위시리스트를 지운 뒤 이
+주석들은 존재하지 않는 것을 가리키게 된다. grep으로 `wishlist`를 찾으면 이 파일들이 나오므로,
+"수정 대상이 두 곳"이라는 판정과 "검색하면 다섯 곳이 나온다"는 사실이 어긋난다.
+
+이것을 파편화로 보지 않는다. 삭제 반경은 **고치지 않으면 깨지는 것**의 범위이고 주석은 거기
+들지 않는다. 다만 삭제를 실행할 때 grep 결과를 그대로 수정 목록으로 쓰면 안 된다는 점은
+기록해둔다.
+
+`examples/week-05-layout` 두 파일도 위시리스트를 언급한다. 어디서도 import하지 않는 참조
+자료이고 Next 번들에 들어가지 않는다. 삭제 후보로 따로 기록했다.
+
+#### 판정
+
+응집 성공으로 본다. 삭제 대상이 한 폴더에 모여 있고, 살아남아 고칠 생산 코드가 둘이며 둘 다
+조합부다. Preflight가 "상위 UI 조합부는 기능의 연결점을 명시하는 composition root이므로 수정
+대상이 될 수 있다"고 미리 인정한 자리와 같다.
+
+### 신상품 뱃지를 상품 카드에 추가한다면
+
+**터치할 파일** — 둘이다.
+
+| 파일 | 할 일 |
+| --- | --- |
+| `entities/product/model/product.ts` | 신상품 판정을 추가한다. `Product`에 이미 `createdAt`이 있어 타입은 바뀌지 않는다 |
+| `entities/product/ui/ProductCard.tsx` | 판정 결과로 뱃지를 그린다 |
+
+**터치하지 않는 것** — `widgets`, `_pages`, `shared`, mock 백엔드다. 카드가 받는 props가
+`Product` 하나 그대로이고, 판정에 필요한 값이 이미 그 안에 있기 때문이다.
+
+#### 예측의 근거
+
+이 예측이 자신 있는 이유는 신상품 여부가 **상품 자체의 성질**이기 때문이다. 화면이 정하는
+것이 아니라 상품 데이터에서 나온다. 그래서 `entities/product` 밖으로 나갈 이유가 없다.
+
+반대 경우도 생각해봤다. 뱃지를 붙일지 말지를 화면이 정한다면(홈에서만 보인다면) `ProductCard`가
+`showNewBadge` 같은 props를 받아야 하고, 그것을 넘기는 `ProductGrid`도 바뀌고, 그것을 부르는
+두 page도 바뀐다. 둘에서 다섯으로 늘어난다. 이 차이가 "상품의 성질인가, 화면의 정책인가"를
+먼저 물어야 하는 이유다.
+
+#### 판정
+
+경계 설계가 이 변경을 감당한다. 다만 위 반대 경우처럼 화면마다 다른 뱃지 정책이 생기면
+`ProductGrid`가 props를 받기 시작하고, 그것이 Decision 3의 Revisit 조건 세 번째
+("widget이 화면별 분기를 props로 받기 시작해 조건이 두 개를 넘는다")에 걸린다.
+
+## FSD 이해 확인
+
+### 1. `ProductCard`가 찜 버튼을 직접 import하면 어떤 의존 규칙을 어기며, 어디에서 조합해야 하는가
+
+`ProductCard`는 `entities/product`에 있고 찜 버튼은 `entities/wishlist`에 있다. 같은 레이어의
+다른 슬라이스를 직접 import하는 것이므로 **동일 레이어 간 직접 import 금지**를 어긴다. 만약
+찜을 feature로 올렸다면 하위가 상위를 아는 역방향 의존까지 겹친다. 우리는
+`widgets/product-grid`에서 조합했다. `ProductCard`가 `actions` 슬롯을 받고, widget이 그 자리에
+두 토글을 넣는다. 카드는 무엇이 들어오는지 알지 않으므로 행위가 늘어도 카드 파일은 바뀌지
+않는다.
+
+### 2. 한 페이지에서만 쓰는 검색 로직도 반드시 feature여야 하는가
+
+아니다. 우리는 `features` 레이어를 아예 열지 않았다. 검색은 `_pages/product-list`가 소유한다.
+URL parser와 조건 조립 훅이 `model`에, 검색 폼이 `ui`에 있다. 근거는 소비 화면이 하나이고
+FSD v2.1의 pages first가 재사용되지 않는 로직을 페이지에 두라고 정하기 때문이다. 토글도 같은
+기준으로 판단했는데 결과가 달랐다. 토글은 두 화면이 쓰지만 담을 정책이 없어 `ui` 파일 하나짜리
+슬라이스가 되므로 entity에 뒀다. 레이어를 여는 기준은 사용 횟수가 아니라 담을 책임이다.
+
+### 3. `formatPrice`는 항상 `shared/lib`인가
+
+아니다. 지금 `formatWon`이 `shared/lib`에 있는 이유는 그 함수가 `toLocaleString('ko-KR')`에
+"원"을 붙이는 것 외에 아무 판단도 하지 않기 때문이다. 통화가 여럿이 되면 어느 통화를 쓸지
+정하는 규칙이 생기고, 회원 등급별 할인가나 세일 정책이 붙으면 그것은 상품 도메인의 판단이므로
+`entities/product/model`로 가야 한다. 판단 기준은 이름이 아니라 **그 함수가 도메인 규칙을
+아는가**다. 아는 순간 `shared`가 도메인을 아는 레이어가 된다.
+
+### 4. 두 feature가 협력해야 할 때 직접 import하지 않고 어떤 상위 레이어에서 조합했는가
+
+우리 프로젝트에는 feature가 없어 이 상황이 그대로 생기지는 않았다. 대신 같은 문제가 entity
+사이에서 나왔다. 담기와 찜은 서로를 알지 않아야 하는데 한 카드 안에 함께 보여야 했다.
+`widgets/product-grid`가 세 entity(product, cart, wishlist)를 조합한다. 헤더도 같은 모양이다.
+`widgets/header`가 cart와 wishlist의 개수를 함께 읽는다. 두 경우 모두 협력이 필요한 지점을
+**상위 레이어의 조합**으로 해결했고, 어느 entity도 다른 entity를 import하지 않는다.
+
+### 5. 폴더 이동 후에도 TanStack Query 데이터와 Zustand 데이터를 서로 복사하지 않은 이유
+
+원본이 둘이 되면 어느 쪽이 맞는지 판정할 수 없기 때문이다. 상품 목록의 원본은 서버이고 캐시가
+그 스냅샷을 들고 있다. 장바구니의 원본은 클라이언트 store다. store가 `Product` 전체를 복사하면
+서버가 가격을 바꿔도 담긴 상품은 옛 가격을 들고 있게 된다. 그래서 store에는 판별에 필요한
+상품 ID만 두고, 화면에 필요한 상품 정보는 캐시에서 온 것을 쓴다. 폴더가 바뀌어도 이 판단은
+바뀌지 않는다. 소유권은 위치가 아니라 원본이 어디인가로 정해진다.
+
+### 6. barrel file과 Public API는 무엇이 다른가
+
+같은 `index.ts`라도 **숨기려는 의도가 있는가**가 다르다. barrel은 경로를 줄이려고 내부를
+재수출하는 파일이고, Public API는 "외부가 알아도 되는 것은 이것뿐"이라는 계약이다.
+우리는 슬라이스 여덟 개 중 셋(`_pages` 둘과 `widgets/header`)에 뒀다. 셋 다 외부가 알아도
+되는 것과 내부 구현이 실제로 갈리기 때문이다. 나머지 다섯은 숨길 내부가 없어 만들지 않았다.
+만들었다면 그것이 정확히 barrel이다. 모든 `index.ts`가 `export *`를 쓰지 않고 공개 대상을
+이름으로 적었다. 파일을 열어야 무엇이 공개인지 아는 순간 계약이 아니게 된다.
 
 ## 1. RADIO
 
 전체 구조를 빠르게 이해하기 위한 본문이다. 논쟁이 있었던 항목의 선택 근거와 반려 이유는
 Decision Card에 두고, 여기서는 결론과 참조만 적는다.
 
-현재는 사실, 불변 조건, 적용 규칙, 미정 항목만 배치한다. 아직 내리지 않은 결정을 목표 구조에
-미리 써넣지 않는다. 결론 부분은 Decision 2~6이 끝난 뒤 채운다.
+Decision 1~6이 모두 끝나 목표 구조가 확정됐다. 작성 중에는 사실과 불변 조건과 적용 규칙만
+두고 아직 내리지 않은 결정을 목표 구조에 미리 써넣지 않았다. 단계별 트레이드오프와 작업
+순서는 [마이그레이션 작업 로그](./week06-migration-log.md)에 따로 있다.
 
 ### R — Requirements
 
@@ -1191,11 +1400,11 @@ nuqs 어댑터를 붙이는 라이브러리 조립일 뿐 비즈니스 판단이
 | 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이유 |
 | --- | --- | --- | --- |
 | `lib/commerce/api.ts`의 `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf`, `isTimeout` | `shared/api/http.ts` | shared / - / api | 도메인을 모르는 전송과 실패 표현이다. 두 page가 함께 쓴다 |
-| `types/commerce.ts`의 `ApiErrorResponse` | `shared/api/http.ts` | shared / - / api | 실패 본문 계약이라 `fetchJson`이 읽는 대상이다 |
+| `types/commerce.ts`의 `ApiErrorResponse` | 삭제 | - | 실패 본문은 `fetchJson`이 `unknown`에서 구조 검사하며 공개 타입 소비자가 없다 |
 | `lib/formatWon.ts` | `shared/lib/formatWon.ts` | shared / - / lib | 통화 표기 한 벌. 상품 정책이 붙지 않았다 |
 | `components/ui/dialog`, `components/ui/select` | `shared/ui/dialog`, `shared/ui/select` | shared / - / ui | 도메인을 모르는 headless UI |
 | `types/commerce.ts`의 `Product`, `Category`, `CategoryId`, `ProductSort` | `entities/product/model/product.ts` | entities / product / model | 상품 도메인 개념. 카드, 목록, 홈, mock이 함께 쓴다 |
-| `lib/commerce/productListContract.ts` | `entities/product/model/productListContract.ts` | entities / product / model | 카테고리와 정렬 허용값은 상품 도메인 어휘다 |
+| `lib/commerce/productListContract.ts` | `entities/product/model/productListContract.ts` + `_pages/product-list/model/searchParams.ts` + `shared/lib/parsePositiveInteger.ts` | entities + pages + shared | 상품 어휘, 화면 필터, 도메인 없는 숫자 정규화를 각 소유자에게 분리한다 |
 | `components/commerce/ProductCard.tsx` | `entities/product/ui/ProductCard.tsx` | entities / product / ui | 상품 표현. 토글 import를 제거해 행위를 알지 않게 한다 |
 | `stores/shopping.ts`의 cart 절반 | `entities/cart/model/cart.ts` | entities / cart / model | [Decision 1 개정](#개정--b에서-c로). capability가 자기 store를 소유한다 |
 | `stores/shopping.ts`의 wishlist 절반 | `entities/wishlist/model/wishlist.ts` | entities / wishlist / model | 같음 |
@@ -1225,27 +1434,18 @@ nuqs 어댑터를 붙이는 라이브러리 조립일 뿐 비즈니스 판단이
 | 상품 목록 queryOptions | `entities/product/api` | `_pages/product-list/api` | B | 소비 지점이 하나다. 목록 전용 staleTime과 key 정책을 도메인 레이어에 올릴 근거가 없다. [Decision 4](#decision-4-상품-조회-계약의-소유자) |
 | 장바구니 store | `entities/cart/model` | 장바구니 행위 feature의 `model` | A | features를 열지 않기로 했다. 상태가 나타내는 것은 행위가 아니라 "담긴 상품 ID"라는 도메인 사실이다 |
 | `types/commerce.ts` | 통째로 `shared/types` 유지 | 소유자별로 분해 | 분해 | 한 파일에 도메인 개념, 화면별 응답 형태, mock 제어값이 섞여 있다. 그대로 두면 mock 제어값을 바꿀 때 상품 도메인 파일이 열린다. 분해 후 각 타입의 소유자가 생긴다 |
-| `productListContract.ts` | `shared/api` | `entities/product/model` | B | 카테고리와 정렬 허용값은 상품 도메인 어휘다. `shared`에 두면 도메인을 모르는 레이어가 카테고리를 알게 된다. mock 백엔드가 이 모듈을 참조하지만, 아래 예외 규칙으로 다룬다 |
+| `productListContract.ts` | 통째로 한 레이어가 소유 | 책임별 분해 | 분해 | 카테고리·정렬 어휘는 entity, `all`과 URL 기본값은 page, 숫자 정규형 판정은 shared가 소유한다 |
 | `Header`, `HeaderCounts` | `widgets/header` | `app/layout.tsx`에 인라인 | A | 두 entity의 개수를 함께 조합한다. 조합 지점은 widget이다. layout에 인라인하면 라우팅 진입점이 도메인을 알게 된다 |
 | `providers.tsx` | `_app/providers.tsx` | `app/providers.tsx` 유지 | B | 담을 것이 파일 하나다. 레이어를 여는 근거는 개수가 아니라 담을 책임인데, 라이브러리 어댑터 조립에는 비즈니스 판단이 없다 |
 | `examples/week-05-layout` | 삭제 | 제자리 유지 | 유지 (삭제 후보로 기록) | 322줄이고 `src` 어디서도 import하지 않는다. Next 번들에는 들어가지 않고 typecheck 대상으로만 남는다. 참조 자료로 의도된 것인지 확인이 필요해 이번 범위에서 지우지 않는다 |
 
-#### mock 백엔드의 예외 규칙
+#### mock 백엔드의 경계
 
-`src/app/api/**`는 FSD 의존 그래프의 대상이 아니다. 실제 서버로 대체되면 사라질 코드이므로
-프론트엔드 슬라이스를 참조하는 것을 허용하되, 참조를 다음 넷으로 제한하고 여기에 열거한다.
-
-| mock이 참조하는 것 | 이유 | 실제 서버가 되면 |
-| --- | --- | --- |
-| `entities/product/model` | 상품 타입과 목록 조건 허용값 | 서버가 자기 스키마를 소유하고 클라이언트는 생성된 타입을 받는다 |
-| `_pages/product-list/api`의 `ProductListResponse` | 목록 응답 형태 | 같음 |
-| `_pages/home/api`의 `HomeResponse` | 홈 응답 형태 | 같음 |
-| `shared/api`의 `ApiErrorResponse` | 실패 본문 형태 | 같음 |
-
-이 넷을 공유하는 대신 계약 테스트로 양쪽을 맞추는 방법도 있다. 실제 서버라면 그래야 한다.
-지금 공유를 택한 이유는 5주차 피드백 반영에서 두 벌로 갈린 검증 규칙이 실제로 어긋나 있던 것을
-고쳤기 때문이고, 그 결정을 구조 이동 커밋에서 되돌리지 않기 위해서다. Revisit 조건은
-"mock을 실제 서버나 별도 프로세스로 옮긴다"이다.
+`src/app/api/**`는 mock 서버지만 프론트엔드 page 슬라이스를 역참조하지 않는다. 상품 카테고리와
+정렬처럼 실제 도메인 어휘만 `entities/product/model`에서, 숫자 문자열의 정규형 판정만
+`shared/lib`에서 사용한다. 응답 타입을 맞추기 위해 page Public API를 넓히지 않으며 route
+테스트가 mock 응답 형태를 고정한다. 실제 서버로 분리할 때는 생성 스키마나 계약 테스트로
+클라이언트 계약과의 드리프트를 막는다.
 
 #### 마이그레이션 원칙
 
