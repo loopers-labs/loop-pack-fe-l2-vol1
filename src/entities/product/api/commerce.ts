@@ -350,10 +350,3 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 });
 
 export const products = productSeeds.map(normalizeProduct);
-
-const mockDelayMs = process.env.NODE_ENV === "test" ? 0 : 500;
-
-export const waitForMockApi = () =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, mockDelayMs);
-  });

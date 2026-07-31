@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
-import { getHomeData } from '@/app/api/_data/homeService';
-import type { HomeResponse } from '@/types/commerce';
+import { getHomeData } from './homeService';
+import type { HomeResponse } from './types';
 
 export function homeQueryOptions() {
   return queryOptions({

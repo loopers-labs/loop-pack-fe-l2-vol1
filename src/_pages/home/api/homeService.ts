@@ -1,6 +1,6 @@
 import type { CategoryId } from '@/entities/product/model/types';
-import type { HomeResponse } from '@/types/commerce';
-import { categories, homeBanner, products } from './commerce';
+import type { HomeResponse } from './types';
+import { categories, homeBanner, products } from '@/entities/product/api/commerce';
 
 export function getHomeData(): HomeResponse {
   const popularProducts = [...products]
