@@ -1,4 +1,4 @@
-import type { BundleProduct, SizedProduct, ThumbnailProduct } from "@/types/product";
+import type { BundleProduct, SizedProduct, ThumbnailProduct } from "../_types/product";
 
 import type { BundleOption } from "../_components/bundle-select";
 import type { ItemOption } from "../_components/item-select";

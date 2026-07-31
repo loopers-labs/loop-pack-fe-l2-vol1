@@ -1,4 +1,4 @@
-import { getCatalog } from "@/services/products";
+import { getCatalog } from "./_lib/get-catalog";
 
 import { ProductOptions } from "./_components/product-options";
 
