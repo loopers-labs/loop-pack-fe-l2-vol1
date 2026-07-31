@@ -6,7 +6,7 @@
 
 ## 제공되는 것과 실행 환경
 
-- 제공 환경은 Node.js `24.17.0`, pnpm `10.15.1`이에요. 다른 버전으로 시작하지 말고 먼저 맞춰요.
+- `.nvmrc`와 `package.json#packageManager`에 지정된 Node.js·pnpm 환경을 사용해요.
 - production build와 runtime은 아래 명령으로 실행해요. 개발 서버 측정으로 Before와 After를 비교하지 않아요.
 
   ```bash
