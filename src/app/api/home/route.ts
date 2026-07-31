@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { categories, homeBanner, products, waitForMockApi } from '@/app/api/_data/commerce';
-import { isMockApiScenario } from '@/types/commerce';
-import type { ApiErrorResponse, HomeResponse } from '@/types/commerce';
+import { isMockApiScenario } from '@/shared/types/api';
+import type { ApiErrorResponse } from '@/shared/types/api';
+import type { HomeResponse } from '@/widgets/home/model';
 
 export const GET = async (
   request: NextRequest

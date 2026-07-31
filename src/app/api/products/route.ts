@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { categories, products, waitForMockApi } from '@/app/api/_data/commerce';
-import type {
-  ApiErrorResponse,
-  MockApiScenario,
-  ProductListResponse,
-  ProductSort,
-} from '@/types/commerce';
+import { isMockApiScenario } from '@/shared/types/api';
+import type { ApiErrorResponse } from '@/shared/types/api';
+import type { ProductListResponse, ProductSort } from '@/entities/product/model';
 
 const sortValues = [
   'latest',
@@ -13,13 +10,9 @@ const sortValues = [
   'price-asc',
   'price-desc',
 ] as const satisfies readonly ProductSort[];
-const scenarioValues = ['empty', 'error'] as const satisfies readonly MockApiScenario[];
 
 const isProductSort = (value: string): value is ProductSort =>
   sortValues.some((sort) => sort === value);
-
-const isMockApiScenario = (value: string): value is MockApiScenario =>
-  scenarioValues.some((scenario) => scenario === value);
 
 const isPositiveInteger = (value: string | null) => value !== null && /^[1-9]\d*$/.test(value);
 

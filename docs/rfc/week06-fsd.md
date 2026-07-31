@@ -400,29 +400,3 @@ export const ProductCard = ({ product }: { product: Product }) => (
 4. **두 feature가 협력할 때?** 직접 import 대신 `widgets`에서 조합. Header가 cart+wishlist 개수를 함께 쓰는 식.
 5. **폴더 이동 후에도 TanStack/Zustand 데이터를 복사하지 않는 이유?** Source of Truth는 하나. 복사하면 동기화 비용·불일치만 생긴다. 헤더 개수는 store에서 파생.
 6. **barrel vs Public API?** barrel은 경로 단축용 습관적 재export. Public API는 "외부가 알아도 되는 것은 이것뿐" 계약. 나는 명시적 이름만 재export하는 Public API를 선택 슬라이스에만 적용.
-
----
-
-## Advanced (선택 여부)
-
-- **A. 의존성 하네스 (도구 선정: `eslint-plugin-boundaries`)** — 전환 완료 후 아래 2규칙을 기계로 검증한다. 5단계 검증(grep)은 마이그레이션 중 일회성 확인용, 이 하네스는 완료 후 영구 회귀 방지용으로 역할을 나눈다.
-  1. 하위 레이어가 상위를 import하지 않는다(`entities → features`, `shared → entities` 등).
-  2. 같은 레이어의 서로 다른 슬라이스가 직접 import하지 않는다(`features/add-to-cart → features/toggle-wishlist`).
-
-  **도구 비교 — 왜 `eslint-plugin-boundaries`인가**
-
-  | 후보                          | 장점                                                                                                                   | 이 프로젝트에서의 단점                                                                       | 채택       |
-  | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------- |
-  | `eslint-plugin-boundaries`    | 기존 `pnpm check`(eslint)에 규칙 추가만으로 통합. 레이어/슬라이스를 element로 선언해 방향 규칙 표현. CI 추가 스텝 없음 | 범용 도구라 FSD 명명·Public API까지는 검사 못 함                                             | **O**      |
-  | `no-restricted-imports`/regex | ESLint 내장, 설정 가장 단순                                                                                            | 전역 동일 규칙이라 "entities는 금지·widgets는 허용" 같은 위치별 분기에 `overrides` 조합 필요 | 후보(보조) |
-  | `steiger`                     | FSD 전용. 명명·Public API·세그먼트까지 FSD 개념을 이해하고 검사                                                        | 아래 상세                                                                                    | 보류       |
-
-  **steiger 보류 근거(4점)**
-  1. **Next.js App Router 충돌**: steiger는 전형적 FSD 레이아웃을 가정하지만, 본 프로젝트의 `src/app/**`는 Next.js **라우팅 디렉터리**(`page/layout/loading/error.tsx` + mock `api/`)다. RFC가 `src/_app`·`src/_pages`로 FSD App/Pages를 예약한 이유이기도 하다. steiger가 `src/app`를 FSD App 레이어로 해석하거나 라우팅 파일을 구조 위반으로 오탐할 위험이 커서, 실측 전엔 안정성을 장담할 수 없다.
-  2. **도구·CI 중복**: 이미 `eslint`가 `pnpm check`에 통합돼 있다. steiger는 별개 도구·config·CI 스텝을 또 만든다.
-  3. **과제 요구는 2개 규칙(= import 방향)이 전부**: steiger의 추가 능력(명명·Public API 강제)은 요구사항이 아닌 nice-to-have.
-  4. **부분 FSD 도입과 주관적 도구의 마찰**: `processes` 미사용·`_pages` 옵션·`src/app/api` mock 전환 제외 등 예외 영역이 많아, 주관적 도구가 "빠진 레이어/예외"를 위반으로 오탐할 가능성이 크다.
-
-  > 결론: 핵심 2규칙은 기존 toolchain에 붙이고 Next.js `src/app`를 내가 통제할 수 있는 `eslint-plugin-boundaries`로 잡는다. steiger는 명명·Public API까지 강제하고 싶어질 때 **보조 검사**로 재검토하되, 우선 이 구조에 실제로 돌려 오탐 범위를 먼저 확인한다.
-
-- **B. 변경 반경 실험**: "위시리스트 전체 비우기" 추가. 예상 — 수정 slice: `features/toggle-wishlist`(clear action 이미 존재) + `widgets/product-list`(버튼). 새 의존 없음. 구현 후 diff 비교 예정.
