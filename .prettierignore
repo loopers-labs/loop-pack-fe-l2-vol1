@@ -3,3 +3,6 @@ dist/
 node_modules/
 
 pnpm-lock.yaml
+
+# 단일공백 표 포맷을 테스트가 파싱하므로 prettier 열 정렬 제외 (docs/assets 이미지 manifest)
+docs/assets/week-05-product-images.md

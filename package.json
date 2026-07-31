@@ -2,14 +2,20 @@
   "name": "commerce",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "format": "prettier . -w --cache",
     "lint": "eslint --cache --fix",
-    "type": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -23,15 +29,19 @@
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
+    "@tanstack/react-query": "^5.101.2",
     "next": "16.2.10",
+    "nuqs": "^2.9.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "tailwind-merge": "^3.6.0"
+    "react-error-boundary": "^6.1.2",
+    "tailwind-merge": "^3.6.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -47,6 +57,7 @@
     "postcss": "^8.5.16",
     "prettier": "^3.8.4",
     "tailwindcss": "^4.3.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

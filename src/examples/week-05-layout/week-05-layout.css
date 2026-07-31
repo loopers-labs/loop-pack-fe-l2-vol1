@@ -1,0 +1,131 @@
+.week05-page {
+  width: min(100% - 32px, 1200px);
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+.week05-header,
+.week05-header nav,
+.week05-categories,
+.week05-filters,
+.week05-pagination,
+.week05-product > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.week05-header {
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+.week05-hero {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 32px;
+  background: #ececec;
+}
+
+.week05-section {
+  margin-top: 40px;
+}
+
+.week05-section > h1,
+.week05-section > h2 {
+  margin-bottom: 16px;
+}
+
+.week05-categories a,
+.week05-product button,
+.week05-pagination button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+}
+
+.week05-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.week05-product {
+  display: grid;
+  gap: 8px;
+}
+
+.week05-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #ececec;
+  object-fit: cover;
+}
+
+.week05-filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.week05-filters input,
+.week05-filters select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+.week05-pagination {
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.week05-page a:focus-visible,
+.week05-page button:focus-visible,
+.week05-page input:focus-visible,
+.week05-page select:focus-visible {
+  outline: 3px solid #2557a7;
+  outline-offset: 3px;
+}
+
+@media (max-width: 960px) {
+  .week05-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .week05-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .week05-filters label {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .week05-header {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .week05-header nav {
+    width: 100%;
+  }
+
+  .week05-hero {
+    min-height: 180px;
+    padding: 24px;
+  }
+
+  .week05-grid {
+    gap: 24px 12px;
+  }
+}
