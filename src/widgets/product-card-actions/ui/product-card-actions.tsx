@@ -1,5 +1,5 @@
-import { CartButton } from "@/features/toggle-cart/ui/cart-button";
-import { WishlistButton } from "@/features/toggle-wishlist/ui/wishlist-button";
+import { CartButton } from "@/features/toggle-cart";
+import { WishlistButton } from "@/features/toggle-wishlist";
 
 interface ProductCardActionsProps {
   productId: string;

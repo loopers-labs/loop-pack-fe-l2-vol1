@@ -10,8 +10,8 @@ import { defineConfig, globalIgnores } from "eslint/config";
 // FSD 의존성 하네스 — 규칙 설계와 전제는 docs/rfc/week06-fsd.md §2.9 참고
 // 레이어 순위: 하위(shared) → 상위(_pages)
 const FSD_LAYERS = ["shared", "entities", "features", "widgets", "_pages"];
-// index.ts(Public API)를 우회하는 딥 임포트 차단 대상
-const FSD_DEEP_IMPORT = ["@/entities/*/*", "@/_pages/*/*"];
+// index.ts(Public API)를 우회하는 딥 임포트 차단 대상 — 비즈니스 슬라이스 전 레이어 (RFC §4.3 3차 개정)
+const FSD_DEEP_IMPORT = ["@/entities/*/*", "@/features/*/*", "@/widgets/*/*", "@/_pages/*/*"];
 
 const fsdHarness = [
   ...FSD_LAYERS.map((layer, rank) => ({

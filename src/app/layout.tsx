@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/app/providers";
-import { HeaderActions } from "@/widgets/header/ui/header-actions";
+import { HeaderActions } from "@/widgets/header";
 import "./globals.css";
 import "./week-05-layout.css";
 import Link from "next/link";

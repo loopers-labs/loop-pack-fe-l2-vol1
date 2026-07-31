@@ -3,7 +3,7 @@
 import { Placeholder } from "@/shared/ui/placeholder";
 import { ProductCard } from "@/entities/product";
 import type { ProductListResponse } from "../api/get-products";
-import { ProductCardActions } from "@/widgets/product-card-actions/ui/product-card-actions";
+import { ProductCardActions } from "@/widgets/product-card-actions";
 
 type ProductListResultsProps = {
   result: ProductListResponse;
