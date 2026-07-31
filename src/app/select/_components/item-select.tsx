@@ -7,7 +7,7 @@ export interface ItemOption extends SelectOption {
   thumbnailUrl: string;
   discountRate: number;
   price: number;
-  badge?: string; // "오늘드림"
+  badge?: string;
 }
 
 interface ItemSelectProps {
