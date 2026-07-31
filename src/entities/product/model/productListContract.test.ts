@@ -1,63 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import {
-  categoryFilterValues,
   categoryIds,
-  isCategoryFilter,
+  isCategoryId,
   isProductSort,
-  parsePageSizeValue,
-  parsePageValue,
+  sortValues,
 } from './productListContract'
 
-// 이 모듈의 존재 이유는 클라이언트 정규화와 서버 검증이 같은 기준을 쓰게 하는 것이다.
-// 허용값이 mock 데이터와 어긋나지 않는지는 데이터를 소유한 route 테스트에서 고정한다.
-
-describe('허용값', () => {
-  it('필터 허용값은 카테고리 ID에 all을 더한 것이다', () => {
-    expect([...categoryFilterValues]).toEqual(['all', ...categoryIds])
-    expect(isCategoryFilter('all')).toBe(true)
-    expect(isCategoryFilter('unknown')).toBe(false)
+describe('상품 카탈로그 어휘', () => {
+  it('지원하는 카테고리를 판별한다', () => {
+    expect(categoryIds).toContain('digital')
+    expect(isCategoryId('digital')).toBe(true)
+    expect(isCategoryId('all')).toBe(false)
   })
 
-  it('정렬 허용값 밖의 값은 거부한다', () => {
+  it('지원하는 정렬을 판별한다', () => {
+    expect(sortValues).toContain('price-asc')
     expect(isProductSort('price-asc')).toBe(true)
     expect(isProductSort('cheapest')).toBe(false)
-  })
-})
-
-describe('parsePageValue', () => {
-  it('1 이상의 정수 표기만 통과시킨다', () => {
-    expect(parsePageValue('1')).toBe(1)
-    expect(parsePageValue('37')).toBe(37)
-  })
-
-  it('0, 음수, 소수, 문자는 거부한다', () => {
-    expect(parsePageValue('0')).toBeNull()
-    expect(parsePageValue('-2')).toBeNull()
-    expect(parsePageValue('1.5')).toBeNull()
-    expect(parsePageValue('abc')).toBeNull()
-    expect(parsePageValue('')).toBeNull()
-  })
-
-  it('안전 정수를 벗어난 거대 수를 거부한다', () => {
-    expect(parsePageValue('9'.repeat(400))).toBeNull()
-  })
-
-  it('같은 페이지를 가리키는 다른 표기를 거부한다', () => {
-    // Number()만 보면 통과하는 값들이다. 통과시키면 한 페이지가 여러 URL과 query key로 갈린다.
-    expect(parsePageValue('0x10')).toBeNull()
-    expect(parsePageValue('1e2')).toBeNull()
-    expect(parsePageValue(' 1')).toBeNull()
-    expect(parsePageValue('+1')).toBeNull()
-    expect(parsePageValue('007')).toBeNull()
-    expect(parsePageValue('01')).toBeNull()
-  })
-})
-
-describe('parsePageSizeValue', () => {
-  it('1 이상 상한 이하만 통과시킨다', () => {
-    expect(parsePageSizeValue('12')).toBe(12)
-    expect(parsePageSizeValue('24')).toBe(24)
-    expect(parsePageSizeValue('25')).toBeNull()
-    expect(parsePageSizeValue('0')).toBeNull()
   })
 })

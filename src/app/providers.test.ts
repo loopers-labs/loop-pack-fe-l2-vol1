@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ApiError } from '@/shared/api/http'
+import { ApiError, NetworkError } from '@/shared/api/http'
 import { createBrowserQueryClient, MAX_QUERY_RETRIES } from './providers'
 
 // 재시도 정책은 함수라 값 비교로는 의도를 확인할 수 없다. 실패 종류를 넣어 판단을 검증한다.
@@ -38,14 +38,18 @@ describe('createBrowserQueryClient', () => {
   it('서버 오류와 네트워크 실패는 상한까지만 재시도한다', () => {
     expect(retryPolicy()(MAX_QUERY_RETRIES - 1, new ApiError(500))).toBe(true)
     expect(retryPolicy()(MAX_QUERY_RETRIES, new ApiError(500))).toBe(false)
-    expect(retryPolicy()(0, new TypeError('Failed to fetch'))).toBe(true)
+    expect(
+      retryPolicy()(0, new NetworkError(new TypeError('Failed to fetch'))),
+    ).toBe(true)
   })
 
   it('예측한 조회 실패는 경계로 올리지 않는다', () => {
     // 올리면 필터까지 사라져 조건을 바꿔 벗어날 길이 닫힌다.
     expect(propagationPolicy()(new ApiError(400))).toBe(false)
     expect(propagationPolicy()(new ApiError(500))).toBe(false)
-    expect(propagationPolicy()(new TypeError('Failed to fetch'))).toBe(false)
+    expect(
+      propagationPolicy()(new NetworkError(new TypeError('Failed to fetch'))),
+    ).toBe(false)
     expect(
       propagationPolicy()(new DOMException('timed out', 'TimeoutError')),
     ).toBe(false)

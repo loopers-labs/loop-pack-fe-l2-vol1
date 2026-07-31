@@ -1,9 +1,13 @@
 import { createParser, parseAsStringLiteral, type inferParserType } from 'nuqs'
 import {
-  categoryFilterValues,
-  parsePageValue,
+  categoryIds,
   sortValues,
 } from '@/entities/product/model/productListContract'
+import { parsePositiveInteger } from '@/shared/lib/parsePositiveInteger'
+
+// `all`은 상품 카테고리가 아니라 목록 화면의 필터 표현이다.
+export const categoryFilterValues = ['all', ...categoryIds] as const
+export type CategoryFilter = (typeof categoryFilterValues)[number]
 
 // page=0, 음수, 소수, 안전 정수 초과는 API가 400으로 거절하는 값이다.
 // parser가 관문이 되어 잘못된 URL을 기본값 1로 되돌린다. 판정 규칙은 route와 공유한다.
@@ -16,7 +20,7 @@ const parseAsSearchQuery = createParser<string>({
 })
 
 const parseAsPageNumber = createParser<number>({
-  parse: parsePageValue,
+  parse: parsePositiveInteger,
   serialize: (value) => String(value),
 })
 

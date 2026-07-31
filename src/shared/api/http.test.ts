@@ -8,6 +8,7 @@ import {
 } from 'vitest'
 import {
   ApiError,
+  NetworkError,
   errorMessageOf,
   fetchJson,
   isExpectedFailure,
@@ -60,6 +61,15 @@ afterEach(() => {
 })
 
 describe('fetchJson', () => {
+  it('fetch 자체의 실패를 NetworkError로 구분한다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockRejectedValue(new TypeError('Failed to fetch')),
+    )
+
+    await expect(fetchJson('/api/things')).rejects.toBeInstanceOf(NetworkError)
+  })
+
   it('성공 응답의 본문을 그대로 돌려준다', async () => {
     stubFetch(jsonResponse({ ok: true }))
 
@@ -143,7 +153,7 @@ describe('실패 분류', () => {
     expect(
       isExpectedFailure(new DOMException('timed out', 'TimeoutError')),
     ).toBe(true)
-    expect(isExpectedFailure(new TypeError('Failed to fetch'))).toBe(true)
+    expect(isExpectedFailure(new NetworkError(new TypeError()))).toBe(true)
   })
 
   it('계약을 어긴 200 응답은 예상 밖 오류다', () => {
@@ -152,6 +162,7 @@ describe('실패 분류', () => {
     expect(
       isExpectedFailure(new Error('cannot read property of undefined')),
     ).toBe(false)
+    expect(isExpectedFailure(new TypeError('programming bug'))).toBe(false)
   })
 
   it('400대는 재시도해도 결과가 같으므로 재시도 대상이 아니다', () => {
@@ -165,7 +176,7 @@ describe('실패 분류', () => {
 
   it('서버 오류와 네트워크 실패와 타임아웃은 재시도 대상이다', () => {
     expect(isRetryable(new ApiError(500))).toBe(true)
-    expect(isRetryable(new TypeError('Failed to fetch'))).toBe(true)
+    expect(isRetryable(new NetworkError(new TypeError()))).toBe(true)
     expect(isRetryable(new DOMException('timed out', 'TimeoutError'))).toBe(
       true,
     )

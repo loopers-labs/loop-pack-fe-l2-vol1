@@ -5,11 +5,11 @@ import { useQuery } from '@tanstack/react-query'
 import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { productListQueries } from '@/_pages/product-list/api/productList'
+import { sortValues } from '@/entities/product/model/productListContract'
 import {
   categoryFilterValues,
-  sortValues,
   type CategoryFilter,
-} from '@/entities/product/model/productListContract'
+} from '../model/searchParams'
 import { useProductListCondition } from '../model/useProductListCondition'
 import type { ProductSort } from '@/entities/product/model/product'
 import SearchForm from './SearchForm'

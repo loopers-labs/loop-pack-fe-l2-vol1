@@ -56,6 +56,8 @@
   - `package.json`은 Node `>=22.12.0`을 요구한다. 개발 환경은 Node `20.19.0`이라 경고가
     나지만 `pnpm check`는 통과한다. 외부 리뷰가 Node `24.17.0`에서 돌린 결과도 통과였다.
     요구 버전을 만족하는 환경에서도 같은 결과라는 증거가 생겼다.
+  - 최종 개정은 `.nvmrc`의 Node `24.17.0`에서 테스트 154건, lint, typecheck,
+    production build를 포함한 `pnpm check`로 다시 검증한다.
 - 수동 기준선
   - URL 공유, 새로고침, 뒤로/앞으로 가기와 실제 `Link` 이동은 문서에 수동 확인 필요 항목으로 남아 있다.
 
@@ -765,10 +767,10 @@ entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.
   들어간다. 세그먼트로 나누어 목적을 드러낸다.
 - `fetchJson`과 `ApiError`가 `shared/api`로 내려간다. 실패를 어디까지 전파할지는 Decision 6에서
   다룬다.
-- `productListContract.ts`는 `_pages/product-list`가 소유할 수 없다. mock API route가 이
-  모듈을 함께 소비하는데, 서버 route가 페이지 슬라이스를 참조하면 의존 방향이 뒤집힌다.
-  그래서 이 모듈만 `shared`로 내리고, 목록 화면 소유에서 뺀다. mock API route 자체의 자리는
-  아래 열린 항목으로 남긴다.
+- 상품 카테고리와 정렬 어휘만 `entities/product`가 소유한다. `'all'`, URL의 정규형,
+  page와 pageSize는 상품 자체의 속성이 아니므로 각각 page model과 mock route로 분리한다.
+- 숫자 문자열의 정규형 판정은 도메인을 모르는 `shared/lib/parsePositiveInteger.ts`에 둔다.
+  클라이언트와 mock 서버가 같은 알고리즘을 사용하되 서로의 레이어를 import하지 않는다.
 
 ### Validation
 
@@ -777,13 +779,14 @@ entity가 소유해도 URL 지식이 따라 들어가지는 않는다. `queries.
 - `_pages/home`과 `_pages/product-list`가 서로를 import하지 않는다.
 - 조회 조건을 바꿀 때 수정 파일이 `_pages/product-list` 안에 모인다.
 - query key와 요청이 같은 조건 객체에서 파생된다는 5주차 불변 조건이 유지된다.
-- `app/api`의 route handler가 `shared`만 참조하고 `_pages`나 `entities`를 참조하지 않는다.
+- `app/api`의 route handler가 `_pages`를 참조하지 않는다. 상품 도메인 어휘는 entity에서,
+  도메인 없는 숫자 파싱은 shared에서 참조한다.
 
 ### 열린 항목
 
-mock API route(`src/app/api`)의 레이어 소속을 이 결정에서 정하지 못했다. Next의 route
-handler라 FSD 레이어 밖 서버 코드인데, `productListContract.ts`를 화면과 공유하면서 의존
-방향을 따지게 되는 첫 지점이 됐다. Decision 5에서 Public API 경계를 정할 때 함께 다룬다.
+mock API route(`src/app/api`)는 FSD 프론트엔드 그래프 밖에 있지만 page 타입을 역참조하지
+않는다. 응답 형태는 route 구현과 route 테스트로 검증하고, 프론트엔드는 자기 page의 조회
+계약을 소유한다. 실제 서버로 분리되면 스키마 생성이나 계약 테스트를 도입한다.
 
 ### Revisit
 
@@ -816,16 +819,16 @@ handler라 FSD 레이어 밖 서버 코드인데, `productListContract.ts`를 �
 
 | 슬라이스 | 외부 소비자 | 외부가 쓰는 것 | 숨길 내부 |
 | --- | --- | --- | --- |
-| `shared/api` | `_pages/home/api`, `_pages/product-list/api`, `app/providers.tsx`, mock 백엔드 | `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf`, `ApiErrorResponse` | 없음. `readServerMessage`는 이미 모듈 비공개다 |
-| `shared/lib` | `entities/product/ui` | `formatWon` | 없음 |
+| `shared/api` | `_pages/home/api`, `_pages/product-list/api`, `app/providers.tsx` | `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf` | 없음. `readServerMessage`는 이미 모듈 비공개다 |
+| `shared/lib` | `entities/product/ui`, `_pages/product-list/model`, mock 백엔드 | `formatWon`, `parsePositiveInteger` | 없음 |
 | `shared/ui` | playground | `useSelect`, dialog | 이미 `select/index.ts`가 컴포넌트를 감추고 훅만 공개한다 |
-| `entities/product` | `_pages` 둘, `widgets/product-grid`, mock 백엔드 | 타입, 허용값, 판정, `ProductCard` | 없음. `parsePositiveIntegerValue`는 이미 모듈 비공개다 |
+| `entities/product` | `_pages` 둘, `widgets/product-grid`, mock 백엔드 | 타입, 상품 카테고리·정렬 어휘, `ProductCard` | 없음 |
 | `entities/cart` | `widgets/header`, `widgets/product-grid` | selector 훅, `CartToggleButton` | 없음. store 인스턴스는 이미 export하지 않는다 |
 | `entities/wishlist` | 같음 | 같음 | 없음 |
 | `widgets/product-grid` | `_pages` 둘 | `ProductGrid` | 없음. 파일이 하나다 |
 | `widgets/header` | `app/layout.tsx` | `Header` | `HeaderCounts`. 클라이언트 경계 분리를 지탱한다 |
 | `_pages/home` | `app/page.tsx` | `HomePage` | `api` 세그먼트 전체 |
-| `_pages/product-list` | `app/products/page.tsx`, mock 백엔드 | `ProductListView`, `ProductListResponse` | `model`과 `api` 세그먼트 전체 |
+| `_pages/product-list` | `app/products/page.tsx` | `ProductListView` | `model`과 `api` 세그먼트 전체 |
 
 ### Question
 
@@ -880,9 +883,8 @@ Decision 2에서 이미 같은 판단을 했다. `index.ts` 개수는 슬라이�
 - `index.ts`가 셋 생긴다. 각각 한 줄이 아니라 "무엇을 공개하는가"를 적은 계약이 된다.
   `shared/ui/select/index.ts`는 5주차부터 있던 것이라 이 셋에 넣지 않았다. 최종적으로
   저장소에 존재하는 Public API는 넷이다.
-- mock 백엔드가 `_pages/product-list`의 `ProductListResponse`를 참조한다. 이 타입은
-  Public API에 포함해야 한다. 프론트엔드 소비자가 아닌 쪽 때문에 공개 표면이 하나 늘어난다.
-  예외 규칙 표에 이미 적힌 항목이므로 새 예외는 아니다.
+- mock 백엔드는 `_pages`를 참조하지 않는다. 따라서 page Public API는 화면 컴포넌트 하나만
+  공개하고 응답 타입과 조회 구현을 숨긴다.
 - 나머지 슬라이스는 deep import가 가능한 상태로 남는다. 파일을 옮기면 소비자가 깨진다.
   대신 슬라이스가 작아서 옮길 일이 적다는 것에 기대고 있다. 이 기대가 틀리면 Revisit한다.
 - 경계를 기계가 아니라 사람이 지킨다. Advanced A(의존성 하네스)를 하면 이 부담이 도구로
@@ -1398,11 +1400,11 @@ nuqs 어댑터를 붙이는 라이브러리 조립일 뿐 비즈니스 판단이
 | 현재 위치 | 목표 위치 | 레이어 / 슬라이스 / 세그먼트 | 이유 |
 | --- | --- | --- | --- |
 | `lib/commerce/api.ts`의 `fetchJson`, `ApiError`, `isRetryable`, `errorMessageOf`, `isTimeout` | `shared/api/http.ts` | shared / - / api | 도메인을 모르는 전송과 실패 표현이다. 두 page가 함께 쓴다 |
-| `types/commerce.ts`의 `ApiErrorResponse` | `shared/api/http.ts` | shared / - / api | 실패 본문 계약이라 `fetchJson`이 읽는 대상이다 |
+| `types/commerce.ts`의 `ApiErrorResponse` | 삭제 | - | 실패 본문은 `fetchJson`이 `unknown`에서 구조 검사하며 공개 타입 소비자가 없다 |
 | `lib/formatWon.ts` | `shared/lib/formatWon.ts` | shared / - / lib | 통화 표기 한 벌. 상품 정책이 붙지 않았다 |
 | `components/ui/dialog`, `components/ui/select` | `shared/ui/dialog`, `shared/ui/select` | shared / - / ui | 도메인을 모르는 headless UI |
 | `types/commerce.ts`의 `Product`, `Category`, `CategoryId`, `ProductSort` | `entities/product/model/product.ts` | entities / product / model | 상품 도메인 개념. 카드, 목록, 홈, mock이 함께 쓴다 |
-| `lib/commerce/productListContract.ts` | `entities/product/model/productListContract.ts` | entities / product / model | 카테고리와 정렬 허용값은 상품 도메인 어휘다 |
+| `lib/commerce/productListContract.ts` | `entities/product/model/productListContract.ts` + `_pages/product-list/model/searchParams.ts` + `shared/lib/parsePositiveInteger.ts` | entities + pages + shared | 상품 어휘, 화면 필터, 도메인 없는 숫자 정규화를 각 소유자에게 분리한다 |
 | `components/commerce/ProductCard.tsx` | `entities/product/ui/ProductCard.tsx` | entities / product / ui | 상품 표현. 토글 import를 제거해 행위를 알지 않게 한다 |
 | `stores/shopping.ts`의 cart 절반 | `entities/cart/model/cart.ts` | entities / cart / model | [Decision 1 개정](#개정--b에서-c로). capability가 자기 store를 소유한다 |
 | `stores/shopping.ts`의 wishlist 절반 | `entities/wishlist/model/wishlist.ts` | entities / wishlist / model | 같음 |
@@ -1432,30 +1434,18 @@ nuqs 어댑터를 붙이는 라이브러리 조립일 뿐 비즈니스 판단이
 | 상품 목록 queryOptions | `entities/product/api` | `_pages/product-list/api` | B | 소비 지점이 하나다. 목록 전용 staleTime과 key 정책을 도메인 레이어에 올릴 근거가 없다. [Decision 4](#decision-4-상품-조회-계약의-소유자) |
 | 장바구니 store | `entities/cart/model` | 장바구니 행위 feature의 `model` | A | features를 열지 않기로 했다. 상태가 나타내는 것은 행위가 아니라 "담긴 상품 ID"라는 도메인 사실이다 |
 | `types/commerce.ts` | 통째로 `shared/types` 유지 | 소유자별로 분해 | 분해 | 한 파일에 도메인 개념, 화면별 응답 형태, mock 제어값이 섞여 있다. 그대로 두면 mock 제어값을 바꿀 때 상품 도메인 파일이 열린다. 분해 후 각 타입의 소유자가 생긴다 |
-| `productListContract.ts` | `shared/api` | `entities/product/model` | B | 카테고리와 정렬 허용값은 상품 도메인 어휘다. `shared`에 두면 도메인을 모르는 레이어가 카테고리를 알게 된다. mock 백엔드가 이 모듈을 참조하지만, 아래 예외 규칙으로 다룬다 |
+| `productListContract.ts` | 통째로 한 레이어가 소유 | 책임별 분해 | 분해 | 카테고리·정렬 어휘는 entity, `all`과 URL 기본값은 page, 숫자 정규형 판정은 shared가 소유한다 |
 | `Header`, `HeaderCounts` | `widgets/header` | `app/layout.tsx`에 인라인 | A | 두 entity의 개수를 함께 조합한다. 조합 지점은 widget이다. layout에 인라인하면 라우팅 진입점이 도메인을 알게 된다 |
 | `providers.tsx` | `_app/providers.tsx` | `app/providers.tsx` 유지 | B | 담을 것이 파일 하나다. 레이어를 여는 근거는 개수가 아니라 담을 책임인데, 라이브러리 어댑터 조립에는 비즈니스 판단이 없다 |
 | `examples/week-05-layout` | 삭제 | 제자리 유지 | 유지 (삭제 후보로 기록) | 322줄이고 `src` 어디서도 import하지 않는다. Next 번들에는 들어가지 않고 typecheck 대상으로만 남는다. 참조 자료로 의도된 것인지 확인이 필요해 이번 범위에서 지우지 않는다 |
 
-#### mock 백엔드의 예외 규칙
+#### mock 백엔드의 경계
 
-`src/app/api/**`는 FSD 의존 그래프의 대상이 아니다. 실제 서버로 대체되면 사라질 코드이므로
-프론트엔드 슬라이스를 참조하는 것을 허용하되, 참조를 다음 넷으로 제한하고 여기에 열거한다.
-
-| mock이 참조하는 것 | 이유 | 실제 서버가 되면 |
-| --- | --- | --- |
-| `entities/product/model` | 상품 타입과 목록 조건 허용값 | 서버가 자기 스키마를 소유하고 클라이언트는 생성된 타입을 받는다 |
-| `_pages/product-list`의 `ProductListResponse` | 목록 응답 형태 | 같음 |
-| `_pages/home`의 `HomeResponse` | 홈 응답 형태 | 같음 |
-| `shared/api`의 `ApiErrorResponse` | 실패 본문 형태 | 같음 |
-
-전환 후 실제 import를 확인했더니 넷 그대로였고, 응답 타입 둘은 page 슬라이스 내부가 아니라
-`index.ts`를 통해 들어왔다. 예외를 열거해둔 덕분에 새로 생긴 것이 없는지 셀 수 있었다.
-
-이 넷을 공유하는 대신 계약 테스트로 양쪽을 맞추는 방법도 있다. 실제 서버라면 그래야 한다.
-지금 공유를 택한 이유는 5주차 피드백 반영에서 두 벌로 갈린 검증 규칙이 실제로 어긋나 있던 것을
-고쳤기 때문이고, 그 결정을 구조 이동 커밋에서 되돌리지 않기 위해서다. Revisit 조건은
-"mock을 실제 서버나 별도 프로세스로 옮긴다"이다.
+`src/app/api/**`는 mock 서버지만 프론트엔드 page 슬라이스를 역참조하지 않는다. 상품 카테고리와
+정렬처럼 실제 도메인 어휘만 `entities/product/model`에서, 숫자 문자열의 정규형 판정만
+`shared/lib`에서 사용한다. 응답 타입을 맞추기 위해 page Public API를 넓히지 않으며 route
+테스트가 mock 응답 형태를 고정한다. 실제 서버로 분리할 때는 생성 스키마나 계약 테스트로
+클라이언트 계약과의 드리프트를 막는다.
 
 #### 마이그레이션 원칙
 

@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { categories, products, waitForMockApi } from '@/app/api/_data/commerce'
 import {
-  isCategoryFilter,
+  isCategoryId,
   isProductSort,
-  parsePageSizeValue,
-  parsePageValue,
 } from '@/entities/product/model/productListContract'
-import type { ApiErrorResponse } from '@/shared/api/http'
-import type { ProductListResponse } from '@/_pages/product-list'
+import { parsePositiveInteger } from '@/shared/lib/parsePositiveInteger'
 import type { MockApiScenario } from '@/app/api/_data/commerce'
 
 // scenario는 mock API 전용 제어값이라 목록 조건 계약에 넣지 않는다.
@@ -19,23 +16,23 @@ const scenarioValues = [
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value)
 
-export async function GET(
-  request: NextRequest,
-): Promise<NextResponse<ProductListResponse | ApiErrorResponse>> {
+export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams
   const scenario = params.get('scenario')
   const q = params.get('q')?.trim().toLocaleLowerCase('ko') ?? ''
   const category = params.get('category')
   const sort = params.get('sort')
-  const page = parsePageValue(params.get('page') ?? '1')
-  const pageSize = parsePageSizeValue(params.get('pageSize') ?? '12')
+  const page = parsePositiveInteger(params.get('page') ?? '1')
+  const pageSize = parsePositiveInteger(params.get('pageSize') ?? '12', {
+    max: 24,
+  })
 
   // 검증은 지연 이전에 끝낸다. 잘못된 요청은 scenario보다 먼저 400으로 거절한다.
   // 조건을 한 식에 모아 page와 pageSize가 이 블록 뒤에서 number로 좁혀지게 한다.
   if (
     (scenario !== null && !isMockApiScenario(scenario)) ||
     (sort !== null && !isProductSort(sort)) ||
-    (category !== null && !isCategoryFilter(category)) ||
+    (category !== null && category !== 'all' && !isCategoryId(category)) ||
     page === null ||
     pageSize === null
   ) {
