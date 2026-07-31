@@ -12,7 +12,8 @@
 
 ### 이번 주에 하지 않는 것
 
-- `src/app/api/` Route Handler·mock fixture는 전환 범위에서 제외 — 프론트엔드 구조 리팩토링에 집중
+- `src/app/api/` Route Handler는 전환 범위에서 제외 — 프론트엔드 구조 리팩토링에 집중
+- 서비스 함수(`productService`, `homeService`)와 mock 데이터(`commerce.ts`)는 아키텍처 리뷰 후 FSD 레이어로 이동 (아래 마이그레이션 8단계)
 - 새로운 기능 추가 없음 (구조 변경과 기능 변경을 같은 커밋에 섞지 않음)
 
 ---
@@ -51,19 +52,26 @@ src/
 ```
 src/
 ├── app/                    # Next.js 라우팅 진입점 (얇은 셸)
-│   ├── api/_data/          # mock — 전환 범위 제외
+│   ├── api/
+│   │   ├── _data/          # Route Handler 전용 mock 유틸·타입
+│   │   │   ├── mock.ts     # waitForMockApi
+│   │   │   └── types.ts    # ApiErrorResponse, MockApiScenario
+│   │   ├── home/route.ts
+│   │   └── products/route.ts
 │   ├── products/
 │   │   ├── page.tsx        # → _pages/products import
+│   │   ├── error.tsx
 │   │   └── [id]/
 │   │       ├── page.tsx    # → _pages/product-detail import
 │   │       └── error.tsx
+│   ├── error.tsx
 │   ├── page.tsx            # → _pages/home import
 │   ├── layout.tsx / providers.tsx
 │   └── getQueryClient.ts
 ├── _pages/
 │   ├── home/
 │   │   ├── ui/             # HomeClient
-│   │   └── api/            # homeQueries
+│   │   └── api/            # homeQueries, homeService, types (HomeResponse)
 │   ├── product-list/
 │   │   ├── ui/             # ProductListContent
 │   │   └── lib/            # useProductSearchParams
@@ -75,14 +83,14 @@ src/
 ├── entities/
 │   ├── product/
 │   │   ├── model/          # Product 타입, 상수 (CATEGORY_IDS 등)
-│   │   └── api/            # productQueries
+│   │   └── api/            # productQueries, productService, commerce (mock 데이터)
 │   ├── cart/
 │   │   └── model/          # cartStore
 │   └── wishlist/
 │       └── model/          # wishlistStore
 └── shared/
     ├── ui/                 # Dialog, Select, icons
-    └── lib/                # formatPrice 등
+    └── lib/                # formatWon 등
 ```
 
 ### 사용할 레이어와 선택 근거
@@ -229,8 +237,8 @@ shared/ui          → entities/product    (하위 → 상위 역방향)
 |------|------|------|
 | `Product`, `SizeValue`, `CategoryId`, `Category`, `CATEGORY_IDS` | `entities/product/model` | product 도메인 본질 |
 | `ProductSort`, `PRODUCT_SORTS`, `CategoryOption`, `CATEGORY_OPTIONS`, `ProductListQuery`, `ProductListResponse` | `entities/product/model` | product 조회 파라미터. `CategoryOption`은 `CategoryId`에서 파생되는 UI 필터용 확장 타입이지만, 소유자는 여전히 product 도메인. 슬라이스가 작으므로 세그먼트 분리 불필요 |
-| `HomeResponse` | `types/commerce.ts` 잔류 | 홈 전용 집계 응답이지만 Category, CategoryId, Product를 참조하므로 entities/product에서 import 필요. route handler 전환 시 함께 정리 |
-| `ApiErrorResponse`, `MockApiScenario` | `types/commerce.ts` 잔류 | route handler(`app/api/`)에서만 사용. route handler를 전환 범위에서 제외했으므로 함께 남겨두고, route handler 전환 시 `shared/api`로 이동 |
+| `HomeResponse` | `_pages/home/api/types.ts` | 홈 전용 집계 응답. Category, CategoryId, Product를 참조하므로 `_pages → entities` 방향으로 import. 아키텍처 리뷰 후 이동 |
+| `ApiErrorResponse`, `MockApiScenario` | `app/api/_data/types.ts` | Route Handler 전용 타입. FSD 레이어 밖에 잔류하되 소비자도 Route Handler뿐이므로 역방향 의존 없음 |
 
 #### homeQueries — entities/product vs _pages/home
 
@@ -509,6 +517,62 @@ FSD 전환 후 목표 구조 기준으로 분석. 기능별 응집이 됐는지 
 | **5** | `8d6f3c5` | ✅ | ✅ | — | _pages 이동 + homeQueries staleTime 5분→1분 |
 | **6** | `32bf919` | ✅ | ✅ | — | useSuspenseQuery 전환. ProductListContent는 `placeholderData` 필요로 useQuery 유지 |
 | **7** | — | ✅ | ✅ | ✅ | 빈 디렉토리 6개 삭제, `hooks` → `lib` 세그먼트명 수정 |
+| **8** | — | ✅ | ✅ | ✅ | 아키텍처 리뷰 후 서비스·mock 데이터·타입 이동 (아래 상세) |
+
+### 8단계 — 아키텍처 리뷰 후 역방향 의존 해소
+
+`architecture-review` 스킬로 POST_MIGRATION 점검을 받은 결과, FSD 레이어 간 역방향 의존 2건이 발견되었다.
+
+| 지적 | 현재 | 문제 |
+|------|------|------|
+| `entities/product/api` → `app/api/_data/productService` | entities → app | 하위가 상위를 import |
+| `_pages/home/api` → `app/api/_data/homeService` | _pages → app | 하위가 상위를 import |
+
+**원인**: 서비스 함수(`productService`, `homeService`)와 mock 데이터(`commerce.ts`)가 `app/api/_data/`에 남아 있었으나, `queryFn`이 이를 직접 호출하면서 entities·_pages에서 app 방향으로 import가 발생.
+
+**해소 방법**: 서비스 함수와 mock 데이터를 FSD 레이어 안으로 이동.
+
+| 파일 | 이동 전 | 이동 후 | 방향 |
+|------|---------|---------|------|
+| `commerce.ts` (mock 데이터) | `app/api/_data/` | `entities/product/api/` | product 도메인 데이터 |
+| `commerce.test.ts` | `app/api/_data/` | `entities/product/api/` | 테스트 co-locate |
+| `productService.ts` | `app/api/_data/` | `entities/product/api/` | product 조회·필터·정렬 |
+| `homeService.ts` | `app/api/_data/` | `_pages/home/api/` | 홈 전용 데이터 가공 |
+| `waitForMockApi` | `commerce.ts`에서 분리 | `app/api/_data/mock.ts` | Route Handler 전용 mock 유틸 |
+| `HomeResponse` | `types/commerce.ts` | `_pages/home/api/types.ts` | 홈 도메인 응답 타입 |
+| `ApiErrorResponse`, `MockApiScenario` | `types/commerce.ts` | `app/api/_data/types.ts` | Route Handler 전용 |
+
+이동 후 `types/commerce.ts`, `constants/` 빈 디렉터리 삭제.
+
+**검증**: `pnpm typecheck` 통과, `pnpm test` 70개 통과.
+
+---
+
+## 아키텍처 리뷰 결과
+
+`architecture-review` 스킬로 POST_MIGRATION 점검을 2회 실시.
+
+### 1차 리뷰 — 지적 4건
+
+| ID | 심각도 | 내용 |
+|---|---|---|
+| AR-01 | High | `entities` → `app/api/_data/productService`, `_pages` → `app/api/_data/homeService` 역방향 의존 |
+| AR-02 | Medium | `types/commerce.ts`가 FSD 밖에서 entities 타입을 참조 |
+| AR-03 | Low | `PRODUCT_LIST_DEFAULTS`의 소유권이 app과 entities에 분산 |
+| AR-04 | Low | Route Handler가 entities를 직접 참조 (`app → entities` 방향이므로 위반 아님) |
+
+### 수용·반려 결정
+
+| 지적 ID | 결정 | 근거 |
+|---|---|---|
+| AR-01 | 수용 | 서비스·mock 데이터를 FSD 레이어로 이동하여 역방향 제거 |
+| AR-02 | 수용 | `HomeResponse` → `_pages/home/api/types.ts`, `ApiErrorResponse`·`MockApiScenario` → `app/api/_data/types.ts`로 분리 후 `types/commerce.ts` 삭제 |
+| AR-03 | 수용 | AR-01 해소 시 자동 해결 — `PRODUCT_LIST_DEFAULTS`가 같은 슬라이스 내 `productService.ts`에 위치 |
+| AR-04 | 반려 | `app → entities`는 FSD 방향 정상. Route Handler가 서비스를 소비하는 구조는 적절 |
+
+### 2차 리뷰 — 승인
+
+AR-01~03 해소 후 재점검. 역방향 import 0건, cross-slice 의존 0건, 순환 의존 0건으로 승인.
 
 ---
 
