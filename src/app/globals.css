@@ -105,6 +105,12 @@ a {
   background: #e0e0e0;
 }
 
+.week05-product button[aria-pressed="true"] {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
+
 .week05-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -40,6 +40,7 @@ export function useProductFilters() {
   useEffect(() => {
     if (filters.q !== searchInput && filters.q !== lastDebounceQ.current) {
       skipNextDebounce.current = true;
+      lastDebounceQ.current = filters.q;
       setSearchInput(filters.q);
     }
     // searchInput은 의존성에서 제외 — filters.q가 외부에서 바뀔 때만 실행
