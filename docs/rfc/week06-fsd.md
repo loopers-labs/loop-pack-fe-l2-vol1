@@ -44,13 +44,13 @@
 
 ### 이번 주에 하지 않을 것
 
-| 항목                                 | 이유                                                                                                                                                        |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app/api` (mock 백엔드) FSD 전환 | 프론트가 아니라 "서버" 역할. 과제에서 제외 허용. 경계는 §2.8에 정의                                                                                         |
-| select/dialog 데모 페이지 전환       | 3~4주차 컴포넌트 데모로 커머스 도메인이 아님. `shared/ui` 이동에 따른 import 경로 갱신만 수행. 전용 코드(`types/product.ts`, `services/products.ts`)도 유지 |
-| `src/examples/week-05-layout` 정리   | 어떤 라우트에도 연결되지 않은 정적 참고용. 이동 대상과 혼동하지 않도록 손대지 않음                                                                          |
-| `week05-*` CSS 클래스 정리/모듈화    | 문자열 결합이라 import 경계로 잡히지 않는 별개 주제. 구조 변경과 섞으면 diff 오염                                                                           |
-| Zustand persist 도입                 | 새로고침 초기화는 의도된 설계. 기능 변경이므로 범위 밖                                                                                                      |
+| 항목                                 | 이유                                                                                                                                                                                                                         |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/api` (mock 백엔드) FSD 전환 | 프론트가 아니라 "서버" 역할. 과제에서 제외 허용. 경계는 §2.8에 정의                                                                                                                                                          |
+| select/dialog 데모 페이지 전환       | 3~4주차 컴포넌트 데모로 커머스 도메인이 아님. `shared/ui` 이동에 따른 import 경로 갱신만 수행. 전용 코드(`types/product.ts`, `services/products.ts`)도 유지 _(3차 리뷰에서 소유자인 `app/select/_types`·`_lib`로 흡수 — §9)_ |
+| `src/examples/week-05-layout` 정리   | 어떤 라우트에도 연결되지 않은 정적 참고용. 이동 대상과 혼동하지 않도록 손대지 않음                                                                                                                                           |
+| `week05-*` CSS 클래스 정리/모듈화    | 문자열 결합이라 import 경계로 잡히지 않는 별개 주제. 구조 변경과 섞으면 diff 오염                                                                                                                                            |
+| Zustand persist 도입                 | 새로고침 초기화는 의도된 설계. 기능 변경이므로 범위 밖                                                                                                                                                                       |
 
 ## 2. A — Architecture
 
@@ -94,7 +94,7 @@ src/
     products/page.tsx           # export { ProductListPage as default } from "@/_pages/products"
     products/error.tsx          # (Phase 6 신규)
     api/                        # mock 백엔드 — FSD 레이어 밖 (§2.8), _contract.ts에 자체 계약
-    dialog/  select/            # 데모 — import 경로만 갱신
+    dialog/  select/            # 데모 — 전용 코드는 select/_lib·_types에 동거 (3차 리뷰)
   _pages/
     home/
       ui/    home-page.tsx  home-banner.tsx  home-category-links.tsx  home-product-section.tsx
@@ -106,11 +106,11 @@ src/
       lib/   search-params.ts (nuqs 파서)
       index.ts
   widgets/
-    header/ui/header-actions.tsx
-    product-card-actions/ui/product-card-actions.tsx   # (신규) 두 feature 버튼 조합
+    header/ui/header-actions.tsx                       + index.ts (3차 리뷰)
+    product-card-actions/ui/product-card-actions.tsx   + index.ts # (신규) 두 feature 버튼 조합
   features/
-    toggle-cart/ui/cart-button.tsx
-    toggle-wishlist/ui/wishlist-button.tsx
+    toggle-cart/ui/cart-button.tsx                     + index.ts (3차 리뷰)
+    toggle-wishlist/ui/wishlist-button.tsx             + index.ts (3차 리뷰)
   entities/
     product/
       ui/    product-card.tsx (actions 슬롯)  product-grid-skeleton.tsx
@@ -122,7 +122,6 @@ src/
     ui/    placeholder.tsx  toggle-button.tsx  dialog/  select/  internal/
     lib/   create-selection-store.ts  use-debounced-callback.ts
     api/   commerce-client.ts (fetchCommerceApi + CommerceApiError + ApiErrorResponse)
-  types/product.ts  services/products.ts   # select 데모 전용 — 범위 제외로 유지
   examples/                                # 범위 제외로 유지
 ```
 
@@ -296,9 +295,9 @@ import type { Product } from "@/entities/product"; // in shared/*
    - 모든 FSD 레이어 → `@/app/*` 금지 (Phase 5 실측 보강 — `_pages`가 mock의 `_contract`를 역수입한 사례가 이 갭을 드러냄, §9 기록)
 2. **같은 레이어 슬라이스 간 직접 import 금지** — "같은 슬라이스 내부는 상대경로"(§2.4) 규칙 덕분에, 레이어 폴더 안에서 자기 레이어의 alias 전체를 금지하는 것으로 구현된다
    - `src/entities/**` 안에서 `@/entities/*` 금지(cart→wishlist 차단), `features`·`widgets`·`_pages`도 동일
-3. **mock 존 규칙(§2.8 강제)** — `src/app/api/**` → `@/_pages/*`·`@/widgets/*`·`@/features/*`·`@/shared/*` 금지, `@/entities/*`는 `allowTypeImports: true`로 타입만 허용
+3. **mock 존 규칙(§2.8 강제)** — `src/app/api/**` → `@/_pages/*`·`@/widgets/*`·`@/features/*`·`@/shared/*` 금지, `@/entities/*`는 `allowTypeImports: true`로 타입만 허용. 단 mock **테스트**(`*.test.ts`)는 `@/_pages/*`도 type-only로 허용 — 계약 드리프트 브리지(§2.8의 의도적 중복을 `expectTypeOf` 동치 검증으로 감시, 런타임 결합은 여전히 차단)
 4. **Public API 계약 강제(§4.3)** — index를 만든 슬라이스는 루트로만 진입한다
-   - 전역에서 `@/entities/*/*`, `@/_pages/*/*` 딥 임포트 금지 — `@/entities/product`(슬라이스 루트)는 허용, `@/entities/product/ui/product-card`는 차단. index가 없는 features/widgets는 딥 임포트가 규범이므로 대상 아님
+   - 전역에서 `@/entities/*/*`, `@/features/*/*`, `@/widgets/*/*`, `@/_pages/*/*` 딥 임포트 금지 — `@/entities/product`(슬라이스 루트)는 허용, `@/entities/product/ui/product-card`는 차단. features/widgets도 3차 리뷰에서 index 생성과 함께 대상에 포함(§4.3 개정)
    - `src/{entities,features,widgets,_pages}/**`에서 `../../*` import 금지 — alias 규칙의 상대경로 우회 차단. 슬라이스 내부(슬라이스/세그먼트/파일 2단 구조)에서 `../`는 세그먼트 간 협력에 충분하고 `../../`는 항상 슬라이스 밖으로 나간다
 
 전제 2가지를 함께 기록한다. ① `src/app/**`(라우팅)에는 규칙 객체를 정의하지 않는다 — 최상위 레이어라 모든 하위 import가 허용되기 때문이다. 단 flat config에서 같은 rule의 options는 병합이 아니라 **교체**이므로, 나중에 `src/app/**` 규칙을 추가한다면 mock 존 객체(규칙 3)가 반드시 뒤에 와야 한다. ② 같은 레이어 차단(규칙 2)에 정말 막히는 날이 오면(예: `entities/cart`가 `Product` 타입이 필요해지는 순간) 탈출구는 FSD 공식 cross-import 표기 **`@x`**(`entities/product/@x/cart`)이지, 규칙을 끄는 것이 아니다 — 규칙을 처음 어기고 싶어지는 순간의 판례를 미리 남긴다.
@@ -318,15 +317,17 @@ import type { Product } from "@/entities/product"; // in shared/*
 
 ### 4.1 슬라이스별 공개 / 은닉
 
-| 슬라이스                         | 공개 (index.ts)                                                                          | 숨기는 것                                                                       |
-| -------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `entities/product`               | `ProductCard`, `ProductGridSkeleton`, `Product`, `Category`, `CategoryId`, `ProductSort` | ui 파일 구조, 카드 마크업                                                       |
-| `entities/cart`                  | `useCartStore`                                                                           | store 생성 방식(createSelectionStore 사용 여부)                                 |
-| `entities/wishlist`              | `useWishlistStore`                                                                       | 동일                                                                            |
-| `_pages/home`                    | `HomePage`                                                                               | 섹션 컴포넌트, 쿼리·fetch, `HomeResponse` 내부 계약                             |
-| `_pages/products`                | `ProductListPage`                                                                        | 필터·검색·결과 컴포넌트, nuqs 파서, `ProductListResponse` 내부 계약             |
-| `features/toggle-*`, `widgets/*` | index 없음 — 파일 직접 import                                                            | (숨길 내부가 없음)                                                              |
-| `shared/*`                       | 세그먼트 루트 index 없음 — `@/shared/ui/placeholder`처럼 모듈별 import                   | `shared/ui/dialog/index.tsx`·`select/index.tsx`는 compound 조립 계약이므로 유지 |
+| 슬라이스                       | 공개 (index.ts)                                                                          | 숨기는 것                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `entities/product`             | `ProductCard`, `ProductGridSkeleton`, `Product`, `Category`, `CategoryId`, `ProductSort` | ui 파일 구조, 카드 마크업                                                       |
+| `entities/cart`                | `useCartStore`                                                                           | store 생성 방식(createSelectionStore 사용 여부)                                 |
+| `entities/wishlist`            | `useWishlistStore`                                                                       | 동일                                                                            |
+| `_pages/home`                  | `HomePage`                                                                               | 섹션 컴포넌트, 쿼리·fetch, `HomeResponse` 내부 계약                             |
+| `_pages/products`              | `ProductListPage`                                                                        | 필터·검색·결과 컴포넌트, nuqs 파서, `ProductListResponse` 내부 계약             |
+| `features/toggle-*`            | `CartButton` / `WishlistButton`                                                          | ui 파일 구조 _(3차 리뷰에서 index 생성 — §4.3 개정)_                            |
+| `widgets/header`               | `HeaderActions`                                                                          | ui 파일 구조 _(동일)_                                                           |
+| `widgets/product-card-actions` | `ProductCardActions`                                                                     | ui 파일 구조 — 소비처 2곳(홈·목록)으로 리트머스 1번 충족                        |
+| `shared/*`                     | 세그먼트 루트 index 없음 — `@/shared/ui/placeholder`처럼 모듈별 import                   | `shared/ui/dialog/index.tsx`·`select/index.tsx`는 compound 조립 계약이므로 유지 |
 
 모든 index.ts는 **서버 모듈로 유지**한다 — index에 `"use client"`를 붙이면 경계가 슬라이스 Public API 전체로 올라가 이후 그 슬라이스에 서버 전용 코드를 넣을 수 없게 된다. 지시어는 그것이 필요한 leaf 파일(예: `_pages/products/ui/product-list-page.tsx`)에만 둔다. 서버 모듈이 클라이언트 모듈을 재수출하는 것은 정상 동작이다.
 
@@ -363,7 +364,11 @@ type ProductCardProps = {
 2. 숨기고 싶은 내부 파일이 2개 이상인가?
 3. 내부 파일명이 바뀔 때 소비자가 몰라야 하는가?
 
-→ `entities/*`(소비처 여럿), `_pages/*`(Next 라우팅 파일과의 경계 계약)에만 생성. `features/*`·`widgets/*`는 파일 1개·소비처 1곳이라 index를 만들면 경로만 짧아지는 barrel이므로 만들지 않는다. 모든 index는 **명시적 named 재수출**만 사용하고 `export *`는 금지한다(이름 충돌·tree-shaking·순환 의존 예방).
+→ 초판 결정은 `entities/*`(소비처 여럿), `_pages/*`(Next 라우팅 파일과의 경계 계약)에만 생성이었고, `features/*`·`widgets/*`는 파일 1개·소비처 1곳이라 barrel로 판단해 제외했다.
+
+> **3차 리뷰 개정**: features/widgets에도 index를 생성하고 §2.9 규칙 4의 딥 임포트 차단을 4개 레이어 전체로 확장한다. 근거 — ① `widgets/product-card-actions`가 소비처 2곳(홈·목록)이 되어 리트머스 1번을 이미 충족하고 있었다(초판의 "소비처 1곳" 전제가 실측과 어긋남) ② 레이어별로 "루트 진입 / 딥 임포트"가 갈리는 이중 기준은 하네스 보호 범위의 비대칭을 낳고, 규칙의 예외는 위반이 아니라 규범처럼 학습된다 ③ index 4개(각 1줄)의 비용보다 "비즈니스 슬라이스는 항상 루트로 진입"이라는 단일 규칙의 가치가 크다. 리트머스는 shared 세그먼트 판단 기준으로는 유지한다.
+
+모든 index는 **명시적 named 재수출**만 사용하고 `export *`는 금지한다(이름 충돌·tree-shaking·순환 의존 예방).
 
 ## 5. O — Optimization
 
@@ -541,3 +546,18 @@ src/widgets/product-card-actions/ui/product-card-actions.tsx  ← 수정 (버튼
 2. **`actions` required의 실증 (Phase 2)** — 카드 이동 시 소비처 2곳이 `actions` 주입 없이 호출되는 상태가 나왔고, required 설계 덕에 typecheck가 즉시 실패했다. optional이었다면 찜/담기 버튼이 조용히 사라진 채 build까지 통과했을 것 — 2차 리뷰 수용 2번이 방어한 정확히 그 시나리오.
 3. **`"use client"` 소실 (Phase 3)** — `product-actions.tsx`를 3파일로 분해하는 과정에서 원본 1행의 지시어가 새 파일 전부에서 누락됐다. 소비처가 전부 클라이언트 트리라 우연히 동작하는 상태였고 리뷰에서 복원했다. "이동 시 지시어 보존"을 기계가 못 잡는 항목으로 인지 — 분해 이동의 체크리스트 항목으로 남긴다.
 4. **숨김 탭의 타이머 동결 (Phase 6)** — 브라우저 탭이 숨겨진 상태에서는 재시도 백오프가 진행되지 않아 에러 상태 도달을 관찰할 수 없었다(§5.3 재현 결과의 환경 특이사항).
+
+### architecture-review 스킬 3차 리뷰 (마이그레이션 완료본) 반영 기록
+
+**수용**
+
+1. Public API 이중 기준(entities·`_pages`는 index+하네스 보호, features·widgets는 딥 임포트 규범) → §4.3 개정: 4개 비즈니스 레이어 전부 index 생성, `FSD_DEEP_IMPORT`에 `@/features/*/*`·`@/widgets/*/*` 추가. 초판 반려("전 슬라이스 index 통일안")를 부분 철회 — `product-card-actions`가 소비처 2곳으로 리트머스 1번을 충족하게 된 실측 변화가 근거
+2. `services/`·`types/` 잔재가 살아있는 최상위 디렉터리로 보여 새 코드를 유인 → 소유자인 데모 페이지 아래 `app/select/_lib/get-catalog.ts`·`app/select/_types/product.ts`로 흡수, 두 디렉터리 삭제. "최상위 디렉터리가 곧 아키텍처 신호" 원칙
+3. 계약 의도적 중복(§2.8)의 드리프트 감지 장치 부재 → 라우트 테스트에 `expectTypeOf` 동치 브리지 추가(mock `_contract` ↔ `_pages/*/api` 응답 타입). type-only import이므로 런타임 독립성은 유지되고, 드리프트는 `pnpm typecheck`가 잡는다. 하네스에 mock 테스트 존 예외(§2.9 규칙 3) 추가
+4. cart 확장 시 entities 간 참조 규칙 미비 지적 → **기각착오 정정**: §2.9 전제 ②에 `@x` 판례가 이미 선결정되어 있어 추가 조치 없음
+
+**유보**
+
+1. `commerce-client.ts`의 도메인 흔적 이름·한국어 기본 에러 메시지 — 1차 리뷰 반려 4번과 동일 논거(이름은 대상 서버 서술, 로직은 도메인 무지)로 유지
+
+**검증 실측**: ① `widgets/header`에서 `@/features/toggle-cart/ui/cart-button` 딥 임포트를 임시 작성 → lint가 "Public API(슬라이스 루트)로만 import하세요"로 차단, 원복 후 통과 ② mock `_contract`의 `ProductListResponse`에 임시 필드 추가 → `pnpm typecheck`가 브리지 테스트에서 TS2344로 실패, 원복 후 통과. 적용 후 `pnpm check`(test·lint·typecheck·build) 전체 통과.
