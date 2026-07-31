@@ -38,18 +38,19 @@ export function ProductList() {
 
   if (!data && isError) {
     return (
-      <p className="week05-status" role="alert">
-        {error.message}
-
-        <button
-          type="button"
-          disabled={isFetching}
-          onClick={() => void refetch()}
-        >
-          다시 시도
-        </button>
-        <Link href="/">홈으로 가기</Link>
-      </p>
+      <div className="week05-error" role="alert">
+        <p>{error.message}</p>
+        <div className="week05-error-actions">
+          <button
+            type="button"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            다시 시도
+          </button>
+          <Link href="/">홈으로 가기</Link>
+        </div>
+      </div>
     );
   }
 
@@ -64,7 +65,7 @@ export function ProductList() {
   return (
     <>
       {isError && (
-        <p className="week05-status" role="alert">
+        <p className="week05-error-banner" role="alert">
           새 목록을 불러오지 못했습니다.
           <button
             type="button"

@@ -10,7 +10,7 @@ export default function CommerceError({
   unstable_retry: () => void;
 }) {
   return (
-    <section className="week05-status" role="alert">
+    <section className="week05-error" role="alert">
       <h1>화면을 표시하지 못했습니다</h1>
       <p>예상하지 못한 문제가 발생했습니다. 다시 시도해주세요.</p>
       <button type="button" onClick={retry}>

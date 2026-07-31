@@ -14,9 +14,8 @@ export function HomeContent() {
 
   if (!data && isError) {
     return (
-      <p className="week05-status" role="alert">
-        {error.message}
-
+      <div className="week05-error" role="alert">
+        <p>{error.message}</p>
         <button
           type="button"
           disabled={isFetching}
@@ -24,7 +23,7 @@ export function HomeContent() {
         >
           다시 시도
         </button>
-      </p>
+      </div>
     );
   }
 
@@ -41,7 +40,7 @@ export function HomeContent() {
   return (
     <>
       {isError && (
-        <p className="week05-status" role="alert">
+        <p className="week05-error-banner" role="alert">
           새 내용을 불러오지 못했습니다.
           <button
             type="button"
