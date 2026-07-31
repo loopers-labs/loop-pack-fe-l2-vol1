@@ -133,13 +133,3 @@ export const useRestored = () =>
     useBoundStore.persist.hasHydrated,
     () => false,
   );
-
-/**
- * persist 저장 대상 값을 읽는다.
- */
-export const useSavedStore = <T>(select: (state: PersistedState) => T) => {
-  const restored = useRestored();
-  const value = useBoundStore(select);
-
-  return restored ? value : undefined;
-};
