@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Product } from "@/entities/product";
 import { formatPrice } from "@/shared/lib";
 import { AddToCartButton } from "@/features/add-to-cart";
+import { WishlistButton } from "@/features/toggle-wishlist";
 import styles from "./ProductCard.module.css";
 
 const CARD_IMAGE_SIZE = 300;
@@ -31,6 +32,7 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
       <div className={styles.cardActions}>
         <AddToCartButton productId={product.id} />
+        <WishlistButton productId={product.id} />
       </div>
     </article>
   );

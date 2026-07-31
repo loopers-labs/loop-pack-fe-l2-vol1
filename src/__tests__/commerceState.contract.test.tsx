@@ -14,10 +14,12 @@ import {
 import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { AddToCartButton } from "@/features/add-to-cart";
+import { WishlistButton } from "@/features/toggle-wishlist";
 // 위젯 내부 컴포넌트라 public API 로 노출하지 않으나, 이 계약 테스트는 헤더 개수 파생을 직접 검증하려 내부를 집는다.
 import { CommerceHeaderCounts } from "@/widgets/commerce/ui/CommerceHeaderCounts";
 import { ProductList } from "@/_pages/products/ui/ProductList";
 import { useCartStore } from "@/entities/cart";
+import { useWishlistStore } from "@/entities/wishlist";
 import { makeQueryClient } from "@/shared/api";
 import {
   normalizeProductListQuery,
@@ -33,9 +35,14 @@ vi.mock("@/entities/product/api/fetchProducts", () => ({
 
 const getProductsMock = vi.mocked(getProducts);
 
-// 담기 버튼을 렌더하는 테스트용 조합(실제로는 ProductCard 가 조합).
+// ProductCardActions 를 대체 — 담기·위시 버튼을 함께 렌더하는 테스트용 조합(실제로는 ProductCard 가 조합).
 function ProductActions({ productId }: { productId: string }) {
-  return <AddToCartButton productId={productId} />;
+  return (
+    <>
+      <AddToCartButton productId={productId} />
+      <WishlistButton productId={productId} />
+    </>
+  );
 }
 
 function makeProduct(id: string): Product {
@@ -64,15 +71,18 @@ beforeEach(() => {
   getProductsMock.mockReset();
   localStorage.clear();
   useCartStore.setState({ ids: new Set(), hasHydrated: true });
+  useWishlistStore.setState({ ids: new Set(), hasHydrated: true });
 });
 
 afterEach(cleanup);
 
 // 요구사항 1 — 계약: action 으로 담고/빼면, 그 상태를 selector 로 구독한 버튼이 즉시 바뀐다.
 describe("Zustand action 과 selector", () => {
-  test("담기 토글 action 이 selector 로 구독한 버튼 상태를 바꾼다", () => {
+  test("담기·위시 토글 action 이 selector 로 구독한 버튼 상태를 바꾼다", () => {
     render(<ProductActions productId="p1" />);
 
+    // 아래 테스트들은 aria-label="장바구니"난 aria-label="위시리스트"로 잡힐텐데...
+    // 이래도 괜찮을지? 아니라면 어떻게 잡아야 할지? 만약 i18n이라던가등의 케이스에는?
     fireEvent.click(
       screen.getByRole("button", { name: "장바구니", pressed: false }),
     );
@@ -85,6 +95,13 @@ describe("Zustand action 과 selector", () => {
     );
     expect(
       screen.getByRole("button", { name: "장바구니", pressed: false }),
+    ).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "위시리스트", pressed: false }),
+    );
+    expect(
+      screen.getByRole("button", { name: "위시리스트", pressed: true }),
     ).toBeTruthy();
   });
 });
@@ -95,6 +112,7 @@ describe("헤더 개수 파생", () => {
     // 개수 element 는 role 이 없어(단순 표시값) data-testid 로 잡고, 보이는 숫자만 assert 한다
     // → 헤더 label 텍스트·포맷·i18n 이 바뀌어도 안 깨진다.
     useCartStore.setState({ hasHydrated: false });
+    useWishlistStore.setState({ hasHydrated: false });
     render(
       <>
         <CommerceHeaderCounts />
@@ -108,6 +126,7 @@ describe("헤더 개수 파생", () => {
     // 복원 후: store 의 개수(size)를 그대로 파생해 드러낸다
     act(() => {
       useCartStore.setState({ hasHydrated: true });
+      useWishlistStore.setState({ hasHydrated: true });
     });
     expect(screen.getByTestId("cart-count").textContent).toBe("0");
 
