@@ -6,11 +6,11 @@ import { ProductList } from './ProductList';
 
 import { productQueries } from '@/entities/product';
 import {
+  loadProductListConditions,
   ProductListFilters,
   ProductSearchForm,
   toProductListQuery,
 } from '@/features/product';
-import { loadProductListConditions } from '@/features/product/index.server';
 import { getQueryClient } from '@/shared/get-query-client';
 
 export function ProductsPage({

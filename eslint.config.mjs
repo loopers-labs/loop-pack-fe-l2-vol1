@@ -129,7 +129,7 @@ export default tseslint.config(
                 '슬라이스 내부는 상대 경로, 외부는 루트 진입점을 사용합니다.',
             },
             {
-              group: ['@/features/*/*', '!@/features/*/index.server'],
+              group: ['@/features/*/*'],
               message:
                 '슬라이스 내부는 상대 경로, 외부는 루트 진입점을 사용합니다.',
             },
@@ -162,7 +162,7 @@ export default tseslint.config(
                   {
                     element: {
                       type: 'features',
-                      fileInternalPath: ['index.ts', 'index.server.ts'],
+                      fileInternalPath: 'index.ts',
                     },
                   },
                   {
@@ -179,7 +179,7 @@ export default tseslint.config(
                   {
                     element: {
                       type: 'features',
-                      fileInternalPath: ['index.ts', 'index.server.ts'],
+                      fileInternalPath: 'index.ts',
                     },
                   },
                   {

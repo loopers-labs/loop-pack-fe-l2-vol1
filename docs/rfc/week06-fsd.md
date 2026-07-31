@@ -132,7 +132,7 @@ app → _pages → features → entities → shared
 
 1. 자기보다 아래 레이어만 import한다.
 2. 같은 레이어의 다른 슬라이스를 직접 import하지 않는다. 예외는 entities의 `@x` 공인 통로(무엇을 누구에게 내주는지 파일로 명시, FSD v2.1 표준)뿐이다.
-3. 다른 슬라이스는 루트 진입점(index.ts, 서버 전용은 index.server.ts)으로만 import한다. 같은 슬라이스 안은 상대 경로(자기 index 참조는 순환). shared는 슬라이스가 아니라 파일 경로로 직접 import한다.
+3. 다른 슬라이스는 루트 진입점(index.ts)으로만 import한다. 같은 슬라이스 안은 상대 경로(자기 index 참조는 순환). shared는 슬라이스가 아니라 파일 경로로 직접 import한다.
 
 ```ts
 // 허용
@@ -202,7 +202,7 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | 1 | 타입 분해: `types/commerce.ts`를 entities/product의 model과 api, mock으로 나누고 참조 12개 파일 경로 갱신 | typecheck |
 | 2 | `entities/product` 신설: api, queries 이동 | queries 테스트 |
 | 3 | store 재배치: slice는 entities/cart, wishlist로, 조합과 persist는 client-state로, `@x` 신설, 도메인별 selector 훅 공개 | store 테스트, localStorage 키와 기존 저장값 복원 확인 |
-| 4 | `features/product` 신설: 검색 폼, 필터, URL 모델, 상수 이동, `index.server.ts` 분리 | search-params, product-list-params 테스트 |
+| 4 | `features/product` 신설: 검색 폼, 필터, URL 모델, 상수 이동 | search-params, product-list-params 테스트 |
 | 5 | `_pages` 신설, ProductCard actions 전환, `(commerce)` 그룹과 헤더 layout 이동, page.tsx 축소 | 기준선 브라우저 확인(R 전 항목), `/demos`에 헤더 없음, hydration 경고 없음, 초기 중복 요청 없음 확인 |
 | 6 | features 정리(ui 세그먼트, index.ts), Public API 정리, 딥 import 제거, 테스트 분리 배치 | 하네스 위반 0 확인 후 error 승격, 통과 증거 기록 |
 | 7 | architecture-review SKILL로 구조 점검, 지적의 수용과 반려를 근거와 함께 기록 | |
@@ -231,14 +231,13 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | entities/product | ProductCard, productQueries, 도메인 타입 | fetch 함수. 조회는 queryOptions로만 |
 | entities/client-state | 도메인별 selector 훅(useCartCount, useIsInCart, useToggleCart와 wishlist 동형), useRestoreSavedStore | useBoundStore(통합 store 훅), persist 검증 storage, 저장 키 |
 | entities/cart, entities/wishlist | index 없음. `@x/client-state`로 slice 생성 함수만 제공 | `@x` 외의 접근 경로 없음 |
-| features/product | (index.ts) ProductSearchForm, ProductListFilters, useProductListUrlState, usePageClamp, toProductListQuery / (index.server.ts) loadProductListConditions | 필터 상수와 라벨, 검색어 정규화 |
+| features/product | ProductSearchForm, ProductListFilters, useProductListUrlState, usePageClamp, toProductListQuery, loadProductListConditions | 필터 상수와 라벨, 검색어 정규화 |
 | features/cart | CartToggleButton, CartCount | (내부 없음) |
 | features/wishlist | WishlistToggleButton, WishlistCount | 위와 동일 |
 | _pages/home, _pages/products | 페이지 컴포넌트 1개 | 페이지 내부 구성 |
 | shared | index 없음. 파일 경로로 직접 import | |
 
 - **통합 store 훅은 공개하지 않는다.** useBoundStore를 그대로 열면 cart 기능이 wishlist 상태를 읽어도 막을 수 없다. 상태 조각별 selector 훅만 공개해 경계를 좁힌다. store 대신 커스텀 훅만 export하는 Zustand 권장 패턴이고, 훅의 소유자가 store를 가진 client-state라 entity 간 참조도 늘지 않는다.
-- **features/product는 진입점을 둘로 나눈다.** `loadProductListConditions`는 `nuqs/server`(서버 전용 모듈)를 쓰는데, 클라이언트 컴포넌트와 같은 index.ts로 수출하면 클라이언트 번들의 모듈 그래프에 서버 전용 코드가 끌려 들어간다. 서버 전용 수출은 `index.server.ts`로 분리한다.
 
 ### `ProductCard`와 행위의 조합
 
