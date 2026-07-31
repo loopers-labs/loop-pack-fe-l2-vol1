@@ -2,8 +2,8 @@ import { getCatalog } from "./_lib/get-catalog";
 
 import { ProductOptions } from "./_components/product-options";
 
-export default async function SelectDemoPage() {
-  const catalog = await getCatalog();
+export default function SelectDemoPage() {
+  const catalog = getCatalog();
 
   return (
     <main
