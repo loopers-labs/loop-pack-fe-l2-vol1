@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
 const request = (query = "") =>
@@ -229,5 +229,40 @@ describe("GET /api/products", () => {
     const errorResponse = await request("?scenario=error");
     expect(errorResponse.status).toBe(500);
     expect(await errorResponse.json()).toEqual({ message: "상품 목록을 불러오지 못했습니다." });
+  });
+
+  it("returns the existing product payload after exactly 1.5 seconds in the slow scenario", async () => {
+    vi.useFakeTimers();
+
+    try {
+      const responsePromise = request(
+        "?scenario=slow&category=digital&sort=popular&page=1&pageSize=3",
+      );
+      let resolved = false;
+      void responsePromise.then(() => {
+        resolved = true;
+      });
+
+      await vi.advanceTimersByTimeAsync(1_499);
+      expect(resolved).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(1);
+      const response = await responsePromise;
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body).toMatchObject({
+        totalCount: 6,
+        page: 1,
+        pageSize: 3,
+      });
+      expect(body.products.map((product: { id: string }) => product.id)).toEqual([
+        "p21",
+        "p22",
+        "p30",
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

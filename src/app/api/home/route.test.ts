@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
 const request = (query = "") =>
@@ -54,6 +54,39 @@ describe("GET /api/home", () => {
     const response = await request("?scenario=error");
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ message: "홈 데이터를 불러오지 못했습니다." });
+  });
+
+  it("returns the existing home payload after exactly 1.5 seconds in the slow scenario", async () => {
+    vi.useFakeTimers();
+
+    try {
+      const responsePromise = request("?scenario=slow");
+      let resolved = false;
+      void responsePromise.then(() => {
+        resolved = true;
+      });
+
+      await vi.advanceTimersByTimeAsync(1_499);
+      expect(resolved).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(1);
+      const response = await responsePromise;
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.banner.image).toBe("/images/products/p6.jpg");
+      expect(body.categories).toHaveLength(5);
+      expect(body.popularProducts.map((product: { id: string }) => product.id)).toEqual([
+        "p21",
+        "p11",
+        "p15",
+        "p8",
+        "p22",
+        "p30",
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("rejects an unknown scenario", async () => {

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { homeBanner, products } from "./commerce";
 
 const productImagesDirectory = join(process.cwd(), "public/images/products");
@@ -11,6 +11,65 @@ const imageManifestPath = join(
 );
 
 describe("commerce fixture", () => {
+  it("provides deterministic home and product data through shared server access", async () => {
+    const dataAccess = await import("./commerce.server").catch(() => null);
+
+    expect(dataAccess).not.toBeNull();
+    if (dataAccess === null) {
+      return;
+    }
+
+    const firstHome = await dataAccess.getHomeData();
+    const secondHome = await dataAccess.getHomeData();
+    const firstProductPage = await dataAccess.getProductListData({
+      q: "",
+      category: "digital",
+      sort: "popular",
+      page: 1,
+      pageSize: 3,
+    });
+    const secondProductPage = await dataAccess.getProductListData({
+      q: "",
+      category: "digital",
+      sort: "popular",
+      page: 1,
+      pageSize: 3,
+    });
+
+    expect(secondHome).toEqual(firstHome);
+    expect(firstHome.popularProducts.map((product) => product.id)).toEqual([
+      "p21",
+      "p11",
+      "p15",
+      "p8",
+      "p22",
+      "p30",
+    ]);
+    expect(secondProductPage).toEqual(firstProductPage);
+    expect(firstProductPage.products.map((product) => product.id)).toEqual([
+      "p21",
+      "p22",
+      "p30",
+    ]);
+    expect(firstProductPage.products.every((product) =>
+      /^\/images\/products\/p\d+\.jpg$/.test(product.image)
+    )).toBe(true);
+  });
+
+  it("rejects loading shared data access in a browser runtime", async () => {
+    vi.resetModules();
+    vi.stubGlobal("window", {});
+
+    try {
+      await expect(import("./commerce.server")).rejects.toThrow(
+        "commerce.server.ts는 서버에서만 사용할 수 있습니다.",
+      );
+    } finally {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    }
+  });
+
   it("uses at least three explicit product brands", () => {
     expect(new Set(products.map((product) => product.brand)).size).toBeGreaterThanOrEqual(3);
   });

@@ -14,7 +14,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build"
+    "verify:week07:starter": "node scripts/week-07/verify-starter.mjs",
+    "verify:week07:submission": "node scripts/week-07/verify-submission.mjs",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm verify:week07:starter"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",

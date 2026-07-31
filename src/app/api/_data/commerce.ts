@@ -1,4 +1,9 @@
-import type { Category, CategoryId, Product } from "@/types/commerce";
+import type {
+  Category,
+  CategoryId,
+  MockApiScenario,
+  Product,
+} from "@/types/commerce";
 
 export const categories: Category[] = [
   { id: "casual", name: "캐주얼" },
@@ -351,9 +356,9 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct);
 
-const mockDelayMs = process.env.NODE_ENV === "test" ? 0 : 500;
+const defaultMockDelayMs = process.env.NODE_ENV === "test" ? 0 : 500;
 
-export const waitForMockApi = () =>
+export const waitForMockApi = (scenario: MockApiScenario | null = null) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, mockDelayMs);
+    setTimeout(resolve, scenario === "slow" ? 1_500 : defaultMockDelayMs);
   });
