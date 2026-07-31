@@ -76,6 +76,33 @@ const fsdHarness = [
       ],
     },
   },
+  // mock 테스트 존: 계약 드리프트 브리지 — _pages 응답 타입을 type-only로 가져와 mock 계약과 동치 검증 (RFC §2.8)
+  // 같은 rule의 options는 교체이므로 mock 존 객체보다 반드시 뒤에 위치
+  {
+    files: ["src/app/api/**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/widgets/*", "@/features/*", "@/shared/*"],
+              message: "FSD: mock 백엔드는 자체 계약(_contract.ts)만 사용합니다",
+            },
+            {
+              group: ["@/entities/*", "@/_pages/*"],
+              allowTypeImports: true,
+              message: "FSD: mock 테스트는 entities·_pages에서 타입만 가져올 수 있습니다",
+            },
+            {
+              group: ["@/entities/*/*"],
+              message: "FSD: Public API(슬라이스 루트)로만 import하세요",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export default defineConfig([
