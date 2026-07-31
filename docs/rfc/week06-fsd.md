@@ -97,8 +97,8 @@ src/
 │   ├── api/                   mock 백엔드 (범위 밖)
 │   └── demos/                 4주차 데모 (범위 밖)
 ├── _pages/                    페이지 조합
-│   ├── home/                  ui: HomeContent
-│   └── products/              ui: ProductList
+│   ├── home/                  ui: HomePage(서버 prefetch) + HomeContent
+│   └── products/              ui: ProductsPage(서버 prefetch) + ProductList
 ├── features/                  사용자 기능
 │   ├── product/               ui: 검색 폼, 필터 / model: URL 파서, 훅, 상수
 │   ├── cart/                  ui: 담기 토글, 카운트
@@ -173,7 +173,7 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | `features/cart/CartToggleButton.tsx` | `features/cart/ui/CartToggleButton.tsx` | features / cart / ui | 담기 행위 UI. client-state 구독은 하위 방향이라 합법 |
 | `features/cart/CartCount.tsx` | `features/cart/ui/CartCount.tsx` | features / cart / ui | 담긴 개수 표시. 행위와 한 슬라이스에 응집. entities에 두면 entity 간 결합이 늘어 비선택 |
 | `features/wishlist/WishlistToggleButton.tsx`, `WishlistCount.tsx` | `features/wishlist/ui/` | features / wishlist / ui | 위와 동일 |
-| `app/(home)/page.tsx`, `app/products/page.tsx` | `app/(commerce)/page.tsx`, `app/(commerce)/products/page.tsx` | app | 헤더 마크업과 화면 구성을 덜어내고 서버 prefetch + 페이지 컴포넌트 렌더만 남긴다 |
+| `app/(home)/page.tsx`, `app/products/page.tsx` | `app/(commerce)/page.tsx`, `app/(commerce)/products/page.tsx` | app | 페이지 컴포넌트 렌더 한 줄만 남긴다. 서버 prefetch는 `_pages`의 HomePage, ProductsPage로 옮긴다.  |
 | (신규) | `app/(commerce)/layout.tsx` | app | 커머스 공통 헤더. 루트에 두면 `/demos`에도 생기므로 그룹으로 격리 |
 | `app/layout.tsx` | 유지 | app | 전역 스타일과 providers만. 헤더는 두지 않는다 |
 | `app/providers.tsx` | 유지 | app | 앱 초기화는 app 레이어의 본래 책임 |
@@ -229,7 +229,7 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | 슬라이스 | 공개 (index.ts) | 숨김 |
 | --- | --- | --- |
 | entities/product | ProductCard, productQueries, 도메인 타입 | fetch 함수. 조회는 queryOptions로만 |
-| entities/client-state | 도메인별 selector 훅(useCartCount, useIsInCart, useToggleCart와 wishlist 동형), useRestoreSavedStore | useBoundStore(통합 store 훅), persist 검증 storage, 저장 키 |
+| entities/client-state | 도메인 훅 useCart(select), useWishlist(select), useRestoreSavedStore | useBoundStore(통합 store 훅), useRestored, persist 검증 storage, 저장 키 |
 | entities/cart, entities/wishlist | index 없음. `@x/client-state`로 slice 생성 함수만 제공 | `@x` 외의 접근 경로 없음 |
 | features/product | ProductSearchForm, ProductListFilters, useProductListUrlState, usePageClamp, toProductListQuery, loadProductListConditions | 필터 상수와 라벨, 검색어 정규화 |
 | features/cart | CartToggleButton, CartCount | (내부 없음) |
@@ -237,7 +237,7 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | _pages/home, _pages/products | 페이지 컴포넌트 1개 | 페이지 내부 구성 |
 | shared | index 없음. 파일 경로로 직접 import | |
 
-- **통합 store 훅은 공개하지 않는다.** useBoundStore를 그대로 열면 cart 기능이 wishlist 상태를 읽어도 막을 수 없다. 상태 조각별 selector 훅만 공개해 경계를 좁힌다. store 대신 커스텀 훅만 export하는 Zustand 권장 패턴이고, 훅의 소유자가 store를 가진 client-state라 entity 간 참조도 늘지 않는다.
+- **통합 store 훅은 공개하지 않는다.** useBoundStore를 그대로 열면 cart 기능이 wishlist 상태를 읽어도 막을 수 없다. 도메인 단위 selector 훅만 공개해 경계를 좁힌다. store 대신 커스텀 훅만 export하는 Zustand 권장 패턴이고, 훅의 소유자가 store를 가진 client-state라 entity 간 참조도 늘지 않는다.
 
 ### `ProductCard`와 행위의 조합
 
