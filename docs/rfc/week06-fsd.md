@@ -483,3 +483,21 @@ import { useWishlistStore } from "@/entities/wishlist";
 | 잘못된 검색 조건(4xx) | `throwOnError`가 4xx는 경계로 안 올림(설계) → 전용 안내 UI가 없어 목록 영역이 빈 채로 남음 |
 | 예상하지 못한 렌더링 오류 | 렌더 중 throw 강제 → 홈은 `app/error.tsx`로 헤더 포함 전체 교체됨(개선대상), 목록은 `app/products/error.tsx`로 목록만 교체(헤더·필터 유지). 둘 다 "다시 시도" 제공 |
 | 장바구니 행위의 비즈니스 오류 | 클라이언트 `Set` 토글이라 실패 경로 자체가 없어 재현 대상 없음 |
+
+## 3. 삭제 시나리오로 자가 검증 (과제 5단계)
+
+폴더 이동 뒤 코드를 고치지 않고 "기능을 통째로 지우면 무엇이 흔들리나"로 응집을 검증한다. 삭제 대상이 여러 레이어에 흩어져 grep 없이 못 찾으면 응집 실패다.
+
+### 시나리오 A — 위시리스트 기능 통째 제거
+
+**삭제할 폴더·파일 (기능 소유 → 폴더째 삭제)**
+- `entities/wishlist/` — `index.ts`, `model/store.ts`
+- `features/toggle-wishlist/` — `index.ts`, `ui/WishlistButton.tsx`
+
+**삭제 후 수정할 파일 (기능 결합 — public API import)**
+- `_app/providers.tsx` — `useWishlistStore` import + `.rehydrate()` 한 줄 제거
+- `widgets/commerce/ui/CommerceHeaderCounts.tsx` — 위시리스트 개수 훅·표시 제거
+- `widgets/product-card/ui/ProductCard.tsx` — `WishlistButton` import + 렌더 제거
+- `src/__tests__/commerceState.contract.test.tsx` — `WishlistButton`·`useWishlistStore`를 실제 import·사용(cart↔wishlist 동기화 계약 테스트) → 위시리스트 검증 제거·수정. **삭제 시 이걸 안 고치면 `pnpm test`/`build`가 깨진다.**
+
+**판정: 응집 성공.** 삭제 대상은 **2개 슬라이스로 완전 co-locate**돼 폴더째 지운다. 기능 결합 소비처는 4곳(배선 / 개수 표시 / 조합 / 계약 테스트) 전부 public API(`@/entities/wishlist`·`@/features/toggle-wishlist`)로 import하므로 저 두 public API만 grep 하여 grep 잡히지 않은 부분을 확인. 그 후 사이트에서 동작 문제 없는지 직접 검증
