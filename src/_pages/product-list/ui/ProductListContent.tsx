@@ -132,7 +132,7 @@ export function ProductListContent() {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error, isFetching } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     ...productListQueryOptions(query),
     placeholderData: keepPreviousData,
   });
@@ -178,9 +178,18 @@ export function ProductListContent() {
   if (isError) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">
-          {error?.message ?? '오류가 발생했습니다.'}
-        </p>
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-text-secondary">
+            {error?.message ?? '오류가 발생했습니다.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
+          >
+            다시 시도
+          </button>
+        </div>
       </div>
     );
   }

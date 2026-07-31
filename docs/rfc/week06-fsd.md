@@ -332,7 +332,7 @@ import { productListQueryOptions } from '@/entities/product/api/productQueries';
 
 | 실패 유형 | 처리 위치 | Error Boundary로 전파하는가 | 사용자 UI | 재시도 방법 | 이 경계를 선택한 이유 |
 |-----------|-----------|---------------------------|-----------|------------|----------------------|
-| 상품 목록 조회 실패 (5xx) | `_pages/product-list` 인라인 | ❌ (useQuery 유지) | 컴포넌트 인라인 에러 메시지 | 검색·필터 변경으로 재요청 | `placeholderData: keepPreviousData`가 필요하므로 useSuspenseQuery 전환 불가. useQuery의 isError 분기로 인라인 처리. route `error.tsx`는 예상 밖 렌더링 오류용 fallback |
+| 상품 목록 조회 실패 (5xx) | `_pages/product-list` 인라인 | ❌ (useQuery 유지) | 컴포넌트 인라인 에러 메시지 + 재시도 버튼 | `refetch()` 버튼 또는 검색·필터 변경으로 재요청 | `placeholderData: keepPreviousData`가 필요하므로 useSuspenseQuery 전환 불가. useQuery의 isError 분기로 인라인 처리하고 `refetch`로 전체 새로고침 없이 재시도. route `error.tsx`는 예상 밖 렌더링 오류용 fallback |
 | 홈 조회 실패 (5xx) | `_pages/home` | ✅ useSuspenseQuery가 자동 throw | `error.tsx` fallback | `reset()` | 배너·카테고리·상품이 모두 한 API에서 오므로 부분 표시가 의미 없음 |
 | 상품 상세 조회 실패 (5xx/404) | `_pages/product-detail` | ✅ useSuspenseQuery가 자동 throw | 기존 `error.tsx` — 다시 시도 + 목록으로 돌아가기 | `reset()` 또는 목록 이동 | 상품 하나의 조회 실패이므로 상세 영역 전체를 fallback으로 대체 |
 | 잘못된 검색 조건 (4xx) | `_pages/product-list` 인라인 | ❌ | 해당 없음 — 현재 nuqs `parseAsStringLiteral`로 유효하지 않은 파라미터를 런타임에 차단하고 있어 잘못된 조건이 API까지 도달하지 않음 | — | URL 파라미터 검증을 클라이언트에서 이미 처리. 향후 사용자 직접 입력(자유 텍스트 검색)이 추가되면 인라인 에러 표시 검토 |
