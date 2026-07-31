@@ -1,14 +1,18 @@
 import { QueryClient, environmentManager } from "@tanstack/react-query";
+import { isServerError } from "./apiError";
 
 export function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // true 면 렌더 중 에러를 throw 한다(→ 가장 가까운 에러 경계에 잡힘). retry 를 다 쓰고도 실패한
-        // 최종 시점에 평가된다. 보여줄 자기 데이터가 없을 때(첫 로드 실패)만 throw 한다. 이미 목록을 보던 중
-        // background refetch 가 실패하면(data 존재) throw 하지 않는다 — throw 하면 멀쩡히 보던 목록이
-        // 통째로 에러 화면으로 교체되므로, stale 데이터를 그대로 유지한다.
-        throwOnError: (_error, query) => query.state.data === undefined,
+        // 렌더 중 에러를 throw 할지 결정한다(→ true 면 가장 가까운 에러 경계에 잡힘). retry 를 다 쓰고도
+        // 실패한 최종 시점에 평가된다. 두 축으로 경계/인라인을 가른다:
+        //  1) 보여줄 자기 데이터가 있으면(background refetch 실패) throw 안 함 — 멀쩡히 보던 목록을
+        //     에러 화면으로 통째로 바꾸지 않고 stale 데이터를 유지한다.
+        //  2) 첫 로드 실패는 '예상 못한' 서버·네트워크 오류(5xx·network)만 경계로 보낸다. 4xx(잘못된
+        //     요청)는 호출부가 화면 안에서 다룰 몫이라 여기서 throw 하지 않는다.
+        throwOnError: (error, query) =>
+          query.state.data === undefined && isServerError(error),
       },
     },
   });

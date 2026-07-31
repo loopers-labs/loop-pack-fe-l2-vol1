@@ -13,7 +13,7 @@ import {
 import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { ProductList } from "./ProductList";
-import { makeQueryClient } from "@/shared/api";
+import { HttpError, makeQueryClient } from "@/shared/api";
 import { getProducts } from "@/entities/product/api/fetchProducts";
 import type { Product, ProductListResponse } from "@/entities/product";
 
@@ -96,8 +96,8 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("ProductList", () => {
-  test("보여줄 데이터가 없는 조회 실패 시 throw 해서 에러 경계로 넘어간다", async () => {
-    getProductsMock.mockRejectedValue(new Error("서버 오류"));
+  test("보여줄 데이터가 없는 서버 오류(5xx) 시 throw 해서 에러 경계로 넘어간다", async () => {
+    getProductsMock.mockRejectedValue(new HttpError(500, "서버 오류"));
     // 경계가 에러를 잡을 때 React 가 찍는 console.error 노이즈를 억제한다.
     const consoleError = vi
       .spyOn(console, "error")
