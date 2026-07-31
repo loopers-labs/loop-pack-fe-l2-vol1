@@ -7,10 +7,8 @@ import nextPlugin from "@next/eslint-plugin-next";
 import prettier from "eslint-config-prettier";
 import { defineConfig, globalIgnores } from "eslint/config";
 
-// FSD 의존성 하네스 — 규칙 설계와 전제는 docs/rfc/week06-fsd.md §2.9 참고
 // 레이어 순위: 하위(shared) → 상위(_pages)
 const FSD_LAYERS = ["shared", "entities", "features", "widgets", "_pages"];
-// index.ts(Public API)를 우회하는 딥 임포트 차단 대상 — 비즈니스 슬라이스 전 레이어 (RFC §4.3 3차 개정)
 const FSD_DEEP_IMPORT = ["@/entities/*/*", "@/features/*/*", "@/widgets/*/*", "@/_pages/*/*"];
 
 const fsdHarness = [
@@ -49,7 +47,6 @@ const fsdHarness = [
       ],
     },
   })),
-  // mock 존: FSD 레이어 밖 — 자체 계약만 사용, entities는 타입만 허용 (RFC §2.8)
   // 주의: 같은 rule의 options는 병합이 아니라 교체 — src/app/** 규칙을 추가하게 되면 이 객체가 반드시 뒤에 와야 함
   {
     files: ["src/app/api/**/*.ts"],
@@ -76,7 +73,6 @@ const fsdHarness = [
       ],
     },
   },
-  // mock 테스트 존: 계약 드리프트 브리지 — _pages 응답 타입을 type-only로 가져와 mock 계약과 동치 검증 (RFC §2.8)
   // 같은 rule의 options는 교체이므로 mock 존 객체보다 반드시 뒤에 위치
   {
     files: ["src/app/api/**/*.test.ts"],
