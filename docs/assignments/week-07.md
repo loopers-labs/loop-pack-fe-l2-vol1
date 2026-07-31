@@ -1,14 +1,5 @@
 # 7주차 — 프론트엔드 성능 최적화: 사용자 경로별 병목 측정과 개선
 
-<!--
-source_document: pasted-text.txt
-source_sha256: 39e307e915f0ebcb787cac091f54cee4b1f5fc2710d96d8b17080d43fd954cce
-source_line_count: 458
-source_transform: 사용자 결정으로 폐기한 선택 범위의 본문·체크리스트·상호 참조 제거
-base_revision: 8708cb2d7e0f8da0ac98fe0153a750aeee7b69dc
-assignment_branch: codex/week-07-performance-assignment
--->
-
 > 느린 API를 없애서 숫자만 줄이지 않아요.
 >
 > 같은 사용자 경로를 production 환경에서 재현하고, 렌더링·데이터 로딩·상호작용 병목을 줄인 뒤, 같은 조건의 Before / After로 효과를 확인해요.
@@ -34,10 +25,8 @@ Week 7 starter가 제공하는 재현 조건을 그대로 사용해요.
 - `/api/home?scenario=slow`와 `/api/products?scenario=slow`는 1.5초 뒤 성공 응답을 반환해요.
 - 응답 데이터는 매번 같은 사용자 경로를 비교할 수 있는 결정적 fixture예요.
 - Advanced A는 `/performance-lab/inp?pageSize=24`에 독립된 목록, store, 카드, 필수 화면 계산을 제공해요.
-- `docs/assignments/week-07-evidence-template.md`는 측정 조건과 원본 증거 위치를 기록할 형식만 제공해요.
-- checkpoint는 API·fixture·제출 형식과 결정적 동작만 확인해요.
 
-API 지연, Advanced A의 재현 병목, 측정 장치와 checkpoint는 과제에서 새로 만드는 기능이 아니에요. starter 조건이 다르거나 위 경로가 재현되지 않으면 임의로 비슷하게 만들지 말고 멘토에게 먼저 알려줘요. 서로 다른 병목을 측정하면 Before / After를 비교할 수 없어요.
+API 지연, Advanced A의 재현 병목과 측정 장치는 과제에서 새로 만드는 기능이 아니에요. starter 조건이 다르거나 위 경로가 재현되지 않으면 임의로 비슷하게 만들지 말고 멘토에게 먼저 알려줘요. 서로 다른 병목을 측정하면 Before / After를 비교할 수 없어요.
 
 멘토는 과제를 공개하기 전에 production build와 위 세 재현 경로를 검증한 starter commit 또는 tag를 공지해요. 해당 기준점이 공지되지 않았다면 과제를 시작하지 않아요.
 
@@ -51,7 +40,7 @@ starter는 정답 UI나 최적화 구현을 제공하지 않아요. 다음 작�
 
 ### 누적 과제 코드와 통합할 때
 
-새 주차 starter는 멘티의 누적 브랜치에 동기화돼요. 기존 홈·상품 목록·검색·카테고리·정렬·페이지네이션·장바구니·위시리스트, FSD, TanStack Query, Zustand 코드를 교체하지 않아요. 같은 파일이 이미 있다면 starter의 정답 구조로 덮어쓰지 말고 API·fixture·측정 장치와 checkpoint만 통합해요.
+새 주차 starter는 멘티의 누적 브랜치에 동기화돼요. 기존 홈·상품 목록·검색·카테고리·정렬·페이지네이션·장바구니·위시리스트, FSD, TanStack Query, Zustand 코드를 교체하지 않아요. 같은 파일이 이미 있다면 starter의 정답 구조로 덮어쓰지 말고 API·fixture·측정 장치만 통합해요.
 
 서버 응답을 Zustand에 복사하거나 URL 상태를 별도 로컬 상태에 복제하지 않아요. FSD 의존 방향과 각 슬라이스의 Public API도 그대로 보존해요.
 
@@ -64,7 +53,7 @@ pnpm build
 pnpm start
 ```
 
-PR 본문과 evidence template에 아래 조건을 함께 남겨요.
+PR 본문에 아래 조건을 함께 남겨요.
 
 - 측정한 commit SHA
 - URL과 query string
@@ -280,7 +269,7 @@ profiling build의 commit 시간과 일반 production build의 Performance 시�
 - `setTimeout`으로 필수 갱신을 다음 paint 뒤로 미루지 않아요.
 - 찜 버튼의 즉각적인 피드백을 제거하지 않아요.
 - Lighthouse TBT를 실제 찜 클릭의 INP 증거라고 설명하지 않아요.
-- fixture, checkpoint, 검증 하네스를 수정해 통과시키지 않아요.
+- fixture나 필수 화면 계산을 줄여 병목을 숨기지 않아요.
 
 ### 완료조건
 
@@ -294,44 +283,15 @@ profiling build의 commit 시간과 일반 production build의 Performance 시�
 
 ---
 
-## 검증 계층과 완료 상태
+## 제출 전 확인
 
-검증은 자동 판정과 멘토 수동 검토를 섞지 않아요.
+```bash
+pnpm check
+```
 
-1. `pnpm test`, `pnpm check` — 기존 기능과 저장소 기본 상태가 깨지지 않았는지 확인해요.
-2. `pnpm verify:week07:starter` — API, fixture, 측정 장치, checkpoint가 결정적으로 동작하는지 확인해요.
-3. `pnpm verify:week07:submission --advanced=none` — Basic 1~5 checkpoint와 evidence template의 필수 원본 위치·형식이 채워졌는지 확인해요.
-4. `pnpm verify:week07:submission --advanced=a` — Advanced A를 선택한 제출에서만 Basic 완료 뒤 Advanced A checkpoint와 증거 형식을 추가로 확인해요.
-5. 멘토 수동 검토 — Lighthouse·filmstrip·waterfall·trace·Profiler의 타당성, 가설과 반증, 무개입 근거, 악화된 결과의 해석을 확인해요.
+`pnpm check`로 기존 기능, 타입, lint와 production build가 깨지지 않았는지 확인해요. 성능 과제의 완료 여부는 명령 하나로 판정하지 않아요. 멘토는 PR에 남긴 Lighthouse·filmstrip·waterfall·trace·Profiler 원본과 가설·반증·무개입 근거를 직접 검토해요.
 
-자동 검증 결과는 다음처럼 구분해요.
-
-| 상태 | 종료 코드 | 의미 |
-| --- | ---: | --- |
-| `PASS` | `0` | 자동으로 확인 가능한 starter 계약 또는 제출 형식이 모두 충족됐어요 |
-| `INFRA_ERROR` | `1` | API·fixture·checkpoint·검증 하네스가 없거나 결정적으로 재현되지 않아요 |
-| `INCOMPLETE` | `2` | 인프라는 정상이지만 학습자 구현 또는 필수 원본 증거가 아직 없어요 |
-
-깨끗한 starter에서 두 submission 명령은 모두 `INFRA_ERROR`가 아니라 `INCOMPLETE`로 종료돼야 해요. starter 자체가 학습자 성과를 선취하면 안 돼요. 필수 원본 증거나 동일 재현 조건이 빠진 제출도 `INCOMPLETE`예요.
-
-자동 검증은 성능 지표가 좋아졌는지, 가설이 타당한지 판정하지 않아요. 지표 미개선 자체도 자동 미완료 사유가 아니에요. 이 판단은 고정된 evidence template의 원본을 멘토가 직접 검토해요.
-
----
-
-## Week 7 requirement-to-starter verification map
-
-독립 검증 산출물은 [week-07-verification-map.md](./week-07-verification-map.md)에서도 확인할 수 있어요. 두 표는 문서 검증에서 같은 행인지 확인하므로 서로 다른 요구사항으로 바뀔 수 없어요.
-
-각 ID는 요구사항 하나를 starter 제공물, 학습자 소유 작업, 필수 증거, 검증과 우회 금지에 정확히 연결해요. checkpoint는 이 표에 없는 최적화 방식이나 절대 점수를 추가로 요구하지 않아요.
-
-| ID | 요구사항 | starter 제공물 | 학습자 소유 작업 | 필수 증거 | 자동 검증 | 멘토 수동 검토 | 인정하지 않는 우회 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `W7-B1` | 같은 조건의 production Before를 고정한다 | 1.5초 slow API, 결정적 홈·상품 fixture, evidence template의 Before 칸 | 재현 행동을 정하고 관찰·가설·반증·최소 변경을 기록한다 | 홈 Lighthouse 5회 원값·중앙값·최솟값·최댓값, filmstrip·waterfall, 목록 최초/갱신 녹화와 요청 순서 | `--scope=basic-infrastructure`, `--scope=basic-checkpoints`; Basic submission은 clean starter에서 `INCOMPLETE` | 측정 조건의 동일성, LCP 원인 가설과 반증 가능성 | 코드 변경 뒤 Before를 만들거나 최고 점수만 고르기 |
-| `W7-B2` | 느린 히어로와 관계없는 셸을 먼저 보낸다 | 홈 slow API와 데이터 계약만 제공하며 렌더 경계·fallback은 제공하지 않는다 | RSC/Client 경계, 데이터 소유자, 실제 크기 fallback을 설계한다 | 셸 선표시 filmstrip, FCP·LCP·CLS 5회, Layout shifts, document·데이터·이미지 waterfall | `--scope=basic-infrastructure`, `--scope=basic-checkpoints`; `basic-2-shell` 형식만 판정 | 경계 선택의 타당성, fallback 교체와 지표 변화 해석 | 지연 제거, 숨김 처리로 히어로 생략, starter가 정답 경계를 강제하기 |
-| `W7-B3` | 최초 pending과 기존 목록 갱신 UX를 구분하고 마지막 URL·결과를 일치시킨다 | 상품 slow API, 결정적 목록 fixture와 연속 조건 변경 재현 입력 | pending/fetching, 성공·실패·빈 결과·취소 의미론과 필요한 최적화만 구현한다 | 최초/갱신 녹화, 요청 순서·취소, 마지막 URL·요청·화면 결과, 적용 증거 또는 무개입 근거 | `--scope=basic-infrastructure`, `--scope=basic-checkpoints`; `basic-3-transition` 형식만 판정 | 클릭 직후 피드백, 상태 구분, 선택 전략과 무개입 근거 | 지연 제거, 서버 응답 복제, 모든 Query API를 체크리스트처럼 추가하기 |
-| `W7-B4` | JavaScript 전 초기 HTML에 페이지 의미와 이동 경로를 담는다 | 기존 홈·목록 데이터 계약과 slow 재현 경로만 제공한다 | metadata, 하나의 `h1`, 설명, 의미 구조, 링크, 이미지 대체 텍스트를 구현한다 | document Response·View Source·JavaScript 비활성 요청 중 하나 이상의 원본 | `--scope=basic-checkpoints`; `basic-4-html` 필수 칸과 증거 위치 형식만 판정 | 초기 응답의 실제 의미, 시맨틱 요소와 링크의 역할 | Elements의 hydration 결과만 제출하거나 기존 페이지를 starter 답안으로 교체하기 |
-| `W7-B5` | 같은 조건의 After와 기능·구조 회귀를 함께 확인한다 | evidence template의 Before / After 표와 기존 `pnpm check` 계약 | 가장 작은 변경을 평가하고 무효 변경을 되돌리거나 유지 근거를 남긴다 | 동일 조건 After 원본, URL·뒤로/앞으로·상태·오류·빈 상태·FSD 회귀 결과, 악화된 값 | `pnpm check`, `--scope=basic-checkpoints`; Basic submission은 필수 원본 누락 시 `INCOMPLETE` | 변화가 흔들림보다 큰지, 원인 설명, 무효 변경과 악화 결과의 정직한 처리 | 조건을 바꾸어 비교하거나 문서에 없는 점수·향상률을 합격 기준으로 삼기 |
-| `W7-AA` | Basic 완료 뒤 찜 하나가 만드는 관계없는 카드 렌더와 필수 계산을 줄인다 | 독립된 24개 카드, store, 찜 동작, 카드별 필수 화면 계산과 측정 checkpoint | 구독·selector·props·컴포넌트 경계를 진단하고 가장 작은 최적화를 구현한다 | 동일 초기 상태·4x slowdown의 Performance 3회 원값·중앙값, interaction 구간, Profiler 렌더 카드 수·원인 | `--scope=advanced-a`, `--advanced=a`; clean starter에서는 `INCOMPLETE` | trace와 Profiler의 원인 연결, 렌더 범위와 interaction 변화 해석 | 카드 수·필수 계산 축소, `setTimeout`, 즉시 피드백 제거, 하네스 수정 |
+지표가 개선되지 않았다는 사실만으로 미완료가 되지는 않아요. 효과가 없던 변경을 되돌렸거나 유지할 이유를 설명하고, 악화된 결과도 숨기지 않았다면 판단 근거로 인정해요.
 
 ---
 
@@ -350,7 +310,7 @@ profiling build의 commit 시간과 일반 production build의 Performance 시�
 - Advanced A의 카드 수를 24개보다 줄여요.
 - 화면에 필요한 계산이나 계산 결과를 삭제해요.
 - `setTimeout`으로 필수 작업을 다음 paint 뒤로 미뤄요.
-- fixture, checkpoint, evidence template, 검증 하네스를 수정해 통과시켜요.
+- fixture나 필수 화면 계산을 줄여 병목을 숨겨요.
 - 여러 최적화를 한 번에 넣고 무엇이 효과를 냈는지 설명하지 못해요.
 
 ---
@@ -373,7 +333,7 @@ AI에는 수정 코드를 바로 요청하기보다 관찰한 사실, trace, 가
 - 느린 히어로의 RSC 셸, 선택한 내부 렌더링 경계, 실제 크기 fallback을 적용한 코드
 - 느린 상품 목록의 pending·전환 UX와 정합성을 확인할 수 있는 코드
 - 초기 HTML의 metadata, 의미 구조, 링크, 이미지 대체 텍스트를 적용한 코드
-- `docs/assignments/week-07-evidence-template.md`를 복사해 작성한 측정 보고서
+- PR 본문에 작성한 측정 보고서
   - Before / After commit SHA와 측정 조건
   - Lighthouse 5회 원값, 중앙값, 최솟값, 최댓값
   - filmstrip, waterfall, Layout shifts, 초기 HTML 증거
@@ -458,5 +418,5 @@ AI에는 수정 코드를 바로 요청하기보다 관찰한 사실, trace, 가
 - [ ] Basic 필수 원본 증거와 동일 재현 조건을 모두 남겼는가?
 - [ ] 왜 이렇게 설계했는지 변경마다 한 줄 근거가 있는가?
 - [ ] 지표가 나빠졌거나 변화가 없던 결과도 숨기지 않았는가?
-- [ ] fixture와 검증 하네스를 수정하지 않았는가?
+- [ ] starter fixture와 Advanced A의 카드 수·필수 계산을 그대로 유지했는가?
 - [ ] AI가 생성하거나 크게 수정한 부분을 표기하고 직접 검토했는가?
