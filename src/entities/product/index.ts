@@ -24,3 +24,4 @@ export {
 } from "./model/productListQuery";
 export { productQueries } from "./api/productQueries";
 export type { ProductListResponse } from "./api/fetchProducts";
+export { isNewProduct } from "./lib/isNewProduct";

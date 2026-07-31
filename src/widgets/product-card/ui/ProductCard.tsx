@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { Product } from "@/entities/product";
+import { isNewProduct, type Product } from "@/entities/product";
 import { formatPrice } from "@/shared/lib";
 import { AddToCartButton } from "@/features/add-to-cart";
 import styles from "./ProductCard.module.css";
@@ -9,9 +9,11 @@ const CARD_IMAGE_SIZE = 300;
 export function ProductCard({ product }: { product: Product }) {
   const { price, originalPrice } = product;
   const hasDiscount = originalPrice !== null && originalPrice > price;
+  const isNew = isNewProduct(product.createdAt);
 
   return (
     <article className={styles.card}>
+      {isNew && <span className={styles.cardBadge}>신상품</span>}
       <Image
         className={styles.cardImage}
         src={product.image}

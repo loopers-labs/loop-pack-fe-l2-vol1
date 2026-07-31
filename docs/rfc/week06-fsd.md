@@ -486,7 +486,9 @@ import { useWishlistStore } from "@/entities/wishlist";
 
 ## 3. 삭제 시나리오로 자가 검증 (과제 5단계)
 
-폴더 이동 뒤 코드를 고치지 않고 "기능을 통째로 지우면 무엇이 흔들리나"로 응집을 검증한다. 삭제 대상이 여러 레이어에 흩어져 grep 없이 못 찾으면 응집 실패다.
+폴더 이동 뒤 코드를 고치지 않고 "기능을 통째로 지우면 무엇이 흔들리나"로 응집을 검증한다. 삭제 대상이 여러 레이어에 흩어져 grep 없이 못 찾으면 응집 실패.
+
+각 시나리오는 실제 커밋으로 적용하고, 끝나면 `revert` 커밋으로 원상 복구
 
 ### 시나리오 A — 위시리스트 기능 통째 제거
 
@@ -501,3 +503,17 @@ import { useWishlistStore } from "@/entities/wishlist";
 - `src/__tests__/commerceState.contract.test.tsx` — `WishlistButton`·`useWishlistStore`를 실제 import·사용(cart↔wishlist 동기화 계약 테스트) → 위시리스트 검증 제거·수정. **삭제 시 이걸 안 고치면 `pnpm test`/`build`가 깨진다.**
 
 **판정: 응집 성공.** 삭제 대상은 **2개 슬라이스로 완전 co-locate**돼 폴더째 지운다. 기능 결합 소비처는 4곳(배선 / 개수 표시 / 조합 / 계약 테스트) 전부 public API(`@/entities/wishlist`·`@/features/toggle-wishlist`)로 import하므로 저 두 public API만 grep 하여 grep 잡히지 않은 부분을 확인. 그 후 사이트에서 동작 문제 없는지 직접 검증
+
+### 시나리오 B — 상품 카드에 신상품 뱃지 추가
+
+**터치할 파일 (3개)**
+- `entities/product` — `createdAt`으로 신상품 여부를 판정하는 순수 함수(`isNewProduct` 등)를 `lib/`(또는 `model/`)에 추가 + `index.ts` export.
+- `widgets/product-card/ui/ProductCard.tsx` — 위 함수 호출 + 뱃지 요소 렌더
+- `widgets/product-card/ui/ProductCard.module.css` — `.cardBadge` 스타일 추가
+
+**판정: 예측 가능.** 도메인 판정은 product 엔티티, 표시·스타일은 ProductCard 위젯 한 곳으로
+
+### 파편화 판단 — 이번 주 고칠 것 / 남길 것
+
+- 두 리트머스 모두 통과 → **구조적 파편화 없음. 이번 주 손댈 것 없음.**
+- 유일한 흠은 `entities/cart/model/store.ts` 주석이 `wishlist`를 언급하는 것 — 코드 결합이 아니라 "왜 cart·wishlist를 분리했나"를 설명하는 자족적 근거라 **남긴다**(위시리스트를 실제로 지울 때 한 줄만 다듬으면 됨).
