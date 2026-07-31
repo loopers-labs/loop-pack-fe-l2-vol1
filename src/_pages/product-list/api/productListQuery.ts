@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { ProductListResponse } from "@/entities/product";
-import { fetchJson } from "@/shared/api";
+import { fetchJson, isServerFault } from "@/shared/api";
 import type { ResolvedProductListQuery } from "../model/useProductListQuery";
 
 // 목록은 조건별 결과라 짧게. 같은 조건 재방문/앞뒤 이동엔 캐시가 즉시 응답.
@@ -23,5 +23,7 @@ export function productListQueryOptions(query: ResolvedProductListQuery) {
     queryKey: ["products", query],
     queryFn: () => fetchJson<ProductListResponse>(`/api/products?${params.toString()}`),
     staleTime: LIST_STALE_TIME,
+    // 5xx·네트워크는 경계로, 4xx는 화면 안에서. 조건을 바꿔 벗어날 수 있는 실패만 인라인이다.
+    throwOnError: (error) => isServerFault(error),
   });
 }

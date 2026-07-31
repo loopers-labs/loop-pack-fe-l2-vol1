@@ -68,11 +68,15 @@ export function ProductListPage() {
         {productsQuery.status === "pending" && (
           <p className="shop-state">상품을 불러오는 중입니다…</p>
         )}
-        {/* 조회 실패해도 위쪽 필터 UI는 살아 있다 — 조건을 바꿔 빠져나올 수 있어야 한다. */}
+        {/* 여기 오는 건 4xx뿐이다(5xx·네트워크는 throwOnError로 error.tsx가 받는다).
+            사용자가 조건으로 만든 실패이므로 필터 UI를 살려 두고 전체 새로고침 없이 재시도한다. */}
         {productsQuery.status === "error" && (
-          <p className="shop-state" role="alert">
-            상품 목록을 불러오지 못했습니다.
-          </p>
+          <div className="shop-state" role="alert">
+            <p>상품 목록을 불러오지 못했습니다. 검색 조건을 확인해 주세요.</p>
+            <button type="button" onClick={() => void productsQuery.refetch()}>
+              다시 시도
+            </button>
+          </div>
         )}
         {productsQuery.status === "success" &&
           (productsQuery.data.products.length === 0 ? (

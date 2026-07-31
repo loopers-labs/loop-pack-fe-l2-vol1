@@ -25,7 +25,6 @@ function ProductSection({ title, products }: { title: string; products: Product[
 export function HomePage() {
   const homeQuery = useQuery(homeQueryOptions());
 
-  // 로딩·에러·데이터를 구분해서 그린다(성공 경로만 그리지 않는다).
   if (homeQuery.status === "pending") {
     return (
       <main className="shop-page">
@@ -34,12 +33,18 @@ export function HomePage() {
     );
   }
 
+  // 에러도 빈 상태와 같은 범위로 다룬다 — 실패한 건 상품 조회지 화면 전체가 아니다.
+  // 이전에는 early return이라 배너·카테고리까지 사라져, 사용자가 할 수 있는 게 새로고침뿐이었다.
   if (homeQuery.status === "error") {
     return (
       <main className="shop-page">
-        <p className="shop-state" role="alert">
-          홈 데이터를 불러오지 못했습니다.
-        </p>
+        <section className="shop-section" role="alert">
+          <h2>상품을 불러오지 못했습니다</h2>
+          <p className="shop-state">잠시 후 다시 시도해 주세요.</p>
+          <button type="button" onClick={() => void homeQuery.refetch()}>
+            다시 시도
+          </button>
+        </section>
       </main>
     );
   }
