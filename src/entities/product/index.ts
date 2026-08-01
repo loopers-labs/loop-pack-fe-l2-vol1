@@ -6,10 +6,6 @@ export {
   type Product,
   type ProductSort,
 } from './model/types';
-export type {
-  HomeResponse,
-  ProductListQuery,
-  ProductListResponse,
-} from './api/types';
+export type { HomeResponse, ProductListResponse } from './api/types';
 export { productQueries } from './api/queries';
 export { ProductCard } from './ui/ProductCard';
