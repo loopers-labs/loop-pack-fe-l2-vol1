@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { homeQuery } from '@/_pages/home/api/home'
+import HeroSection from './HeroSection'
 
 export default function HomePage() {
   const { data, isPending, isError, error, refetch } = useQuery(homeQuery())
@@ -41,10 +42,10 @@ export default function HomePage() {
 
   return (
     <main>
-      <section className="week05-hero">
-        <p>{data.banner.description}</p>
-        <h1>{data.banner.title}</h1>
-      </section>
+      <HeroSection
+        title={data.banner.title}
+        description={data.banner.description}
+      />
 
       <section className="week05-section">
         <h2>카테고리</h2>

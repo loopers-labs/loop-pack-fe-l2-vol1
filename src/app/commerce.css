@@ -31,6 +31,50 @@
   background: #ececec;
 }
 
+/* 7주차 Hero. aspect-ratio로 공간을 먼저 잡아 이미지가 늦게 와도 아래가 밀리지 않게 한다.
+   fallback도 같은 비율을 써야 교체 시점에 layout shift가 생기지 않는다. */
+.week07-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  color: #211b17;
+  background: #d8cebf;
+}
+
+.week07-hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.week07-hero-copy {
+  position: absolute;
+  inset: auto auto clamp(20px, 5vw, 64px) clamp(20px, 5vw, 64px);
+  width: min(440px, calc(100% - 40px));
+  padding: clamp(18px, 3vw, 32px);
+  background: rgb(255 253 248 / 88%);
+  backdrop-filter: blur(8px);
+}
+
+.week07-hero-copy h1 {
+  margin: 6px 0 10px;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.week07-hero-copy p {
+  line-height: 1.6;
+}
+
+.week07-hero-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
 .week05-section {
   margin-top: 40px;
 }
@@ -123,6 +167,16 @@
   .week05-hero {
     min-height: 180px;
     padding: 24px;
+  }
+
+  /* 좁은 화면에서는 세로 비율로 바꾼다. 이미지가 잘리는 위치도 함께 옮겨
+     주요 피사체가 카피 뒤로 숨지 않게 한다. */
+  .week07-hero {
+    aspect-ratio: 4 / 5;
+  }
+
+  .week07-hero-image {
+    object-position: 56% center;
   }
 
   .week05-grid {
