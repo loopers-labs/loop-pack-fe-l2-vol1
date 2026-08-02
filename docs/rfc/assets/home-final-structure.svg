@@ -1,0 +1,106 @@
+<svg viewBox="0 0 1100 1000" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', 'Malgun Gothic', sans-serif">
+  <defs>
+    <style>
+      .box { fill: #ffffff; stroke: #333; stroke-width: 1.5; }
+      .comp-name { font-size: 14px; fill: #111827; font-weight: 700; }
+      .sub-text { font-size: 11px; fill: #4b5563; }
+      .fsd-tag { font-size: 10.5px; font-weight: 700; }
+      .path { font-family: 'Consolas', monospace; font-size: 10px; fill: #6b7280; }
+      .arrow { stroke: #9ca3af; stroke-width: 1.3; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#9ca3af"/>
+    </marker>
+  </defs>
+
+  <rect width="1100" height="1000" fill="#f9fafb"/>
+  <text x="30" y="34" font-size="18" font-weight="800" fill="#111827">Home 화면 — 최종 구현 구조 (app/(home) 기준)</text>
+  <text x="30" y="54" class="sub-text">실제 폴더 경로를 각 박스에 표기함</text>
+
+  <!-- Page container -->
+  <rect x="30" y="75" width="700" height="880" fill="none" stroke="#d1d5db" stroke-dasharray="6,4"/>
+  <text x="45" y="95" class="path">app/(home)/page.tsx → _api/homeQueryOptions.ts → _ui/HomeView.tsx</text>
+
+  <!-- Header -->
+  <rect x="55" y="110" width="650" height="80" class="box" fill="#eef2ff"/>
+  <text x="70" y="132" class="comp-name">&lt;Header /&gt;</text>
+  <text x="70" y="150" class="sub-text">Commerce · 위시리스트 개수 · 장바구니 개수</text>
+  <text x="70" y="166" class="path">widgets/header/ui/Header.tsx</text>
+  <text x="70" y="180" class="sub-text">→ entities/wishlist, entities/cart 읽기 전용 참조</text>
+  <text x="640" y="132" class="fsd-tag" fill="#4338ca">widget</text>
+
+  <!-- Banner -->
+  <rect x="55" y="205" width="650" height="80" class="box" fill="#ececec"/>
+  <text x="70" y="228" class="comp-name">&lt;Banner /&gt;</text>
+  <text x="70" y="246" class="sub-text">SubTitle(text) + Title(text)</text>
+  <text x="70" y="262" class="path">app/(home)/_ui/HomeView.tsx 내부 (mapper 없이 select로 projection)</text>
+  <text x="640" y="228" class="fsd-tag" fill="#334155">shared 성격</text>
+
+  <!-- Filter zone -->
+  <rect x="55" y="300" width="650" height="90" fill="none" stroke="#a21caf" stroke-dasharray="3,3"/>
+  <text x="70" y="318" class="fsd-tag" fill="#a21caf">&lt;Filter /&gt; — Home 페이지: 카테고리만 노출 (children)</text>
+  <text x="70" y="336" class="path">entities/category/model/category.ts + categoriesMapper.ts</text>
+  <text x="70" y="354" class="sub-text">목록 표시만, 선택 반영 로직 없음 (entity)</text>
+  <text x="70" y="372" class="sub-text">※ ProductList 페이지에서는 이 자리에 features/product-filter가 대신 들어감</text>
+
+  <!-- ProductListSection (구 Body) -->
+  <rect x="55" y="405" width="650" height="440" fill="none" stroke="#d1d5db"/>
+  <text x="70" y="425" class="path">widgets/product-list-section/ui/ProductListSection.tsx — text 슬롯(children) + 그리드</text>
+
+  <rect x="75" y="440" width="610" height="60" class="box" fill="#fff7ed"/>
+  <text x="90" y="463" class="sub-text">text 슬롯: Home → "인기상품" / "신상품" (섹션 반복)</text>
+  <text x="90" y="480" class="sub-text">widget이 children으로 타이틀 텍스트를 주입</text>
+
+  <!-- ProductCard -->
+  <rect x="75" y="515" width="290" height="290" class="box" fill="#f0fdf4"/>
+  <text x="90" y="538" class="comp-name" font-size="13">&lt;ProductCard /&gt;</text>
+  <text x="90" y="556" class="path">entities/product/ui/ProductCard.tsx</text>
+  <text x="90" y="572" class="sub-text">서브타이틀·타이틀·가격만 표시</text>
+  <text x="90" y="588" class="sub-text">액션 버튼은 children으로 받음 (entity가 모름)</text>
+
+  <rect x="90" y="600" width="260" height="90" fill="#e5e7eb" stroke="#9ca3af"/>
+  <text x="100" y="625" font-size="11" fill="#4b5563">이미지</text>
+  <text x="100" y="650" class="sub-text">SubTitle / Title / price</text>
+
+  <rect x="100" y="700" width="60" height="26" rx="13" class="box" fill="#fee2e2"/>
+  <text x="108" y="717" font-size="11" fill="#b91c1c">찜</text>
+  <rect x="170" y="700" width="70" height="26" rx="13" class="box" fill="#dbeafe"/>
+  <text x="180" y="717" font-size="11" fill="#1d4ed8">담기</text>
+  <text x="90" y="745" class="sub-text">↑ children으로 주입된 feature 버튼</text>
+  <text x="90" y="762" class="sub-text">(ProductCard 자체는 버튼 로직을 모름)</text>
+  <text x="90" y="785" class="fsd-tag" fill="#15803d">entities/product/ui ✓</text>
+
+  <!-- features box next to ProductCard -->
+  <rect x="390" y="515" width="290" height="220" class="box" fill="#fdf4ff"/>
+  <text x="405" y="538" class="comp-name" font-size="13">features (버튼 UI + entity 액션 소비)</text>
+  <text x="405" y="562" class="path">features/toggle-wishlist/ui/ToggleWishlistButton.tsx</text>
+  <text x="405" y="578" class="sub-text">→ entities/wishlist의 setSingleIdInWishlist 액션 사용</text>
+  <text x="405" y="600" class="path">features/add-to-cart/ui/AddToCartButton.tsx</text>
+  <text x="405" y="616" class="sub-text">→ entities/cart의 setSingleIdInCart 액션 사용</text>
+  <text x="405" y="645" class="fsd-tag" fill="#15803d">✓ 확정 (RFC 반영)</text>
+  <text x="405" y="663" class="sub-text">wishlist/cart 상태+액션 전부 entity 소유</text>
+  <text x="405" y="679" class="sub-text">이유: 도메인 상태(무엇이 담겼는지) 자체가</text>
+  <text x="405" y="693" class="sub-text">entity 몫, feature는 버튼 UI만</text>
+
+  <!-- Pagination -->
+  <rect x="75" y="820" width="605" height="55" class="box" fill="#f1f5f9"/>
+  <text x="90" y="843" class="sub-text">Pagination — page/onChange props만, 로직 없음</text>
+  <text x="90" y="858" class="path">shared/ui/Pagination</text>
+
+  <!-- Legend -->
+  <rect x="760" y="110" width="310" height="330" fill="#ffffff" stroke="#e5e7eb"/>
+  <text x="775" y="135" font-size="13" font-weight="700" fill="#111827">이번에 신규로 생긴 구조</text>
+  <text x="775" y="158" class="sub-text">entities/wishlist, entities/cart</text>
+  <text x="775" y="174" class="sub-text">→ 상태+액션+selector를 entity가 전부 소유</text>
+  <text x="775" y="196" class="sub-text">entities/product/model/*Mapper.ts</text>
+  <text x="775" y="212" class="sub-text">→ 순수 함수, 홈 응답의 존재를 모름</text>
+  <text x="775" y="234" class="sub-text">shared/ui/PageHeading (title+description)</text>
+  <text x="775" y="256" class="sub-text">shared/ui/dialog, select (components/ui에서 이동)</text>
+  <text x="775" y="278" class="sub-text">app/(home)/_api, _ui — private folder(_) 적용</text>
+  <text x="775" y="300" class="sub-text">app/examples/_dialog, _selectBox — private folder</text>
+
+  <text x="775" y="335" font-size="13" font-weight="700" fill="#15803d">✓ RFC로 확정됨</text>
+  <text x="775" y="358" class="sub-text">wishlist/cart store → entity가 상태+액션</text>
+  <text x="775" y="374" class="sub-text">전부 소유, feature는 버튼 UI만 (해석 A)</text>
+  <text x="775" y="396" class="sub-text">ProductCard 찜/담기 → children 주입 확정</text>
+</svg>

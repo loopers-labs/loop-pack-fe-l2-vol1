@@ -1,5 +1,5 @@
-import { SelectBoxExamples } from './selectBox';
-import { DialogExamples } from './dialog';
+import { SelectBoxExamples } from './_selectBox';
+import { DialogExamples } from './_dialog';
 
 /**
  * week4에서 작성한 커스텀 컴포넌트 페이지
@@ -15,8 +15,7 @@ export default function ExamplesPage() {
       </p>
       <ul style={{ lineHeight: 2, color: 'var(--foreground)', paddingLeft: 18 }}>
         <li>
-          컴포넌트 자리: <code>src/components/ui/select</code> ·{' '}
-          <code>src/components/ui/dialog</code>
+          컴포넌트 자리: <code>src/shared/ui/select</code> · <code>src/shared/ui/dialog</code>
         </li>
         <li>
           mock 백엔드: <code>GET /api/products</code> (<code>src/app/api/products/route.ts</code>)

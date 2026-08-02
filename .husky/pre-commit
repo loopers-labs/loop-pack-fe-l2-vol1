@@ -1,4 +1,1 @@
-if [ -f .git/MERGE_HEAD ]; then
-  exit 0
-fi
 pnpm exec lint-staged

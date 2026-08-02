@@ -424,8 +424,7 @@ export function installMockApi() {
   const originalFetch = window.fetch.bind(window);
 
   window.fetch = async (input, init) => {
-    const url =
-      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    const url = typeof input === 'string' || input instanceof URL ? input.toString() : input.url;
 
     if (url.startsWith('/api/products')) {
       // 네트워크 latency 흉내

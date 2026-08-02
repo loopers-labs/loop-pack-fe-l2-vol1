@@ -74,79 +74,16 @@ pnpm preview       # 빌드 결과물 미리보기
 ## ● 코드 품질 기준
 
 - 레이어를 타고 들어가야만 로직을 이해할 수 있는 구조를 피한다.
-
-### º 파생 가능한 값은 계산한다 (최중요 패턴)
-
-`useState` + `useEffect` 동기화 대신 파생값으로 처리한다.
-
-```text
-// ❌
-const [fullName, setFullName] = useState('');
-useEffect(() => {
-  setFullName(`${firstName} ${lastName}`);
-}, [firstName, lastName]);
-
-// ✅
-const fullName = `${firstName} ${lastName}`;
-```
-
-### º View는 그리기만 한다 — 로직을 몰라야 한다
-
-공통/leaf 컴포넌트는 "무엇을 보여줄지" 판단(매핑, 분기, 계산)하지 않고 전달받은 값을 그리기만 한다.
-판단은 그 컴포넌트를 사용하는 도메인 컴포넌트/페이지가 미리 끝내서 값으로 내려준다.
-
-```text
-// ❌ — View가 도메인 지식(상태 → 색상 매핑)을 직접 판단
-function StatusTag({ isPaid, isPreparing, isShipped }: Props) {
-  let color = '#9ca3af';
-  if (isPaid) color = '#3b82f6';
-  if (isPreparing) color = '#f59e0b';
-  if (isShipped) color = '#8b5cf6';
-  return <span style={{ color }}>{label}</span>;
-}
-
-// ✅ — View는 label/color를 그릴 뿐, 매핑은 호출부(도메인)가 책임진다
-function Tag({ label, color }: Props) {
-  return <span style={{ color }}>{label}</span>;
-}
-```
-
-### º 복잡한 조건에 이름 붙이기
-
-```text
-// ❌
-if (user.age >= 18 && user.hasVerifiedEmail && !user.isBanned) { /* ... */ }
-
-// ✅
-const canPurchase = user.age >= 18 && user.hasVerifiedEmail && !user.isBanned;
-if (canPurchase) { /* ... */ }
-```
-
-### º early return 패턴을 활용
-
-```text
-// ✅
-if(typeof user.age === 'number') return;
-```
-
-### º JSX에서 분기 케이스가 3개 이상일 때 IIFE(즉시 실행 함수 표현) 사용
-
-```text
-// ✅
-{(() => {
-    switch (choice) {
-      case 'pizza': return <FastFoodInfo />;
-      case 'candy': return <DessertInfo />;
-      default: return <div>선택된 항목이 없습니다.</div>;
-    }
-})()}
-```
-
-### º 기타
-
+- 파생 가능한 값은 useState + useEffect 대신 변수로 계산한다
+- View는 그리기만 한다 — 매핑, 분기, 계산은 호출부가 책임진다
+- 복잡한 조건에는 이름을 붙인다
+- 조건부 렌더링은 early return 우선
+- JSX에서 분기 케이스가 3개 이상이면 IIFE 사용
 - 이름에 의도가 드러나야 한다 (`data` / `temp` / `flag` 지양)
 - 한 함수/컴포넌트는 한 가지 책임
 - 기존 유틸 재사용 — 유사한 코드 중복 생성 금지
+
+> 구체적인 ✅/❌ 예시는 ~/.claude/skills/component-review/SKILL.md 참고
 
 ## ● Never Do
 

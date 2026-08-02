@@ -13,6 +13,8 @@ type ProductFiltersProps = {
   onCategoryChange: (category: CategoryId | 'all') => void;
   /** 정렬 변경 시 호출 */
   onSortChange: (sort: ProductSort) => void;
+  /** 검색·카테고리·정렬 조건 전체 초기화 시 호출 */
+  onReset: () => void;
 };
 
 const CATEGORY_OPTIONS: { value: CategoryId | 'all'; label: string }[] = [
@@ -31,11 +33,13 @@ const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: 'price-desc', label: '가격 높은순' },
 ];
 
+/* AI-generated : week06-advanced-b.md 2단계 기준 */
 export function ProductFilters({
   filters,
   onSearch,
   onCategoryChange,
   onSortChange,
+  onReset,
 }: ProductFiltersProps) {
   const appliedQuery = filters.q ?? '';
   const [prevAppliedQuery, setPrevAppliedQuery] = useState(appliedQuery);
@@ -106,6 +110,9 @@ export function ProductFilters({
           ))}
         </select>
       </label>
+      <button type="button" onClick={onReset}>
+        초기화
+      </button>
     </form>
   );
 }

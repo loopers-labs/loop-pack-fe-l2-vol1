@@ -3,8 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Header } from './Header';
-import { useWishlistStore } from '@/features/wishlist/model/useWishlistStore';
-import { useCartStore } from '@/features/cart/model/useCartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 
 function renderHeader() {
   const queryClient = new QueryClient();

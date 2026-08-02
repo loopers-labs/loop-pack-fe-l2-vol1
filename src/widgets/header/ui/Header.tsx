@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
-import { useWishlistStore } from '@/features/wishlist/model/useWishlistStore';
-import { useCartStore } from '@/features/cart/model/useCartStore';
-import { useProductList } from '@/entities/product/api/useProductList';
+import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { DEFAULT_PRODUCT_LIST_QUERY } from '@/entities/product/model/product';
+import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions';
 
 export function Header() {
   const wishlistCount = useWishlistStore((state) => state.productIds.size);
@@ -14,12 +14,12 @@ export function Header() {
 
   return (
     <header className="week05-header">
-      <Link href="/home">Commerce</Link>
+      <Link href="/">Commerce</Link>
       <nav aria-label="주요 메뉴">
         <Link
           href="/products"
           onMouseEnter={() =>
-            queryClient.prefetchQuery(useProductList.queryOptions(DEFAULT_PRODUCT_LIST_QUERY))
+            queryClient.prefetchQuery(productsQueryOptions(DEFAULT_PRODUCT_LIST_QUERY))
           }
         >
           상품

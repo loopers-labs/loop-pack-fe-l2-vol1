@@ -1,5 +1,5 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import ProductView from '@/app/products/ui/ProductView';
+import ProductView from '@/app/products/_ui/ProductView';
 import { getQueryClient } from '@/shared/api/getQueryClient';
 import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions';
 import type { SearchParams } from 'nuqs';

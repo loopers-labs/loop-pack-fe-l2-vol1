@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { useWishlistStore } from '@/features/wishlist/model/useWishlistStore';
-import { useCartStore } from '@/features/cart/model/useCartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 
 export function MainProvider({
   children,

@@ -24,5 +24,3 @@ export function useProductList(query: ProductListQuery) {
 
   return result;
 }
-
-useProductList.queryOptions = productsQueryOptions;
