@@ -19,67 +19,54 @@ pnpm dev
 
 ## 프로젝트 구조
 
-feature-first colocation. 코드는 기술 종류가 아니라 **도메인 기능**으로 묶는다.
+커머스 코드는 FSD(Feature-Sliced Design)의 **App → Pages → Widgets → Features → Entities → Shared** 여섯 레이어로 둔다. route와 route handler는 루트 `app/`의 Next 경계에만 두고, 화면·상태·UI의 책임은 `src/` 레이어가 소유한다.
 
 ```txt
-app/                            # Next App Router: 라우팅 전용(페이지 조립), 도메인 로직 없음
-├─ (commerce)/                  # 5주차 커머스 라우트 그룹 (URL 세그먼트를 만들지 않음)
-│  ├─ layout.tsx                # <CommerceProviders>만 마운트하는 서버 컴포넌트
-│  ├─ page.tsx                  # "/" 에 <HomeView />
-│  ├─ products/
-│  │  └─ page.tsx               # "/products" 에 <ListView />
-│  └─ route-wiring.test.tsx     # 두 page.tsx가 실제 뷰를 마운트하는지 확인
-├─ week-04/
-│  └─ page.tsx                  # 4주차 산출물, 커머스 도입 후에도 보존
+app/                            # Next App Router: 얇은 route·route handler·error 경계
+├─ (commerce)/                  # URL 세그먼트를 만들지 않는 커머스 route group
+│  ├─ layout.tsx                # <CommerceProviders> 조립
+│  ├─ page.tsx                  # "/"의 HomeView public API 연결
+│  ├─ products/page.tsx         # "/products"의 ListView public API 연결
+│  └─ error.tsx                 # 커머스 error boundary
 ├─ api/
+│  ├─ _mock/                    # route handler가 사용하는 mock catalog·home 데이터
 │  ├─ home/route.ts             # GET /api/home
 │  ├─ products/route.ts         # GET /api/products
-│  └─ product-options/route.ts  # 4주차 상품 옵션 mock 백엔드
-├─ layout.tsx
-└─ globals.css
-mocks/                          # MSW: src/ 밖에 둬 no-cross-feature 스캔 대상에서 제외
-├─ handlers.ts                  # products와 home은 실제 라우트 GET에 위임(그 외는 손으로 합성)
-├─ server.ts
-├─ setup.ts
-└─ render.tsx                   # 테스트 렌더 헬퍼: QueryClient와 NuqsTestingAdapter 주입
+│  └─ product-options/route.ts  # 4주차 상품 옵션 mock API
+├─ week-04/page.tsx             # 4주차 화면 보존
+├─ layout.tsx                   # root layout
+└─ globals.css                  # 전역 CSS
 src/
-├─ shared/                      # 둘 이상 피처가 공유하는 원시 요소만 (필요해질 때)
-│  └─ ui/
-│     ├─ select/                # Select (Headless), 4주차 1단계
-│     └─ dialog/                # Dialog (Compound), 4주차 2단계
-├─ products/                    # 4주차 상품 옵션 피처
-└─ commerce/                    # 5주차 커머스 상태와 화면
-   ├─ store.ts                  # Zustand: cartIds, wishlistIds
-   ├─ queries.ts                # TanStack Query queryOptions (홈, 목록)
-   ├─ use-list-query.ts         # nuqs useQueryStates: 목록 URL 상태
-   ├─ providers.tsx             # QueryClientProvider + Suspense + NuqsAdapter
-   ├─ header.tsx
-   ├─ home-view.tsx
-   ├─ product-section.tsx
-   ├─ product-card.tsx
-   ├─ product-actions.tsx
-   ├─ list-view.tsx
-   ├─ list-filter-bar.tsx
-   ├─ list-pagination.tsx
-   ├─ commerce.module.css
-   ├─ api/                      # 데이터 호출
-   └─ index.ts                  # 공개 표면(배럴): 외부는 이 파일로만 import
+├─ _app/                        # App: QueryClient·Nuqs provider와 공통 shell 조립
+├─ _pages/
+│  ├─ home/                     # Pages: 홈 화면·홈 API query
+│  └─ product-list/             # Pages: 목록 화면·URL/query·페이지네이션
+├─ widgets/
+│  └─ header/                   # Widgets: 전역 Header UI
+├─ features/
+│  ├─ add-to-cart/              # Features: AddToCartButton·장바구니 store
+│  └─ toggle-wishlist/          # Features: WishlistToggleButton·위시리스트 store
+├─ entities/
+│  └─ product/                  # Entities: Product 타입·카테고리·ProductCard
+├─ shared/
+│  ├─ api/                      # Shared: fetch와 HTTP error 기반
+│  └─ ui/                       # Shared: dialog·select UI primitive
+└─ products/                    # 4주차 legacy 상품 옵션 slice; FSD 레이어와 공존
 docs/assignments/                # 주차별 과제 명세
 ```
 
-- 의존성은 단방향: `shared → 피처 → app`. 피처끼리는 직접 import하지 않는다. 여러 피처를 묶는 조립은 항상 `app/`에서 한다.
-- 피처는 `index.ts` 배럴로만 외부에 공개한다. 배럴 밖의 내부 파일을 다른 피처나 `app/`에서 직접 import하지 않는다.
-- **도메인 기능**: `src/<feature>/`에 콜로케이션한다. `src/shared/ui/{dialog,select}`(4주차 디자인 패턴 스타터), `src/products/`(4주차 상품 옵션), `src/commerce/`(5주차 커머스 상태와 화면)가 각각 하나의 피처다. 라우팅과 페이지 조립은 루트 `app/`에 있고, MSW 목(`mocks/`)은 `src/` 밖에 둬 `pnpm depcruise`(= `depcruise src`)의 스캔 대상에서 제외한다.
+- 새 화면은 `src/_pages`에서 시작한다(pages-first). UI는 `ui/`, 상태·규칙은 `model/`, 데이터 호출은 `api/` segment에 콜로케이션한다.
+- 외부 slice는 각 slice 루트의 named public API(`index.ts`)만 import한다. 내부 파일로의 deep import는 금지한다.
+- `src/products`는 4주차 legacy slice다. 새 커머스 코드는 FSD 여섯 레이어에 추가한다.
 
 ## 왜 이렇게 했는가
 
 - **screaming architecture**: 폴더 이름이 "무슨 기술이냐"가 아니라 "무슨 기능이냐"를 외치게 한다. `components/`, `hooks/`, `utils/`처럼 기술별로 나누면 기능 하나를 이해하는 데도 여러 폴더를 오가야 한다.
 - **YAGNI**: `shared/`로 올리는 기준은 "나중에 쓸 수도 있어서"가 아니라 "지금 이미 둘 이상의 피처가 쓰고 있어서"다. 미리 공용화하지 않는다.
-- **규칙이 구조를 강제한다**: 위 경계는 말로만 지키는 컨벤션이 아니라 `.dependency-cruiser.cjs`의 규칙 3종이 `pnpm depcruise`(= `depcruise src`)로 기계적으로 검사한다.
-  - `shared-is-independent`: `src/shared/`는 다른 무엇도 import할 수 없다. 단방향 의존 그래프의 최하단이라는 것을 규칙으로 고정한 것.
-  - `no-cross-feature`: 피처는 다른 피처를 직접 import할 수 없다. 조립은 항상 `app/`에서.
-  - `feature-barrel-only`: 피처 밖에서는 피처의 `index.ts` 배럴로만 import할 수 있다. 내부 파일 직접 import 금지.
-  - 이 3종 규칙은 스캔 범위가 `src/`로 한정돼 있다(`depcruise src`). 그래서 라우팅을 `src/app/`이 아니라 **루트 `app/`**로 뺐다. 스캔 밖에 있으므로 페이지가 여러 피처를 자유롭게 조립해도 `no-cross-feature`에 걸리지 않는다. `src/shared/`가 이 규칙들의 유일한 예외(모두가 import할 수 있는 쪽)인 이유도 같다. 단방향 의존 그래프의 맨 아래에 있는 게 `shared`이기 때문이다.
+- **규칙이 구조를 강제한다**: `.dependency-cruiser.cjs`는 `pnpm depcruise`의 `depcruise src`로 `src/`만 검사한다. 따라서 FSD 규칙은 여섯 FSD 레이어에서 시작하는 edge에 적용되고, `src/products`에는 path-agnostic한 `no-circular`만 직접 적용된다. 루트 `app/**`은 scan root 밖이다.
+  - **방향**: 모든 경로의 순환을 막는 `no-circular`, Shared의 독립성을 지키는 `shared-is-independent`, 그리고 상위 레이어 import를 차단하는 `fsd-no-upward-shared`, `fsd-no-upward-entities`, `fsd-no-upward-features`, `fsd-no-upward-widgets`, `fsd-no-upward-pages`가 App → Pages → Widgets → Features → Entities → Shared 방향을 고정한다.
+  - **slice 격리**: `fsd-no-cross-slice`는 `_pages`·`widgets`·`features`·`entities`의 같은 레이어 내 다른 slice 직접 import를 막는다.
+  - **public API family**: slice와 Shared 진입점만 허용하는 `fsd-entry-point-only-slices`, `fsd-entry-point-only-shared-ui`, `fsd-entry-point-only-shared-api`, `fsd-entry-point-only-shared-api-shared-ui`, `fsd-entry-point-only-shared-ui-internal`, `fsd-entry-point-only-app`, `fsd-entry-point-only-app-shared-ui`가 내부 deep import를 막는다.
 
 ## 상태 소유권
 
@@ -87,12 +74,12 @@ docs/assignments/                # 주차별 과제 명세
 
 구현을 시작하기 전에 상태와 소유자, 수명, 공유 범위, 선택 이유를 다음 표로 먼저 정리했다.
 
-| 상태                                                    | 소유자                                           | 수명                                                                   | 공유 범위                                               | 선택 이유                                                                                                            |
-| ------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 서버 데이터(홈 응답, 상품 목록)                         | TanStack Query                                   | `staleTime`과 `gcTime`으로 캐시 수명을 관리(홈 5분/10분, 목록 1분/5분) | `QueryClientProvider`를 구독하는 모든 화면(홈, 목록)    | 원본이 서버이므로 조회 상태와 캐싱, 재검증을 자체 관리하는 라이브러리에 맡기고 클라이언트에 복제하지 않는다          |
-| URL 복원 조건(`q`, `category`, `sort`, `page`)          | nuqs                                             | URL이 존재하는 동안 유지되고 새로고침이나 공유에도 남는다              | 이 URL을 여는 모든 사용자, 같은 브라우저의 앞뒤 이동    | 공유하거나 새로고침하거나 뒤로가기로 복원돼야 하는 조건의 원본은 URL이라 타입 있는 URL 상태 훅으로 관리한다          |
-| 비로그인 전역 클라이언트 상태(`cartIds`, `wishlistIds`) | Zustand                                          | 탭과 세션 동안 유지되고 새로고침 시 초기화(`persist` 미적용)           | `Header`와 모든 `ProductActions`가 구독하는 전역 스토어 | 여러 화면(홈, 목록)이 같은 담김과 찜 상태를 동시에 읽고 써야 하는 비로그인 상태라 컴포넌트 트리 밖 저장소가 필요하다 |
-| 제출 전 검색어 draft                                    | React 로컬 state(`list-filter-bar`의 `useState`) | 컴포넌트 마운트 동안, 제출 시 URL의 `q`로 반영되고 이후 폐기           | `list-filter-bar` 내부에만                              | 한 화면 수명의 입력이라 전역화할 이유가 없고, 타이핑마다 URL을 쓰면 히스토리가 오염된다                              |
+| 상태                                                    | 소유자                                           | 수명                                                                   | 공유 범위                                            | 선택 이유                                                                                                                     |
+| ------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 서버 데이터(홈 응답, 상품 목록)                         | TanStack Query                                   | `staleTime`과 `gcTime`으로 캐시 수명을 관리(홈 5분/10분, 목록 1분/5분) | `QueryClientProvider`를 구독하는 모든 화면(홈, 목록) | 원본이 서버이므로 조회 상태와 캐싱, 재검증을 자체 관리하는 라이브러리에 맡기고 클라이언트에 복제하지 않는다                   |
+| URL 복원 조건(`q`, `category`, `sort`, `page`)          | nuqs                                             | URL이 존재하는 동안 유지되고 새로고침이나 공유에도 남는다              | 이 URL을 여는 모든 사용자, 같은 브라우저의 앞뒤 이동 | 공유하거나 새로고침하거나 뒤로가기로 복원돼야 하는 조건의 원본은 URL이라 타입 있는 URL 상태 훅으로 관리한다                   |
+| 비로그인 전역 클라이언트 상태(`cartIds`, `wishlistIds`) | Feature별 Zustand store                          | 탭과 세션 동안 유지되고 새로고침 시 초기화(`persist` 미적용)           | `Header`, `AddToCartButton`, `WishlistToggleButton`  | 여러 화면(홈, 목록)이 같은 담김과 찜 상태를 동시에 읽고 써야 하나, 두 사용자 행위의 상태를 각각 해당 Feature slice가 소유한다 |
+| 제출 전 검색어 draft                                    | React 로컬 state(`list-filter-bar`의 `useState`) | 컴포넌트 마운트 동안, 제출 시 URL의 `q`로 반영되고 이후 폐기           | `list-filter-bar` 내부에만                           | 한 화면 수명의 입력이라 전역화할 이유가 없고, 타이핑마다 URL을 쓰면 히스토리가 오염된다                                       |
 
 ### 캐시 수명(`staleTime`과 `gcTime`) 근거
 
@@ -100,9 +87,9 @@ docs/assignments/                # 주차별 과제 명세
 
 ### store 데이터 형태와 selector 경계
 
-Zustand store는 `cartIds: Set<string>`과 `wishlistIds: Set<string>` 두 값, `toggleCart`와 `toggleWishlist` 두 action만 노출한다. `Product` 객체는 담지 않는다. 상품 데이터의 원본은 서버이고 TanStack Query가 소유하므로, store가 `Product`를 복제해 담으면 같은 데이터에 두 번째 원본이 생긴다.
+`features/add-to-cart/model/store.ts`는 `cartIds: Set<string>`과 `toggleCart`를, `features/toggle-wishlist/model/store.ts`는 `wishlistIds: Set<string>`과 `toggleWishlist`를 각각 소유한다. 두 store 모두 `Product` 객체는 담지 않는다. 상품 데이터의 원본은 서버이고 TanStack Query가 소유하므로, store가 `Product`를 복제해 담으면 같은 데이터에 두 번째 원본이 생긴다.
 
-selector 경계도 필요한 값만 구독하도록 나눈다. `Header`는 `cartIds.size`와 `wishlistIds.size`를 각각 별개 selector로 구독하고, `ProductActions`는 해당 상품의 `has(id)` 두 개와 두 action만 구독한다. 담기 버튼 하나를 눌러도 그 상품 카드와 헤더만 리렌더되고, 목록에 함께 렌더된 다른 상품 카드는 영향받지 않는다.
+selector 경계도 필요한 값만 구독하도록 나눈다. `Header`는 `useCartCount`와 `useWishlistCount`로 각각의 개수를 구독하고, `AddToCartButton`과 `WishlistToggleButton`은 자신이 소유한 store에서 해당 상품의 상태와 action만 구독한다. 담기 버튼 하나를 눌러도 그 상품 카드와 헤더만 리렌더되고, 목록에 함께 렌더된 다른 상품 카드는 영향받지 않는다.
 
 ### 전역으로 올리지 않은 상태
 
@@ -112,9 +99,9 @@ selector 경계도 필요한 값만 구독하도록 나눈다. `Header`는 `cart
 
 로그인과 서버 동기화가 도입되면 위시리스트의 원본이 서버로 옮겨간다. 그 시점에는 로컬 익명 상태(현재 Zustand가 들고 있는 `wishlistIds`)를 계정 데이터에 합칠지, 버릴지, 충돌을 어떻게 처리할지부터 정해야 한다. 그 결정이 끝난 뒤 Zustand의 역할은 두 가지 중 하나로 좁혀진다. 서버 뮤테이션이 확정되기 전의 임시 입력(optimistic 버퍼)이거나, 서버 데이터와 무관한 순수 UI 상태(예: 방금 찜한 아이템의 하이라이트 애니메이션 플래그)다. 지금처럼 위시리스트 자체의 원본으로 남을 수는 없다.
 
-### 컴포넌트 경계: ProductCard와 ProductActions
+### 컴포넌트 경계: ProductCard와 Feature 버튼
 
-상품 카드를 표시 전용 `ProductCard`와 담기, 찜 상태를 다루는 `ProductActions`로 나눈다. 기준은 변경 이유가 다르다는 것이다. 카드 레이아웃(이미지, 이름, 가격)은 디자인 변경으로 바뀌고, 담김 상태는 사용자 조작(Zustand 토글)으로 바뀐다. `ProductCard`는 store를 구독하지 않는 순수 표시 컴포넌트이고, `ProductActions`만 두 `has(id)`와 두 action을 selector로 구독한다. 카드 자체가 store를 구독하면 담기 버튼 하나를 누를 때마다 목록에 렌더된 카드 30개 전부가 리렌더된다.
+상품 카드는 표시 전용 `ProductCard`로 두고, 담기와 찜은 각각 `AddToCartButton`, `WishlistToggleButton` Feature가 맡는다. 기준은 변경 이유가 다르다는 것이다. 카드 레이아웃(이미지, 이름, 가격)은 디자인 변경으로 바뀌고, 담김·찜 상태는 사용자 조작(Zustand 토글)으로 바뀐다. `ProductCard`는 store를 구독하지 않는 순수 표시 컴포넌트이고, 각 Feature 버튼만 자신의 selector를 구독한다. 카드 자체가 store를 구독하면 담기 버튼 하나를 누를 때마다 목록에 렌더된 카드 30개 전부가 리렌더된다.
 
 ### 데이터 정확성 검증의 1차 안전망
 
@@ -142,7 +129,7 @@ nuqs의 `useQueryStates`는 내부에서 `useSearchParams()`를 호출한다. Ne
 
 ## AI 생성 범위
 
-5주차 커머스 상태 관리 구현(`src/commerce/` 상태 레이어와 화면, `mocks/`, 관련 테스트, 이 설계 문서를 포함한 README 변경)은 Claude Code로 생성하고 직접 리뷰했다. 상태를 어느 라이브러리가 가질지에 대한 판단은 이 문서에 근거를 남겨 직접 검토했고, 구현이 그 판단대로 동작하는지는 `pnpm check`(lint, 타입, `depcruise`, 테스트, 빌드, 포맷)로 기계적으로 재확인한다.
+5주차 커머스 상태 관리 구현(`src/_app`, `src/_pages`, `src/widgets`, `src/features`, `src/entities`, `src/shared`와 관련 테스트, 이 설계 문서를 포함한 README 변경)은 Claude Code로 생성하고 직접 리뷰했다. 상태를 어느 라이브러리가 가질지에 대한 판단은 이 문서에 근거를 남겨 직접 검토했고, 구현이 그 판단대로 동작하는지는 `pnpm check`(lint, 타입, `depcruise`, 테스트, 빌드, 포맷)로 기계적으로 재확인한다.
 
 ### 시각 회귀 테스트
 
@@ -158,14 +145,14 @@ D(상태 아키텍처 테스트) 4항목 전부와 C(사용자 경험 개선)의
 
 | 과제 항목                      | 검증 위치                                                                                                                                                                            |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Zustand action과 selector      | `store.test.ts` 8개(토글 왕복, 새 Set 교체, 두 Set의 상호 비간섭), `product-actions.test.tsx` 4개(selector 구독 결과가 `aria-pressed`에 반영되는지)                                  |
+| Zustand action과 selector      | Feature별 `store.test.ts`(토글 왕복, 새 Set 교체), `add-to-cart-button.test.tsx`와 `wishlist-toggle-button.test.tsx`(selector 구독 결과가 `aria-pressed`에 반영되는지)               |
 | Header 개수 파생               | `header.test.tsx` 5개. store에 값을 넣고 `Header`만 렌더해 개수가 따라오는지                                                                                                         |
 | nuqs URL 조건과 query key 일치 | `queries.test.ts`가 5필드 각각이 queryKey를 바꾸는지 단정하고, `list-view.test.tsx`가 MSW Life-cycle events API로 실제 요청 쿼리를 캡처해 URL 조건이 요청에 그대로 나가는지 단정한다 |
 | 홈과 목록의 store 동기화       | `home-list-sync.test.tsx`                                                                                                                                                            |
 
-선택 이유: 상태 소유권 4분할이 이번 과제의 본체인데, 그 경계가 지켜지는지는 코드를 읽어서 알 수 없다. `ProductActions`가 로컬 `useState`로 담김 여부를 들고 있어도 화면 하나만 보는 스위트는 전부 통과한다. 홈과 목록, `Header`를 한 트리에 렌더해 공통 상품(p26)을 한 번만 토글하는 `home-list-sync.test.tsx`만이 그 오귀속을 잡는다. 카드가 2장인데 헤더 개수가 1이어야 한다는 단정이 판별력의 핵심이다.
+선택 이유: 상태 소유권 4분할이 이번 과제의 본체인데, 그 경계가 지켜지는지는 코드를 읽어서 알 수 없다. `AddToCartButton` 또는 `WishlistToggleButton`이 로컬 `useState`로 상태를 들고 있어도 화면 하나만 보는 스위트는 전부 통과한다. 홈과 목록, `Header`를 한 트리에 렌더해 공통 상품(p26)을 한 번만 토글하는 `home-list-sync.test.tsx`만이 그 오귀속을 잡는다. 카드가 2장인데 헤더 개수가 1이어야 한다는 단정이 판별력의 핵심이다.
 
-추가한 복잡도: 새 DOM이나 E2E 환경은 넣지 않았다. Vitest와 React Testing Library, MSW, happy-dom은 이전 주차에 이미 있었고 5주차에 더한 것은 `mocks/render.tsx` 하나다. QueryClient와 `NuqsTestingAdapter`를 주입하는 렌더 헬퍼 36줄이다.
+추가한 복잡도: 새 DOM이나 E2E 환경은 넣지 않았다. Vitest와 React Testing Library, MSW, happy-dom은 이전 주차에 이미 있었고, QueryClient와 `NuqsTestingAdapter`를 주입하는 테스트 렌더 헬퍼만 추가했다.
 
 **C: 전체 페이지를 새로고침하지 않는 오류 재시도**
 

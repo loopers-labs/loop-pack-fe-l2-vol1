@@ -30,14 +30,18 @@ pnpm format:check  # Prettier 검사만
 - `as` 단언 대신 좁히기 · 명시 타입 · 데이터 구조로 푼다.
 - 게이트가 막으면 **먼저 코드를 고친다**. 불가피하면 `// eslint-disable-next-line <룰명> -- <사유>`로 끈다 — 룰명·사유 없는 disable은 게이트가 막는다.
 
-## 프로젝트 구조 — feature-first colocation (Next App Router)
+## 프로젝트 구조 — FSD 6레이어 (Next App Router)
 
-코드는 기술 종류가 아니라 **도메인 기능**으로 묶는다. 폴더가 프레임워크가 아니라 도메인을 외치게 한다(screaming architecture).
+코드는 FSD(Feature-Sliced Design)의 **App → Pages → Widgets → Features → Entities → Shared** 여섯 레이어로 묶는다. 의존은 이 순서대로 상위에서 하위로만 흐른다. 같은 레이어의 다른 slice는 직접 import하지 않으며, 외부 소비자는 slice 루트의 named public API(`index.ts`)만 import한다.
 
-- **루트 `app/`은 라우팅 전용**: Next App Router의 페이지·레이아웃 파일만 두고 조립(assembly)만 한다. 도메인 로직을 두지 않는다.
-- **피처 콜로케이션**: 한 기능의 컴포넌트·훅·로직·타입을 `src/<feature>/`에 함께 둔다. `components/`·`hooks/` 같은 종류별 최상위 폴더를 만들지 않는다.
-- **공유는 필요할 때만**: 둘 이상 피처가 쓰는 것만 `src/shared/`로 올린다(YAGNI). 현재 `src/shared/ui/`.
-- **단방향 의존**: `shared → 피처 → app`. 피처끼리 서로 직접 import 금지 — 조립은 상위(`app`)에서.
-- **공개 표면**: 각 피처는 `index.ts`로만 외부에 노출한다. 내부 파일 깊은 import 금지.
-- **데이터 레이어 이름은 `api/`**: 피처의 API 호출은 `<feature>/api/`에. `services/`·`repository/`(백엔드 DDD 용어)를 쓰지 않는다.
-- 이 경계는 `pnpm depcruise`(dependency-cruiser, `src/`만 스캔)가 기계적으로 강제한다.
+- **루트 `app/`은 Next 경계만 둔다**: route, route handler, `error.tsx` 경계를 두는 얇은 adapter다. 화면·도메인 로직은 넣지 않고 `src/_pages` 또는 `src/_app`의 public API를 조립한다.
+- **`src/_app`은 App 레이어**: 전역 provider, 앱 bootstrap, 공통 shell을 조립한다.
+- **`src/_pages`는 Pages 레이어**: 화면과 그 URL/query 해석·로딩·로컬 상태를 소유한다. 새 화면은 여기서 시작한다(pages-first).
+- **`src/widgets`는 Widgets 레이어**: 여러 Page에서 의미 있게 재사용되는 큰 UI 블록을 둔다.
+- **`src/features`는 Features 레이어**: `add-to-cart`처럼 사용자가 수행하는 재사용 상호작용과 그 상태·API를 둔다.
+- **`src/entities`는 Entities 레이어**: `product`처럼 안정적인 도메인 개념과 표현을 둔다.
+- **`src/shared`는 Shared 레이어**: 도메인을 모르는 API 기반과 UI primitive만 둔다. 공용화는 실제로 둘 이상의 소비자가 생겼을 때 한다.
+- **slice와 segment**: UI는 `ui/`, 상태·규칙은 `model/`, 외부 호출은 `api/`에 둔다. `components/`·`hooks/` 같은 종류별 최상위 폴더를 만들지 않는다.
+- **적용 범위**: `src/products`는 4주차 legacy slice로 FSD 여섯 레이어와 공존한다. 새 커머스 화면과 기능은 여섯 FSD 레이어에 둔다.
+
+이 경계는 `pnpm depcruise`가 `src`를 스캔해 강제한다. 세부 책임과 public API 규칙은 `docs/architecture/layers.md`, `docs/architecture/public-api.md`를 따른다.
