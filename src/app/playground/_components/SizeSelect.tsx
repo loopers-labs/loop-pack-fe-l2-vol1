@@ -4,7 +4,7 @@
 // mock 백엔드(/api/products)의 재고를 그대로 쓴다: stock 0 = 품절 → 키보드 이동에서 스킵.
 
 import { useEffect, useState } from 'react'
-import { useSelect } from '@/components/ui/select'
+import { useSelect } from '@/shared/ui/select'
 
 interface SizeOption {
   value: number

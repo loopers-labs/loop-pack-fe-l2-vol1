@@ -1,4 +1,11 @@
-import type { Category, CategoryId, Product } from '@/types/commerce'
+import type {
+  Category,
+  CategoryId,
+  Product,
+} from '@/entities/product/model/product'
+
+// mock API 전용 제어값이다. 사용자 URL 상태나 목록 조건 계약에 넣지 않는다.
+export type MockApiScenario = 'empty' | 'error'
 
 export const categories: Category[] = [
   { id: 'casual', name: '캐주얼' },

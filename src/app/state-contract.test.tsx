@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
-import HeaderCounts from '@/components/commerce/HeaderCounts'
-import { resetShoppingState } from '@/stores/shopping'
-import type { Product } from '@/types/commerce'
-import HomePage from './page'
-import ProductListView from './products/ProductListView'
+import { Header } from '@/widgets/header'
+import { resetStores } from '@/test/resetStores'
+import type { Product } from '@/entities/product/model/product'
+import { HomePage } from '@/_pages/home'
+import { ProductListView } from '@/_pages/product-list'
 
 // 구현이 아니라 사용자에게 보이는 상태 계약을 검증한다.
 // 홈과 목록이 같은 store를 보는지, URL 조건이 화면과 요청에 일치하는지.
@@ -48,15 +48,16 @@ const listPayload = {
   pageSize: 12,
 }
 
+// 응답은 실제 Response로 만든다. 부분 객체를 캐스팅하면 본문 파싱 경로가 실물과 달라진다.
+// Response는 본문을 한 번만 읽을 수 있어서 호출마다 새로 만든다.
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status })
+
 const stubCommerceApi = (listOverrides: Partial<typeof listPayload> = {}) => {
   const list = { ...listPayload, ...listOverrides }
-  const fetchMock = vi.fn((input: RequestInfo | URL) => {
-    const url = String(input)
-    const payload = url.startsWith('/api/home') ? homePayload : list
-    return Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve(payload),
-    } as Response)
+  const fetchMock = vi.fn<typeof fetch>((input) => {
+    const payload = String(input).startsWith('/api/home') ? homePayload : list
+    return Promise.resolve(jsonResponse(payload))
   })
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
@@ -89,7 +90,7 @@ const renderApp = (
 }
 
 beforeEach(() => {
-  resetShoppingState()
+  resetStores()
 })
 
 afterEach(() => {
@@ -101,7 +102,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     stubCommerceApi()
     renderApp(
       <>
-        <HeaderCounts />
+        <Header />
         <HomePage />
         <ProductListView />
       </>,
@@ -127,7 +128,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     stubCommerceApi()
     renderApp(
       <>
-        <HeaderCounts />
+        <Header />
         <HomePage />
       </>,
     )
@@ -139,16 +140,13 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
   })
 })
 
-describe('요청 실패는 전용 화면과 재시도 출구를 가진다', () => {
+describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다', () => {
   it('목록 실패 시 에러 화면을 보여주고, 재시도가 성공하면 목록으로 복귀한다', async () => {
     // 첫 요청만 500, 재시도부터 성공하는 스텁
     const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: false, status: 500 } as Response)
-      .mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(listPayload),
-      } as Response)
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 500 }))
+      .mockImplementation(() => Promise.resolve(jsonResponse(listPayload)))
     vi.stubGlobal('fetch', fetchMock)
 
     renderApp(<ProductListView />)
@@ -161,10 +159,41 @@ describe('요청 실패는 전용 화면과 재시도 출구를 가진다', () =
     expect(await screen.findByText('총 2개')).toBeInTheDocument()
   })
 
+  it('목록 조회가 실패해도 조건을 바꿀 수 있는 UI는 화면에 남는다', async () => {
+    // Decision 6의 핵심이다. 조회 실패를 Error Boundary로 올리면 필터까지 사라져
+    // 사용자가 조건을 바꿔 벗어날 길이 닫힌다. 그래서 결과 영역 안에서 처리한다.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(new Response(null, { status: 500 })),
+      ),
+    )
+    const onUrlUpdate = vi.fn()
+
+    renderApp(<ProductListView />, { onUrlUpdate })
+
+    await screen.findByText('상품 목록을 불러오지 못했습니다.')
+
+    expect(screen.getByLabelText('검색')).toBeInTheDocument()
+    expect(screen.getByLabelText('카테고리')).toBeInTheDocument()
+    expect(screen.getByLabelText('정렬')).toBeInTheDocument()
+
+    // 남아 있기만 한 것이 아니라 조작되어야 한다.
+    fireEvent.change(screen.getByLabelText('카테고리'), {
+      target: { value: 'digital' },
+    })
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
+    expect(lastUrlUpdate(onUrlUpdate).searchParams.get('category')).toBe(
+      'digital',
+    )
+  })
+
   it('홈 실패 시 에러 화면과 재시도 버튼을 보여준다', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response),
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(new Response(null, { status: 500 })),
+      ),
     )
 
     renderApp(<HomePage />)
@@ -175,6 +204,59 @@ describe('요청 실패는 전용 화면과 재시도 출구를 가진다', () =
     expect(
       screen.getByRole('button', { name: '다시 시도' }),
     ).toBeInTheDocument()
+  })
+
+  it('조건이 거절되면 서버 메시지를 보여주고 재시도 대신 조건 초기화를 준다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400),
+        ),
+      ),
+    )
+    const onUrlUpdate = vi.fn()
+
+    renderApp(<ProductListView />, {
+      searchParams: '?category=casual&page=3',
+      onUrlUpdate,
+    })
+
+    // 화면이 정한 기본 문구가 아니라 서버가 보낸 메시지를 보여준다.
+    expect(
+      await screen.findByText('요청 조건을 확인해주세요.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: '검색 조건 초기화' }))
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
+    expect(lastUrlUpdate(onUrlUpdate).queryString).toBe('')
+  })
+
+  it('되돌릴 조건이 없으면 초기화 대신 화면 밖으로 나가는 길을 준다', async () => {
+    // 조건이 이미 기본값이면 초기화해도 query key가 그대로라 아무 일도 일어나지 않는다.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400),
+        ),
+      ),
+    )
+
+    renderApp(<ProductListView />)
+
+    expect(
+      await screen.findByText('요청 조건을 확인해주세요.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: '검색 조건 초기화' }),
+    ).toBeNull()
+    expect(screen.getByRole('link', { name: '홈으로' })).toHaveAttribute(
+      'href',
+      '/',
+    )
   })
 })
 
@@ -266,7 +348,7 @@ describe('목록 조건의 원본은 URL이다', () => {
     fireEvent.change(input, { target: { value: '가디건' } })
     expect(onUrlUpdate).not.toHaveBeenCalled()
 
-    fireEvent.submit(input.closest('form') as HTMLFormElement)
+    fireEvent.click(screen.getByRole('button', { name: '검색' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     const updated = lastUrlUpdate(onUrlUpdate).searchParams
     expect(updated.get('q')).toBe('가디건')

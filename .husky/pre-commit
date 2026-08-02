@@ -1,1 +1,2 @@
+pnpm architecture:check:staged
 pnpm exec lint-staged

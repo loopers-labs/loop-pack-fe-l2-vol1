@@ -3,7 +3,7 @@
 // Dialog 데모 — 같은 compound 조각으로 uncontrolled/controlled 두 사용법을 보인다.
 
 import { useState } from 'react'
-import { Dialog } from '@/components/ui/dialog'
+import { Dialog } from '@/shared/ui/dialog'
 
 const actionButtonStyle = {
   padding: '10px 16px',
