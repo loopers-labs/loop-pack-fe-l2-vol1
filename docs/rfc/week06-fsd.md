@@ -13,7 +13,22 @@
 
 기준선은 [baseline summary](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/baseline/summary.md)와 `scenario-1.txt`~`scenario-8.txt`를 따른다. 홈/목록 렌더, skeleton(홈 10·목록 12), 네트워크 오류의 인라인 오류와 재시도, 빈 결과, URL 공유(필터·정렬·페이지), 홈↔목록 장바구니/찜 동기화를 보존한다. 특히 `scenario-4.txt`는 현재 abort 시 필터·헤더를 유지한 인라인 오류와 재시도를, `unroute-check.txt`는 route 해제 뒤 정상 복구를 기록한다.
 
-현재 `@/commerce`의 **앱 외부 소비자**는 5개다: `app/(commerce)/layout.tsx`, `page.tsx`, `products/page.tsx`, `app/api/home/route.ts`, `app/api/products/route.ts`. 반면 **repo 전체 `@/commerce` import**는 테스트 `src/commerce/handler-parity.test.ts`까지 포함하여 6개다. 전자는 실행 조립 경계, 후자는 테스트를 포함한 검색 결과이므로 같은 수로 취급하지 않는다.
+#### 구조 이동 재측정 — 2026-08-03, `e00aa5b`
+
+구조 이동 재측정은 [summary](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/structure-remeasure/summary.md)와 [scenario-1.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/structure-remeasure/scenario-1.txt)~[scenario-8.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/structure-remeasure/scenario-8.txt)를 기준으로 수행했다. baseline과 재측정은 8/8 동일했다.
+
+| Scenario          | 재측정 결과                                                                     | baseline 대비 |
+| ----------------- | ------------------------------------------------------------------------------- | ------------- |
+| 1. 홈 정상 렌더   | 인기/신상품·카드 12                                                             | 동일          |
+| 2. 목록 정상 렌더 | 목록 12·총 30·pagination                                                        | 동일          |
+| 3. skeleton       | 홈 10·목록 12                                                                   | 동일          |
+| 4. network abort  | inline 오류·재시도·필터·헤더 유지, unroute 뒤 정상 복구. Error Boundary 전 단계 | 동일          |
+| 5. 빈 검색        | 총 0·inline empty·boundary 없음                                                 | 동일          |
+| 6. 필터 URL       | `q=케이스`·`category=digital`·`sort=price-asc`·카드 2                           | 동일          |
+| 7. pagination     | page2→back1→forward2→reload2 및 첫 상품                                         | 동일          |
+| 8. cart/wishlist  | 홈 toggle 뒤 목록에서 header 1/1·두 버튼 `pressed=true`                         | 동일          |
+
+마이그레이션 전 `@/commerce`의 **앱 외부 소비자**는 5개다: `app/(commerce)/layout.tsx`, `page.tsx`, `products/page.tsx`, `app/api/home/route.ts`, `app/api/products/route.ts`. 반면 **repo 전체 `@/commerce` import**는 테스트 `src/commerce/handler-parity.test.ts`까지 포함하여 6개다. 전자는 실행 조립 경계, 후자는 테스트를 포함한 검색 결과이므로 같은 수로 취급하지 않는다.
 
 ## 2. Architecture — 제안 구조와 의존 규칙
 
