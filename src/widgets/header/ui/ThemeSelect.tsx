@@ -1,14 +1,22 @@
 'use client'
 
-import { useState } from 'react'
-import { isTheme, THEME_COOKIE_KEY, type Theme } from '@/shared/lib/theme'
+import { useEffect, useState } from 'react'
+import {
+  isTheme,
+  THEME_COOKIE_KEY,
+  themeFromCookie,
+  type Theme,
+} from '@/shared/lib/theme'
 
-interface ThemeSelectProps {
-  initialTheme: Theme
-}
+export default function ThemeSelect() {
+  const [theme, setTheme] = useState<Theme>('light')
 
-export default function ThemeSelect({ initialTheme }: ThemeSelectProps) {
-  const [theme, setTheme] = useState<Theme>(initialTheme)
+  useEffect(() => {
+    const storedTheme = themeFromCookie(document.cookie)
+
+    setTheme(storedTheme)
+    document.documentElement.dataset.theme = storedTheme
+  }, [])
 
   const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const nextTheme = event.target.value

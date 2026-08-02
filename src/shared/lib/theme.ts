@@ -7,3 +7,13 @@ export const isTheme = (value: string | null): value is Theme =>
 
 export const resolveTheme = (value: string | undefined): Theme =>
   value === 'dark' ? 'dark' : 'light'
+
+export const themeFromCookie = (cookie: string): Theme => {
+  const value = cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${THEME_COOKIE_KEY}=`))
+    ?.slice(THEME_COOKIE_KEY.length + 1)
+
+  return resolveTheme(value)
+}
