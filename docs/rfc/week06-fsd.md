@@ -113,7 +113,7 @@ feature store를 테스트·상위 조립에서 직접 reset해야 하는 경우
 
 `app/(commerce)/error.tsx`의 재시도 버튼은 `useQueryErrorResetBoundary().reset()`과 Next `reset()`을 각각 한 번 호출한다. Query cache의 error 상태와 Next route boundary를 모두 재설정해야 전체 새로고침 없이 재시도할 수 있다. `unstable_retry()`는 client-fetch에 불필요한 refresh라 사용하지 않는다. 같은 segment의 `layout.tsx`는 `error.tsx`가 감싸지 않으며, Header는 `CommerceProviders`가 layout 안에서 렌더링하므로 boundary fallback에서도 남는다.
 
-TDD는 `HttpError`와 guard, 두 page query의 `throwOnError` predicate, boundary의 두 reset 호출, home/list의 5xx·network 전파를 대상으로 했다. RED 증거는 [error-boundary/red.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/error-boundary/red.txt)로, 구현 전 7파일의 10개 실패를 기록한다. GREEN 증거는 [error-boundary/green.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/error-boundary/green.txt)로, targeted 7파일/68테스트와 전체 40파일/226테스트 통과를 기록한다. 브라우저 검증은 아직 수행하지 않았으며, 최종 QA에서 `network route "**/api/products*" --abort` 후 boundary와 Header를 확인하고, `network unroute` 뒤 reset을 눌러 reload 없이 회복하는지 검증한다.
+TDD는 `HttpError`와 guard, 두 page query의 `throwOnError` predicate, boundary의 두 reset 호출, home/list의 5xx·network 전파를 대상으로 했다. RED 증거는 [error-boundary/red.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/error-boundary/red.txt)로, 구현 전 7파일의 10개 실패를 기록한다. GREEN 증거는 [error-boundary/green.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/error-boundary/green.txt)로, targeted 7파일/68테스트와 전체 40파일/226테스트 통과를 기록한다. 최종 브라우저 QA에서 `**/api/products*` network abort는 route boundary로 전파됐고, Header의 wishlist/cart 상태, `window.__week06Marker`, navigation entry 1은 fallback과 복구 뒤에도 유지됐다. route를 해제한 뒤 `다시 시도`를 누르자 같은 URL에서 목록이 복구됐으며 document reload는 없었다. 런타임 `fetch`가 반환한 400은 검색·카테고리·정렬 control을 유지한 인라인 오류로 남았고, 원래 fetch 복원 뒤 인라인 `재시도`로 같은 URL에서 복구됐다([scenario 4](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-4.txt)).
 
 ### Advanced A와 depcruise
 
@@ -208,13 +208,35 @@ $ pnpm depcruise
 | RED → GREEN          | 전체 초기화 동작을 테스트로 추가                | [RED](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/red.txt)는 버튼 부재로 2개 테스트가 실패한 상태를 기록한다. [GREEN](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/green.txt)은 targeted 2파일/57테스트와 `pnpm check`의 전체 40파일/228테스트 통과를 기록한다.                                                                                               |
 | 브라우저 URL/history | 비기본 상태는 한 번 push하고, 기본 상태는 no-op | [push/back](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/reset.txt)는 비기본 URL에서 초기화 뒤 `/products`·기본 control·1페이지를 표시하고 history push 1회와 back 복원을 PASS로 기록한다. [기본 상태 no-op](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/noop.txt)은 URL/history entry를 추가하지 않아 한 번의 back이 이전 페이지로 이동함을 PASS로 기록한다. |
 
-### 삭제 시나리오 — TODO 14 기록 예정
+### 삭제 시나리오 — 결과
 
-placeholder: `toggle-wishlist`를 제거할 때 삭제할 feature slice, ProductCard slot composition 두 곳, Header의 wishlist count 소비를 나열하고 다른 slice에 남은 orphan import가 없음을 `rg`·`pnpm check`로 증명한다.
+`toggle-wishlist`를 제거할 때는 feature slice **7파일을 통째로 삭제**한다: `index.ts`, `index.test.ts`, `model/store.ts`, `model/store.test.ts`, `ui/wishlist-toggle-button.tsx`, `ui/wishlist-toggle-button.test.tsx`, `ui/wishlist-toggle-button.module.css`. 삭제 뒤 production 조립 변경 지점은 정확히 3곳이다. `src/widgets/header/ui/header.tsx`에서 `useWishlistCount`와 count 표시를 제거하고, `src/_pages/home/ui/product-section.tsx`와 `src/_pages/product-list/ui/list-view.tsx`에서 각각 ProductCard의 `WishlistToggleButton` action slot 조립을 제거한다.
+
+직접 소비 테스트도 `src/_pages/home/ui/home-view.test.tsx`와 `src/widgets/header/ui/header.test.tsx`에서 wishlist 단정을 제거하며, `features/toggle-wishlist/index.test.ts` slice contract test는 slice와 함께 삭제한다. 실제 `rg` 대조에서 slice 파일은 예측한 7파일과 일치했고, production import는 위 3개 조립 지점뿐이었다. 검색에는 두 직접 테스트와 slice contract test만 추가로 나타났으며, 다른 production slice의 orphan import는 없었다. 판정은 PASS다([예측](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/deletion-scenario/prediction.md), [grep 대조](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/deletion-scenario/grep-check.txt)).
+
+#### 신상품 뱃지 변경 반경 예측
+
+신상품 뱃지는 사용자 행위가 아닌 Product 표시이므로 새 Feature slice를 만들지 않는다. 요구가 한 화면에만 생기면 pages-first로 해당 Page에서 시작한다. home과 product-list 두 화면 소비가 확정되면 `src/entities/product/ui/product-card.tsx`에 `badge?: ReactNode` slot을 추가하고, `src/_pages/home/ui/product-section.tsx`와 `src/_pages/product-list/ui/list-view.tsx`가 화면 정책에 맞춰 조립한다. 그때 `src/entities/product/ui/product-card.test.tsx`는 slot 표시를, `src/_pages/home/ui/home-view.test.tsx`와 `src/_pages/product-list/ui/list-view.test.tsx`는 각 화면 조건을 직접 검증한다([예측](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/deletion-scenario/prediction.md)).
 
 ## 8. Operations — 측정, 승격, 후속 기록
 
 구조 재측정에서는 baseline의 scenario 1\~8을 동일하게 비교한다. 최종 QA에서는 scenario 1\~3·5~8은 동일하고 scenario 4만 새 boundary 정책으로 바뀐다. API smoke, handler parity 7 case, category drift guard, public API tests도 함께 실행한다. 임시 violation stub·temporary error code는 최종 tree에 남기지 않는다.
+
+### 최종 브라우저 QA — 2026-08-03
+
+최종 QA는 **전 항목 PASS**다. 비오류 scenario 1·2·3·5·6·7·8은 baseline과 **7/7 동일**했고, scenario 4는 구현한 오류 경계 정책과 무새로고침 복구를 확인했다([최종 QA 요약](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/summary.md)).
+
+| 범위                    | 실제 결과                                                                                                                                                                                                                   | 증거                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1. 홈 정상 렌더         | Hero·카테고리·인기/신상품과 ProductCard 12개가 baseline과 동일                                                                                                                                                              | [scenario 1](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-1.txt) |
+| 2. 목록 정상 렌더       | 총 30개, ProductCard 12개, pagination과 기본 control이 baseline과 동일                                                                                                                                                      | [scenario 2](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-2.txt) |
+| 3. skeleton             | 홈 10개·목록 12개 skeleton이 baseline과 동일                                                                                                                                                                                | [scenario 3](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-3.txt) |
+| 4. 오류 정책·복구       | network는 route boundary, 4xx는 control을 유지한 inline 오류였다. Header·marker·navigation entry 1을 보존했고, route 해제 뒤 boundary `다시 시도`와 fetch 복원 뒤 inline `재시도` 모두 같은 URL에서 새로고침 없이 복구했다. | [scenario 4](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-4.txt) |
+| 5. 빈 검색              | 총 0개와 inline empty UI, URL/control 상태가 baseline과 동일                                                                                                                                                                | [scenario 5](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-5.txt) |
+| 6. 필터 URL             | `q=케이스`, `category=digital`, `sort=price-asc`, ProductCard 2개가 baseline과 동일                                                                                                                                         | [scenario 6](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-6.txt) |
+| 7. pagination           | page 2 → back 1 → forward 2 → reload 2의 URL·첫 상품이 baseline과 동일                                                                                                                                                      | [scenario 7](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-7.txt) |
+| 8. cart/wishlist 동기화 | 홈 toggle 뒤 SPA 이동한 목록에서도 Header 1/1과 두 버튼 `aria-pressed=true`가 baseline과 동일                                                                                                                               | [scenario 8](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/scenario-8.txt) |
+| 전체 초기화             | 비기본 URL은 push 1회 뒤 기본 URL/control/1페이지로 전환하고 back으로 시작 상태를 복원했다. 기본 상태는 URL·history를 바꾸지 않는 no-op이며 한 번의 back은 이전 페이지로 이동했다.                                          | [reset](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/final-qa/reset.txt)           |
 
 ### Architecture-review 수용/반려 — TODO 15 기록 예정
 
