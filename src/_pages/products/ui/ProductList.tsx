@@ -10,6 +10,8 @@ import { SEARCH_DEBOUNCE_MS } from "@/features/search";
 import layout from "@/shared/ui/layout.module.css";
 import styles from "./ProductList.module.css";
 
+const PRODUCT_LIST_LOAD_ERROR = "상품 목록을 불러오지 못했습니다.";
+
 export function ProductList() {
   const { query, setPage, clampPageToRange } = useProductListSearchParams();
   const queryClient = useQueryClient();
@@ -22,7 +24,7 @@ export function ProductList() {
     [query, debouncedSearch],
   );
 
-  const { data, isPending, isPlaceholderData } = useQuery(
+  const { data, isPending, isPlaceholderData, isError } = useQuery(
     productQueries.list(activeQuery),
   );
 
@@ -57,6 +59,11 @@ export function ProductList() {
         <div className={isPlaceholderData ? styles.updating : undefined}>
           <ProductListResult result={data} onPageChange={setPage} />
         </div>
+      )}
+      {/* 4xx(잘못된 조회 조건)는 throwOnError 가 경계로 안 올린다(앱↔서버 계약 불일치라 재시도가 무의미).
+          보여줄 데이터가 없을 때만 목록 자리에 상황 안내를 띄운다 — background refetch 실패는 위 data 분기가 stale 로 유지한다. */}
+      {isError && !data && (
+        <p className={layout.status}>{PRODUCT_LIST_LOAD_ERROR}</p>
       )}
     </>
   );
