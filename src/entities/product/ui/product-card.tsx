@@ -1,13 +1,14 @@
 import Image from "next/image";
-import type { Product } from "./api/types";
-import { ProductActions } from "./product-actions";
-import styles from "./commerce.module.css";
+import type { ReactNode } from "react";
+import type { Product } from "../model/types";
+import styles from "../../../commerce/commerce.module.css";
 
 export interface ProductCardProps {
   product: Product;
+  actions?: ReactNode;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, actions }: ProductCardProps) {
   return (
     <article className={styles.product}>
       <Image
@@ -29,7 +30,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </s>
         )}
       </strong>
-      <ProductActions productId={product.id} productName={product.name} />
+      {actions}
     </article>
   );
 }

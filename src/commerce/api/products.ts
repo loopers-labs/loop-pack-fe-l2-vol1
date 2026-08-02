@@ -1,5 +1,6 @@
 import { categories, products } from "./catalog";
-import type { CategoryId, ProductListResponse, ProductSort } from "./types";
+import type { CategoryId } from "@/entities/product";
+import type { ProductListResponse, ProductSort } from "./types";
 
 // 정렬·카테고리 유효값은 도메인 지식이므로 피처가 소유하고, 어댑터(route)가 검증에 재사용한다.
 export const PRODUCT_SORTS = [
@@ -11,9 +12,6 @@ export const PRODUCT_SORTS = [
 
 export const isProductSort = (value: string): value is ProductSort =>
   PRODUCT_SORTS.some((sort) => sort === value);
-
-export const isCategoryId = (value: string): value is CategoryId =>
-  categories.some((category) => category.id === value);
 
 type ProductQuery = {
   q: string;

@@ -1,13 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "../../mocks/render";
-import { useCommerceStore } from "./store";
+import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "../../../../mocks/render";
 import { ProductCard } from "./product-card";
-import type { Product } from "./api/types";
+import type { Product } from "../model/types";
 
 afterEach(cleanup);
-beforeEach(() => {
-  useCommerceStore.setState({ cartIds: new Set(), wishlistIds: new Set() }); // 카드가 store를 구독하므로 격리한다
-});
 
 const baseProduct: Product = {
   id: "p1",
@@ -57,5 +53,11 @@ describe("ProductCard", () => {
 
     expect(screen.getByText("판매가")).toBeInTheDocument();
     expect(screen.queryByText("정가")).not.toBeInTheDocument();
+  });
+
+  it("actions 슬롯을 카드 안에 렌더링한다", () => {
+    render(<ProductCard product={baseProduct} actions={<button type="button">담기</button>} />);
+
+    expect(screen.getByRole("button", { name: "담기" })).toBeInTheDocument();
   });
 });

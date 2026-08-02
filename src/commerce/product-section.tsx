@@ -1,7 +1,7 @@
 "use client";
 
-import type { Product } from "./api/types";
-import { ProductCard } from "./product-card";
+import { ProductCard, type Product } from "@/entities/product";
+import { ProductActions } from "./product-actions";
 import styles from "./commerce.module.css";
 
 export interface ProductSectionProps {
@@ -18,7 +18,11 @@ export function ProductSection({ title, products }: ProductSectionProps) {
       ) : (
         <div className={styles.grid}>
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              actions={<ProductActions productId={product.id} productName={product.name} />}
+            />
           ))}
         </div>
       )}

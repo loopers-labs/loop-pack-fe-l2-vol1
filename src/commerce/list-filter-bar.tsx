@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { isCategoryId, PRODUCT_SORTS, isProductSort } from "./api/products";
+import { isCategoryId } from "@/entities/product";
+import { PRODUCT_SORTS, isProductSort } from "./api/products";
 import type { ProductSort } from "./api/types";
 import styles from "./commerce.module.css";
 import { CATEGORY_FILTER_VALUES } from "./use-list-query";

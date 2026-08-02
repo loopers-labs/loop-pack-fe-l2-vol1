@@ -2,9 +2,10 @@
 
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ProductCard } from "@/entities/product";
 import { ListFilterBar } from "./list-filter-bar";
 import { ListPagination } from "./list-pagination";
-import { ProductCard } from "./product-card";
+import { ProductActions } from "./product-actions";
 import { productListQueryOptions } from "./queries";
 import { PAGE_SIZE, useListQuery } from "./use-list-query";
 import styles from "./commerce.module.css";
@@ -66,7 +67,11 @@ export function ListView() {
           <>
             <div className={styles.grid}>
               {data.products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  actions={<ProductActions productId={product.id} productName={product.name} />}
+                />
               ))}
             </div>
             <ListPagination

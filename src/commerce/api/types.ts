@@ -1,13 +1,4 @@
-// commerce 도메인 계약. 홈·목록 두 화면이 공유하는 서버 데이터 shape.
-// (과제 문서는 src/types/commerce.ts를 예시로 들지만, 이 레포는 feature-first라
-//  타입도 피처 안에 둔다. 과제 문서 자체가 "제공 파일 구조는 정답 아님"이라 명시.)
-
-export type CategoryId = "casual" | "fashion" | "goods" | "home" | "digital";
-
-export type Category = {
-  id: CategoryId;
-  name: string;
-};
+import type { Category, CategoryId, Product } from "@/entities/product";
 
 export type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
 
@@ -19,21 +10,6 @@ export type ProductListQuery = {
   sort: ProductSort;
   page: number;
   pageSize: number;
-};
-
-export type Product = {
-  id: string;
-  brand: string;
-  name: string;
-  category: CategoryId;
-  price: number;
-  originalPrice: number | null;
-  image: string;
-  freeShipping: boolean;
-  sizes: Array<{ value: number; stock: number }>;
-  rating: number;
-  reviewCount: number;
-  createdAt: string;
 };
 
 export type HomeResponse = {
