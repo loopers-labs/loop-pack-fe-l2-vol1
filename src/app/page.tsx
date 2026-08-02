@@ -1,10 +1,6 @@
 import { Suspense } from "react";
-import { connection } from "next/server";
-import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { CommerceHeader } from "@/widgets/commerce";
-import { HomeContent } from "@/_pages/home";
-import { getQueryClient } from "@/shared/api";
-import { homeQueries } from "@/_pages/home";
+import { HomeSection } from "@/_pages/home";
 import app from "@/_app/styles/app.module.css";
 import layout from "@/shared/ui/layout.module.css";
 
@@ -15,25 +11,8 @@ export default function HomePage() {
       <Suspense
         fallback={<p className={layout.status}>홈 데이터를 불러오는 중…</p>}
       >
-        <HomeData />
+        <HomeSection />
       </Suspense>
     </main>
-  );
-}
-
-// 홈은 서버에서 자기 /api/home 을 fetch 한다. 정적 prerender 는 빌드타임에 페이지를 실행하는데
-// 그 시점엔 라우트 서버가 안 떠 있어 self-fetch 가 ECONNREFUSED 로 실패한다 → 요청당 렌더가 필요하다.
-// connection() - 이 라우트를 정적 -> 동적으로 바뀌게 하여 빌드 prerender 를 막는다.
-// https://nextjs.org/docs/app/api-reference/functions/connection
-async function HomeData() {
-  await connection();
-
-  const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(homeQueries.detail());
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <HomeContent />
-    </HydrationBoundary>
   );
 }
