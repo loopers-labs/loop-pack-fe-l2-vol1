@@ -2,7 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import styles from "@/components/commerce/commerce.module.css";
+import app from "@/_app/styles/app.module.css";
+import layout from "@/shared/ui/layout.module.css";
 
 // 서버 데이터 조회 등에서 던진 에러를 잡는 세그먼트 경계.
 // router.refresh() 로 서버 컴포넌트를 다시 가져오고 reset() 으로 경계를 재렌더한다.
@@ -13,13 +14,13 @@ export default function AppError({ reset }: { reset: () => void }) {
   const [isRetrying, startTransition] = useTransition();
 
   return (
-    <main className={styles.page}>
-      <p className={`${styles.status} ${styles.error}`}>
+    <main className={app.page}>
+      <p className={`${layout.status} ${app.error}`}>
         화면을 표시하지 못했습니다. 잠시 후 다시 시도해주세요.
       </p>
       <button
         type="button"
-        className={styles.retryButton}
+        className={app.retryButton}
         disabled={isRetrying}
         onClick={() =>
           startTransition(() => {

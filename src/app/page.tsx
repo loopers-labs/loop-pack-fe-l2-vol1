@@ -1,16 +1,19 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { getHome } from "@/services/commerce";
-import { CommerceHeader } from "@/components/commerce/CommerceHeader";
-import { HomeContent } from "@/components/commerce/HomeContent";
-import styles from "@/components/commerce/commerce.module.css";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+import { CommerceHeader } from "@/widgets/commerce";
+import { HomeContent } from "@/_pages/home";
+import { getQueryClient } from "@/shared/api";
+import { homeQueries } from "@/_pages/home";
+import app from "@/_app/styles/app.module.css";
+import layout from "@/shared/ui/layout.module.css";
 
 export default function HomePage() {
   return (
-    <main className={styles.page}>
+    <main className={app.page}>
       <CommerceHeader />
       <Suspense
-        fallback={<p className={styles.status}>홈 데이터를 불러오는 중…</p>}
+        fallback={<p className={layout.status}>홈 데이터를 불러오는 중…</p>}
       >
         <HomeData />
       </Suspense>
@@ -24,7 +27,13 @@ export default function HomePage() {
 // https://nextjs.org/docs/app/api-reference/functions/connection
 async function HomeData() {
   await connection();
-  const home = await getHome();
 
-  return <HomeContent home={home} />;
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(homeQueries.detail());
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <HomeContent />
+    </HydrationBoundary>
+  );
 }

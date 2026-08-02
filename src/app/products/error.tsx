@@ -1,8 +1,9 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { productQueries } from "@/queries/products";
-import styles from "@/components/commerce/commerce.module.css";
+import { productQueries } from "@/entities/product";
+import app from "@/_app/styles/app.module.css";
+import layout from "@/shared/ui/layout.module.css";
 
 // 목록 조회에서 render 중 throw 된 에러를 잡는 세그먼트 경계.
 // layout 안(필터 아래)에서 렌더되므로 헤더·검색/정렬은 그대로 남고 목록 자리만 이 화면으로 교체된다. (Advanced C: 전체 페이지를 새로고침하지 않는 오류 재시도 경험)
@@ -17,9 +18,9 @@ export default function ProductListError({ reset }: { reset: () => void }) {
   };
 
   return (
-    <div className={`${styles.status} ${styles.error}`}>
+    <div className={`${layout.status} ${app.error}`}>
       <p>상품 목록을 불러오지 못했습니다.</p>
-      <button type="button" className={styles.retryButton} onClick={retry}>
+      <button type="button" className={app.retryButton} onClick={retry}>
         다시 시도
       </button>
     </div>
