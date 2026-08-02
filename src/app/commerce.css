@@ -168,6 +168,7 @@
 .week05-image {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 1;
   margin-bottom: 9px;
   background: var(--surface-muted);
