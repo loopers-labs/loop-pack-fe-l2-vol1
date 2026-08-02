@@ -1496,7 +1496,7 @@ cart와 wishlist는 capability 모델과 store를 모두 분리한다. 대안 �
 - `ProductCard`는 cart와 wishlist 구현을 직접 import하지 않는다.
 - 상위 조합부가 `ProductCard`와 사용자 행위를 연결한다.
 - 각 capability는 selector hook과 action hook만 공개하고 store 구현체는 공개하지 않는다.
-- Public API는 `_pages` 두 슬라이스에만 둔다. 나머지는 파일 단위 export로 경계를 지킨다.
+- Public API는 `_pages` 두 슬라이스와 `widgets/header`에 둔다. 나머지는 파일 단위 export로 경계를 지킨다.
   근거와 반려한 대안은 [Decision 5](#decision-5-public-api-경계)를 따른다.
 
 - 조회 실패는 각 화면이 인라인으로 처리하고 Error Boundary로 전파하지 않는다. 근거와

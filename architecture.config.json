@@ -1,0 +1,23 @@
+{
+  "publicApis": [
+    "src/_pages/home",
+    "src/_pages/product-list",
+    "src/widgets/header"
+  ],
+  "documentGuards": [
+    {
+      "file": "docs/rfc/week06-fsd.md",
+      "forbid": ["Public API는 `_pages` 두 슬라이스에만 둔다"],
+      "require": [
+        "`_pages/home`, `_pages/product-list`,\n`widgets/header` 셋이다"
+      ]
+    }
+  ],
+  "manualReview": [
+    "변경 이유와 실제 소비자 목록이 일치하는가",
+    "삭제 시나리오의 예상 파일과 실제 diff가 일치하는가",
+    "에러 표, throwOnError 정책, 회귀 테스트가 같은 기준을 쓰는가",
+    "route error.tsx와 reset 경로를 브라우저에서 재현했는가",
+    "결정 번복 시 해당 결정을 인용하는 RFC 절을 함께 갱신했는가"
+  ]
+}

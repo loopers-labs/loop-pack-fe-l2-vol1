@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
-import HeaderCounts from '@/widgets/header/ui/HeaderCounts'
+import { Header } from '@/widgets/header'
 import { resetStores } from '@/test/resetStores'
 import type { Product } from '@/entities/product/model/product'
 import { HomePage } from '@/_pages/home'
@@ -102,7 +102,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     stubCommerceApi()
     renderApp(
       <>
-        <HeaderCounts />
+        <Header />
         <HomePage />
         <ProductListView />
       </>,
@@ -128,7 +128,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     stubCommerceApi()
     renderApp(
       <>
-        <HeaderCounts />
+        <Header />
         <HomePage />
       </>,
     )
