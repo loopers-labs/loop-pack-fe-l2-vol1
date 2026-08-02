@@ -1,7 +1,8 @@
 "use client";
 
 import { ProductCard, type Product } from "@/entities/product";
-import { ProductActions } from "./product-actions";
+import { AddToCartButton } from "@/features/add-to-cart";
+import { WishlistToggleButton } from "@/features/toggle-wishlist";
 import styles from "./commerce.module.css";
 
 export interface ProductSectionProps {
@@ -21,7 +22,12 @@ export function ProductSection({ title, products }: ProductSectionProps) {
             <ProductCard
               key={product.id}
               product={product}
-              actions={<ProductActions productId={product.id} productName={product.name} />}
+              actions={
+                <div className={styles.actions}>
+                  <AddToCartButton productId={product.id} productName={product.name} />
+                  <WishlistToggleButton productId={product.id} productName={product.name} />
+                </div>
+              }
             />
           ))}
         </div>

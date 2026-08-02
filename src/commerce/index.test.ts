@@ -27,14 +27,12 @@ const RUNTIME_EXPORT_NAMES = [
 
 // 피처 내부 구현 — 배럴에 새어 나오면 안 된다.
 const PRIVATE_IMPLEMENTATION_NAMES = [
-  "useCommerceStore",
   "useListQuery",
   "LIST_QUERY_PARSERS",
   "PAGE_SIZE",
   "CATEGORY_FILTER_VALUES",
   "pageParser",
   "ProductCard",
-  "ProductActions",
   "ProductSection",
   "ListFilterBar",
   "ListPagination",

@@ -1,13 +1,11 @@
 import { create } from "zustand";
 
-interface CommerceState {
-  cartIds: Set<string>;
+type WishlistState = {
   wishlistIds: Set<string>;
-  toggleCart: (id: string) => void;
   toggleWishlist: (id: string) => void;
-}
+};
 
-function toggleId(ids: Set<string>, id: string): Set<string> {
+const toggleId = (ids: Set<string>, id: string): Set<string> => {
   const next = new Set(ids);
   if (next.has(id)) {
     next.delete(id);
@@ -15,11 +13,9 @@ function toggleId(ids: Set<string>, id: string): Set<string> {
     next.add(id);
   }
   return next;
-}
+};
 
-export const useCommerceStore = create<CommerceState>((set) => ({
-  cartIds: new Set(),
+export const useWishlistStore = create<WishlistState>((set) => ({
   wishlistIds: new Set(),
-  toggleCart: (id) => set((state) => ({ cartIds: toggleId(state.cartIds, id) })),
   toggleWishlist: (id) => set((state) => ({ wishlistIds: toggleId(state.wishlistIds, id) })),
 }));

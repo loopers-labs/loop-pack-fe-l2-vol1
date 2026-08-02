@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCommerceStore } from "./store";
+import { useCartCount } from "@/features/add-to-cart";
+import { useWishlistCount } from "@/features/toggle-wishlist";
 import styles from "./commerce.module.css";
 
 export function Header() {
-  const cartCount = useCommerceStore((s) => s.cartIds.size);
-  const wishlistCount = useCommerceStore((s) => s.wishlistIds.size);
+  const cartCount = useCartCount();
+  const wishlistCount = useWishlistCount();
 
   return (
     <header className={styles.header}>

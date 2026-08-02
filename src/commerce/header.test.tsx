@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "../../mocks/render";
-import { useCommerceStore } from "./store";
+import { useCartStore } from "@/features/add-to-cart/model/store";
+import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
 import { Header } from "./header";
 
 afterEach(cleanup);
 beforeEach(() => {
-  useCommerceStore.setState({ cartIds: new Set(), wishlistIds: new Set() });
+  useCartStore.setState({ cartIds: new Set() });
+  useWishlistStore.setState({ wishlistIds: new Set() });
 });
 
 describe("Header", () => {
@@ -17,10 +19,8 @@ describe("Header", () => {
   });
 
   it("reflects store counts after items are added", () => {
-    useCommerceStore.setState({
-      cartIds: new Set(["p1", "p2"]),
-      wishlistIds: new Set(["p3"]),
-    });
+    useCartStore.setState({ cartIds: new Set(["p1", "p2"]) });
+    useWishlistStore.setState({ wishlistIds: new Set(["p3"]) });
 
     render(<Header />);
 
@@ -29,10 +29,8 @@ describe("Header", () => {
   });
 
   it("keeps cart and wishlist counts independent", () => {
-    useCommerceStore.setState({
-      cartIds: new Set(["p1", "p2", "p3"]),
-      wishlistIds: new Set(),
-    });
+    useCartStore.setState({ cartIds: new Set(["p1", "p2", "p3"]) });
+    useWishlistStore.setState({ wishlistIds: new Set() });
 
     render(<Header />);
 

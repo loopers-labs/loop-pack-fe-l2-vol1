@@ -4,13 +4,15 @@ import { NextRequest } from "next/server";
 import { server } from "../../mocks/server";
 import { cleanup, fireEvent, render, screen } from "../../mocks/render"; // render는 QueryClientProvider로 감싸는 커스텀 버전이다(HomeView가 useQuery를 쓴다)
 import { GET as getHome } from "../../app/api/home/route";
-import { useCommerceStore } from "./store";
+import { useCartStore } from "@/features/add-to-cart/model/store";
+import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
 import { getHomeData } from "./api/home";
 import { HomeView } from "./home-view";
 
 afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않는다.
 beforeEach(() => {
-  useCommerceStore.setState({ cartIds: new Set(), wishlistIds: new Set() }); // 카드가 store를 구독하므로 격리한다
+  useCartStore.setState({ cartIds: new Set() });
+  useWishlistStore.setState({ wishlistIds: new Set() });
 });
 
 const CATEGORY_CHIPS = [

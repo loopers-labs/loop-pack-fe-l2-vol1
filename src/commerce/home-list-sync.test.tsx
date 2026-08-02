@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, waitFor } from "../../mocks/render";
-import { useCommerceStore } from "./store";
+import { useCartStore } from "@/features/add-to-cart/model/store";
+import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
 import { getHomeData } from "./api/home";
 import { Header } from "./header";
 import { HomeView } from "./home-view";
@@ -9,12 +10,13 @@ import { ListView } from "./list-view";
 
 afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않는다
 beforeEach(() => {
-  useCommerceStore.setState({ cartIds: new Set(), wishlistIds: new Set() }); // 이전 it의 토글이 새어 나오면 개수 단정이 무너진다
+  useCartStore.setState({ cartIds: new Set() });
+  useWishlistStore.setState({ wishlistIds: new Set() });
 });
 
 // 홈 신상품 섹션과 목록 1페이지(기본 정렬 latest)에 함께 나타나는 상품(p26)을 통해
-// Zustand store가 두 화면에서 실제로 같은 단일 소스인지 검증한다. 각 컴포넌트가
-// 로컬 useState로 담김 여부를 들고 있어도 개별 스위트(product-actions.test.tsx 등)는
+// feature별 Zustand store가 두 화면에서 실제로 같은 소스인지 검증한다. 각 컴포넌트가
+// 로컬 useState로 담김 여부를 들고 있어도 개별 버튼 스위트는
 // 통과하므로, 홈·목록을 한 트리에 함께 렌더하는 이 스위트만이 그 오귀속을 잡는다.
 describe("home-list-sync", () => {
   it("홈 신상품과 목록 1페이지에 공통으로 나타나는 상품의 담기·찜 상태가 하나의 store로 동기화된다", async () => {
@@ -53,6 +55,9 @@ describe("home-list-sync", () => {
     expect(cartButtonsAfterClick).toHaveLength(2);
     for (const button of cartButtonsAfterClick) {
       expect(button).toHaveAttribute("aria-pressed", "true");
+    }
+    for (const button of wishlistButtons) {
+      expect(button).toHaveAttribute("aria-pressed", "false");
     }
     // 클릭은 1회, 상품도 1종 — 카드가 2장이라 개수가 2가 되면 store가 카드별로 쪼개져 있다는 뜻이다.
     expect(screen.getByText("장바구니 1")).toBeInTheDocument();
