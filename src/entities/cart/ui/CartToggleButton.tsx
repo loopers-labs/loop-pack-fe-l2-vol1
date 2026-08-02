@@ -20,11 +20,11 @@ export default function CartToggleButton({
   return (
     <button
       type="button"
-      aria-label={`${productName} 장바구니`}
+      aria-label={`${productName} bag`}
       aria-pressed={isInCart}
       onClick={() => toggleCart(productId)}
     >
-      {isInCart ? '빼기' : '담기'}
+      {isInCart ? 'Remove' : 'Add to bag'}
     </button>
   )
 }

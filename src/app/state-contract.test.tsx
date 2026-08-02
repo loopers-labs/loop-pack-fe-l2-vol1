@@ -98,6 +98,31 @@ afterEach(() => {
 })
 
 describe('홈과 목록과 헤더는 같은 store를 본다', () => {
+  it('알려진 카테고리는 storefront 영문명을 쓰고 새 카테고리는 서버 이름을 보존한다', async () => {
+    const payload = {
+      ...homePayload,
+      categories: [
+        { id: 'casual', name: '캐주얼' },
+        { id: 'new-category', name: '새 카테고리' },
+      ],
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() => Promise.resolve(jsonResponse(payload))),
+    )
+
+    renderApp(<HomePage />)
+
+    expect(await screen.findByRole('link', { name: 'Casual' })).toHaveAttribute(
+      'href',
+      '/products?category=casual',
+    )
+    expect(screen.getByRole('link', { name: '새 카테고리' })).toHaveAttribute(
+      'href',
+      '/products?category=new-category',
+    )
+  })
+
   it('홈에서 담으면 목록의 같은 상품과 헤더 개수가 함께 바뀐다', async () => {
     stubCommerceApi()
     renderApp(
@@ -109,19 +134,19 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     )
 
     // 홈과 목록이 다 뜬 다음에 조회한다. 상품A는 양쪽에 있어야 한다
-    await screen.findByText('총 2개')
+    await screen.findByText('2 products')
     await waitFor(() =>
-      expect(screen.getAllByLabelText('상품A 장바구니')).toHaveLength(2),
+      expect(screen.getAllByLabelText('상품A bag')).toHaveLength(2),
     )
-    const cartButtons = screen.getAllByLabelText('상품A 장바구니')
+    const cartButtons = screen.getAllByLabelText('상품A bag')
 
     fireEvent.click(cartButtons[0])
 
     cartButtons.forEach((button) => {
       expect(button).toHaveAttribute('aria-pressed', 'true')
     })
-    expect(screen.getByText('장바구니 1')).toBeInTheDocument()
-    expect(screen.getByText('위시리스트 0')).toBeInTheDocument()
+    expect(screen.getByText('Bag 1')).toBeInTheDocument()
+    expect(screen.getByText('Wishlist 0')).toBeInTheDocument()
   })
 
   it('위시리스트 토글은 장바구니 개수에 영향을 주지 않는다', async () => {
@@ -133,10 +158,10 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
       </>,
     )
 
-    fireEvent.click(await screen.findByLabelText('상품B 위시리스트'))
+    fireEvent.click(await screen.findByLabelText('상품B wishlist'))
 
-    expect(screen.getByText('위시리스트 1')).toBeInTheDocument()
-    expect(screen.getByText('장바구니 0')).toBeInTheDocument()
+    expect(screen.getByText('Wishlist 1')).toBeInTheDocument()
+    expect(screen.getByText('Bag 0')).toBeInTheDocument()
   })
 })
 
@@ -199,11 +224,9 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
 
     renderApp(<HomePage />)
 
+    expect(await screen.findByText('Could not load home.')).toBeInTheDocument()
     expect(
-      await screen.findByText('홈 데이터를 불러오지 못했습니다.'),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '다시 시도' }),
+      screen.getByRole('button', { name: 'Try again' }),
     ).toBeInTheDocument()
   })
 
