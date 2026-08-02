@@ -51,6 +51,4 @@ export type ProductListResponse = {
   pageSize: number;
 };
 
-export type ApiErrorResponse = {
-  message: string;
-};
+export type { ApiErrorResponse } from "@/shared/api";

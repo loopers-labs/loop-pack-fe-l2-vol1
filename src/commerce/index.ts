@@ -5,8 +5,8 @@ export { CommerceProviders } from "./providers";
 export { Header } from "./header";
 export { HomeView } from "./home-view";
 export { ListView } from "./list-view";
+export type { ApiErrorResponse } from "@/shared/api";
 export type {
-  ApiErrorResponse,
   Category,
   CategoryId,
   HomeResponse,
