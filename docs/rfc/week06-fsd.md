@@ -106,9 +106,27 @@ TDD 범위는 HttpError/guard, throwOnError predicate, boundary component, 기�
 - 교체: `fsd-no-upward`, `$1/$2` 캡처 기반 `fsd-no-cross-slice`, `fsd-entry-point-only`.
 - 범위: 여섯 FSD 레이어에서 시작하는 `src/` edge만. 과도기 `src/commerce`와 `src/products`는 새 FSD 규칙의 직접 대상이 아니며, `app/**`은 scan root 밖이다.
 
-#### depcruise violation 재현 — TODO 3 기록 예정
+#### depcruise violation 재현 — TODO 3 기록
 
-placeholder: `src/features/tmp/index.ts`와 `src/entities/tmp/model/violation.ts`의 의도적 상향 import로 `fsd-no-upward` 실패 출력, 삭제 후 `pnpm depcruise` 성공 출력을 이곳에 붙인다.
+`src/features/tmp/index.ts`에 빈 named export와 `src/entities/tmp/model/violation.ts`의
+`../../../features/tmp` import를 임시로 추가한 뒤 실행했다. `entities → features` 상향 edge가
+`fsd-no-upward` family의 entities 규칙으로 실패하는 것을 확인했다.
+
+```text
+$ pnpm depcruise
+  error fsd-no-upward-entities: src/entities/tmp/model/violation.ts → src/features/tmp/index.ts
+
+x 1 dependency violations (1 errors, 0 warnings). 79 modules, 201 dependencies cruised.
+ELIFECYCLE Command failed with exit code 1.
+```
+
+두 임시 파일을 삭제하고 빈 `src/features/tmp`, `src/entities/tmp/model`, `src/entities/tmp`
+디렉터리도 제거한 뒤 다시 실행했다.
+
+```text
+$ pnpm depcruise
+✔ no dependency violations found (77 modules, 200 dependencies cruised)
+```
 
 ## 6. Implementation — 31개 파일 매핑
 
