@@ -55,20 +55,44 @@ module.exports = {
       name: "fsd-no-cross-slice",
       severity: "error",
       comment: "동일 FSD 계층의 다른 slice 를 직접 import 하지 않는다",
-      from: { path: "^src/(_pages|widgets|features|entities)/([^/]+)/" },
+      from: { path: "^src/(_pages|widgets|features)/([^/]+)/" },
       to: {
         path: "^src/$1/",
         pathNot: "^src/$1/$2/",
       },
     },
     {
+      name: "fsd-no-cross-entity-slice",
+      severity: "error",
+      comment: "Entity 간에는 소비자 전용 @x 진입점만 예외로 허용한다",
+      from: { path: "^src/entities/([^/]+)/" },
+      to: {
+        path: "^src/entities/",
+        pathNot: ["^src/entities/$1/", "^src/entities/[^/]+/@x/$1\\.ts$"],
+      },
+    },
+    {
       name: "fsd-entry-point-only-slices",
       severity: "error",
       comment: "다른 FSD slice 는 index.ts 공개 API로만 import 한다",
-      from: { path: "^src/(_pages|widgets|features|entities)/([^/]+)/" },
+      from: { path: "^src/(_pages|widgets|features)/([^/]+)/" },
       to: {
         path: "^src/(_pages|widgets|features|entities)/[^/]+/",
         pathNot: ["^src/$1/$2/", "^src/(_pages|widgets|features|entities)/[^/]+/index\\.ts$"],
+      },
+    },
+    {
+      name: "fsd-entry-point-only-entity-slices",
+      severity: "error",
+      comment: "Entity 외부 접근은 index.ts 또는 소비자 전용 @x 진입점만 허용한다",
+      from: { path: "^src/entities/([^/]+)/" },
+      to: {
+        path: "^src/entities/[^/]+/",
+        pathNot: [
+          "^src/entities/$1/",
+          "^src/entities/[^/]+/index\\.ts$",
+          "^src/entities/[^/]+/@x/$1\\.ts$",
+        ],
       },
     },
     {
