@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render as rtlRender } from "@testing-library/react"; // 순수 RTL render만 예외로 직접 가져온다 — 결함1 회귀 테스트가 NuqsTestingAdapter를 직접 감싸 searchParams prop을 rerender로 바꿔야 하는데, 커스텀 render로는 어댑터 prop에 닿을 수 없다
 import userEvent from "@testing-library/user-event";
-import { http, delay } from "msw";
+import { http, delay, HttpResponse } from "msw";
 import { NextRequest } from "next/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
@@ -14,10 +14,17 @@ afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않�
 
 // 응답을 손으로 합성하지 않고 route.ts의 시나리오 분기(scenario=error)로 위임한다 —
 // 검증·정렬·페이지네이션·에러 메시지 로직은 route.ts 하나에만 존재해야 한다.
-const errorScenario = () =>
+const serverErrorScenario = () =>
   server.use(
     http.get("/api/products", () =>
       getProducts(new NextRequest("http://localhost:3000/api/products?scenario=error")),
+    ),
+  );
+
+const clientErrorScenario = () =>
+  server.use(
+    http.get("/api/products", () =>
+      HttpResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 }),
     ),
   );
 
@@ -46,17 +53,37 @@ describe("ListView", () => {
   });
 
   describe("에러 (F2)", () => {
-    it("에러 상태에서 상품 목록을 불러오지 못했습니다 문구와 재시도 버튼을 낸다", async () => {
-      errorScenario();
+    it("4xx 오류에서는 상품 목록 인라인 문구와 재시도 버튼을 내고 필터바를 유지한다", async () => {
+      clientErrorScenario();
 
       render(<ListView />);
 
       expect(await screen.findByText("상품 목록을 불러오지 못했습니다")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "재시도" })).toBeInTheDocument();
+      expect(screen.getByRole("textbox")).toBeEnabled();
+      expect(screen.getAllByRole("combobox")).toHaveLength(2);
+    });
+
+    it("5xx 오류를 인라인으로 처리하지 않고 렌더 오류 fallback으로 전파한다", async () => {
+      serverErrorScenario();
+
+      render(<ListView />, { withErrorBoundary: true });
+
+      expect(await screen.findByRole("alert", { name: "렌더 오류" })).toBeInTheDocument();
+      expect(screen.queryByText("상품 목록을 불러오지 못했습니다")).toBeNull();
+    });
+
+    it("네트워크 전송 실패를 인라인으로 처리하지 않고 렌더 오류 fallback으로 전파한다", async () => {
+      server.use(http.get("/api/products", () => HttpResponse.error()));
+
+      render(<ListView />, { withErrorBoundary: true });
+
+      expect(await screen.findByRole("alert", { name: "렌더 오류" })).toBeInTheDocument();
+      expect(screen.queryByText("상품 목록을 불러오지 못했습니다")).toBeNull();
     });
 
     it("재시도 클릭이 refetch를 트리거해 성공 화면으로 전환된다", async () => {
-      errorScenario();
+      clientErrorScenario();
 
       render(<ListView />);
 
@@ -116,7 +143,7 @@ describe("ListView", () => {
     });
 
     it("error에는 총 개수가 없고, 필터바는 여전히 활성 상태로 마운트되어 있다", async () => {
-      errorScenario();
+      clientErrorScenario();
 
       render(<ListView />);
 

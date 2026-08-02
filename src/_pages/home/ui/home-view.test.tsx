@@ -20,10 +20,17 @@ const CATEGORY_CHIPS = [
   { name: "디지털", id: "digital" },
 ];
 
-const errorScenario = () =>
+const serverErrorScenario = () =>
   server.use(
     http.get("/api/home", () =>
       getHome(new NextRequest("http://localhost:3000/api/home?scenario=error")),
+    ),
+  );
+
+const clientErrorScenario = () =>
+  server.use(
+    http.get("/api/home", () =>
+      HttpResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 }),
     ),
   );
 
@@ -59,24 +66,34 @@ describe("HomeView", () => {
     expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
   });
 
-  it("error 상태에서 홈 데이터를 불러오지 못했습니다 문구를 낸다", async () => {
-    errorScenario();
+  it("4xx 오류에서는 홈 데이터를 불러오지 못했습니다 인라인 문구를 낸다", async () => {
+    clientErrorScenario();
 
     render(<HomeView />);
 
     expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
   });
 
-  it("네트워크 전송 실패에서도 홈 데이터를 불러오지 못했습니다 문구를 낸다 (서버 메시지가 아니라 화면이 문구를 소유한다)", async () => {
+  it("5xx 오류를 인라인으로 처리하지 않고 렌더 오류 fallback으로 전파한다", async () => {
+    serverErrorScenario();
+
+    render(<HomeView />, { withErrorBoundary: true });
+
+    expect(await screen.findByRole("alert", { name: "렌더 오류" })).toBeInTheDocument();
+    expect(screen.queryByText("홈 데이터를 불러오지 못했습니다.")).toBeNull();
+  });
+
+  it("네트워크 전송 실패를 인라인으로 처리하지 않고 렌더 오류 fallback으로 전파한다", async () => {
     server.use(http.get("/api/home", () => HttpResponse.error()));
 
-    render(<HomeView />);
+    render(<HomeView />, { withErrorBoundary: true });
 
-    expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
+    expect(await screen.findByRole("alert", { name: "렌더 오류" })).toBeInTheDocument();
+    expect(screen.queryByText("홈 데이터를 불러오지 못했습니다.")).toBeNull();
   });
 
   it("재시도 버튼 클릭이 refetch를 트리거해 성공 화면으로 전환된다", async () => {
-    errorScenario();
+    clientErrorScenario();
 
     render(<HomeView />);
 

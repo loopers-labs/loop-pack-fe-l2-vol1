@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryObserver, useQuery } from "@tanstack/react-query";
 import { cleanup, render } from "../../../../mocks/render";
+import { HttpError } from "../../../shared/api";
 import { homeQueryOptions } from "./queries";
 
 afterEach(cleanup);
@@ -23,6 +24,24 @@ describe("homeQueryOptions", () => {
     expect(typeof options.queryFn).toBe("function");
     expect(options.staleTime).toBe(300000);
     expect(options.gcTime).toBe(600000);
+  });
+
+  it("5xx와 네트워크 오류만 Error Boundary로 전파한다", () => {
+    const options = homeQueryOptions();
+    const { throwOnError } = options;
+    const queryClient = new QueryClient();
+    const observer = new QueryObserver(queryClient, options);
+    const query = observer.getCurrentQuery();
+
+    expect(typeof throwOnError).toBe("function");
+    if (typeof throwOnError !== "function") {
+      throw new Error("throwOnError는 predicate여야 합니다.");
+    }
+
+    expect(throwOnError(new HttpError(500), query)).toBe(true);
+    expect(throwOnError(new HttpError(503), query)).toBe(true);
+    expect(throwOnError(new HttpError(404), query)).toBe(false);
+    expect(throwOnError(new Error("network unavailable"), query)).toBe(true);
   });
 });
 

@@ -100,18 +100,20 @@ feature store를 테스트·상위 조립에서 직접 reset해야 하는 경우
 
 ## 5. Optimization — 에러·로딩·검증 전략
 
-### 에러 처리: 현재와 목표
+### 에러 처리: 마이그레이션 전과 구현 결과
 
-| 구분         | 현재 UX/표현                                  | 목표 UX/표현                                                                   | 전파하는가 |
-| ------------ | --------------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
-| 5xx HTTP     | status 없는 `Error`, view의 `isError` 인라인  | `HttpError(status)`와 queryOptions `throwOnError` → `app/(commerce)/error.tsx` | 예         |
-| network 실패 | status 없는 `Error`, 인라인                   | typed network failure → 같은 boundary                                          | 예         |
-| 4xx HTTP     | 현재 API에는 세분 정책 없음, 인라인 오류 경로 | `HttpError(status < 500)`, page의 인라인 오류·재시도                           | 아니오     |
-| empty 응답   | 빈 결과 UI                                    | 인라인 empty UI                                                                | 아니오     |
+| 구분         | 마이그레이션 전 UX/표현                       | 구현 결과                                                                                | 전파하는가 |
+| ------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------- |
+| 5xx HTTP     | status 없는 `Error`, view의 `isError` 인라인  | `HttpError(status >= 500)`를 각 page query의 `throwOnError`가 route boundary로 전파한다. | 예         |
+| network 실패 | status 없는 `Error`, 인라인                   | `fetch`가 던진 원래 `Error`(non-`HttpError`)를 그대로 route boundary로 전파한다.         | 예         |
+| 4xx HTTP     | 현재 API에는 세분 정책 없음, 인라인 오류 경로 | `HttpError(status < 500)`는 view에서 인라인 오류와 재시도 버튼으로 처리한다.             | 아니오     |
+| empty 응답   | 빈 결과 UI                                    | view가 인라인 empty UI로 처리한다.                                                       | 아니오     |
 
-정책은 각 queryOptions에 `throwOnError: (error) => isHttpError(error) ? error.status >= 500 : true`를 둔다. 네트워크 오류는 `HttpError`가 아니므로 `true`로 전파한다. 전역 `defaultOptions`는 쓰지 않는다. `(commerce)/error.tsx`는 `useQueryErrorResetBoundary().reset()`과 Next `reset()`을 함께 호출한다. `reset()`만으로는 Query cache error reset이 보장되지 않고, `unstable_retry()`는 client-fetch에 불필요한 refresh다. 같은 segment `layout`은 `error.tsx`가 감싸지 않으므로 Header는 경계에서도 남는다.
+구현은 `homeQueryOptions`와 `productListQueryOptions`에 각각 `throwOnError: (error) => (isHttpError(error) ? error.status >= 500 : true)`를 둔다. `HttpError`의 status가 500 이상이면 route boundary `app/(commerce)/error.tsx`로 전파하고, status가 500 미만이면 view에 남긴다. `fetch`가 거부되면 `fetchJson`은 별도 typed network class로 변환하지 않고 원래 `Error`를 그대로 전파하므로, non-`HttpError`는 boundary로 전파한다. 전역 `defaultOptions`에는 이 정책을 두지 않는다.
 
-TDD 범위는 HttpError/guard, throwOnError predicate, boundary component, 기존 home/list 5xx assertion의 정책 전환이다. happy-dom으로 경계 활성화를 전부 증명하지 않고, 브라우저에서 `network route "**/api/products*" --abort` → boundary/header 확인 → `network unroute` → reset 클릭 → reload 없이 회복을 검증한다.
+`app/(commerce)/error.tsx`의 재시도 버튼은 `useQueryErrorResetBoundary().reset()`과 Next `reset()`을 각각 한 번 호출한다. Query cache의 error 상태와 Next route boundary를 모두 재설정해야 전체 새로고침 없이 재시도할 수 있다. `unstable_retry()`는 client-fetch에 불필요한 refresh라 사용하지 않는다. 같은 segment의 `layout.tsx`는 `error.tsx`가 감싸지 않으며, Header는 `CommerceProviders`가 layout 안에서 렌더링하므로 boundary fallback에서도 남는다.
+
+TDD는 `HttpError`와 guard, 두 page query의 `throwOnError` predicate, boundary의 두 reset 호출, home/list의 5xx·network 전파를 대상으로 했다. RED 증거는 [error-boundary/red.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/error-boundary/red.txt)로, 구현 전 7파일의 10개 실패를 기록한다. GREEN 증거는 [error-boundary/green.txt](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/error-boundary/green.txt)로, targeted 7파일/68테스트와 전체 40파일/226테스트 통과를 기록한다. 브라우저 검증은 아직 수행하지 않았으며, 최종 QA에서 `network route "**/api/products*" --abort` 후 boundary와 Header를 확인하고, `network unroute` 뒤 reset을 눌러 reload 없이 회복하는지 검증한다.
 
 ### Advanced A와 depcruise
 

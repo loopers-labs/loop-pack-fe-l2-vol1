@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { isHttpError } from "@/shared/api";
 import { fetchProductList } from "./fetch";
 import type { ProductListQuery } from "./types";
 
@@ -10,5 +11,6 @@ export function productListQueryOptions(query: ProductListQuery) {
     queryFn: () => fetchProductList(query),
     staleTime: 60000,
     gcTime: 300000,
+    throwOnError: (error) => (isHttpError(error) ? error.status >= 500 : true),
   });
 }
