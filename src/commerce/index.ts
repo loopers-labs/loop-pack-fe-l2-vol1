@@ -4,7 +4,7 @@ export { waitForMockApi } from "./api/catalog";
 export { getHomeData } from "./api/home";
 export { isProductSort, queryProducts } from "./api/products";
 export { CommerceProviders } from "./providers";
-export { Header } from "./header";
+export { Header } from "@/widgets/header";
 export { HomeView } from "./home-view";
 export { ListView } from "./list-view";
 export type { ApiErrorResponse } from "@/shared/api";

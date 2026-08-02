@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCartCount } from "@/features/add-to-cart";
 import { useWishlistCount } from "@/features/toggle-wishlist";
-import styles from "./commerce.module.css";
+import styles from "./header.module.css";
 
 export function Header() {
   const cartCount = useCartCount();

@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, waitFor } from "../../mocks/render";
 import { useCartStore } from "@/features/add-to-cart/model/store";
 import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
+import { Header } from "@/widgets/header";
 import { getHomeData } from "./api/home";
-import { Header } from "./header";
 import { HomeView } from "./home-view";
 import { ListView } from "./list-view";
 
