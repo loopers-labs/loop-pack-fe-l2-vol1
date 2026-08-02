@@ -9,3 +9,7 @@ docs/assignments/
 .playwright-mcp
 .superset
 .sync-backup
+playwright-report/
+test-results/
+blob-report/
+.omo/

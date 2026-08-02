@@ -5,7 +5,7 @@ import type { Product } from "@/products/api/types";
 
 afterEach(cleanup);
 
-// s2 route(src/mocks/handlers.ts)의 p1(size)/p2(thumbnail)/p3(bundle)와 정합.
+// s2 route(mocks/handlers.ts)의 p1(size)/p2(thumbnail)/p3(bundle)와 정합.
 const sizeProduct: Product = {
   id: "p1",
   name: "러닝화",

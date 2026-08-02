@@ -14,11 +14,11 @@ export type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
 export type MockApiScenario = "empty" | "error";
 
 export type ProductListQuery = {
-  q?: string;
-  category?: CategoryId | "all";
-  sort?: ProductSort;
-  page?: number;
-  pageSize?: number;
+  q: string;
+  category: CategoryId | "all";
+  sort: ProductSort;
+  page: number;
+  pageSize: number;
 };
 
 export type Product = {

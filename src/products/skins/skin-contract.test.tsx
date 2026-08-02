@@ -8,7 +8,7 @@ import type { SizeOption, ThumbnailOption, BundleOption } from "@/products/api/t
 
 afterEach(cleanup);
 
-// s2 route(src/mocks/handlers.ts) 데이터와 정합. thumbnail/bundle은 품절(stock 0) 케이스 검증을 위해
+// s2 route(mocks/handlers.ts) 데이터와 정합. thumbnail/bundle은 품절(stock 0) 케이스 검증을 위해
 // route에 없는 품절 옵션 하나씩만 덧붙인다(readout 예시로 쓰는 t1/t2·b1/b2는 그대로 둔다).
 const sizeOptions: SizeOption[] = [
   { id: "s24", value: 24, deliveryText: "내일(토) 도착보장", stock: 3 },

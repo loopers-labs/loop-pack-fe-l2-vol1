@@ -1,7 +1,12 @@
+import { NextRequest } from "next/server";
 import { http, HttpResponse } from "msw";
+import { GET as getProducts } from "../app/api/products/route";
+import { GET as getHome } from "../app/api/home/route";
 
-// /api/product-options route.ts와 동일 shape·값을 인라인으로 독립 복제한다
-// (src/products import 금지 — depcruise no-cross-feature).
+// /api/product-options route.ts와 동일 shape·값을 인라인으로 독립 복제한다.
+// mocks/가 src/ 밖에 있어 depcruise(no-cross-feature)의 src/products import 금지가
+// 더는 적용되지 않지만, get-products.test.ts:10이 이 3개 Product 픽스처를 그대로
+// 기대하므로 위임(route.ts 재사용) 전환은 이번 범위에서 다루지 않는다.
 const products = [
   {
     id: "p1",
@@ -55,4 +60,8 @@ export const handlers = [
   http.get("/api/product-options", () => {
     return HttpResponse.json({ products, totalCount: products.length });
   }),
+  // 검증·정렬·페이지네이션 로직은 route.ts의 GET 하나에만 존재해야 한다 —
+  // 여기서 응답을 합성하면 로직이 갈라져도 테스트가 통과하는 채로 남는다.
+  http.get("/api/products", ({ request }) => getProducts(new NextRequest(request.url))),
+  http.get("/api/home", ({ request }) => getHome(new NextRequest(request.url))),
 ];
