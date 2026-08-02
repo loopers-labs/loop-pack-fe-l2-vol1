@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { categories, homeBanner, products, waitForMockApi } from "@/app/api/_data/commerce";
 import type { ApiErrorResponse, HomeResponse, MockApiScenario } from "@/types/commerce";
 
-const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
+const scenarioValues = ["empty", "error", "slow"] as const satisfies
+  readonly MockApiScenario[];
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);
@@ -19,7 +20,7 @@ export async function GET(
     );
   }
 
-  await waitForMockApi();
+  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
 
   if (scenario === "error") {
     return NextResponse.json(
