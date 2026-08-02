@@ -9,7 +9,7 @@ export default function Page() {
     <Suspense
       fallback={
         <main className="week05-section">
-          <p>상품 목록을 불러오는 중입니다.</p>
+          <p>Loading products…</p>
         </main>
       }
     >

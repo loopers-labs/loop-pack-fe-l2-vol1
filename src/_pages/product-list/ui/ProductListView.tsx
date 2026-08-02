@@ -12,6 +12,7 @@ import {
 } from '../model/searchParams'
 import { useProductListCondition } from '../model/useProductListCondition'
 import type { ProductSort } from '@/entities/product/model/product'
+import ProductFilterSelect from './ProductFilterSelect'
 import SearchForm from './SearchForm'
 
 // 허용값 목록은 URL 계약이라 상수로 고정한다. parser가 컴파일 타임 유니온을 요구해서
@@ -19,19 +20,19 @@ import SearchForm from './SearchForm'
 // 아래 이름은 응답이 오기 전 첫 페인트에만 쓰는 폴백이다.
 // all은 서버에 없는 UI 전용 값이라 항상 이쪽을 쓴다.
 const categoryFallbackLabels: Record<CategoryFilter, string> = {
-  all: '전체',
-  casual: '캐주얼',
-  fashion: '패션',
-  goods: '뷰티·잡화',
-  home: '홈',
-  digital: '디지털',
+  all: 'All',
+  casual: 'Casual',
+  fashion: 'Fashion',
+  goods: 'Beauty & Goods',
+  home: 'Home',
+  digital: 'Digital',
 }
 
 const sortLabels: Record<ProductSort, string> = {
-  latest: '최신순',
-  popular: '인기순',
-  'price-asc': '낮은 가격순',
-  'price-desc': '높은 가격순',
+  latest: 'Newest',
+  popular: 'Popular',
+  'price-asc': 'Price: Low to high',
+  'price-desc': 'Price: High to low',
 }
 
 export default function ProductListView() {
@@ -42,27 +43,23 @@ export default function ProductListView() {
   )
 
   // 표시 이름은 서버 응답에서 찾고, 없으면 폴백을 쓴다.
-  const categoryLabel = (value: CategoryFilter) =>
-    data?.categories.find((category) => category.id === value)?.name ??
-    categoryFallbackLabels[value]
+  const categoryLabel = (value: CategoryFilter) => categoryFallbackLabels[value]
 
   // 검색, 카테고리, 정렬이 바뀌면 보던 페이지는 의미가 없다. 1페이지로 되돌린다.
   const handleSearch = (query: string) => {
     setFilters({ q: query, page: 1 })
   }
 
-  const handleCategoryChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
+  const handleCategoryChange = (value: string) => {
     const next = categoryFilterValues.find(
-      (value) => value === event.target.value,
+      (categoryValue) => categoryValue === value,
     )
     if (!next) return
     setFilters({ category: next, page: 1 })
   }
 
-  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const next = sortValues.find((value) => value === event.target.value)
+  const handleSortChange = (value: string) => {
+    const next = sortValues.find((sortValue) => sortValue === value)
     if (!next) return
     setFilters({ sort: next, page: 1 })
   }
@@ -78,7 +75,7 @@ export default function ProductListView() {
 
   let results: React.ReactNode
   if (isPending) {
-    results = <p>상품 목록을 불러오는 중입니다.</p>
+    results = <p>Loading products…</p>
   } else if (isError) {
     // 실패 종류마다 열려 있는 길이 다르다. 셋 중 하나는 반드시 실제로 동작해야 한다.
     // 재시도는 서버 오류에만 의미가 있고, 조건이 거절된 실패는 조건을 되돌려야 벗어난다.
@@ -88,22 +85,22 @@ export default function ProductListView() {
     if (isRetryable(error)) {
       exit = (
         <button type="button" onClick={() => refetch()}>
-          다시 시도
+          Try again
         </button>
       )
     } else if (canResetFilters) {
       exit = (
         <button type="button" onClick={() => setFilters(null)}>
-          검색 조건 초기화
+          Reset filters
         </button>
       )
     } else {
-      exit = <Link href="/">홈으로</Link>
+      exit = <Link href="/">Go home</Link>
     }
 
     results = (
       <>
-        <p>{errorMessageOf(error, '상품 목록을 불러오지 못했습니다.')}</p>
+        <p>{errorMessageOf(error, 'Could not load products.')}</p>
         {exit}
       </>
     )
@@ -112,26 +109,26 @@ export default function ProductListView() {
     // 범위 밖 페이지를 연 것. 후자는 막다른 화면이 되지 않게 출구를 준다
     results = (
       <>
-        <p>없는 페이지입니다. 조건에 맞는 상품은 {data.totalCount}개입니다.</p>
+        <p>This page does not exist. {data.totalCount} products match.</p>
         <button type="button" onClick={() => handlePageChange(1)}>
-          1페이지로 이동
+          Go to page 1
         </button>
       </>
     )
   } else if (data.products.length === 0) {
-    results = <p>조건에 맞는 상품이 없습니다.</p>
+    results = <p>No products match your filters.</p>
   } else {
     results = (
       <>
-        <p>총 {data.totalCount}개</p>
+        <p className="product-result-count">{data.totalCount} products</p>
         <ProductGrid products={data.products} />
-        <nav className="week05-pagination" aria-label="페이지 이동">
+        <nav className="week05-pagination" aria-label="Pagination">
           <button
             type="button"
             disabled={condition.page <= 1}
             onClick={() => handlePageChange(condition.page - 1)}
           >
-            이전
+            Previous
           </button>
           <span>
             {condition.page} / {totalPages}
@@ -141,7 +138,7 @@ export default function ProductListView() {
             disabled={condition.page >= totalPages}
             onClick={() => handlePageChange(condition.page + 1)}
           >
-            다음
+            Next
           </button>
         </nav>
       </>
@@ -150,45 +147,39 @@ export default function ProductListView() {
 
   return (
     <main>
-      <section className="week05-section">
-        <h1>상품 목록</h1>
+      <section className="product-list-hero">
+        <p className="product-list-eyebrow">SHOP</p>
+        <h1>Products</h1>
+        <p className="product-list-description">
+          Objects worth keeping, selected for everyday life.
+        </p>
         <div className="week05-filters">
           <SearchForm
             key={condition.q}
             initialQuery={condition.q}
             onSearch={handleSearch}
           />
-          <label>
-            카테고리
-            <select
-              name="category"
-              value={condition.category}
-              onChange={handleCategoryChange}
-            >
-              {categoryFilterValues.map((value) => (
-                <option key={value} value={value}>
-                  {categoryLabel(value)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            정렬
-            <select
-              name="sort"
-              value={condition.sort}
-              onChange={handleSortChange}
-            >
-              {sortValues.map((value) => (
-                <option key={value} value={value}>
-                  {sortLabels[value]}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ProductFilterSelect
+            label="Category"
+            value={condition.category}
+            options={categoryFilterValues.map((value) => ({
+              value,
+              label: categoryLabel(value),
+            }))}
+            onChange={handleCategoryChange}
+          />
+          <ProductFilterSelect
+            label="Sort"
+            value={condition.sort}
+            options={sortValues.map((value) => ({
+              value,
+              label: sortLabels[value],
+            }))}
+            onChange={handleSortChange}
+          />
         </div>
       </section>
-      <section className="week05-section" aria-label="상품 검색 결과">
+      <section className="week05-section" aria-label="Product results">
         {results}
       </section>
     </main>

@@ -152,11 +152,11 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     renderApp(<ProductListView />)
 
     expect(
-      await screen.findByText('상품 목록을 불러오지 못했습니다.'),
+      await screen.findByText('Could not load products.'),
     ).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
-    expect(await screen.findByText('총 2개')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByText('2 products')).toBeInTheDocument()
   })
 
   it('목록 조회가 실패해도 조건을 바꿀 수 있는 UI는 화면에 남는다', async () => {
@@ -172,16 +172,17 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
 
     renderApp(<ProductListView />, { onUrlUpdate })
 
-    await screen.findByText('상품 목록을 불러오지 못했습니다.')
+    await screen.findByText('Could not load products.')
 
-    expect(screen.getByLabelText('검색')).toBeInTheDocument()
-    expect(screen.getByLabelText('카테고리')).toBeInTheDocument()
-    expect(screen.getByLabelText('정렬')).toBeInTheDocument()
+    expect(screen.getByLabelText('Search')).toBeInTheDocument()
+    expect(
+      screen.getByRole('combobox', { name: /Category/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: /Sort/ })).toBeInTheDocument()
 
     // 남아 있기만 한 것이 아니라 조작되어야 한다.
-    fireEvent.change(screen.getByLabelText('카테고리'), {
-      target: { value: 'digital' },
-    })
+    fireEvent.click(screen.getByRole('combobox', { name: /Category/ }))
+    fireEvent.click(screen.getByRole('option', { name: 'Digital' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     expect(lastUrlUpdate(onUrlUpdate).searchParams.get('category')).toBe(
       'digital',
@@ -226,9 +227,9 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     expect(
       await screen.findByText('요청 조건을 확인해주세요.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: '검색 조건 초기화' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     expect(lastUrlUpdate(onUrlUpdate).queryString).toBe('')
   })
@@ -249,11 +250,9 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     expect(
       await screen.findByText('요청 조건을 확인해주세요.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
-    expect(
-      screen.queryByRole('button', { name: '검색 조건 초기화' }),
-    ).toBeNull()
-    expect(screen.getByRole('link', { name: '홈으로' })).toHaveAttribute(
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Reset filters' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute(
       'href',
       '/',
     )
@@ -267,10 +266,14 @@ describe('목록 조건의 원본은 URL이다', () => {
       searchParams: '?category=digital&sort=popular&page=2',
     })
 
-    await screen.findByText('총 2개')
+    await screen.findByText('2 products')
 
-    expect(screen.getByLabelText('카테고리')).toHaveValue('digital')
-    expect(screen.getByLabelText('정렬')).toHaveValue('popular')
+    expect(
+      screen.getByRole('combobox', { name: /Category/ }),
+    ).toHaveTextContent('Digital')
+    expect(screen.getByRole('combobox', { name: /Sort/ })).toHaveTextContent(
+      'Popular',
+    )
 
     const requestedUrl = String(fetchMock.mock.calls[0][0])
     expect(requestedUrl).toContain('category=digital')
@@ -284,10 +287,14 @@ describe('목록 조건의 원본은 URL이다', () => {
       searchParams: '?category=unknown&sort=cheapest&page=1.5',
     })
 
-    await screen.findByText('총 2개')
+    await screen.findByText('2 products')
 
-    expect(screen.getByLabelText('카테고리')).toHaveValue('all')
-    expect(screen.getByLabelText('정렬')).toHaveValue('latest')
+    expect(
+      screen.getByRole('combobox', { name: /Category/ }),
+    ).toHaveTextContent('All')
+    expect(screen.getByRole('combobox', { name: /Sort/ })).toHaveTextContent(
+      'Newest',
+    )
     const requestedUrl = String(fetchMock.mock.calls[0][0])
     expect(requestedUrl).toContain('category=all')
     expect(requestedUrl).toContain('sort=latest')
@@ -302,10 +309,9 @@ describe('목록 조건의 원본은 URL이다', () => {
       onUrlUpdate,
     })
 
-    await screen.findByText('총 2개')
-    fireEvent.change(screen.getByLabelText('카테고리'), {
-      target: { value: 'casual' },
-    })
+    await screen.findByText('2 products')
+    fireEvent.click(screen.getByRole('combobox', { name: /Category/ }))
+    fireEvent.click(screen.getByRole('option', { name: 'Casual' }))
 
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     const updated = lastUrlUpdate(onUrlUpdate).searchParams
@@ -320,8 +326,8 @@ describe('목록 조건의 원본은 URL이다', () => {
     const onUrlUpdate = vi.fn()
     renderApp(<ProductListView />, { searchParams: '?page=99', onUrlUpdate })
 
-    await screen.findByText(/없는 페이지/)
-    fireEvent.click(screen.getByRole('button', { name: '1페이지로 이동' }))
+    await screen.findByText(/does not exist/)
+    fireEvent.click(screen.getByRole('button', { name: 'Go to page 1' }))
 
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     // page=1은 기본값이라 URL에서 제거된다
@@ -333,7 +339,7 @@ describe('목록 조건의 원본은 URL이다', () => {
     renderApp(<ProductListView />)
 
     expect(
-      await screen.findByText('조건에 맞는 상품이 없습니다.'),
+      await screen.findByText('No products match your filters.'),
     ).toBeInTheDocument()
   })
 
@@ -342,13 +348,13 @@ describe('목록 조건의 원본은 URL이다', () => {
     const onUrlUpdate = vi.fn()
     renderApp(<ProductListView />, { onUrlUpdate })
 
-    await screen.findByText('총 2개')
-    const input = screen.getByLabelText('검색')
+    await screen.findByText('2 products')
+    const input = screen.getByLabelText('Search')
 
     fireEvent.change(input, { target: { value: '가디건' } })
     expect(onUrlUpdate).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: '검색' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     const updated = lastUrlUpdate(onUrlUpdate).searchParams
     expect(updated.get('q')).toBe('가디건')
