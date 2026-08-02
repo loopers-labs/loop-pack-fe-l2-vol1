@@ -1,36 +1,31 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { cookies } from 'next/headers'
 import Providers from './providers'
+import { resolveTheme, THEME_COOKIE_KEY } from '@/shared/lib/theme'
 import { Header } from '@/widgets/header'
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import './globals.css'
 import './commerce.css'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
-
 export const metadata: Metadata = {
   title: 'Commerce',
-  description: 'Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.',
+  description: 'A curated commerce experience by Loopers.',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const theme = resolveTheme(cookieStore.get(THEME_COOKIE_KEY)?.value)
+
   return (
-    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ko" data-theme={theme}>
       <body>
         <Providers>
           <div className="week05-page">
-            <Header />
+            <Header initialTheme={theme} />
             {children}
           </div>
         </Providers>
