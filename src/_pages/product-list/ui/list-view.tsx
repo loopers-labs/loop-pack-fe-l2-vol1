@@ -14,7 +14,7 @@ import styles from "./product-list.module.css";
 const SKELETON_CARD_COUNT = 12;
 
 export function ListView() {
-  const [query, setQuery] = useListQuery();
+  const [query, setQuery, resetQuery] = useListQuery();
   const listQuery = { ...query, pageSize: PAGE_SIZE };
   const result = useQuery(productListQueryOptions(listQuery));
 
@@ -96,7 +96,7 @@ export function ListView() {
     <div className={styles.page}>
       <section className={styles.section}>
         {/* F5b: 다섯 분기 전부에서 필터바가 마운트된 채 enabled로 남는다 — 분기는 이 아래 body만 갈아낀다. */}
-        <ListFilterBar query={query} setQuery={setQuery} />
+        <ListFilterBar query={query} setQuery={setQuery} onReset={resetQuery} />
         {body}
       </section>
     </div>

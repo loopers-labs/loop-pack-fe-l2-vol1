@@ -197,13 +197,16 @@ $ pnpm depcruise
 
 각 단계는 `pnpm check`(lint, typecheck, depcruise, test, build, format check)를 통과한다. dev server는 `.next` 경합을 피하려 gate 전에 중지한다. `vitest` 기본 glob과 tsconfig path 설정은 이동 뒤에도 유지되므로 설정 변경은 필요 없다.
 
-### Advanced B — 사전 예측
+### Advanced B — 사전 예측과 구현 결과
 
-"전체 초기화"는 `_pages/product-list/ui/list-filter-bar`의 버튼과 `model/use-list-query`의 reset으로 구현한다. 사전 예측은 **변경 slice 1개(`_pages/product-list`)**, **public API 변경 없음**이다. 별도 `features/reset-list-filters`는 feature가 page URL model을 향해 상향 의존하게 되므로 만들지 않는다.
+"전체 초기화"는 `_pages/product-list/ui/list-filter-bar.tsx`의 버튼이 `model/use-list-query.ts`의 reset을 호출해 URL의 `q`, `category`, `sort`, `page`를 기본값으로 되돌린다. 별도 `features/reset-list-filters`는 feature가 page URL model을 향해 상향 의존하게 되므로 만들지 않았다.
 
-| 예측 시점 | 예측                     | 구현 후 결과                                                      |
-| --------- | ------------------------ | ----------------------------------------------------------------- |
-| 구현 전   | 1 slice, public API 불변 | placeholder: TODO 12에서 수정 파일·barrel diff·테스트 결과를 기록 |
+| 구분                 | 사전 예측                                       | 구현 결과                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 변경 반경            | 변경 slice 1개: `_pages/product-list`           | `_pages/product-list` 1개 slice에서만 `model/use-list-query.ts`, `ui/list-filter-bar.tsx`, `ui/list-view.tsx`, `ui/list-view.test.tsx` 4파일을 수정했다(59 insertions, 4 deletions).                                                                                                                                                                                                                                                 |
+| public API           | 변경 없음                                       | `_pages/product-list/index.ts`는 수정하지 않아 공개 표면은 불변이다. reset과 버튼 wiring은 slice 내부 구현으로 남는다.                                                                                                                                                                                                                                                                                                               |
+| RED → GREEN          | 전체 초기화 동작을 테스트로 추가                | [RED](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/red.txt)는 버튼 부재로 2개 테스트가 실패한 상태를 기록한다. [GREEN](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/green.txt)은 targeted 2파일/57테스트와 `pnpm check`의 전체 40파일/228테스트 통과를 기록한다.                                                                                               |
+| 브라우저 URL/history | 비기본 상태는 한 번 push하고, 기본 상태는 no-op | [push/back](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/reset.txt)는 비기본 URL에서 초기화 뒤 `/products`·기본 control·1페이지를 표시하고 history push 1회와 back 복원을 PASS로 기록한다. [기본 상태 no-op](/Users/toong/.omt/loop-pack-fe-l2-vol1/evidence/week06-fsd-migration/advanced-b/noop.txt)은 URL/history entry를 추가하지 않아 한 번의 back이 이전 페이지로 이동함을 PASS로 기록한다. |
 
 ### 삭제 시나리오 — TODO 14 기록 예정
 

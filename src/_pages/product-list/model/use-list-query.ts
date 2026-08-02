@@ -102,5 +102,14 @@ export function useListQuery() {
     void setQuery(next);
   };
 
-  return [query, setListQuery] as const;
+  const resetListQuery = (): void => {
+    setListQuery({
+      q: LIST_QUERY_PARSERS.q.defaultValue,
+      category: LIST_QUERY_PARSERS.category.defaultValue,
+      sort: LIST_QUERY_PARSERS.sort.defaultValue,
+      page: LIST_QUERY_PARSERS.page.defaultValue,
+    });
+  };
+
+  return [query, setListQuery, resetListQuery] as const;
 }

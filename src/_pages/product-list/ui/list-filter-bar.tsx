@@ -13,6 +13,7 @@ import styles from "./product-list.module.css";
 // 다시 손으로 베끼면 훅 시그니처가 바뀔 때 두 곳을 따로 고쳐야 한다.
 type ListQuery = ReturnType<typeof useListQuery>[0];
 type SetListQuery = ReturnType<typeof useListQuery>[1];
+type ResetListQuery = ReturnType<typeof useListQuery>[2];
 
 const CATEGORY_LABELS = {
   all: "전체",
@@ -36,9 +37,10 @@ const isCategoryFilterValue = (value: string): value is (typeof CATEGORY_FILTER_
 type ListFilterBarProps = {
   query: ListQuery;
   setQuery: SetListQuery;
+  onReset: ResetListQuery;
 };
 
-export function ListFilterBar({ query, setQuery }: ListFilterBarProps) {
+export function ListFilterBar({ query, setQuery, onReset }: ListFilterBarProps) {
   // 제출로 인한 key 리마운트인지(포커스 복원 필요) 최초 마운트인지(포커스 훔치면 안 됨)
   // 구별하는 플래그. 상태(state)로 안 두는 이유: 이 값 자체는 화면에 아무것도 그리지
   // 않고 SearchInput의 ref 콜백이 커밋 시점에 한 번 읽고 끄는 신호일 뿐이라
@@ -97,6 +99,9 @@ export function ListFilterBar({ query, setQuery }: ListFilterBarProps) {
           ))}
         </select>
       </label>
+      <button type="button" onClick={onReset}>
+        전체 초기화
+      </button>
     </div>
   );
 }

@@ -390,6 +390,47 @@ describe("ListView", () => {
       });
     });
 
+    describe("검색 조건 전체 초기화", () => {
+      it("비기본 검색 조건에서 전체 초기화를 누르면 기본 컨트롤로 복원하고 history push를 1회 쓴다", async () => {
+        const onUrlUpdate = vi.fn();
+        const user = userEvent.setup();
+        render(<ListView />, {
+          searchParams: "?q=스탠리&category=home&sort=price-asc&page=2",
+          onUrlUpdate,
+        });
+        await screen.findByText(/^총 /);
+
+        await user.click(screen.getByRole("button", { name: "전체 초기화" }));
+
+        expect(onUrlUpdate).toHaveBeenCalledTimes(1);
+        const event = onUrlUpdate.mock.calls[0][0];
+        expect(event.options.history).toBe("push");
+        expect(event.searchParams.has("q")).toBe(false);
+        expect(event.searchParams.has("category")).toBe(false);
+        expect(event.searchParams.has("sort")).toBe(false);
+        expect(event.searchParams.has("page")).toBe(false);
+        expect(screen.getByLabelText("검색")).toHaveValue("");
+        expect(screen.getByLabelText("카테고리")).toHaveValue("all");
+        expect(screen.getByLabelText("정렬")).toHaveValue("latest");
+
+        const nav = await screen.findByRole("navigation", { name: "페이지 이동" });
+        expect(within(nav).getByRole("button", { current: "page" })).toHaveAccessibleName(
+          "1페이지",
+        );
+      });
+
+      it("기본 URL에서 전체 초기화를 눌러도 URL을 쓰지 않는다", async () => {
+        const onUrlUpdate = vi.fn();
+        const user = userEvent.setup();
+        render(<ListView />, { onUrlUpdate });
+        await screen.findByText("총 30개");
+
+        await user.click(screen.getByRole("button", { name: "전체 초기화" }));
+
+        expect(onUrlUpdate).not.toHaveBeenCalled();
+      });
+    });
+
     describe("검색 제출 후 포커스가 유지된다 — key 리마운트에도 살아남는 포커스 복원 (C5)", () => {
       it("B1: 최초 렌더 직후에는 검색 입력이 포커스를 훔치지 않는다", async () => {
         render(<ListView />);
