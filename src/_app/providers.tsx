@@ -4,7 +4,7 @@ import { Suspense, useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Header } from "@/widgets/header";
-import styles from "./commerce.module.css";
+import styles from "./providers.module.css";
 
 export function CommerceProviders({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient());
