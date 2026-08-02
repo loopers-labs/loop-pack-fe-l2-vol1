@@ -1,16 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import {
-  isCategoryId,
-  isProductSort,
-  queryProducts,
-  waitForMockApi,
-  type ApiErrorResponse,
-  type CategoryId,
-  type MockApiScenario,
-  type ProductListResponse,
-  type ProductSort,
-} from "@/commerce";
+import { waitForMockApi } from "../_mock/catalog";
+import { queryProducts } from "../_mock/products";
+import type { MockApiScenario } from "../_mock/types";
+import { isCategoryId, type CategoryId } from "@/entities/product";
+import { isProductSort, type ProductListResponse, type ProductSort } from "@/_pages/product-list";
+import type { ApiErrorResponse } from "@/shared/api";
 
 const SCENARIOS = ["empty", "error"] as const satisfies readonly MockApiScenario[];
 const isScenario = (value: string): value is MockApiScenario =>
@@ -19,7 +14,7 @@ const isScenario = (value: string): value is MockApiScenario =>
 const isPositiveInteger = (value: string) => /^[1-9]\d*$/.test(value);
 
 // route handler는 어댑터: raw searchParams를 검증된 쿼리로 번역하거나 400으로 끝내고,
-// 검색·정렬·페이지 로직은 commerce.queryProducts가 소유한다.
+// 검색·정렬·페이지 로직은 mock queryProducts가 소유한다.
 export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<ProductListResponse | ApiErrorResponse>> {

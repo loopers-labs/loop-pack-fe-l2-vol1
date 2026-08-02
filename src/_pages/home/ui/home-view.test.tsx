@@ -7,7 +7,7 @@ import { cleanup, fireEvent, render, screen } from "../../../../mocks/render"; /
 import { GET as getHome } from "../../../../app/api/home/route";
 import { AddToCartButton } from "@/features/add-to-cart";
 import { WishlistToggleButton } from "@/features/toggle-wishlist";
-import { getHomeData } from "@/commerce";
+import type { HomeResponse } from "@/_pages/home";
 import { HomeView } from "./home-view";
 
 afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않는다.
@@ -37,6 +37,14 @@ const emptyScenario = () =>
 // 실제 요청 URL 그대로 route.ts에 위임한다 — list-view.test.tsx의 successScenario와 동일한 형태.
 const successScenario = () =>
   server.use(http.get("/api/home", ({ request }) => getHome(new NextRequest(request.url))));
+
+async function getDefaultHome(): Promise<HomeResponse> {
+  const response = await getHome(new NextRequest("http://localhost:3000/api/home"));
+  if (!response.ok) {
+    throw new Error(`기본 홈 응답이 실패했습니다: ${response.status}`);
+  }
+  return response.json();
+}
 
 describe("HomeView", () => {
   it("pending 상태에서 aria-busy 스켈레톤을 낸다", () => {
@@ -94,7 +102,7 @@ describe("HomeView", () => {
   });
 
   it("인기 상품 카드에도 담기·찜 버튼이 aria-pressed와 함께 실려 나온다", async () => {
-    const home = getHomeData();
+    const home = await getDefaultHome();
     const firstPopular = home.popularProducts[0];
     if (firstPopular === undefined) {
       throw new Error("픽스처에 인기 상품이 없다");
@@ -158,8 +166,8 @@ describe("HomeView", () => {
     expect(screen.getAllByText("표시할 상품이 없습니다")).toHaveLength(2);
   });
 
-  it("인기 상품과 신상품 픽스처는 서로소다 (회귀 가드)", () => {
-    const home = getHomeData();
+  it("인기 상품과 신상품 픽스처는 서로소다 (회귀 가드)", async () => {
+    const home = await getDefaultHome();
     const popularIds = new Set(home.popularProducts.map((product) => product.id));
     const newIds = new Set(home.newProducts.map((product) => product.id));
 

@@ -1,18 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import {
-  getHomeData,
-  waitForMockApi,
-  type ApiErrorResponse,
-  type HomeResponse,
-  type MockApiScenario,
-} from "@/commerce";
+import { waitForMockApi } from "../_mock/catalog";
+import { getHomeData } from "../_mock/home";
+import type { MockApiScenario } from "../_mock/types";
+import type { HomeResponse } from "@/_pages/home";
+import type { ApiErrorResponse } from "@/shared/api";
 
 const SCENARIOS = ["empty", "error"] as const satisfies readonly MockApiScenario[];
 const isScenario = (value: string): value is MockApiScenario =>
   SCENARIOS.some((scenario) => scenario === value);
 
-// route handler는 어댑터: HTTP 파싱·검증·상태코드·지연만 담당하고 데이터 구성은 commerce가 소유한다.
+// route handler는 어댑터: HTTP 파싱·검증·상태코드·지연만 담당하고 데이터 구성은 mock이 소유한다.
 export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<HomeResponse | ApiErrorResponse>> {

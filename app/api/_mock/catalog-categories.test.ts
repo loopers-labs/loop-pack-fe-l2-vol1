@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { categories as mockCategories } from "@/commerce/api/catalog";
-import { isCategoryId } from "./categories";
+import { isCategoryId } from "@/entities/product";
+import { categories as mockCategories } from "./catalog";
 
 describe("isCategoryId", () => {
   it("accepts every category id in the transitional mock catalog", () => {

@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from "../../mocks/render";
 import { useCartStore } from "@/features/add-to-cart/model/store";
 import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
 import { Header } from "@/widgets/header";
-import { getHomeData } from "@/commerce";
+import { getHomeData } from "../api/_mock/home";
 import { HomeView } from "@/_pages/home";
 import { ListView } from "@/_pages/product-list";
 
