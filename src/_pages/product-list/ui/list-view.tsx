@@ -5,11 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ProductCard } from "@/entities/product";
 import { AddToCartButton } from "@/features/add-to-cart";
 import { WishlistToggleButton } from "@/features/toggle-wishlist";
+import { productListQueryOptions } from "../api/queries";
+import { PAGE_SIZE, useListQuery } from "../model/use-list-query";
 import { ListFilterBar } from "./list-filter-bar";
 import { ListPagination } from "./list-pagination";
-import { productListQueryOptions } from "./queries";
-import { PAGE_SIZE, useListQuery } from "./use-list-query";
-import styles from "./commerce.module.css";
+import styles from "./product-list.module.css";
 
 const SKELETON_CARD_COUNT = 12;
 

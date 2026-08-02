@@ -1,8 +1,8 @@
 import { createParser, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 
 import type { CategoryId } from "@/entities/product";
-import { PRODUCT_SORTS } from "./api/products";
-import type { ProductSort } from "./api/types";
+import { PRODUCT_SORTS } from "../api/products";
+import type { ProductSort } from "../api/types";
 
 // 목록 요청의 기본 페이지 크기. route.ts가 pageSize<=24를 강제하고 기본값도 12다.
 export const PAGE_SIZE = 12;

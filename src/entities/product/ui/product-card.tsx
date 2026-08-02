@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import type { Product } from "../model/types";
-import styles from "../../../commerce/commerce.module.css";
+import styles from "./product-card.module.css";
 
 export interface ProductCardProps {
   product: Product;

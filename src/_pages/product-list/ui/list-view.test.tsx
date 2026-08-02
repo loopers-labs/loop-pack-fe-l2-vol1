@@ -1,22 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { render as rtlRender } from "@testing-library/react"; // 순수 RTL render만 예외로 직접 가져온다 — 결함1 회귀 테스트가 NuqsTestingAdapter를 직접 감싸 searchParams prop을 rerender로 바꿔야 하는데, 커스텀 render로는 어댑터 prop에 닿을 수 없다
 import userEvent from "@testing-library/user-event";
 import { http, delay } from "msw";
 import { NextRequest } from "next/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
-import { server } from "../../mocks/server";
-import { cleanup, fireEvent, render, screen, within } from "../../mocks/render"; // render는 QueryClientProvider로 감싸는 커스텀 버전이다(ListView가 useQuery를 쓴다)
-import { GET as getProducts } from "../../app/api/products/route";
-import { useCartStore } from "@/features/add-to-cart/model/store";
-import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
+import { server } from "../../../../mocks/server";
+import { cleanup, fireEvent, render, screen, within } from "../../../../mocks/render"; // render는 QueryClientProvider로 감싸는 커스텀 버전이다(ListView가 useQuery를 쓴다)
+import { GET as getProducts } from "../../../../app/api/products/route";
 import { ListView } from "./list-view";
 
 afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않는다.
-beforeEach(() => {
-  useCartStore.setState({ cartIds: new Set() });
-  useWishlistStore.setState({ wishlistIds: new Set() });
-});
 
 // 응답을 손으로 합성하지 않고 route.ts의 시나리오 분기(scenario=error)로 위임한다 —
 // 검증·정렬·페이지네이션·에러 메시지 로직은 route.ts 하나에만 존재해야 한다.

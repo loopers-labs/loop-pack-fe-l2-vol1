@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
-import { GET as getProducts } from "../../app/api/products/route";
-import type { ProductListResponse } from "@/commerce";
+import { GET as getProducts } from "../../../../app/api/products/route";
+import type { ProductListResponse } from "@/_pages/product-list";
 
 // mocks/handlers.ts의 /api/products는 실제 route.ts GET에 위임한다.
 // 이 스위트는 그 위임이 유지됨을 대조한다 — 누군가 편의로 핸들러에

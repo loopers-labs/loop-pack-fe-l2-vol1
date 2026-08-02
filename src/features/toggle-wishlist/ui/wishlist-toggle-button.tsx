@@ -1,6 +1,7 @@
 "use client";
 
 import { useWishlistStore } from "../model/store";
+import styles from "./wishlist-toggle-button.module.css";
 
 export type WishlistToggleButtonProps = {
   productId: string;
@@ -14,6 +15,7 @@ export function WishlistToggleButton({ productId, productName }: WishlistToggleB
   return (
     <button
       type="button"
+      className={styles.button}
       aria-pressed={inWishlist}
       aria-label={`${productName} 위시리스트`}
       onClick={() => toggleWishlist(productId)}

@@ -1,0 +1,23 @@
+.button {
+  padding: 8px 12px;
+  border: 1px solid var(--commerce-border);
+  border-radius: var(--commerce-radius-pill);
+  background: transparent;
+  color: inherit;
+  font-size: 0.85rem;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.button:hover {
+  border-color: var(--commerce-accent);
+  color: var(--commerce-accent);
+}
+
+.button[aria-pressed="true"] {
+  border-color: var(--commerce-accent);
+  background: var(--commerce-accent);
+  color: var(--commerce-accent-ink);
+}

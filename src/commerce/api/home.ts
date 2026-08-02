@@ -1,5 +1,5 @@
 import { categories, homeBanner, products } from "./catalog";
-import type { HomeResponse } from "./types";
+import type { HomeResponse } from "@/_pages/home";
 
 // 홈 화면 데이터 구성(순수 도메인). scenario 분기는 어댑터(route)가 담당한다.
 export function getHomeData(): HomeResponse {

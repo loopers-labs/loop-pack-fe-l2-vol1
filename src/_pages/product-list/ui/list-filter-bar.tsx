@@ -2,11 +2,11 @@ import { useCallback, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 import { isCategoryId } from "@/entities/product";
-import { PRODUCT_SORTS, isProductSort } from "./api/products";
-import type { ProductSort } from "./api/types";
-import styles from "./commerce.module.css";
-import { CATEGORY_FILTER_VALUES } from "./use-list-query";
-import type { useListQuery } from "./use-list-query";
+import { PRODUCT_SORTS, isProductSort } from "../api/products";
+import type { ProductSort } from "../api/types";
+import { CATEGORY_FILTER_VALUES } from "../model/use-list-query";
+import type { useListQuery } from "../model/use-list-query";
+import styles from "./product-list.module.css";
 
 // use-list-query.ts가 ListQueryValues를 export하지 않으므로(내부 구현 세부),
 // 훅의 실제 반환 튜플에서 값/setter 타입을 그대로 뽑아 쓴다 — 타입을 여기서

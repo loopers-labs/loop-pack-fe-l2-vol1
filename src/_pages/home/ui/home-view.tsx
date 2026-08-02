@@ -3,9 +3,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { homeQueryOptions } from "./queries";
+import { homeQueryOptions } from "../api/queries";
 import { ProductSection } from "./product-section";
-import styles from "./commerce.module.css";
+import styles from "./home.module.css";
 
 const SKELETON_CARD_COUNT = 10;
 

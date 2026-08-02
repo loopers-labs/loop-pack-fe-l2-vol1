@@ -1,19 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { http, delay, HttpResponse } from "msw";
 import { NextRequest } from "next/server";
-import { server } from "../../mocks/server";
-import { cleanup, fireEvent, render, screen } from "../../mocks/render"; // render는 QueryClientProvider로 감싸는 커스텀 버전이다(HomeView가 useQuery를 쓴다)
-import { GET as getHome } from "../../app/api/home/route";
-import { useCartStore } from "@/features/add-to-cart/model/store";
-import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
-import { getHomeData } from "./api/home";
+import { server } from "../../../../mocks/server";
+import { cleanup, fireEvent, render, screen } from "../../../../mocks/render"; // render는 QueryClientProvider로 감싸는 커스텀 버전이다(HomeView가 useQuery를 쓴다)
+import { GET as getHome } from "../../../../app/api/home/route";
+import { AddToCartButton } from "@/features/add-to-cart";
+import { WishlistToggleButton } from "@/features/toggle-wishlist";
+import { getHomeData } from "@/commerce";
 import { HomeView } from "./home-view";
 
 afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않는다.
-beforeEach(() => {
-  useCartStore.setState({ cartIds: new Set() });
-  useWishlistStore.setState({ wishlistIds: new Set() });
-});
 
 const CATEGORY_CHIPS = [
   { name: "캐주얼", id: "casual" },
@@ -97,15 +94,30 @@ describe("HomeView", () => {
   });
 
   it("인기 상품 카드에도 담기·찜 버튼이 aria-pressed와 함께 실려 나온다", async () => {
-    render(<HomeView />);
-
-    await screen.findByRole("heading", { level: 1, name: "매일 새롭게 발견하는 취향" });
-
     const home = getHomeData();
     const firstPopular = home.popularProducts[0];
     if (firstPopular === undefined) {
       throw new Error("픽스처에 인기 상품이 없다");
     }
+
+    const user = userEvent.setup();
+    render(
+      <>
+        <AddToCartButton productId={firstPopular.id} productName={firstPopular.name} />
+        <WishlistToggleButton productId={firstPopular.id} productName={firstPopular.name} />
+      </>,
+    );
+    const cartButton = screen.getByRole("button", { name: `${firstPopular.name} 장바구니` });
+    const wishlistButton = screen.getByRole("button", { name: `${firstPopular.name} 위시리스트` });
+    if (cartButton.getAttribute("aria-pressed") === "true") {
+      await user.click(cartButton);
+    }
+    if (wishlistButton.getAttribute("aria-pressed") === "true") {
+      await user.click(wishlistButton);
+    }
+    cleanup();
+    render(<HomeView />);
+    await screen.findByRole("heading", { level: 1, name: "매일 새롭게 발견하는 취향" });
 
     expect(screen.getByRole("button", { name: `${firstPopular.name} 장바구니` })).toHaveAttribute(
       "aria-pressed",

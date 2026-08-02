@@ -1,4 +1,4 @@
-import styles from "./commerce.module.css";
+import styles from "./product-list.module.css";
 
 type ListPaginationProps = {
   page: number;

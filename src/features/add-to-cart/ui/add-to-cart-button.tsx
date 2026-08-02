@@ -1,6 +1,7 @@
 "use client";
 
 import { useCartStore } from "../model/store";
+import styles from "./add-to-cart-button.module.css";
 
 export type AddToCartButtonProps = {
   productId: string;
@@ -14,6 +15,7 @@ export function AddToCartButton({ productId, productName }: AddToCartButtonProps
   return (
     <button
       type="button"
+      className={styles.button}
       aria-pressed={inCart}
       aria-label={`${productName} 장바구니`}
       onClick={() => toggleCart(productId)}

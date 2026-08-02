@@ -4,9 +4,9 @@ import { cleanup, render, screen, waitFor } from "../../mocks/render";
 import { useCartStore } from "@/features/add-to-cart/model/store";
 import { useWishlistStore } from "@/features/toggle-wishlist/model/store";
 import { Header } from "@/widgets/header";
-import { getHomeData } from "./api/home";
-import { HomeView } from "./home-view";
-import { ListView } from "./list-view";
+import { getHomeData } from "@/commerce";
+import { HomeView } from "@/_pages/home";
+import { ListView } from "@/_pages/product-list";
 
 afterEach(cleanup); // globals:false라 RTL 자동 cleanup이 등록되지 않는다
 beforeEach(() => {
