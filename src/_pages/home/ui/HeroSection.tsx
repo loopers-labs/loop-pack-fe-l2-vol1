@@ -23,7 +23,7 @@ export default function HeroSection({ title, description }: HeroSectionProps) {
         height={2160}
       />
       <div className="week07-hero-copy">
-        <p className="week07-hero-eyebrow">이번 주의 발견</p>
+        <p className="week07-hero-eyebrow">EDITOR&apos;S PICK</p>
         <h1>{title}</h1>
         <p>{description}</p>
       </div>

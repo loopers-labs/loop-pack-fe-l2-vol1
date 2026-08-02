@@ -16,6 +16,7 @@ describe('HeroSection', () => {
 
     expect(markup).toContain('<h1>매일 새롭게 발견하는 취향</h1>')
     expect(markup).toContain('지금 가장 사랑받는 상품을 만나보세요.')
+    expect(markup).toContain('EDITOR&#x27;S PICK')
     expect(markup.match(/<h1[\s>]/g)).toHaveLength(1)
   })
 
