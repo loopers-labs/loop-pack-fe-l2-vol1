@@ -1,4 +1,4 @@
-import type { HomeResponse } from '@/types/commerce';
+import type { HomeResponse } from '@/_pages/home/model';
 
 export async function getHome(): Promise<HomeResponse> {
   const res = await fetch('/api/home');
