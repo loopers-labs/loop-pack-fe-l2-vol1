@@ -1,17 +1,12 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { productListQueryOptions } from "@/features/commerce/queries";
-import {
-  categoryOptions,
-  isCategoryValue,
-  isSortValue,
-  sortOptions,
-  useProductListQuery,
-} from "@/features/commerce/searchParams";
 import { ProductCardWithActions } from "@/widgets/product-card/ui/ProductCardWithActions";
-import { SearchForm } from "@/components/commerce/SearchForm";
+import { productListQueryOptions } from "../api/productListQuery";
+import { categoryOptions, isCategoryValue, isSortValue, sortOptions } from "../config/options";
+import { useProductListQuery } from "../model/useProductListQuery";
+import { SearchForm } from "./SearchForm";
 
-export function ProductsView() {
+export function ProductListPage() {
   const [params, setParams] = useProductListQuery();
   const productsQuery = useQuery(productListQueryOptions(params));
 
@@ -73,6 +68,7 @@ export function ProductsView() {
         {productsQuery.status === "pending" && (
           <p className="shop-state">상품을 불러오는 중입니다…</p>
         )}
+        {/* 조회 실패해도 위쪽 필터 UI는 살아 있다 — 조건을 바꿔 빠져나올 수 있어야 한다. */}
         {productsQuery.status === "error" && (
           <p className="shop-state" role="alert">
             상품 목록을 불러오지 못했습니다.

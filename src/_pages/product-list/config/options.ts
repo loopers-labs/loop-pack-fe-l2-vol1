@@ -1,8 +1,6 @@
-"use client";
-import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import type { CategoryId, ProductSort } from "@/entities/product/model/types";
 
-const categoryValues = [
+export const categoryValues = [
   "all",
   "casual",
   "fashion",
@@ -10,13 +8,15 @@ const categoryValues = [
   "home",
   "digital",
 ] as const satisfies readonly (CategoryId | "all")[];
-const sortValues = [
+
+export const sortValues = [
   "latest",
   "popular",
   "price-asc",
   "price-desc",
 ] as const satisfies readonly ProductSort[];
 
+// 화면에 그릴 필터 옵션 — 목록 페이지에서만 쓰므로 이 슬라이스가 소유한다.
 export const categoryOptions: ReadonlyArray<{ id: CategoryId | "all"; name: string }> = [
   { id: "all", name: "전체" },
   { id: "casual", name: "캐주얼" },
@@ -39,15 +39,3 @@ export const isCategoryValue = (value: string): value is CategoryId | "all" =>
 
 export const isSortValue = (value: string): value is ProductSort =>
   sortValues.some((sort) => sort === value);
-
-const productListParsers = {
-  q: parseAsString.withDefault(""),
-  category: parseAsStringLiteral(categoryValues).withDefault("all"),
-  sort: parseAsStringLiteral(sortValues).withDefault("latest"),
-  page: parseAsInteger.withDefault(1),
-};
-
-// history:"push" — 각 변경을 히스토리에 쌓아 앞뒤 이동으로 복원 가능하게.
-export function useProductListQuery() {
-  return useQueryStates(productListParsers, { history: "push" });
-}
