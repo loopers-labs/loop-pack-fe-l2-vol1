@@ -7,7 +7,7 @@ import {
   useQueryStates,
 } from 'nuqs';
 import { productsQueries } from '@/queries/productsQueries';
-import { DEBOUNCE_DELAY } from '@/constants/time';
+import { DEBOUNCE_DELAY } from '@/shared/constants/time';
 
 const categoryValues = [
   'all',

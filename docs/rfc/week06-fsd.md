@@ -243,6 +243,7 @@ shared               → entities               (shared는 도메인을 몰라�
 | `ProductCard.tsx` | `entities/product/ui` (순수 표시) | `widgets/product-card` (조합) | 둘 다 사용 | 순수 표시는 entities, 찜·담기 행위와 조합하는 단위는 widgets. entities가 features를 import하면 역방향 의존이 생기므로 상위 레이어인 widgets에서 조합 |
 | `productsQueries.ts` | `entities/product/api` | `features/product-filters/api` | `entities/product/api` | features/product-filters가 import해서 쓰지만, 상품 도메인의 서버 상태 정의이므로 entities에 둔다. features → entities import 방향이 맞음 |
 | `src/types/commerce.ts` | 분해 후 각 도메인 entity | `shared/types` 유지 | 분해 | 도메인 소유자가 명확한 타입(Product, CartItem, HomeResponse)은 각 entity/model로 분해. 한 파일에 모으면 도메인 경계가 없어짐 |
+| `storeSync.test.ts` | `entities/cart/model` | `src/__tests__` (별도 통합 테스트 폴더) | `entities/cart/model` | 소스 파일 없이 테스트만 존재. cartStore·wishlistStore 두 entity를 같이 검증하는 통합 테스트. 마이그레이션 작업 중 발견. 기존 프로젝트 스타일(소스 옆 .test.ts)에 맞춰 cart에 배치 |
 
 ---
 
