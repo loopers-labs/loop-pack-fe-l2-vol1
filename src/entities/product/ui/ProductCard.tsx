@@ -1,22 +1,24 @@
 'use client';
 import Image from 'next/image';
 import type { Product } from '@/entities/product/model';
-import { useCartStore } from '@/entities/cart/model/cartStore';
-import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 
 type Props = {
   product: Product;
+  isInWishlist: boolean;
+  isInCart: boolean;
+  onToggleWishlist: () => void;
+  onAddToCart: () => void;
+  onRemoveFromCart: () => void;
 };
 
-export function ProductCard({ product }: Props) {
-  const isInWishlist = useWishlistStore((state) =>
-    state.items.includes(product.id),
-  );
-  const toggleWishlist = useWishlistStore((state) => state.toggleItem);
-  const isInCart = useCartStore((state) => state.items.includes(product.id));
-  const addToCart = useCartStore((state) => state.addItem);
-  const removeFromCart = useCartStore((state) => state.removeItem);
-
+export function ProductCard({
+  product,
+  isInWishlist,
+  isInCart,
+  onToggleWishlist,
+  onAddToCart,
+  onRemoveFromCart,
+}: Props) {
   return (
     <article className="week05-product">
       <Image
@@ -34,7 +36,7 @@ export function ProductCard({ product }: Props) {
           type="button"
           aria-label={`${product.name} 위시리스트`}
           aria-pressed={isInWishlist}
-          onClick={() => toggleWishlist(product.id)}
+          onClick={onToggleWishlist}
         >
           찜
         </button>
@@ -42,9 +44,7 @@ export function ProductCard({ product }: Props) {
           type="button"
           aria-label={`${product.name} 장바구니`}
           aria-pressed={isInCart}
-          onClick={() =>
-            isInCart ? removeFromCart(product.id) : addToCart(product.id)
-          }
+          onClick={isInCart ? onRemoveFromCart : onAddToCart}
         >
           담기
         </button>
