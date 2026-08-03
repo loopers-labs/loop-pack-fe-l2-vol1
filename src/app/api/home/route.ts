@@ -4,9 +4,9 @@ import {
   homeBanner,
   products,
   waitForMockApi,
-  type MockApiScenario,
 } from "@/app/api/_data/commerce";
 import type { ApiErrorResponse } from "@/shared/api";
+import type { MockApiScenario } from "@/entities/product";
 import type { HomeResponse } from "@/_pages/home";
 
 const scenarioValues = [

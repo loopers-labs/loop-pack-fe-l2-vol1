@@ -1,8 +1,5 @@
 import type { Category, CategoryId, Product } from "@/entities/product";
 
-// mock 라우트가 강제로 재현할 상태(빈 목록·에러). 이 mock API 계층 전용이라 여기 둔다.
-export type MockApiScenario = "empty" | "error";
-
 export const categories: Category[] = [
   { id: "casual", name: "캐주얼" },
   { id: "fashion", name: "패션" },

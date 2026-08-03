@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  categories,
-  products,
-  waitForMockApi,
-  type MockApiScenario,
-} from "@/app/api/_data/commerce";
+import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
 import type { ApiErrorResponse } from "@/shared/api";
-import type { ProductListResponse, ProductSort } from "@/entities/product";
+import type {
+  MockApiScenario,
+  ProductListResponse,
+  ProductSort,
+} from "@/entities/product";
 
 const sortValues = [
   "latest",
