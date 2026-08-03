@@ -17,7 +17,7 @@ function ProductListContent() {
     filters,
     setFilters,
     searchInput,
-    setSearchInput,
+    handleSearchChange,
     data,
     isLoading,
     isError,
@@ -37,7 +37,7 @@ function ProductListContent() {
               name="q"
               placeholder="상품명 또는 브랜드"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
           </label>
           <label>
