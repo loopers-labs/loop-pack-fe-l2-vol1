@@ -1,4 +1,4 @@
-import type { HomeResponse } from "@/types/commerce";
+import type { HomeResponse } from "@/_pages/home/api/types";
 import styles from "./HeroSection.module.css";
 
 type HeroSectionProps = Pick<
