@@ -19,6 +19,16 @@ afterEach(() => {
 });
 
 describe("app/(commerce)/error.tsx", () => {
+  it("상세 오류 대신 안정적인 안내 문구만 표시한다", async () => {
+    const errorModulePath = "./error";
+    const { default: CommerceError } = await import(/* @vite-ignore */ errorModulePath);
+
+    render(<CommerceError error={new Error("내부 시스템 상세 오류")} reset={vi.fn()} />);
+
+    expect(screen.getByText("잠시 후 다시 시도해주세요.")).toBeInTheDocument();
+    expect(screen.queryByText("내부 시스템 상세 오류")).not.toBeInTheDocument();
+  });
+
   it("오류 fallback에서 다시 시도를 누르면 Query와 Next 경계를 각각 한 번씩 재설정한다", async () => {
     const user = userEvent.setup();
     const reset = vi.fn();

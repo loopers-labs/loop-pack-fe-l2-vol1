@@ -430,6 +430,24 @@ describe("ListView", () => {
         expect(onUrlUpdate).not.toHaveBeenCalled();
       });
 
+      it("소유하지 않는 query만 있는 URL에서는 전체 초기화가 history를 쓰지 않는다", async () => {
+        const previousUrl = window.location.href;
+        window.history.replaceState({}, "", "/products?utm_source=campaign");
+
+        try {
+          const onUrlUpdate = vi.fn();
+          const user = userEvent.setup();
+          render(<ListView />, { searchParams: "?utm_source=campaign", onUrlUpdate });
+          await screen.findByText("총 30개");
+
+          await user.click(screen.getByRole("button", { name: "전체 초기화" }));
+
+          expect(onUrlUpdate).not.toHaveBeenCalled();
+        } finally {
+          window.history.replaceState({}, "", previousUrl);
+        }
+      });
+
       it("파싱 결과가 기본값이어도 비정상 URL에서 전체 초기화를 누르면 canonical 기본 URL로 정규화한다", async () => {
         const previousUrl = window.location.href;
         window.history.replaceState({}, "", "/products?category=bogus&page=0");

@@ -62,6 +62,8 @@ type ListQueryValues = {
   page: number;
 };
 
+const LIST_QUERY_KEYS = ["q", "category", "sort", "page"] as const;
+
 // page 리셋은 호출자 규약이 아니라 훅 내부 불변식이다(C9b) — list-filter-bar가
 // setQuery({ q })만 불러도 리셋이 지켜지도록, q·category·sort 중 하나라도 partial에
 // "있으면"(값이 이전과 같아도) 아래 삼항식이 page를 1로 되돌려 같은 호출에 함께
@@ -112,9 +114,12 @@ export function useListQuery() {
 
     // 파서는 스키마 밖 값을 기본값으로 복구한다. 따라서 `?category=bogus&page=0`은
     // query만 보면 이미 기본값이라 no-op처럼 보이지만, 주소창에는 잘못된 값이 남아
-    // 있다. 전체 초기화에서는 원본 URL에 파라미터가 남아 있으면 setter를 직접 호출해
-    // canonical 기본 URL로 수렴시킨다. 쿼리 없는 기본 URL은 기존 no-op 경로를 유지한다.
-    if (typeof window !== "undefined" && window.location.search.length > 0) {
+    // 있다. 전체 초기화에서는 원본 URL에 소유 query가 남아 있을 때만 setter를 직접
+    // 호출해 canonical 기본 URL로 수렴시킨다. 추적용 query만 있는 URL은 건드리지 않는다.
+    const hasOwnedQuery =
+      typeof window !== "undefined" &&
+      LIST_QUERY_KEYS.some((key) => new URLSearchParams(window.location.search).has(key));
+    if (hasOwnedQuery) {
       void setQuery(defaults);
       return;
     }
