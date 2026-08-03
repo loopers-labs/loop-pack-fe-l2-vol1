@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@/entities/product/model/types";
 import { homeQueryOptions } from "@/features/commerce/queries";
-import { ProductCard } from "@/components/commerce/ProductCard";
+import { ProductCardWithActions } from "@/widgets/product-card/ui/ProductCardWithActions";
 
 function ProductSection({ title, products }: { title: string; products: Product[] }) {
   return (
@@ -14,7 +14,7 @@ function ProductSection({ title, products }: { title: string; products: Product[
       ) : (
         <div className="shop-grid">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCardWithActions key={product.id} product={product} />
           ))}
         </div>
       )}

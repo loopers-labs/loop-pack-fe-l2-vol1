@@ -4,6 +4,7 @@ import { useCartCount } from "@/entities/cart/model/store";
 import { useWishlistCount } from "@/entities/wishlist/model/store";
 
 // 헤더는 "개수"만 구독한다 — 어떤 상품이 담겼는지는 알 필요가 없다.
+// 두 entity를 조합해 보여주는 독립 블록이라 widget이다.
 export function Header() {
   const wishlistCount = useWishlistCount();
   const cartCount = useCartCount();

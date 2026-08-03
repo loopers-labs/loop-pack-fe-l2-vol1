@@ -8,7 +8,7 @@ import {
   sortOptions,
   useProductListQuery,
 } from "@/features/commerce/searchParams";
-import { ProductCard } from "@/components/commerce/ProductCard";
+import { ProductCardWithActions } from "@/widgets/product-card/ui/ProductCardWithActions";
 import { SearchForm } from "@/components/commerce/SearchForm";
 
 export function ProductsView() {
@@ -86,7 +86,7 @@ export function ProductsView() {
               <p className="shop-total">총 {productsQuery.data.totalCount}개</p>
               <div className="shop-grid">
                 {productsQuery.data.products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCardWithActions key={product.id} product={product} />
                 ))}
               </div>
               <nav className="shop-pagination" aria-label="페이지 이동">
