@@ -39,11 +39,11 @@
 
 **품질 게이트**
 
-- `pnpm check`(테스트 156개, lint, typecheck, build) 통과.
+- `pnpm check`(테스트 173개, lint, typecheck, build) 통과.
 
 **비기능 보존**
 
-- 찜/담기 저장값의 검증, version, migration 동작이 유지된다. 기존 사용자의 localStorage 데이터가 그대로 복원된다.
+- 찜/담기 저장값의 검증, version, migration 동작이 유지된다. 저장 키는 도메인별로 나뉘고(`commerce-cart`, `commerce-wishlist`), 배포 전이라 기존 저장값 이전은 하지 않는다.
 - hydration 불일치 경고 없이 첫 화면이 그려진다.
 - 서버는 요청마다 새 QueryClient를 만들어 사용자 간 캐시가 섞이지 않는다.
 - 서버 prefetch 후 클라이언트가 같은 데이터를 중복 요청하지 않는다.
@@ -101,15 +101,15 @@ src/
 │   └── products/              ui: ProductsPage(서버 prefetch) + ProductList
 ├── features/                  사용자 기능
 │   ├── product/               ui: 검색 폼, 필터 / model: URL 파서, 훅, 상수
-│   ├── cart/                  ui: 담기 토글, 카운트
-│   └── wishlist/              ui: 찜 토글, 카운트
+│   ├── cart/                  ui: 담기 토글
+│   └── wishlist/              ui: 찜 토글
 ├── entities/                  도메인 개념
 │   ├── product/               ui: 카드 / api: 쿼리 / model: 타입
-│   ├── cart/                  model: slice / @x
-│   ├── wishlist/              model: slice / @x
-│   └── client-state/          model: store 조합 + persist
+│   ├── cart/                  model: store + persist / ui: 카운트
+│   └── wishlist/              model: store + persist / ui: 카운트
 └── shared/                    도메인 무관 기반
     ├── api-client.ts, get-query-client.ts
+    ├── persisted-store.ts     형태를 모르는 persist 배관
     └── ui/                    dialog, select (4주차 자산)
 ```
 
@@ -137,8 +137,9 @@ app → _pages → features → entities → shared
 ```ts
 // 허용
 import { ProductCard } from '@/entities/product';                    // 상위가 하위를 사용
-import { createCartSlice } from '@/entities/cart/@x/client-state';   // entity 간 공인 통로
+import { useCart } from '@/entities/cart';                           // 슬라이스 루트 진입점
 import { apiClient } from '@/shared/api-client';                     // shared는 파일 경로 직접 import
+// entity 간 참조가 필요하면 @x 공인 통로만 허용한다(하네스가 강제). 현재 사용처는 없다.
 
 // 금지
 import { CartToggleButton } from '@/features/cart';        // entities/product 안에서: 하위가 상위
@@ -166,13 +167,14 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | `features/products/ProductListFilters.tsx` | `features/product/ui/ProductListFilters.tsx` | features / product / ui | 카테고리, 정렬 선택 UI. 필터 상수와 URL 훅을 같은 슬라이스에서 쓴다 |
 | `features/products/HomeContent.tsx` | `_pages/home/ui/HomeContent.tsx` | _pages / home / ui | 홈 전용 화면 구성. 섹션 순서와 카드에 붙일 행위 버튼을 결정한다 |
 | `features/products/ProductList.tsx` | `_pages/products/ui/ProductList.tsx` | _pages / products / ui | 목록 전용 화면 구성. 목록, 페이지네이션, 카드 조합 |
-| `features/cart/cart-slice.ts` | `entities/cart/model/cart-slice.ts` | entities / cart / model | 장바구니 상태 형태와 토글 규칙. 도메인의 데이터 모델 |
-| `features/wishlist/wishlist-slice.ts` | `entities/wishlist/model/wishlist-slice.ts` | entities / wishlist / model | 위와 동일 |
-| `shared/store.ts` | `entities/client-state/model/store.ts` | entities / client-state / model | slice 조합과 persist. 비즈니스 상태를 shared에서 뺀다. 저장 키가 그대로라 사용자 데이터 이전이 없다 |
-| `shared/store.test.tsx`, `shared/store-restore.test.tsx` | 순수 store 검증은 `entities/client-state/model/`, 컴포넌트 결합 검증은 루트 `tests/` | entities, 레이어 밖 | 기존 테스트가 feature 컴포넌트(CartCount 등)를 렌더하므로 entities에 그대로 두면 하위가 상위를 import하게 된다. 레이어를 가로지르는 통합 테스트는 레이어 밖 루트 `tests/`에 둔다(단위는 co-location, 통합은 루트 디렉터리라는 일반 관행. src 리팩토링이 이 테스트를 강제로 바꾸지 않게 하는 목적도 있다) |
-| `features/cart/CartToggleButton.tsx` | `features/cart/ui/CartToggleButton.tsx` | features / cart / ui | 담기 행위 UI. client-state 구독은 하위 방향이라 합법 |
-| `features/cart/CartCount.tsx` | `features/cart/ui/CartCount.tsx` | features / cart / ui | 담긴 개수 표시. 행위와 한 슬라이스에 응집. entities에 두면 entity 간 결합이 늘어 비선택 |
-| `features/wishlist/WishlistToggleButton.tsx`, `WishlistCount.tsx` | `features/wishlist/ui/` | features / wishlist / ui | 위와 동일 |
+| `features/cart/cart-slice.ts` | `entities/cart/model/cart-store.ts` | entities / cart / model | 장바구니 상태 형태, 토글, 저장 키와 검증. 상태의 소유자가 실물 store까지 갖는다 |
+| `features/wishlist/wishlist-slice.ts` | `entities/wishlist/model/wishlist-store.ts` | entities / wishlist / model | 위와 동일. 장바구니와 서로 읽지 않으므로 store를 합치지 않는다 |
+| `shared/store.ts` | 검증 storage와 복원 훅은 `shared/persisted-store.ts`, 상태와 저장 형태는 각 entity | shared, entities | 비즈니스 상태를 shared에서 뺀다. shared에는 JSON 파싱·version·저장소 실패만 다루는 배관이 남고, 무엇을 저장하는지는 모른다. 저장 형태 검증은 소유자가 넘긴다 |
+| `shared/store.test.tsx`, `shared/store-restore.test.tsx` | 배관 검증은 `shared/persisted-store.test.ts`, 각 store 검증은 `entities/*/model/`, 컴포넌트 결합 검증은 루트 `tests/` | shared, entities, 레이어 밖 | 검증 코드는 검증 대상 옆에 둔다. 다만 기존 테스트가 여러 레이어의 컴포넌트를 함께 렌더하므로 그대로 두면 하위가 상위를 import하게 된다. 레이어를 가로지르는 통합 테스트는 레이어 밖 루트 `tests/`에 둔다(단위는 co-location, 통합은 루트 디렉터리라는 일반 관행. src 리팩토링이 이 테스트를 강제로 바꾸지 않게 하는 목적도 있다) |
+| `features/cart/CartToggleButton.tsx` | `features/cart/ui/CartToggleButton.tsx` | features / cart / ui | 담기 행위 UI. entities/cart 구독은 하위 방향이라 합법 |
+| `features/cart/CartCount.tsx` | `entities/cart/ui/CartCount.tsx` | entities / cart / ui | 담긴 개수는 사용자 행위가 없는 도메인 표현이다. 자기 슬라이스의 model만 읽으면 되므로 레이어를 건너지 않는다 |
+| `features/wishlist/WishlistToggleButton.tsx` | `features/wishlist/ui/` | features / wishlist / ui | 위와 동일 |
+| `features/wishlist/WishlistCount.tsx` | `entities/wishlist/ui/WishlistCount.tsx` | entities / wishlist / ui | 위와 동일 |
 | `app/(home)/page.tsx`, `app/products/page.tsx` | `app/(commerce)/page.tsx`, `app/(commerce)/products/page.tsx` | app | 페이지 컴포넌트 렌더 한 줄만 남긴다. 서버 prefetch는 `_pages`의 HomePage, ProductsPage로 옮긴다.  |
 | (신규) | `app/(commerce)/layout.tsx` | app | 커머스 공통 헤더. 루트에 두면 `/demos`에도 생기므로 그룹으로 격리 |
 | `app/layout.tsx` | 유지 | app | 전역 스타일과 providers만. 헤더는 두지 않는다 |
@@ -188,20 +190,20 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | --- | --- | --- | --- | --- |
 | `ProductCard` | `entities/product/ui` (actions 주입) | 각 `_pages`의 로컬 카드 (사본) | **A** | 사본은 카드 수정마다 두 곳을 고치게 된다. actions 주입이면 entity로 내려도 방향 위반이 없다. 조합 몇 줄의 중복만 수용 |
 | 상품 queryOptions | `entities/product/api` | 각 페이지 슬라이스의 `api` | **A** | home()과 list()는 페이지가 다르지만 같은 도메인의 서버 상태다. 나누면 캐시 키 네임스페이스와 staleTime 정책이 흩어진다. 홈 응답의 배너는 mock 응답 계약의 산물이고 조회 정의의 소유자는 도메인 |
-| 장바구니 store | `entities/cart/model` | 담기 feature의 `model` (제3후보: `_app`의 store) | **slice는 entities/cart, 조합과 persist는 entities/client-state, `@x` 연결** | 담기, 찜, 헤더 카운트가 공유한다(기준: 함께 쓰는 기능 수). 단일 store 방침(Zustand 공식 권장)과 persist 키 유지를 함께 만족. feature model은 다른 기능이 내부를 구독하게 되어 탈락, `_app` store는 구독자가 features라 역방향이라 탈락. client-state는 기술적 슬라이스임을 인정하는 예외 |
+| 장바구니 store | `entities/cart/model` | 담기 feature의 `model` (제3후보: 통합 store를 두는 기술적 슬라이스) | **A** | 담기와 헤더 카운트가 공유한다(기준: 함께 쓰는 기능 수). feature model은 다른 기능이 내부를 구독하게 되어 탈락. 통합 store는 Zustand 단일 store 방침이 근거였으나, 그 방침은 slice끼리 상태를 읽을 때(한 액션이 둘을 원자적으로 갱신) 성립한다. cart와 wishlist는 서로를 읽지 않아 이득이 없고, 통합의 실제 동기였던 persist 배관 재사용은 함수로 풀 문제라 탈락 |
 | `types/commerce.ts`의 `Product` 타입 | `entities/product/model` | `shared/types` 유지 | **A** | 한 창고는 소유자를 지우고 무관한 코드를 결합시킨다. mock 전용 타입은 mock으로 보낸다 |
 | 목록 URL 파서와 훅 | `_pages/products/model` | `features/product/model` | **B** | 검색, 필터, 정렬은 상품이 무엇인가(entity)가 아니라 사용자가 목록에 가하는 행위라 feature 자격이 있다. 페이지 슬라이스는 조합 전용이라는 규칙에 따라 한 페이지 전용이어도 feature에 두고, 도메인 대상별로 행위를 모은다. pages first(페이지에 두다 재사용 시 승격)와 다른 의도적 선택임을 기록 |
 
 ### 단계별 마이그레이션 계획과 검증 방법
 
-공통 검증은 `pnpm check`(테스트 156개 포함).
+공통 검증은 `pnpm check`(테스트 173개 포함).
 
 | 단계 | 작업 | 추가 검증 |
 | --- | --- | --- |
 | 0 | 하네스(ESLint 의존 규칙, warn)와 architecture-review SKILL 작성 | 위반 코드를 일부러 넣어 규칙이 잡는지 확인 |
 | 1 | 타입 분해: `types/commerce.ts`를 entities/product의 model과 api, mock으로 나누고 참조 12개 파일 경로 갱신 | typecheck |
 | 2 | `entities/product` 신설: api, queries 이동 | queries 테스트 |
-| 3 | store 재배치: slice는 entities/cart, wishlist로, 조합과 persist는 client-state로, `@x` 신설, 도메인별 selector 훅 공개 | store 테스트, localStorage 키와 기존 저장값 복원 확인 |
+| 3 | store 재배치: entities/cart, wishlist가 각자 store와 저장 키를 갖고, 형태를 모르는 persist 배관만 shared로. 도메인별 selector 훅과 actions 훅 공개 | 배관 테스트, 각 store 테스트, 저장·복원 확인 |
 | 4 | `features/product` 신설: 검색 폼, 필터, URL 모델, 상수 이동 | search-params, product-list-params 테스트 |
 | 5 | `_pages` 신설, ProductCard actions 전환, `(commerce)` 그룹과 헤더 layout 이동, page.tsx 축소 | 기준선 브라우저 확인(R 전 항목), `/demos`에 헤더 없음, hydration 경고 없음, 초기 중복 요청 없음 확인 |
 | 6 | features 정리(ui 세그먼트, index.ts), Public API 정리, 딥 import 제거, 테스트 분리 배치 | 하네스 위반 0 확인 후 error 승격, 통과 증거 기록 |
@@ -217,27 +219,30 @@ import { productQueries } from '@/entities/product/api/queries'; // 딥 import
 | --- | --- | --- | --- | --- |
 | 상품 조회 결과 | 서버/TanStack Query | entities/product (api) | 홈, 상품 목록 | queryOptions로만 조회. 캐시가 유일한 사본 |
 | 검색, 정렬, 페이지 | URL/nuqs | features/product (model) | 상품 목록 | URL이 유일 원본. useState 복사 없이 파서로 읽고 setConditions로만 변경 |
-| 장바구니, 위시리스트 | Zustand | entities/client-state (slice는 cart, wishlist 소유) | 헤더, 상품 행위 UI | 상품 ID 배열만 저장. 개수 등 파생값은 selector로 계산 |
+| 장바구니 | Zustand | entities/cart (model) | 헤더 카운트, 담기 버튼 | 상품 ID 배열만 저장. 개수 등 파생값은 selector로 계산 |
+| 위시리스트 | Zustand | entities/wishlist (model) | 헤더 카운트, 찜 버튼 | 위와 동일. 장바구니와 서로 읽지 않아 store를 나눠 소유한다 |
 | Dialog 열림 여부 | React 로컬 상태 | shared/ui/dialog (소비 컴포넌트의 로컬) | 해당 UI | 컴포넌트 수명의 상태를 전역 store로 승격하지 않음 |
 
 ## I: 인터페이스
 
 ### 슬라이스별 공개 API
 
-숨길 내부가 있는 슬라이스만 루트 index.ts로 선별 수출한다. 경로 축약용 barrel이 아니라 "외부가 알아도 되는 것은 이것뿐"이라는 계약이고, 딥 import 금지 하네스가 강제한다. 공개할 것이 없는 entities/cart, wishlist는 index 없이 `@x` 파일만 둔다.
+숨길 내부가 있는 슬라이스만 루트 index.ts로 선별 수출한다. 경로 축약용 barrel이 아니라 "외부가 알아도 되는 것은 이것뿐"이라는 계약이고, 딥 import 금지 하네스가 강제한다.
 
 | 슬라이스 | 공개 (index.ts) | 숨김 |
 | --- | --- | --- |
 | entities/product | ProductCard, productQueries, 도메인 타입 | fetch 함수. 조회는 queryOptions로만 |
-| entities/client-state | 도메인 훅 useCart(select), useWishlist(select), useRestoreSavedStore | useBoundStore(통합 store 훅), useRestored, persist 검증 storage, 저장 키 |
-| entities/cart, entities/wishlist | index 없음. `@x/client-state`로 slice 생성 함수만 제공 | `@x` 외의 접근 경로 없음 |
+| entities/cart | CartCount, useCart(select), useCartActions, useRestoreCart | useCartStore, 저장 키와 version, 상태 형태와 검증 |
+| entities/wishlist | WishlistCount, useWishlist(select), useWishlistActions, useRestoreWishlist | 위와 동일 |
 | features/product | ProductSearchForm, ProductListFilters, useProductListUrlState, usePageClamp, toProductListQuery, loadProductListConditions | 필터 상수와 라벨, 검색어 정규화 |
-| features/cart | CartToggleButton, CartCount | (내부 없음) |
-| features/wishlist | WishlistToggleButton, WishlistCount | 위와 동일 |
+| features/cart | CartToggleButton | (내부 없음) |
+| features/wishlist | WishlistToggleButton | 위와 동일 |
 | _pages/home, _pages/products | 페이지 컴포넌트 1개 | 페이지 내부 구성 |
 | shared | index 없음. 파일 경로로 직접 import | |
 
-- **통합 store 훅은 공개하지 않는다.** useBoundStore를 그대로 열면 cart 기능이 wishlist 상태를 읽어도 막을 수 없다. 도메인 단위 selector 훅만 공개해 경계를 좁힌다. store 대신 커스텀 훅만 export하는 Zustand 권장 패턴이고, 훅의 소유자가 store를 가진 client-state라 entity 간 참조도 늘지 않는다.
+- **store 훅은 공개하지 않는다.** `useCartStore`를 그대로 열면 복원 게이트를 거치지 않고 상태를 읽을 수 있다. 복원 전에는 저장값을 모르므로 그 상태로 카운트를 그리면 0이 깜빡이고, 토글 버튼은 복원값에 덮일 클릭을 받는다. 이 분기를 호출부마다 복사하면 빼먹는 순간 조용히 깨지므로, 게이트를 통과한 `useCart(select)`만 공개한다. store 대신 커스텀 훅만 export하는 Zustand 권장 패턴이다.
+- **액션은 한 객체로 묶어 훅 하나로 낸다.** 액션은 바뀌지 않아 상태가 아니고, `actions` 객체의 참조가 고정이라 구독해도 리렌더가 없다. 값이나 액션이 늘어도 공개 훅을 추가하지 않는다.
+- **`useCart(select)`는 데이터만 받는다.** 타입에서 `actions`를 제외해, 게이트를 거친 훅으로 액션을 꺼내 복원 전 `undefined`가 되는 실수를 막는다.
 
 ### `ProductCard`와 행위의 조합
 
