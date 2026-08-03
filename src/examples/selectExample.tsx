@@ -2,7 +2,7 @@
 // 서버 컴포넌트(page)는 함수를 클라이언트로 못 넘기므로, renderOption을 넘기는 이쪽이 "use client".
 "use client";
 import Image from "next/image";
-import { Select } from "./index";
+import { Select } from "@/shared/ui/select";
 
 type ProductSize = { value: number; stock: number };
 type Product = {

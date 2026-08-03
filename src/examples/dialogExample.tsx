@@ -2,7 +2,7 @@
 // 상태를 넘기는(useState) 쪽이라 "use client".
 "use client";
 import { useState } from "react";
-import { Dialog } from "./index";
+import { Dialog } from "@/shared/ui/dialog";
 
 export function DialogExample() {
   // controlled: open을 바깥이 소유. Dialog.Trigger 말고 "바깥 버튼"으로도 열려서

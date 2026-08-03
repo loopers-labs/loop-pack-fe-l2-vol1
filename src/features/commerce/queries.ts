@@ -1,11 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import type {
-  ApiErrorResponse,
-  CategoryId,
-  HomeResponse,
-  ProductListResponse,
-  ProductSort,
-} from "@/types/commerce";
+import type { CategoryId, HomeResponse, ProductListResponse, ProductSort } from "@/types/commerce";
+import { fetchJson } from "@/shared/api";
 
 // URL(nuqs)에서 기본값이 채워진 뒤의 조회 조건. scenario는 사용자 상태가 아니므로 제외.
 export type ResolvedProductListQuery = {
@@ -14,24 +9,6 @@ export type ResolvedProductListQuery = {
   sort: ProductSort;
   page: number;
 };
-
-// API 에러 응답 좁히기 — as 없이 타입 가드로 message를 확보.
-const isApiErrorResponse = (value: unknown): value is ApiErrorResponse => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  return "message" in value && typeof value.message === "string";
-};
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    const body: unknown = await response.json().catch(() => null);
-    const message = isApiErrorResponse(body) ? body.message : "요청을 처리하지 못했습니다.";
-    throw new Error(message);
-  }
-  return response.json();
-}
 
 // 홈은 자주 바뀌지 않는 카탈로그성 데이터 → 오래 신선하게 둔다.
 const HOME_STALE_TIME = 5 * 60 * 1000;
