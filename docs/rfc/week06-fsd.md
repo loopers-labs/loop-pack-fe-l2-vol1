@@ -472,13 +472,13 @@ Public API는 사용할 예정이다.
 
 ## 에러 처리 경계
 
-| 실패 유형                          | 처리 위치                                                        | Error Boundary로 전파하는가 | 사용자 UI                                     | 재시도 방법                                  | 이 경계를 선택한 이유                                                                        |
-| ---------------------------------- | ---------------------------------------------------------------- | --------------------------- | --------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 홈 조회 실패                       | `_pages/home` error boundary                                     | 예                          | 홈 데이터를 불러오지 못했다는 fallback        | `QueryErrorResetBoundary` + boundary `reset` | 홈 aggregate 데이터가 없으면 홈 본문 전체를 렌더하기 어렵다.                                 |
-| 상품 목록 조회 실패                | `_pages/products` 결과 영역                                      | 아니오                      | 목록 영역 안의 에러와 다시 시도 버튼          | query `refetch`                              | 필터와 헤더는 유지하고 결과 영역만 복구 가능하게 한다.                                       |
-| 잘못된 검색 조건 4xx               | `_pages/products/model` URL parser, API 응답 방어 처리           | 아니오                      | 내부 기본값 조회 또는 결과 영역 인라인 메시지 | 조건 변경                                    | 사용자가 고칠 수 있는 입력 문제라 전체 라우트 경계로 올리지 않는다.                          |
-| 예상하지 못한 렌더링 오류          | `src/app/(commerce)/error.tsx`                                   | 예                          | commerce route fallback                       | `reset`                                      | 코드 버그나 예측 못한 오류는 라우트 경계에서 복구한다.                                       |
-| 장바구니/위시리스트 로컬 행위 오류 | `features/add-to-cart`, `features/toggle-wishlist` action 호출부 | 아니오                      | 현재 해당 없음                                | 향후 toast 또는 inline message               | 현재 로컬 map toggle은 실패 가능성이 낮다. 서버 동기화가 붙으면 mutation error로 재설계한다. |
+| 실패 유형                          | 처리 위치                                                        | Error Boundary로 전파하는가 | 사용자 UI                              | 재시도 방법                                  | 이 경계를 선택한 이유                                                                                                            |
+| ---------------------------------- | ---------------------------------------------------------------- | --------------------------- | -------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 홈 조회 실패                       | `_pages/home` error boundary                                     | 예                          | 홈 데이터를 불러오지 못했다는 fallback | `QueryErrorResetBoundary` + boundary `reset` | 홈 aggregate 데이터가 없으면 홈 본문 전체를 렌더하기 어렵다.                                                                     |
+| 상품 목록 조회 실패                | `_pages/products` 결과 영역                                      | 아니오                      | 목록 영역 안의 에러와 다시 시도 버튼   | query `refetch`                              | 필터와 헤더는 유지하고 결과 영역만 복구 가능하게 한다.                                                                           |
+| 잘못된 URL 검색 조건               | `_pages/products/model` URL parser                               | 아니오                      | 내부 기본값으로 조회                   | 조건 변경                                    | nuqs parser가 잘못된 `page`, `category`, `sort` 값을 기본값으로 떨어뜨리므로 사용자 화면 흐름에서는 API 4xx까지 전파되지 않는다. |
+| 예상하지 못한 렌더링 오류          | `src/app/(commerce)/error.tsx`                                   | 예                          | commerce route fallback                | `reset`                                      | 코드 버그나 예측 못한 오류는 라우트 경계에서 복구한다.                                                                           |
+| 장바구니/위시리스트 로컬 행위 오류 | `features/add-to-cart`, `features/toggle-wishlist` action 호출부 | 아니오                      | 현재 해당 없음                         | 향후 toast 또는 inline message               | 현재 로컬 map toggle은 실패 가능성이 낮다. 서버 동기화가 붙으면 mutation error로 재설계한다.                                     |
 
 Error Boundary는 이벤트 핸들러와 비동기 콜백 오류를 자동으로 잡지 못한다.
 장바구니/위시리스트 클릭 중 발생하는 오류는 해당 action 또는 mutation 호출부에서 처리한다.
@@ -486,6 +486,8 @@ Error Boundary는 이벤트 핸들러와 비동기 콜백 오류를 자동으로
 홈 조회는 `useSuspenseQuery`를 사용해 실패를 `HomeErrorBoundary`로 전파한다.
 `useSuspenseQuery`는 `throwOnError` 옵션을 노출하지 않으므로, 에러 전파 기준은 Suspense Query 선택과 boundary 조합으로 표현한다.
 상품 목록 조회는 `useQuery`의 `throwOnError: false`를 명시해 결과 영역 인라인 에러 처리 정책을 코드에 둔다.
+Mock API를 직접 잘못된 `category`, `sort`, `page`, `pageSize`로 호출하면 400을 반환한다.
+다만 사용자 URL 상태는 nuqs parser를 거치며 기본값으로 정규화되므로, 상품 목록 화면의 에러 경계에서는 4xx fallback을 별도로 두지 않는다.
 
 route `loading.tsx`/Suspense는 서버 prefetch 또는 page shell 로딩 범위를 맡고,
 Query `isPending`은 클라이언트 refetch나 결과 영역 로딩 범위를 맡는다.
