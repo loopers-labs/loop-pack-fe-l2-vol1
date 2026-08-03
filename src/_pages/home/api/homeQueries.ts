@@ -1,5 +1,5 @@
 import { GC_TIME, STALE_TIME } from '@/shared/constants/time';
-import { getHome } from '@/service/home';
+import { getHome } from './home';
 import { queryOptions } from '@tanstack/react-query';
 
 export const homeQueries = {
