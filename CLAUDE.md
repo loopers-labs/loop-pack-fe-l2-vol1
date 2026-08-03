@@ -6,16 +6,14 @@
 
 ## 기술 스택
 
-| 항목          | 기술                                         |
-| ------------- | -------------------------------------------- |
-| 프레임워크    | React 19                                     |
-| 언어          | TypeScript 6                                 |
-| 빌드 도구     | Vite 8                                       |
-| 패키지 매니저 | pnpm                                         |
-| 린터          | ESLint 10                                    |
-| 포맷터        | Prettier                                     |
-| Git 훅        | husky + lint-staged                          |
-| 커밋 검증     | commitlint + @commitlint/config-conventional |
+| 항목          | 기술                          |
+| ------------- | ----------------------------- |
+| 프레임워크    | Next.js 16 (App Router)       |
+| 언어          | TypeScript 5                  |
+| 패키지 매니저 | pnpm                          |
+| 린터          | ESLint 9                      |
+| 포맷터        | Prettier                      |
+| Git 훅        | husky + lint-staged           |
 
 ---
 
