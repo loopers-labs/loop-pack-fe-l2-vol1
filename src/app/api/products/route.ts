@@ -14,7 +14,7 @@ import type {
   MockApiScenario,
 } from "@/app/api/_data/types";
 
-const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
+const scenarioValues = ["empty", "error", "slow"] as const satisfies readonly MockApiScenario[];
 
 const isProductSort = (value: string): value is ProductSort =>
   (PRODUCT_SORTS as readonly string[]).includes(value);
@@ -68,7 +68,7 @@ export async function GET(
 
   const id = params.get("id");
 
-  await waitForMockApi();
+  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
 
   if (id) {
     const product = getProductById(id);

@@ -4,7 +4,8 @@ import { getHomeData } from "@/_pages/home/api/homeService";
 import type { HomeResponse } from "@/_pages/home/api/types";
 import type { ApiErrorResponse, MockApiScenario } from "@/app/api/_data/types";
 
-const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
+const scenarioValues = ["empty", "error", "slow"] as const satisfies
+  readonly MockApiScenario[];
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);
@@ -21,7 +22,7 @@ export async function GET(
     );
   }
 
-  await waitForMockApi();
+  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
 
   if (scenario === "error") {
     return NextResponse.json(
