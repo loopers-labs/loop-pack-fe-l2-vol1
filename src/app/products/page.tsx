@@ -2,7 +2,8 @@
 import { Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
-import { useProductFilters } from '@/hooks/useProductFilters';
+import { useProductFilters } from '@/features/product-filters/model/useProductFilters';
+import { ProductFiltersForm } from '@/features/product-filters/ui/ProductFiltersForm';
 
 export default function ProductListPage() {
   return (
@@ -30,55 +31,14 @@ function ProductListContent() {
       <Header />
       <section className="week05-section">
         <h1>상품 목록</h1>
-        <form className="week05-filters" onSubmit={(e) => e.preventDefault()}>
-          <label>
-            검색
-            <input
-              name="q"
-              placeholder="상품명 또는 브랜드"
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
-          </label>
-          <label>
-            카테고리
-            <select
-              name="category"
-              value={filters.category}
-              onChange={(e) =>
-                setFilters({
-                  category: e.target.value as typeof filters.category,
-                  page: 1,
-                })
-              }
-            >
-              <option value="all">전체</option>
-              <option value="casual">캐주얼</option>
-              <option value="fashion">패션</option>
-              <option value="goods">뷰티·잡화</option>
-              <option value="home">홈</option>
-              <option value="digital">디지털</option>
-            </select>
-          </label>
-          <label>
-            정렬
-            <select
-              name="sort"
-              value={filters.sort}
-              onChange={(e) =>
-                setFilters({
-                  sort: e.target.value as typeof filters.sort,
-                  page: 1,
-                })
-              }
-            >
-              <option value="latest">최신순</option>
-              <option value="popular">인기순</option>
-              <option value="price-asc">낮은 가격순</option>
-              <option value="price-desc">높은 가격순</option>
-            </select>
-          </label>
-        </form>
+        <ProductFiltersForm
+          searchInput={searchInput}
+          onSearchChange={handleSearchChange}
+          category={filters.category}
+          onCategoryChange={(category) => setFilters({ category, page: 1 })}
+          sort={filters.sort}
+          onSortChange={(sort) => setFilters({ sort, page: 1 })}
+        />
       </section>
       <section className="week05-section" aria-label="상품 검색 결과">
         {isLoading && <p>로딩 중...</p>}
