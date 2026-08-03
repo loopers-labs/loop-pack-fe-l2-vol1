@@ -31,37 +31,27 @@ export function useProductFilters() {
   );
 
   const [searchInput, setSearchInput] = useState(filters.q);
-  const isFirstRender = useRef(true);
-  const skipNextDebounce = useRef(false);
-  // debounce가 마지막으로 URL에 반영한 값. 이 값이 filters.q로 돌아올 때는 외부 변경이 아니므로 sync 건너뜀
-  const lastDebounceQ = useRef(filters.q);
+  // 마지막으로 URL에 반영한 값. debounce가 쓴 것인지 외부(뒤로/앞으로가기)가 바꾼 것인지 구분
+  const lastCommitted = useRef(filters.q);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 브라우저 앞/뒤로가기로 URL이 바뀌면 searchInput을 URL에 맞게 sync
+  // 뒤로/앞으로가기로 URL이 바뀌면 searchInput을 sync. 대기 중인 debounce도 취소
   useEffect(() => {
-    if (filters.q !== searchInput && filters.q !== lastDebounceQ.current) {
-      skipNextDebounce.current = true;
-      lastDebounceQ.current = filters.q;
+    if (filters.q !== lastCommitted.current) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      lastCommitted.current = filters.q;
       setSearchInput(filters.q);
     }
-    // searchInput은 의존성에서 제외 — filters.q가 외부에서 바뀔 때만 실행
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.q]);
 
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    if (skipNextDebounce.current) {
-      skipNextDebounce.current = false;
-      return;
-    }
-    const timer = setTimeout(() => {
-      lastDebounceQ.current = searchInput;
-      void setFilters({ q: searchInput, page: 1 });
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      lastCommitted.current = value;
+      void setFilters({ q: value, page: 1 });
     }, DEBOUNCE_DELAY);
-    return () => clearTimeout(timer);
-  }, [searchInput, setFilters]);
+  };
 
   const { data, isLoading, isError, refetch } = useQuery(
     productsQueries.productList(filters),
@@ -79,7 +69,7 @@ export function useProductFilters() {
     filters,
     setFilters,
     searchInput,
-    setSearchInput,
+    handleSearchChange,
     data,
     isLoading,
     isError,
