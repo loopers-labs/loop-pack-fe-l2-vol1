@@ -9,7 +9,7 @@ type HeroSectionProps = Pick<
 export function HeroSection({ title, description }: HeroSectionProps) {
   return (
     <section className={styles.hero} aria-labelledby="week07-hero-title">
-      {/* eslint-disable-next-line @next/next/no-img-element -- Week 7 intentionally starts with an unoptimized LCP image. */}
+      {/* 7주차 과제: 의도적으로 최적화하지 않은 LCP 이미지 */}
       <img
         className={styles.image}
         src="/images/week-07/hero-original.jpg"

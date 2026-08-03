@@ -167,6 +167,10 @@ export function ProductListContent() {
     [setSearch],
   );
 
+  const handleRetry = () => {
+    void refetch();
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -184,7 +188,7 @@ export function ProductListContent() {
           </p>
           <button
             type="button"
-            onClick={() => refetch()}
+            onClick={handleRetry}
             className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
           >
             다시 시도
