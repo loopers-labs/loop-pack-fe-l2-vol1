@@ -1,0 +1,7 @@
+echo "🔍 타입 검사를 시작합니다..."
+if pnpm tsc --noEmit; then
+  echo "✅ 타입 검사 통과"
+else
+  echo "❌ 타입 오류가 있습니다. 푸시가 중단됩니다."
+  exit 1
+fi
