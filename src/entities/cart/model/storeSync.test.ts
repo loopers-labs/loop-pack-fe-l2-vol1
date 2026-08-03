@@ -5,8 +5,8 @@
  * 동일한 상태를 반환해야 한다.
  */
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useCartStore } from '@/store/cartStore';
-import { useWishlistStore } from '@/store/wishlistStore';
+import { useCartStore } from './cartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 
 beforeAll(() => {
   vi.stubGlobal('localStorage', {

@@ -1,4 +1,4 @@
-import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
+import type { ProductListQuery, ProductListResponse } from '@/entities/product/model';
 
 export async function getProducts(
   query: ProductListQuery,
@@ -11,5 +11,5 @@ export async function getProducts(
 
   const result = await fetch(`/api/products?${params.toString()}`);
   if (!result.ok) throw new Error('API 호출 실패');
-  return result.json();
+  return result.json() as Promise<ProductListResponse>;
 }
