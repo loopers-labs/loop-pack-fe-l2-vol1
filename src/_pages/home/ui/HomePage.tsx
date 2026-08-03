@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/_pages/home/api/homeQueries';
-import { Header } from '@/widgets/header';
 import { ProductCard } from '@/widgets/product-card';
 import type { Category, Product } from '@/entities/product/model';
 
@@ -10,8 +9,7 @@ export function HomePage() {
   const { data, isLoading, isError, refetch } = useQuery(homeQueries.data());
 
   return (
-    <main className="week05-page">
-      <Header />
+    <>
       {isLoading && <p>로딩 중...</p>}
       {isError && (
         <section className="week05-section week05-error">
@@ -59,6 +57,6 @@ export function HomePage() {
           ))}
         </>
       )}
-    </main>
+    </>
   );
 }
