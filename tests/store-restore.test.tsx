@@ -2,9 +2,13 @@ import { act, render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
 
 import {
-  STORAGE_KEY,
-  useBoundStore,
-} from '@/entities/client-state/model/store';
+  CART_STORAGE_KEY,
+  useCartStore,
+} from '@/entities/cart/model/cart-store';
+import {
+  useWishlistStore,
+  WISHLIST_STORAGE_KEY,
+} from '@/entities/wishlist/model/wishlist-store';
 import { CartCount } from '@/features/cart';
 import { CartToggleButton } from '@/features/cart';
 import { WishlistCount } from '@/features/wishlist';
@@ -21,13 +25,10 @@ const headerCountText = (label: string) =>
  * 복원 전 화면은 아직 아무도 복원을 부르지 않은 모듈에서만 만들 수 있어 파일을 따로 둔다.
  */
 it('복원 전에는 개수를 감추고 버튼을 잠그며, 복원되면 함께 풀린다', async () => {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      state: { cartProductIds: ['p9'], wishlistProductIds: ['p9'] },
-      version: 1,
-    }),
-  );
+  const saved = JSON.stringify({ state: { productIds: ['p9'] }, version: 1 });
+
+  localStorage.setItem(CART_STORAGE_KEY, saved);
+  localStorage.setItem(WISHLIST_STORAGE_KEY, saved);
 
   render(
     <>
@@ -53,7 +54,8 @@ it('복원 전에는 개수를 감추고 버튼을 잠그며, 복원되면 함�
   expect(wishlistToggle).not.toHaveAttribute('aria-pressed');
 
   await act(async () => {
-    await useBoundStore.persist.rehydrate();
+    await useCartStore.persist.rehydrate();
+    await useWishlistStore.persist.rehydrate();
   });
 
   expect(headerCountText('장바구니')).toBe('장바구니 1');

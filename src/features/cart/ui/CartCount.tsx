@@ -1,9 +1,9 @@
 'use client';
 
-import { useCart } from '@/entities/client-state';
+import { useCart } from '@/entities/cart';
 
 export function CartCount() {
-  const count = useCart((cart) => cart.count);
+  const count = useCart((cart) => cart.productIds.length);
 
   // 복원 전에는 담아둔 게 있어도 0으로 보이므로, 숫자 자리를 비워두고 폭만 남긴다
   return (
