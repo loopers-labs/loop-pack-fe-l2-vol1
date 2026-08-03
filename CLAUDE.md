@@ -32,7 +32,7 @@ pnpm format:check  # Prettier 검사만
 
 ## 프로젝트 구조 — FSD 6레이어 (Next App Router)
 
-코드는 FSD(Feature-Sliced Design)의 **App → Pages → Widgets → Features → Entities → Shared** 여섯 레이어로 묶는다. 의존은 이 순서대로 상위에서 하위로만 흐른다. 같은 레이어의 다른 slice는 직접 import하지 않으며, 외부 소비자는 slice 루트의 named public API(`index.ts`)만 import한다.
+코드는 FSD(Feature-Sliced Design)의 **App → Pages → Widgets → Features → Entities → Shared** 여섯 레이어로 묶는다. 의존은 이 순서대로 상위에서 하위로만 흐른다. 같은 레이어의 다른 slice는 직접 import하지 않으며, 일반적인 외부 소비자는 slice 루트의 named public API(`index.ts`)만 import한다. Entity 간 불가피한 관계만 producer의 소비자 전용 `@x/<consumer>.ts` 진입점을 예외로 쓴다.
 
 - **루트 `app/`은 Next 경계만 둔다**: route, route handler, `error.tsx` 경계를 두는 얇은 adapter다. 화면·도메인 로직은 넣지 않고 `src/_pages` 또는 `src/_app`의 public API를 조립한다.
 - **`src/_app`은 App 레이어**: 전역 provider, 앱 bootstrap, 공통 shell을 조립한다.

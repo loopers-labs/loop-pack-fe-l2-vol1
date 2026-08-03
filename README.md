@@ -56,7 +56,7 @@ docs/assignments/                # 주차별 과제 명세
 ```
 
 - 새 화면은 `src/_pages`에서 시작한다(pages-first). UI는 `ui/`, 상태·규칙은 `model/`, 데이터 호출은 `api/` segment에 콜로케이션한다.
-- 외부 slice는 각 slice 루트의 named public API(`index.ts`)만 import한다. 내부 파일로의 deep import는 금지한다.
+- 일반적인 외부 slice 접근은 각 slice 루트의 named public API(`index.ts`)만 import한다. 내부 파일로의 deep import는 금지한다. 단, Entity 간 불가피한 관계는 producer의 소비자 전용 `@x/<consumer>.ts` 진입점만 예외로 허용한다.
 - `src/products`는 4주차 legacy slice다. 새 커머스 코드는 FSD 여섯 레이어에 추가한다.
 
 ## 왜 이렇게 했는가
@@ -66,7 +66,7 @@ docs/assignments/                # 주차별 과제 명세
 - **규칙이 구조를 강제한다**: `.dependency-cruiser.cjs`는 `pnpm depcruise`의 `depcruise src`로 `src/`만 검사한다. 따라서 FSD 규칙은 여섯 FSD 레이어에서 시작하는 edge에 적용되고, `src/products`에는 path-agnostic한 `no-circular`만 직접 적용된다. 루트 `app/**`은 scan root 밖이다.
   - **방향**: 모든 경로의 순환을 막는 `no-circular`, Shared의 독립성을 지키는 `shared-is-independent`, 그리고 상위 레이어 import를 차단하는 `fsd-no-upward-shared`, `fsd-no-upward-entities`, `fsd-no-upward-features`, `fsd-no-upward-widgets`, `fsd-no-upward-pages`가 App → Pages → Widgets → Features → Entities → Shared 방향을 고정한다.
   - **slice 격리**: `fsd-no-cross-slice`는 `_pages`·`widgets`·`features`·`entities`의 같은 레이어 내 다른 slice 직접 import를 막는다.
-  - **public API family**: slice와 Shared 진입점만 허용하는 `fsd-entry-point-only-slices`, `fsd-entry-point-only-shared-ui`, `fsd-entry-point-only-shared-api`, `fsd-entry-point-only-shared-api-shared-ui`, `fsd-entry-point-only-shared-ui-internal`, `fsd-entry-point-only-app`, `fsd-entry-point-only-app-shared-ui`가 내부 deep import를 막는다.
+  - **public API family**: 일반 slice와 Shared 진입점은 `fsd-entry-point-only-slices`, `fsd-entry-point-only-shared-ui`, `fsd-entry-point-only-shared-api`, `fsd-entry-point-only-shared-api-shared-ui`, `fsd-entry-point-only-shared-ui-internal`, `fsd-entry-point-only-app`, `fsd-entry-point-only-app-shared-ui`가 root `index.ts` 외 deep import를 막는다. Entity 간 불가피한 관계만 `fsd-no-cross-entity-slice`, `fsd-entry-point-only-entity-slices`가 producer의 소비자 전용 `@x/<consumer>.ts`를 허용한다.
 
 ## 상태 소유권
 
