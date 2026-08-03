@@ -339,3 +339,34 @@ barrel file과 Public API를 구분한다. "외부가 알아도 되는 것은 �
 ## 삭제 시나리오 자가 검증 (5단계, 마이그레이션 후 작성)
 
 과제의 두 시나리오(위시리스트 통째 제거, 신상품 뱃지 추가)에 장바구니 서버 전환 시나리오를 더해, 변경 반경이 폴더 단위로 예측되는지 검증한다.
+
+### 시나리오 1: "위시리스트 기능을 통째로 제거한다면"
+
+삭제할 폴더·파일:
+- `src/entities/wishlist/` (폴더 전체 — `wishlistStore.ts`, `wishlistStore.test.ts`)
+
+삭제 후 수정이 필요한 파일:
+- `src/app/providers.tsx` — `useWishlistStore.persist.rehydrate()` 제거
+- `src/widgets/product-card/index.tsx` — `useWishlistStore` import 및 찜 관련 props 제거
+- `src/widgets/header/index.tsx` — `useWishlistStore` import 및 wishlistCount 제거
+- `src/entities/cart/model/storeSync.test.ts` — wishlist 관련 테스트 제거
+
+판정: **응집 성공** — 삭제 대상이 `entities/wishlist/` 한 곳에 모여 있음. 수정 파일은 widgets 2개 + providers + 테스트로 grep 없이 예측 가능한 범위.
+
+### 시나리오 2: "신상품 뱃지를 상품 카드에 추가한다면"
+
+터치할 파일:
+- `src/entities/product/model/index.ts` — `Product` 타입에 `isNew: boolean` 필드 추가
+- `src/entities/product/ui/ProductCard.tsx` — 뱃지 렌더링 추가
+- `src/app/api/_data/commerce.ts` — mock 데이터에 `isNew` 필드 추가 (API route 범위)
+
+판정: **응집 성공** — `entities/product/` 안에서 완결. `features/product-filters`, `entities/cart`, `entities/wishlist`는 건드릴 필요 없음.
+
+### 시나리오 3: "장바구니를 서버 API로 전환한다면"
+
+터치할 파일:
+- `src/entities/cart/model/cartStore.ts` — Zustand local state → 서버 API 호출로 교체
+- `src/entities/cart/model/cartApi.ts` — fetch 함수 신설
+- `src/app/providers.tsx` — `persist.rehydrate()` 제거
+
+판정: **응집 성공** — `entities/cart/` 폴더 안에서 완결. `widgets/header`, `widgets/product-card`는 store 인터페이스(`items`, `addItem`, `removeItem`)만 바라보므로 내부 구현이 서버로 바뀌어도 수정 불필요.
