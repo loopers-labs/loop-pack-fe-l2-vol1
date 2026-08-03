@@ -1,0 +1,156 @@
+.page {
+  /* 상단 여백은 .page가 직접 소유한다 — 첫 자식의 margin-top(margin collapsing)에
+     기대면 첫 자식이 렌더 분기(skeleton/message/hero/section)마다 달라 여백이 들쭉날쭉해진다. */
+  padding: 24px 0 64px;
+}
+
+.section {
+  margin-top: 48px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.skeleton {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.skeletonCard {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--commerce-radius-sm);
+  background: linear-gradient(
+    100deg,
+    var(--commerce-surface) 30%,
+    var(--commerce-border) 45%,
+    var(--commerce-surface) 60%
+  );
+  background-size: 200% 100%;
+  animation: commerce-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes commerce-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonCard {
+    animation: none;
+  }
+}
+
+.message {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--commerce-muted);
+}
+
+.message button {
+  margin-left: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--commerce-border);
+  border-radius: var(--commerce-radius-pill);
+  background: transparent;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.message button:hover {
+  border-color: var(--commerce-accent);
+  color: var(--commerce-accent);
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.filters input,
+.filters select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--commerce-border);
+  border-radius: var(--commerce-radius-sm);
+  background: transparent;
+  color: inherit;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  border: 1px solid var(--commerce-border);
+  border-radius: var(--commerce-radius-pill);
+  background: transparent;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.pagination button:hover {
+  border-color: var(--commerce-accent);
+  color: var(--commerce-accent);
+}
+
+.total {
+  font-size: 0.9rem;
+  color: var(--commerce-muted);
+}
+
+@media (max-width: 960px) {
+  .grid,
+  .skeleton {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .grid,
+  .skeleton {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filters label {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid,
+  .skeleton {
+    gap: 24px 12px;
+  }
+}

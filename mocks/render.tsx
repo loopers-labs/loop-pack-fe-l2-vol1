@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactElement } from "react";
+import { Component, type ComponentProps, type ReactElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { render as rtlRender, type RenderResult } from "@testing-library/react";
@@ -11,25 +11,52 @@ export { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/re
 
 type NuqsAdapterProps = ComponentProps<typeof NuqsTestingAdapter>;
 
-type RenderOptions = Pick<NuqsAdapterProps, "searchParams" | "onUrlUpdate">;
+type RenderOptions = Pick<NuqsAdapterProps, "searchParams" | "onUrlUpdate"> & {
+  withErrorBoundary?: boolean;
+};
 
 type RenderResultWithQueryClient = RenderResult & { queryClient: QueryClient };
+
+type RenderErrorProbeProps = { children: ReactElement };
+
+type RenderErrorProbeState = { error: Error | null };
+
+class RenderErrorProbe extends Component<RenderErrorProbeProps, RenderErrorProbeState> {
+  state: RenderErrorProbeState = { error: null };
+
+  static getDerivedStateFromError(error: Error): RenderErrorProbeState {
+    return { error };
+  }
+
+  render(): ReactElement {
+    const { error } = this.state;
+
+    if (error) {
+      return <div role="alert" aria-label="렌더 오류" />;
+    }
+
+    return this.props.children;
+  }
+}
 
 // 5주차 커머스 스위트 전체가 쓰는 테스트 렌더 헬퍼.
 // hasMemory: true는 무조건 계약이다 — 꺼두면 nuqs 상태가 초기 URL로 동결되어
 // 정렬·페이지네이션 조작이 렌더에 반영되지 않는다.
 export function render(
   ui: ReactElement,
-  { searchParams, onUrlUpdate }: RenderOptions = {},
+  { searchParams, onUrlUpdate, withErrorBoundary }: RenderOptions = {},
 ): RenderResultWithQueryClient {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const renderedUi = withErrorBoundary ? <RenderErrorProbe>{ui}</RenderErrorProbe> : ui;
+  const renderOptions = withErrorBoundary ? { onCaughtError: () => undefined } : undefined;
 
   const result = rtlRender(
     <QueryClientProvider client={queryClient}>
       <NuqsTestingAdapter hasMemory searchParams={searchParams} onUrlUpdate={onUrlUpdate}>
-        {ui}
+        {renderedUi}
       </NuqsTestingAdapter>
     </QueryClientProvider>,
+    renderOptions,
   );
 
   return { ...result, queryClient };

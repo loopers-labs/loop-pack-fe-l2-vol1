@@ -1,0 +1,31 @@
+.shell {
+  --commerce-accent: #b8492f;
+  --commerce-accent-ink: #fff6f0;
+  --commerce-surface: #f1ece4;
+  --commerce-border: #ddd6ca;
+  --commerce-muted: #6b6357;
+  --commerce-radius-sm: 4px;
+  --commerce-radius-pill: 999px;
+
+  width: min(100% - 32px, 1200px);
+  margin: 0 auto;
+  padding-top: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .shell {
+    --commerce-accent: #ff8a5c;
+    --commerce-accent-ink: #241209;
+    --commerce-surface: #1c1a17;
+    --commerce-border: #33302b;
+    --commerce-muted: #9b9488;
+  }
+}
+
+.shell a:focus-visible,
+.shell button:focus-visible,
+.shell input:focus-visible,
+.shell select:focus-visible {
+  outline: 3px solid var(--commerce-accent);
+  outline-offset: 3px;
+}
