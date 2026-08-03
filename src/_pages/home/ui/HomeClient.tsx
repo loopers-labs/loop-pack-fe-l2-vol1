@@ -2,13 +2,13 @@
 
 import { useCallback } from 'react';
 import Link from 'next/link';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { homeQueryOptions } from '@/queries/homeQueries';
-import { productListQueryOptions } from '@/queries/productQueries';
-import { useWishlistStore } from '@/store/wishlistStore';
-import { useCartStore } from '@/store/cartStore';
-import { formatWon, calcDiscount } from '@/utils/format';
-import type { Product } from '@/types/commerce';
+import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query';
+import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
+import { productListQueryOptions } from '@/entities/product/api/productQueries';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
+import { useCartStore } from '@/entities/cart/model/cartStore';
+import { formatWon, calcDiscount } from '@/shared/lib/format';
+import type { Product } from '@/entities/product/model/types';
 
 function ProductCard({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
@@ -63,14 +63,7 @@ function ProductCard({ product }: { product: Product }) {
         </button>
         <button
           type="button"
-          onClick={() =>
-            addItem({
-              id: product.id,
-              name: product.name,
-              image: product.image,
-              price: product.price,
-            })
-          }
+          onClick={() => addItem(product.id)}
           className="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary transition-colors hover:bg-bg"
         >
           담기
@@ -82,7 +75,7 @@ function ProductCard({ product }: { product: Product }) {
 
 export function HomeClient() {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery(homeQueryOptions());
+  const { data } = useSuspenseQuery(homeQueryOptions());
 
   const prefetchProducts = useCallback(() => {
     void queryClient.prefetchQuery(
@@ -90,40 +83,9 @@ export function HomeClient() {
     );
   }, [queryClient]);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="size-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-          <p className="text-sm text-text-secondary">불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
+  const { banner, categories, categoryThumbnails, popularProducts, newProducts } = data;
 
-  if (isError) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">
-          {error?.message ?? '오류가 발생했습니다.'}
-        </p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const { banner, categories, popularProducts, newProducts } = data;
-
-  if (popularProducts.length === 0 && newProducts.length === 0) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">표시할 상품이 없습니다.</p>
-      </div>
-    );
-  }
-
-  const allProducts = [...popularProducts, ...newProducts];
+  const isProductsEmpty = popularProducts.length === 0 && newProducts.length === 0;
 
   return (
     <>
@@ -162,18 +124,16 @@ export function HomeClient() {
           Shop by Categories
         </h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          {categories.map((cat) => {
-            const catProduct = allProducts.find((p) => p.category === cat.id);
-            return (
+          {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/products?category=${cat.id}`}
                 className="group flex flex-col items-center gap-3"
               >
                 <div className="aspect-square w-full overflow-hidden rounded-xl bg-bg">
-                  {catProduct && (
+                  {categoryThumbnails[cat.id] && (
                     <img
-                      src={catProduct.image}
+                      src={categoryThumbnails[cat.id]}
                       alt={cat.name}
                       className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -183,13 +143,16 @@ export function HomeClient() {
                   {cat.name}
                 </span>
               </Link>
-            );
-          })}
+          ))}
         </div>
       </section>
 
       {/* 인기 상품 */}
-      {popularProducts.length > 0 && (
+      {isProductsEmpty ? (
+        <div className="flex min-h-[30vh] items-center justify-center">
+          <p className="text-sm text-text-secondary">표시할 상품이 없습니다.</p>
+        </div>
+      ) : popularProducts.length > 0 && (
         <section className="bg-bg-card py-14">
           <div className="mx-auto max-w-5xl px-8">
             <h2 className="mb-8 font-family-display text-xl font-normal text-text">
@@ -205,7 +168,7 @@ export function HomeClient() {
       )}
 
       {/* 신상품 */}
-      {newProducts.length > 0 && (
+      {!isProductsEmpty && newProducts.length > 0 && (
         <section className="mx-auto max-w-5xl px-8 py-14">
           <h2 className="mb-8 font-family-display text-xl font-normal text-text">
             신상품

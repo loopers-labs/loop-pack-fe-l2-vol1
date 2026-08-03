@@ -1,8 +1,10 @@
 import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '../getQueryClient';
-import { productListQueryOptions } from '@/queries/productQueries';
-import { ProductListContent } from './_components/ProductListContent';
+import { productListQueryOptions } from '@/entities/product/api/productQueries';
+import { CATEGORY_OPTIONS, PRODUCT_SORTS } from '@/entities/product/model/types';
+import type { CategoryOption, ProductSort } from '@/entities/product/model/types';
+import { ProductListContent } from '@/_pages/product-list/ui/ProductListContent';
 
 interface ProductListPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -14,14 +16,21 @@ export default async function ProductListPage({
   const params = await searchParams;
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchQuery(
-    productListQueryOptions({
-      q: params.q,
-      category: (params.category ?? 'all') as 'all',
-      sort: (params.sort ?? 'latest') as 'latest',
-      page: params.page ? Number(params.page) : 1,
-    }),
-  );
+  const category = (CATEGORY_OPTIONS as readonly string[]).includes(params.category ?? '')
+    ? (params.category as CategoryOption)
+    : 'all';
+  const sort = (PRODUCT_SORTS as readonly string[]).includes(params.sort ?? '')
+    ? (params.sort as ProductSort)
+    : 'latest';
+
+  const query = {
+    q: params.q,
+    category,
+    sort,
+    page: params.page ? Number(params.page) : 1,
+  };
+
+  await queryClient.ensureQueryData(productListQueryOptions(query));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useSelect } from '@/components/ui/select';
-import { ChevronIcon } from '@/components/icons/ChevronIcon';
-import { formatWon } from '@/utils/format';
-import type { SelectOption } from '@/components/ui/select';
+import { useSelect } from '@/shared/ui/select';
+import { ChevronIcon } from '@/shared/ui/icons/ChevronIcon';
+import { formatWon } from '@/shared/lib/format';
+import type { SelectOption } from '@/shared/ui/select';
 
 type OptionValue = { id: string; name: string; price: number; stock: number };
 

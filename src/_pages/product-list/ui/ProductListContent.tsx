@@ -7,12 +7,12 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query';
-import { productListQueryOptions } from '@/queries/productQueries';
-import { useWishlistStore } from '@/store/wishlistStore';
-import { useCartStore } from '@/store/cartStore';
-import { useProductSearchParams } from '../_hooks/useProductSearchParams';
-import { formatWon } from '@/utils/format';
-import type { Product, ProductListResponse } from '@/types/commerce';
+import { productListQueryOptions } from '@/entities/product/api/productQueries';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
+import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useProductSearchParams } from '../lib/useProductSearchParams';
+import { formatWon } from '@/shared/lib/format';
+import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/entities/product/model/types';
 
 function ProductActions({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
@@ -34,14 +34,7 @@ function ProductActions({ product }: { product: Product }) {
       </button>
       <button
         type="button"
-        onClick={() =>
-          addItem({
-            id: product.id,
-            name: product.name,
-            image: product.image,
-            price: product.price,
-          })
-        }
+        onClick={() => addItem(product.id)}
         className="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary transition-colors hover:bg-bg"
       >
         담기
@@ -139,7 +132,7 @@ export function ProductListContent() {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error, isFetching } = useQuery({
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     ...productListQueryOptions(query),
     placeholderData: keepPreviousData,
   });
@@ -185,9 +178,18 @@ export function ProductListContent() {
   if (isError) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">
-          {error?.message ?? '오류가 발생했습니다.'}
-        </p>
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-text-secondary">
+            {error?.message ?? '오류가 발생했습니다.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
+          >
+            다시 시도
+          </button>
+        </div>
       </div>
     );
   }
@@ -214,7 +216,7 @@ export function ProductListContent() {
         />
         <select
           value={params.category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => setCategory(e.target.value as CategoryOption)}
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
         >
           <option value="all">전체</option>
@@ -226,7 +228,7 @@ export function ProductListContent() {
         </select>
         <select
           value={params.sort}
-          onChange={(e) => setSort(e.target.value)}
+          onChange={(e) => setSort(e.target.value as ProductSort)}
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
         >
           <option value="latest">최신순</option>

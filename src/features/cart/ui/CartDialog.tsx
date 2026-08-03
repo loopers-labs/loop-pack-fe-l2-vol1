@@ -1,18 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { Dialog } from '@/components/ui/dialog';
-import { useCartStore } from '@/store/cartStore';
-import { formatWon } from '@/utils/format';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog } from '@/shared/ui/dialog';
+import { useCartStore } from '@/entities/cart/model/cartStore';
+import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
+import { formatWon } from '@/shared/lib/format';
 
 export function CartDialog() {
-  const lastAddedItem = useCartStore((s) => s.lastAddedItem);
+  const lastAddedId = useCartStore((s) => s.lastAddedId);
   const clearLastAdded = useCartStore((s) => s.clearLastAdded);
 
-  if (!lastAddedItem) return null;
+  const { data: product } = useQuery({
+    ...productDetailQueryOptions(lastAddedId ?? ''),
+    enabled: !!lastAddedId,
+  });
+
+  if (!lastAddedId || !product) return null;
 
   return (
-    <Dialog open={!!lastAddedItem} onOpenChange={() => clearLastAdded()}>
+    <Dialog open={!!lastAddedId} onOpenChange={() => clearLastAdded()}>
       <Dialog.Overlay />
       <Dialog.Content>
         <div className="w-[320px] rounded-2xl bg-bg-card p-6 shadow-lg">
@@ -23,17 +30,17 @@ export function CartDialog() {
           <div className="mt-4 flex gap-3">
             <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-bg">
               <img
-                src={lastAddedItem.image}
-                alt={lastAddedItem.name}
+                src={product.image}
+                alt={product.name}
                 className="size-full object-cover"
               />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] text-text">
-                {lastAddedItem.name}
+                {product.name}
               </p>
               <p className="mt-1 text-[14px] font-semibold text-text">
-                {formatWon(lastAddedItem.price)}
+                {formatWon(product.price)}
               </p>
             </div>
           </div>

@@ -1,10 +1,10 @@
 'use client';
 
-import { useSelect } from '@/components/ui/select';
-import { ChevronIcon } from '@/components/icons/ChevronIcon';
-import { DeliveryIcon } from '@/components/icons/DeliveryIcon';
-import type { SelectOption } from '@/components/ui/select';
-import type { SizeValue } from '@/types/commerce';
+import { useSelect } from '@/shared/ui/select';
+import { ChevronIcon } from '@/shared/ui/icons/ChevronIcon';
+import { DeliveryIcon } from '@/shared/ui/icons/DeliveryIcon';
+import type { SelectOption } from '@/shared/ui/select';
+import type { SizeValue } from '@/entities/product/model/types';
 
 interface SizeSelectProps {
   options: SelectOption<SizeValue>[];

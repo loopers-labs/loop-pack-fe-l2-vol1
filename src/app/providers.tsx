@@ -2,7 +2,7 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { CartDialog } from '@/components/CartDialog';
+import { CartDialog } from '@/features/cart/ui/CartDialog';
 import { getQueryClient } from './getQueryClient';
 
 interface ProvidersProps {

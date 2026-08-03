@@ -11,6 +11,41 @@ React 19 + Vite + TypeScript 프로젝트에서 컴포넌트를 작성하거나 
 - 렌더링에 필요한 값은 `state` 또는 props에서 직접 계산한다.
 - 파생값을 별도 `state`로 복사하지 않는다.
 - `useEffect`는 외부 시스템 동기화에만 사용한다. props/state 변화에 맞춰 값을 복사하는 용도로 쓰지 않는다.
+- 같은 값이 2곳 이상에서 필요하면 상수 한 곳에서 정의하고 참조한다. 타입도 상수 배열에서 파생한다.
+
+```tsx
+// 상수 배열에서 타입 파생
+export const PRODUCT_SORTS = ["latest", "popular", "price-asc", "price-desc"] as const;
+export type ProductSort = (typeof PRODUCT_SORTS)[number];
+
+// 나쁨: 같은 값을 여러 곳에 하드코딩
+type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
+const sortValues = ["latest", "popular", "price-asc", "price-desc"];
+parseAsStringLiteral(["latest", "popular", "price-asc", "price-desc"]);
+```
+
+- 외부 입력(URL 파라미터, API 응답)은 `as`가 아니라 런타임 검증으로 타입을 좁힌다.
+
+```tsx
+// 좋음: 런타임 검증
+category: parseAsStringLiteral(CATEGORY_OPTIONS).withDefault('all')
+
+// 나쁨: 검사 없이 단언
+category: parseAsString.withDefault('all') // → string
+params.category as CategoryOption          // → 잘못된 값 통과
+```
+
+- Server Component에서 같은 서버의 API route를 fetch하지 않는다. 데이터 함수를 직접 호출한다.
+
+```tsx
+// 좋음: 함수 직접 호출
+const data = getProductList(query);
+queryClient.setQueryData(productListQueryOptions(query).queryKey, data);
+
+// 나쁨: 서버가 자기 자신에게 HTTP 요청
+await queryClient.prefetchQuery(productListQueryOptions(query));
+// → queryFn 안에서 fetch('/api/products') → 서버에서 상대 경로 실패
+```
 
 ## 파일 내부 순서
 
@@ -189,6 +224,58 @@ src/
 | 처리하지 않은 Promise      | `await`, `void`, 명시적 에러 처리        |
 | 없는 패키지 import         | `package.json` 확인 후 사용              |
 | 조건부 hook 호출           | hook은 항상 컴포넌트 최상위에서 호출     |
+| 외부 입력에 `as` 단언      | 런타임 검증으로 좁히기. HTML 요소 값처럼 범위가 보장되는 경우는 예외 |
+
+## URL 상태 관리
+
+- URL 파라미터는 전용 훅 하나에 캡슐화한다. 파서 정의, 읽기, 변경 함수, query 변환을 훅 안에 둔다.
+- 훅은 `params`(URL 값 그대로, UI 표시용)와 `query`(API 요청에 맞게 변환)를 분리해서 반환한다.
+
+```tsx
+const query: ProductListQuery = {
+  q: params.q || undefined,  // 빈 문자열 → undefined (API에 불필요한 파라미터 제거)
+  category: params.category,
+  sort: params.sort,
+  page: params.page,
+};
+
+return { params, query, setCategory, setSort, setSearch, setPage };
+```
+
+- 필터·정렬·검색 변경 시 page를 1로 리셋하는 로직은 훅 내부에 캡슐화한다. 호출부가 page를 직접 관리하지 않는다.
+
+```tsx
+// 좋음: 훅 내부에서 page 리셋
+const setCategory = (category: CategoryOption) => {
+  void setParams({ category, page: 1 });
+};
+
+// 나쁨: 호출부에서 page 리셋을 직접 처리
+onChange={(e) => {
+  setCategory(e.target.value);
+  setPage(1);  // 빼먹으면 2페이지에서 필터 바꿨을 때 빈 결과
+}}
+```
+
+- `history: 'push'`로 설정해 뒤로가기로 이전 필터 상태를 복원한다.
+- debounce가 있는 검색 input은 uncontrolled + ref로 관리한다. URL 상태와 동기화할 때 focus 중이면 건너뛴다.
+
+```tsx
+const inputRef = useRef<HTMLInputElement>(null);
+useEffect(() => {
+  if (inputRef.current && inputRef.current !== document.activeElement) {
+    inputRef.current.value = params.q ?? '';
+  }
+}, [params.q]);
+```
+
+- URL 파라미터의 허용 값은 `parseAsStringLiteral`로 검증한다. 잘못된 값은 default로 폴백된다.
+
+## 유틸 함수 사용
+
+- `src/utils/`에 이미 존재하는 유틸 함수가 있으면 반드시 사용한다. 같은 로직을 직접 구현하지 않는다.
+  - 예: `formatWon()` 대신 `toLocaleString()`을 직접 호출하지 않는다.
+- 여러 파일에서 동일한 로직이 반복되면 유틸 함수로 추출한다.
 
 ## 유틸 함수 사용
 

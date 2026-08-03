@@ -12,7 +12,10 @@
 
 - 서버에서 오는 데이터 → 서버 상태 (추후 TanStack Query)
 - UI 전용 (모달 열림, 탭 선택) → 로컬 상태 (useState)
-- URL에 반영되어야 하는 것 (필터, 페이지, 검색어) → URL 상태
+- URL에 반영되어야 하는 것 (필터, 페이지, 검색어) → URL 상태 (nuqs)
+  - URL 파라미터는 전용 훅 하나에 캡슐화 (`useProductSearchParams` 패턴)
+  - 훅이 params(UI 표시용)와 query(API 요청용)를 분리해서 반환
+  - 필터 변경 시 page 리셋은 훅 내부에서 처리, 호출부가 신경 쓰지 않음
 - 여러 컴포넌트가 공유해야 하는 것 → Context 또는 전역 상태
 
 ## Component

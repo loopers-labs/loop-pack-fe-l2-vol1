@@ -2,16 +2,16 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { productDetailQueryOptions } from '@/queries/productQueries';
-import { useWishlistStore } from '@/store/wishlistStore';
-import { useCartStore } from '@/store/cartStore';
-import { BackIcon } from '@/components/icons/BackIcon';
-import { StarIcon } from '@/components/icons/StarIcon';
-import { formatWon, calcDiscount } from '@/utils/format';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
+import { useCartStore } from '@/entities/cart/model/cartStore';
+import { BackIcon } from '@/shared/ui/icons/BackIcon';
+import { StarIcon } from '@/shared/ui/icons/StarIcon';
+import { formatWon, calcDiscount } from '@/shared/lib/format';
 import { SizeSelect } from './SizeSelect';
-import type { SelectOption } from '@/components/ui/select';
-import type { SizeValue } from '@/types/commerce';
+import type { SelectOption } from '@/shared/ui/select';
+import type { SizeValue } from '@/entities/product/model/types';
 
 const CATEGORY_NAME: Record<string, string> = {
   casual: '캐주얼',
@@ -23,46 +23,11 @@ const CATEGORY_NAME: Record<string, string> = {
 
 export function ProductDetailContent() {
   const { id } = useParams<{ id: string }>();
-  const { data: product, isLoading, isError, error } = useQuery(
-    productDetailQueryOptions(id),
-  );
+  const { data: product } = useSuspenseQuery(productDetailQueryOptions(id));
 
-  const isWished = useWishlistStore((s) =>
-    product ? s.ids.has(product.id) : false,
-  );
+  const isWished = useWishlistStore((s) => s.ids.has(product.id));
   const toggle = useWishlistStore((s) => s.toggle);
   const addItem = useCartStore((s) => s.addItem);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="size-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-          <p className="text-sm text-text-secondary">
-            상품 정보를 불러오는 중...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !product) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-sm text-text-secondary">
-            {error?.message ?? '상품을 찾을 수 없습니다.'}
-          </p>
-          <Link
-            href="/products"
-            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
-          >
-            목록으로 돌아가기
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   const discount = product.originalPrice
     ? calcDiscount(product.originalPrice, product.price)
@@ -176,14 +141,7 @@ export function ProductDetailContent() {
             </button>
             <button
               type="button"
-              onClick={() =>
-                addItem({
-                  id: product.id,
-                  name: product.name,
-                  image: product.image,
-                  price: product.price,
-                })
-              }
+              onClick={() => addItem(product.id)}
               className="flex h-[52px] flex-1 items-center justify-center rounded-xl bg-text text-[15px] font-semibold text-bg-card transition-colors hover:bg-text/90"
             >
               장바구니 담기

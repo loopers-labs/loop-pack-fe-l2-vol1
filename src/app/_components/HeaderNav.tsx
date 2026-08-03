@@ -3,9 +3,9 @@
 import { useCallback } from 'react';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
-import { productListQueryOptions } from '@/queries/productQueries';
-import { useCartStore } from '@/store/cartStore';
-import { useWishlistStore } from '@/store/wishlistStore';
+import { productListQueryOptions } from '@/entities/product/api/productQueries';
+import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 
 export function HeaderNav() {
   const queryClient = useQueryClient();
