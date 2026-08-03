@@ -3,8 +3,8 @@
 // 첫 페인트부터 상품이 노출되어 스피너를 없애고 LCP를 개선한다.
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
-import { homeQueries } from '@/widgets/home/api/queries';
-import { HomeContent } from '@/widgets/home/ui/HomeContent';
+import { homeQueries } from '@/_pages/home/api/queries';
+import { HomeContent } from '@/_pages/home/ui/HomeContent';
 import { makeQueryClient } from '@/shared/api/queryClient';
 
 const Home = async () => {

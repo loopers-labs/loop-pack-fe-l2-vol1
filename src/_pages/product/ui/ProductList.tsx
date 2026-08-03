@@ -10,6 +10,7 @@ import { Header } from '@/widgets/header/Header';
 import { ProductCard } from '@/widgets/product-card/ProductCard';
 import { useProductPage } from '../model/useProductPage';
 import { useProductList } from '../model/useProductList';
+import { Product } from '@/entities/product/model';
 
 export const ProductList = () => {
   const {
@@ -42,7 +43,7 @@ export const ProductList = () => {
       <>
         <p>총 {totalCount.toLocaleString()}개</p>
         <div className="grid">
-          {data?.products.map((product) => (
+          {data?.products.map((product: Product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

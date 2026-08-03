@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CategoryId } from '@/entities/product/model';
-import { homeQueries } from '@/widgets/home/api/queries';
-import { HomeCategory } from '@/widgets/home/model';
+import { homeQueries } from '@/_pages/home/api/queries';
+import { HomeCategory } from '@/_pages/home/model';
 import { ProductCard } from '@/widgets/product-card/ProductCard';
 import { Header } from '@/widgets/header/Header';
 import { productQueries } from '@/entities/product/api/queries';

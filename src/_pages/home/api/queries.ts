@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import { apiFetch } from '@/shared/api/fetcher';
 import type { MockApiScenario } from '@/shared/types/api';
-import type { HomeResponse } from '@/widgets/home/model';
+import type { HomeResponse } from '@/_pages/home/model';
 
 // [AI] scenario 쿼리 파라미터를 받아 /api/home?scenario=<value> 형태로 페칭한다.
 export const fetchHome = (scenario?: MockApiScenario) =>
