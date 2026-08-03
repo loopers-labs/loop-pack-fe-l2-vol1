@@ -77,7 +77,7 @@ app -> views -> widgets -> features -> entities -> shared
 - `shared`가 `features`를 import
 - `entities/product`가 `features/add-to-cart`를 import
 - `features/search`가 `widgets/header`를 import
-- 서로 다른 slice의 내부 파일을 deep import
+- 서로 다른 slice의 공개되지 않은 내부 파일을 임의로 import
 
 ## slice와 segment
 
@@ -85,7 +85,6 @@ app -> views -> widgets -> features -> entities -> shared
 
 ```txt
 src/features/add-to-cart/
-  index.ts
   ui/
   model/
   api/
@@ -112,14 +111,14 @@ segment는 필요할 때만 만든다. 비어 있는 관성적 폴더를 만들�
 
 ```txt
 src/features/add-to-cart/ui/add-to-cart-button/
-  index.ts
+  index.ts                       # 선택적 컴포넌트 공개 경계
   add-to-cart-button.tsx
   add-to-cart-button.types.ts
   add-to-cart-button.constants.ts
   add-to-cart-button.utils.ts
 ```
 
-폴더로 승격한 뒤에도 외부 공개 계약은 폴더의 `index.ts`에서 필요한 것만 명시적으로 export한다. 내부 타입, 상수, 유틸리티, 보조 컴포넌트는 외부에서 직접 import하지 않는다.
+폴더로 승격한 컴포넌트의 외부 공개 계약은 해당 컴포넌트 폴더의 `index.ts`에서 필요한 named export만 명시할 수 있다. 이것이 이 저장소에서 허용하는 유일한 `index.ts` 공개 경계다. 내부 타입, 상수, 유틸리티, 보조 컴포넌트는 외부에서 직접 import하지 않는다.
 
 폴더 승격 기준:
 
@@ -164,13 +163,13 @@ src/entities/product/api/
   ProductService.ts       # Query 설정 계층 (queryOptions, queryKeyFactory)
 ```
 
-entity의 `index.ts`에서 Service 인스턴스를 export한다. 사용처는 인스턴스를 직접 import해 사용하고, 테스트나 커스텀 구성이 필요할 때는 클래스를 import해 별도 인스턴스를 만든다.
+entity root에는 Public API용 `index.ts`를 만들지 않는다. Service 인스턴스와 클래스는 실제 모듈 파일에서 named export하고, 사용처는 파일 경로를 직접 import한다. 테스트나 커스텀 구성이 필요할 때도 같은 파일에서 클래스를 import해 별도 인스턴스를 만든다.
 
 ```ts
-// src/entities/product/index.ts
-import { ProductService } from './api/service'
-
-export const productEntity = new ProductService()
+import {
+  ProductService,
+  productEntity,
+} from '@/entities/product/api/ProductService'
 ```
 
 왜 정적 메서드 대신 인스턴스를 쓰는가:
@@ -200,7 +199,7 @@ src/entities/product/
 
 ## 직접 import (배럴 익스포트 비사용)
 
-이 저장소는 `index.ts` 배럴 익스포트를 사용하지 않는다. slice 외부에서는 모듈의 실제 파일 경로를 직접 import한다.
+이 저장소는 slice root와 entity root에 `index.ts` 배럴 익스포트를 사용하지 않는다. slice 외부에서는 모듈의 실제 파일 경로를 직접 import한다. 폴더로 승격한 컴포넌트 내부의 `index.ts`만 필요한 named export를 모으는 공개 경계로 선택할 수 있으며, 그 외 모듈은 직접 import한다.
 
 ```ts
 // 권장
@@ -215,7 +214,7 @@ import { useCartStore } from '@/features/cart'
 
 이유:
 
-- `index.ts`가 없으면 IDE에서 "Go to Definition"이 실제 파일로 바로 이동한다.
+- root `index.ts`가 없으면 IDE에서 "Go to Definition"이 실제 파일로 바로 이동한다.
 - 트리쉐이킹이 불확실해지는 문제를 피한다.
 - 사용하지 않는 export가 번들에 포함되는 것을 막는다.
 - slice의 공개 계약이 파일 시스템 구조로 드러나며, 변경 시 import 경로가 명시적으로 바뀌어 영향 범위가 보인다.
@@ -234,8 +233,8 @@ FSD 위반 여부를 볼 때는 다음 질문을 사용한다.
 
 - 이 파일의 책임이 레이어 이름과 일치하는가?
 - 상위 레이어를 하위 레이어에서 import하지 않았는가?
-- 다른 slice의 내부 구현을 deep import하지 않았는가?
-- `index.ts` 배럴 익스포트를 만들지 않았는가?
+- 공개되지 않은 다른 slice의 내부 구현을 import하지 않았는가?
+- slice/entity root에 `index.ts` 배럴 익스포트를 만들지 않았는가?
 - 직접 파일 경로로 import하는가?
 - 컴포넌트가 화면 조립, 도메인 로직, 공용 유틸 책임을 동시에 갖고 있지 않은가?
 - 상태와 상태를 사용하는 로직이 컴포넌트 본문에 남아 있지 않고 커스텀 훅으로 분리되어 있는가?

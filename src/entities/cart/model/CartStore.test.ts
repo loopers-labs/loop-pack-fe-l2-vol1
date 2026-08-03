@@ -1,4 +1,37 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+
+const { storage } = vi.hoisted(() => {
+  const storage = new Map<string, string>()
+
+  const localStorage = {
+    clear: () => {
+      storage.clear()
+    },
+    getItem: (key: string) => storage.get(key) ?? null,
+    key: (index: number) => Array.from(storage.keys())[index] ?? null,
+    get length() {
+      return storage.size
+    },
+    removeItem: (key: string) => {
+      storage.delete(key)
+    },
+    setItem: (key: string, value: string) => {
+      storage.set(key, value)
+    },
+  }
+
+  vi.stubGlobal('localStorage', localStorage)
+
+  return { storage }
+})
 
 import { cartSelectors, useCartStore } from './CartStore'
 
@@ -6,9 +39,22 @@ const resetCart = () => {
   useCartStore.setState({ items: {} })
 }
 
+const persistCartState = (items: Record<string, boolean>) => {
+  storage.set('commerce-cart', JSON.stringify({ state: { items }, version: 1 }))
+}
+
 describe('CartStore actions', () => {
   beforeEach(() => {
+    storage.clear()
     resetCart()
+  })
+
+  afterEach(() => {
+    storage.clear()
+  })
+
+  afterAll(() => {
+    vi.unstubAllGlobals()
   })
 
   it('addToCart adds productId to items', () => {
@@ -50,6 +96,30 @@ describe('CartStore actions', () => {
     addToCart('p1')
     addToCart('p2')
     clearCart()
+    expect(useCartStore.getState().items).toEqual({})
+  })
+
+  it('rehydrate restores valid current-version items and preserves actions', async () => {
+    persistCartState({ p1: true })
+
+    await useCartStore.persist.rehydrate()
+
+    expect(useCartStore.getState().items).toEqual({ p1: true })
+
+    const { addToCart: hydratedAddToCart } = useCartStore.getState()
+
+    expect(typeof hydratedAddToCart).toBe('function')
+
+    hydratedAddToCart('p2')
+
+    expect(useCartStore.getState().items).toEqual({ p1: true, p2: true })
+  })
+
+  it('rehydrate falls back to an empty state for corrupted current-version items', async () => {
+    persistCartState({ p1: false })
+
+    await useCartStore.persist.rehydrate()
+
     expect(useCartStore.getState().items).toEqual({})
   })
 })

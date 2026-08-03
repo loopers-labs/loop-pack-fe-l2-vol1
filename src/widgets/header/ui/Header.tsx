@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 
-import { cartSelectors, useCartStore } from '@/features/cart/model/CartStore'
+import { cartSelectors, useCartStore } from '@/entities/cart/model/CartStore'
 import {
   useWishlistStore,
   wishlistSelectors,
-} from '@/features/wishlist/model/WishlistStore'
+} from '@/entities/wishlist/model/WishlistStore'
 import { useHydratePersistedStore } from '@/shared/lib/useHydratePersistedStore'
 
 export function Header() {

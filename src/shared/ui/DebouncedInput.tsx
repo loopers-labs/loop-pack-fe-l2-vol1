@@ -2,12 +2,10 @@
 
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 
-import { useDebouncedValue } from '@/shared/lib/useDebouncedValue'
-
 const DEFAULT_DEBOUNCE_MS = 300
 
 type DebouncedInputProps = {
-  initialValue: string
+  value: string
   onDebouncedChange: (value: string) => void
   debounceMs?: number
   label: ReactNode
@@ -17,7 +15,7 @@ type DebouncedInputProps = {
 }
 
 export function DebouncedInput({
-  initialValue,
+  value,
   onDebouncedChange,
   debounceMs = DEFAULT_DEBOUNCE_MS,
   label,
@@ -25,17 +23,36 @@ export function DebouncedInput({
   placeholder,
   className,
 }: DebouncedInputProps) {
-  const [draft, setDraft] = useState(initialValue)
-  const debounced = useDebouncedValue(draft, debounceMs)
+  const [prevValue, setPrevValue] = useState(value)
+  const [draft, setDraft] = useState(value)
+
+  // Sync draft to external value changes (browser nav, own emission
+  // returning). Adjusting during render avoids a stale frame between
+  // the value change and an effect firing.
+  if (value !== prevValue) {
+    setPrevValue(value)
+    setDraft(value)
+  }
 
   const onDebouncedChangeRef = useRef(onDebouncedChange)
   useEffect(() => {
     onDebouncedChangeRef.current = onDebouncedChange
   }, [onDebouncedChange])
 
+  // When draft differs from value (the external source of truth),
+  // schedule emission after a full debounceMs. Each draft change
+  // resets the timer, so only the final settled value emits.
   useEffect(() => {
-    onDebouncedChangeRef.current(debounced)
-  }, [debounced])
+    if (draft === value) {
+      return
+    }
+    const timer = setTimeout(() => {
+      onDebouncedChangeRef.current(draft)
+    }, debounceMs)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [draft, value, debounceMs])
 
   return (
     <label className="flex flex-col gap-1">

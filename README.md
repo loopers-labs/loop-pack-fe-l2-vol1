@@ -22,15 +22,23 @@ pnpm dev
 ```txt
 src/
   app/                           # Next App Router entry
-    _components/
-      dialog-demos/              # Dialog demo components and tokenized styles
-      DialogDemos.client.tsx
-      select-demos/              # Select demo options, renderers, styles
-      SelectDemos.client.tsx
+    api/
+      _data/
+        commerce.ts
+      home/
+        route.ts
+      products/
+        route.ts
+    products/
+      error.tsx
+      loading.tsx
+      page.tsx
+    error.tsx
     favicon.ico
     globals.css
     layout.tsx
     page.tsx
+    providers.tsx
   shared/
     ui/
       select/                    # Select (Headless) — 4주차 1단계
@@ -41,7 +49,7 @@ src/
 docs/assignments/                # 주차별 과제 명세
 ```
 
-> Next entry와 Select/Dialog 예시는 `src/app`에, 재사용 가능한 UI 구현은 `src/shared/ui`에 둡니다.
+> Next entry와 라우트 파일은 `src/app`에, 재사용 가능한 UI와 도메인 기능은 하위 FSD 레이어에 둡니다.
 
 ## 주차별 과제
 
@@ -127,7 +135,7 @@ pnpm build
 | 검색어(q)                                                | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 검색 조건의 원본은 URL. 공유·새로고침·뒤로 가기로 같은 결과가 복원되어야 한다                             |
 | 카테고리(category)                                       | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 홈의 카테고리 링크로 진입하거나 공유 링크로 복원되어야 한다                                               |
 | 정렬(sort)                                               | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 정렬 조건도 공유·복원 대상. 기본값 `latest`를 URL에 명시해 API 요청과 항상 일치시킨다                     |
-| 페이지(page)                                             | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | 페이지 위치도 복원 대상. 검색·카테고리·정렬이 바뀌면 1로 돌아간다                                         |
+| 페이지(page)                                             | nuqs(URL 상태)                                 | URL 수명                                  | 공유·새로고침·앞뒤 이동 복원         | `page`는 양의 정수만 허용해 그 외 값은 `1`로 정규화한다. 검색·카테고리·정렬이 바뀌면 1로 돌아간다         |
 | 비로그인 장바구니(cart)                                  | Zustand(전역 클라이언트 상태)                  | 세션 수명, persist로 새로고침 후 복원     | 홈·목록(헤더 카운트, 상품 담기 버튼) | 여러 페이지에서 함께 쓰는 비로그인 사용자의 로컬 상태. 서버 원본이 없는 동안 Zustand가 임시 소유자다      |
 | 비로그인 위시리스트(wishlist)                            | Zustand(전역 클라이언트 상태)                  | 세션 수명, persist로 새로고침 후 복원     | 홈·목록(헤더 카운트, 상품 찜 버튼)   | 장바구니와 동일한 근거. 서버 동기화가 생기면 소유권이 서버로 이동한다                                     |
 | 모달·드롭다운 열림 여부                                  | React 로컬 상태                                | 컴포넌트 수명                             | 해당 컴포넌트                        | 한 화면에서만 쓰는 일시적 UI 상태. 공유·복원 필요가 없으므로 전역에 두지 않는다                           |
@@ -149,13 +157,13 @@ pnpm build
 ### 전역으로 올리지 않은 상태
 
 - **모달·드롭다운 열림 여부** — 한 화면에서만 쓰는 일시적 UI 상태는 React 로컬 상태로 둔다. 전역 store에 넣으면 불필요한 리렌더와 store 복잡도만 증가한다.
-- **검색 입력 초안** — URL 상태와 동기화해야 하는 최종 검색어는 nuqs로 두되, 타이핑 중인 초안은 컴포넌트 로컬 상태로 다루어 매 입력마다 URL이 바뀌지 않게 한다(필요 시 debounce 적용).
+- **검색 입력 초안** — URL 상태와 동기화해야 하는 최종 검색어는 nuqs로 두되, 타이핑 중인 초안은 컴포넌트 로컬 상태로 다루어 매 입력마다 URL이 바뀌지 않게 한다. 외부에서 URL이 바뀌면(앞뒤 이동, 컴포넌트가 직접 반영한 URL 변경이 다시 돌아오는 경우) draft를 재마운트 없이 조용히 따라가고, 자체 debounce는 포커스를 유지한다.
 - **계산 가능한 값** — 헤더의 장바구니/위시리스트 개수, 할인 여부, 품절 여부 등은 별도 상태로 중복 저장하지 않고 파생한다.
 
 ### Zustand store 데이터 형태와 selector 경계
 
 - **데이터 형태** — `cart: Record<productId, true>`, `wishlist: Record<productId, true>`로 productId 집합만 저장한다. 상품 상세 정보는 TanStack Query 캐시에서 가져오고 store에 복사하지 않는다.
-- **selector 경계** — Header는 `cartCount`, `wishlistCount` 파생값만 구독한다. 상품 버튼은 `useIsInCart(productId)`, `useIsInWishlist(productId)`로 해당 상품 포함 여부만 구독하고 action(`addToCart`, `removeFromCart`, `toggleWishlist`)은 별도 selector로 가져온다.
+- **selector 경계** — Header는 `cartSelectors.count` / `wishlistSelectors.count`로 파생 개수만 구독한다. 상품 버튼은 `cartSelectors.isInCart(productId)` / `wishlistSelectors.isInWishlist(productId)`로 해당 상품 포함 여부만 구독하고, action(`addToCart` / `removeFromCart`, `toggleWishlist`)은 `useCartStore((state) => state.addToCart)`처럼 컴포넌트 내부에서 별도 selector로 따로 가져온다.
 
 ### 로그인·서버 동기화가 생기면
 
@@ -167,21 +175,21 @@ pnpm build
 
 - **저장 대상** — `partialize`로 `items`만 영속화한다. actions과 selector는 store 인스턴스에 묶여있어 저장할 필요 없다.
 - **저장 키·버전** — `commerce-cart` / `commerce-wishlist`, `version: 1`. 버전이 바뀌면 `migrate`가 실행된다.
-- **복구 전략** — `migrate`는 `unknown`을 받아 Zod(`z.record(z.string(), z.literal(true))`)로 검증한다. 스키마를 통과하면 저장값을 그대로 쓰고, 깨지거나 오래된 값이면 빈 상태(`{ items: {} }`)로 폴백한다. 사용자가 손으로 localStorage를 바꿔도 앱이 깨지지 않는다.
+- **복구 전략** — `migrate`는 `unknown`을 받아 Zod(`z.record(z.string(), z.literal(true))`)로 검증한다. 스키마를 통과하면 저장값을 그대로 쓰고, 깨지거나 오래된 값이면 빈 상태(`{ items: {} }`)로 폴백한다. 같은 Zod 검증은 `merge`에서도 매 rehydration마다 `mergeCartState` / `mergeWishlistState`를 통해 다시 돌기 때문에 현재 버전에서 값이 깨진 경우(예: `items`에 `false`나 객체가 들어간 경우)에도 빈 상태로 폴백한다. 사용자가 손으로 localStorage를 바꿔도 앱이 깨지지 않는다.
 - **Hydration mismatch** — `skipHydration: true`로 두고, 클라이언트에서만 `useHydratePersistedStore` 훅이 `store.persist.rehydrate()`를 호출한다. SSR 시점엔 항상 빈 상태를 렌더하고 클라이언트 마운트 후 영속 상태를 끌어올려 Next.js hydration 불일치를 회피한다. 이 훅은 `hasHydrated()`로 idempotent하게 동작한다.
 - **호출 지점** — Header(root layout에 있음)에서 cart·wishlist 두 store를 한 번씩 hydrate한다. ProductCard는 hydration 후 selector가 자동 리렌더하므로 별도 호출이 필요 없다.
 - **로그인·서버 동기화와의 관계** — 영속화는 어디까지나 비로그인 사용자의 로컬 익명 상태를 보존하기 위한 임시 수단이다. 서버가 위시리스트 원본을 소유하게 되면 persist를 걷어내고 TanStack Query로 대체한다. 이때 마이그레이션은 "로컬 익명 상태를 계정 데이터에 합칠지 버릴지"라는 정책 결정으로 바뀐다.
 
 ### Advanced D — 테스트
 
-과제의 핵심 상태 계약 4가지를 자동화 테스트로 보호한다. `vitest` 환경은 `environment: 'node'`로 두고, DOM·React 렌더링·실제 URL hydration이 필요한 검증은 Playwright 영역으로 분리했다.
+과제의 핵심 상태 계약은 자동화 테스트와 브라우저 route-sync 확인으로 나누어 보호한다. `vitest` 환경은 `environment: 'node'`로 두고, DOM·React 렌더링·실제 URL hydration이 필요한 검증은 dev 서버를 띄운 뒤 수동으로 확인한다.
 
-- **Zustand action + selector** — `src/features/cart/model/CartStore.test.ts`, `src/features/wishlist/model/WishlistStore.test.ts`. addToCart·removeFromCart·clearCart·toggleWishlist 액션이 items 집합을 의도대로 변경하는지, cartSelectors.count·isInCart·wishlistSelectors.count·isInWishlist가 store state에서 올바르게 파생되는지 검증한다. 개수를 별도 상태로 저장하지 않고 파생한다는 과제 계약을 테스트가 보호한다.
+- **Zustand action + selector** — `src/entities/cart/model/CartStore.test.ts`, `src/entities/wishlist/model/WishlistStore.test.ts`. addToCart·removeFromCart·clearCart·toggleWishlist 액션이 items 집합을 의도대로 변경하는지, cartSelectors.count·isInCart·wishlistSelectors.count·isInWishlist가 store state에서 올바르게 파생되는지 검증한다. 개수를 별도 상태로 저장하지 않고 파생한다는 과제 계약을 테스트가 보호한다.
 - **Header 개수 파생** — count selector가 items 길이를 반환하고 추가·제거에 따라 정확히 증감하는지 검증한다. Header가 별도 count 상태를 두지 않는다는 계약을 보호.
 - **nuqs URL 조건 ↔ query key 일치** — `src/features/product-filter/model/useProductFilters.test.ts`에서 `productFilterParsers`의 기본값(q='', category='all', sort='latest', page=1)과 enum을 검증하고, `src/entities/product/api/ProductService.test.ts`에서 `queryKeyFactory.product.list(query)`가 ProductListQuery 전체를 key에 반영하는지, q·category·sort·page·pageSize 각 변경이 key를 바꾸는지, 동일 쿼리는 동일 key를 반환하는지, scenario가 key에 들어가지 않는지 검증한다.
-- **홈·목록 store 동기화** — `src/features/store-sync.test.ts`에서 `useCartStore`/`useWishlistStore`가 모듈 싱글톤임을 검증하고, 한 곳에서 변경하면 같은 인스턴스를 읽는 다른 곳에서 즉시 반영됨을 확인한다. 두 view가 같은 store를 공유한다는 계약을 보호.
+- **홈·목록 store 동기화** — cart/wishlist entity 테스트가 각 store의 action·selector 계약을 보호하고, 홈·목록이 같은 store를 공유하는지와 route 전환 중 상태가 유지되는지는 dev 서버를 통한 브라우저 route-sync 흐름으로 확인한다. 별도의 자동화 store-sync 테스트 파일은 두지 않는다.
 
-**테스트 경계** — 단위 테스트는 순수 로직과 타입 계약만 검증한다. React 렌더링 결과, nuqs의 실제 URL 동기화, hydration 시점의 store 값 변화, 페이지 전환 중 카운트 유지는 Playwright로 검증한다(`검증 결과` 섹션). 이 경계를 둔 이유는 단위 테스트가 DOM·Next.js 라우터 없이 빠르게 돌고 상태 계약 자체를 명확히 검증하며, UI 흐름은 실제 브라우저에서 확인하는 쪽이 신뢰도가 높기 때문이다.
+**테스트 경계** — 단위 테스트는 순수 로직과 타입 계약만 검증한다. React 렌더링 결과, nuqs의 실제 URL 동기화, hydration 시점의 store 값 변화, 페이지 전환 중 카운트 유지는 dev 서버를 띄운 뒤 수동으로 확인한다(`검증 결과` 섹션). 이 경계를 둔 이유는 단위 테스트가 DOM·Next.js 라우터 없이 빠르게 돌고 상태 계약 자체를 명확히 검증하며, UI 흐름은 실제 라우터와 마운트 타이밍 위에서 확인하는 쪽이 신뢰도가 높기 때문이다.
 
 `productFilterParsers`를 useProductFilters.ts에서 export하도록 리팩터링한 이유는, 훅이 아닌 parser 객체 자체를 단위 테스트에서 직접 검증하기 위해서다. 훅은 DOM/React가 필요하지만 parser 계약(기본값·enum)은 순수 객체 검증으로 충분하다.
 
@@ -189,12 +197,12 @@ pnpm build
 
 - **URL 공유**: `?category=fashion&q=stan&page=2` 링크를 새 탭에서 열면 같은 검색·카테고리·정렬·페이지 조건이 복원되고 동일한 상품 목록이 표시된다. ✅
 - **새로고침**: 현재 URL의 검색·카테고리·정렬·페이지가 모두 유지된다. nuqs가 URL에서 상태를 재수신(hydrate)한다. ✅
-- **앞뒤 이동**: `?q=sta` → `?q=stanley` 순으로 변경한 뒤 뒤로 가면 `?q=sta`로 URL과 input 값이 모두 복원된다(Playwright로 확인). ✅
-- **검색 debounce**: 3글자를 100ms 안에 빠르게 입력하면 입력 직후엔 URL이 바뀌지 않고, 멈춘 뒤 300ms 후 `?q=sta`로 한 번만 갱신된다. 매 키스트로크마다 URL이 바뀌지 않는다(Playwright로 확인). ✅
-- **페이지네이션**: totalCount=30, pageSize=12일 때 `1 / 3`에서 다음 버튼 활성, `2 / 3`에서 양쪽 활성, `3 / 3`에서 다음 비활성. URL `?page=N`이 동기화된다(Playwright로 확인). ✅
+- **앞뒤 이동**: `?q=sta` → `?q=stanley` 순으로 변경한 뒤 뒤로 가면 `?q=sta`로 URL과 input 값이 모두 복원된다(수동 확인). ✅
+- **검색 debounce**: 3글자를 100ms 안에 빠르게 입력하면 입력 직후엔 URL이 바뀌지 않고, 멈춘 뒤 300ms 후 `?q=sta`로 한 번만 갱신된다. 매 키스트로크마다 URL이 바뀌지 않는다(수동 확인). ✅
+- **페이지네이션**: totalCount=30, pageSize=12일 때 `1 / 3`에서 다음 버튼 활성, `2 / 3`에서 양쪽 활성, `3 / 3`에서 다음 비활성. URL `?page=N`이 동기화된다(수동 확인). ✅
 - **store 일관성**: 홈에서 담은 상품이 목록의 헤더 카운트와 상품 버튼 상태에 즉시 반영된다. Zustand store가 단일 인스턴스이므로 두 화면이 같은 상태를 공유한다. ✅
 - **클라이언트 페이지 이동**: 홈→목록→홈 이동 중 장바구니·위시리스트 상태와 헤더 개수가 유지된다. Header를 root layout으로 옮겨 라우트 전환에도 카운트가 초기화되지 않는다. ✅
-- **영속화(persist)**: 상품을 담거나 찜한 뒤 새로고침하면 헤더 카운트와 상품 버튼 상태가 그대로 복원된다. localStorage를 직접 지우면 빈 상태로 돌아간다. 잘못된 값(예: `items`에 `false` 또는 객체)을 주입해도 `migrate`의 Zod 검증이 빈 상태로 폴백해 앱이 깨지지 않는다. ✅
+- **영속화(persist)**: 상품을 담거나 찜한 뒤 새로고침하면 헤더 카운트와 상품 버튼 상태가 그대로 복원된다. localStorage를 직접 지우면 빈 상태로 돌아간다. 잘못된 값(예: `items`에 `false` 또는 객체)을 주입해도 `migrate`와 rehydration 시 `merge`가 같은 Zod 검증을 다시 돌려 빈 상태로 폴백해 앱이 깨지지 않는다. ✅
 - **hydration 일치**: SSR HTML은 항상 빈 카운트로 렌더하고, 클라이언트 마운트 후 `useHydratePersistedStore`가 `rehydrate()`를 호출해 영속 상태를 반영한다. React hydration 경고가 발생하지 않는다. ✅
 
 ### AI 활용

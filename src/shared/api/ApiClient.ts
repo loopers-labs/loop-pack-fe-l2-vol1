@@ -1,33 +1,18 @@
 import { default as ky, HTTPError } from 'ky'
 
-import type { ApiErrorResponse } from '@/shared/api/ApiErrorResponse'
+import { ApiErrorResponseSchema } from '@/shared/api/ApiErrorResponse'
+
+const API_ERROR_FALLBACK_MESSAGE = '요청 중 오류가 발생했습니다.'
 
 export class ApiClientError extends Error {
+  readonly name = 'ApiClientError'
+
   constructor(
     message: string,
     readonly status: number,
   ) {
     super(message)
-    this.name = 'ApiClientError'
   }
-}
-
-const parseErrorBody = async (
-  response: Response,
-): Promise<ApiErrorResponse | null> => {
-  try {
-    return (await response.json()) as ApiErrorResponse
-  } catch {
-    return null
-  }
-}
-
-const toApiClientError = async (error: HTTPError): Promise<ApiClientError> => {
-  const body = await parseErrorBody(error.response)
-  return new ApiClientError(
-    body?.message ?? '요청 중 오류가 발생했습니다.',
-    error.response.status,
-  )
 }
 
 /**
@@ -36,11 +21,16 @@ const toApiClientError = async (error: HTTPError): Promise<ApiClientError> => {
  * baseURL을 두지 않고 상대 경로를 사용해 클라이언트/서버 양쪽에서 동작한다.
  */
 export const apiClient = ky.create({
+  retry: 0,
   hooks: {
     beforeError: [
-      async (state) => {
+      (state) => {
         if (state.error instanceof HTTPError) {
-          throw await toApiClientError(state.error)
+          const result = ApiErrorResponseSchema.safeParse(state.error.data)
+          return new ApiClientError(
+            result.success ? result.data.message : API_ERROR_FALLBACK_MESSAGE,
+            state.error.response.status,
+          )
         }
         return state.error
       },

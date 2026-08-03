@@ -1,19 +1,21 @@
-'use client'
-
 import Image from 'next/image'
+import type { ReactNode } from 'react'
 
 import type { Product } from '@/entities/product/model/types'
-import { AddToCartButton } from '@/features/cart/ui/AddToCartButton'
-import { ToggleWishlistButton } from '@/features/wishlist/ui/ToggleWishlistButton'
 
 type ProductCardProps = {
-  product: Product
-  priority?: boolean
+  readonly product: Product
+  readonly priority?: boolean
+  readonly actions?: ReactNode
 }
 
 const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function ProductCard({
+  product,
+  priority = false,
+  actions,
+}: ProductCardProps) {
   const discountRate =
     product.originalPrice !== null
       ? Math.round((1 - product.price / product.originalPrice) * 100)
@@ -50,13 +52,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </>
         )}
       </div>
-      <div className="flex gap-2">
-        <ToggleWishlistButton
-          productId={product.id}
-          productName={product.name}
-        />
-        <AddToCartButton productId={product.id} productName={product.name} />
-      </div>
+      <div className="flex gap-2">{actions}</div>
     </article>
   )
 }

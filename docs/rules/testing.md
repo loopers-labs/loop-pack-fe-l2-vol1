@@ -5,18 +5,24 @@
 ## 기본 명령
 
 ```bash
+pnpm test
+pnpm test:watch
 pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm build
+pnpm check
 ```
 
 각 명령의 의미:
 
+- `pnpm test`: `vitest run`으로 Vitest 테스트를 한 번 실행하고 종료한다.
+- `pnpm test:watch`: `vitest`를 watch 모드로 실행해 로컬 개발 중 변경을 감시한다.
 - `pnpm format:check`: Prettier 포맷 위반 확인
 - `pnpm lint`: ESLint 규칙 위반 확인
 - `pnpm typecheck`: Next 단일 TypeScript 프로젝트 타입 검사
 - `pnpm build`: Next production 빌드
+- `pnpm check`: `pnpm test && pnpm lint && pnpm typecheck && pnpm build`를 이 순서로 실행한다. 앞 단계가 실패하면 뒤 단계는 실행하지 않는다.
 
 ## 변경 유형별 기준
 
@@ -45,16 +51,14 @@ pnpm build
 - 변경한 설정이 영향을 주는 명령을 직접 실행한다.
 - ESLint/Prettier/TypeScript 설정 변경은 각각 `pnpm lint`, `pnpm format:check`, `pnpm typecheck`로 검증한다.
 
-## 테스트가 아직 없는 경우
+## 테스트 파일과 범위
 
-현재 저장소에는 별도 test script가 없다. 새 테스트 러너를 도입할 때는 다음을 함께 문서화한다.
+Vitest는 `vitest.config.ts`의 `environment: 'node'`에서 실행한다. 테스트 파일은 순수 로직과 타입 계약을 중심으로 작성한다.
 
-- test script 이름
-- 테스트 파일 위치 규칙
-- unit/integration/e2e 범위
-- CI 또는 Git hook 연결 여부
+- DOM·React 렌더링, 실제 URL 동기화, hydration 시점의 값 변화, 페이지 전환 중 상태 유지는 dev 서버를 띄운 뒤 브라우저에서 확인한다.
+- 테스트 러너 스크립트는 `package.json`의 `test`, `test:watch`, `check`를 source of truth로 삼는다.
 
-테스트가 없다는 이유로 lint/type/build 검증을 생략하지 않는다.
+테스트가 없는 영역이 있더라도 lint/type/build 검증을 생략하지 않는다.
 
 ## 실패 처리
 

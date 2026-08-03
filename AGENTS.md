@@ -14,7 +14,7 @@
 - 코드 작성 방식, React/TypeScript 스타일, export 기준, 런타임 입력 검증 기준이 필요하면 `docs/rules/conventions.md`를 본다.
 - ESLint, Prettier, TypeScript 규칙의 의도나 금지 패턴을 확인해야 하면 `docs/rules/lint-and-format.md`를 본다.
 - 커밋 메시지 형식과 Git hook 게이트를 확인해야 하면 `docs/rules/commit-and-pr.md`를 본다.
-- 기능 배치, FSD 레이어, slice public API, `index.ts` export 기준이 필요하면 `docs/rules/fsd-architecture.md`를 본다. 이 저장소는 배럴 익스포트(`index.ts`)를 사용하지 않고 직접 파일 경로로 import한다.
+- 기능 배치, FSD 레이어, slice public API, `index.ts` export 기준이 필요하면 `docs/rules/fsd-architecture.md`를 본다. 이 저장소는 slice/entity root에 배럴 익스포트(`index.ts`)를 사용하지 않고 직접 파일 경로로 import한다. 단, 폴더로 승격한 컴포넌트 내부에서는 필요한 named export만 `index.ts`로 공개할 수 있다.
 - UI, form, interaction, loading/error/empty state를 바꾸면 `docs/rules/accessibility.md`를 본다.
 - 작업 완료 전 어떤 명령으로 검증할지 판단해야 하면 `docs/rules/testing.md`를 본다.
 - 변경 범위를 감사하거나 리뷰 기준을 맞춰야 하면 `docs/rules/audit.md`를 본다. OpenCode가 아닌 환경에서는 해당 문서와 `.opencode/agents/*.md`의 기준을 직접 적용한다.

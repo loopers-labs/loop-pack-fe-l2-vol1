@@ -40,6 +40,14 @@ const migrateCart = (persisted: unknown): CartState => {
   return initialCartState
 }
 
+const mergeCartState = (
+  persistedState: unknown,
+  currentState: CartStore,
+): CartStore => ({
+  ...currentState,
+  ...migrateCart(persistedState),
+})
+
 export const useCartStore = create<CartStore>()(
   pipe
     .use(devtools({ name: 'CartStore' }))
@@ -50,6 +58,7 @@ export const useCartStore = create<CartStore>()(
         storage: createJSONStorage(() => localStorage),
         partialize: (state) => ({ items: state.items }),
         migrate: (persistedState) => migrateCart(persistedState),
+        merge: mergeCartState,
         skipHydration: true,
       }),
     )

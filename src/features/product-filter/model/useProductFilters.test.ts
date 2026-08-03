@@ -25,6 +25,22 @@ describe('productFilterParsers', () => {
     expect(productFilterParsers.page.defaultValue).toBe(1)
   })
 
+  describe('page parser contract', () => {
+    it.each([1, 42])(
+      'Given a valid positive integer %i When parsed Then it returns the same page',
+      (page) => {
+        expect(productFilterParsers.page.parse(String(page))).toBe(page)
+      },
+    )
+
+    it.each(['0', '-1', '1.5', 'abc'])(
+      'Given an invalid page value %s When parsed Then it falls back to page 1',
+      (value) => {
+        expect(productFilterParsers.page.parse(value)).toBe(1)
+      },
+    )
+  })
+
   it('ProductFilters type covers q, category, sort, page', () => {
     const filters: ProductFilters = {
       q: '',

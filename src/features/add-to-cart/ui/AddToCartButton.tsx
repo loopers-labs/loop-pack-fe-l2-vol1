@@ -1,6 +1,6 @@
 'use client'
 
-import { cartSelectors, useCartStore } from '@/features/cart/model/CartStore'
+import { cartSelectors, useCartStore } from '@/entities/cart/model/CartStore'
 
 type AddToCartButtonProps = {
   productId: string
@@ -12,7 +12,8 @@ export function AddToCartButton({
   productName,
 }: AddToCartButtonProps) {
   const isInCart = useCartStore(cartSelectors.isInCart(productId))
-  const { addToCart, removeFromCart } = useCartStore()
+  const addToCart = useCartStore((state) => state.addToCart)
+  const removeFromCart = useCartStore((state) => state.removeFromCart)
 
   return (
     <button

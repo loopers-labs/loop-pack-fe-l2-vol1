@@ -3,7 +3,7 @@
 import {
   useWishlistStore,
   wishlistSelectors,
-} from '@/features/wishlist/model/WishlistStore'
+} from '@/entities/wishlist/model/WishlistStore'
 
 type ToggleWishlistButtonProps = {
   productId: string
@@ -17,7 +17,7 @@ export function ToggleWishlistButton({
   const isInWishlist = useWishlistStore(
     wishlistSelectors.isInWishlist(productId),
   )
-  const { toggleWishlist } = useWishlistStore()
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist)
 
   return (
     <button

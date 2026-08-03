@@ -40,6 +40,14 @@ const migrateWishlist = (persisted: unknown): WishlistState => {
   return initialWishlistState
 }
 
+const mergeWishlistState = (
+  persistedState: unknown,
+  currentState: WishlistStore,
+): WishlistStore => ({
+  ...currentState,
+  ...migrateWishlist(persistedState),
+})
+
 export const useWishlistStore = create<WishlistStore>()(
   pipe
     .use(devtools({ name: 'WishlistStore' }))
@@ -50,6 +58,7 @@ export const useWishlistStore = create<WishlistStore>()(
         storage: createJSONStorage(() => localStorage),
         partialize: (state) => ({ items: state.items }),
         migrate: (persistedState) => migrateWishlist(persistedState),
+        merge: mergeWishlistState,
         skipHydration: true,
       }),
     )

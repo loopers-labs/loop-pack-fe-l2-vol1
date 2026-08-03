@@ -1,8 +1,8 @@
 'use client'
 
 import {
+  createParser,
   type inferParserType,
-  parseAsInteger,
   parseAsString,
   parseAsStringEnum,
   useQueryStates,
@@ -10,14 +10,23 @@ import {
 
 import {
   categorySchema,
+  pageSchema,
   sortSchema,
 } from '@/entities/product/model/ProductQuerySchema'
+
+const pageParser = createParser({
+  parse: (query: string) => {
+    const parsedPage = pageSchema.safeParse(Number(query))
+    return parsedPage.success ? parsedPage.data : null
+  },
+  serialize: (value: number) => String(value),
+}).withDefault(1)
 
 export const productFilterParsers = {
   q: parseAsString.withDefault(''),
   category: parseAsStringEnum(categorySchema.options).withDefault('all'),
   sort: parseAsStringEnum(sortSchema.options).withDefault('latest'),
-  page: parseAsInteger.withDefault(1),
+  page: pageParser,
 } as const
 
 export type ProductFilters = inferParserType<typeof productFilterParsers>

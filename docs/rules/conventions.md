@@ -60,9 +60,9 @@ AI가 생성한 코드도 머지하는 순간 작성자의 코드입니다. 코�
 - 재사용 모듈은 named export를 사용한다.
 - 파일 이름은 기본적으로 그 파일에서 내보내는 대표 export 이름을 그대로 따른다. 예: 타입은 `SelectOption.ts`에서 `SelectOption`, 컴포넌트는 `SelectTrigger.tsx`에서 `SelectTrigger`, 훅은 `useSelectRootState.ts`에서 `useSelectRootState`, namespace 유틸은 `OptionNavigation.ts`에서 `OptionNavigation`을 export한다.
 - default export는 거의 허용하지 않는다. Next 라우트 파일, ESLint/Next 설정 파일처럼 외부 도구가 default export를 요구하는 파일만 예외로 둔다.
-- FSD slice 외부에서 접근해야 하는 API는 slice의 public API(`index.ts`)로 노출한다.
-- `index.ts` public API는 `export { Name } from './path'`처럼 명시적으로 나열한다. `export * from './path'`는 slice 경계를 흐리므로 금지한다.
-- 내부 구현 파일을 다른 slice나 상위 레이어에서 deep import하지 않는다.
+- FSD slice의 외부 노출과 import 경계는 `docs/rules/fsd-architecture.md`의 직접 파일 import 원칙을 따른다. slice root에 `index.ts` Public API를 만들거나 사용하도록 요구하지 않는다.
+- 컴포넌트가 폴더로 승격되어 내부 파일이 나뉜 경우에만 해당 컴포넌트 폴더의 `index.ts`를 선택적으로 사용해 외부에 공개할 컴포넌트를 명시할 수 있다. 이때도 `export *`는 사용하지 않고, 내부 타입·상수·유틸리티·보조 컴포넌트는 공개하지 않는다.
+- 공개 의도가 없는 내부 구현 파일은 다른 slice나 상위 레이어에서 import하지 않는다.
 - 공용 유틸리티는 비슷한 동작끼리 namespace class의 static method로 묶는다. 예: `MoneyUtils.format`, `DateRangeUtils.contains`. 외부로 공개되는 유틸리티를 top-level standalone 함수로 흩뿌리지 않는다. React custom hook은 예외로 두되, React 규약이 드러나도록 `use[A-Z0-9]...` 이름의 function으로 공개한다.
 
 ## 스타일링

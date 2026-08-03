@@ -34,8 +34,7 @@ export function FilterBar({
       }}
     >
       <DebouncedInput
-        key={filters.q}
-        initialValue={filters.q}
+        value={filters.q}
         label="검색"
         name="q"
         placeholder="상품명 또는 브랜드"

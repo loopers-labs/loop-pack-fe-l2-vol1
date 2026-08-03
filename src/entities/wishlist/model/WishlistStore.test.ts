@@ -1,4 +1,37 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+
+const { storage } = vi.hoisted(() => {
+  const storage = new Map<string, string>()
+
+  const localStorage = {
+    clear: () => {
+      storage.clear()
+    },
+    getItem: (key: string) => storage.get(key) ?? null,
+    key: (index: number) => Array.from(storage.keys())[index] ?? null,
+    get length() {
+      return storage.size
+    },
+    removeItem: (key: string) => {
+      storage.delete(key)
+    },
+    setItem: (key: string, value: string) => {
+      storage.set(key, value)
+    },
+  }
+
+  vi.stubGlobal('localStorage', localStorage)
+
+  return { storage }
+})
 
 import { useWishlistStore, wishlistSelectors } from './WishlistStore'
 
@@ -6,9 +39,25 @@ const resetWishlist = () => {
   useWishlistStore.setState({ items: {} })
 }
 
+const persistWishlistState = (items: Record<string, boolean>) => {
+  storage.set(
+    'commerce-wishlist',
+    JSON.stringify({ state: { items }, version: 1 }),
+  )
+}
+
 describe('WishlistStore actions', () => {
   beforeEach(() => {
+    storage.clear()
     resetWishlist()
+  })
+
+  afterEach(() => {
+    storage.clear()
+  })
+
+  afterAll(() => {
+    vi.unstubAllGlobals()
   })
 
   it('toggleWishlist adds productId when absent', () => {
@@ -51,6 +100,31 @@ describe('WishlistStore actions', () => {
     toggleWishlist('p1')
     toggleWishlist('p2')
     clearWishlist()
+    expect(useWishlistStore.getState().items).toEqual({})
+  })
+
+  it('rehydrate restores valid current-version items and preserves actions', async () => {
+    persistWishlistState({ p1: true })
+
+    await useWishlistStore.persist.rehydrate()
+
+    expect(useWishlistStore.getState().items).toEqual({ p1: true })
+
+    const { toggleWishlist: hydratedToggleWishlist } =
+      useWishlistStore.getState()
+
+    expect(typeof hydratedToggleWishlist).toBe('function')
+
+    hydratedToggleWishlist('p2')
+
+    expect(useWishlistStore.getState().items).toEqual({ p1: true, p2: true })
+  })
+
+  it('rehydrate falls back to an empty state for corrupted current-version items', async () => {
+    persistWishlistState({ p1: false })
+
+    await useWishlistStore.persist.rehydrate()
+
     expect(useWishlistStore.getState().items).toEqual({})
   })
 })

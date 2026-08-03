@@ -1,5 +1,7 @@
 import type { Product } from '@/entities/product/model/types'
-import { ProductCard } from '@/widgets/product-card/ui/ProductCard'
+import { ProductCard } from '@/entities/product/ui/ProductCard'
+import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton'
+import { ToggleWishlistButton } from '@/features/toggle-wishlist/ui/ToggleWishlistButton'
 
 export function ProductGrid({
   products,
@@ -18,7 +20,22 @@ export function ProductGrid({
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          actions={
+            <>
+              <ToggleWishlistButton
+                productId={product.id}
+                productName={product.name}
+              />
+              <AddToCartButton
+                productId={product.id}
+                productName={product.name}
+              />
+            </>
+          }
+        />
       ))}
     </div>
   )

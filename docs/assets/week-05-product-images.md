@@ -4,6 +4,7 @@ The starter includes 30 local JPEG images. They are served from `public/images/p
 
 The `originalPrice` values in the Week 05 fixture are deterministic mock merchandising fields for exercising discount UI branches. They are not sourced prices.
 
+<!-- prettier-ignore -->
 | Local product | Local file | Product name |
 | --- | --- | --- |
 | p1 | `p1.jpg` | [11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG |
