@@ -1,4 +1,4 @@
-import { GC_TIME, STALE_TIME } from '@/constants/time';
+import { GC_TIME, STALE_TIME } from '@/shared/constants/time';
 import { getHome } from '@/service/home';
 import { queryOptions } from '@tanstack/react-query';
 
