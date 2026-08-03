@@ -1,6 +1,4 @@
-// [AI] 전역 에러 경계(app/error.tsx). 예상 밖 렌더링 오류의 마지막 보루 fallback.
-// (현재 throwOnError 미적용 상태 — 쿼리 5xx는 widget에서 인라인 처리되므로
-//  여기는 주로 렌더 크래시를 잡는다. throwOnError 도입은 RFC O 섹션 기준으로 별도 적용 예정.)
+// [AI] 전역 에러 경계(app/error.tsx). 5xx에러인 경우 이 fallback이 보여진다.
 'use client';
 
 import { useEffect } from 'react';
