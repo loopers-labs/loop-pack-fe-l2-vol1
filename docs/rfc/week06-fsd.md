@@ -212,7 +212,7 @@ $ pnpm depcruise
 
 `toggle-wishlist`를 제거할 때는 feature slice **7파일을 통째로 삭제**한다: `index.ts`, `index.test.ts`, `model/store.ts`, `model/store.test.ts`, `ui/wishlist-toggle-button.tsx`, `ui/wishlist-toggle-button.test.tsx`, `ui/wishlist-toggle-button.module.css`. 삭제 뒤 production 조립 변경 지점은 정확히 3곳이다. `src/widgets/header/ui/header.tsx`에서 `useWishlistCount`와 count 표시를 제거하고, `src/_pages/home/ui/product-section.tsx`와 `src/_pages/product-list/ui/list-view.tsx`에서 각각 ProductCard의 `WishlistToggleButton` action slot 조립을 제거한다.
 
-직접 소비 테스트도 `src/_pages/home/ui/home-view.test.tsx`와 `src/widgets/header/ui/header.test.tsx`에서 wishlist 단정을 제거하며, `features/toggle-wishlist/index.test.ts` slice contract test는 slice와 함께 삭제한다. 실제 `rg` 대조에서 slice 파일은 예측한 7파일과 일치했고, production import는 위 3개 조립 지점뿐이었다. 검색에는 두 직접 테스트와 slice contract test만 추가로 나타났으며, 다른 production slice의 orphan import는 없었다. 판정은 PASS다. 로컬 evidence는 `$OMT_DIR/evidence/week06-fsd-migration/deletion-scenario/{prediction.md,grep-check.txt}`다.
+직접 소비 테스트도 `src/_pages/home/ui/home-view.test.tsx`와 `src/widgets/header/ui/header.test.tsx`에서 wishlist 단정을 제거하며, `features/toggle-wishlist/index.test.ts` slice contract test는 slice와 함께 삭제한다. `app/(commerce)/home-list-sync.test.tsx`도 wishlist store를 deep import해 reset하고, 홈·목록의 찜 동기화와 Header count를 단정하므로 삭제 시 함께 수정한다. 실제 `rg` 대조에서 slice 파일은 예측한 7파일과 일치했고, production import는 위 3개 조립 지점뿐이었다. 검색에는 두 직접 테스트, slice contract test, 그리고 이 assembly test가 추가로 나타났으며, 다른 production slice의 orphan import는 없었다. 판정은 PASS다. 로컬 evidence는 `$OMT_DIR/evidence/week06-fsd-migration/deletion-scenario/{prediction.md,grep-check.txt}`다.
 
 #### 신상품 뱃지 변경 반경 예측
 

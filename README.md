@@ -156,7 +156,7 @@ D(상태 아키텍처 테스트) 4항목 전부와 C(사용자 경험 개선)의
 
 **C: 전체 페이지를 새로고침하지 않는 오류 재시도**
 
-에러 화면의 재시도 버튼이 `query.refetch()`로 같은 쿼리만 다시 부른다. Basic 요구인 로딩과 에러, 빈 상태 구분을 만들다 보니 에러 화면에 탈출 경로가 필요했고, 그 자리에 전체 새로고침 대신 refetch를 넣었으므로 추가한 복잡도는 없다. `home-view.test.tsx`와 `list-view.test.tsx`가 재시도 클릭 후 성공 화면으로 전환되는지 단정한다.
+network·5xx는 각 page query의 `throwOnError`가 커머스 route boundary로 전파한다. fallback은 상세 오류 대신 고정 사용자 문구를 보이고, 재시도에서 TanStack Query의 error boundary reset과 Next `reset()`을 차례로 호출해 전체 페이지 새로고침 없이 같은 route를 다시 시도한다. 4xx와 empty는 사용자가 현재 화면 문맥을 잃지 않도록 화면 내 inline 상태로 남기며, 4xx 오류 UI의 재시도는 해당 query를 다시 요청한다. `error.test.tsx`가 두 reset 호출과 고정 문구를, `home-view.test.tsx`와 `list-view.test.tsx`가 inline 재시도 후 성공 화면 전환을 단정한다.
 
 C의 나머지 네 항목(검색어 debounce, 다음 페이지 prefetch, 목록 이동 전 prefetch, 페이지 변경 중 기존 목록 유지)은 하지 않았다.
 
