@@ -1,0 +1,77 @@
+/* 검색 필터 바 — 한 줄 정렬, 좁아지면 wrap. 각 label 은 캡션 위·컨트롤 아래 세로 그룹이라
+   label 은 키가 크고 검색 버튼은 캡션이 없어 낮다 → align-items:flex-end 로 바닥을 맞춘다.
+   컨트롤(input·select)은 feature 가 클래스 없이 렌더하므로 후손 선택자로 이 폼 안에서만 스타일을 준다.
+   색상·간격·모서리 토큰은 조상 .page 에서 상속받는다. */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-md);
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+/* 검색어 입력만 남는 폭을 차지하게 키운다. 카테고리·정렬 select 는 내용폭 유지. */
+.filters label:first-of-type {
+  flex: 1;
+  min-width: 240px;
+}
+
+.filters input,
+.filters select {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  background: #fff;
+  color: var(--color-text);
+}
+
+.filters input {
+  width: 100%;
+}
+
+.filters select {
+  min-width: 140px;
+  cursor: pointer;
+}
+
+.filters input:focus,
+.filters select:focus {
+  border-color: var(--color-accent);
+}
+
+.filters input:focus-visible,
+.filters select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.filters button {
+  padding: 10px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.filters button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.filters button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

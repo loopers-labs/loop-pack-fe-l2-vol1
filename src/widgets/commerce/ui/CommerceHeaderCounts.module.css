@@ -1,0 +1,7 @@
+/* 헤더 개수 표시 — 색상·간격 토큰은 조상 .page 에서 상속받는다. */
+.headerCounts {
+  display: flex;
+  gap: var(--space-md);
+  font-size: 14px;
+  color: var(--color-muted);
+}

@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
-import type {
-  ApiErrorResponse,
-  MockApiScenario,
-  ProductListResponse,
-  ProductSort,
-} from "@/types/commerce";
+import {
+  categories,
+  products,
+  waitForMockApi,
+  type MockApiScenario,
+} from "@/app/api/_data/commerce";
+import type { ApiErrorResponse } from "@/shared/api";
+import type { ProductListResponse, ProductSort } from "@/entities/product";
 
-const sortValues = ["latest", "popular", "price-asc", "price-desc"] as const satisfies
-  readonly ProductSort[];
-const scenarioValues = ["empty", "error", "slow"] as const satisfies
-  readonly MockApiScenario[];
+const sortValues = [
+  "latest",
+  "popular",
+  "price-asc",
+  "price-desc",
+] as const satisfies readonly ProductSort[];
+const scenarioValues = [
+  "empty",
+  "error",
+  "slow",
+] as const satisfies readonly MockApiScenario[];
 
 const isProductSort = (value: string): value is ProductSort =>
   sortValues.some((sort) => sort === value);
@@ -54,7 +62,9 @@ export async function GET(
     categories.some((item) => item.id === category);
   const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page);
   const validPageSize =
-    isPositiveInteger(pageSizeValue) && Number.isSafeInteger(pageSize) && pageSize <= 24;
+    isPositiveInteger(pageSizeValue) &&
+    Number.isSafeInteger(pageSize) &&
+    pageSize <= 24;
 
   if (!validCategory || !validPage || !validPageSize) {
     return NextResponse.json(
@@ -75,7 +85,9 @@ export async function GET(
   const filteredProducts = products.filter((product) => {
     const matchesCategory =
       category === null || category === "all" || product.category === category;
-    const searchable = `${product.brand} ${product.name}`.toLocaleLowerCase("ko");
+    const searchable = `${product.brand} ${product.name}`.toLocaleLowerCase(
+      "ko",
+    );
 
     return matchesCategory && searchable.includes(q);
   });
