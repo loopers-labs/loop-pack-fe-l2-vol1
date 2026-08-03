@@ -430,6 +430,27 @@ describe("ListView", () => {
         expect(onUrlUpdate).not.toHaveBeenCalled();
       });
 
+      it("명시적인 유효 기본 query만 있는 URL에서 전체 초기화를 눌러도 URL을 쓰지 않는다", async () => {
+        const previousUrl = window.location.href;
+        window.history.replaceState({}, "", "/products?q=&category=all&sort=latest&page=1");
+
+        try {
+          const onUrlUpdate = vi.fn();
+          const user = userEvent.setup();
+          render(<ListView />, {
+            searchParams: "?q=&category=all&sort=latest&page=1",
+            onUrlUpdate,
+          });
+          await screen.findByText("총 30개");
+
+          await user.click(screen.getByRole("button", { name: "전체 초기화" }));
+
+          expect(onUrlUpdate).not.toHaveBeenCalled();
+        } finally {
+          window.history.replaceState({}, "", previousUrl);
+        }
+      });
+
       it("소유하지 않는 query만 있는 URL에서는 전체 초기화가 history를 쓰지 않는다", async () => {
         const previousUrl = window.location.href;
         window.history.replaceState({}, "", "/products?utm_source=campaign");

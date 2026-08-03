@@ -32,10 +32,15 @@ type _CategoryCoverage = _AssertNever<Exclude<CategoryId, (typeof CATEGORY_FILTE
 // 에러 화면(재시도 버튼만 있고 탈출 경로가 없는 분기)을 연다.
 // parseAsInteger는 "0"·"-1"을 그대로 통과시켜 route가 400으로 거부하는 값을 상태로
 // 들여보내므로 쓸 수 없다.
-const parsePageValue = (value: string): number => {
+const isValidPageValue = (value: string): boolean => {
   const leadingDigits = /^\d+/.exec(value)?.[0] ?? "";
   const parsed = Number(leadingDigits);
-  return /^[1-9]\d*$/.test(leadingDigits) && Number.isSafeInteger(parsed) ? parsed : 1;
+  return /^[1-9]\d*$/.test(leadingDigits) && Number.isSafeInteger(parsed);
+};
+
+const parsePageValue = (value: string): number => {
+  const leadingDigits = /^\d+/.exec(value)?.[0] ?? "";
+  return isValidPageValue(value) ? Number(leadingDigits) : 1;
 };
 
 export const pageParser = createParser<number>({
@@ -62,7 +67,17 @@ type ListQueryValues = {
   page: number;
 };
 
-const LIST_QUERY_KEYS = ["q", "category", "sort", "page"] as const;
+const hasInvalidOwnedQuery = (searchParams: URLSearchParams): boolean => {
+  const category = searchParams.get("category");
+  const sort = searchParams.get("sort");
+  const page = searchParams.get("page");
+
+  return (
+    (category !== null && LIST_QUERY_PARSERS.category.parse(category) === null) ||
+    (sort !== null && LIST_QUERY_PARSERS.sort.parse(sort) === null) ||
+    (page !== null && !isValidPageValue(page))
+  );
+};
 
 // page 리셋은 호출자 규약이 아니라 훅 내부 불변식이다(C9b) — list-filter-bar가
 // setQuery({ q })만 불러도 리셋이 지켜지도록, q·category·sort 중 하나라도 partial에
@@ -114,12 +129,12 @@ export function useListQuery() {
 
     // 파서는 스키마 밖 값을 기본값으로 복구한다. 따라서 `?category=bogus&page=0`은
     // query만 보면 이미 기본값이라 no-op처럼 보이지만, 주소창에는 잘못된 값이 남아
-    // 있다. 전체 초기화에서는 원본 URL에 소유 query가 남아 있을 때만 setter를 직접
-    // 호출해 canonical 기본 URL로 수렴시킨다. 추적용 query만 있는 URL은 건드리지 않는다.
-    const hasOwnedQuery =
-      typeof window !== "undefined" &&
-      LIST_QUERY_KEYS.some((key) => new URLSearchParams(window.location.search).has(key));
-    if (hasOwnedQuery) {
+    // 있다. 반면 `?q=&category=all&sort=latest&page=1`은 모든 raw 값이 유효하므로
+    // setListQuery의 병합 no-op에 맡긴다. literal은 해당 nuqs parser로, page는 그
+    // parser가 기본값으로 바꾸기 전 validator로 원본 값을 판별한다.
+    const searchParams =
+      typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
+    if (searchParams !== null && hasInvalidOwnedQuery(searchParams)) {
       void setQuery(defaults);
       return;
     }
