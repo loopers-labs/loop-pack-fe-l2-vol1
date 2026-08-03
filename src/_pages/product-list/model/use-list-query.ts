@@ -103,12 +103,23 @@ export function useListQuery() {
   };
 
   const resetListQuery = (): void => {
-    setListQuery({
+    const defaults = {
       q: LIST_QUERY_PARSERS.q.defaultValue,
       category: LIST_QUERY_PARSERS.category.defaultValue,
       sort: LIST_QUERY_PARSERS.sort.defaultValue,
       page: LIST_QUERY_PARSERS.page.defaultValue,
-    });
+    };
+
+    // 파서는 스키마 밖 값을 기본값으로 복구한다. 따라서 `?category=bogus&page=0`은
+    // query만 보면 이미 기본값이라 no-op처럼 보이지만, 주소창에는 잘못된 값이 남아
+    // 있다. 전체 초기화에서는 원본 URL에 파라미터가 남아 있으면 setter를 직접 호출해
+    // canonical 기본 URL로 수렴시킨다. 쿼리 없는 기본 URL은 기존 no-op 경로를 유지한다.
+    if (typeof window !== "undefined" && window.location.search.length > 0) {
+      void setQuery(defaults);
+      return;
+    }
+
+    setListQuery(defaults);
   };
 
   return [query, setListQuery, resetListQuery] as const;

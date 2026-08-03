@@ -45,15 +45,18 @@ export function ListFilterBar({ query, setQuery, onReset }: ListFilterBarProps) 
   // 구별하는 플래그. 상태(state)로 안 두는 이유: 이 값 자체는 화면에 아무것도 그리지
   // 않고 SearchInput의 ref 콜백이 커밋 시점에 한 번 읽고 끄는 신호일 뿐이라
   // 리렌더를 유발할 필요가 없다 — ref가 정확히 그 용도다. 켜는 조건(q !== query.q)은
-  // 끄는 조건(key={query.q} 리마운트)과 동치여야 한다 — 같은 값 재제출(no-op)에서
+  // 끄는 조건(query.q 변경에 따른 key 리마운트)과 동치여야 한다 — 같은 값 재제출(no-op)에서
   // 켜면 리마운트가 없어 못 꺼지고, 다음에 폼 바깥에서 온 q 변경(뒤로가기)이 리마운트를
   // 낼 때 잔류한 플래그가 사용자가 제출하지 않은 포커스 이동을 일으킨다.
   const focusNextMountRef = useRef(false);
+  // 제출하지 않은 draft도 전체 초기화해야 한다. URL 기본값이 이미 같아 query.q가 바뀌지
+  // 않는 경우에도 SearchInput을 새 initialQ로 다시 만들 수 있도록 reset 횟수를 key에 더한다.
+  const [resetVersion, setResetVersion] = useState(0);
 
   return (
     <div className={styles.filters}>
       <SearchInput
-        key={query.q}
+        key={`${query.q}-${resetVersion}`}
         initialQ={query.q}
         focusNextMountRef={focusNextMountRef}
         onSubmit={(q) => {
@@ -99,7 +102,13 @@ export function ListFilterBar({ query, setQuery, onReset }: ListFilterBarProps) 
           ))}
         </select>
       </label>
-      <button type="button" onClick={onReset}>
+      <button
+        type="button"
+        onClick={() => {
+          onReset();
+          setResetVersion((version) => version + 1);
+        }}
+      >
         전체 초기화
       </button>
     </div>

@@ -429,6 +429,44 @@ describe("ListView", () => {
 
         expect(onUrlUpdate).not.toHaveBeenCalled();
       });
+
+      it("파싱 결과가 기본값이어도 비정상 URL에서 전체 초기화를 누르면 canonical 기본 URL로 정규화한다", async () => {
+        const previousUrl = window.location.href;
+        window.history.replaceState({}, "", "/products?category=bogus&page=0");
+
+        try {
+          const onUrlUpdate = vi.fn();
+          const user = userEvent.setup();
+          render(<ListView />, {
+            searchParams: "?category=bogus&page=0",
+            onUrlUpdate,
+          });
+          await screen.findByText("총 30개");
+
+          await user.click(screen.getByRole("button", { name: "전체 초기화" }));
+
+          expect(onUrlUpdate).toHaveBeenCalledTimes(1);
+          const { searchParams } = onUrlUpdate.mock.calls[0][0];
+          expect(searchParams.has("category")).toBe(false);
+          expect(searchParams.has("page")).toBe(false);
+        } finally {
+          window.history.replaceState({}, "", previousUrl);
+        }
+      });
+
+      it("제출하지 않은 검색어를 입력한 뒤 전체 초기화를 누르면 검색 입력도 비운다", async () => {
+        const user = userEvent.setup();
+        render(<ListView />);
+        await screen.findByText("총 30개");
+
+        const searchInput = screen.getByLabelText("검색");
+        await user.type(searchInput, "미제출 검색어");
+        expect(searchInput).toHaveValue("미제출 검색어");
+
+        await user.click(screen.getByRole("button", { name: "전체 초기화" }));
+
+        expect(screen.getByLabelText("검색")).toHaveValue("");
+      });
     });
 
     describe("검색 제출 후 포커스가 유지된다 — key 리마운트에도 살아남는 포커스 복원 (C5)", () => {
