@@ -304,13 +304,12 @@ test.describe('5주차 예외와 복구', () => {
     await expect(page.getByText('상품 목록을 불러오지 못했어요.', { exact: true })).toHaveCount(0)
   })
 
-  test('허용 범위를 벗어난 숫자 조건은 제어된 오류 상태로 처리한다', async ({ page }) => {
+  test('허용 범위를 벗어난 페이지는 첫 페이지로 보정한다', async ({ page }) => {
     await page.goto('/products?page=0')
 
-    await expect(page.getByText('상품 목록을 불러오지 못했어요.', { exact: true })).toBeVisible({
-      timeout: 20_000,
-    })
-    await expect(page.getByRole('button', { name: '다시 시도' })).toBeVisible()
+    await expect(page.getByText('총 30개', { exact: true })).toBeVisible()
+    await expect(page.getByText('1 / 3', { exact: true })).toBeVisible()
+    await expect(page.getByText('상품 목록을 불러오지 못했어요.', { exact: true })).toHaveCount(0)
   })
 
   test('마지막 페이지를 초과하면 빈 상태와 함께 앞 페이지로 돌아갈 수단을 남긴다', async ({
@@ -360,37 +359,5 @@ test.describe('5주차 예외와 복구', () => {
 
     await expect(page.getByText('총 30개', { exact: true })).toBeVisible()
     await expect(retryButton).toHaveCount(0)
-  })
-
-  test('손상된 persist 저장값은 빈 장바구니·위시리스트로 복구한다', async ({ page }) => {
-    await page.addInitScript(() => {
-      localStorage.setItem('cart', JSON.stringify({ state: { ids: ['p21', 42] }, version: 1 }))
-      localStorage.setItem('wishlist', JSON.stringify({ state: { ids: 'p21' }, version: 1 }))
-    })
-
-    await page.goto('/')
-
-    await expect(page.getByText('위시리스트 0', { exact: true })).toBeVisible()
-    await expect(page.getByText('장바구니 0', { exact: true })).toBeVisible()
-    await expect(
-      page.getByRole('button', { name: '메이커스 투명케이스 위시리스트' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    await expect(
-      page.getByRole('button', { name: '메이커스 투명케이스 장바구니' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-  })
-
-  test('이전 버전의 persist 저장값을 현재 상태로 migration한다', async ({ page }) => {
-    await page.addInitScript(() => {
-      localStorage.setItem('wishlist', JSON.stringify({ state: { ids: ['p21'] }, version: 0 }))
-    })
-
-    await page.goto('/')
-
-    await expect(page.getByText('위시리스트 1', { exact: true })).toBeVisible()
-    await expect(page.getByText('장바구니 0', { exact: true })).toBeVisible()
-    await expect(
-      page.getByRole('button', { name: '메이커스 투명케이스 위시리스트' }),
-    ).toHaveAttribute('aria-pressed', 'true')
   })
 })

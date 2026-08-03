@@ -1,0 +1,52 @@
+.card {
+  display: grid;
+  gap: 8px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.image {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.line {
+  height: 19px;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.title {
+  height: 29px;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.short {
+  width: 60%;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.button {
+  width: 72px;
+  height: 35px;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

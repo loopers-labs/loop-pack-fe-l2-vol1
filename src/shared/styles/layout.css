@@ -1,0 +1,8 @@
+.layout-section {
+  margin-top: 40px;
+}
+
+.layout-section > h1,
+.layout-section > h2 {
+  margin-bottom: 16px;
+}

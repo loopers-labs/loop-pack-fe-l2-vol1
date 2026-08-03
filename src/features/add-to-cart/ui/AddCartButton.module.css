@@ -1,0 +1,13 @@
+.button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* 장바구니 페이지가 생기기 전까지 담김 여부를 버튼 색으로 확인한다. */
+.button[aria-pressed='true'] {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}

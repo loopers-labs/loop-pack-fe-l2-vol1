@@ -3,6 +3,8 @@ import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
+import fsdConfig from './eslint/fsd.config.mjs'
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -47,6 +49,7 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
     },
   },
+  fsdConfig,
   eslintConfigPrettier,
 ])
 

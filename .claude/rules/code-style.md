@@ -12,6 +12,15 @@
 
 ## 네이밍
 
+### 파일명
+
+- 컴포넌트: `PascalCase` — `RootProvider.tsx`, `ProductCard.tsx`, `ProductCard.module.css`
+- 훅: `camelCase` — `usePostLike.ts`, `usePagination.ts` (파일명과 훅 이름 일치)
+- 유틸 / API / 설정 / 타입: `kebab-case` — `post-like.api.ts`, `format-price.ts`, `cart-store.ts`
+- 기준은 "무엇을 내보내는가"다. 컴포넌트면 PascalCase, 훅이면 camelCase, 나머지는 kebab-case
+
+### 식별자
+
 - 컴포넌트: `PascalCase`
 - 함수: 동사 + 목적어 (`fetchUser`, `formatDate`)
 - 이벤트 핸들러: props 콜백 `onX` / 내부 함수 `handleX`

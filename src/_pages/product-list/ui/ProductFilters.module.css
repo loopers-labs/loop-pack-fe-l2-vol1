@@ -1,0 +1,73 @@
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.filters input,
+.filters select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+.filters input:focus-visible,
+.filters select:focus-visible {
+  outline: 3px solid #2557a7;
+  outline-offset: 3px;
+}
+
+.skeleton {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeletonField {
+  display: grid;
+  gap: 6px;
+}
+
+.skeletonLabel,
+.skeletonControl {
+  display: block;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.skeletonLabel {
+  width: 48px;
+  height: 18px;
+}
+
+.skeletonControl {
+  width: 180px;
+  min-height: 40px;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 720px) {
+  .filters label,
+  .skeletonField {
+    flex: 1 1 100%;
+  }
+
+  .skeletonControl {
+    width: 100%;
+  }
+}
