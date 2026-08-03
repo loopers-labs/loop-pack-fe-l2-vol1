@@ -2,8 +2,8 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/queries/homeQueries';
-import { Header } from '@/components/Header';
-import { ProductCard } from '@/components/ProductCard';
+import { Header } from '@/widgets/header';
+import { ProductCard } from '@/widgets/product-card';
 import type { Category, Product } from '@/entities/product/model';
 
 export default function Home() {
