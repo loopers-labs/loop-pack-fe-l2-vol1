@@ -1,12 +1,8 @@
 "use client";
 import Image from "next/image";
 import type { Product } from "@/entities/product/model/types";
-import {
-  useIsInCart,
-  useIsInWishlist,
-  useToggleCart,
-  useToggleWishlist,
-} from "@/features/commerce/store";
+import { useIsInCart, useToggleCart } from "@/entities/cart/model/store";
+import { useIsInWishlist, useToggleWishlist } from "@/entities/wishlist/model/store";
 
 const priceFormatter = new Intl.NumberFormat("ko-KR");
 const formatPrice = (value: number) => `${priceFormatter.format(value)}원`;
