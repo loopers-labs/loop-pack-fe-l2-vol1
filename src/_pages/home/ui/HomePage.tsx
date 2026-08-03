@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import type { Product } from "@/entities/product/model/types";
-import { ProductCardWithActions } from "@/widgets/product-card/ui/ProductCardWithActions";
+import type { Product } from "@/entities/product";
+import { ProductCardWithActions } from "@/widgets/product-card";
 import { homeQueryOptions } from "../api/homeQuery";
 
 function ProductSection({ title, products }: { title: string; products: Product[] }) {

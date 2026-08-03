@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { ProductListResponse } from "@/entities/product/model/types";
+import type { ProductListResponse } from "@/entities/product";
 import { fetchJson } from "@/shared/api";
 import type { ResolvedProductListQuery } from "../model/useProductListQuery";
 

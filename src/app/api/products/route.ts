@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
-import type { ProductListResponse, ProductSort } from "@/entities/product/model/types";
+import type { ProductListResponse, ProductSort } from "@/entities/product";
 import type { ApiErrorResponse } from "@/shared/api";
 import type { MockApiScenario } from "../scenario";
 

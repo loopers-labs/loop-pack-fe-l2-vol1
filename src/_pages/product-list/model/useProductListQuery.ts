@@ -1,6 +1,6 @@
 "use client";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
-import type { CategoryId, ProductSort } from "@/entities/product/model/types";
+import type { CategoryId, ProductSort } from "@/entities/product";
 import { categoryValues, sortValues } from "../config/options";
 
 // URL(nuqs)에서 기본값이 채워진 뒤의 조회 조건.

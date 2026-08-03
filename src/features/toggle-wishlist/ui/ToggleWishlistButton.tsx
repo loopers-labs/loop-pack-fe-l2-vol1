@@ -1,5 +1,5 @@
 "use client";
-import { useIsInWishlist, useToggleWishlist } from "@/entities/wishlist/model/store";
+import { useIsInWishlist, useToggleWishlist } from "@/entities/wishlist";
 
 export function ToggleWishlistButton({
   productId,

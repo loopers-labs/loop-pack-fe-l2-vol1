@@ -1,4 +1,4 @@
-import type { CategoryId, ProductSort } from "@/entities/product/model/types";
+import type { CategoryId, ProductSort } from "@/entities/product";
 
 export const categoryValues = [
   "all",

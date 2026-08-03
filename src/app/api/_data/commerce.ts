@@ -1,4 +1,4 @@
-import type { Category, CategoryId, Product } from "@/entities/product/model/types";
+import type { Category, CategoryId, Product } from "@/entities/product";
 
 export const categories: Category[] = [
   { id: "casual", name: "캐주얼" },

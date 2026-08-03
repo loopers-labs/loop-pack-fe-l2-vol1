@@ -1,6 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { ProductCardWithActions } from "@/widgets/product-card/ui/ProductCardWithActions";
+import { ProductCardWithActions } from "@/widgets/product-card";
 import { productListQueryOptions } from "../api/productListQuery";
 import { categoryOptions, isCategoryValue, isSortValue, sortOptions } from "../config/options";
 import { useProductListQuery } from "../model/useProductListQuery";

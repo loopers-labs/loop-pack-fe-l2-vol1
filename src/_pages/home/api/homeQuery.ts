@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { HomeResponse } from "@/entities/product/model/types";
+import type { HomeResponse } from "@/entities/product";
 import { fetchJson } from "@/shared/api";
 
 // 홈은 자주 바뀌지 않는 카탈로그성 데이터 → 오래 신선하게 둔다.
