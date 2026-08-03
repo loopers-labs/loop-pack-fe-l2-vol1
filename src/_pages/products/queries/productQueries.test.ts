@@ -14,4 +14,8 @@ describe("productQueries", () => {
 
     expect(productQueries.list(params).queryKey).toEqual(["products", "list", params]);
   });
+
+  it("상품 목록 조회 실패는 Error Boundary로 전파하지 않는다", () => {
+    expect(productQueries.list().throwOnError).toBe(false);
+  });
 });

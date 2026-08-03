@@ -10,5 +10,6 @@ export const productQueries = {
       queryFn: () => getProducts(params),
       staleTime: 1000 * 60,
       placeholderData: keepPreviousData,
+      throwOnError: false,
     }),
 };

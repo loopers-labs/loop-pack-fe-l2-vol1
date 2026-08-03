@@ -483,6 +483,10 @@ Public API는 사용할 예정이다.
 Error Boundary는 이벤트 핸들러와 비동기 콜백 오류를 자동으로 잡지 못한다.
 장바구니/위시리스트 클릭 중 발생하는 오류는 해당 action 또는 mutation 호출부에서 처리한다.
 
+홈 조회는 `useSuspenseQuery`를 사용해 실패를 `HomeErrorBoundary`로 전파한다.
+`useSuspenseQuery`는 `throwOnError` 옵션을 노출하지 않으므로, 에러 전파 기준은 Suspense Query 선택과 boundary 조합으로 표현한다.
+상품 목록 조회는 `useQuery`의 `throwOnError: false`를 명시해 결과 영역 인라인 에러 처리 정책을 코드에 둔다.
+
 route `loading.tsx`/Suspense는 서버 prefetch 또는 page shell 로딩 범위를 맡고,
 Query `isPending`은 클라이언트 refetch나 결과 영역 로딩 범위를 맡는다.
 하나로 합치지 않는 이유는 라우트 진입 로딩과 목록 조건 변경 로딩의 사용자 영향 범위가 다르기 때문이다.
