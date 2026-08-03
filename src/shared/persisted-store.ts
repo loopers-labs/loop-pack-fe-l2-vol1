@@ -1,7 +1,10 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import type { PersistStorage } from 'zustand/middleware';
 
-/** persist는 version이 숫자일 때만 비교하므로, 숫자가 아니면 절대 일치하지 않는 값으로 바꿔 폐기로 보낸다 */
+/**
+ * persist는 version이 숫자일 때만 비교한다.
+ * 숫자가 아니면 절대 일치하지 않는 값으로 바꿔 폐기로 보낸다.
+ */
 const UNKNOWN_VERSION = -1;
 
 const removeStored = (name: string) => {
