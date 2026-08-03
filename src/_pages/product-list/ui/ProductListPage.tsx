@@ -1,6 +1,5 @@
 'use client';
 import { Suspense } from 'react';
-import { Header } from '@/widgets/header';
 import { ProductCard } from '@/widgets/product-card';
 import { useProductFilters } from '@/features/product-filters/model/useProductFilters';
 import { ProductFiltersForm } from '@/features/product-filters/ui/ProductFiltersForm';
@@ -27,8 +26,7 @@ function ProductListContent() {
   } = useProductFilters();
 
   return (
-    <main className="week05-page">
-      <Header />
+    <>
       <section className="week05-section">
         <h1>상품 목록</h1>
         <ProductFiltersForm
@@ -81,6 +79,6 @@ function ProductListContent() {
           </>
         )}
       </section>
-    </main>
+    </>
   );
 }
