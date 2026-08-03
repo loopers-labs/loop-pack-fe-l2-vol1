@@ -7,16 +7,6 @@ export type Category = {
 
 export type ProductSort = "latest" | "popular" | "price-asc" | "price-desc";
 
-export type MockApiScenario = "empty" | "error";
-
-export type ProductListQuery = {
-  q?: string;
-  category?: CategoryId | "all";
-  sort?: ProductSort;
-  page?: number;
-  pageSize?: number;
-};
-
 export type Product = {
   id: string;
   brand: string;
@@ -32,6 +22,7 @@ export type Product = {
   createdAt: string;
 };
 
+// 서버와 클라이언트가 공유하는 응답 계약. mock 백엔드(app/api)도 이 타입을 지킨다.
 export type HomeResponse = {
   banner: { title: string; description: string; image: string };
   categories: Category[];
@@ -45,8 +36,4 @@ export type ProductListResponse = {
   totalCount: number;
   page: number;
   pageSize: number;
-};
-
-export type ApiErrorResponse = {
-  message: string;
 };

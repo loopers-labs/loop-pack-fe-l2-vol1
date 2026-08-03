@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import type { Product } from "@/types/commerce";
+import type { Product } from "@/entities/product/model/types";
 import { homeQueryOptions } from "@/features/commerce/queries";
 import { ProductCard } from "@/components/commerce/ProductCard";
 

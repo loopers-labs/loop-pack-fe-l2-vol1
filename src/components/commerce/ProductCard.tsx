@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import type { Product } from "@/types/commerce";
+import type { Product } from "@/entities/product/model/types";
 import {
   useIsInCart,
   useIsInWishlist,

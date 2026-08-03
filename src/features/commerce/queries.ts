@@ -1,5 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { CategoryId, HomeResponse, ProductListResponse, ProductSort } from "@/types/commerce";
+import type {
+  CategoryId,
+  HomeResponse,
+  ProductListResponse,
+  ProductSort,
+} from "@/entities/product/model/types";
 import { fetchJson } from "@/shared/api";
 
 // URL(nuqs)에서 기본값이 채워진 뒤의 조회 조건. scenario는 사용자 상태가 아니므로 제외.

@@ -1,6 +1,6 @@
 "use client";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
-import type { CategoryId, ProductSort } from "@/types/commerce";
+import type { CategoryId, ProductSort } from "@/entities/product/model/types";
 
 const categoryValues = [
   "all",
