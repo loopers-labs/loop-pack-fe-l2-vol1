@@ -1,5 +1,4 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -24,64 +23,28 @@ describe("ProductCard", () => {
     cleanup();
   });
 
-  it("위시리스트 상태와 버튼 문구를 props 기준으로 렌더링한다", () => {
+  it("floating action과 bottom action을 정해진 위치에 렌더링한다", () => {
     render(
       <ProductCard
         product={product}
-        wishlistLabel="테스트 상품 위시리스트"
-        cartLabel="테스트 상품 장바구니"
-        isInWishlist={true}
-        isInCart={false}
-        onWishlistToggle={() => {}}
-        onCartToggle={() => {}}
+        floatingAction={<button type="button">floating action</button>}
+        bottomAction={<button type="button">bottom action</button>}
       />,
     );
 
-    const wishlistButton = screen.getByRole("button", { name: "테스트 상품 위시리스트" });
+    const floatingAction = screen.getByRole("button", { name: "floating action" });
+    const bottomAction = screen.getByRole("button", { name: "bottom action" });
 
-    expect(wishlistButton).toHaveAttribute("aria-pressed", "true");
-    expect(wishlistButton).toHaveTextContent("찜 해제");
+    expect(floatingAction.parentElement).toHaveAttribute("data-slot", "floating-action");
+    expect(bottomAction.parentElement).toHaveAttribute("data-slot", "bottom-action");
   });
 
-  it("장바구니 상태와 버튼 문구를 props 기준으로 렌더링한다", () => {
-    render(
-      <ProductCard
-        product={product}
-        wishlistLabel="테스트 상품 위시리스트"
-        cartLabel="테스트 상품 장바구니"
-        isInWishlist={false}
-        isInCart={true}
-        onWishlistToggle={() => {}}
-        onCartToggle={() => {}}
-      />,
-    );
+  it("action slot이 없어도 상품 정보를 렌더링한다", () => {
+    render(<ProductCard product={product} />);
 
-    const cartButton = screen.getByRole("button", { name: "테스트 상품 장바구니" });
-
-    expect(cartButton).toHaveAttribute("aria-pressed", "true");
-    expect(cartButton).toHaveTextContent("빼기");
-  });
-
-  it("버튼을 누르면 전달받은 action을 호출한다", async () => {
-    const onWishlistToggle = vi.fn();
-    const onCartToggle = vi.fn();
-
-    render(
-      <ProductCard
-        product={product}
-        wishlistLabel="테스트 상품 위시리스트"
-        cartLabel="테스트 상품 장바구니"
-        isInWishlist={false}
-        isInCart={false}
-        onWishlistToggle={onWishlistToggle}
-        onCartToggle={onCartToggle}
-      />,
-    );
-
-    await userEvent.click(screen.getByRole("button", { name: "테스트 상품 위시리스트" }));
-    await userEvent.click(screen.getByRole("button", { name: "테스트 상품 장바구니" }));
-
-    expect(onWishlistToggle).toHaveBeenCalledTimes(1);
-    expect(onCartToggle).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("img", { name: "테스트 상품" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "테스트 상품" })).toBeInTheDocument();
+    expect(screen.getByText("Loopers Select")).toBeInTheDocument();
+    expect(screen.getByText("10,000원")).toBeInTheDocument();
   });
 });

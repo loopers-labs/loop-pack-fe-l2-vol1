@@ -2,6 +2,8 @@ import { ProductCard } from "@/entities/product";
 import type { ProductCardItem } from "@/entities/product";
 import { useAddToCart } from "@/features/add-to-cart";
 import { useToggleWishlist } from "@/features/toggle-wishlist";
+import { CartActionButton } from "./CartActionButton";
+import { WishlistActionButton } from "./WishlistActionButton";
 
 type CommerceProductCardProps = {
   product: ProductCardItem;
@@ -23,13 +25,22 @@ export function CommerceProductCard({
     <ProductCard
       product={product}
       titleLevel={titleLevel}
-      wishlistLabel={wishlistLabel}
-      cartLabel={cartLabel}
-      isInWishlist={wishlistAction.isPressed}
-      isInCart={cartAction.isPressed}
-      isActionDisabled={wishlistAction.disabled || cartAction.disabled}
-      onWishlistToggle={wishlistAction.onClick}
-      onCartToggle={cartAction.onClick}
+      floatingAction={
+        <WishlistActionButton
+          label={wishlistLabel}
+          pressed={wishlistAction.isPressed}
+          disabled={wishlistAction.disabled}
+          onClick={wishlistAction.onClick}
+        />
+      }
+      bottomAction={
+        <CartActionButton
+          label={cartLabel}
+          pressed={cartAction.isPressed}
+          disabled={cartAction.disabled}
+          onClick={cartAction.onClick}
+        />
+      }
     />
   );
 }

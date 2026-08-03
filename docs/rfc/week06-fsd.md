@@ -297,9 +297,13 @@ store 접근 hook을 `shared`로 우회해야 하는 문제가 남는다.
 ```
 
 현재 홈과 상품 목록에서 상품 카드 action 구성은 동일하다.
-따라서 각 page에서 매번 cart/wishlist props를 계산하거나 action slot을 주입하기보다,
+따라서 각 page에서 매번 cart/wishlist 상태와 action을 계산하기보다,
 `CommerceProductCard`가 product UI와 cart/wishlist action을 조합한다.
 이 방식은 현재 코드의 변경량이 작고, `ProductCard`를 상품 표시 UI로 유지하면서 store 연결을 widget 내부로 숨길 수 있다.
+
+리뷰 피드백 반영 전에는 `ProductCard`가 `isInWishlist`, `onWishlistToggle`, `isInCart`, `onCartToggle` 같은 props를 직접 받았다.
+이 구조는 `entities/product`가 `features`를 import하지는 않지만, `ProductCard`의 public API에 wishlist/cart 행위 이름이 드러난다는 문제가 있었다.
+리뷰 후 `ProductCard`는 상품 정보 표시와 action 위치만 책임지도록 바꾸고, 실제 찜/담기 버튼은 `widgets/product-card`에서 조합하도록 변경한다.
 
 wrapper 내부 조합은 다음 형태를 목표로 한다.
 
@@ -311,11 +315,22 @@ function CommerceProductCard({ product }: CommerceProductCardProps) {
   return (
     <ProductCard
       product={product}
-      isInCart={cartAction.isPressed}
-      isInWishlist={wishlistAction.isPressed}
-      isActionDisabled={cartAction.disabled || wishlistAction.disabled}
-      onCartToggle={cartAction.onClick}
-      onWishlistToggle={wishlistAction.onClick}
+      floatingAction={
+        <WishlistActionButton
+          label={`${product.name} 위시리스트`}
+          pressed={wishlistAction.isPressed}
+          disabled={wishlistAction.disabled}
+          onClick={wishlistAction.onClick}
+        />
+      }
+      bottomAction={
+        <CartActionButton
+          label={`${product.name} 장바구니`}
+          pressed={cartAction.isPressed}
+          disabled={cartAction.disabled}
+          onClick={cartAction.onClick}
+        />
+      }
     />
   );
 }
@@ -324,15 +339,16 @@ function CommerceProductCard({ product }: CommerceProductCardProps) {
 다만 `CommerceProductCard`가 cart/wishlist store 내부 shape에 직접 의존하지는 않는다.
 `cartProductIdMap` 같은 저장 구조를 직접 읽지 않고, `features/add-to-cart`, `features/toggle-wishlist`
 hook을 통해 필요한 상태와 action만 소비한다.
-`ProductCard`는 찜/담기 버튼의 위치, 접근성 속성, disabled 표현을 계속 담당하되,
+`ProductCard`는 `floatingAction`, `bottomAction` 위치만 제공하고 wishlist/cart 도메인 이름은 알지 않는다.
+찜/담기 버튼의 접근성 속성, pressed/disabled 표현은 `widgets/product-card/ui`의 action button이 담당하고,
 상태 계산과 action 연결은 `CommerceProductCard`가 하위 slice의 공개 API로 조합한다.
 `hasHydrated` 같은 persist 복원 상태도 `CommerceProductCard`에 직접 노출하지 않는다.
 `useAddToCart`, `useToggleWishlist`가 각각 복원 상태를 읽고 `disabled`, `isPressed`로 변환해 반환한다.
 두 feature hook에서 같은 hydration flag를 읽는 중복은 허용한다.
 중요한 기준은 widget이 cart/wishlist store의 내부 shape나 persist 생명주기를 직접 알지 않게 하는 것이다.
 
-나중에 화면마다 상품 카드 action 구성이 달라지면 버튼 UI 자체를 feature로 분리하거나,
-`ProductCard`에 위치별 slot을 여는 방식으로 전환한다.
+현재 `WishlistActionButton`, `CartActionButton`은 상품 카드 안의 위치와 시각 표현에 묶여 있으므로 `widgets/product-card/ui`에 둔다.
+나중에 여러 widget/page에서 같은 action button UI를 재사용하게 되면 `features/add-to-cart/ui`, `features/toggle-wishlist/ui`로 승격한다.
 
 ### Public API 사용 여부
 
