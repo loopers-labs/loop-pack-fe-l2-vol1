@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/queries/homeQueries';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
-import type { Category, Product } from '@/types/commerce';
+import type { Category, Product } from '@/entities/product/model';
 
 export default function Home() {
   const { data, isLoading, isError, refetch } = useQuery(homeQueries.data());

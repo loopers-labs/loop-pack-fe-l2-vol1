@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { productsQueries } from '@/queries/productsQueries';
+import { productsQueries } from './productsQueries';
 
 describe('productsQueries — query key와 URL 조건 일치', () => {
   it('query key에 filters 객체 전체가 포함된다', () => {

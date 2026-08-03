@@ -6,7 +6,7 @@ import {
   parseAsStringLiteral,
   useQueryStates,
 } from 'nuqs';
-import { productsQueries } from '@/queries/productsQueries';
+import { productsQueries } from '@/entities/product/api/productsQueries';
 import { DEBOUNCE_DELAY } from '@/shared/constants/time';
 
 const categoryValues = [

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { useCartStore } from '@/store/cartStore';
-import { useWishlistStore } from '@/store/wishlistStore';
+import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 
 export function Header() {
   const cartCount = useCartStore((state) => state.items.length);

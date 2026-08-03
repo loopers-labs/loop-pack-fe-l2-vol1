@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useWishlistStore } from '@/store/wishlistStore';
+import { useWishlistStore } from './wishlistStore';
 
 beforeAll(() => {
   vi.stubGlobal('localStorage', {

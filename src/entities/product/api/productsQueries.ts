@@ -1,6 +1,6 @@
 import { GC_TIME, STALE_TIME } from '@/shared/constants/time';
-import { getProducts } from '@/service/products';
-import type { ProductListQuery } from '@/types/commerce';
+import { getProducts } from './products';
+import type { ProductListQuery } from '@/entities/product/model';
 import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 
 export const productsQueries = {

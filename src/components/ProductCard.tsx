@@ -1,8 +1,8 @@
 'use client';
 import Image from 'next/image';
-import type { Product } from '@/types/commerce';
-import { useCartStore } from '@/store/cartStore';
-import { useWishlistStore } from '@/store/wishlistStore';
+import type { Product } from '@/entities/product/model';
+import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 
 type Props = {
   product: Product;
