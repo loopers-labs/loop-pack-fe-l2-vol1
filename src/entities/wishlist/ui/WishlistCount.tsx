@@ -1,6 +1,6 @@
 'use client';
 
-import { useWishlist } from '@/entities/wishlist';
+import { useWishlist } from '../model/wishlist-store';
 
 export function WishlistCount() {
   const count = useWishlist((wishlist) => wishlist.productIds.length);

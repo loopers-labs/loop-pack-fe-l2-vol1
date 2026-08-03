@@ -3,13 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { Profiler } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { CartCount } from '@/entities/cart';
 import { useCartStore } from '@/entities/cart/model/cart-store';
 import type { Product } from '@/entities/product';
 import { ProductCard } from '@/entities/product';
+import { WishlistCount } from '@/entities/wishlist';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlist-store';
-import { CartCount } from '@/features/cart';
 import { CartToggleButton } from '@/features/cart';
-import { WishlistCount } from '@/features/wishlist';
 import { WishlistToggleButton } from '@/features/wishlist';
 
 const PRODUCT: Product = {

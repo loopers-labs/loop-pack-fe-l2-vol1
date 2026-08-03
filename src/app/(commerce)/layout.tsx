@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import { CartCount } from '@/features/cart';
-import { WishlistCount } from '@/features/wishlist';
+import { CartCount } from '@/entities/cart';
+import { WishlistCount } from '@/entities/wishlist';
 
 export default function CommerceLayout({ children }: { children: ReactNode }) {
   return (

@@ -1,17 +1,17 @@
 import { act, render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
 
+import { CartCount } from '@/entities/cart';
 import {
   CART_STORAGE_KEY,
   useCartStore,
 } from '@/entities/cart/model/cart-store';
+import { WishlistCount } from '@/entities/wishlist';
 import {
   useWishlistStore,
   WISHLIST_STORAGE_KEY,
 } from '@/entities/wishlist/model/wishlist-store';
-import { CartCount } from '@/features/cart';
 import { CartToggleButton } from '@/features/cart';
-import { WishlistCount } from '@/features/wishlist';
 import { WishlistToggleButton } from '@/features/wishlist';
 
 const PRODUCT_NAME = '사이드 테이블';

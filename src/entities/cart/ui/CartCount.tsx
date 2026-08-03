@@ -1,6 +1,6 @@
 'use client';
 
-import { useCart } from '@/entities/cart';
+import { useCart } from '../model/cart-store';
 
 export function CartCount() {
   const count = useCart((cart) => cart.productIds.length);
