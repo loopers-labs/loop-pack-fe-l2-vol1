@@ -370,3 +370,31 @@ barrel file과 Public API를 구분한다. "외부가 알아도 되는 것은 �
 - `src/app/providers.tsx` — `persist.rehydrate()` 제거
 
 판정: **응집 성공** — `entities/cart/` 폴더 안에서 완결. `widgets/header`, `widgets/product-card`는 store 인터페이스(`items`, `addItem`, `removeItem`)만 바라보므로 내부 구현이 서버로 바뀌어도 수정 불필요.
+
+---
+
+## FSD 이해 확인 질문
+
+**Q1. `ProductCard`가 찜 버튼을 직접 import하면 어떤 의존 규칙을 어기며, 어디에서 조합해야 하는가?**
+
+`entities/product/ui`가 `features`(찜·담기 행위)를 import하면 하위 레이어가 상위 레이어를 아는 역방향 의존이 생깁니다. FSD의 상위→하위 단방향 의존 규칙을 어기게 됩니다. 이 프로젝트에서는 `widgets/product-card`에서 `entities/product/ui`(순수 표시)와 store를 조합했습니다.
+
+**Q2. 한 페이지에서만 쓰는 검색 로직도 반드시 feature여야 하는가? 내 프로젝트에서는 어떻게 결정했는가?**
+
+반드시 feature일 필요는 없습니다. 한 페이지에서만 쓴다면 `_pages` 안에 둬도 됩니다. 다만 이 프로젝트에서는 `useProductFilters`가 URL 파싱·debounce·React Query 호출·페이지 계산을 담당하며 사용자 행위 단위로 명확히 분류되어 `features/product-filters/model`에 배치했습니다.
+
+**Q3. `formatPrice`는 항상 `shared/lib`인가? 통화·회원 등급·상품 정책이 포함되면 결정이 어떻게 달라지는가?**
+
+단순 숫자 포맷팅이라면 도메인을 모르는 순수 함수이므로 `shared/lib`에 둘 수 있습니다. 하지만 통화·회원 등급·상품 정책이 포함되면 특정 도메인의 규칙이 개입하므로 `shared`에 두면 비즈니스 로직이 섞입니다. 이 경우 해당 도메인의 `entities` 또는 `features`에 배치해야 합니다.
+
+**Q4. 두 feature가 협력해야 할 때 직접 import하지 않고 어떤 상위 레이어에서 조합했는가?**
+
+feature끼리 직접 import하지 않고 상위 레이어인 `widgets`에서 조합합니다. 이 프로젝트에서는 `widgets/product-card`가 `entities/product/ui`(순수 표시)와 `entities/cart`, `entities/wishlist` store를 조합했고, `widgets/header`가 장바구니·위시리스트 카운트를 조합했습니다.
+
+**Q5. 폴더 이동 후에도 TanStack Query 데이터와 Zustand 데이터를 서로 복사하지 않은 이유는 무엇인가?**
+
+각 상태의 Source of Truth(원본 저장소)가 이미 정해져 있기 때문입니다. 서버 데이터는 TanStack Query가, 장바구니·위시리스트는 Zustand가 원본입니다. 폴더를 옮겨도 이 원칙은 바뀌지 않으며, 서버 응답을 Zustand에 복사하면 두 저장소가 달라지는 버그가 생기고 동기화 코드가 추가로 필요해집니다.
+
+**Q6. barrel file과 Public API는 무엇이 다른가? 내 프로젝트에서는 어느 쪽을 선택했고 그 의도는 무엇인가?**
+
+barrel file은 경로를 줄이기 위해 습관적으로 내부를 재수출하는 파일이고, Public API는 "외부에 노출할 것은 이것뿐"이라는 의도를 담은 계약입니다. 이 프로젝트에서는 `entities/product`와 `features/product-filters`에만 `index.ts`를 두었고, 내부 구현(fetch 함수, debounce 로직 등)을 숨기고 외부에 필요한 타입과 훅만 공개하는 Public API 방식을 선택했습니다.
