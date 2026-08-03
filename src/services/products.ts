@@ -1,4 +1,4 @@
-import { apiClient } from '@/api/apiClient';
+import { apiClient } from '@/shared/api/apiClient';
 
 //AI가 작성한 파일입니다.
 

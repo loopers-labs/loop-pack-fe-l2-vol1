@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 
-import { getQueryClient } from '@/lib/query/get-query-client';
+import { getQueryClient } from '@/shared/api/queryClient';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
