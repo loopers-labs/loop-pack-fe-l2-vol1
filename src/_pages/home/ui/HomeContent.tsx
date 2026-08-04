@@ -3,21 +3,15 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ProductGrid } from "@/widgets/product-card";
 import { PrefetchCategoryLink } from "@/features/category-select";
+import { HeroSection } from "@/examples/week-07-performance/HeroSection";
 import { homeQueries } from "../api/home";
 import type { Product } from "@/entities/product";
 import layout from "@/shared/ui/layout.module.css";
 import styles from "./HomeContent.module.css";
 
-function ProductSection({
-  title,
-  products,
-}: {
-  title: string;
-  products: Product[];
-}) {
+function ProductSection({ products }: { title: string; products: Product[] }) {
   return (
     <section className={layout.section}>
-      <h2 className={layout.sectionTitle}>{title}</h2>
       {products.length === 0 ? (
         <p className={layout.status}>표시할 상품이 없습니다.</p>
       ) : (
@@ -32,10 +26,10 @@ export function HomeContent() {
 
   return (
     <>
-      <section className={styles.hero}>
-        <p>{home.banner.description}</p>
-        <h1>{home.banner.title}</h1>
-      </section>
+      <HeroSection
+        title={home.banner.title}
+        description={home.banner.description}
+      />
 
       <section className={layout.section}>
         <h2 className={layout.sectionTitle}>카테고리</h2>
