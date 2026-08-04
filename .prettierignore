@@ -12,3 +12,6 @@ docs
 # 에이전트 설정
 .claude
 .agents
+
+# 스타터 mock 백엔드 — 과제 판별 대상이라 원본 포맷 유지
+src/app/api
