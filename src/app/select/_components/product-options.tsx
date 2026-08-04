@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { ProductCatalog } from "@/types/product";
+import type { ProductCatalog } from "../_types/product";
 
 import { toBundleOptions, toItemOptions, toSizeOptions } from "../_lib/option-mappers";
 import { BundleSelect, type BundleOption } from "./bundle-select";

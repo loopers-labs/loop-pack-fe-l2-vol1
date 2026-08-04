@@ -6,7 +6,6 @@
 - children을 적극 활용해 합성(Composition) 우선
 - Props Drilling이 3단계 이상이면 Context 또는 상태 관리 도입 검토
 - 공통 컴포넌트는 비즈니스 로직을 포함하지 않음
-- 파일당 컴포넌트 1개
 - 페이지 단위의 컴포넌트(예: page.tsx)는 상태 연결과 컴포넌트 조합만 담당
 
 ## 코드 스타일
@@ -15,7 +14,6 @@
 - `async/await` 우선, 필요시 `then` 사용
 - 명시적 요청 없으면 파일/README/문서 생성 금지
 - 주석은 최소정보로 사용 (단, lint/ts 우회 시 사유 주석은 예외)
-- Single Responsibility Principle
 - Single Source of truth
 
 ## Next.js 규칙

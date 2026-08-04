@@ -1,6 +1,6 @@
 "use client";
 
-import { useSelect, type SelectOption } from "@/components/ui/select";
+import { useSelect, type SelectOption } from "@/shared/ui/select";
 
 export interface BundleOption extends SelectOption {
   price: number;

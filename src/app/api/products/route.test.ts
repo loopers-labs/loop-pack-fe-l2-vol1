@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
+import type { ProductListResponse as PageProductListResponse } from "@/_pages/products/api/get-products";
+import type { ProductListResponse } from "../_contract";
 import { GET } from "./route";
 
 const request = (query = "") => GET(new NextRequest(`http://localhost/api/products${query}`));
@@ -16,6 +18,10 @@ const allProductIds = async (sort: string) => {
 const hugePositiveInteger = "9".repeat(400);
 
 describe("GET /api/products", () => {
+  it("keeps the mock contract in sync with the _pages contract", () => {
+    expectTypeOf<ProductListResponse>().toEqualTypeOf<PageProductListResponse>();
+  });
+
   it("preserves Week 04 field shape while using the mapped source identity", async () => {
     const response = await request();
     const body = await response.json();

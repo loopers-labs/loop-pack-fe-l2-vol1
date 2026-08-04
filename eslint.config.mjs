@@ -7,6 +7,100 @@ import nextPlugin from "@next/eslint-plugin-next";
 import prettier from "eslint-config-prettier";
 import { defineConfig, globalIgnores } from "eslint/config";
 
+// 레이어 순위: 하위(shared) → 상위(_pages)
+const FSD_LAYERS = ["shared", "entities", "features", "widgets", "_pages"];
+const FSD_DEEP_IMPORT = ["@/entities/*/*", "@/features/*/*", "@/widgets/*/*", "@/_pages/*/*"];
+
+const fsdHarness = [
+  ...FSD_LAYERS.map((layer, rank) => ({
+    files: [`src/${layer}/**/*.{ts,tsx}`],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              // 상위 레이어 금지 + 자기 레이어 포함 = 같은 레이어 슬라이스 간 직접 import 차단
+              // (같은 슬라이스 내부는 상대경로 규칙이라 alias 전체 금지로 구현 가능)
+              // shared는 비즈니스 슬라이스가 없으므로 자기 레이어 제외
+              // app(라우팅·mock)은 최상위이므로 모든 FSD 레이어에서 import 금지
+              group: [
+                ...FSD_LAYERS.slice(layer === "shared" ? 1 : rank).map((l) => `@/${l}/*`),
+                "@/app/*",
+              ],
+              message: `FSD: ${layer}에서 같은/상위 레이어를 import할 수 없습니다`,
+            },
+            {
+              group: FSD_DEEP_IMPORT,
+              message: "FSD: Public API(슬라이스 루트)로만 import하세요",
+            },
+            ...(layer === "shared"
+              ? []
+              : [
+                  {
+                    group: ["../../*"],
+                    message: "FSD: 상대경로로 슬라이스 경계를 넘을 수 없습니다",
+                  },
+                ]),
+          ],
+        },
+      ],
+    },
+  })),
+  // 주의: 같은 rule의 options는 병합이 아니라 교체 — src/app/** 규칙을 추가하게 되면 이 객체가 반드시 뒤에 와야 함
+  {
+    files: ["src/app/api/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/_pages/*", "@/widgets/*", "@/features/*", "@/shared/*"],
+              message: "FSD: mock 백엔드는 자체 계약(_contract.ts)만 사용합니다",
+            },
+            {
+              group: FSD_DEEP_IMPORT,
+              message: "FSD: Public API(슬라이스 루트)로만 import하세요",
+            },
+            {
+              group: ["@/entities/*"],
+              allowTypeImports: true,
+              message: "FSD: mock 백엔드는 entities에서 타입만 가져올 수 있습니다",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // 같은 rule의 options는 교체이므로 mock 존 객체보다 반드시 뒤에 위치
+  {
+    files: ["src/app/api/**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/widgets/*", "@/features/*", "@/shared/*"],
+              message: "FSD: mock 백엔드는 자체 계약(_contract.ts)만 사용합니다",
+            },
+            {
+              group: ["@/entities/*", "@/_pages/*"],
+              allowTypeImports: true,
+              message: "FSD: mock 테스트는 entities·_pages에서 타입만 가져올 수 있습니다",
+            },
+            {
+              group: ["@/entities/*/*"],
+              message: "FSD: Public API(슬라이스 루트)로만 import하세요",
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+
 export default defineConfig([
   globalIgnores([".next/**", "out/**", "next-env.d.ts"]),
   {
@@ -69,5 +163,6 @@ export default defineConfig([
       ],
     },
   },
+  ...fsdHarness,
   prettier,
 ]);

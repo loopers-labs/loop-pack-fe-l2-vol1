@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog } from "@/shared/ui/dialog";
 
 const buttonStyle = {
   padding: "10px 16px",
@@ -22,7 +22,6 @@ const primaryButtonStyle = {
 } as const;
 
 export default function DialogDemoPage() {
-  // controlled 데모용 — 열림 상태의 주인이 "페이지"다
   const [cartOpen, setCartOpen] = useState(false);
 
   return (
@@ -37,7 +36,6 @@ export default function DialogDemoPage() {
     >
       <h1 style={{ fontSize: 24, fontWeight: 800 }}>Dialog — Compound + 이중 API</h1>
 
-      {/* 1. uncontrolled — open prop 없음. 열림 상태를 Dialog가 스스로 관리 */}
       <section style={{ display: "grid", gap: 8 }}>
         <h2 style={{ fontSize: 15, color: "#5a6675" }}>
           ① uncontrolled — 페이지는 열림 상태를 모른다
@@ -69,7 +67,6 @@ export default function DialogDemoPage() {
         </Dialog>
       </section>
 
-      {/* 2. controlled — open·onOpenChange를 페이지가 소유. Trigger 없이도 연다 */}
       <section style={{ display: "grid", gap: 8 }}>
         <h2 style={{ fontSize: 15, color: "#5a6675" }}>
           ② controlled — 페이지가 열림 상태의 주인이다 (현재: {cartOpen ? "열림" : "닫힘"})

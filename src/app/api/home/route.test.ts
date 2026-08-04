@@ -1,10 +1,16 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
+import type { HomeResponse as PageHomeResponse } from "@/_pages/home/api/get-home";
+import type { HomeResponse } from "../_contract";
 import { GET } from "./route";
 
 const request = (query = "") => GET(new NextRequest(`http://localhost/api/home${query}`));
 
 describe("GET /api/home", () => {
+  it("keeps the mock contract in sync with the _pages contract", () => {
+    expectTypeOf<HomeResponse>().toEqualTypeOf<PageHomeResponse>();
+  });
+
   it("returns banner, categories, popular products, and new products", async () => {
     const response = await request();
     const body = await response.json();
