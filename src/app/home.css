@@ -32,36 +32,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.week05-hero {
-  position: relative;
-  min-height: 260px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 32px;
-  background-color: #ececec;
-  background-size: cover;
-  background-position: center;
-  color: #fff;
-}
-
-.week05-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.55));
-}
-
-.week05-hero > * {
-  position: relative;
-}
-
-.week05-hero h1 {
-  font-size: 1.75rem;
-  font-weight: 800;
-}
-
 .week05-section {
   margin-top: 40px;
 }

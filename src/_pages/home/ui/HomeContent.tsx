@@ -3,6 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
+import { HeroSection } from './HeroSection';
+
 import { ProductCard, productQueries } from '@/entities/product';
 import { CartToggleButton } from '@/features/cart';
 import { WishlistToggleButton } from '@/features/wishlist';
@@ -52,13 +54,7 @@ export function HomeContent() {
         </p>
       )}
 
-      <section
-        className="week05-hero"
-        style={{ backgroundImage: `url(${banner.image})` }}
-      >
-        <p>{banner.description}</p>
-        <h1>{banner.title}</h1>
-      </section>
+      <HeroSection title={banner.title} description={banner.description} />
 
       <section className="week05-section">
         <h2>카테고리</h2>
