@@ -83,3 +83,31 @@ docs/read0more-week7/recordings/step0_race_condition_check.webm
 
 ### Hero의 시각적 크기, 비율, 주요 피사체와 문구를 유지, 이미지를 작게 보이게 하거나 품질을 낮춰 수치만 줄이지 않게
 - 크기, 비율, 주요 피사체와 문구를 유지 하였으며, 품질의 경우 next/image의 사용 시 default값(75)으로 사용
+
+### 홈 데이터를 기다리는 동안 Header, 하나의 h1, 페이지 설명까지 함께 막히지 않도록 현재 데이터 소유권에 맞는 렌더링 경계를 선택
+- 기존 구조 그대로 만족하여 따로 수정하지 않음. Header는 `Suspense` 밖(셸)이라 안 막히고, 느린 홈 데이터는 이를 소유한 `HomeSection`만 `<Suspense>`로 격리
+
+### Hero fallback은 실제 Hero와 같은 공간을 차지하게 하고, 교체 때 아래 콘텐츠가 밀리지 않는지 Layout shifts track으로 확인
+- fallback 추가 후에도 Lighthouse로 CLS 0임을 확인
+- fallback 추가 방식에 대한 추가설명: `<Suspense fallback={<><HeroSkeleton /><p className={layout.status}>홈 데이터를 불러오는 중…</p></>}>` 와 같이 hero와 그 외의 부분을 묶은 fallback을 사용. 그 이유로는 현재 `/api/home`이 배너·리스트를 한 응답으로 내려주므로 두 경계로 나눠도 같은 응답에 함께 풀려 이득이 없다고 판단하여 단일 Suspense fallback을(HeroSkeleton + 텍스트) 선택. 실무라면 별도 API 분리를 요청 하여 요청이 수용 될 경우는 Suspense 경계를 따로 지정했을 것으로 예상
+
+### LCP의 병목 구간과 선택한 변경의 인과관계
+- 병목 구간과 근거 수치: [LCP 4구간 관찰](#lcp를-서버-응답-대기-이미지-요청-시작-대기-이미지-전송-화면에-그려질-때까지의-시간으로-나눠-관찰) 참조 — 이미지 전송(Resource load duration) 7,904ms가 LCP의 93%를 차지 하므로 이 전송 구간이 LCP의 병목.
+- 선택한 변경: [이미지 후보·포맷·압축률](#실제-표시-크기와-viewport에-맞는-이미지-후보포맷압축률을-선택하고-불필요하게-큰-이미지가-내려가지-않게) · [발견/요청·우선순위](#hero-이미지가-언제-발견되어-요청되는지-이-페이지에서-요청-우선순위를-높일-이유가-있는지) 참조 — next/image로 표시 폭·DPR에 맞는 srcset(640~1920) + AVIF/WebP + quality 75, LCP 요소라 `priority` 적용.
+- 인과관계: 병목 구간이 이미지 전송 이므로 전송 바이트 자체(7.5MB→수십KB)를 줄인 것이 LCP 하락을 위한 작업.
+
+### Lighthouse FCP, LCP, CLS 5회 측정 값 after
+
+| 지표 | raw값 | 중앙값 | 최소 | 최대 |
+| --- | --- | --- | --- | --- | 
+| FCP | 0.5s, 0.5s, 0.5s, 0.5s, 0.5s | 0.5s | 0.5s | 0.5s |
+| LCP | 1s, 1s, 1s, 1s, 1s | 1s | 1s | 1s |
+| CLS | 0, 0, 0, 0, 0 | 0 | 0 | 0 |
+
+**before와 비교하여 FCP 8초 감소, hero에 대한 fallback 추가후에도 CLS 0임을 확인**
+
+### LCP를 서버 응답 대기, 이미지 요청 시작 대기, 이미지 전송, 화면에 그려질 때까지의 시간으로 나눠 관찰 after
+
+![LCP breakdown](images/LCP_breakdown_after.jpg)
+
+**before와 비교하여 Resource load duration 7904ms -> 530ms로 감소, 다만 Element Render delay가 37ms -> 62ms로 미세하게 상승**
