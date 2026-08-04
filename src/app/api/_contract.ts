@@ -1,6 +1,6 @@
 import type { Category, Product } from "@/entities/product";
 
-export type MockApiScenario = "empty" | "error";
+export type MockApiScenario = "empty" | "error" | "slow";
 
 export type ApiErrorResponse = {
   message: string;
