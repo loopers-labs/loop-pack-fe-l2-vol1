@@ -3,9 +3,8 @@
 import { useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  useQuery,
+  useSuspenseQuery,
   useQueryClient,
-  keepPreviousData,
 } from '@tanstack/react-query';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
@@ -127,18 +126,14 @@ function ProductGrid({ data, isFetching, setPage }: ProductGridProps) {
 }
 
 export function ProductListContent() {
-  const { params, query, setCategory, setSort, setSearch, setPage } =
+  const { params, query, isPending, setCategory, setSort, setSearch, setPage } =
     useProductSearchParams();
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
-    ...productListQueryOptions(query),
-    placeholderData: keepPreviousData,
-  });
+  const { data } = useSuspenseQuery(productListQueryOptions(query));
 
   useEffect(() => {
-    if (!data) return;
     const totalPages = Math.ceil(data.totalCount / data.pageSize);
     if (data.page < totalPages) {
       void queryClient.prefetchQuery(
@@ -166,39 +161,6 @@ export function ProductListContent() {
     },
     [setSearch],
   );
-
-  const handleRetry = () => {
-    void refetch();
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-sm text-text-secondary">상품을 불러오는 중...</p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-sm text-text-secondary">
-            {error?.message ?? '오류가 발생했습니다.'}
-          </p>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
-          >
-            다시 시도
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
 
   const { categories } = data;
 
@@ -242,7 +204,7 @@ export function ProductListContent() {
         </select>
       </div>
 
-      <ProductGrid data={data} isFetching={isFetching} setPage={setPage} />
+      <ProductGrid data={data} isFetching={isPending} setPage={setPage} />
     </main>
   );
 }
