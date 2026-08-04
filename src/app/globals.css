@@ -47,3 +47,149 @@ a {
     color-scheme: dark;
   }
 }
+
+/* 공통 레이아웃 (홈/상품 목록 공통) */
+.page {
+  width: min(100% - 32px, 1200px);
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+.section {
+  margin-top: 40px;
+}
+
+.section > h1,
+.section > h2 {
+  margin-bottom: 16px;
+}
+
+.page a:focus-visible,
+.page button:focus-visible,
+.page input:focus-visible,
+.page select:focus-visible {
+  outline: 3px solid #2557a7;
+  outline-offset: 3px;
+}
+
+/* 홈 */
+.hero {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 32px;
+  background: #ececec;
+}
+
+.categories {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.categories a {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+}
+
+/* 상품 목록 */
+.header,
+.header nav,
+.filters,
+.pagination,
+.product > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header {
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.product {
+  display: grid;
+  gap: 8px;
+}
+
+.product button,
+.pagination button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #ececec;
+  object-fit: cover;
+}
+
+.filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.filters input,
+.filters select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+.pagination {
+  justify-content: center;
+  margin-top: 32px;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filters label {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    min-height: 180px;
+    padding: 24px;
+  }
+
+  .header {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header nav {
+    width: 100%;
+  }
+
+  .grid {
+    gap: 24px 12px;
+  }
+}

@@ -1,12 +1,11 @@
-import type { HomeResponse } from "@/types/commerce";
-import styles from "./HeroSection.module.css";
+// [AI] FSD 마이그레이션으로 HomeResponse의 위치가 @/_pages/home/model로 이동함.
+import type { HomeResponse } from '@/_pages/home/model';
+import styles from './HeroSection.module.css';
 
-type HeroSectionProps = Pick<
-  HomeResponse["banner"],
-  "title" | "description"
->;
+type HeroSectionProps = Pick<HomeResponse['banner'], 'title' | 'description'>;
 
-export function HeroSection({ title, description }: HeroSectionProps) {
+// [AI] starter의 function 선언을 func-style 규칙에 맞춰 화살표 함수로 변경.
+export const HeroSection = ({ title, description }: HeroSectionProps) => {
   return (
     <section className={styles.hero} aria-labelledby="week07-hero-title">
       {/* eslint-disable-next-line @next/next/no-img-element -- Week 7 intentionally starts with an unoptimized LCP image. */}
@@ -24,4 +23,4 @@ export function HeroSection({ title, description }: HeroSectionProps) {
       </div>
     </section>
   );
-}
+};
