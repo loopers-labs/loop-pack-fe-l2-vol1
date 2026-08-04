@@ -1,7 +1,8 @@
 
 ## 🧭 0단계 — 측정 조건을 고정하고 Before를 남기기
 
-**before commit SHA**: 
+**before commit SHA**: a0dfbfe17d5cbfafc2660ca29bab30de63cf21f1
+**After commit SHA**: After 적용 후 기재
 
 **Lighthouse 측정 조건**
 - viewport: 모바일 412×823 (Lighthouse 모바일 기본 프리셋)
