@@ -17,6 +17,7 @@ export function getProducts(conditions: Required<ProductListQuery>) {
     sort: conditions.sort,
     page: String(conditions.page),
     pageSize: String(conditions.pageSize),
+    ...(conditions.scenario ? { scenario: conditions.scenario } : {}),
   });
 
   return apiClient<ProductListResponse>(`/api/products?${params}`);

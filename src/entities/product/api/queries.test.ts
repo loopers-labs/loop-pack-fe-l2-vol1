@@ -9,6 +9,7 @@ const CONDITIONS = {
   sort: 'popular',
   page: 1,
   pageSize: 12,
+  scenario: null,
 } satisfies Required<ProductListQuery>;
 
 const PREVIOUS_DATA = {
