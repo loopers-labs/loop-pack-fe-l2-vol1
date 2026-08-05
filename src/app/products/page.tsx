@@ -3,7 +3,7 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '../getQueryClient';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { searchParamsCache } from '@/entities/product/lib/searchParamsParsers';
-import { ErrorBoundary } from '@/shared/ui/error-boundary/ErrorBoundary';
+import { ProductListErrorBoundary } from './_components/ProductListErrorBoundary';
 import { ProductListContent } from '@/_pages/product-list/ui/ProductListContent';
 
 interface ProductListPageProps {
@@ -36,24 +36,7 @@ export default function ProductListPage({
   searchParams,
 }: ProductListPageProps) {
   return (
-    <ErrorBoundary
-      fallback={(error, reset) => (
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <p className="text-sm text-text-secondary">
-              {error.message || '오류가 발생했습니다.'}
-            </p>
-            <button
-              type="button"
-              onClick={reset}
-              className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
-            >
-              다시 시도
-            </button>
-          </div>
-        </div>
-      )}
-    >
+    <ProductListErrorBoundary>
       <Suspense
         fallback={
           <div className="flex min-h-[50vh] items-center justify-center">
@@ -65,6 +48,6 @@ export default function ProductListPage({
       >
         <ProductListLoader searchParams={searchParams} />
       </Suspense>
-    </ErrorBoundary>
+    </ProductListErrorBoundary>
   );
 }
