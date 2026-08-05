@@ -14,7 +14,11 @@ describe("HeroSection", () => {
 
     expect(markup).toContain("매일 새롭게 발견하는 취향");
     expect(markup).toContain("지금 가장 사랑받는 상품을 만나보세요.");
+    expect(markup).toContain(
+      '<source media="(max-width: 640px)" srcSet="/images/week-07/hero-mobile-768.webp"/>',
+    );
     expect(markup).toContain('src="/images/week-07/hero-1600.webp"');
+    expect(markup).toContain('fetchPriority="high"');
     expect(markup).toContain('width="1600"');
     expect(markup).toContain('height="900"');
   });
