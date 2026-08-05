@@ -134,6 +134,45 @@
 - **상태 줄 고정 높이**: idle에도 같은 라인박스를 차지하는 숨김 텍스트를 렌더해 갱신 표시 전환 시 아래 콘텐츠가 밀리지 않게 함
 - 측정 환경 참고: 클로드 브라우저 패널이 비표시(hidden)면 TanStack Query가 재시도를 일시정지하므로, 에러 상태 검증은 headless Chrome(visible)로 수행함
 
+## 3단계 — metadata와 Open Graph (중간 기록)
+
+### 합성 확인과 구현
+
+- **루트 layout**: `metadataBase(APP_ORIGIN)` + `title.template("%s | Commerce")` + 공통 openGraph(siteName·locale·type·fallback image). 페이지 `openGraph`는 shallow merge로 루트를 통째로 덮으므로 `sharedOpenGraph` 공통 객체를 각 페이지에서 spread해 siteName·locale·type을 유지
+- **발견**: `title.template`은 자식 세그먼트에만 적용된다 — `/products`(자식)는 `"…" | Commerce`가 붙지만, 홈(`app/page.tsx`)은 template을 정의한 layout과 같은 세그먼트라 suffix 없이 배너 title만 노출 (Next 문서상 의도된 동작)
+- **같은 query factory·URL 정규화**: 홈은 `homeQueries.home()`, 목록은 `productListQueries.list()`를 본문과 그대로 사용. 목록의 URL 조건은 nuqs `createLoader(productSearchParsers)`로 본문과 같은 파서에서 정규화 → queryKey와 GET 쿼리스트링이 본문과 동일
+- **서버 QueryClient**: `getQueryClient()`는 호출마다 새 QueryClient (singleton·영속 캐시 없음)
+- **서버 fetch 절대 URL**: `fetchCommerceApi`가 서버에서만 `APP_ORIGIN`을 앞에 붙임 (클라이언트는 상대 URL 유지)
+- 홈·목록 모두 요청 시점 metadata를 위해 동적 렌더링 (`/` force-dynamic, `/products`는 searchParams 사용으로 자동) — `robots: noindex` 없음
+
+### 규칙 적용 실측 (JS 끈 초기 HTML = curl document 응답)
+
+| URL 조건                                                      | title                         | description                                                | og:image              |
+| ------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------- | --------------------- |
+| `/` (홈)                                                      | 매일 새롭게 발견하는 취향     | 지금 가장 사랑받는 상품을 만나보세요.                      | banner image (p6.jpg) |
+| `/products?q=후디`                                            | "후디" 검색 결과 \| Commerce  | 전체 카테고리 상품 1개를 최신순으로 만나보세요.            | 첫 상품 (p27.jpg)     |
+| `/products?page=2`                                            | 상품 목록 2페이지 \| Commerce | 전체 카테고리 상품 30개를 최신순으로 만나보세요.           | 첫 상품 (p30.jpg)     |
+| `/products?q=니트&category=fashion&sort=price-asc` (성공 0건) | "니트" 검색 결과 \| Commerce  | 패션 카테고리(낮은 가격순) 조건에 맞는 상품이 0개입니다. … | **fallback 유지**     |
+| `/products?scenario=empty`                                    | 상품 목록 \| Commerce         | 전체 카테고리(최신순) 조건에 맞는 상품이 0개입니다. …      | **fallback 유지**     |
+
+### metadata query failure (`APP_ORIGIN=http://127.0.0.1:9` build·runtime)
+
+- 홈·목록 document 모두 **HTTP 200** + **root 공통 metadata 상속** (`<title>Commerce</title>`, 루트 description, 루트 og) — 페이지별 빈 metadata가 만들어지지 않음. 본문은 클라이언트 상대 URL fetch라 화면은 정상 동작
+
+### Route Handler 실제 호출 횟수 (임시 서버 로그 계수 → 제거 완료)
+
+- curl document 1회 (JS 없음): `/api/products` **1회** — generateMetadata의 서버 fetch만
+- 실제 브라우저 로드 1회 (JS 실행): **4회** — ① metadata 서버 fetch ② 본문 클라이언트 fetch (서버/클라이언트가 별개 실행이라 같은 URL이어도 memoization 대상 아님) ③④ Header `<Link href="/">`·`<Link href="/products">` prefetch가 각 라우트의 generateMetadata를 실행시켜 `/api/home`·기본 `/api/products` 추가 호출 — **동적 metadata의 숨은 비용**
+
+### UA별 document 응답 시점 (`/products?scenario=slow`, 3회)
+
+| UA                  | time_starttransfer | time_total   | 해석                                                 |
+| ------------------- | ------------------ | ------------ | ---------------------------------------------------- |
+| 일반(curl 기본)     | 0.007~0.010s       | 1.511~1.529s | 스트리밍 — 셸 먼저 전송, metadata는 body로 늦게 합류 |
+| facebookexternalhit | 1.513~1.523s       | 1.513~1.523s | HTML 제한 봇 — metadata 완성까지 문서 전체 블로킹    |
+
+→ 크롤러에게는 slow API 1.5초가 그대로 첫 바이트 지연이 된다. 동적 metadata의 비용은 일반 사용자가 아니라 봇 응답 시점과 prefetch 유발 호출에서 드러남
+
 ## After
 
 - **After SHA**: (4단계에서 기입)
