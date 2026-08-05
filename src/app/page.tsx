@@ -9,6 +9,7 @@ export default function HomePage() {
   return (
     <main className={app.page}>
       <CommerceHeader />
+      <h1 className={layout.sectionTitle}>홈</h1>
       <Suspense
         fallback={
           <>
