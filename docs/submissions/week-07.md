@@ -95,6 +95,45 @@
 - **LCP element**: 변화 없음 — 동일한 Hero `<img>`(이제 `/_next/image?...&w=750` 최적화 응답)
 - **부작용 확인**: FCP 변화 없음(905ms), `/products?scenario=slow` 목록 pending UI·동작 이전과 동일
 
+## 2단계 — 목록 상태와 CLS (중간 기록)
+
+### 여섯 상태 사전 검증 (구현 전, 클로드 브라우저)
+
+| 상태                    | 검증 결과                                                                                                                                         | 판정       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 데이터 없는 최초 진입   | SSR HTML에 `aria-busy="true" aria-label="상품 목록 불러오는 중"` + pageSize(12)개 스켈레톤 카드 — 목록 크기 예상 가능                             | 충족       |
+| 이전 데이터가 있는 갱신 | 정렬 변경 후 1.5초 동안 기존 목록 유지되지만 갱신 중 표시가 전혀 없음 (busy/status 마커 0건)                                                      | **미충족** |
+| 성공 + 0건              | 없는 검색어 입력 시 URL에 q 반영 + 검색창에 조건 표시 + "총 0개" + "검색 결과가 없어요" 안내                                                      | 충족       |
+| 최초 실패               | `throwOnError`(status≥500)가 던져져 `products/error.tsx` 바운더리가 실패 이유 + "다시 시도"를 표시 (코드 경로로 확정)                             | 충족       |
+| 갱신 실패               | 같은 throw 경로로 바운더리가 **페이지 전체를 교체** → 기존 목록 유지 불가 (코드 경로로 확정)                                                      | **미충족** |
+| 취소                    | queryFn이 AbortSignal 미사용 → 취소 자체가 없고 뒤처진 요청은 완주하되 queryKey가 달라 화면을 덮지 않음, 오류 노출 없음 (연속 변경 실험에서 확인) | 충족       |
+
+### 최소 변경 (미충족 2건만)
+
+- [queries.ts](../../src/_pages/products/api/queries.ts): 목록 쿼리의 `throwOnError` 제거 — 에러를 컴포넌트에서 최초/갱신으로 구분 처리
+- [product-list-content.tsx](../../src/_pages/products/ui/product-list-content.tsx):
+  - `isPending` → 스켈레톤(최초 진입), `!isPending && isFetching` → 기존 목록 위에 "목록을 갱신하는 중…" 상태 줄(항상 같은 높이 유지로 shift 방지)
+  - `isError && 캐시에 성공 없음` → 전체 실패 Placeholder + 다시 시도 (최초 실패)
+  - `isError && 캐시에 성공 있음` → React Query 캐시에서 가장 최근 성공 응답을 읽어 기존 목록 유지 + 갱신 실패 알림 + 다시 시도 (서버 응답의 로컬 복사 없음 — 캐시가 단일 출처)
+- **isPending/isFetching 역할**: `isPending`은 "보여줄 데이터가 아직 없다"(최초 스켈레톤 담당), `isFetching`은 "네트워크 요청 진행 중"(기존 목록 위 갱신 표시 담당). placeholderData가 있으면 isPending=false·isFetching=true가 되어 두 상태가 자연히 갈린다
+- **URL 조건과 query key**: nuqs 파서 → `productSearchParsers` 상태가 queryKey(`["products", normalized]`)와 GET 쿼리스트링에 동일하게 들어감 (기존 충족, 변경 없음)
+
+### 구현 후 재검증 + 증거 (production build)
+
+| 상태                    | 재검증 결과 (실측)                                                                                                                                          | 증거                                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 데이터 없는 최초 진입   | 1.5초 동안 제목·필터 + pageSize개 스켈레톤, 목록 교체 시 CLS 0 (Lighthouse layout shift 0건)                                                                | [state1-initial-pending.gif](assets/week-07/state1-initial-pending.gif) |
+| 이전 데이터가 있는 갱신 | 정렬 변경 → 기존 목록 유지 + "목록을 갱신하는 중…" 표시 → 완료 시 새 결과로 교체 (DOM 샘플: 0→1174ms 표시→2168ms 교체)                                      | [state2-refreshing.png](assets/week-07/state2-refreshing.png)           |
+| 성공 + 0건              | `scenario=empty` 진입: "총 0개" + "검색 결과가 없어요" 안내, URL 조건은 필터 컨트롤에 반영                                                                  | [state3-empty.gif](assets/week-07/state3-empty.gif)                     |
+| 최초 실패               | `scenario=error` 하드 리로드: 스켈레톤 → 재시도 소진(~9.1초) 후 목록 대신 "상품을 불러오지 못했어요" `role="alert"` + 다시 시도, 필터 유지                  | [state4-initial-error.png](assets/week-07/state4-initial-error.png)     |
+| 갱신 실패               | 목록 있는 상태에서 500 응답 강제 → 기존 목록 그대로 + "목록을 갱신하지 못했어요 (…) 다시 시도" `role="alert"`; 다시 시도 클릭 → 갱신 중 → 새 결과 복구 확인 | [state5-refresh-failed.png](assets/week-07/state5-refresh-failed.png)   |
+| 취소                    | 카테고리→정렬→카테고리 연속 변경: 요청 3건 모두 완주(취소 없음)·오류 노출 없음, 갱신 내내 "갱신하는 중" 표시, 최종 URL(active query)과 화면 일치            | DOM·네트워크 타임라인 (아래)                                            |
+
+- **연속 변경 타임라인**(5번 루틴 재수행): URL은 각 변경 즉시 반영, 화면은 기존 목록 + "갱신하는 중…" 유지, 최종 조건 응답(end 2990ms) 도착 후 총 30개·최신순으로 확정 — 중간 응답(end 1521/1995ms)이 최종 화면을 덮지 않음
+- **fallback→콘텐츠 교체 CLS**: slow·empty·error 세 시나리오 모두 Lighthouse CLS 0, layout shift 0건
+- **상태 줄 고정 높이**: idle에도 같은 라인박스를 차지하는 숨김 텍스트를 렌더해 갱신 표시 전환 시 아래 콘텐츠가 밀리지 않게 함
+- 측정 환경 참고: 클로드 브라우저 패널이 비표시(hidden)면 TanStack Query가 재시도를 일시정지하므로, 에러 상태 검증은 headless Chrome(visible)로 수행함
+
 ## After
 
 - **After SHA**: (4단계에서 기입)
