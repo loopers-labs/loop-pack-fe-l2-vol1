@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
+import ProductGridFallback from '@/widgets/product-grid/ui/ProductGridFallback'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { productListQueries } from '@/_pages/product-list/api/productList'
 import { sortValues } from '@/entities/product/model/productListContract'
@@ -83,13 +84,15 @@ export default function ProductListView() {
   const isUpdating = isFetching && !isPending
 
   // 보조 기술에는 무엇이 왜 바뀌는지 문장으로 전한다. 목록이 이전 조건의 결과인지가
-  // 두 상황을 가르는 핵심이라 문구를 나눈다.
-  let updateMessage = ''
-  if (isPlaceholderData) {
-    updateMessage =
+  // 세 상황을 가르는 핵심이라 문구를 나눈다.
+  let statusMessage = ''
+  if (isPending) {
+    statusMessage = 'Loading products.'
+  } else if (isPlaceholderData) {
+    statusMessage =
       'Updating results. The current list shows the previous selection.'
   } else if (isUpdating) {
-    updateMessage = 'Updating results.'
+    statusMessage = 'Updating results.'
   }
 
   // 페이지 표기의 근거는 URL이 아니라 지금 화면에 있는 응답이다. 전환 중에는 URL이
@@ -101,7 +104,20 @@ export default function ProductListView() {
 
   let results: React.ReactNode
   if (isPending) {
-    results = <p>Loading products…</p>
+    // 텍스트 한 줄은 결과가 얼마나 들어올지 알려주지 않는다. 실제 목록과 같은 자리를 잡는다.
+    // 개수 행과 페이지네이션도 결과 블록의 일부라 함께 예약한다. 그리드만 잡으면
+    // 응답이 도착할 때 카드가 개수 행 높이만큼 아래로 내려간다.
+    results = (
+      <>
+        <p className="product-result-count" aria-hidden="true">
+          <span className="product-skeleton product-skeleton-count" />
+        </p>
+        <ProductGridFallback count={condition.pageSize} />
+        <div className="week05-pagination" aria-hidden="true">
+          <span className="product-skeleton product-skeleton-pagination" />
+        </div>
+      </>
+    )
   } else if (isError) {
     // 실패 종류마다 열려 있는 길이 다르다. 셋 중 하나는 반드시 실제로 동작해야 한다.
     // 재시도는 서버 오류에만 의미가 있고, 조건이 거절된 실패는 조건을 되돌려야 벗어난다.
@@ -216,7 +232,7 @@ export default function ProductListView() {
       {/* 이 알림은 결과 영역 밖에 둔다. aria-busy 영역 안의 변경은 보조 기술이 완료까지
           미룰 수 있는데, 완료 시점에는 이 문구가 이미 사라져 끝내 읽히지 않는다. */}
       <p className="visually-hidden" role="status">
-        {updateMessage}
+        {statusMessage}
       </p>
       <section
         className="week05-section"

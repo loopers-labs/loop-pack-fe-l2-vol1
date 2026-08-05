@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
 import type { Product } from '@/entities/product/model/product'
 import { resetStores } from '@/test/resetStores'
+import { PRODUCT_PAGE_SIZE } from '../model/searchParams'
 import ProductListView from './ProductListView'
 
 // 조건을 바꾸는 동안 사용자가 무엇을 보는지 고정한다.
@@ -84,13 +85,30 @@ afterEach(() => {
 })
 
 describe('조건을 바꾸는 동안의 목록', () => {
-  it('보여줄 데이터가 없는 최초 진입은 목록 대신 대기 화면을 보여준다', async () => {
+  it('보여줄 데이터가 없는 최초 진입은 올 목록만큼 자리를 잡는다', () => {
     deferredFetch()
 
     renderView()
 
-    expect(screen.getByText('Loading products…')).toBeInTheDocument()
+    // 텍스트 한 줄이 아니라 실제 목록과 같은 수의 카드 자리를 예약한다.
+    expect(document.querySelectorAll('.week05-grid')).toHaveLength(1)
+    expect(document.querySelectorAll('.week05-product')).toHaveLength(
+      PRODUCT_PAGE_SIZE,
+    )
     expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull()
+  })
+
+  it('빈 상자를 훑게 하지 않고 기다리는 중이라는 사실만 전한다', () => {
+    deferredFetch()
+
+    renderView()
+
+    expect(document.querySelector('.week05-grid')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    )
+    expect(liveRegion()).toHaveTextContent('Loading products.')
+    expect(resultsRegion()).toHaveAttribute('aria-busy', 'true')
   })
 
   it('이전 목록이 있으면 갱신 중에도 목록과 페이지네이션을 유지한다', async () => {

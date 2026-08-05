@@ -411,6 +411,43 @@
   font-weight: 700;
 }
 
+/* fallback 카드의 글자 자리다. 높이는 실제 텍스트가 만드는 줄 높이에 맞춘다.
+   여기가 어긋나면 결과가 도착할 때 카드 높이가 바뀌어 아래가 밀린다. */
+.product-skeleton {
+  display: block;
+  background: var(--surface-muted);
+}
+
+.product-skeleton-count {
+  width: 84px;
+  height: 14px;
+}
+
+.product-skeleton-brand {
+  width: 42%;
+  height: 14px;
+}
+
+.product-skeleton-name {
+  width: 88%;
+  height: 100%;
+}
+
+.product-skeleton-price {
+  width: 34%;
+  height: 18px;
+}
+
+.product-skeleton-action {
+  width: 78px;
+  height: 36px;
+}
+
+.product-skeleton-pagination {
+  width: 232px;
+  height: 36px;
+}
+
 /* 화면에는 짧은 문구만 두고, 무엇이 왜 바뀌는지는 보조 기술에 문장으로 전한다. */
 .visually-hidden {
   position: absolute;
