@@ -9,10 +9,10 @@ export function HeroSection({ title, description }: HeroSectionProps) {
       {/* eslint-disable-next-line @next/next/no-img-element -- Week 7 intentionally starts with an unoptimized LCP image. */}
       <img
         className={styles.image}
-        src="/images/week-07/hero-original.jpg"
+        src="/images/week-07/hero-1600.webp"
         alt=""
-        width={3840}
-        height={2160}
+        width={1600}
+        height={900}
       />
       <div className={styles.copy}>
         <p className={styles.eyebrow}>이번 주의 발견</p>
