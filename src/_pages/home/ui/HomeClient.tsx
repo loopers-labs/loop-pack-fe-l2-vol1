@@ -1,14 +1,15 @@
 'use client';
 
-import { useCallback } from 'react';
+// import { useCallback } from 'react';
 import Link from 'next/link';
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
-import { productListQueryOptions } from '@/entities/product/api/productQueries';
+// import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { formatWon, calcDiscount } from '@/shared/lib/format';
 import type { Product } from '@/entities/product/model/types';
+import {HeroSection} from "@/examples/week-07-performance/HeroSection";
 
 function ProductCard({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
@@ -74,14 +75,14 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 export function HomeClient() {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
   const { data } = useSuspenseQuery(homeQueryOptions());
 
-  const prefetchProducts = useCallback(() => {
+  /* const prefetchProducts = useCallback(() => {
     void queryClient.prefetchQuery(
       productListQueryOptions({ category: 'all', sort: 'latest', page: 1 }),
     );
-  }, [queryClient]);
+  }, [queryClient]); */
 
   const { banner, categories, categoryThumbnails, popularProducts, newProducts } = data;
 
@@ -90,6 +91,8 @@ export function HomeClient() {
   return (
     <>
       {/* 배너 */}
+      <HeroSection title={banner.title} description={banner.description}/>
+      {/* 기존 배너
       <section className="relative overflow-hidden bg-bg-card">
         <div className="relative h-[420px] md:h-[520px]">
           <img
@@ -116,7 +119,7 @@ export function HomeClient() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* 카테고리 */}
       <section className="mx-auto max-w-5xl px-8 py-14">
