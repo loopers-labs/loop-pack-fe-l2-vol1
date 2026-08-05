@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query'
+import { keepPreviousData, queryOptions } from '@tanstack/react-query'
 import type {
   Category,
   CategoryId,
@@ -67,6 +67,10 @@ export const productListQueries = {
       // 일반에서 구체로 내려가는 계층이라 목록 전체와 특정 조건을 각각 조준할 수 있다.
       queryKey: [...productListQueries.lists(), condition],
       queryFn: ({ signal }) => fetchProducts(condition, signal),
+      // 조건을 바꾸면 새 key라 데이터가 없어 화면이 통째로 비었다. 목록과 페이지네이션이
+      // 사라지면 사용자는 어디까지 보고 있었는지도 잃는다. 이전 결과를 자리에 남긴다.
+      // 대신 화면이 그것을 현재 조건의 결과처럼 보여주면 안 된다. isPlaceholderData로 구분한다.
+      placeholderData: keepPreviousData,
       staleTime: 30_000,
       gcTime: 5 * 60_000,
     }),

@@ -38,9 +38,18 @@ const sortLabels: Record<ProductSort, string> = {
 export default function ProductListView() {
   const { condition, setFilters, canResetFilters } = useProductListCondition()
   // 조립된 조건 하나가 그대로 query key와 요청이 된다. 기본 정렬도 API에 명시된다.
-  const { data, isPending, isError, error, refetch } = useQuery(
-    productListQueries.list(condition),
-  )
+  // isPending은 보여줄 데이터가 아예 없는 최초 진입이다.
+  // isPlaceholderData는 지금 보이는 목록이 이전 조건의 결과라는 뜻이고,
+  // isFetching은 그 위에서 새 조건을 기다리는 중이라는 뜻이다. 셋을 다른 화면으로 쓴다.
+  const {
+    data,
+    isPending,
+    isFetching,
+    isPlaceholderData,
+    isError,
+    error,
+    refetch,
+  } = useQuery(productListQueries.list(condition))
 
   // 표시 이름은 서버 응답에서 찾고, 없으면 폴백을 쓴다.
   const categoryLabel = (value: CategoryFilter) => categoryFallbackLabels[value]
@@ -69,8 +78,25 @@ export default function ProductListView() {
     setFilters({ page })
   }
 
+  // 보여줄 목록이 이미 있는데 새 응답을 기다리는 상태다. 조건을 바꾼 경우와
+  // 같은 조건을 다시 가져오는 경우 모두 사용자에게는 갱신 중이다.
+  const isUpdating = isFetching && !isPending
+
+  // 보조 기술에는 무엇이 왜 바뀌는지 문장으로 전한다. 목록이 이전 조건의 결과인지가
+  // 두 상황을 가르는 핵심이라 문구를 나눈다.
+  let updateMessage = ''
+  if (isPlaceholderData) {
+    updateMessage =
+      'Updating results. The current list shows the previous selection.'
+  } else if (isUpdating) {
+    updateMessage = 'Updating results.'
+  }
+
+  // 페이지 표기의 근거는 URL이 아니라 지금 화면에 있는 응답이다. 전환 중에는 URL이
+  // 먼저 새 조건으로 바뀌므로, URL을 따르면 1페이지 상품 위에 2가 적힌다.
+  const shownPage = data?.page ?? 1
   const totalPages = data
-    ? Math.max(1, Math.ceil(data.totalCount / condition.pageSize))
+    ? Math.max(1, Math.ceil(data.totalCount / data.pageSize))
     : 1
 
   let results: React.ReactNode
@@ -120,23 +146,31 @@ export default function ProductListView() {
   } else {
     results = (
       <>
-        <p className="product-result-count">{data.totalCount} products</p>
+        {/* 갱신 표시를 개수 행 안에 넣는다. 새 줄을 끼우면 그만큼 아래가 밀린다. */}
+        <p className="product-result-count">
+          {data.totalCount} products
+          {isUpdating ? (
+            <span className="product-result-updating"> · Updating…</span>
+          ) : null}
+        </p>
         <ProductGrid products={data.products} />
         <nav className="week05-pagination" aria-label="Pagination">
+          {/* 전환 중 이동을 막는다. 보이는 것은 이전 페이지라 여기서 한 번 더 누르면
+              사용자가 의도한 곳과 다른 페이지로 간다. */}
           <button
             type="button"
-            disabled={condition.page <= 1}
-            onClick={() => handlePageChange(condition.page - 1)}
+            disabled={isPlaceholderData || shownPage <= 1}
+            onClick={() => handlePageChange(shownPage - 1)}
           >
             Previous
           </button>
           <span>
-            {condition.page} / {totalPages}
+            {shownPage} / {totalPages}
           </span>
           <button
             type="button"
-            disabled={condition.page >= totalPages}
-            onClick={() => handlePageChange(condition.page + 1)}
+            disabled={isPlaceholderData || shownPage >= totalPages}
+            onClick={() => handlePageChange(shownPage + 1)}
           >
             Next
           </button>
@@ -179,7 +213,16 @@ export default function ProductListView() {
           />
         </div>
       </section>
-      <section className="week05-section" aria-label="Product results">
+      {/* 이 알림은 결과 영역 밖에 둔다. aria-busy 영역 안의 변경은 보조 기술이 완료까지
+          미룰 수 있는데, 완료 시점에는 이 문구가 이미 사라져 끝내 읽히지 않는다. */}
+      <p className="visually-hidden" role="status">
+        {updateMessage}
+      </p>
+      <section
+        className="week05-section"
+        aria-label="Product results"
+        aria-busy={isFetching}
+      >
         {results}
       </section>
     </main>

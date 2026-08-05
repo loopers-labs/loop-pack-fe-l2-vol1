@@ -1,3 +1,4 @@
+import { keepPreviousData } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   fetchProducts,
@@ -117,6 +118,22 @@ describe('productListQueries', () => {
     const pageChanged = productListQueries.list({ ...base, page: 2 })
     expect(pageChanged.queryKey).not.toEqual(
       productListQueries.list(base).queryKey,
+    )
+  })
+
+  it('조건이 바뀌는 동안 이전 결과를 자리에 남긴다', () => {
+    const condition: ProductListCondition = {
+      q: '',
+      category: 'all',
+      sort: 'latest',
+      page: 1,
+      pageSize: 12,
+      scenario: null,
+    }
+
+    // 이 옵션이 빠지면 조건을 바꾸는 순간 화면에 데이터가 없어져 목록이 통째로 사라진다.
+    expect(productListQueries.list(condition).placeholderData).toBe(
+      keepPreviousData,
     )
   })
 

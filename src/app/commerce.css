@@ -395,10 +395,30 @@
   background: transparent;
 }
 
+/* 갱신 상태는 이 행 안에서만 바뀐다. 블록을 새로 끼우면 그 높이만큼 아래가 밀린다.
+   좁은 화면에서 문구가 길어져도 줄이 늘지 않도록 한 줄로 잘라 높이를 고정한다. */
 .product-result-count {
   margin-bottom: 20px;
+  overflow: hidden;
   color: var(--muted-foreground);
   font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.product-result-updating {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+/* 화면에는 짧은 문구만 두고, 무엇이 왜 바뀌는지는 보조 기술에 문장으로 전한다. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .week05-pagination {
