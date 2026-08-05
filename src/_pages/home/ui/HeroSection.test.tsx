@@ -1,10 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-// starter가 준 계약을 고정한다. 1단계에서 이미지를 바꾸더라도
-// 시각적 크기·비율·문구와 홈의 유일한 h1은 유지되어야 한다.
+// starter가 준 계약을 고정한다. 이미지를 바꾸더라도 시각적 크기와 비율과 문구,
+// 그리고 홈의 유일한 h1은 유지되어야 한다.
 describe('HeroSection', () => {
-  it('배너 응답의 제목과 설명을 홈의 유일한 h1으로 보여준다', async () => {
+  it('셸이 넘긴 제목과 설명을 홈의 유일한 h1으로 보여준다', async () => {
     const { default: HeroSection } = await import('./HeroSection')
 
     const markup = renderToStaticMarkup(
@@ -45,8 +45,7 @@ describe('HeroSection', () => {
     expect(markup).toContain('width="3840"')
     expect(markup).toContain('height="2160"')
 
-    // next/image 기본값 lazy가 들어오면 전송 크기 외에 로드 시점까지 바뀐다.
-    // 바꾸기 전 raw img의 eager를 유지해야 두 변경이 섞이지 않는다.
-    expect(markup).toContain('loading="eager"')
+    // LCP 후보를 lazy로 미루지 않는다. 여기서 lazy가 보이면 발견 시점이 다시 밀린다.
+    expect(markup).not.toContain('loading="lazy"')
   })
 })

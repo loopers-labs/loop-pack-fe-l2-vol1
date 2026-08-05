@@ -1,82 +1,22 @@
-'use client'
-
-import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
-import { errorMessageOf, isRetryable } from '@/shared/api/http'
-import { homeQuery } from '@/_pages/home/api/home'
 import HeroSection from './HeroSection'
+import HomeContent from './HomeContent'
 
-const categoryLabels: Record<string, string> = {
-  casual: 'Casual',
-  fashion: 'Fashion',
-  goods: 'Beauty & Goods',
-  home: 'Home',
-  digital: 'Digital',
-}
+// 홈의 서버 셸이다. 느린 홈 응답과 무관한 것만 여기 둔다.
+//
+// 이전에는 이 컴포넌트가 client였고 응답 전에 early return해서 Hero와 제목과 설명이
+// 초기 HTML에서 통째로 빠졌다. 그래서 브라우저는 LCP 후보 이미지의 존재조차
+// 응답이 온 뒤에야 알 수 있었다.
+//
+// 문구는 배너 응답이 아니라 이 셸이 소유한다. 화면에 보이던 문장을 그대로 옮겨서
+// 렌더링 경계만 바꾸고 콘텐츠는 건드리지 않는다. 응답의 banner는 계약 그대로 둔다.
+const heroTitle = '매일 새롭게 발견하는 취향'
+const heroDescription = '지금 가장 사랑받는 상품을 만나보세요.'
 
 export default function HomePage() {
-  const { data, isPending, isError, error, refetch } = useQuery(homeQuery())
-
-  if (isPending) {
-    return (
-      <main className="week05-section">
-        <p>Loading home…</p>
-      </main>
-    )
-  }
-
-  if (isError) {
-    return (
-      <main className="week05-section">
-        <p>{errorMessageOf(error, 'Could not load home.')}</p>
-        {/* 400대는 같은 요청을 다시 보내도 같은 실패다. 홈에는 되돌릴 조건이 없으므로
-            재시도 대신 다른 화면으로 나가는 길을 준다. */}
-        {isRetryable(error) ? (
-          <button type="button" onClick={() => refetch()}>
-            Try again
-          </button>
-        ) : (
-          <Link href="/products">Browse products</Link>
-        )}
-      </main>
-    )
-  }
-
-  const productSections = [
-    { title: 'Popular', products: data.popularProducts },
-    { title: 'New arrivals', products: data.newProducts },
-  ]
-
   return (
     <main>
-      <HeroSection
-        title={data.banner.title}
-        description={data.banner.description}
-      />
-
-      <section className="week05-section">
-        <h2>Categories</h2>
-        <div className="week05-categories">
-          {data.categories.map((category) => (
-            <Link key={category.id} href={`/products?category=${category.id}`}>
-              {categoryLabels[category.id] ?? category.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* 상품이 비어도 배너와 카테고리는 그대로 둔다. 빈 것은 상품 섹션뿐이다. */}
-      {productSections.map(({ title, products }) => (
-        <section className="week05-section" key={title}>
-          <h2>{title}</h2>
-          {products.length === 0 ? (
-            <p>No products to show yet.</p>
-          ) : (
-            <ProductGrid products={products} />
-          )}
-        </section>
-      ))}
+      <HeroSection title={heroTitle} description={heroDescription} />
+      <HomeContent />
     </main>
   )
 }
