@@ -14,6 +14,8 @@
 ## Home / Hero LCP 측정 조건
 
 - 측정 URL: `http://localhost:3000/`
+- Home API 조건: normal 응답 (`NEXT_PUBLIC_HOME_API_SCENARIO` 미설정, `/api/home`)
+- `/api/home?scenario=slow` 조건은 메인 기준선을 대체하지 않고, 아래 `Home / Slow API 보조 관찰`에서 LCP 구간 분해용으로 별도 기록한다.
 - Lighthouse: Chrome DevTools Lighthouse
   - Mode: Navigation
   - Device: Mobile
@@ -23,11 +25,11 @@
 
 ## Home / Hero LCP Raw Reports
 
-- [before-try1.html](./before-try1.html)
-- [before-try2.html](./before-try2.html)
-- [before-try3.html](./before-try3.html)
-- [before-try4.html](./before-try4.html)
-- [before-try5.html](./before-try5.html)
+- [home-normal-lighthouse-try1.html](./home-normal-lighthouse-try1.html)
+- [home-normal-lighthouse-try2.html](./home-normal-lighthouse-try2.html)
+- [home-normal-lighthouse-try3.html](./home-normal-lighthouse-try3.html)
+- [home-normal-lighthouse-try4.html](./home-normal-lighthouse-try4.html)
+- [home-normal-lighthouse-try5.html](./home-normal-lighthouse-try5.html)
 
 ## Home / Hero LCP 측정 결과
 
@@ -53,7 +55,7 @@
 
 Performance trace는 Lighthouse와 같은 모바일 viewport에서 확인했다. 다만 DevTools Performance 탭은 `CPU: 제한 없음`, `Network: 제한 없음` 상태였기 때문에 Lighthouse Mobile 수치와 직접 비교하지 않고 표시 순서와 LCP 후보 변화만 관찰했다.
 
-- Raw trace: [home-hero.trace.json.gz](./home-hero.trace.json.gz)
+- Raw trace: [home-normal-performance-trace.json.gz](./home-normal-performance-trace.json.gz)
 
 Trace에서 확인한 주요 이벤트는 다음과 같다.
 
@@ -76,6 +78,8 @@ Layout Shifts track에서 눈에 띄는 layout shift 이벤트는 관찰하지 �
 
 Chrome DevTools Network에서 새로고침 직후 초기 요청 순서와 전송 크기를 확인했다.
 
+- Raw Network: [home-normal-network.har](./home-normal-network.har)
+
 | 요청                                | 상대 시점 | 전송 크기 | 소요 시간 | 비고               |
 | ----------------------------------- | --------: | --------: | --------: | ------------------ |
 | document `/`                        |     0.0ms |    10.4KB |   522.7ms | 초기 HTML          |
@@ -90,6 +94,47 @@ Chrome DevTools Network에서 새로고침 직후 초기 요청 순서와 전송
 로컬 Network 탭에서는 document 요청 소요 시간이 Hero 이미지보다 길게 보인다. 하지만 document는 페이지 로드를 시작하기 위한 기본 요청이고, Lighthouse Mobile 기준 LCP resource는 Hero 이미지로 확인되었다.
 
 이 판단은 Lighthouse Mobile의 LCP resource와 Network 전송 크기 기록에 근거한 가설이다. 다음 단계에서 Hero 이미지 전송 크기를 줄인 뒤 같은 조건으로 재측정해 반증한다.
+
+## Home / Slow API 보조 관찰
+
+Hero LCP 구간 중 서버 응답 대기와 이미지 요청 시작 대기를 확인하기 위해 `NEXT_PUBLIC_HOME_API_SCENARIO=slow` 조건을 별도로 관찰했다. 이 측정은 normal Home 5회 기준선을 대체하지 않고, LCP 구간 분해를 위한 보조 자료로 사용한다.
+
+- 실행:
+  - `NEXT_PUBLIC_HOME_API_SCENARIO=slow pnpm build`
+  - `NEXT_PUBLIC_HOME_API_SCENARIO=slow pnpm start`
+- 측정 URL: `http://localhost:3000/`
+- Lighthouse 조건: normal Home 측정과 같은 Mobile navigation 조건
+- Raw reports:
+  - [home-slow-lighthouse-try1.html](./home-slow-lighthouse-try1.html)
+  - [home-slow-lighthouse-try2.html](./home-slow-lighthouse-try2.html)
+  - [home-slow-lighthouse-try3.html](./home-slow-lighthouse-try3.html)
+- Raw Network: [home-slow-network.har](./home-slow-network.har)
+- Raw trace: [home-slow-performance-trace.json.gz](./home-slow-performance-trace.json.gz)
+
+### Home / Slow API Lighthouse 결과
+
+| 회차 | Performance |  FCP |   LCP |  TBT | CLS |
+| ---- | ----------: | ---: | ----: | ---: | --: |
+| 1    |          75 | 0.9s | 40.1s | 10ms |   0 |
+| 2    |          75 | 0.9s | 40.6s | 20ms |   0 |
+| 3    |          74 | 0.9s | 40.7s | 10ms |   0 |
+
+- LCP median: 40.602s
+- LCP min: 40.069s
+- LCP max: 40.686s
+- CLS: 3회 모두 `0`
+
+### Home / Slow API 구간 분해
+
+| 구간                  | 관찰                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| 서버 응답 대기        | Network HAR에서 document `/` 요청이 약 `1.54s` 걸렸다.                              |
+| 이미지 요청 시작 대기 | Performance trace에서 document 요청 직후 Hero 이미지 요청이 시작됐다.               |
+| 이미지 전송           | `/images/week-07/hero-original.jpg` 전송 크기는 약 `7.5MB`로 normal 측정과 같았다.  |
+| 화면에 그려질 때까지  | Trace에서 Hero 제목 텍스트가 먼저 LCP 후보가 되고, 최종 후보는 Hero 이미지가 됐다.  |
+| Layout shift 확인     | Trace의 LayoutShift 이벤트는 `0`개였고, Lighthouse CLS도 3회 모두 `0`으로 기록됐다. |
+
+Home slow 조건에서는 서버 응답 대기 약 `1.5s`가 document 요청에 반영됐다. 그래도 Lighthouse LCP는 3회 모두 약 `40s`로 유지되어, slow home 데이터 대기보다 Hero 원본 이미지 전송 비용이 더 큰 병목 후보로 남았다.
 
 ## 관찰
 
@@ -129,6 +174,7 @@ Products 페이지는 Lighthouse 점수 측정보다 slow API 상태 전이와 �
 Chrome DevTools MCP로 `http://localhost:3000/products`를 production slow 환경에서 관찰했다.
 
 - 관찰 방법: Chrome DevTools MCP로 화면 snapshot, Network 요청 목록, 특정 API 요청 상세, 페이지 상태 로그를 확인했다.
+- Raw Network: [products-slow-network.har](./products-slow-network.har)
 - 최초 진입 완료 후 화면: URL `/products`, `총 30개`, 첫 페이지 상품 12개 표시.
 - 최초 진입 이후 next page prefetch: `/api/products?category=all&sort=latest&page=2&pageSize=12&scenario=slow`가 브라우저 fetch로 발생하고 200으로 완료됐다.
 - 페이지 2 이동: page 2가 이미 prefetch되어 즉시 전환됐고, 이동 후 `/api/products?category=all&sort=latest&page=3&pageSize=12&scenario=slow` prefetch가 약 1.5초 뒤 200으로 완료됐다.
@@ -136,6 +182,7 @@ Chrome DevTools MCP로 `http://localhost:3000/products`를 production slow 환�
 - 검색 결과 empty: `goods` 상태에서 `q=스탠리`를 입력하면 pending 동안 기존 goods 6개 목록이 유지되고, 완료 후 `총 0개`와 빈 상태 문구로 바뀌었다.
 - 빠른 변경 경합: `digital&sort=popular` 요청과 `home&sort=popular` 요청을 약 120ms 간격으로 겹치게 만들었다. 더 이른 `digital&sort=popular` 응답이 먼저 200으로 끝났지만 화면을 덮지 않았고, 최종 URL `/products?category=home&sort=popular`에 맞는 home 상품 6개가 표시됐다.
 - 검색 연속 입력: 제한 없는 로컬 DevTools 조건에서 검색어를 `스` → `스탠` → `스탠리`로 입력했다. 100ms 간격 입력은 debounce 때문에 최종 `스탠리` 요청만 발생했다. 350ms 간격 입력은 `스`, `스탠`, `스탠리` 요청이 각각 발생해 겹쳤지만, 이전 검색어 응답이 먼저 200으로 끝나도 화면은 최종 URL `/products?q=스탠리`에 맞는 `총 4개` 결과로 갱신됐다.
+- Network HAR: 조건 변경과 검색 입력 중 `/api/products?...scenario=slow` 요청 6개가 기록됐고, 모두 200으로 약 `1.51s`에 완료됐다.
 - 요청 취소: 이번 관찰에서 Network에 남은 `/api/products?...scenario=slow` 요청들은 모두 200으로 완료됐다. React Query가 stale 응답을 화면에 반영하지는 않지만, fetch abort로 취소된 요청은 확인되지 않았다.
 - Console: preserved error/warn/issue 메시지는 없었다.
 
@@ -143,7 +190,7 @@ Chrome DevTools MCP로 `http://localhost:3000/products`를 production slow 환�
 
 Chrome DevTools Performance trace로 Products slow scenario의 조건 변경 경합과 검색 연속 입력을 한 번에 녹화했다.
 
-- Raw trace: [products-slow.trace.json.gz](./products-slow.trace.json.gz)
+- Raw trace: [products-slow-performance-trace.json.gz](./products-slow-performance-trace.json.gz)
 
 - Trace 조건: `http://localhost:3000/products`, CPU `1x`, Network throttling 없음.
 - 녹화 행동: 카테고리 `goods` 변경, 정렬 `price-asc` 변경, 필터 초기화, 검색어 `스` → `스탠` → `스탠리` 350ms 간격 입력.
