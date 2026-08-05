@@ -175,33 +175,39 @@
 
 ## After
 
-- **After SHA**: (4단계에서 기입)
+- **After SHA**: `18bc44003be4d0fd0f2fcd86ad5e2b980471d532`
+- 측정 조건은 Before와 동일 (측정 조건 표), 실행만 `APP_ORIGIN=http://localhost:3000 pnpm build`→`pnpm start` (3단계 metadata의 서버 fetch용 origin 지정)
 
 ### Lighthouse 5회 raw 값 (Before와 같은 조건)
 
-| 회차       | FCP | LCP | CLS |
-| ---------- | --- | --- | --- |
-| 1          |     |     |     |
-| 2          |     |     |     |
-| 3          |     |     |     |
-| 4          |     |     |     |
-| 5          |     |     |     |
-| **중앙값** |     |     |     |
-| **최솟값** |     |     |     |
-| **최댓값** |     |     |     |
+| 회차       | FCP    | LCP      | CLS |
+| ---------- | ------ | -------- | --- |
+| 1          | 909 ms | 2,789 ms | 0   |
+| 2          | 905 ms | 2,642 ms | 0   |
+| 3          | 905 ms | 2,719 ms | 0   |
+| 4          | 904 ms | 2,564 ms | 0   |
+| 5          | 905 ms | 2,721 ms | 0   |
+| **중앙값** | 905 ms | 2,719 ms | 0   |
+| **최솟값** | 904 ms | 2,564 ms | 0   |
+| **최댓값** | 909 ms | 2,789 ms | 0   |
 
 ### Before 대비 비교
 
-- **LCP element 변화**:
-- **Hero 이미지 전송 크기·요청 시작 순서 변화**:
-- **가장 길었던 구간의 변화**:
-- **측정 흔들림(5회 범위)보다 큰 변화인가**:
+- **LCP element 변화**: 동일한 Hero `<img>` — src만 원본 jpg에서 `/_next/image?...&w=750`(WebP) 최적화 응답으로 변경, "Request is discoverable in initial document" false → true
+- **Hero 이미지 전송 크기·요청 시작 순서 변화**: 전송 7,545,525 B → **32,423 B** (약 1/233). 요청 시작 순서 document → `/api/home`(81ms) → hero(595ms)였던 것이 document → **hero(21ms)** → `/api/home`(93ms)로 역전 (초기 HTML preload)
+- **가장 길었던 구간의 변화**: 전송(load duration) — 시뮬레이션 ~~36.8초(전체의 90%)가 ~~0.16초로. 관찰 트레이스 기준 4구간 모두 균등하게 짧아짐 (TTFB 7~~11ms / load delay 6~~8ms / 전송 7~~41ms / 렌더 41~~54ms)
+- **측정 흔들림(5회 범위)보다 큰 변화인가**: 그렇다 — Before LCP 5회 범위는 20ms(40,522~~40,542), After 범위는 225ms(2,564~~2,789)인데 변화량은 **37,805ms(−93.3%)**. CLS도 5회 모두 0.0393 → 5회 모두 0으로 결정적
 - **효과 없거나 악화된 변경과 유지/되돌림 판단**:
+  - 홈이 정적 프리렌더 → **동적 렌더링**으로 전환됨(3단계 요청 시점 metadata 요구): 문서 완료 시간 6ms → 528ms(스트리밍이 `/api/home` metadata를 기다림). 다만 첫 바이트는 스트리밍으로 즉시 나가 FCP(905ms 동일)·LCP(오히려 개선)·CLS(0) 등 사용자 체감 지표 악화 없음 → **유지** (비용은 크롤러 첫 바이트 1.5s와 Link prefetch 유발 API 호출로 3단계에 기록)
+  - 홈 title에 template 미적용(같은 세그먼트): Next 의도된 동작으로 기록하고 유지
+  - 그 외 되돌릴 변경 없음 — 이미지 품질(q75)·시각 크기·기존 기능 저하 없음
 
 ### 회귀 확인
 
-- 목록 최초 진입·갱신 재녹화, URL 복원(검색·카테고리·정렬·페이지):
-- 뒤로/앞으로 가기:
-- 장바구니·위시리스트·Header 개수:
-- 로딩·에러·빈 상태·재시도:
-- FSD 의존 방향·슬라이스 Public API 우회 여부:
+- 목록 최초 진입·갱신 재녹화, URL 복원(검색·카테고리·정렬·페이지): 최초 진입 스켈레톤→목록 재녹화 [products-slow-after.gif](assets/week-07/products-slow-after.gif) (CLS 0), 갱신 중 표시·실패 유지 동작은 2단계 증거와 동일. `?q=후디&category=all&sort=popular&page=1` 하드 로드 시 검색 input·셀렉트·목록 모두 URL대로 복원 ✓
+- 뒤로/앞으로 가기: casual 변경 → 뒤로(이전 조건·목록·input 복원) → 앞으로(casual 복원) 모두 URL·화면·컨트롤 일치 ✓
+- 장바구니·위시리스트·Header 개수: 찜 클릭 → `aria-pressed=true` + "위시리스트 1", 담기 클릭 → "담김" + "장바구니 1" 즉시 반영 ✓
+- 로딩·에러·빈 상태·재시도: 스켈레톤(GIF), `scenario=error` 실패 이유+다시 시도, `scenario=empty` "총 0개"+안내 모두 After 빌드에서 재확인 ✓ (다시 시도 클릭 복구는 2단계에서 검증)
+- FSD 의존 방향·슬라이스 Public API 우회 여부: 외부에서 `_pages` 내부 deep import 0건(모두 index 경유), shared→상위 레이어 역참조 0건, entities/widgets 방향 위반 0건 ✓
+- `pnpm check`(test+lint+typecheck+build) 통과
+- 홈 After 재녹화: [home-loading-after.gif](assets/week-07/home-loading-after.gif)
