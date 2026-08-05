@@ -28,6 +28,10 @@ export async function getProducts(params: ProductListQuery = {}): Promise<Produc
   setSearchParam(searchParams, "page", params.page);
   setSearchParam(searchParams, "pageSize", params.pageSize);
 
+  if (process.env.NEXT_PUBLIC_PRODUCT_API_SCENARIO === "slow") {
+    searchParams.set("scenario", "slow");
+  }
+
   const queryString = searchParams.toString();
   const apiPath = `/api/products${queryString ? `?${queryString}` : ""}`;
   const response = await fetch(createApiUrl(apiPath));
