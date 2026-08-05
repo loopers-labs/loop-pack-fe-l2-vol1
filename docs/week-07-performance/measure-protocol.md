@@ -1,41 +1,38 @@
 # 7주차 측정 절차
 
-Before와 After에서 **SHA를 뺀 모든 조건이 같아야** 비교가 성립한다. 기억에 의존하지 말고 이 문서를 옆에 띄워 체크하면서 측정한다.
+Before와 After에서 **SHA를 뺀 모든 조건이 같아야** 비교가 성립한다. 이 문서를 옆에 띄워 체크하면서 측정한다.
 
-## 고정 조건 — 매 측정마다 확인
+## 공통 조건
 
 | 항목 | 값 | 확인 |
 | --- | --- | --- |
 | 실행 | `pnpm build` → `pnpm start` (dev 서버 금지) | ☐ |
-| `APP_ORIGIN` | `http://localhost:3000` (build·runtime 동일) | ☐ |
-| 브라우저 프로필 | 확장·캐시·로그인 없는 새 프로필 (시크릿창 아님) | ☐ |
-| 프로필 이름 | `perf-week07` | ☐ |
-| **Lighthouse Device** | **Desktop** | ☐ |
-| Throttling | 프리셋 기본값 그대로 (커스텀으로 바꾸지 않는다) | ☐ |
-| load 조건 | cold — 매 회 Empty cache and hard reload | ☐ |
-| Chrome 버전 | `기록: ______` | ☐ |
-| Lighthouse 버전 | `기록: ______` | ☐ |
+| `APP_ORIGIN` | `http://localhost:3000` (build·runtime 같은 값) | ☐ |
+| 브라우저 프로필 | `perf-week07` — 확장·캐시·로그인 없는 별도 프로필 | ☐ |
+| Chrome 버전 | `______` (`chrome://version`) | ☐ |
+| Lighthouse 버전 | `______` | ☐ |
 
-**Desktop 프리셋이 세 조건을 함께 고정한다.** 따로 맞출 것이 없고, 커스텀으로 바꾸면 그것부터 Before/After에서 어긋난다.
+## 실험별 조건
 
-| 프리셋 | viewport | RTT | 대역폭 | CPU |
-| --- | --- | --- | --- | --- |
-| **Desktop (사용)** | **1350 × 940** | **40ms** | **10 Mbps** (`desktopDense4G`) | **1x** |
-| Mobile (미사용) | 412 × 823 | 150ms | 1.6 Mbps | 4x |
+측정은 독립된 실험 셋이다. 실험 안에서만 조건이 고정되면 되고, 실험끼리 달라도 비교가 깨지지 않는다.
 
-> 10 Mbps면 7.5MB 원본을 받는 데 약 6초가 걸린다. 스로틀링 없이 localhost에서 재면 디스크에서 바로 읽어 병목이 아예 안 잡힌다.
-
-**Performance 패널 녹화는 Lighthouse와 별개 도구라 emulation을 자동으로 맞춰주지 않는다.** 수동으로 같은 조건에 둔다.
-
-| 항목 | 값 | 확인 |
+| 실험 | 도구 | 설정 |
 | --- | --- | --- |
-| Device toolbar | `1350 × 940` | ☐ |
-| Network | Custom — 40ms RTT / 10 Mbps | ☐ |
-| CPU | `No throttling` (1x, Desktop 프리셋과 동일) | ☐ |
+| **홈 지표** | Lighthouse | Mode `Navigation` · Device `Desktop` · Categories `Performance`만 · `Clear storage` 켬 · Throttling은 **기본값 그대로** |
+| **홈 녹화** | Performance | Device toolbar `1350 × 940` · Network `Desktop 10Mbps`(10240 Kbps / 40 ms) · CPU `No throttling` · `Disable network cache` 켬 |
+| **목록 관찰** | 화면 | Network·CPU 스로틀 **없음**. 기다림은 `?scenario=slow`(1.5초)가 만든다 |
 
-> **Advanced A만 예외다.** 과제가 CPU `4x slowdown`을 명시했다. Basic 측정(Desktop 프리셋, CPU 1x)과 섞지 않는다.
+**Lighthouse는 Device를 고르면 나머지가 따라온다.** Desktop 프리셋이 viewport·네트워크·CPU를 함께 고정하므로 따로 맞출 것이 없다.
 
-> 프로필 만들기: Chrome → 프로필 아이콘 → 추가 → 로그인 없이 계속. 확장 프로그램이 없는지 `chrome://extensions`로 확인한다. 시크릿창은 "시크릿에서 허용"한 확장이 살아 있을 수 있어 쓰지 않는다.
+| Device | viewport | RTT | 대역폭 | CPU |
+| --- | --- | --- | --- | --- |
+| Desktop | 1350 × 940 | 40 ms | 10 Mbps (`desktopDense4G`) | 1x |
+
+**Performance 녹화는 Lighthouse와 별개 도구라 이 값을 자동으로 맞춰주지 않는다.** 위 표대로 수동 설정한다. Lighthouse와 같은 조건에 두어야 두 증거가 같은 지반 위에 놓인다.
+
+**목록 관찰에 스로틀을 걸지 않는 이유**는 볼 것이 시간이 아니라 화면 상태이기 때문이다. 기다림은 slow API가 이미 만들고, 거기에 네트워크까지 조이면 지연의 원인이 섞인다.
+
+> localhost 서버는 같은 컴퓨터에 있어 네트워크를 타지 않는다. 스로틀 없이 재면 7.5MB Hero가 29 ms에 도착해(실측) 이미지가 병목이라는 사실이 측정에 나타나지 않는다. 스로틀을 걸면 같은 파일이 6.14초가 된다.
 
 ## 실행 순서
 
@@ -44,83 +41,82 @@ Before와 After에서 **SHA를 뺀 모든 조건이 같아야** 비교가 성립
 ```bash
 APP_ORIGIN=http://localhost:3000 pnpm build
 APP_ORIGIN=http://localhost:3000 pnpm start
-```
-
-측정 대상 SHA를 먼저 적는다.
-
-```bash
 git rev-parse --short HEAD
 ```
 
-### 2. 홈 cold load — Lighthouse 5회
+SHA를 먼저 기록한다.
+
+### 2. 홈 지표 — Lighthouse 5회
 
 `http://localhost:3000/`
 
-- DevTools → Lighthouse → Mode `Navigation`, Device `Desktop`, Categories `Performance`만
-- Throttling은 프리셋 기본값 그대로 둔다
-- 매 회 전에 Network 탭 우클릭 → `Empty cache and hard reload`
-- 회차마다 **FCP · LCP · CLS raw 값**을 기록표에 적는다
+- 회차마다 **FCP · LCP · CLS raw 값**을 적는다
+- 캐시는 Lighthouse가 `Clear storage`로 매 회 비운다
+- 리포트 하단의 `LCP breakdown`(구간 4개)과 `Improve image delivery`(표시·전송 크기)를 함께 남긴다
 
-### 3. 홈 — Performance 녹화 1회
+### 3. 홈 녹화 — Performance 1회
 
-- LCP element가 무엇인지 (Lighthouse 리포트의 `Largest Contentful Paint element`)
-- filmstrip에서 **Header → 페이지 제목 → Hero** 가 각각 언제 보이는지
+- LCP element가 무엇인지
+- filmstrip에서 헤더 · 콘텐츠 · Hero가 각각 언제 보이는지
 - Layout Shifts track에 이동이 있는지, 있다면 어느 요소인지
-- Network waterfall에서 **document / `/api/home` / `hero-original.jpg`** 의 요청 시작 시점과 전송 크기
-- Hero 이미지의 **표시 크기**(레이아웃상 실제 폭·높이)와 전송 크기를 함께 적는다
+- Network waterfall에서 document · `/api/home` · `hero-original.jpg`의 요청 시작 시점과 전송 크기
+- 대기 중 프레임을 클릭해 사용자가 실제로 보는 화면을 남긴다
 
-### 4. 목록 slow — 3가지 상황 녹화
+### 4. 목록 6화면
 
-| 상황 | 방법 |
+| 상태 | 방법 |
 | --- | --- |
-| 데이터 없는 최초 진입 | 새 탭에서 `http://localhost:3000/products?scenario=slow` |
-| 기존 목록이 있는 갱신 | 위 화면이 뜬 뒤 카테고리·정렬·페이지 변경 |
-| 취소 | 검색·카테고리·정렬·페이지를 **빠르게 연속으로** 변경 |
+| 데이터 없는 최초 진입 | `/products?scenario=slow` |
+| 이전 데이터 있는 갱신 | 목록이 뜬 뒤 카테고리·정렬·페이지 변경 |
+| 성공 + 0건 | `/products?scenario=empty` |
+| 최초 실패 | `/products?scenario=error` |
+| 갱신 실패 | Network 탭에서 `/api/products` 차단 후 조건 변경 |
+| 취소 | 조건을 빠르게 연속 변경 |
 
-각 상황에서 확인할 것:
+각 상태에서 확인할 것
 
-- 화면이 어떻게 바뀌는지 (비워지는가, 유지되는가, 크기를 예상할 수 있는가)
+- 화면이 비워지는가, 유지되는가, 목록 크기를 예상할 수 있는가
 - 현재 URL의 active query와 화면 결과가 일치하는가
 - 이전 요청이 늦게 끝나도 현재 화면을 덮지 않는가
-- 취소된 요청이 오류로 보이지 않는가
-- fallback ↔ 실제 목록 교체에서 Layout shift가 생기는가
+- fallback과 실제 목록 교체에서 layout shift가 생기는가
 
-### 5. metadata 증거 (3단계에서 사용)
+> Query 캐시가 1분이라 이미 본 조건으로 돌아가면 네트워크를 타지 않는다. 취소를 관찰할 때는 새로고침으로 캐시를 비우고 아직 안 누른 값들로 바꾼다.
+
+### 5. metadata 증거
 
 ```bash
-# 일반 UA vs 페이스북 크롤러 응답 시점
 ./scripts/week-07-performance/ua-compare.sh /products
-./scripts/week-07-performance/ua-compare.sh "/products?scenario=slow"
-
-# 초기 HTML — JavaScript 실행 전 상태
 curl -s http://localhost:3000/ | head -100
 ```
 
-metadata query failure 재현 (닿지 않는 origin을 build·runtime 모두에 넣는다):
+일반 UA와 `facebookexternalhit`의 응답 시점을 비교하고, JavaScript 실행 전 document에 무엇이 있는지 확인한다.
+
+**조회 실패 재현** — 아무도 듣지 않는 포트를 origin으로 두면 서버가 자기 API를 부를 때 반드시 실패한다. metadata 조회가 실패했을 때 페이지별 빈 값이 아니라 root 공통 metadata를 상속하는지 확인하는 용도다. build와 runtime 둘 다 같은 값이어야 재현된다.
 
 ```bash
 APP_ORIGIN=http://127.0.0.1:9 pnpm build
 APP_ORIGIN=http://127.0.0.1:9 pnpm start
 ```
 
-> 로컬 origin으로 응답 시점과 HTML은 측정하되, localhost가 박힌 Open Graph URL을 "공유가 잘 된다"는 증거로 쓰지 않는다.
+> Open Graph 이미지 주소가 `localhost`면 외부 크롤러가 자기네 localhost를 찾아가 가져오지 못한다. 로컬에서 응답 시점과 HTML은 측정하되, 이 URL을 "공유가 잘 된다"는 증거로 쓰지 않는다.
 
 ### 6. 서버 호출 계수
 
-Route Handler에 임시 카운터를 넣고 document 요청 1회에 몇 번 불리는지 센다. **브라우저 Network로 판정하지 않는다** — 서버에서 일어나는 호출은 거기 안 보인다. 관찰이 끝나면 계측을 제거한다.
+Route Handler에 임시 카운터를 넣고 document 요청 1회에 몇 번 불리는지 센다. 관찰이 끝나면 계측을 제거한다.
+
+`generateMetadata`와 페이지 본문이 같은 데이터를 각각 조회하면 QueryClient가 둘 생긴다. 그래도 React가 같은 render에서 URL·옵션이 같은 native fetch를 하나로 합치므로 실제 HTTP 호출은 한 번일 수 있다. **서버가 자기 API를 부르는 것은 브라우저 Network에 보이지 않으므로 서버 측에서 세야 한다.**
 
 ## 기록 위치
 
-[`measurements.md`](./measurements.md) 한 파일에 라운드를 이어 쓴다. 최상단 궤적 요약표에 라운드마다 SHA·변경 내용·중앙값·판정을 남기고, 아래에 상세를 붙인다.
+라운드마다 폴더를 하나 만들고 그 안에 `notes.md`와 캡쳐를 함께 둔다. 궤적 요약표는 [`README.md`](./README.md)에 이어 쓴다.
 
-- R0(Before)와 최종 After는 풀 기록
-- 중간 라운드는 5회 raw + 바뀐 구간만. 단 PR에서 효과를 주장할 라운드는 반드시 5회
+```
+docs/week-07-performance/
+├── README.md          궤적 요약 · 캡쳐 체크리스트 · 라운드 템플릿
+├── measure-protocol.md
+└── r0-before/
+    ├── notes.md
+    └── 01-lighthouse.png ...
+```
 
-## 하지 말 것
-
-- `pnpm dev`로 측정
-- Lighthouse throttling을 커스텀으로 바꾸기 (프리셋이 이미 세 조건을 고정한다)
-- 스로틀링 없이 localhost에서 재기 (7.5MB가 공짜가 되어 병목이 안 잡힌다)
-- Basic 측정과 Advanced A의 CPU 설정을 섞기 (1x vs 4x)
-- 한 번의 최고 점수만 기록 (5회 raw가 필요하다)
-- 확장 프로그램이 있는 평소 프로필 사용, 시크릿창 사용
+R0(Before)와 최종 After는 풀 기록, 중간 라운드는 5회 raw와 바뀐 구간만 적는다.

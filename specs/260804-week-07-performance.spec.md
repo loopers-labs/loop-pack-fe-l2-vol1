@@ -53,7 +53,7 @@
 - **D7: 공통 Open Graph는 페이지마다 직접 완성한다** — 공유 모듈을 두지 않고 각 `generateMetadata`가 `siteName`·`locale`·`type`까지 채워 shallow merge에도 유실되지 않게 한다.
 - **D8: `generateMetadata`는 라우트 파일(`(commerce)/page.tsx`, `(commerce)/products/page.tsx`)에 직접 작성한다** — layout은 navigation 시 rerender되지 않아 stale을 막으려 `searchParams`를 받지 못한다(Next 공식 문서 `layout.js` Caveats). 검색어·정렬·페이지 번호가 전부 searchParams라 페이지별 동적 metadata는 `page.tsx`에만 둘 수 있다. 루트 `app/layout.tsx`는 title template과 기본 metadata를 맡는다. 6주차의 "라우트 파일은 얇은 진입점" 방침에 대한 예외로 기록한다.
 - **D9: metadata 조회 실패는 `try/catch`로 잡고 빈 객체를 반환한다** — 페이지별 부분 값을 만들지 않아 root 공통 metadata가 그대로 상속되고, 정상 empty(조건과 0건을 설명)와 서로 다른 fallback이 된다.
-- **D10: 효과 판정 기준은 Before 5회 raw 값의 범위다** — 중앙값 변화가 그 범위보다 클 때만 유지하고, 안이면 되돌리거나 유지하는 이유를 적는다. 사후 합리화를 막으려 기준을 측정 전에 고정한다.
+- **D10: 효과 판정 기준은 크기와 원인 두 조건이다** — 중앙값 변화가 Before 5회 raw 값의 범위보다 크고, 그 변화가 그 라운드에서 지목한 병목 구간에서 나왔을 때만 유지한다. 하나라도 못 채우면 되돌리거나 유지하는 이유를 적는다. 과제가 "범위보다 큰 변화인지, 그리고 그 변화가 선택한 병목과 연결되는지"로 조건을 둘 다 걸었다. 범위만 보면 원인과 무관한 변화도 효과로 통과한다. 사후 합리화를 막으려 기준을 측정 전에 고정한다.
 
 ## 완료 조건
 
@@ -63,7 +63,7 @@
 - [ ] 고정 조건(URL, 행동, viewport, CPU·network throttling, 브라우저·Lighthouse 버전, cold load, 별도 프로필)을 문서로 못박고 Before·After에서 동일하게 유지한다
 - [ ] FCP·LCP·CLS의 5회 raw 값과 중앙값·최솟값·최댓값을 Before·After 각각 남긴다
 - [ ] 각 단계마다 관찰한 사실 / 원인 가설 / 반증 방법 / 가장 작은 변경을 한 문장씩 적는다
-- [ ] 변화가 5회 raw 값의 범위보다 큰지 설명한다
+- [ ] 변화가 5회 raw 값의 범위보다 큰지, 그리고 그 변화가 지목한 병목 구간에서 나왔는지 각각 설명한다
 - [ ] LCP element, Network waterfall, Performance filmstrip을 함께 확인한다
 - [ ] Layout Shifts와 **document · `/api/home` · Hero 이미지**의 URL·전송 크기·요청 시작 시점을 확인한다
 - [ ] Before 시점에 slow 목록의 최초 진입과 기존 목록 갱신을 각각 녹화하고, 취소된 요청을 별도로 관찰한다
@@ -108,7 +108,7 @@
 - [ ] 검색·카테고리·정렬·페이지와 뒤로/앞으로 가기가 같은 화면을 복원한다
 - [ ] 장바구니·위시리스트·Header 개수, 로딩·에러·빈 상태·재시도가 유지된다
 - [ ] FSD 의존 방향과 슬라이스 Public API를 우회하지 않는다 (하네스 통과)
-- [ ] 효과가 없거나 악화된 변경, 개입하지 않은 근거를 `docs/week-07-performance/measurements.md`에 기록한다
+- [ ] 효과가 없거나 악화된 변경, 개입하지 않은 근거를 라운드 폴더의 `notes.md`에 기록한다
 
 **서술 — PR 본문 (T9)**
 
