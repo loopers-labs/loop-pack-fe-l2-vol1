@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("HeroSection", () => {
   it("renders the existing banner contract as a stable hero", async () => {
-    const { HeroSection } = await import("./HeroSection");
+    const { HeroSection } = await import("./hero-section");
 
     const markup = renderToStaticMarkup(
       <HeroSection

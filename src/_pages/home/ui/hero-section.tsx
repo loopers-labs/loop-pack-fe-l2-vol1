@@ -1,5 +1,5 @@
 import type { HomeResponse } from "@/types/commerce";
-import styles from "./HeroSection.module.css";
+import styles from "./hero-section.module.css";
 
 type HeroSectionProps = Pick<HomeResponse["banner"], "title" | "description">;
 
