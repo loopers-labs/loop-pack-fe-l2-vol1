@@ -11,12 +11,22 @@ import { fetchJson } from '@/shared/api/http'
 // entity가 아니라 page가 소유하는 근거는 RFC Decision 4에 있다. 소비 화면이 하나이고,
 // 목록 전용 staleTime과 key 정책은 이 화면의 조회 정책이기 때문이다.
 
+// 측정 재현용 제어값이다. 사용자 필터가 아니라 mock API에 응답 지연을 요구하는 조건이다.
+// 서버 응답을 바꾸므로 조건에 포함해 query key와 실제 요청이 함께 갈리게 한다.
+// 재현에 필요한 slow 하나만 둔다. empty와 error는 개별 API 호출로 확인하면 된다.
+export const productListScenarioValues = ['slow'] as const
+
+// 부재를 null로 표현한다. 조건 객체가 항상 완전한 모양이어야 key와 요청이 어긋나지 않는다.
+export type ProductListScenario =
+  (typeof productListScenarioValues)[number] | null
+
 export type ProductListQuery = {
   q?: string
   category?: CategoryId | 'all'
   sort?: ProductSort
   page?: number
   pageSize?: number
+  scenario?: ProductListScenario
 }
 
 // 조건을 항상 완전한 형태로 정규화한다.
@@ -42,6 +52,8 @@ export const fetchProducts = (
   params.set('sort', condition.sort)
   params.set('page', String(condition.page))
   params.set('pageSize', String(condition.pageSize))
+  // 지원하지 않는 값과 부재는 조건이 아니다. 있을 때만 보내 평소 응답 시점을 유지한다.
+  if (condition.scenario) params.set('scenario', condition.scenario)
   return fetchJson<ProductListResponse>(`/api/products?${params}`, signal)
 }
 

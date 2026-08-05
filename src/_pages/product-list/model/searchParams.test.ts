@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { PRODUCT_PAGE_SIZE, productListSearchParams } from './searchParams'
+import {
+  hasNonDefaultFilters,
+  PRODUCT_PAGE_SIZE,
+  productListScenarioSearchParams,
+  productListSearchParams,
+} from './searchParams'
 
 // parser는 잘못된 URL이 API 계약을 벗어나지 않게 막는 관문이다.
 // parse가 null을 돌려주면 nuqs가 기본값을 쓴다.
@@ -47,6 +52,34 @@ describe('category, sort parser', () => {
     expect(productListSearchParams.category.defaultValue).toBe('all')
     expect(productListSearchParams.sort.defaultValue).toBe('latest')
     expect(productListSearchParams.page.defaultValue).toBe(1)
+  })
+})
+
+describe('scenario parser', () => {
+  it('재현에 쓰는 slow만 통과시킨다', () => {
+    expect(productListScenarioSearchParams.scenario.parse('slow')).toBe('slow')
+  })
+
+  it('지원하지 않는 값은 요청 조건으로 쓰지 않는다', () => {
+    // URL에서 지운다는 뜻이 아니다. 주소창의 문자열은 남을 수 있고,
+    // 조건으로 읽히지 않아 평소 응답 시점을 그대로 쓴다는 뜻이다.
+    expect(productListScenarioSearchParams.scenario.parse('xxx')).toBeNull()
+    expect(productListScenarioSearchParams.scenario.parse('error')).toBeNull()
+  })
+
+  it('기본값을 두지 않아 URL에 없으면 조건이 없다', () => {
+    // 기본값이 생기면 URL에 없어도 매 요청에 재현 조건이 붙는다.
+    expect(productListScenarioSearchParams.scenario).not.toHaveProperty(
+      'defaultValue',
+    )
+  })
+
+  it('필터 그룹과 분리되어 초기화 판정에 들어가지 않는다', () => {
+    // 같은 그룹이면 setFilters(null)이 재현 조건까지 지운다.
+    expect(productListSearchParams).not.toHaveProperty('scenario')
+    expect(
+      hasNonDefaultFilters({ q: '', category: 'all', sort: 'latest', page: 1 }),
+    ).toBe(false)
   })
 })
 

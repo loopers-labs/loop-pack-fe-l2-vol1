@@ -15,6 +15,7 @@ const defaultCondition: ProductListCondition = {
   sort: 'latest',
   page: 1,
   pageSize: 12,
+  scenario: null,
 }
 
 const emptyListResponse = () =>
@@ -60,6 +61,7 @@ describe('fetchProducts', () => {
       sort: 'price-asc',
       page: 2,
       pageSize: 12,
+      scenario: null,
     })
 
     const requestedUrl = String(fetchMock.mock.calls[0][0])
@@ -67,6 +69,18 @@ describe('fetchProducts', () => {
     expect(requestedUrl).toContain('category=casual')
     expect(requestedUrl).toContain('sort=price-asc')
     expect(requestedUrl).toContain('page=2')
+  })
+
+  // 재현 조건은 응답 시점을 바꾸므로 실제 요청까지 내려가야 한다.
+  // 여기서 끊기면 URL에 slow를 넣어도 평소 응답이 와서 Before를 녹화할 수 없다.
+  it('재현 조건이 있으면 scenario를 요청에 붙이고, 없으면 뺀다', async () => {
+    const fetchMock = stubFetch()
+
+    await fetchProducts({ ...defaultCondition, scenario: 'slow' })
+    expect(String(fetchMock.mock.calls[0][0])).toContain('scenario=slow')
+
+    await fetchProducts(defaultCondition)
+    expect(String(fetchMock.mock.calls[1][0])).not.toContain('scenario')
   })
 })
 
@@ -78,6 +92,7 @@ describe('productListQueries', () => {
       sort: 'latest',
       page: 2,
       pageSize: 12,
+      scenario: null,
     }
 
     expect(productListQueries.all()).toEqual(['products'])
@@ -96,11 +111,29 @@ describe('productListQueries', () => {
       sort: 'latest',
       page: 1,
       pageSize: 12,
+      scenario: null,
     }
 
     const pageChanged = productListQueries.list({ ...base, page: 2 })
     expect(pageChanged.queryKey).not.toEqual(
       productListQueries.list(base).queryKey,
     )
+  })
+
+  // 같은 필터라도 응답 시점이 다르면 다른 결과다. key가 같으면 느린 응답이
+  // 평소 캐시를 덮거나 그 반대가 되어 무엇을 측정한 것인지 알 수 없게 된다.
+  it('재현 조건이 다르면 key도 달라 다른 캐시를 쓴다', () => {
+    const base: ProductListCondition = {
+      q: '',
+      category: 'all',
+      sort: 'latest',
+      page: 1,
+      pageSize: 12,
+      scenario: null,
+    }
+
+    expect(
+      productListQueries.list({ ...base, scenario: 'slow' }).queryKey,
+    ).not.toEqual(productListQueries.list(base).queryKey)
   })
 })

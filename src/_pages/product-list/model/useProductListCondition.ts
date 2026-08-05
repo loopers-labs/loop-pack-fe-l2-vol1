@@ -5,6 +5,7 @@ import type { ProductListCondition } from '@/_pages/product-list/api/productList
 import {
   hasNonDefaultFilters,
   PRODUCT_PAGE_SIZE,
+  productListScenarioSearchParams,
   productListSearchParams,
   productListUrlOptions,
 } from './searchParams'
@@ -17,10 +18,13 @@ export const useProductListCondition = () => {
     productListSearchParams,
     productListUrlOptions,
   )
+  // 재현 조건은 읽기만 한다. setFilters가 소유하지 않아 초기화에도 살아남는다.
+  const [{ scenario }] = useQueryStates(productListScenarioSearchParams)
 
   const condition: ProductListCondition = {
     ...filters,
     pageSize: PRODUCT_PAGE_SIZE,
+    scenario,
   }
 
   // 조건 초기화가 실제로 무언가를 바꾸는 상태인지 화면이 알아야 한다.

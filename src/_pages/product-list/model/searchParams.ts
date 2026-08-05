@@ -1,4 +1,5 @@
 import { createParser, parseAsStringLiteral, type inferParserType } from 'nuqs'
+import { productListScenarioValues } from '@/_pages/product-list/api/productList'
 import {
   categoryIds,
   sortValues,
@@ -33,6 +34,14 @@ export const productListSearchParams = {
 }
 
 export type ProductListFilters = inferParserType<typeof productListSearchParams>
+
+// 재현 조건은 사용자 필터와 다른 그룹에 둔다. 같은 그룹이면 setFilters(null) 초기화가
+// 필터를 지울 때 재현 조건까지 함께 지운다. 그룹을 나누면 초기화의 사정권 밖에 남는다.
+// 기본값을 두지 않아 URL에 없으면 null이고, 지원하지 않는 값도 null로 읽는다.
+// 이때 주소창의 문자열은 그대로 남을 수 있다. 지우는 것이 아니라 요청 조건으로 쓰지 않는다.
+export const productListScenarioSearchParams = {
+  scenario: parseAsStringLiteral(productListScenarioValues),
+}
 
 // 기본값의 원본은 parser다. 화면이 기본값을 다시 적으면 두 곳이 갈린다.
 // 조건이 이미 기본값이면 초기화해도 URL과 query key가 그대로여서 아무 일도 일어나지 않는다.
