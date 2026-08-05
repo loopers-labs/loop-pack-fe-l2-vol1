@@ -44,7 +44,7 @@
 | LCP로 인하여 Performance 점수가 크게 떨어짐 | hero image의 큰 용량으로 인하여 인터넷 속도가 느리다면 사용자가 이미지를 보는데 큰 시간이 소요됨  | 용량이 작은 이미지를 변경해 보고 재측정 | next/image를 사용하여 이미지 사이즈를 줄여보기 |
 
 ### /api/products?scenario=slow에서 이전 요청이 늦게 끝나도 현재 화면을 덮지 않는지 확인 녹화
-docs/read0more-week7/recordings/step0_race_condition_check.webm
+- docs/read0more-week7/recordings/step0_race_condition_check.webm
 
 ## 🖼️ 1단계 — Hero의 실제 LCP 병목을 줄이기
 
@@ -111,3 +111,51 @@ docs/read0more-week7/recordings/step0_race_condition_check.webm
 ![LCP breakdown](images/LCP_breakdown_after.jpg)
 
 **before와 비교하여 Resource load duration 7904ms -> 530ms로 감소, 다만 Element Render delay가 37ms -> 62ms로 미세하게 상승**
+
+## ⏳ 2단계 — 최초 pending, 목록 갱신, CLS를 나눠 다루기
+
+### 2-1 slow API의 1.5초 지연은 그대로 두고, 데이터가 없는 최초 진입에는 실제 목록 크기를 예상할 수 있는 pending UI를 보여주기
+- before: **수정 필요.** 최초 pending 은 텍스트 안내(`상품 목록을 불러오는 중…`)뿐이라 실제 목록 크기를 예상하지 못함.
+- after: **스켈레톤 도입.** `ProductListSkeleton`를 `products/page.tsx` Suspense fallback + `ProductList` isPending 에 적용. 
+- 영상: `docs/read0more-week7/recordings/step2-1-무데이터-최초진입-스켈레톤.webm`.
+
+### 2-2 기존 목록이 있을 때 검색·카테고리·정렬·페이지 조건을 바꾸면 목록을 즉시 비우지 않고 갱신 중임을 보여주기
+- before: **이미 적용됨.** `placeholderData: keepPreviousData` + 전환 중 `isPlaceholderData` 로 이전 목록을 흐리게 유지.
+- after: 코드 변경 없음(이미 적용). 이전 목록 유지+흐림 재확인.
+- 영상: `docs/read0more-week7/recordings/step2-2-기존목록-갱신중-흐림.webm`
+
+### 2-3 표에 적은 사용자 관찰 기준을 먼저 만족시키고, isPending과 isFetching이 각각 어떤 화면을 맡는지 설명하고, 최초 실패·기존 목록 갱신 실패·빈 결과·취소된 요청을 구분하기
+- before:
+  - `isPending`(캐시된 데이터가 없고 첫 fetch 중일 때 true): **상품 목록을 불러오는 중…** 화면을 출력할 때 사용.
+  - `isFetching`(첫 로드든 background 재요청이든 fetch 가 진행 중이면 true) 은 **사용하지 않음.**
+  - 최초 실패 = **이미 적용**.
+    - 5xx(일시적 서버 실패) → `error.tsx` 세그먼트 경계로 올려 "다시 시도" 버튼 제공(헤더·필터 유지). 재시도하면 성공할 수 있으니 버튼이 의미 있음.
+    - 4xx(잘못된 조회 조건) → 목록 자리에 인라인 안내만. **요청 조건 자체가 틀린 것(앱↔서버 계약 불일치)이라 같은 요청을 재시도해도 똑같이 4xx → 재시도가 무의미**하다고 생각했기 때문. 고치려면 재시도가 아니라 조회 조건(URL/필터)을 바꿔야 하므로, 재시도 버튼을 주는 `error.tsx` 경계로 올리지 않고 `isError`를 이용하여 인라인 안내로 끝냄.
+  - 기존 목록 갱신 실패 = **수정 필요.** (기존 목록 stale 유지되나 인라인 실패 표시·재시도 없음).
+  - 빈 결과 = **이미 적용.**
+  - 취소 = **이미 적용.** (취소된 이전 요청이 화면 안 덮음)
+- after:
+  - 최초 실패: 목록이 한 번도 안 뜬 채 첫 로드 실패 → `error.tsx` "다시 시도"(헤더·필터 유지) 확인.
+  - 기존 목록 갱신 실패: **기존 목록을 유지한 채 인라인 배너("목록을 갱신하지 못했습니다." + 다시 시도→`refetch`)** 표시.
+  - 빈 결과: "검색 결과가 없습니다." 확인.
+  - 취소: 검색어 race(스탠리→가디건)로 늦은 응답이 현재 화면 안 덮음 확인.
+- 영상:
+  - 최초 실패: `docs/read0more-week7/recordings/step2-3-최초실패.webm`
+  - 기존 목록 갱신 실패: `docs/read0more-week7/recordings/step2-3-갱신실패.webm`
+  - 빈 결과: `docs/read0more-week7/recordings/step2-3-성공-0건.webm`
+  - 취소: `docs/read0more-week7/recordings/step2-4-검색어-race-취소.webm`
+
+### 2-4 서버 응답을 바꾸는 URL 조건을 query key와 실제 GET 요청에 함께 넣고, 현재 URL의 active query와 화면 결과가 일치하며, 이전 요청이 늦게 끝나도 현재 화면을 덮지 않기
+- before: **이미 적용됨.** `normalizeProductListQuery` 결과를 queryKey·GET 양쪽에 동일하게 사용. 늦게 온 이전 요청은 현재 activeQuery 키에만 반영되어 화면을 덮지 않음.
+- after: 2단계 상태에서도 검색어 race 로 재확인. A(스탠리)·B(가디건) 요청 겹침, 최종 URL=`?q=가디건`·화면=가디건 결과, 늦은 A 응답이 화면 안 덮음.
+- 영상: `docs/read0more-week7/recordings/step2-4-검색어-race-취소.webm`
+
+### 2-5 서버 응답을 Zustand나 별도 로컬 상태에 복사하지 않기
+- before: **이미 적용됨.** 목록은 `useQuery` 결과를 그대로 사용, 별도 상태 복제 없음.
+- after: 코드 변경 없음.
+
+### 2-6 fallback과 실제 콘텐츠가 바뀔 때 CLS가 생기지 않는지 녹화와 Layout shifts track으로 확인하기
+- before: **수정 필요.** 실제 목록 크기를 예상할 수 있는 pending UI 미구현. 실제 상품 목록으로 교체 시 CLS 확인 대상.
+- after: 스켈레톤이 카드 grid + "총 N개" 줄 공간까지 처리. CLS 0 확인(크롬 DevTools의 performance탭에서 확인).
+- 영상: `docs/read0more-week7/recordings/step2-1-무데이터-최초진입-스켈레톤.webm`, `docs/read0more-week7/recordings/step2-2-기존목록-갱신중-흐림.webm`
+
