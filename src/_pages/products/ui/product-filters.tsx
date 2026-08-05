@@ -3,6 +3,7 @@
 import {
   categoryFilterOptions,
   pageSizeValues,
+  sortFilterOptions,
   type ProductSearchState,
 } from "../lib/search-params";
 import { ProductSearchInput } from "./product-search-input";
@@ -47,10 +48,11 @@ export function ProductFilters({ search, onChange }: ProductFiltersProps) {
             })
           }
         >
-          <option value="latest">최신순</option>
-          <option value="popular">인기순</option>
-          <option value="price-asc">낮은 가격순</option>
-          <option value="price-desc">높은 가격순</option>
+          {sortFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </label>
       <label>

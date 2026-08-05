@@ -1,11 +1,12 @@
 import type { CategoryId, ProductSort } from "@/types/commerce";
 import {
+  createLoader,
   createParser,
   parseAsNumberLiteral,
   parseAsString,
   parseAsStringLiteral,
   type inferParserType,
-} from "nuqs";
+} from "nuqs/server";
 
 const parseAsPositiveInteger = createParser({
   parse: (value) => {
@@ -31,20 +32,27 @@ export const categoryFilterOptions = [
 
 const categoryFilterValues = categoryFilterOptions.map((option) => option.value);
 
+export const sortFilterOptions = [
+  { value: "latest", label: "최신순" },
+  { value: "popular", label: "인기순" },
+  { value: "price-asc", label: "낮은 가격순" },
+  { value: "price-desc", label: "높은 가격순" },
+] as const satisfies readonly { value: ProductSort; label: string }[];
+
+const sortFilterValues = sortFilterOptions.map((option) => option.value);
+
 export const scenarioValues = ["slow", "empty", "error"] as const;
 
 export const productSearchParsers = {
   q: parseAsString.withDefault(""),
   scenario: parseAsStringLiteral(scenarioValues),
   category: parseAsStringLiteral(categoryFilterValues).withDefault("all"),
-  sort: parseAsStringLiteral([
-    "latest",
-    "popular",
-    "price-asc",
-    "price-desc",
-  ] as const satisfies readonly ProductSort[]).withDefault("latest"),
+  sort: parseAsStringLiteral(sortFilterValues).withDefault("latest"),
   page: parseAsPositiveInteger.withDefault(1),
   pageSize: parseAsNumberLiteral(pageSizeValues).withDefault(12),
 };
 
 export type ProductSearchState = inferParserType<typeof productSearchParsers>;
+
+// 서버(metadata)에서도 본문과 같은 파서로 URL 조건을 정규화한다
+export const loadProductSearchParams = createLoader(productSearchParsers);
