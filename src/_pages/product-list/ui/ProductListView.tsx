@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
 import ProductGridFallback from '@/widgets/product-grid/ui/ProductGridFallback'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
@@ -52,6 +53,32 @@ export default function ProductListView() {
     refetch,
   } = useQuery(productListQueries.list(condition))
 
+  // 갱신이 최종 실패하면 새 key에는 데이터가 없다. placeholder는 pending에만 걸리기
+  // 때문이다. 그러면 화면이 통째로 비어 사용자가 보던 목록과 위치를 잃는다.
+  //
+  // 그래서 마지막으로 실제 표시가 확정된 조건만 기억한다. 서버 응답은 여기 담지 않는다.
+  // 목록의 원본은 계속 Query Cache이고, 여기 남는 것은 어느 key를 보고 있었는지뿐이다.
+  const queryClient = useQueryClient()
+  const lastShownCondition = useRef(condition)
+  const showsCurrentResult = Boolean(data) && !isPlaceholderData
+  useEffect(() => {
+    if (showsCurrentResult) lastShownCondition.current = condition
+  })
+
+  // 실패했을 때만 직전 조건의 캐시를 꺼낸다. 캐시가 이미 비워졌으면 undefined가 되어
+  // 보여줄 목록이 없는 실패로 자연스럽게 떨어진다.
+  const previousList =
+    isError && !data
+      ? queryClient.getQueryData(
+          productListQueries.list(lastShownCondition.current).queryKey,
+        )
+      : undefined
+
+  // 화면이 실제로 그릴 목록이다. 현재 조건의 결과가 없으면 직전 결과를 쓴다.
+  const shownList = data ?? previousList
+  // 지금 보이는 것이 현재 URL 조건의 결과가 아니라는 뜻이다. 숨기지 않고 문장으로 밝힌다.
+  const showsPreviousSelection = isPlaceholderData || Boolean(previousList)
+
   // 표시 이름은 서버 응답에서 찾고, 없으면 폴백을 쓴다.
   const categoryLabel = (value: CategoryFilter) => categoryFallbackLabels[value]
 
@@ -88,6 +115,9 @@ export default function ProductListView() {
   let statusMessage = ''
   if (isPending) {
     statusMessage = 'Loading products.'
+  } else if (previousList) {
+    statusMessage =
+      'Could not update results. The current list shows the previous selection.'
   } else if (isPlaceholderData) {
     statusMessage =
       'Updating results. The current list shows the previous selection.'
@@ -97,9 +127,9 @@ export default function ProductListView() {
 
   // 페이지 표기의 근거는 URL이 아니라 지금 화면에 있는 응답이다. 전환 중에는 URL이
   // 먼저 새 조건으로 바뀌므로, URL을 따르면 1페이지 상품 위에 2가 적힌다.
-  const shownPage = data?.page ?? 1
-  const totalPages = data
-    ? Math.max(1, Math.ceil(data.totalCount / data.pageSize))
+  const shownPage = shownList?.page ?? 1
+  const totalPages = shownList
+    ? Math.max(1, Math.ceil(shownList.totalCount / shownList.pageSize))
     : 1
 
   let results: React.ReactNode
@@ -112,13 +142,17 @@ export default function ProductListView() {
         <p className="product-result-count" aria-hidden="true">
           <span className="product-skeleton product-skeleton-count" />
         </p>
+        {/* 성공 상태가 늘 비워 두는 안내 행이다. 여기서 빠지면 결과가 도착할 때
+            그 높이만큼 목록이 내려간다. */}
+        <div className="product-result-notice" aria-hidden="true" />
         <ProductGridFallback count={condition.pageSize} />
         <div className="week05-pagination" aria-hidden="true">
           <span className="product-skeleton product-skeleton-pagination" />
         </div>
       </>
     )
-  } else if (isError) {
+  } else if (!shownList) {
+    // 보여줄 목록이 하나도 없는 실패다. 화면 전체가 오류와 출구를 맡는다.
     // 실패 종류마다 열려 있는 길이 다르다. 셋 중 하나는 반드시 실제로 동작해야 한다.
     // 재시도는 서버 오류에만 의미가 있고, 조건이 거절된 실패는 조건을 되돌려야 벗어난다.
     // 조건이 이미 기본값이면 초기화해도 URL과 query key가 그대로라 화면이 변하지 않으므로,
@@ -146,36 +180,49 @@ export default function ProductListView() {
         {exit}
       </>
     )
-  } else if (data.products.length === 0 && data.totalCount > 0) {
+  } else if (shownList.products.length === 0 && shownList.totalCount > 0) {
     // 빈 응답에는 두 종류가 있다. 조건에 맞는 상품이 없는 것과
     // 범위 밖 페이지를 연 것. 후자는 막다른 화면이 되지 않게 출구를 준다
     results = (
       <>
-        <p>This page does not exist. {data.totalCount} products match.</p>
+        <p>This page does not exist. {shownList.totalCount} products match.</p>
         <button type="button" onClick={() => handlePageChange(1)}>
           Go to page 1
         </button>
       </>
     )
-  } else if (data.products.length === 0) {
+  } else if (shownList.products.length === 0) {
     results = <p>No products match your filters.</p>
   } else {
     results = (
       <>
         {/* 갱신 표시를 개수 행 안에 넣는다. 새 줄을 끼우면 그만큼 아래가 밀린다. */}
         <p className="product-result-count">
-          {data.totalCount} products
+          {shownList.totalCount} products
           {isUpdating ? (
             <span className="product-result-updating"> · Updating…</span>
           ) : null}
         </p>
-        <ProductGrid products={data.products} />
+        {/* 갱신이 실패해도 목록은 남긴다. 대신 실패했다는 사실과 다시 시도할 길을
+            목록 위에 붙여, 지금 보이는 것이 최신이 아님을 숨기지 않는다.
+            이 행은 성공 상태에서도 비어 있는 채로 남아 자리를 지킨다. */}
+        <div className="product-result-notice">
+          {previousList ? (
+            <>
+              <span>{errorMessageOf(error, 'Could not update products.')}</span>
+              <button type="button" onClick={() => refetch()}>
+                Try again
+              </button>
+            </>
+          ) : null}
+        </div>
+        <ProductGrid products={shownList.products} />
         <nav className="week05-pagination" aria-label="Pagination">
-          {/* 전환 중 이동을 막는다. 보이는 것은 이전 페이지라 여기서 한 번 더 누르면
-              사용자가 의도한 곳과 다른 페이지로 간다. */}
+          {/* 이전 조건의 결과를 보는 동안에는 이동을 막는다. 보이는 페이지를 기준으로
+              또 요청을 만들면 사용자가 의도한 곳과 다른 페이지로 간다. */}
           <button
             type="button"
-            disabled={isPlaceholderData || shownPage <= 1}
+            disabled={showsPreviousSelection || shownPage <= 1}
             onClick={() => handlePageChange(shownPage - 1)}
           >
             Previous
@@ -185,7 +232,7 @@ export default function ProductListView() {
           </span>
           <button
             type="button"
-            disabled={isPlaceholderData || shownPage >= totalPages}
+            disabled={showsPreviousSelection || shownPage >= totalPages}
             onClick={() => handlePageChange(shownPage + 1)}
           >
             Next

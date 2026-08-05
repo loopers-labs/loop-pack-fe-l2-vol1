@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
+import { NuqsAdapter } from 'nuqs/adapters/react'
 import type { Product } from '@/entities/product/model/product'
 import { resetStores } from '@/test/resetStores'
 import { PRODUCT_PAGE_SIZE } from '../model/searchParams'
@@ -35,36 +35,52 @@ const pageResponse = (page: number, products: Product[]) => ({
 
 // 호출마다 resolve를 밖으로 꺼내 둔다. 응답 시점을 테스트가 정한다.
 const deferredFetch = () => {
-  const pending: Array<(body: unknown) => void> = []
+  const pending: Array<(response: Response) => void> = []
   const fetchMock = vi.fn<typeof fetch>(
-    () =>
-      new Promise<Response>((resolve) => {
-        pending.push((body) => resolve(new Response(JSON.stringify(body))))
-      }),
+    () => new Promise<Response>((resolve) => pending.push(resolve)),
   )
   vi.stubGlobal('fetch', fetchMock)
+
+  const takeNext = () => {
+    const resolve = pending.shift()
+    if (!resolve) throw new Error('대기 중인 요청이 없다')
+    return resolve
+  }
+
   return {
-    settle: (body: unknown) => {
-      const next = pending.shift()
-      if (!next) throw new Error('대기 중인 요청이 없다')
-      next(body)
-    },
+    settle: (body: unknown) => takeNext()(new Response(JSON.stringify(body))),
+    // 중단이 아니라 실제 실패 응답이어야 갱신 실패와 취소가 섞이지 않는다.
+    fail: () =>
+      takeNext()(
+        new Response(
+          JSON.stringify({ message: '상품 목록을 불러오지 못했습니다.' }),
+          { status: 500 },
+        ),
+      ),
+    requestedPages: () =>
+      fetchMock.mock.calls.map((call) =>
+        new URL(String(call[0]), 'http://test').searchParams.get('page'),
+      ),
     callCount: () => fetchMock.mock.calls.length,
   }
 }
 
-// 테스트 어댑터는 초기 searchParams만 읽는다. 그래서 조건이 바뀐 뒤의 최종 화면은
-// 그 조건으로 새로 마운트해 확인하고, 전환 중 화면은 클릭 직후에 확인한다.
+// 테스트 어댑터가 아니라 jsdom의 실제 history를 쓰는 어댑터를 쓴다.
+// 테스트 어댑터는 초기 searchParams만 읽어서 조건을 바꾼 뒤의 화면까지 갈 수 없다.
+// 갱신 실패는 조건이 바뀐 채로 유지돼야 관찰할 수 있는 상태다.
 const renderView = (searchParams = '') => {
+  window.history.replaceState(null, '', `/products${searchParams}`)
+  // 어댑터는 popstate로 URL을 다시 읽는다. 이 신호가 없으면 앞 테스트의 조건이 남는다.
+  window.dispatchEvent(new PopStateEvent('popstate'))
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   render(
-    <NuqsTestingAdapter searchParams={searchParams}>
+    <NuqsAdapter>
       <QueryClientProvider client={queryClient}>
         <ProductListView />
       </QueryClientProvider>
-    </NuqsTestingAdapter>,
+    </NuqsAdapter>,
   )
   return queryClient
 }
@@ -76,8 +92,16 @@ const resultsRegion = () =>
 // 완료까지 미뤄질 수 있고, 그때는 문구가 이미 사라져 끝내 읽히지 않는다.
 const liveRegion = () => screen.getByRole('status')
 
+// URL이 실제로 새 조건으로 바뀐 뒤를 기다린다. 어댑터가 갱신을 잠깐 모으기 때문에
+// 고정 시간 대기 대신 관찰 가능한 상태로 동기를 맞춘다.
+const goneToPageTwo = () =>
+  waitFor(() => expect(window.location.search).toContain('page=2'))
+
 beforeEach(() => {
   resetStores()
+  // URL은 문서 하나를 공유한다. 앞 테스트가 남긴 조건이 다음 테스트의 시작점이 되지 않게 한다.
+  window.history.replaceState(null, '', '/products')
+  window.dispatchEvent(new PopStateEvent('popstate'))
 })
 
 afterEach(() => {
@@ -119,6 +143,7 @@ describe('조건을 바꾸는 동안의 목록', () => {
     expect(await screen.findByText('1페이지 상품')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
 
     // 목록이 사라지지 않는다. 이것이 이 변경의 핵심이다.
     await waitFor(() => expect(api.callCount()).toBe(2))
@@ -135,6 +160,7 @@ describe('조건을 바꾸는 동안의 목록', () => {
     await screen.findByText('1페이지 상품')
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
     await waitFor(() => expect(api.callCount()).toBe(2))
 
     // 화면에는 개수 행 안에서 짧게, 보조 기술에는 무엇을 보고 있는지 문장으로.
@@ -168,6 +194,7 @@ describe('조건을 바꾸는 동안의 목록', () => {
     await screen.findByText('1페이지 상품')
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
     await waitFor(() => expect(api.callCount()).toBe(2))
 
     // URL은 이미 page=2지만 화면의 상품은 1페이지다. 표기가 상품을 따라야 어긋나지 않는다.
@@ -182,11 +209,136 @@ describe('조건을 바꾸는 동안의 목록', () => {
     await screen.findByText('1페이지 상품')
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
     await waitFor(() => expect(api.callCount()).toBe(2))
 
     // 보이는 것이 이전 페이지라 여기서 또 누르면 의도한 곳과 다른 페이지로 간다.
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled()
+  })
+
+  it('보여줄 목록이 없는 최초 실패는 목록 대신 오류와 재시도를 보여준다', async () => {
+    const api = deferredFetch()
+    renderView()
+
+    api.fail()
+
+    expect(
+      await screen.findByRole('button', { name: 'Try again' }),
+    ).toBeInTheDocument()
+    expect(document.querySelectorAll('.week05-product')).toHaveLength(0)
+    expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull()
+  })
+
+  it('갱신이 실패해도 직전에 보던 목록은 남는다', async () => {
+    const api = deferredFetch()
+    renderView()
+
+    api.settle(pageResponse(1, [makeProduct('p1', '1페이지 상품')]))
+    await screen.findByText('1페이지 상품')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
+    await waitFor(() => expect(api.callCount()).toBe(2))
+    api.fail()
+    await screen.findByRole('button', { name: 'Try again' })
+
+    // 실패한 것은 page=2라는 새 캐시 항목이라 그쪽에는 데이터가 없다.
+    // 직전 조건의 캐시를 꺼내 목록을 유지하는지가 이 변경의 핵심이다.
+    expect(screen.getByText('1페이지 상품')).toBeInTheDocument()
+    expect(screen.getByText(/불러오지 못했습니다/)).toBeInTheDocument()
+    // 실패했다고 URL을 되돌리지 않는다. 사용자가 가려던 조건이 그대로 남아야
+    // 재시도가 같은 곳을 다시 요청한다.
+    expect(window.location.search).toContain('page=2')
+    expect(liveRegion()).toHaveTextContent(
+      'Could not update results. The current list shows the previous selection.',
+    )
+  })
+
+  it('갱신 실패 중에는 표기가 이전 응답을 따르고 페이지 이동을 막는다', async () => {
+    const api = deferredFetch()
+    renderView()
+
+    api.settle(pageResponse(1, [makeProduct('p1', '1페이지 상품')]))
+    await screen.findByText('1페이지 상품')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
+    await waitFor(() => expect(api.callCount()).toBe(2))
+    api.fail()
+    await screen.findByRole('button', { name: 'Try again' })
+
+    expect(screen.getByText('1 / 3')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled()
+  })
+
+  it('갱신 실패의 재시도는 실패한 현재 조건을 다시 요청한다', async () => {
+    const api = deferredFetch()
+    renderView()
+
+    api.settle(pageResponse(1, [makeProduct('p1', '1페이지 상품')]))
+    await screen.findByText('1페이지 상품')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
+    await waitFor(() => expect(api.callCount()).toBe(2))
+    api.fail()
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }))
+
+    // 되돌아가는 것이 아니라 사용자가 가려던 조건을 다시 요청해야 한다.
+    await waitFor(() => expect(api.callCount()).toBe(3))
+    expect(api.requestedPages()).toEqual(['1', '2', '2'])
+
+    // 다시 기다리는 동안에도 목록은 남아 있어야 한다.
+    expect(screen.getByText('1페이지 상품')).toBeInTheDocument()
+    expect(resultsRegion()).toHaveAttribute('aria-busy', 'true')
+  })
+
+  it('재시도가 성공하면 현재 조건의 목록으로 교체된다', async () => {
+    const api = deferredFetch()
+    renderView()
+
+    api.settle(pageResponse(1, [makeProduct('p1', '1페이지 상품')]))
+    await screen.findByText('1페이지 상품')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
+    await waitFor(() => expect(api.callCount()).toBe(2))
+    api.fail()
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }))
+    await waitFor(() => expect(api.callCount()).toBe(3))
+    api.settle(pageResponse(2, [makeProduct('p13', '2페이지 상품')]))
+
+    expect(await screen.findByText('2페이지 상품')).toBeInTheDocument()
+    expect(screen.queryByText('1페이지 상품')).toBeNull()
+    expect(screen.getByText('2 / 3')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeEnabled()
+    expect(liveRegion()).toHaveTextContent('')
+  })
+
+  it('직전 목록이 캐시에서 사라졌으면 전체 오류 화면으로 떨어진다', async () => {
+    const api = deferredFetch()
+    const queryClient = renderView()
+
+    api.settle(pageResponse(1, [makeProduct('p1', '1페이지 상품')]))
+    await screen.findByText('1페이지 상품')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await goneToPageTwo()
+    await waitFor(() => expect(api.callCount()).toBe(2))
+    // 관찰자가 없어진 이전 항목은 gcTime이 지나면 사라진다. 그 상태를 앞당긴다.
+    // 지금 관찰 중인 항목까지 지우면 쿼리가 새로 만들어져 실패 자체가 관찰되지 않는다.
+    queryClient.removeQueries({
+      predicate: (query) =>
+        (query.state.data as { page?: number } | undefined)?.page === 1,
+    })
+    api.fail()
+
+    expect(
+      await screen.findByRole('button', { name: 'Try again' }),
+    ).toBeInTheDocument()
+    expect(document.querySelectorAll('.week05-product')).toHaveLength(0)
   })
 
   it('응답이 도착하면 표기와 상품과 조작이 새 조건으로 정리된다', async () => {

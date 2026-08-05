@@ -398,7 +398,7 @@
 /* 갱신 상태는 이 행 안에서만 바뀐다. 블록을 새로 끼우면 그 높이만큼 아래가 밀린다.
    좁은 화면에서 문구가 길어져도 줄이 늘지 않도록 한 줄로 잘라 높이를 고정한다. */
 .product-result-count {
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   overflow: hidden;
   color: var(--muted-foreground);
   font-size: 12px;
@@ -408,6 +408,37 @@
 
 .product-result-updating {
   color: var(--foreground);
+  font-weight: 700;
+}
+
+/* 갱신 실패 안내가 들어갈 자리다. 실패는 클릭 1.5초 뒤에 오므로 그때 줄을 끼우면
+   입력 제외 구간을 벗어난 layout shift가 된다. 그래서 성공 상태와 fallback에서도
+   같은 높이를 늘 비워 둔다. 개수 행의 아래 여백을 줄여 예약 공간으로 인한 높이 증가를 줄인다. */
+.product-result-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 26px;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 좁은 화면에서 문구가 길어져도 줄이 늘지 않아야 예약한 높이가 유지된다. */
+.product-result-notice span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.product-result-notice button {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid var(--border);
+  font-size: 11px;
   font-weight: 700;
 }
 
