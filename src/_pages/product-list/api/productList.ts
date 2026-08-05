@@ -11,10 +11,10 @@ import { fetchJson } from '@/shared/api/http'
 // entity가 아니라 page가 소유하는 근거는 RFC Decision 4에 있다. 소비 화면이 하나이고,
 // 목록 전용 staleTime과 key 정책은 이 화면의 조회 정책이기 때문이다.
 
-// 측정 재현용 제어값이다. 사용자 필터가 아니라 mock API에 응답 지연을 요구하는 조건이다.
+// 재현용 제어값이다. 사용자 필터가 아니라 mock API에 특정 응답을 요구하는 조건이다.
 // 서버 응답을 바꾸므로 조건에 포함해 query key와 실제 요청이 함께 갈리게 한다.
-// 재현에 필요한 slow 하나만 둔다. empty와 error는 개별 API 호출로 확인하면 된다.
-export const productListScenarioValues = ['slow'] as const
+// starter가 이미 정의한 세 값을 그대로 쓴다. 새 실패 계약을 만들지 않는다.
+export const productListScenarioValues = ['empty', 'error', 'slow'] as const
 
 // 부재를 null로 표현한다. 조건 객체가 항상 완전한 모양이어야 key와 요청이 어긋나지 않는다.
 export type ProductListScenario =

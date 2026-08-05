@@ -56,15 +56,21 @@ describe('category, sort parser', () => {
 })
 
 describe('scenario parser', () => {
-  it('재현에 쓰는 slow만 통과시킨다', () => {
+  it('starter가 정의한 세 값을 통과시킨다', () => {
     expect(productListScenarioSearchParams.scenario.parse('slow')).toBe('slow')
+    expect(productListScenarioSearchParams.scenario.parse('empty')).toBe(
+      'empty',
+    )
+    expect(productListScenarioSearchParams.scenario.parse('error')).toBe(
+      'error',
+    )
   })
 
   it('지원하지 않는 값은 요청 조건으로 쓰지 않는다', () => {
     // URL에서 지운다는 뜻이 아니다. 주소창의 문자열은 남을 수 있고,
-    // 조건으로 읽히지 않아 평소 응답 시점을 그대로 쓴다는 뜻이다.
+    // 조건으로 읽히지 않아 평소 응답을 그대로 쓴다는 뜻이다.
     expect(productListScenarioSearchParams.scenario.parse('xxx')).toBeNull()
-    expect(productListScenarioSearchParams.scenario.parse('error')).toBeNull()
+    expect(productListScenarioSearchParams.scenario.parse('SLOW')).toBeNull()
   })
 
   it('기본값을 두지 않아 URL에 없으면 조건이 없다', () => {

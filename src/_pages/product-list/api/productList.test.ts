@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   fetchProducts,
   productListQueries,
+  productListScenarioValues,
   type ProductListCondition,
 } from './productList'
 
@@ -77,11 +78,18 @@ describe('fetchProducts', () => {
   it('재현 조건이 있으면 scenario를 요청에 붙이고, 없으면 뺀다', async () => {
     const fetchMock = stubFetch()
 
-    await fetchProducts({ ...defaultCondition, scenario: 'slow' })
-    expect(String(fetchMock.mock.calls[0][0])).toContain('scenario=slow')
+    // 세 값 모두 실제 요청까지 내려가야 여섯 상태를 화면에서 재현할 수 있다.
+    for (const scenario of productListScenarioValues) {
+      await fetchProducts({ ...defaultCondition, scenario })
+    }
+    const requested = fetchMock.mock.calls.map((call) => String(call[0]))
+    productListScenarioValues.forEach((scenario, index) => {
+      expect(requested[index]).toContain(`scenario=${scenario}`)
+    })
 
     await fetchProducts(defaultCondition)
-    expect(String(fetchMock.mock.calls[1][0])).not.toContain('scenario')
+    expect(requested.length).toBe(productListScenarioValues.length)
+    expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('scenario')
   })
 })
 
