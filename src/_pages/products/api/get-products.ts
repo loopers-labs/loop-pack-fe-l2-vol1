@@ -17,5 +17,9 @@ export function getProducts(params: ProductListParams): Promise<ProductListRespo
     searchParams.set("q", q);
   }
 
+  if (params.scenario !== null) {
+    searchParams.set("scenario", params.scenario);
+  }
+
   return fetchCommerceApi<ProductListResponse>(`/api/products?${searchParams.toString()}`);
 }

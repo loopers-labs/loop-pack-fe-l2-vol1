@@ -31,8 +31,11 @@ export const categoryFilterOptions = [
 
 const categoryFilterValues = categoryFilterOptions.map((option) => option.value);
 
+export const scenarioValues = ["slow", "empty", "error"] as const;
+
 export const productSearchParsers = {
   q: parseAsString.withDefault(""),
+  scenario: parseAsStringLiteral(scenarioValues),
   category: parseAsStringLiteral(categoryFilterValues).withDefault("all"),
   sort: parseAsStringLiteral([
     "latest",
