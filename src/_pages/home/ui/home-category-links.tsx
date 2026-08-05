@@ -1,5 +1,5 @@
-import type { Category } from "@/entities/product";
 import Link from "next/link";
+import type { Category } from "@/types/commerce";
 
 type HomeCategoryLinksProps = {
   categories: Category[];

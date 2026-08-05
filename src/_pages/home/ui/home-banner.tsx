@@ -1,4 +1,4 @@
-import type { HomeResponse } from "../api/get-home";
+import type { HomeResponse } from "@/types/commerce";
 
 type HomeBannerProps = {
   banner: HomeResponse["banner"];

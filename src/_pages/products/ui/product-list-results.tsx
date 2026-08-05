@@ -2,7 +2,7 @@
 
 import { Placeholder } from "@/shared/ui/placeholder";
 import { ProductCard } from "@/entities/product";
-import type { ProductListResponse } from "../api/get-products";
+import type { ProductListResponse } from "@/types/commerce";
 import { ProductCardActions } from "@/widgets/product-card-actions";
 
 type ProductListResultsProps = {

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { ReactNode } from "react";
-import { Product } from "../model/types";
+import type { Product } from "@/types/commerce";
 
 type ProductCardProps = {
   product: Product;

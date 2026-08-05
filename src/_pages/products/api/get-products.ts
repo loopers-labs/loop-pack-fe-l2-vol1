@@ -1,14 +1,6 @@
-import type { Category, Product } from "@/entities/product";
+import type { ProductListResponse } from "@/types/commerce";
 import { fetchCommerceApi } from "@/shared/api/commerce-client";
 import type { ProductSearchState } from "../lib/search-params";
-
-export type ProductListResponse = {
-  products: Product[];
-  categories: Category[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-};
 
 export type ProductListParams = ProductSearchState;
 

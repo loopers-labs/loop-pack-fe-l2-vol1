@@ -1,6 +1,4 @@
-type ApiErrorResponse = {
-  message: string;
-};
+import type { ApiErrorResponse } from "@/types/commerce";
 
 export class CommerceApiError extends Error {
   readonly status: number;
