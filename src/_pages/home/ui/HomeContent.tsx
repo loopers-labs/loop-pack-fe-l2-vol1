@@ -9,6 +9,7 @@ import { ProductCard } from '@/widgets/product-card/ProductCard';
 import { Header } from '@/widgets/header/Header';
 import { productQueries } from '@/entities/product/api/queries';
 import { PAGE_SIZE } from '@/features/product-filters/model/useProductListFilters';
+import { HeroSection } from '@/examples/week-07-performance/HeroSection';
 
 const HomeCategoryArr: HomeCategory[] = ['인기 상품', '신상품'] as const;
 const ProductCategoryArr: { id: CategoryId; label: string }[] = [
@@ -20,7 +21,7 @@ const ProductCategoryArr: { id: CategoryId; label: string }[] = [
 ] as const;
 
 export const HomeContent = () => {
-  const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
+  const { data, isPending, isError, refetch } = useQuery(homeQueries.home('slow'));
 
   const queryClient = useQueryClient();
 
@@ -65,10 +66,7 @@ export const HomeContent = () => {
   return (
     <main className="page">
       <Header />
-      <section className="hero">
-        <p>{data?.banner.description}</p>
-        <h1>{data?.banner.title}</h1>
-      </section>
+      <HeroSection title="제목" description="설명" />
       <section className="section">
         <h2>카테고리</h2>
         <div className="categories">
