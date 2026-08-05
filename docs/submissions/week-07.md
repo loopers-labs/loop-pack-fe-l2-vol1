@@ -57,6 +57,44 @@
 - **가설을 반증할 방법**: 로딩 시점은 그대로 두고 이미지 파일만 뷰포트 크기에 맞게 줄여(예: next/image 최적화) 재측정했을 때 LCP가 5회 측정 범위(±20ms)보다 크게 줄지 않으면 가설 기각.
 - **먼저 시도할 가장 작은 변경**: HeroSection의 `<img>`를 `next/image`의 `<Image priority>`로 교체해 자동 리사이즈·포맷 변환과 preload를 적용한다.
 
+## 1단계 — Hero LCP (중간 측정)
+
+### LCP 구간 분해 판정 (Before 데이터 기준)
+
+| 구간                  | 관찰값(비스로틀)                                 | Slow 4G 시뮬레이션 환산       | 판정     |
+| --------------------- | ------------------------------------------------ | ----------------------------- | -------- |
+| 서버 응답 대기        | 4~6ms                                            | ~0.15초                       |          |
+| 이미지 요청 시작 대기 | 585~595ms (하이드레이션 + `/api/home` 0.5s 대기) | ~3초                          |          |
+| 전송                  | 48~63ms (localhost)                              | **~36.8초** (7.5MB ÷ 1.6Mbps) | **최장** |
+| 그리기                | 80~98ms                                          | ~0.4초                        |          |
+
+→ 전송이 LCP 40.5초의 약 90%. 적용한 변경(승인 후 구현):
+
+1. **전송**: HeroSection `<img>` → `next/image` `<Image sizes="100vw" priority>` — 실제 표시 크기(모바일 412 CSS px × DPR 1.75 ≈ 721px → 750w 후보) 기준 리사이즈 + WebP 재인코딩, 시각적 크기·비율(3840×2160 intrinsic, `object-fit: cover`)·품질(q75) 유지
+2. **렌더링 경계**: HeroSection을 데이터 분기 밖으로 이동해 항상 렌더(SSR HTML 포함 → preload 발견), 로딩 중 HomeBanner 자리는 같은 공간의 `.week05-hero` placeholder(min-height 220px)가 유지, Hero copy는 absolute 배치라 늦게 떠도 밀림 없음
+
+### 1단계 후 Lighthouse 5회 (홈 cold load, Before와 같은 조건)
+
+| 회차       | FCP    | LCP      | CLS |
+| ---------- | ------ | -------- | --- |
+| 1          | 909 ms | 3,107 ms | 0   |
+| 2          | 906 ms | 3,013 ms | 0   |
+| 3          | 905 ms | 3,124 ms | 0   |
+| 4          | 905 ms | 2,869 ms | 0   |
+| 5          | 905 ms | 3,010 ms | 0   |
+| **중앙값** | 905 ms | 3,013 ms | 0   |
+| **최솟값** | 905 ms | 2,869 ms | 0   |
+| **최댓값** | 909 ms | 3,124 ms | 0   |
+
+### Before 대비 인과관계
+
+- **이미지 전송 크기**: 7,545,525 B → **32,424 B** (750w WebP, 약 1/233) — 최장 구간이던 전송이 시뮬레이션 ~36.8초 → ~0.16초로 줄어 LCP 중앙값 40,524ms → 3,013ms (−92.6%). 측정 흔들림(5회 범위 FCP ±5ms, LCP ±255ms)보다 압도적으로 큰 변화
+- **요청 시작**: 595ms(`/api/home` 완료 후) → **17ms**(초기 HTML의 preload가 문서 파싱 직후 발동, `/api/home`(96ms)보다도 먼저). Lighthouse insight "Request is discoverable in initial document" false → true
+- **Layout shift**: 0.0393(스켈레톤→콘텐츠 교체) → **0** — 배너 placeholder가 같은 공간을 차지하고 Hero가 항상 렌더되므로 교체 시 밀리는 요소 없음
+- **filmstrip**: 375ms 프레임에 Header+배너 placeholder+**Hero 이미지**까지 표시(Before는 스켈레톤뿐), 750ms에 h1·copy·카테고리가 같은 자리에 등장. 녹화: [home-loading-step1.gif](assets/week-07/home-loading-step1.gif)
+- **LCP element**: 변화 없음 — 동일한 Hero `<img>`(이제 `/_next/image?...&w=750` 최적화 응답)
+- **부작용 확인**: FCP 변화 없음(905ms), `/products?scenario=slow` 목록 pending UI·동작 이전과 동일
+
 ## After
 
 - **After SHA**: (4단계에서 기입)
