@@ -357,12 +357,13 @@ describe('목록 조건의 원본은 URL이다', () => {
     expect(lastUrlUpdate(onUrlUpdate).searchParams.get('page')).toBeNull()
   })
 
-  it('결과가 정말 없을 때만 조건 불일치 문구를 보여준다', async () => {
+  it('결과가 정말 없을 때만 0건 문구를 보여준다', async () => {
     stubCommerceApi({ products: [], totalCount: 0 })
     renderApp(<ProductListView />)
 
+    // 걸어둔 조건이 없으므로 필터를 언급하지 않는다.
     expect(
-      await screen.findByText('No products match your filters.'),
+      await screen.findByText('No products are available.'),
     ).toBeInTheDocument()
   })
 

@@ -12,16 +12,19 @@ import {
   categoryFilterValues,
   type CategoryFilter,
 } from '../model/searchParams'
+import { describeEmptyResult } from '../model/emptyResult'
 import { useProductListCondition } from '../model/useProductListCondition'
 import type { ProductSort } from '@/entities/product/model/product'
 import ProductFilterSelect from './ProductFilterSelect'
 import SearchForm from './SearchForm'
 
 // 허용값 목록은 URL 계약이라 상수로 고정한다. parser가 컴파일 타임 유니온을 요구해서
-// 서버 응답으로 대체할 수 없다. 반면 표시 이름의 원본은 서버 응답이고,
-// 아래 이름은 응답이 오기 전 첫 페인트에만 쓰는 폴백이다.
-// all은 서버에 없는 UI 전용 값이라 항상 이쪽을 쓴다.
-const categoryFallbackLabels: Record<CategoryFilter, string> = {
+// 서버 응답으로 대체할 수 없다.
+//
+// URL parser는 storefront가 지원하는 category만 통과시킨다.
+// 따라서 목록의 필터와 조건 설명은 같은 영문 label 계약을 사용한다.
+// 서버가 새 category를 내려줘도 URL 계약에 추가되기 전에는 선택 조건이 되지 않는다.
+const categoryLabels: Record<CategoryFilter, string> = {
   all: 'All',
   casual: 'Casual',
   fashion: 'Fashion',
@@ -76,11 +79,17 @@ export default function ProductListView() {
 
   // 화면이 실제로 그릴 목록이다. 현재 조건의 결과가 없으면 직전 결과를 쓴다.
   const shownList = data ?? previousList
-  // 지금 보이는 것이 현재 URL 조건의 결과가 아니라는 뜻이다. 숨기지 않고 문장으로 밝힌다.
+  // 지금 보이는 것이 현재 URL 조건의 결과가 아니라는 뜻이다. 응답을 기다리는 중이거나
+  // 갱신이 실패한 경우다. 숨기지 않고 문장으로 밝힌다.
   const showsPreviousSelection = isPlaceholderData || Boolean(previousList)
+  // 그 목록을 만든 조건이다. 이전 결과를 보여주는 동안 현재 URL 조건으로 설명하면,
+  // 아직 확인되지도 않은 0건을 사실처럼 말하게 된다.
+  const shownCondition = showsPreviousSelection
+    ? lastShownCondition.current
+    : condition
 
-  // 표시 이름은 서버 응답에서 찾고, 없으면 폴백을 쓴다.
-  const categoryLabel = (value: CategoryFilter) => categoryFallbackLabels[value]
+  const categoryLabel = (value: CategoryFilter) => categoryLabels[value]
+  const sortLabel = (value: ProductSort) => sortLabels[value]
 
   // 검색, 카테고리, 정렬이 바뀌면 보던 페이지는 의미가 없다. 1페이지로 되돌린다.
   const handleSearch = (query: string) => {
@@ -131,6 +140,33 @@ export default function ProductListView() {
   const totalPages = shownList
     ? Math.max(1, Math.ceil(shownList.totalCount / shownList.pageSize))
     : 1
+
+  // 개수 행과 안내 행은 결과가 있든 0건이든 같은 자리에 같은 높이로 있어야 한다.
+  // 분기마다 다시 적으면 둘이 갈라져 전환할 때 화면이 밀린다.
+  const countRow = shownList ? (
+    <p className="product-result-count">
+      {shownList.totalCount} products
+      {isUpdating ? (
+        <span className="product-result-updating"> · Updating…</span>
+      ) : null}
+    </p>
+  ) : null
+
+  // 갱신이 실패해도 목록은 남긴다. 대신 실패했다는 사실과 다시 시도할 길을
+  // 목록 위에 붙여, 지금 보이는 것이 최신이 아님을 숨기지 않는다.
+  // 이 행은 성공 상태와 0건에서도 비어 있는 채로 남아 자리를 지킨다.
+  const noticeRow = (
+    <div className="product-result-notice">
+      {previousList ? (
+        <>
+          <span>{errorMessageOf(error, 'Could not update products.')}</span>
+          <button type="button" onClick={() => refetch()}>
+            Try again
+          </button>
+        </>
+      ) : null}
+    </div>
+  )
 
   let results: React.ReactNode
   if (isPending) {
@@ -192,30 +228,30 @@ export default function ProductListView() {
       </>
     )
   } else if (shownList.products.length === 0) {
-    results = <p>No products match your filters.</p>
+    // 0건도 성공 응답이다. 개수와 조건을 성공 경로와 같은 자리에서 보여줘야
+    // 사용자가 무엇을 걸어서 0건인지 알고 되돌릴 수 있다.
+    results = (
+      <>
+        {countRow}
+        {noticeRow}
+        <p>
+          {describeEmptyResult(shownCondition, {
+            category: categoryLabel,
+            sort: sortLabel,
+          })}
+        </p>
+        {canResetFilters ? (
+          <button type="button" onClick={() => setFilters(null)}>
+            Reset filters
+          </button>
+        ) : null}
+      </>
+    )
   } else {
     results = (
       <>
-        {/* 갱신 표시를 개수 행 안에 넣는다. 새 줄을 끼우면 그만큼 아래가 밀린다. */}
-        <p className="product-result-count">
-          {shownList.totalCount} products
-          {isUpdating ? (
-            <span className="product-result-updating"> · Updating…</span>
-          ) : null}
-        </p>
-        {/* 갱신이 실패해도 목록은 남긴다. 대신 실패했다는 사실과 다시 시도할 길을
-            목록 위에 붙여, 지금 보이는 것이 최신이 아님을 숨기지 않는다.
-            이 행은 성공 상태에서도 비어 있는 채로 남아 자리를 지킨다. */}
-        <div className="product-result-notice">
-          {previousList ? (
-            <>
-              <span>{errorMessageOf(error, 'Could not update products.')}</span>
-              <button type="button" onClick={() => refetch()}>
-                Try again
-              </button>
-            </>
-          ) : null}
-        </div>
+        {countRow}
+        {noticeRow}
         <ProductGrid products={shownList.products} />
         <nav className="week05-pagination" aria-label="Pagination">
           {/* 이전 조건의 결과를 보는 동안에는 이동을 막는다. 보이는 페이지를 기준으로

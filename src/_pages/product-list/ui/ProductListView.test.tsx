@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react'
 import type { Product } from '@/entities/product/model/product'
@@ -30,6 +36,15 @@ const pageResponse = (page: number, products: Product[]) => ({
   categories: [{ id: 'casual', name: '캐주얼' }],
   totalCount: 30,
   page,
+  pageSize: 12,
+})
+
+// 0건도 성공 응답이다. 범위 밖 페이지와 갈리도록 totalCount도 0으로 둔다.
+const emptyResponse = () => ({
+  products: [],
+  categories: [{ id: 'casual', name: '캐주얼' }],
+  totalCount: 0,
+  page: 1,
   pageSize: 12,
 })
 
@@ -96,6 +111,12 @@ const liveRegion = () => screen.getByRole('status')
 // 고정 시간 대기 대신 관찰 가능한 상태로 동기를 맞춘다.
 const goneToPageTwo = () =>
   waitFor(() => expect(window.location.search).toContain('page=2'))
+
+// 초기 URL에서도 통과하지 않도록 바뀐 값 자체를 기다린다.
+const searchedForKnit = () =>
+  waitFor(() =>
+    expect(decodeURIComponent(window.location.search)).toContain('q=니트'),
+  )
 
 beforeEach(() => {
   resetStores()
@@ -215,6 +236,99 @@ describe('조건을 바꾸는 동안의 목록', () => {
     // 보이는 것이 이전 페이지라 여기서 또 누르면 의도한 곳과 다른 페이지로 간다.
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled()
+  })
+
+  it('0건도 개수와 조건을 성공 경로와 같은 자리에서 보여준다', async () => {
+    const api = deferredFetch()
+    renderView('?q=니트&category=goods&sort=popular')
+
+    api.settle(emptyResponse())
+
+    expect(await screen.findByText('0 products')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'No products match “니트” in Beauty & Goods, sorted by Popular.',
+      ),
+    ).toBeInTheDocument()
+    // 조건이 있으니 되돌릴 것이 있다.
+    expect(screen.getByRole('button', { name: 'Reset filters' })).toBeEnabled()
+    expect(document.querySelectorAll('.product-result-notice')).toHaveLength(1)
+  })
+
+  it('조건이 전부 기본값인 0건에는 되돌릴 것이 없다', async () => {
+    const api = deferredFetch()
+    renderView()
+
+    api.settle(emptyResponse())
+
+    expect(
+      await screen.findByText('No products are available.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reset filters' })).toBeNull()
+  })
+
+  it('응답을 기다리는 동안에도 0건 설명은 보이는 목록의 조건을 가리킨다', async () => {
+    const api = deferredFetch()
+    renderView('?q=셔츠')
+
+    api.settle(emptyResponse())
+    await screen.findByText('No products match “셔츠”.')
+
+    fireEvent.change(screen.getByLabelText('Search'), {
+      target: { value: '니트' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+    await searchedForKnit()
+    await waitFor(() => expect(api.callCount()).toBe(2))
+
+    // 니트 요청은 아직 끝나지 않았다. 0건인지 확인된 적이 없다.
+    expect(screen.getByText('No products match “셔츠”.')).toBeInTheDocument()
+    expect(within(resultsRegion()).queryByText(/니트/)).toBeNull()
+    expect(screen.getByText(/Updating…/)).toBeInTheDocument()
+    expect(liveRegion()).toHaveTextContent(
+      'Updating results. The current list shows the previous selection.',
+    )
+
+    // 니트가 실제로 0건으로 끝난 뒤에야 니트 설명으로 바뀐다.
+    api.settle(emptyResponse())
+    expect(
+      await screen.findByText('No products match “니트”.'),
+    ).toBeInTheDocument()
+  })
+
+  it('0건 설명은 실패한 새 조건이 아니라 보이는 목록의 조건을 가리킨다', async () => {
+    const api = deferredFetch()
+    renderView('?q=셔츠')
+
+    api.settle(emptyResponse())
+    await screen.findByText('No products match “셔츠”.')
+
+    fireEvent.change(screen.getByLabelText('Search'), {
+      target: { value: '니트' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+    await searchedForKnit()
+    await waitFor(() => expect(api.callCount()).toBe(2))
+    api.fail()
+    await screen.findByRole('button', { name: 'Try again' })
+
+    // 니트 요청은 실패했으니 0건인지 확인된 적이 없다. 확인된 0건은 셔츠뿐이다.
+    expect(screen.getByText('No products match “셔츠”.')).toBeInTheDocument()
+    expect(screen.queryByText(/니트/)).toBeNull()
+    // 실패한 것은 현재 URL 조건이고, URL은 그 조건을 유지한다.
+    expect(screen.getByText(/불러오지 못했습니다/)).toBeInTheDocument()
+    expect(decodeURIComponent(window.location.search)).toContain('q=니트')
+  })
+
+  it('검색어의 특수문자를 마크업이 아니라 글자로 보여준다', async () => {
+    const api = deferredFetch()
+    renderView('?q=<script>alert(1)</script>')
+
+    api.settle(emptyResponse())
+
+    // 문자열을 HTML로 조립하지 않는다. 텍스트 노드로만 남아야 한다.
+    expect(await screen.findByText(/<script>/)).toBeInTheDocument()
+    expect(document.body.querySelector('script')).toBeNull()
   })
 
   it('보여줄 목록이 없는 최초 실패는 목록 대신 오류와 재시도를 보여준다', async () => {
