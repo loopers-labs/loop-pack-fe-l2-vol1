@@ -120,7 +120,7 @@
 
 **공통**
 
-- [ ] 성능 변경이 기존 동작을 깨지 않았음을 테스트로 고정한다 (목록 6화면, URL 복원, 장바구니·위시리스트 개수)
+- [ ] 성능 변경이 기존 동작을 깨지 않았음을 확인한다 — 목록 6화면·URL 복원·장바구니·위시리스트 개수를 수동 관찰과 녹화로 확인하고 라운드 기록에 남긴다
 - [ ] `pnpm check`(test + lint + typecheck + build)와 `pnpm test:e2e` 통과
 - [ ] AI가 만든 부분을 표기하고 직접 검토한다
 
@@ -132,7 +132,7 @@
 - **T3**: 1단계 — 렌더링 경계 조정(셸과 Hero 분리, `h1`·설명을 데이터 밖으로), Hero 이미지 개입, fallback 공간 계약 — fulfills: 1단계 완료 조건
 - **T4**: 2단계 — 6화면 재점검, 최초 진입 pending UI와 취소 처리 보강, 나머지는 근거 기록 — fulfills: 2단계 완료 조건
 - **T5**: 3단계 — 루트 title template·공통 OG, 홈·목록 `generateMetadata`, fallback 2종 구분, 서버 호출 계수와 UA 비교 — fulfills: 3단계 완료 조건
-- **T6**: 동작 계약 테스트 보강 — 목록 6화면, URL 복원, 장바구니·위시리스트 개수 — fulfills: 공통 조건 1
+- **T6**: 동작 회귀 확인 — 목록 6화면, URL 복원, 장바구니·위시리스트 개수를 관찰로 확인하고 근거를 기록 — fulfills: 공통 조건 1
 - **T7**: 4단계 — After 5회 재측정, 회귀 확인, 효과 없던 시도와 개입하지 않은 근거 정리 — fulfills: 4단계 완료 조건
 - **T8**: Advanced A 판단 — `/performance-lab/inp?pageSize=24`에서 병목 확인 후 착수 여부 결정 — fulfills: D5
 - **T9**: Technical Writing — 측정에서 판단으로 이어지는 서술을 PR 본문으로 정리 — fulfills: 공통 조건 3
