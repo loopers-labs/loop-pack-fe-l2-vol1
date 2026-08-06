@@ -21,7 +21,7 @@ const ProductCategoryArr: { id: CategoryId; label: string }[] = [
 ] as const;
 
 export const HomeContent = () => {
-  const { data, isPending, isError, refetch } = useQuery(homeQueries.home('slow'));
+  const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
 
   const queryClient = useQueryClient();
 
