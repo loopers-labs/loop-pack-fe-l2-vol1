@@ -191,6 +191,47 @@ a {
   }
 }
 
+/* [AI] 갱신 중 표시(isPlaceholderData) — 결과 영역 상단에 얇은 막대를 띄운다.
+   position: absolute라 기존 목록을 밀지 않아 갱신 중 CLS가 생기지 않는다.
+   최초 진입 스켈레톤과 시각적으로 다르게(얇은 막대 vs 카드 모양) 구성했다. */
+.results {
+  position: relative;
+}
+
+.refresh-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  overflow: hidden;
+  background: rgba(37, 87, 167, 0.15);
+}
+
+.refresh-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: #2557a7;
+  animation: refresh-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes refresh-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refresh-bar::after {
+    animation: none;
+  }
+}
+
 .filters label {
   display: grid;
   gap: 6px;

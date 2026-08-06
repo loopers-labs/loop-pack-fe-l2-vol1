@@ -26,7 +26,8 @@ export const ProductList = () => {
     setSearchInput,
     query,
   } = useProductPage();
-  const { data, isPending, isError, totalPages, totalCount, refetch } = useProductList(page, query);
+  const { data, isPending, isError, isPlaceholderData, totalPages, totalCount, refetch } =
+    useProductList(page, query);
 
   const renderResults = () => {
     if (isPending)
@@ -50,14 +51,17 @@ export const ProductList = () => {
     if (data?.products.length === 0) return <p>검색 결과가 없습니다.</p>;
 
     return (
-      <>
+      // [AI] .results를 relative로 두고, isPlaceholderData일 때 상단에 얇은 막대를 absolute로 띄운다.
+      // absolute라 기존 목록을 비우거나 밀지 않아 갱신 중에도 레이아웃이 안정적이다(CLS 방지).
+      <div className="results">
+        {isPlaceholderData && <div className="refresh-bar" role="status" aria-label="갱신 중" />}
         <p>총 {totalCount.toLocaleString()}개</p>
         <div className="grid">
           {data?.products.map((product: Product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
-      </>
+      </div>
     );
   };
 

@@ -4,7 +4,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 export const useProductList = (page: number, query: object) => {
-  const { data, isPending, isError, refetch } = useQuery(productQueries.list(query));
+  const { data, isPending, isError, isPlaceholderData, refetch } = useQuery(
+    productQueries.list(query)
+  );
 
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / (data?.pageSize ?? PAGE_SIZE)));
@@ -20,6 +22,7 @@ export const useProductList = (page: number, query: object) => {
     data,
     isPending,
     isError,
+    isPlaceholderData,
     totalPages,
     totalCount,
     refetch,
