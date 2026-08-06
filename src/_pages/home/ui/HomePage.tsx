@@ -1,14 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { homeQueries } from '@/features/home/home.queries';
-import { SiteHeader } from '@/components/SiteHeader';
 import { ProductGrid } from '@/entities/product';
 import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
 import { WishButton } from '@/features/toggle-wishlist/ui/WishButton';
-import '@/examples/week-05-layout/week-05-layout.css';
+import { homeQueries } from '../api/home.queries';
 
-export default function Home() {
+export function HomePage() {
   const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
 
   if (isPending) return <p>불러오는 중…</p>;
@@ -24,9 +22,7 @@ export default function Home() {
     );
 
   return (
-    <main className="week05-page">
-      <SiteHeader />
-
+    <main>
       <section
         className="week05-hero"
         style={{
