@@ -52,22 +52,22 @@ Before 문서의 Home normal 조건을 유지했다.
 
 ## Home Lighthouse 5회 결과
 
-| 회차 | Performance |    FCP |    LCP |  TBT | CLS | Speed Index |
-| ---- | ----------: | -----: | -----: | ---: | --: | ----------: |
-| 1    |          94 | 0.915s | 3.156s | 27ms |   0 |      1.330s |
-| 2    |          93 | 0.917s | 3.240s |  5ms |   0 |      1.248s |
-| 3    |          94 | 0.912s | 3.153s | 37ms |   0 |      1.267s |
-| 4    |          93 | 0.916s | 3.234s |  5ms |   0 |      1.234s |
-| 5    |          94 | 0.912s | 3.152s |  5ms |   0 |      1.261s |
+| 회차 | Performance | FCP    | LCP    | TBT  | CLS | Speed Index |
+| ---- | ----------- | ------ | ------ | ---- | --- | ----------- |
+| 1    | 94          | 0.915s | 3.156s | 27ms | 0   | 1.330s      |
+| 2    | 93          | 0.917s | 3.240s | 5ms  | 0   | 1.248s      |
+| 3    | 94          | 0.912s | 3.153s | 37ms | 0   | 1.267s      |
+| 4    | 93          | 0.916s | 3.234s | 5ms  | 0   | 1.234s      |
+| 5    | 94          | 0.912s | 3.152s | 5ms  | 0   | 1.261s      |
 
 ## Home Lighthouse 집계
 
 | 항목        | 중앙값 | 범위           |
-| ----------- | -----: | -------------- |
-| Performance |     94 | `93~94`        |
+| ----------- | ------ | -------------- |
+| Performance | 94     | `93~94`        |
 | FCP         | 0.915s | `0.912~0.917s` |
 | LCP         | 3.156s | `3.152~3.240s` |
-| CLS         |      0 | `0~0`          |
+| CLS         | 0      | `0~0`          |
 
 Lighthouse의 LCP 분석 기준 최종 LCP element는 Home Hero 이미지였다.
 
@@ -88,10 +88,10 @@ LCP 요청 탐색 항목도 모두 통과했다.
 Raw HAR: [home-normal-network.har](./home-normal-network.har)
 
 | 요청                                   | 순서 | 전송 크기 | 소요 시간 | 상태 |
-| -------------------------------------- | ---: | --------: | --------: | ---: |
-| document `/`                           |    1 |   11.2KiB |   546.8ms |  200 |
-| `/images/week-07/hero-mobile-768.webp` |   19 |   46.0KiB |    39.3ms |  200 |
-| `/_next/image?...p21.jpg&w=640&q=75`   |   20 |   70.6KiB |    21.6ms |  200 |
+| -------------------------------------- | ---- | --------- | --------- | ---- |
+| document `/`                           | 1    | 11.2KiB   | 546.8ms   | 200  |
+| `/images/week-07/hero-mobile-768.webp` | 19   | 46.0KiB   | 39.3ms    | 200  |
+| `/_next/image?...p21.jpg&w=640&q=75`   | 20   | 70.6KiB   | 21.6ms    | 200  |
 
 - 전체 전송량은 약 `459.5KiB`였다.
 - Hero 이미지는 `46.0KiB`로 유지됐다.
@@ -103,26 +103,26 @@ Raw trace: [home-normal-performance-trace.json.gz](./home-normal-performance-tra
 
 Trace에서 확인한 값:
 
-| 항목                              |  값 |
-| --------------------------------- | --: |
-| `LayoutShift` 이벤트 수           |   0 |
-| `had_recent_input=false` shift 수 |   0 |
-| no recent input shift 합계        |   0 |
-| LCP candidate 이벤트 수           |   1 |
+| 항목                              | 값  |
+| --------------------------------- | --- |
+| `LayoutShift` 이벤트 수           | 0   |
+| `had_recent_input=false` shift 수 | 0   |
+| no recent input shift 합계        | 0   |
+| LCP candidate 이벤트 수           | 1   |
 
 Home real-final trace에서는 Layout Shifts track에 shift가 기록되지 않았다. Lighthouse 5회 CLS도 모두 `0`이었다.
 
 ## Before / After 비교
 
-| 항목                     |       Before normal |       After real-final | 변화               |
-| ------------------------ | ------------------: | ---------------------: | ------------------ |
-| Performance median       |                  75 |                     94 | 개선               |
-| FCP median               |              0.900s |                 0.915s | 측정 흔들림 범위   |
-| FCP range                |        0.900~0.900s |           0.912~0.917s | 측정 흔들림 범위   |
-| LCP median               |             40.590s |                 3.156s | 크게 개선          |
-| LCP range                |      40.588~40.599s |           3.152~3.240s | 크게 개선          |
-| CLS median               |                   0 |                      0 | 유지               |
-| Hero image transfer size |            약 7.5MB |                46.0KiB | 크게 감소          |
+| 항목                     | Before normal       | After real-final       | 변화               |
+| ------------------------ | ------------------- | ---------------------- | ------------------ |
+| Performance median       | 75                  | 94                     | 개선               |
+| FCP median               | 0.900s              | 0.915s                 | 측정 흔들림 범위   |
+| FCP range                | 0.900~0.900s        | 0.912~0.917s           | 측정 흔들림 범위   |
+| LCP median               | 40.590s             | 3.156s                 | 크게 개선          |
+| LCP range                | 40.588~40.599s      | 3.152~3.240s           | 크게 개선          |
+| CLS median               | 0                   | 0                      | 유지               |
+| Hero image transfer size | 약 7.5MB            | 46.0KiB                | 크게 감소          |
 | LCP resource             | `hero-original.jpg` | `hero-mobile-768.webp` | 모바일 후보로 변경 |
 
 판단:
@@ -159,6 +159,37 @@ Home real-final trace에서는 Layout Shifts track에 shift가 기록되지 않�
 - 로딩, 에러, 빈 상태, 재시도
 - URL query와 화면 결과 일치
 
+## 기능 회귀 체크
+
+4단계에서 요구한 기존 커머스 기능 회귀는 Step 2 녹화, 현재 코드 구조, 테스트 결과를 함께 근거로 확인했다.
+
+| 항목                               | 확인 근거                                                                                              | 판단 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------ | ---- |
+| 검색·카테고리·정렬·페이지 URL 복원 | Step 2 녹화와 문서, `useProductListSearchParams`가 `nuqs` URL 상태를 `history: "push"`로 관리하는 코드 | 유지 |
+| 뒤로 가기·앞으로 가기              | 검색·카테고리·정렬·페이지 조건이 URL query로 남고, `nuqs` history 상태로 복원되는 구조                 | 유지 |
+| 장바구니·Header 개수               | `ProductListCommerceState.test.tsx`에서 상품 카드 장바구니 action 후 Header `장바구니 1` 반영 확인     | 유지 |
+| 위시리스트·Header 개수             | `ProductListCommerceState.test.tsx`에서 상품 카드 위시리스트 action 후 Header `위시리스트 1` 반영 확인 | 유지 |
+| 로딩·에러·빈 상태·재시도           | Step 2 상태표와 녹화에서 최초 pending, empty, 최초 실패, 갱신 실패, `다시 시도` 버튼을 구분            | 유지 |
+
+## 공통 체크
+
+- FSD 의존 방향: `fsdImportBoundaries.test.ts`를 포함한 `pnpm check`가 통과했다.
+- 슬라이스 Public API: 성능 작업 중 Route Handler, FSD slice 경계, 장바구니·위시리스트 store를 우회하는 별도 복사 상태를 만들지 않았다.
+- AI 활용: AI는 측정값 정리와 병목 가설 검토에 사용했고, 최종 판단은 Lighthouse raw, HAR, trace, curl, 서버 로그, 테스트로 직접 확인했다.
+
+검증 명령:
+
+```bash
+pnpm check
+```
+
+결과:
+
+- Vitest: 25개 파일, 112개 테스트 통과
+- ESLint: 통과
+- TypeScript: 통과
+- production build: 통과
+
 ## Metadata 회귀
 
 3단계에서 확인한 metadata document 증거는 다음 문서에 남겼다.
@@ -183,3 +214,4 @@ Home real-final trace에서는 Layout Shifts track에 shift가 기록되지 않�
 - FCP는 사실상 유지됐다.
 - Products 조건 변경 Performance trace에서 LayoutShift가 관찰된 점은 2단계 문서에 남겼다. Lighthouse navigation CLS는 0이었고, 현재는 UX/복잡도 tradeoff 때문에 후속 관찰 대상으로 유지한다.
 - 첫 상품 이미지가 Hero보다 큰 전송 크기로 관찰됐지만, 이번 4단계 Home LCP element는 Hero 이미지였으므로 별도 후속 최적화 후보로 분리한다.
+- 기능 회귀는 별도 새 최적화 없이 Step 2 녹화, 현재 코드 구조, `pnpm check` 결과로 확인했다.
