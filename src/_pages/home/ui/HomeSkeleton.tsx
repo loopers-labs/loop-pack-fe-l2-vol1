@@ -8,7 +8,8 @@ const HOME_SECTION_PRODUCT_COUNT = 6;
 export function HomeSkeleton() {
   return (
     <div aria-busy="true">
-      <Skeleton className="min-h-[220px] max-[720px]:min-h-[180px]" />
+      {/* Hero와 같은 aspect-ratio(데스크톱 16/9·모바일 4/5)로 공간을 잡아 교체 시 CLS를 막는다. */}
+      <Skeleton className="aspect-[16/9] max-[640px]:aspect-[4/5]" />
       <section className="week05-section">
         <Skeleton className="mb-4 h-6 w-24" />
         <div className="week05-categories">

@@ -127,6 +127,15 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // 7주차 과제 픽스처는 "일부러 최적화 안 한 LCP <img>"를 Before 기준으로 두고
+  // 인라인 eslint-disable로 no-img-element를 끈다. 우리 하네스는 noInlineConfig라
+  // 그 disable이 무효가 되어 커밋이 막히므로, 제공 픽스처를 고치지 않고
+  // 이 측정용 폴더에서만 인라인 설정을 허용한다. 과제도 next/image를 완료 기준으로 두지 않는다.
+  {
+    files: ["src/examples/week-07-performance/**/*.{ts,tsx}"],
+    linterOptions: { noInlineConfig: false },
+  },
+
   // Override default ignores of eslint-config-next.
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", ".claude/**"]),
 

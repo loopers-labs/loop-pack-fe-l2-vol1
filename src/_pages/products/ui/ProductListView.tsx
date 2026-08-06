@@ -146,27 +146,32 @@ export function ProductListView() {
               )}
             >
               <ProductListResults />
-              <nav className="week05-pagination" aria-label="페이지 이동">
-                <button
-                  type="button"
-                  onClick={() => goToPage(query.page - 1)}
-                  disabled={query.page <= 1}
-                >
-                  이전
-                </button>
-                <span>
-                  {query.page} / {totalPages}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => goToPage(query.page + 1)}
-                  onMouseEnter={prefetchNextPage}
-                  onFocus={prefetchNextPage}
-                  disabled={query.page >= totalPages}
-                >
-                  다음
-                </button>
-              </nav>
+              {/* 페이지네이션은 이동할 결과가 있을 때만 보인다. 0건(빈 결과)이나 데이터 없는
+                  최초 로딩에선 totalCount가 0이라 숨겨, "1 / 1"이 떠 결과가 있는 듯 보이지 않게 한다.
+                  갱신 중엔 이전 데이터의 totalCount가 유지돼 그대로 보인다. */}
+              {totalCount > 0 && (
+                <nav className="week05-pagination" aria-label="페이지 이동">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(query.page - 1)}
+                    disabled={query.page <= 1}
+                  >
+                    이전
+                  </button>
+                  <span>
+                    {query.page} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(query.page + 1)}
+                    onMouseEnter={prefetchNextPage}
+                    onFocus={prefetchNextPage}
+                    disabled={query.page >= totalPages}
+                  >
+                    다음
+                  </button>
+                </nav>
+              )}
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>

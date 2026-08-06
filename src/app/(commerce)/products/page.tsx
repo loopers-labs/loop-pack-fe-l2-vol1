@@ -1,4 +1,5 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { ProductListView } from "@/_pages/products/ui/ProductListView";
@@ -9,7 +10,54 @@ import {
   loadProductListSearchParams,
   serializeProductListSearchParams,
 } from "@/features/products/model/searchParams";
+import { SORT_OPTIONS } from "@/features/products/ui/filterOptions";
 import { getServerQueryClient } from "@/shared/api/getServerQueryClient";
+import { makeQueryClient } from "@/shared/api/queryClient";
+import { buildPageMetadata } from "@/shared/config/siteMetadata";
+
+// 본문과 같은 query factory·정규화 URL로 목록을 조회해 metadata를 만든다. 본문(page)과 별개 QueryClient라
+// 캐시를 공유하지 않고, 같은 GET URL·options의 native fetch가 request 안에서 memoization돼 Route Handler는
+// 한 번만 호출된다(서버 로그로 확인). 조회 실패 시 페이지별 빈 값이 아니라 root 공통 metadata를 상속한다.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const query = await loadProductListSearchParams(searchParams);
+  // 본문 redirect와 같은 정규화로 만든 canonical URL을 og:url·canonical에 쓴다.
+  const url = serializeProductListSearchParams("/products", query);
+
+  try {
+    const data = await makeQueryClient().fetchQuery(productListQueryOptions(query));
+
+    const categoryName =
+      query.category === "all"
+        ? "전체 상품"
+        : (data.categories.find((category) => category.id === query.category)?.name ?? "상품");
+    const sortLabel = SORT_OPTIONS.find((option) => option.value === query.sort)?.label ?? "";
+    const pageSuffix = query.page > 1 ? ` — ${query.page}페이지` : "";
+    const subject = query.q ? `"${query.q}" 검색` : categoryName;
+
+    // 성공 + 0건: URL 조건과 0개임을 설명한다. image를 안 주면 공통 fallback이 유지된다.
+    if (data.totalCount === 0) {
+      return buildPageMetadata({
+        title: `${subject} 결과 없음${pageSuffix}`,
+        description: `${categoryName} · ${sortLabel} 조건에 맞는 상품이 없습니다(0개).`,
+        url,
+      });
+    }
+
+    // 검색어를 title에 먼저, category·sort는 description에, 2페이지 이상은 title에 페이지 번호를 반영한다.
+    return buildPageMetadata({
+      title: query.q ? `"${query.q}" 검색 결과${pageSuffix}` : `${categoryName}${pageSuffix}`,
+      description: `${categoryName} · ${sortLabel}`,
+      image: data.products[0]?.image,
+      url,
+    });
+  } catch {
+    return {};
+  }
+}
 
 // app은 라우팅만. 화면 조합은 _pages가 소유한다.
 // searchParams를 서버에서 읽어 라우트가 동적이 되므로, useSearchParams의 CSR-bailout이 사라져

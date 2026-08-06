@@ -10,6 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "build:slow": "NEXT_PUBLIC_MOCK_SCENARIO=slow next build",
+    "start:slow": "NEXT_PUBLIC_MOCK_SCENARIO=slow next start",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

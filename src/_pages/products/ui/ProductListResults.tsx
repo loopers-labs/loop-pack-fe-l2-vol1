@@ -46,8 +46,12 @@ export function ProductListResults() {
       )}
       <p>총 {data.totalCount}개</p>
       <div className="week05-grid">
-        {data.products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        {/* key에 위치(index)를 함께 넣는다. 전환(특히 all↔카테고리)에서 양쪽에 겹치는 상품이
+            product.id만으로는 DOM이 유지된 채 자리를 옮겨 CLS가 생긴다. index를 더하면 위치가 바뀔 때
+            key가 달라져 그 자리에 새로 mount되므로 이동이 없다. product.id를 남겨 같은 위치의 서로
+            다른 상품은 구분된다. 목록은 조건마다 통째로 교체되고 카드는 상태가 없어 안전하다. */}
+        {data.products.map((product, index) => (
+          <ProductCard key={`${product.id}-${index}`} product={product} />
         ))}
       </div>
     </>

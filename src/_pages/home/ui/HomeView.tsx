@@ -1,11 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 
 import { homeQueryOptions } from "@/_pages/home/api/queries";
 import { ProductSection } from "@/_pages/home/ui/ProductSection";
+// Week 7 홈 LCP인 Hero. 원본을 next/image로 표시폭에 맞춰 최적화한다.
+// 제공 픽스처라 examples에 두고 여기서 조합만 한다.
+import { HeroSection } from "@/examples/week-07-performance/HeroSection";
 
 import { HomeSkeleton } from "./HomeSkeleton";
 
@@ -24,20 +26,7 @@ export function HomeView() {
 
       {data && (
         <>
-          <section className="week05-hero">
-            {/* 제목·설명이 이미 텍스트로 있는 장식 이미지다.
-                alt를 비워 스크린리더가 같은 내용을 두 번 읽지 않게 한다. */}
-            <Image
-              className="week05-hero-image"
-              src={data.banner.image}
-              alt=""
-              fill
-              sizes="100vw"
-              priority
-            />
-            <p>{data.banner.description}</p>
-            <h1>{data.banner.title}</h1>
-          </section>
+          <HeroSection title={data.banner.title} description={data.banner.description} />
           <section className="week05-section">
             <h2>카테고리</h2>
             <div className="week05-categories">

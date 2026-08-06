@@ -1,6 +1,6 @@
 import type { Category, CategoryId, Product } from "@/entities/product/model/types";
 
-export type MockApiScenario = "empty" | "error";
+export type MockApiScenario = "empty" | "error" | "slow";
 
 export const categories: Category[] = [
   { id: "casual", name: "캐주얼" },
@@ -353,9 +353,8 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct);
 
-const mockDelayMs = process.env.NODE_ENV === "test" ? 0 : 500;
-
-export const waitForMockApi = () =>
+export const waitForMockApi = (requestedDelayMs = 500) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, mockDelayMs);
+    const delayMs = process.env.NODE_ENV === "test" ? 0 : requestedDelayMs;
+    setTimeout(resolve, delayMs);
   });
