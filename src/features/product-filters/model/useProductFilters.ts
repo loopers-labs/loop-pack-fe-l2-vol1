@@ -53,7 +53,7 @@ export function useProductFilters() {
     }, DEBOUNCE_DELAY);
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
+  const { data, isLoading, isFetching, isError, refetch } = useQuery(
     productsQueries.productList(filters),
   );
 
@@ -72,6 +72,7 @@ export function useProductFilters() {
     handleSearchChange,
     data,
     isLoading,
+    isFetching,
     isError,
     refetch,
     totalPages,

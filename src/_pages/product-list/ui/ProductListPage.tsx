@@ -20,6 +20,7 @@ function ProductListContent() {
     handleSearchChange,
     data,
     isLoading,
+    isFetching,
     isError,
     refetch,
     totalPages,
@@ -40,7 +41,8 @@ function ProductListContent() {
       </section>
       <section className="week05-section" aria-label="상품 검색 결과">
         {isLoading && <p>로딩 중...</p>}
-        {isError && (
+
+        {!data && isError && (
           <div className="week05-error">
             <p>오류가 발생했습니다.</p>
             <button type="button" onClick={() => void refetch()}>
@@ -48,12 +50,23 @@ function ProductListContent() {
             </button>
           </div>
         )}
-        {!isLoading && !isError && (
+
+        {data && (
           <>
-            <p>총 {data?.totalCount ?? 0}개</p>
+            {isFetching && <p aria-live="polite">갱신 중...</p>}
+            {isError && (
+              <div className="week05-error" role="alert">
+                <p>갱신에 실패했습니다.</p>
+                <button type="button" onClick={() => void refetch()}>
+                  다시 시도
+                </button>
+              </div>
+            )}
+
+            <p>총 {data.totalCount}개</p>
             <div className="week05-grid">
-              {data?.products.length === 0 && <p>상품이 없습니다.</p>}
-              {data?.products.map((product) => (
+              {data.products.length === 0 && <p>상품이 없습니다.</p>}
+              {data.products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
