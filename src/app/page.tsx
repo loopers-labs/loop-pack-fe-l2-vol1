@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import { CommerceHeader } from "@/widgets/commerce";
-import { HomeSection } from "@/_pages/home";
+import { HomeSection, generateHomeMetadata } from "@/_pages/home";
 import { HeroSkeleton } from "@/examples/week-07-performance/HeroSkeleton";
 import app from "@/_app/styles/app.module.css";
 import layout from "@/shared/ui/layout.module.css";
+
+export const generateMetadata = generateHomeMetadata;
 
 export default function HomePage() {
   return (
