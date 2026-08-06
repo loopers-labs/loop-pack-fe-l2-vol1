@@ -104,7 +104,7 @@
 | LCP | 1s, 1s, 1s, 1s, 1s | 1s | 1s | 1s |
 | CLS | 0, 0, 0, 0, 0 | 0 | 0 | 0 |
 
-**before와 비교하여 FCP 8초 감소, hero에 대한 fallback 추가 후에도 CLS 0임을 확인**
+**before와 비교하여 LCP 8초 감소(8.5s→1s), hero에 대한 fallback 추가 후에도 CLS 0임을 확인**
 
 ### LCP를 서버 응답 대기, 이미지 요청 시작 대기, 이미지 전송, 화면에 그려질 때까지의 시간으로 나눠 관찰 after
 
