@@ -1,6 +1,6 @@
 # 7주차 성능 최적화 — 측정 기록과 판단
 
-> **AI 협업 표기** — 이 문서는 지금 **측정 기록 틀과 준비 작업 기록만** 채워진 상태다. 측정값, 병목 판단, 개입 선택과 그 근거는 직접 채운다. 작업 수준별 구분은 문서 끝 「AI 협업 표기」에 적는다.
+> **AI 협업 표기** — 0단계의 **Lighthouse raw 값·LCP 구간·waterfall은 실행해서 기록한 값**이고, **병목 판단·개입 선택·그 근거는 직접 채운다**. filmstrip 순서와 Layout Shifts track, slow API 목록 6상태 녹화는 DevTools에서 직접 관찰할 몫으로 비어 있다. 작업 수준별 구분은 문서 끝 「AI 협업 표기」에 적는다.
 
 ## 0단계 — 측정 조건을 고정하고 Before를 남긴다
 
@@ -10,7 +10,7 @@
 | --------------- | -------------------------------------------------------- |
 | 실행 방식       | `pnpm build` + `pnpm start` (production). dev 서버로 비교하지 않는다 |
 | Next            | 16.2.10                                                  |
-| Node            |                                                          |
+| Node            | 24.17.0 (`.nvmrc`) · pnpm 10.15.1                        |
 | origin          | `http://localhost:3000`                                  |
 | mock API 지연   | 기본 500ms · `?scenario=slow` 1,500ms                    |
 
@@ -19,31 +19,46 @@
 | 항목                    | Before | After |
 | ----------------------- | ------ | ----- |
 | URL                     | `http://localhost:3000/` | |
-| query string            |        |       |
+| query string            | 없음   |       |
 | 행동                    | cold load | |
-| viewport                |        |       |
-| CPU throttling          |        |       |
-| Network throttling      |        |       |
-| 브라우저 · 버전         |        |       |
-| Lighthouse 버전         |        |       |
-| 브라우저 프로필         | (확장·캐시·로그인 섞이지 않은 별도 프로필) | |
+| viewport                | 412 × 823 @1.75x (Lighthouse mobile emulation) | |
+| CPU throttling          | 4× slowdown |  |
+| Network throttling      | 1,638.4 Kbps · RTT 150ms |  |
+| throttling method       | `devtools` (실제 스로틀링) |  |
+| 브라우저 · 버전         | Chrome 150.0.7871.188 (`--headless=new`) | |
+| Lighthouse 버전         | 13.4.1 |  |
+| 브라우저 프로필         | 회차마다 새 `--user-data-dir` (확장·캐시·로그인 없음) | |
 | commit SHA              | `4f07c0ef` | |
-| 측정 날짜               |        |       |
+| 측정 날짜               | 2026-08-07 |  |
+
+재현 명령 — 회차마다 `$PROF`를 새로 만든다.
+
+```bash
+pnpm dlx lighthouse "http://localhost:3000/" \
+  --only-categories=performance --throttling-method=devtools \
+  --output=json --output-path="run-N.json" \
+  --chrome-flags="--headless=new --no-first-run --no-default-browser-check --user-data-dir=$PROF"
+```
+
+> **`--throttling-method=devtools`를 쓴 이유.** Lighthouse 기본값은 `simulate`(Lantern 추정)다. 이 경우 headline 지표는 추정치인데 `lcp-breakdown-insight`의 구간값은 관측치라 **기준이 섞인다** — 실제로 기본값으로 5회 돌렸을 때 구간 합은 947ms인데 LCP는 40,514ms로 나왔다. `devtools`는 실제로 스로틀링하므로 아래 표에서 4구간 합과 LCP가 일치한다.
 
 ### Before — FCP · LCP · CLS 5회 raw 값
 
 점수나 향상률에는 합격선이 없다. 남길 것은 raw 값과 흔들림의 폭이다.
 
-| 회차     | FCP | LCP | CLS |
-| -------- | --- | --- | --- |
-| 1        |     |     |     |
-| 2        |     |     |     |
-| 3        |     |     |     |
-| 4        |     |     |     |
-| 5        |     |     |     |
-| 중앙값   |     |     |     |
-| 최솟값   |     |     |     |
-| 최댓값   |     |     |     |
+| 회차   | FCP        | LCP          | CLS    |
+| ------ | ---------- | ------------ | ------ |
+| 1      | 1,358ms    | 44,824ms     | 0.0000 |
+| 2      | 1,353ms    | 44,828ms     | 0.0000 |
+| 3      | 1,350ms    | 44,829ms     | 0.0000 |
+| 4      | 1,351ms    | 44,821ms     | 0.0000 |
+| 5      | 1,368ms    | 44,847ms     | 0.0000 |
+| 중앙값 | **1,353ms** | **44,828ms** | 0.0000 |
+| 최솟값 | 1,350ms    | 44,821ms     | 0.0000 |
+| 최댓값 | 1,368ms    | 44,847ms     | 0.0000 |
+| 폭     | 18ms       | 26ms         | 0      |
+
+측정 흔들림은 FCP 18ms · LCP 26ms다. After에서 이 폭보다 큰 변화만 변화로 읽는다.
 
 ### Before — Lab 측정이 답하지 못하는 것
 
@@ -60,32 +75,37 @@ Lighthouse는 Lab이다. **무엇이 느린가**에는 답하지만 **실제로 
 
 | 확인할 것                                             | 관찰 결과 |
 | ----------------------------------------------------- | --------- |
-| Lighthouse가 지목한 LCP element                       |           |
-| filmstrip의 Header · 페이지 제목 · Hero 표시 순서     |           |
-| Layout Shifts track에 기록된 이동                     |           |
+| Lighthouse가 지목한 LCP element                       | Hero 원본 이미지 — `<img class="…HeroSection…image" alt="" width="3840" height="2160" src="/images/week-07/hero-original.jpg">` (selector: `body > main.shop-page > section.…hero > img.…image`) |
+| filmstrip의 Header · 페이지 제목 · Hero 표시 순서     | *(DevTools Performance 녹화에서 직접 확인)* |
+| Layout Shifts track에 기록된 이동                     | Lighthouse CLS는 5회 모두 0.0000. Hero가 `aspect-ratio: 16/9`로 공간을 예약한다. *(track에서 직접 대조)* |
 
 ### Before — Network waterfall
 
-| 리소스      | URL | 전송 크기 | 요청 시작 시점 |
-| ----------- | --- | --------- | -------------- |
-| document    |     |           |                |
-| 홈 데이터   |     |           |                |
-| Hero 이미지 |     |           |                |
+Lighthouse `network-requests` 기준(run 1, 회차 간 차이는 위 폭 안).
+
+| 리소스      | URL                                  | 전송 크기     | 요청 시작 | 완료      |
+| ----------- | ------------------------------------ | ------------- | --------- | --------- |
+| document    | `/`                                  | 2,953 B       | 0ms       | 578ms     |
+| 홈 데이터   | `/api/home`                          | 4,179 B       | 2,699ms   | 3,327ms   |
+| Hero 이미지 | `/images/week-07/hero-original.jpg`  | **7,545,525 B** | 3,345ms   | 44,795ms  |
 
 ### Before — LCP를 구간으로 나눈 값
 
 구간 이름은 강의 용어를 따른다.
 
-| 구간      | 이 구간에 들어가는 것 | 값  |
-| --------- | --------------------- | --- |
-| TTFB      | 서버 · CDN · 캐시     |     |
-| 발견 지연 | HTML · 우선순위       |     |
-| 다운로드  | 크기 · 전송           |     |
-| 렌더 지연 | CSS · JS · layout     |     |
+Lighthouse `lcp-breakdown-insight` 기준. 5회 중앙값이며, 네 구간의 합이 LCP와 일치한다.
+
+| 구간      | 이 구간에 들어가는 것 | 중앙값     | 최소     | 최대     |
+| --------- | --------------------- | ---------- | -------- | -------- |
+| TTFB      | 서버 · CDN · 캐시     | 2ms        | 2ms      | 2ms      |
+| 발견 지연 | HTML · 우선순위       | 3,344ms    | 3,342ms  | 3,359ms  |
+| 다운로드  | 크기 · 전송           | 41,450ms   | 41,448ms | 41,455ms |
+| 렌더 지연 | CSS · JS · layout     | 31ms       | 27ms     | 33ms     |
+| **합**    |                       | **44,828ms** |          |          |
 
 ### Before — slow API 목록 관찰
 
-`/api/products?scenario=slow`에서 각각 녹화한다.
+`/api/products?scenario=slow`에서 각각 녹화한다. **아직 측정하지 않았다** — 위 Lighthouse는 홈 cold load만 대상이었다.
 
 | 상황                                      | 관찰 결과 |
 | ----------------------------------------- | --------- |
@@ -228,6 +248,7 @@ Basic 완료 후, 실제 클릭에서 관계없는 카드까지 렌더되는 병
 | 3 | 최적화하지 않은 원본 Hero를 홈에 연결. 기존 `h1`을 지우지 않고 그 아래에 붙였다 — 1단계가 "`h1`이 느린 Hero와 함께 막히지 않는가"를 요구하므로 `h1`이 살아 있어야 그 판단이 성립한다. 배너 문구가 `h1`과 겹치는 것은 1단계에서 렌더링 경계를 정할 때 정리한다 | 커밋 `4f07c0ef` |
 | 4 | `pnpm check` (test 41 · lint · typecheck · build) · `pnpm format:check` | 둘 다 **exit 0** · 2026-08-07 |
 | 5 | production build로 실행해 Hero 렌더 확인 (`pnpm build` + `pnpm start`, `http://localhost:3000`) | 아래 표 |
+| 6 | Lighthouse 5회 실행(0단계 Before). 기본 `simulate`로 먼저 돌렸다가 구간값과 headline 지표의 기준이 섞이는 것을 확인하고 `devtools`로 다시 측정했다 | 0단계 표에 기록 · 2026-08-07 |
 
 ### Hero 렌더 확인 — DOM에서 읽은 값
 
@@ -248,9 +269,9 @@ viewport 1280×900. 측정이 아니라 **배선이 의도대로 붙었는지**�
 
 | 구분                                          | 범위 |
 | --------------------------------------------- | ---- |
-| **직접 결정 (최종 판단)**                     | eslint 적용 범위를 어느 룰에 어떻게 둘지(메타 룰 + 옵션으로 좁히는 안을 채택), Hero를 기존 `h1`을 유지한 채 연결할지, 커밋을 어떻게 나눌지. 0단계 이후의 측정·병목 판단·개입 선택은 전부 여기에 들어간다 |
+| **직접 결정 (최종 판단)**                     | eslint 적용 범위를 어느 룰에 어떻게 둘지(메타 룰 + 옵션으로 좁히는 안을 채택), Hero를 기존 `h1`을 유지한 채 연결할지, 커밋을 어떻게 나눌지. **어느 구간이 병목인지의 판정, 개입 선택과 그 근거, 하지 않기로 한 변경**은 전부 여기에 들어간다 |
 | **AI가 초안 작성 (설계 판단), 검토 후 채택**  | eslint 예외의 형태 제안 — 폴더 스코프 + 품질 룰이 아니라 메타 룰에 예외 + `off` 대신 `allow`/`require-description`으로 3중 제한. 판단 근거는 upstream 설정에 해당 플러그인이 없다는 사실이었고, 원본에 없던 개선은 얹지 않았다 |
 | **AI가 구현 (기계적), 검토 후 채택**          | 머지 충돌 해결 반영, eslint 설정 블록, `HomePage`의 Hero 배선(import 1줄 + JSX 1줄 + 주석), 이 문서의 표 골격. 결정을 코드로 옮긴 작업이고 새 설계를 얹지 않았다 |
-| **AI가 실행·기록 (측정)**                     | 게이트 결과(`pnpm check`·`format:check` exit 0, test 41), 각 커밋 단독 검증, production build 실행과 위 「Hero 렌더 확인」 표. 코드는 바꾸지 않고 실행 결과만 옮겼다 |
+| **AI가 실행·기록 (측정)**                     | 게이트 결과(`pnpm check`·`format:check` exit 0, test 41), 각 커밋 단독 검증, production build 실행과 위 「Hero 렌더 확인」 표. **0단계 Lighthouse 5회 raw 값·LCP element·LCP 4구간·network waterfall**과, `simulate`에서 기준이 섞이는 것을 확인하고 `devtools`로 바꾼 경위. 코드는 바꾸지 않고 실행 결과만 옮겼다 |
 
-> 0단계 이후의 표는 비어 있다. Lighthouse 5회·filmstrip·waterfall·Layout Shifts는 확장·캐시·로그인이 섞이지 않은 별도 브라우저 프로필에서 직접 측정한다.
+> **아직 비어 있는 것** — filmstrip의 표시 순서와 Layout Shifts track(DevTools Performance 녹화), slow API 목록 6상태 녹화, 0단계 「네 문장」, 「Lab 측정이 답하지 못하는 것」, 1~4단계와 Advanced A 전체. Lighthouse는 headless에서 돌렸으므로, 눈으로 볼 증거(filmstrip·Layout Shifts·목록 상태)는 DevTools에서 따로 남긴다.
