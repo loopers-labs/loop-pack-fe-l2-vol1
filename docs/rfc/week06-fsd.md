@@ -177,12 +177,14 @@
 ```
 src/
 ├── app/                        # Next 라우팅 + 앱 초기화 (FSD app 레이어 겸함)
-│   ├── layout.tsx              # NuqsAdapter → QueryProvider → SiteHeader + children
+│   ├── layout.tsx              # 전역: 폰트·globals.css·week-05-layout.css·NuqsAdapter → QueryProvider
 │   ├── providers.tsx           # ← providers/QueryProvider.tsx
-│   ├── SiteHeader.tsx          # ← components/SiteHeader.tsx (전역 크롬)
-│   ├── page.tsx                # 얇게: <HomePage /> 렌더만
-│   ├── products/page.tsx       # 얇게: <ProductsPage /> 렌더만
-│   ├── dialog-demo/ · select-demo/   # import 경로만 shared/ui로 수정
+│   ├── SiteHeader.tsx          # ← components/SiteHeader.tsx (전역 크롬, 소유는 app 레이어)
+│   ├── (commerce)/             # 라우트 그룹 — URL 불변, 커머스 화면에만 공통 크롬
+│   │   ├── layout.tsx          # week05-page 컨테이너 + SiteHeader 1회 렌더
+│   │   ├── page.tsx            # 얇게: <HomePage /> 렌더만
+│   │   └── products/page.tsx   # 얇게: <ProductsPage /> 렌더만
+│   ├── dialog-demo/ · select-demo/   # import 경로만 shared/ui로 수정 (헤더 없음 유지)
 │   └── api/                    # 전환 제외 (R절)
 │
 ├── _pages/
@@ -207,8 +209,10 @@ src/
 │
 ├── shared/ui/{dialog,select}/  # ← components/ui/*
 ├── types/commerce.ts           # 물리적 유지, shared/types로 간주 (R절·결정표)
-└── examples/week-05-layout/    # 전환 범위 외 (CSS import만 layout 1회로)
+└── examples/week-05-layout/    # 전환 범위 외 (CSS import만 루트 layout 1회로)
 ```
+
+마이그레이션 중 결정 — **라우트 그룹 `(commerce)`** (초안에는 없던 구조): 루트 layout에 `SiteHeader`를 두면 데모 라우트(dialog-demo·select-demo)에도 헤더와 `week05-page` 폭 제한이 생겨 4주차 화면이 바뀐다 — "기존 동작 보존"과 충돌한다. URL을 바꾸지 않는 라우트 그룹으로 커머스 화면(홈·목록)에만 공통 크롬을 적용해 둘을 다 지켰다. 헤더 파일의 소유는 여전히 app 레이어(`app/SiteHeader.tsx`)이고, 그룹 layout은 그것을 조합하는 자리일 뿐이다.
 
 **사용할 레이어만 선택한 근거**
 
@@ -222,7 +226,7 @@ src/
 만들지 않는 레이어:
 
 - `_app` — 옮길 것이 `QueryProvider` 17줄 하나인데 그 조합은 이미 `src/app/layout.tsx`가 한다. 따로 만들면 껍데기 한 겹이 늘고 전역 설정이 두 곳으로 나뉜다.
-- `widgets` — 강의 기준으로 FSD 적정 규모가 파일 100개 이상인데 이 프로젝트는 26개다. 이 규모에서 간접층 한 겹은 비용만 있다. widgets가 맡을 책임은 이렇게 분배한다: `SiteHeader`는 전역 크롬이므로 layout이 1회 렌더(페이지별 중복 렌더 자체가 문제 3의 증상이었다), `ProductGrid`는 행위 없는 상품 표현이므로 entities. **비용: 카드+버튼 조합 JSX가 홈·목록 두 페이지에 중복된다.** 이 중복은 widgets 생략의 대가로 감수한다. 재도입 트리거: 조합이 3곳 이상에서 재사용되거나 여러 슬라이스를 묶는 독립 UI 블록이 생기면 그때 widgets를 도입한다(queryOptions의 entities 승격 기준과 같은 원칙).
+- `widgets` — 강의 기준으로 FSD 적정 규모가 파일 100개 이상인데 이 프로젝트는 26개다. 이 규모에서 간접층 한 겹은 비용만 있다. widgets가 맡을 책임은 이렇게 분배한다: `SiteHeader`는 전역 크롬이므로 `(commerce)` 라우트 그룹 layout이 1회 렌더(페이지별 중복 렌더 자체가 문제 3의 증상이었다), `ProductGrid`는 행위 없는 상품 표현이므로 entities. **비용: 카드+버튼 조합 JSX가 홈·목록 두 페이지에 중복된다.** 이 중복은 widgets 생략의 대가로 감수한다. 재도입 트리거: 조합이 3곳 이상에서 재사용되거나 여러 슬라이스를 묶는 독립 UI 블록이 생기면 그때 widgets를 도입한다(queryOptions의 entities 승격 기준과 같은 원칙).
 - 검색·필터 feature — `useProductFilters`는 nuqs로 URL을 직접 소유하므로 라우트에 종속된다. feature로 빼면 "이 URL 구조를 쓰는 페이지에서만 동작하는" 재사용 불가 슬라이스가 된다. 한 곳에서만 쓰여서가 아니라 **URL 소유권이 페이지에 있어서** 페이지 세그먼트에 둔다.
 - `processes` — 과제 규칙상 사용하지 않는다(결정 아님).
 
@@ -255,6 +259,17 @@ src/
 | 3. features | 담기·찜 버튼 추출, 카드 조합을 renderActions로 전환 | `pnpm check` + 카드 버튼 동작·상태 동기화 |
 | 4. _pages + app | 페이지 본문 이동, SiteHeader→layout, QueryProvider→app/providers.tsx, CSS import 정리 | `pnpm check` + URL 왕복·새로고침·직접 진입 전체 재확인 |
 
+**단계별 검증 결과 (실측, 2026-08-06)**
+
+| 단계 | 커밋 | `pnpm check` | 기준선 재확인 |
+| --- | --- | --- | --- |
+| 1. shared | `884154c` | 36/36 통과 | 데모 라우트 2개 200. git rename 100% (내용 무변경 순수 이동) |
+| 2. entities | `a24ebff` | 36/36 통과 | 담기+찜 → 배지 1/1, `aria-pressed` true, `<Link>` 홈 이동·복귀에서 배지·버튼 상태 유지, 홈↔목록 동기화 |
+| 3. features | `f877c1b` | 36/36 통과 | features 버튼으로 교체 후 동일 동작. 2단계의 임시 조합 컴포넌트 제거 |
+| 4. _pages + app | `e04dcf7` | 36/36 통과 (`.next` 스테일 타입은 dev 서버 재시작으로 해소) | 라우트 6종 200/404, `?sort=price-asc&page=2` 직접 진입 복원, 정렬 변경 시 page 리셋, 뒤로/앞으로 복원, 배지 유지. **의도된 변경**: 홈 로딩·에러 중에도 헤더 생존(이전엔 맨 `<p>`만 렌더). 데모 라우트는 헤더 없음 유지 |
+
+4단계의 홈 에러 alert 재관측은 자동화 탭의 타이머 스로틀로 재시도가 지연돼 생략했다 — `isError` 분기 코드는 이동 전과 동일하고(0단계에서 alert 동작 검증), 이 단계의 변경점인 "헤더가 페이지 상태와 무관하게 생존"은 로딩 화면에서 확인했다.
+
 **파일 매핑표**
 
 이동하는 파일:
@@ -263,7 +278,8 @@ src/
 | --- | --- | --- | --- |
 | `components/ProductGrid.tsx` (내부 `ProductCard`) | `entities/product/ui/ProductCard.tsx` + `ProductGrid.tsx` | entities/product/ui | 카드를 파일로 추출, 표현만 남김. 행위는 슬롯으로 |
 | `ProductCard` 안의 담기·찜 버튼 | `features/add-to-cart/ui/` · `features/toggle-wishlist/ui/` | features/*/ui | 행위 하나 = feature 하나 |
-| `components/SiteHeader.tsx` | `app/SiteHeader.tsx` | app | 전역 크롬, layout 1회 렌더 |
+| `components/SiteHeader.tsx` | `app/SiteHeader.tsx` | app | 전역 크롬, `(commerce)` layout이 1회 렌더 |
+| `app/page.tsx` · `app/products/page.tsx` (라우팅 파일) | `app/(commerce)/…` | app | 커머스 전용 크롬을 위한 라우트 그룹 — URL 불변, 데모 라우트 보존 |
 | `components/ui/dialog/` · `select/` | `shared/ui/dialog/` · `select/` | shared/ui | 도메인 무관, 내부 의존 0 |
 | `stores/shopStore.ts` | `entities/cart/model/store.ts` + `entities/wishlist/model/store.ts` | entities/*/model | 도메인별 분리 (문제 2) |
 | `features/home/*` | `_pages/home/api/` | _pages/home/api | 소비자가 홈 페이지 하나 |
