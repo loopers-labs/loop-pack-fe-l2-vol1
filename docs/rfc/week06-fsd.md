@@ -339,6 +339,7 @@ src/
 | `entities/wishlist` | ✅ | `useWishCount`, `useIsWished`, `useToggleWish` | 〃 |
 | `shared/ui/select` | ✅ (기존 유지) | `useSelect` + 공개 타입 | 훅 내부 로직 |
 | `shared/ui/dialog` | — | 단일 파일 구현(`index.tsx`가 곧 구현) | — |
+| `shared/api` | ❌ | `HttpError`·`InvalidResponseError` (직접 import) | 파일 1개 = 숨길 내부 없음 (4단계에서 추가) |
 | `features/*` 2개 | ❌ | 버튼 컴포넌트 (직접 import) | 파일 1개 = 숨길 내부 없음. index는 barrel이 된다 |
 | `_pages/*` | ❌ | 페이지 컴포넌트 (직접 import) | 소비자가 라우팅 진입점 하나뿐 — 계약을 맺을 외부가 없다 |
 
@@ -370,12 +371,37 @@ features에 내부(model 등)가 생기면 그 시점에 index를 추가한다 �
 
 ## 4단계 — 에러 처리 경계
 
+<!-- AI 초안 -->
+
+**전파 기준 한 줄 요약: 재시도가 의미 있는 오류(HTTP·네트워크)는 인라인, 재시도가 무의미한 오류(응답 계약 위반·렌더링 버그)만 경계로.** 강의 예시(5xx→경계)와 반대인데, 조회 실패를 `error.tsx`로 던지면 필터까지 사라져 "나머지 화면을 가리지 않는 범위" 요구와 어긋나기 때문이다. 사용자는 필터를 유지한 채 재시도하거나 조건을 바꿔 우회할 수 있어야 한다.
+
+구현: 공통 에러 타입 `shared/api/errors.ts`(`HttpError`(status 보유)·`InvalidResponseError` — 도메인·화면 문구 없음, 문구는 각 페이지 api 모듈 소유), `app/providers.tsx`의 전역 `throwOnError: (e) => e instanceof InvalidResponseError` + `retry: 계약 위반 0회·그 외 1회`, `app/(commerce)/error.tsx`. fetch는 axios와 달리 에러에 status가 없으므로 `HttpError` 없이는 이 기준 자체를 구현할 수 없다 — 타입이 선행 조건이다.
+
 | 실패 유형 | 처리 위치 | Error Boundary로 전파하는가 | 사용자 UI | 재시도 방법 | 이 경계를 선택한 이유 |
 | --- | --- | --- | --- | --- | --- |
-| 상품 목록 조회 실패 |  |  |  |  |  |
-| 잘못된 검색 조건(4xx) |  |  |  |  |  |
-| 예상하지 못한 렌더링 오류 |  |  |  |  |  |
-| 장바구니 행위의 비즈니스 오류 |  |  |  |  |  |
+| 상품 목록 조회 실패 (5xx·네트워크) | `ProductsResult` 인라인 | ❌ | `role="alert"` + 다시 시도 — 헤더·검색·필터 유지 | 자동 1회 + `refetch` 버튼 (전체 새로고침 없음) | 재시도로 복구될 수 있는 오류다. 필터가 살아 있어야 조건을 바꿔 우회할 수 있다. 홈 조회 실패도 같은 패턴(헤더는 layout 소유라 생존) |
+| 잘못된 검색 조건(4xx) | 해당 없음 | — | — | — | nuqs parser가 잘못된 category·sort·page를 기본값으로 정규화하고 pageSize는 보내지 않아 **UI 경로에서 400이 발생하지 않는다**(0단계 실측). 향후 검증 없는 자유 입력이 쿼리에 추가되면 폼 옆 인라인 처리가 필요해진다 |
+| 응답 계약 위반 (형태 불일치) | 경계 — `throwOnError` | ✅ | `(commerce)/error.tsx` fallback + 다시 시도 — 헤더 생존 | `resetQueries`(에러 쿼리만) + `reset()` | 재시도해도 같은 결과라 인라인 "다시 시도"는 오해를 만든다. 코드·서버 버그의 신호이므로 세그먼트 교체가 정직하다 |
+| 예상하지 못한 렌더링 오류 | `(commerce)/error.tsx` | ✅ (Next가 자동) | 위와 동일 | `reset()` | catch-all 안전장치. `(commerce)` 안쪽 경계라 헤더는 생존한다 |
+| 장바구니 행위의 비즈니스 오류 | 해당 없음 | — | — | — | 비로그인 로컬 Zustand 토글이라 실패 경로가 없다. 서버 장바구니(재고·인증)가 생기면 mutation 에러를 **행위 지점 인라인**으로 처리해야 한다 — Error Boundary는 이벤트 핸들러 오류를 잡지 못하기 때문(아래) |
+
+**요구사항 5 — Error Boundary가 못 잡는 것.** Error Boundary는 렌더링 중 던져진 에러만 잡는다. 이벤트 핸들러·`useEffect`·비동기 콜백의 에러는 못 잡는다. 이 앱에서 쿼리 에러가 경계에 잡히는 이유는 TanStack Query의 `throwOnError`가 fetch 에러를 **렌더링 중 throw로 변환**해 주기 때문이다. 핸들러 오류의 현재 발생 지점은 없고(스토어 토글은 실패 경로 없음), 생기면 해당 행위 컴포넌트에서 try-catch + 인라인 알림으로 처리한다.
+
+**요구사항 6 — 로딩 범위 구분.** `loading.tsx`는 쓰지 않는다. 라우트 전환은 정적 세그먼트라 즉시이고, 기다림이 생기는 곳은 데이터 조회뿐이다 — 그건 결과 영역 안 `isPending`이 맡는다(헤더·필터를 유지한 채 결과만 로딩 표시). `loading.tsx`를 두면 페이지 전체가 fallback으로 바뀌어 요구사항 1과 어긋난다. `ProductsPage`의 `Suspense`는 데이터가 아니라 `useSearchParams`의 정적 프리렌더 경계 용도다.
+
+**실패 재현 결과 (2026-08-06, 코드 무변경 — 브라우저에서 `window.fetch`를 감싸 주입)**
+
+| 재현 | 방법 | 결과 |
+| --- | --- | --- |
+| 인라인 (HTTP 500) | 캐시 없는 새 키(`q=셔츠`)로 `scenario=error` 주입 | fetch **2회**(최초+재시도 1 — 새 retry 정책 그대로) 후 인라인 alert. 헤더·검색·필터 생존. 패치 해제 후 `다시 시도` → 전체 새로고침 없이 `총 1개` 복구, URL 유지 |
+| 경계 (계약 위반) | 응답을 `{}`(200)로 치환 | 재시도 **0회**, 즉시 `(commerce)/error.tsx`. 헤더 생존, 페이지 영역만 fallback |
+| 경계 복구 | `다시 시도` 클릭 | **`reset()`만으로는 복구 실패** — TanStack이 에러를 캐시에 보관해 재마운트한 `useQuery`가 즉시 재throw, 경계 무한 재진입. `resetQueries({predicate: 에러 상태})` 선행으로 해결(재현으로 발견한 버그). 수정 후 필터·정렬·URL 유지한 채 목록 복구 |
+| 캐시 있는 키의 백그라운드 실패 | 캐시된 키로 500 주입 | 스테일 데이터를 유지하며 조용히 실패 — 화면 회귀 없음 (TanStack 기본 동작, 수용) |
+| 4xx | 0단계 기준선 | UI 경로 발생 불가 확인 (parser 차단), API 직접 호출로만 400 관측 |
+
+부수 관측: TanStack v5는 창이 비포커스면 재시도를 **일시정지**하고 포커스 복귀 시 재개한다(`focusManager`). 자동화 탭에서 재시도가 안 나가던 원인이었고, 실사용에선 "백그라운드 탭에서 재시도 낭비 안 함"이라는 합리적 기본값이라 그대로 둔다.
+
+**R절 기록 의무 이행 — 홈 에러 화면 결함.** 재현: 홈 API 강제 실패(0단계). 원인: `app/page.tsx`의 `isError` early return이 `SiteHeader`를 품은 성공 return보다 앞. 수정 위치: 4단계 마이그레이션에서 헤더를 `(commerce)` layout으로 이동(구조 커밋 `e04dcf7`) + 이 단계의 retry 정책으로 실패 인지 7초+→약 2.5초 단축(기능 커밋). 검증: 홈 조회 실패 시 헤더 생존을 브라우저로 확인.
 
 ---
 
