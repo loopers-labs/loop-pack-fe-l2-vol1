@@ -101,7 +101,7 @@ export function HomeClient() {
             className="absolute inset-0 size-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-text/60 via-text/30 to-transparent" />
-          <div className="relative mx-auto flex h-full max-w-5xl items-center px-8">
+          <div className="relative flex h-full items-center px-8">
             <div className="max-w-lg">
               <h2 className="font-family-display text-3xl font-light text-white md:text-[42px] md:leading-[1.2]">
                 {banner.title}
@@ -122,7 +122,7 @@ export function HomeClient() {
       </section> */}
 
       {/* 카테고리 */}
-      <section className="mx-auto max-w-5xl px-8 py-14">
+      <section className="px-8 py-14">
         <h2 className="mb-8 font-family-display text-xl font-normal text-text">
           Shop by Categories
         </h2>
@@ -157,7 +157,7 @@ export function HomeClient() {
         </div>
       ) : popularProducts.length > 0 && (
         <section className="bg-bg-card py-14">
-          <div className="mx-auto max-w-5xl px-8">
+          <div className="px-8">
             <h2 className="mb-8 font-family-display text-xl font-normal text-text">
               인기 상품
             </h2>
@@ -172,7 +172,7 @@ export function HomeClient() {
 
       {/* 신상품 */}
       {!isProductsEmpty && newProducts.length > 0 && (
-        <section className="mx-auto max-w-5xl px-8 py-14">
+        <section className="px-8 py-14">
           <h2 className="mb-8 font-family-display text-xl font-normal text-text">
             신상품
           </h2>

@@ -20,7 +20,7 @@ export default function RootLayout({
         <Providers>
           {/* 공통 헤더 */}
           <header className="border-b border-border/60 bg-bg-card">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-6">
+            <div className="mx-auto flex max-w-screen-xl items-center justify-between px-8 py-6">
               <Link
                 href="/"
                 className="font-family-display text-2xl font-bold tracking-tight text-text"
@@ -32,11 +32,11 @@ export default function RootLayout({
           </header>
 
           {/* 페이지 콘텐츠 */}
-          <div className="flex-1">{children}</div>
+          <div className="mx-auto max-w-screen-xl flex-1">{children}</div>
 
           {/* 공통 푸터 */}
           <footer className="border-t border-border/60 bg-bg-card">
-            <div className="mx-auto max-w-5xl px-8 py-10">
+            <div className="mx-auto max-w-screen-xl px-8 py-10">
               <div className="flex flex-col items-center gap-2">
                 <span className="font-family-display text-lg font-bold text-text">
                   Aesthetic
