@@ -172,10 +172,12 @@
 - docs/read0more-week7/recordings/step3-normal.html
 
 **정상 empty**
+
 ![정상 empty](recordings/step3-정상empty.jpg)
 - metadata가 `<head>`가 아니라 문서 끝(body)에 붙는 건 Next의 **스트리밍 metadata**(기본): 느린 `generateMetadata`를 안 기다리고 셸을 먼저 보낸 뒤 완료되면 태그를 body에 추가한다. JS 실행 봇(Googlebot)은 최종 DOM으로 정상 인식하고, JS 미실행 봇(facebookexternalhit)엔 스트리밍을 꺼 `<head>`에 blocking으로 넣으므로 SEO·공유 카드 모두 문제없다.
 
 **metadata query failure**
+
 ![metadata query failure](recordings/step3-metadata-failure.jpg)
 - 스크린샷의 `<title>상품 목록 | Commerce`는 DevTools live DOM이라 클라이언트 `document.title` 동기화(`ProductList` useEffect)가 덮어쓴 값이다. `products/layout.tsx`엔 metadata가 없으므로 **서버(크롤러가 받는 SSR) title은 실패 시 루트 `Commerce`** 가 맞고, 같은 화면의 og:title·description·og:image가 루트값인 것으로 metadata 실패가 확인된다(목록 자체는 클라이언트가 정상 로드해 총 30개가 보임).
 
@@ -236,6 +238,7 @@ failure 재현: `APP_ORIGIN=http://127.0.0.1:9 pnpm build`, `APP_ORIGIN=http://1
 | After | `10370f634e3e92400b35d72979228b3d3cfb4c90` |
 
 ### 4-2 Lighthouse FCP·LCP·CLS 5회 재측정 (Before 대비)
+
 - Before와 같은 환경에서 측정
 
 | 지표 | Before 중앙값(최소~최대) | After raw값 | After 중앙값 | After 최소 | After 최대 |
@@ -296,7 +299,7 @@ Before와 After를 지표별로 다시 대조
 | 항목 | Before | After | 판정 |
 | --- | --- | --- | --- |
 | LCP(중앙값) | 8.5s | 0.8s | ✅ 대폭 개선 — 선택한 병목과 직접 연결 |
-| FCP(중앙값) | 0.5s | 0.5s | 유지 — 최소값만 0.5→0.4s로 소폭변동 |
+| FCP(중앙값) | 0.5s | 0.5s | 유지 — 최소값만 0.5→0.4s로 소폭 변동 |
 | CLS | 0 | 0 | 유지 — Hero fallback·목록 스켈레톤 추가 후에도 shift 없음 |
 | Hero 이미지 전송 | 7.5MB / 7,904ms | 130kB(AVIF) / 270ms | ✅ 대폭 개선 |
 | LCP Element Render delay | 37ms | 50ms | ⚠️ 소폭 악화(+13ms) |
@@ -308,7 +311,7 @@ Before와 After를 지표별로 다시 대조
 - **악화 항목 판단 — 둘 다 유지**:
   - `Element Render delay 37→50ms`: next/image 디코딩·레이아웃 경로 차이로 렌더 단계가 ~13ms 늘었으나, 같은 LCP 안에서 전송이 7,904→270ms로 줄어든 이득(LCP 순감 ~7.7s)이 압도적이라 유지.
   - `document 8.2→9.0KB(+0.8KB)`: preload `<link>` + `srcset`/`sizes` 마크업이 초기 HTML에 실린 결과(4-3). 이미지 전송 7.5MB→130kB 절감·LCP 대폭 단축을 위한 의도된 트레이드오프라 유지.
-- **결론**: **FCP만 줄고 LCP·CLS·이미지 품질·기존 기능이 나빠진 경우가 아니로 판단.** FCP는 유지, LCP가 크게 개선됐고, 악화는 렌더 딜레이 +13ms·document +0.8KB 두 가지.
+- **결론**: **FCP만 줄고 LCP·CLS·이미지 품질·기존 기능이 나빠진 경우가 아니라고 판단.** FCP는 유지, LCP가 크게 개선됐고, 악화는 렌더 딜레이 +13ms·document +0.8KB 두 가지.
 
 ### 4-8 추가 발견 — hero 이미지 `priority` deprecation 대응
 
