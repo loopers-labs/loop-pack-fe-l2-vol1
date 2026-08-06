@@ -33,4 +33,32 @@ describe("getProducts", () => {
       "/api/products?q=%EC%8A%A4%ED%83%A0%EB%A6%AC&category=goods&sort=popular&page=2&pageSize=12&scenario=slow",
     );
   });
+
+  it("요청 취소를 위해 AbortSignal을 fetch에 전달한다", async () => {
+    const abortController = new AbortController();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          products: [],
+          categories: [],
+          totalCount: 0,
+          page: 1,
+          pageSize: 12,
+        }),
+      ),
+    );
+
+    await getProducts(
+      {
+        category: "all",
+        page: 1,
+        pageSize: 12,
+      },
+      { signal: abortController.signal },
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/products?category=all&page=1&pageSize=12", {
+      signal: abortController.signal,
+    });
+  });
 });

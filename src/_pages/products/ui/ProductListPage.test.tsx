@@ -8,7 +8,7 @@ import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListPageClient } from "./ProductListPage";
 import { getProducts } from "../api/productApi";
-import type { ProductListResponse } from "../api/productApi";
+import type { ProductListQuery, ProductListResponse } from "../api/productApi";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
@@ -117,11 +117,9 @@ describe("ProductListPageClient", () => {
     });
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 1,
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        page: 1,
+      });
     });
 
     expect(window.location.search).toBe("?page=-1");
@@ -133,11 +131,9 @@ describe("ProductListPageClient", () => {
     });
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          category: "all",
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        category: "all",
+      });
     });
 
     expect(window.location.search).toBe("?category=wrong");
@@ -149,11 +145,9 @@ describe("ProductListPageClient", () => {
     });
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sort: "latest",
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        sort: "latest",
+      });
     });
 
     expect(window.location.search).toBe("?sort=wrong");
@@ -180,12 +174,10 @@ describe("ProductListPageClient", () => {
     await userEvent.click(screen.getByRole("option", { name: "뷰티·잡화" }));
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          category: "goods",
-          page: 1,
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        category: "goods",
+        page: 1,
+      });
     });
   });
 
@@ -198,12 +190,10 @@ describe("ProductListPageClient", () => {
     await userEvent.click(screen.getByRole("option", { name: "인기순" }));
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sort: "popular",
-          page: 1,
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        sort: "popular",
+        page: 1,
+      });
     });
   });
 
@@ -231,11 +221,9 @@ describe("ProductListPageClient", () => {
     await userEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 3,
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        page: 3,
+      });
     });
 
     expect(screen.getByText("첫 번째 상품")).toBeInTheDocument();
@@ -279,13 +267,11 @@ describe("ProductListPageClient", () => {
     });
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          category: "goods",
-          sort: "popular",
-          page: 2,
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        category: "goods",
+        sort: "popular",
+        page: 2,
+      });
     });
   });
 
@@ -303,18 +289,14 @@ describe("ProductListPageClient", () => {
     });
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 2,
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        page: 2,
+      });
     });
 
-    expect(mockedGetProducts).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        page: 3,
-      }),
-    );
+    expectGetProductsNotCalledWithParams({
+      page: 3,
+    });
   });
 
   it("상품 목록 요청이 실패하면 새로고침 없이 다시 시도할 수 있다", async () => {
@@ -388,11 +370,9 @@ describe("ProductListPageClient", () => {
     });
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          q: "",
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        q: "",
+      });
     });
 
     vi.useFakeTimers();
@@ -401,11 +381,9 @@ describe("ProductListPageClient", () => {
       target: { value: "스탠리" },
     });
 
-    expect(mockedGetProducts).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        q: "스탠리",
-      }),
-    );
+    expectGetProductsNotCalledWithParams({
+      q: "스탠리",
+    });
     expect(onUrlUpdate).not.toHaveBeenCalledWith(
       expect.objectContaining({
         queryString: "?q=%EC%8A%A4%ED%83%A0%EB%A6%AC",
@@ -418,11 +396,9 @@ describe("ProductListPageClient", () => {
     vi.useRealTimers();
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          q: "스탠리",
-        }),
-      );
+      expectGetProductsCalledWithParams({
+        q: "스탠리",
+      });
     });
   });
 
@@ -459,4 +435,16 @@ function createProduct(product: Partial<Product> = {}): Product {
     createdAt: "2026-01-01T00:00:00.000Z",
     ...product,
   };
+}
+
+function expectGetProductsCalledWithParams(params: Partial<ProductListQuery>) {
+  expect(mockedGetProducts).toHaveBeenCalledWith(expect.objectContaining(params), {
+    signal: expect.any(AbortSignal),
+  });
+}
+
+function expectGetProductsNotCalledWithParams(params: Partial<ProductListQuery>) {
+  expect(mockedGetProducts.mock.calls).not.toEqual(
+    expect.arrayContaining([[expect.objectContaining(params), expect.anything()]]),
+  );
 }

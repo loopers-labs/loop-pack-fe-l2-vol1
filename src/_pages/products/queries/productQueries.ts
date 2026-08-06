@@ -7,7 +7,7 @@ export const productQueries = {
   list: (params: ProductListQuery = {}) =>
     queryOptions({
       queryKey: [...productQueries.all(), "list", params],
-      queryFn: () => getProducts(params),
+      queryFn: ({ signal }) => getProducts(params, { signal }),
       staleTime: 1000 * 60,
       placeholderData: keepPreviousData,
       throwOnError: false,
