@@ -1,8 +1,10 @@
 
 ## 🧭 0단계 — 측정 조건을 고정하고 Before를 남기기
 
-**before commit SHA**: a0dfbfe17d5cbfafc2660ca29bab30de63cf21f1
-**After commit SHA**: After 적용 후 기재
+| 구분 | commit SHA |
+| --- | --- |
+| Before | `a0dfbfe17d5cbfafc2660ca29bab30de63cf21f1` |
+| After | `10370f634e3e92400b35d72979228b3d3cfb4c90` |
 
 **Lighthouse 측정 조건**
 - viewport: 모바일 412×823 (Lighthouse 모바일 기본 프리셋)
@@ -31,11 +33,9 @@
 ![Performance filmstrip](images/performance_filmstrip.jpg)
 
 **Network waterfall의 document·홈 데이터·Hero 이미지 요청 시작 순서와 전송 크기**
-| 항목       | 요청 시작 순서 | 전송 크기 | 비고                                                                                 |
-| -------- | -------- | ----: | -------- |
-| document | 1        | 8.2 KB | -                                                    |
-| 홈 데이터    | 확인 불가 | - | React Query prefetch(dehydrate)로 서버에서 조회되어 브라우저 Network Waterfall에는 별도 요청이 나타나지 않음 |
-| Hero 이미지 | 2       | 7.5 MB | - |
+
+![Network waterfall](images/network_warterfall.jpg)
+- 홈 데이터의 경우 React Query prefetch(dehydrate)로 서버에서 조회되어 브라우저 Network Waterfall에는 별도 요청이 나타나지 않음
 
 
 ### 관찰한 사실, 원인 가설, 가설을 반증할 방법, 먼저 시도할 가장 작은 변경
@@ -223,4 +223,96 @@ failure 재현: `APP_ORIGIN=http://127.0.0.1:9 pnpm build`, `APP_ORIGIN=http://1
 | description | `{카테고리명} · {정렬} · 총 0개` | `Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.`(루트) |
 | og:image | `product-fallback.jpg`(OG fallback) | `product-fallback.jpg`(루트) |
 | 출처 | **페이지별** metadata(URL 조건 반영) | **루트 공통(src/app/layout.tsx, src/shared/config/metadata.ts)** |
+
+## 🔁 4단계 — 같은 조건에서 After와 회귀를 확인하기
+
+### 4-1 Before·After SHA
+
+| 구분 | commit SHA |
+| --- | --- |
+| Before | `a0dfbfe17d5cbfafc2660ca29bab30de63cf21f1` |
+| After | `10370f634e3e92400b35d72979228b3d3cfb4c90` |
+
+### 4-2 Lighthouse FCP·LCP·CLS 5회 재측정 (Before 대비)
+- Before와 같은 환경에서 측정
+
+| 지표 | Before 중앙값(최소~최대) | After raw값 | After 중앙값 | After 최소 | After 최대 |
+| --- | --- | --- | --- | --- | --- |
+| FCP | 0.5s (0.5s~0.5s) | 0.4s, 0.5s, 0.5s, 0.5s, 0.5s | 0.5s | 0.4s | 0.5s |
+| LCP | 8.5s (8.5s~8.5s) | 0.8s, 0.9s, 0.8s, 0.8s, 0.8s | 0.8s | 0.8s | 0.9s |
+| CLS | 0 (0~0) | 0, 0, 0, 0, 0 | 0 | 0 | 0 |
+
+### 4-3 LCP element·Hero 이미지 전송·요청 시작 순서·가장 길었던 구간 비교
+- 0단계의 [이 항목](#lcp-element-performance-filmstrip의-header페이지-제목hero-표시-순서-network-waterfall의-document홈-데이터hero-이미지-요청-시작-순서와-전송-크기)에 대한 after
+
+**LCP element**
+
+![LCP element after](images/LCP_element_after.jpg)
+- before와 비교: LCP 요소는 before/after 모두 **동일하게 hero 이미지**. Resource load duration이 7,950ms에서 270ms로 단축.
+
+**Performance filmstrip**
+
+![Performance filmstrip after](images/performance_filmstrip_after.jpg)
+- before와 비교: 표시 순서(Header → 페이지 제목 → Hero)는 before/after 동일하나, Hero가 채워지는 시점이 크게 앞당겨짐
+
+**Network waterfall의 document·홈 데이터·Hero 이미지 요청 시작 순서와 전송 크기**
+
+![Network waterfall after](images/network_warterfall_after.jpg)
+- 홈 데이터의 경우 React Query prefetch(dehydrate)로 서버에서 조회되어 브라우저 Network Waterfall에는 별도 요청이 나타나지 않음
+- before와 비교:
+  - **Hero 이미지 전송 크기**: 7.5MB → **130kB(AVIF)** 로 대폭 감소 — 이 구간이 LCP 병목이었으므로 가장 큰 개선.
+  - **요청 시작 순서**: before는 Hero(`hero-original.jpg`) Request #19 -> after는 `preload` + `fetchPriority="high"`로 인하여 Hero(Request #18)
+  - **document 전송 크기**: 8.2KB → **9.0kB로 소폭 증가.** next/image가 초기 HTML에 ① `<head>` hero preload `<link rel="preload" as="image" imagesrcset=… fetchpriority="high">` 를 주입하고, ② `<img>` 에 여러 해상도 후보를 담은 `srcset`(640~1920)과 `sizes` 문자열을 추가하기 때문. 즉 preload 링크 + srcset 마크업 바이트가 document에 더 실린 것. Hero를 더 빨리·작게 받기 위한 **의도된 트레이드오프**(document +0.8KB ↔ 이미지 전송 7.5MB→130kB + LCP 대폭 단축).
+
+### 4-4 목록 최초 진입·갱신 화면 재녹화, 검색·카테고리·정렬·페이지 URL 복원 확인
+
+After 빌드에서 목록 화면이 2단계 동작을 그대로 유지하는지 시나리오별로 재녹화해 회귀 없음을 확인한다.
+
+- **최초 진입(스켈레톤):** 무데이터 최초 진입 시 실제 목록 크기를 예상하는 스켈레톤 → 데이터 도착 후 실제 목록으로 교체.
+  - 영상: `docs/read0more-week7/recordings/step4-4-최초진입-스켈레톤.webm`
+- **기존 목록 갱신(흐림 유지):** 조건 변경 시 이전 목록을 즉시 비우지 않고 흐리게 유지한 채 갱신.
+  - 영상: `docs/read0more-week7/recordings/step4-4-기존목록-갱신-흐림.webm`
+- **URL 복원:** 검색·카테고리·정렬·페이지를 바꾼 뒤 **현재 URL의 active query와 화면 결과가 일치**하고, 새로고침 시 URL에서 조건이 복원됨을 재확인.
+  - 영상: `docs/read0more-week7/recordings/step4-4-URL복원.webm`
+
+### 4-5 회귀 재확인 (뒤로/앞으로 가기·장바구니·위시리스트·상태 화면)
+
+| 확인 항목 | 결과 |
+| --- | --- |
+| 뒤로/앞으로 가기 | 정상 동작 |
+| 장바구니·위시리스트·Header 개수 | 정상 동작 |
+| 로딩·에러·빈 상태·재시도 | 정상 동작 |
+
+### 4-6 FSD 의존 방향·슬라이스 Public API 확인
+
+- pre-commit `steiger` FSD lint 게이트를 통과한 상태로 커밋했으므로, 의존 방향(상위→하위) 위반과 슬라이스 Public API 우회는 없다고 판단.
+
+### 4-7 회귀 판정 (효과 없거나 악화된 변경)
+
+Before와 After를 지표별로 다시 대조
+
+| 항목 | Before | After | 판정 |
+| --- | --- | --- | --- |
+| LCP(중앙값) | 8.5s | 0.8s | ✅ 대폭 개선 — 선택한 병목과 직접 연결 |
+| FCP(중앙값) | 0.5s | 0.5s | 유지 — 최소값만 0.5→0.4s로 소폭변동 |
+| CLS | 0 | 0 | 유지 — Hero fallback·목록 스켈레톤 추가 후에도 shift 없음 |
+| Hero 이미지 전송 | 7.5MB / 7,904ms | 130kB(AVIF) / 530ms | ✅ 대폭 개선 |
+| LCP Element Render delay | 37ms | 62ms | ⚠️ 소폭 악화(+25ms) |
+| document 전송 크기 | 8.2KB | 9.0kB | ⚠️ 소폭 악화(+0.8KB) |
+| 이미지 품질 | 원본 | quality 75 | 육안상 큰 차이가 없어보이므로 유지 |
+| 기존 기능(장바구니·위시리스트·필터·정렬·페이지) | 정상 | 정상 | 회귀 없음(4-5) |
+
+- **LCP가 1s → 0.8s로 한 번 더 내려간 이유**: 4-8의 `fetchPriority="high"` 적용으로 hero 요청 우선순위가 올라간 결과. 1단계 after(1.0s)보다 재측정(4-2)이 더 나은 값을 냈다.
+- **악화 항목 판단 — 둘 다 유지**:
+  - `Element Render delay 37→62ms`: next/image 디코딩·레이아웃 경로 차이로 렌더 단계가 ~25ms 늘었으나, 같은 LCP 안에서 전송이 7,904→530ms로 줄어든 이득(LCP 순감 ~7.7s)이 압도적이라 유지.
+  - `document 8.2→9.0KB(+0.8KB)`: preload `<link>` + `srcset`/`sizes` 마크업이 초기 HTML에 실린 결과(4-3). 이미지 전송 7.5MB→130kB 절감·LCP 대폭 단축을 위한 의도된 트레이드오프라 유지.
+- **결론**: **FCP만 줄고 LCP·CLS·이미지 품질·기존 기능이 나빠진 경우가 아니로 판단.** FCP는 유지, LCP가 크게 개선됐고, 악화는 렌더 딜레이 +25ms·document +0.8KB 두 가지.
+
+### 4-8 추가 발견 — hero 이미지 `priority` deprecation 대응
+
+4단계 회귀 확인 중 **Lighthouse 검사에서 hero(LCP) 이미지에 `fetchpriority="high"` 가 붙지 않았다는 안내**를 받아 알게 됐고, 원인은 공식 문서를 보고 확인.
+
+- **원인**: Next **16.0.0** 부터 `next/image` 의 `priority` prop 이 deprecated 되고 `preload` prop 으로 분리됨. 이 버전에서 `priority` 는 eager 로딩 + preload `<link>` 방출까지만 하고, **`fetchpriority="high"` 는 붙이지 않는다** (13.x~15.x 까지는 `priority` 가 `fetchpriority="high"` 까지 묶어줬으나 16 에서 분리.)
+- **조치**: 1단계에서 준 `priority` 를 deprecated 되지 않은 `preload` + `fetchPriority="high"` 로 교체.
+- 참고: [next/image docs — Version History (v16.0.0)](https://nextjs.org/docs/app/api-reference/components/image)
 
