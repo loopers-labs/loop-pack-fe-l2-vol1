@@ -5,4 +5,4 @@ export {
   loadProductListConditions,
   toProductListQuery,
 } from './model/product-list-params';
-export { PRODUCT_PAGE_SIZE } from './model/constants';
+export { PRODUCT_PAGE_SIZE, PRODUCT_SORT_LABEL } from './model/constants';
