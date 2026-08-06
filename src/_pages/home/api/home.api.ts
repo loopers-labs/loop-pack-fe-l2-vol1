@@ -1,4 +1,5 @@
 import type { HomeResponse } from '@/types/commerce';
+import { HttpError, InvalidResponseError } from '@/shared/api/errors';
 
 function isHomeResponse(data: unknown): data is HomeResponse {
   return (
@@ -14,11 +15,13 @@ function isHomeResponse(data: unknown): data is HomeResponse {
 
 export async function getHome(): Promise<HomeResponse> {
   const res = await fetch('/api/home');
-  if (!res.ok) throw new Error('홈 데이터를 불러오지 못했습니다.');
+  if (!res.ok) {
+    throw new HttpError(res.status, '홈 데이터를 불러오지 못했습니다.');
+  }
 
   const data: unknown = await res.json();
   if (!isHomeResponse(data)) {
-    throw new Error('홈 응답 형식이 올바르지 않습니다.');
+    throw new InvalidResponseError('홈 응답 형식이 올바르지 않습니다.');
   }
   return data;
 }

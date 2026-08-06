@@ -1,4 +1,5 @@
 import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
+import { HttpError, InvalidResponseError } from '@/shared/api/errors';
 
 function isProductListResponse(data: unknown): data is ProductListResponse {
   return (
@@ -22,11 +23,13 @@ export async function getProducts(
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
 
   const res = await fetch(`/api/products?${params.toString()}`);
-  if (!res.ok) throw new Error('상품 목록을 불러오지 못했습니다.');
+  if (!res.ok) {
+    throw new HttpError(res.status, '상품 목록을 불러오지 못했습니다.');
+  }
 
   const data: unknown = await res.json();
   if (!isProductListResponse(data)) {
-    throw new Error('상품 목록 응답 형식이 올바르지 않습니다.');
+    throw new InvalidResponseError('상품 목록 응답 형식이 올바르지 않습니다.');
   }
   return data;
 }
