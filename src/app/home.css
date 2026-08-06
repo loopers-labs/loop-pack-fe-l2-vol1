@@ -72,6 +72,11 @@
   gap: 20px;
 }
 
+/* 갱신 중인 목록은 이전 결과라는 것이 보이게 흐린다. 자리는 그대로 둬 밀리지 않는다. */
+.week05-grid[data-updating='true'] {
+  opacity: 0.5;
+}
+
 .week05-product {
   display: grid;
   gap: 6px;
