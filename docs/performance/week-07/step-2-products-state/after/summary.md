@@ -4,8 +4,8 @@
 
 Home Hero LCP 최적화와 Lighthouse 반복 측정은 다음 문서에 따로 기록했다.
 
-- 1차 Hero after: [../after/summary.md](../after/summary.md)
-- 최종 Hero after: [../after-final/summary.md](../after-final/summary.md)
+- 1차 Hero after: [../../step-1-home-lcp/after/summary.md](../../step-1-home-lcp/after/summary.md)
+- 최종 Hero after: [../../step-1-home-lcp/after-final/summary.md](../../step-1-home-lcp/after-final/summary.md)
 
 이 문서는 2단계 요구사항인 Products 목록의 최초 pending, 기존 목록 갱신, 빈 결과, 실패, 취소 요청, CLS 관찰만 다룬다.
 
