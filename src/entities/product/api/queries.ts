@@ -2,8 +2,8 @@ import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { apiFetch } from '@/shared/api/fetcher';
 import type { ProductListQuery, ProductListResponse } from '@/entities/product/model';
 
-export const fetchProductList = (query: ProductListQuery) =>
-  apiFetch<ProductListResponse>('/api/products', { query });
+export const fetchProductList = (query: ProductListQuery, signal?: AbortSignal) =>
+  apiFetch<ProductListResponse>('/api/products', { query, signal });
 
 // 화면 기본 정렬은 latest. 과제 계약에 따라 API 요청에 sort=latest를 명시한다.
 export const DEFAULT_PRODUCT_LIST_QUERY: ProductListQuery = {
@@ -22,7 +22,9 @@ export const productQueries = {
   list: (query: ProductListQuery) =>
     queryOptions({
       queryKey: ['products', 'list', query],
-      queryFn: () => fetchProductList(query),
+      // context에서 signal을 꺼내 fetcher까지 전달한다.
+      // 이 연결이 있어야 query key가 바뀔 때 TanStack Query가 이전 요청을 실제로 취소한다.
+      queryFn: ({ signal }) => fetchProductList(query, signal),
       staleTime: 30 * 1000,
       gcTime: 5 * 60 * 1000,
       // 페이지 이동 중에도 이전 데이터를 placeholder로 유지해 totalPages가 1로 튀는 현상을 막는다.

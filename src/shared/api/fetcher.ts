@@ -4,6 +4,9 @@ type QueryValue = string | number;
 
 type FetcherOptions = {
   query?: Record<string, QueryValue | undefined>;
+  // TanStack Query가 queryFn에 넘겨주는 AbortSignal을 fetch까지 연결하기 위한 통로.
+  // 연결해야 query key가 바뀔 때 이전 요청이 실제로 취소된다.
+  signal?: AbortSignal;
 };
 
 const buildQueryString = (query?: FetcherOptions['query']): string => {
@@ -42,7 +45,9 @@ export class ApiError extends Error {
 // response.json()은 Promise<any>를 반환하므로, 별도의 타입 단언 없이
 // 반환 타입 Promise<T>로 직접 할당 가능하다. (eslint consistent-type-assertions: never 대응)
 export const apiFetch = async <T>(path: string, options?: FetcherOptions): Promise<T> => {
-  const response = await fetch(`${getBaseUrl()}${path}${buildQueryString(options?.query)}`);
+  const response = await fetch(`${getBaseUrl()}${path}${buildQueryString(options?.query)}`, {
+    signal: options?.signal,
+  });
 
   if (!response.ok) {
     let message = `요청에 실패했습니다. (status: ${response.status})`;
