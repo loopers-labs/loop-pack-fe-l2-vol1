@@ -3,8 +3,40 @@
 import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/features/home/home.queries';
 import { SiteHeader } from '@/components/SiteHeader';
-import { ProductGrid } from '@/components/ProductGrid';
+import { ProductGrid } from '@/entities/product';
+import { useIsInCart, useToggleCart } from '@/entities/cart';
+import { useIsWished, useToggleWish } from '@/entities/wishlist';
+import type { Product } from '@/types/commerce';
 import '@/examples/week-05-layout/week-05-layout.css';
+
+// 3단계에서 features/add-to-cart·toggle-wishlist로 추출 예정인 임시 조합.
+function ProductActions({ product }: { product: Product }) {
+  const inCart = useIsInCart(product.id);
+  const wished = useIsWished(product.id);
+  const toggleCart = useToggleCart();
+  const toggleWish = useToggleWish();
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-pressed={wished}
+        aria-label={`${product.name} 위시리스트`}
+        onClick={() => toggleWish(product.id)}
+      >
+        {wished ? '♥ 찜' : '♡ 찜'}
+      </button>
+      <button
+        type="button"
+        aria-pressed={inCart}
+        aria-label={`${product.name} 장바구니`}
+        onClick={() => toggleCart(product.id)}
+      >
+        {inCart ? '빼기' : '담기'}
+      </button>
+    </>
+  );
+}
 
 export default function Home() {
   const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
@@ -51,7 +83,10 @@ export default function Home() {
         {data.popularProducts.length === 0 ? (
           <p>인기 상품이 없어요.</p>
         ) : (
-          <ProductGrid products={data.popularProducts} />
+          <ProductGrid
+            products={data.popularProducts}
+            renderActions={(product) => <ProductActions product={product} />}
+          />
         )}
       </section>
 
@@ -60,7 +95,10 @@ export default function Home() {
         {data.newProducts.length === 0 ? (
           <p>신상품이 없어요.</p>
         ) : (
-          <ProductGrid products={data.newProducts} />
+          <ProductGrid
+            products={data.newProducts}
+            renderActions={(product) => <ProductActions product={product} />}
+          />
         )}
       </section>
     </main>
