@@ -6,39 +6,10 @@ import { productQueries } from '@/features/products/products.queries';
 import { useProductFilters } from '@/features/products/useProductFilters';
 import { SiteHeader } from '@/components/SiteHeader';
 import { ProductGrid } from '@/entities/product';
-import { useIsInCart, useToggleCart } from '@/entities/cart';
-import { useIsWished, useToggleWish } from '@/entities/wishlist';
-import type { Product, ProductListQuery } from '@/types/commerce';
+import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
+import { WishButton } from '@/features/toggle-wishlist/ui/WishButton';
+import type { ProductListQuery } from '@/types/commerce';
 import '@/examples/week-05-layout/week-05-layout.css';
-
-// 3단계에서 features/add-to-cart·toggle-wishlist로 추출 예정인 임시 조합.
-function ProductActions({ product }: { product: Product }) {
-  const inCart = useIsInCart(product.id);
-  const wished = useIsWished(product.id);
-  const toggleCart = useToggleCart();
-  const toggleWish = useToggleWish();
-
-  return (
-    <>
-      <button
-        type="button"
-        aria-pressed={wished}
-        aria-label={`${product.name} 위시리스트`}
-        onClick={() => toggleWish(product.id)}
-      >
-        {wished ? '♥ 찜' : '♡ 찜'}
-      </button>
-      <button
-        type="button"
-        aria-pressed={inCart}
-        aria-label={`${product.name} 장바구니`}
-        onClick={() => toggleCart(product.id)}
-      >
-        {inCart ? '빼기' : '담기'}
-      </button>
-    </>
-  );
-}
 
 function ProductsResult({
   filters,
@@ -72,7 +43,15 @@ function ProductsResult({
       <p>총 {data.totalCount}개</p>
       <ProductGrid
         products={data.products}
-        renderActions={(product) => <ProductActions product={product} />}
+        renderActions={(product) => (
+          <>
+            <WishButton productId={product.id} productName={product.name} />
+            <AddToCartButton
+              productId={product.id}
+              productName={product.name}
+            />
+          </>
+        )}
       />
       <nav className="week05-pagination" aria-label="페이지 이동">
         <button
