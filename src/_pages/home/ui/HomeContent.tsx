@@ -3,8 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
-import { HeroSection } from './HeroSection';
-
 import { ProductCard, productQueries } from '@/entities/product';
 import { CartToggleButton } from '@/features/cart';
 import { WishlistToggleButton } from '@/features/wishlist';
@@ -37,7 +35,7 @@ export function HomeContent() {
     );
   }
 
-  const { banner, categories, popularProducts, newProducts } = data;
+  const { categories, popularProducts, newProducts } = data;
 
   return (
     <>
@@ -53,8 +51,6 @@ export function HomeContent() {
           </button>
         </p>
       )}
-
-      <HeroSection title={banner.title} description={banner.description} />
 
       <section className="week05-section">
         <h2>카테고리</h2>
