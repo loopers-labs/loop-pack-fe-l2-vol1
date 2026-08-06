@@ -73,6 +73,7 @@
 | R3 카드 공간 예약 | [`r3-cls-reservation/`](./r3-cls-reservation/notes.md) | 완료 |
 | R4 목록 최초 진입 대기 화면 | [`r4-list-pending/`](./r4-list-pending/notes.md) | 완료 |
 | R5 갱신 중 이전 목록 유지 | [`r5-list-refresh/`](./r5-list-refresh/notes.md) | 완료 (CLS는 개입하지 않음 · 2단계 6화면 재점검 포함) |
+| R6 metadata와 Open Graph | [`r6-metadata/`](./r6-metadata/notes.md) | 완료 (3단계 증거 포함) |
 
 라운드마다 폴더를 하나 만들고 그 안에 `notes.md`와 캡쳐를 함께 둔다. 캡쳐 이름은 `{순번}-{내용}.png`이고, 순번은 아래 체크리스트와 같다. 같은 순번은 라운드가 달라도 같은 화면을 가리킨다.
 
