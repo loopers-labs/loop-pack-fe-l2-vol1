@@ -59,3 +59,15 @@
 - `git commit --no-verify` 사용을 제안하지 않는다. 훅 우회는 허용하지 않는다.
 - ESLint 규칙을 추가할 때 `warn` 레벨은 사용하지 않는다. `error`로 강제하거나 끈다.
 - 약어·축약어보다 의도가 드러나는 이름을 사용한다.
+
+---
+
+## FSD 레이어 규칙
+
+레이어 구조: `app > _pages > widgets > features > entities > shared`
+
+- 상위 레이어는 하위 레이어를 import할 수 있다. 반대 방향은 금지한다.
+- 같은 레이어끼리(예: entities ↔ entities, features ↔ features)의 직접 import는 금지한다. 두 슬라이스를 함께 써야 하면 상위 레이어(features, widgets)에서 조합한다.
+- 이 규칙은 `eslint.config.mjs`의 `eslint-plugin-boundaries`로 강제된다. 위반 시 lint error로 잡힌다.
+- 테스트 파일(`*.test.ts`, `*.spec.ts`)은 이 규칙에서 제외한다. 서로 다른 entity/feature의 상태가 독립적으로 동작하는지 검증하는 테스트는 여러 슬라이스를 함께 import할 수 있다.
+- 새 슬라이스를 만들 때는 반드시 해당 레이어 폴더 안에 위치시키고, Public API(`index.ts`)를 통해서만 외부에 노출한다.
