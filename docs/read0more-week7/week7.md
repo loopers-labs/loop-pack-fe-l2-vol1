@@ -321,3 +321,50 @@ Before와 After를 지표별로 다시 대조
 - **조치**: 1단계에서 준 `priority` 를 deprecated 되지 않은 `preload` + `fetchPriority="high"` 로 교체.
 - 참고: [next/image docs — Version History (v16.0.0)](https://nextjs.org/docs/app/api-reference/components/image)
 
+## ⚡ Advanced A — INP: 찜 클릭에서 관계없는 카드 렌더 줄이기
+- CPU: 4x slowdown
+- 실행 환경: `pnpm build --profile && pnpm start`
+- Interactions track 은 크롬 게스트 프로필로 측정. React Developer Tools 의 profiler 사용을 위해 익스텐션이 필요한 관계로, 이 부분은 일반 계정으로 측정
+
+### A-1 Interactions track(input delay, processing duration, presentation) before
+![advancedA Interactions track 확인방법](images/advancedA-Interactions_track_확인방법.jpg)
+
+확인은 위와 같은 방식으로 Performance 탭에서 확인
+
+| 구간 | Before 3회 |
+| --- | --- |
+| input delay | 11ms, 15ms, 13ms |
+| processing duration | 105ms, 96ms, 96ms |
+| presentation delay | 20ms, 24ms, 23ms |
+
+### A-2 React Profiler — 렌더 범위와 변경 원인
+![advancedA profiler](images/advancedA-profiler.jpg)
+- 렌더 범위: 찜하기 시 모든 상품이 다시 렌더링 됨
+- 변경 원인: `const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds)`
+카드마다 store 에서 wishlistIds 배열 전체를 구독하기 때문에, 한 상품을 찜하면 24개 카드 전부의 selector 가 새 배열 참조를 받아 전부 리렌더링
+
+### A-3 실제 원인에 맞는 최소 변경
+
+- **원인**: 카드는 자기가 찜됐는지 여부만 알면 되는데 `wishlistIds` 배열 전체를 구독함. 토글마다 새 배열 참조가 나와 24개 카드 selector 가 전부 바뀐 걸로 보고 전부 리렌더링.
+- **변경**: selector 를 배열이 아니라 id별 boolean 으로 좁히는 단순한 변경으로 개선 가능.
+
+```diff
+- const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds);
+- const selected = wishlistIds.includes(product.id);
++ const selected = usePerformanceWishlist((state) =>
++   state.wishlistIds.includes(product.id),
++ );
+```
+
+### A-4 Interactions track(input delay, processing duration, presentation) before, after 비교 / React Profiler after
+
+| 구간 | Before 3회 | After 3회 |
+| --- | --- | --- |
+| input delay | 11ms, 15ms, 13ms | 8ms, 7ms, 8ms |
+| processing duration | 105ms, 96ms, 96ms | 12ms, 12ms, 11ms |
+| presentation delay | 20ms, 24ms, 23ms | 32ms, 33ms, 33ms |
+
+![advancedA profiler after](images/advancedA-profiler_after.jpg)
+
+**개선 결과**: 관계없는 카드 리렌더가 사라져 processing duration 이 96ms→12ms(중앙값)로 약 87% 감소, INP(input+processing+presentation)도 약 132ms→53ms로 감소. React Profiler after 에서도 찜한 카드 1개만 렌더되고 나머지 23개는 렌더되지 않음(회색)을 확인.
+
