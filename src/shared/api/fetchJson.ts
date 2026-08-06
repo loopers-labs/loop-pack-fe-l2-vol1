@@ -20,8 +20,10 @@ function resolveUrl(url: string): string {
   return `${origin}${url}`;
 }
 
-export async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(resolveUrl(url));
+// signal은 선택이다 — 넘기면 더는 필요 없어진 요청을 브라우저가 실제로 끊는다.
+// 취소된 요청은 TanStack Query가 에러로 올리지 않으므로 화면이 실패로 보이지 않는다.
+export async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(resolveUrl(url), { signal });
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
     // 화면 문구는 각 화면이 소유한다. 여기서는 서버가 준 message와 status만 전달한다.
