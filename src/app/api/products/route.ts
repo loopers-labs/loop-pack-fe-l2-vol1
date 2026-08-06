@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
-import type {
-  ApiErrorResponse,
-  MockApiScenario,
-  ProductListResponse,
-  ProductSort,
-} from "@/types/commerce";
+import type { ApiErrorResponse, MockApiScenario } from "@/shared/api";
+import type { ProductListResponse, ProductSort } from "@/entities/product/model";
 
 const sortValues = ["latest", "popular", "price-asc", "price-desc"] as const satisfies
   readonly ProductSort[];
