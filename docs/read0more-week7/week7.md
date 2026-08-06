@@ -63,19 +63,20 @@
 - 비율은 `aspect-ratio: 16/9`(모바일 `4/5`), `object-fit: cover`
 
 **필요 해상도 판단**
-- 데스크탑: CSS 표시 폭은 최대 1280px. 단 레티나 등 DPR이 높은 화면도 고려. DPR 2면 이론상 1280×2 = 2560px가 필요하다. 다만 2560px를 그대로 내리면 전송이 과하므로, 중간치인 1920으로 시도.
-- 모바일: 모바일 기기는 일반적으로 DPR이 2~3이라 실제 필요 픽셀이 큼(예: 390px × DPR 3 ≈ 1170px, 큰 폰도 ~1290px). 즉 모바일 최대 필요치도 데스크탑 CSS 폭(1280)과 비슷한 수준이라 1280 이하 후보로 커버
-- 결론: 모바일(≤~1290) ~ 고DPR 데스크탑(~1920)까지의 필요 픽셀을 하나의 srcset 후보 세트(640·828·1080·1280·1920)로 함께 커버하고, 브라우저가 각 기기의 폭×DPR에 맞는 최소 후보를 고르게
+- 데스크탑: CSS 표시 폭은 최대 1280px. DPR 2면 1280×2 = 2560px가 필요하다.
+- 모바일: `100vw`라 뷰포트 폭을 그대로 쓴다. 예: 412px × DPR 2.625 ≈ 1082px가 필요하다.
+- next/image가 srcset 후보를 만들고, 브라우저가 **슬롯 폭 × DPR 이상인 최소 후보**를 고른다. `sizes`는 후보 목록을 자르는 게 아니라 이 **슬롯 폭만** 정한다.
+- 결론: `next.config`에서 `deviceSizes`를 지정하지 않았으므로 next/image 기본 후보(640·750·828·1080·1200·1920·2048·3840, 원본이 3840×2160이라 그 위로는 업스케일 안 함)가 그대로 srcset이 되고, `sizes`로 슬롯 폭을 정해 브라우저가 각 기기 폭×DPR에 맞는 최소 후보를 받게 한다. 실제로 받는 후보 예: 모바일(412×2.625≈1082) → 1200w, 데스크탑 1280 슬롯 DPR 1 → 1920w, DPR 2(레티나) → 3840w. 즉 전송 상한은 특정 값(예: 1920)이 아니라 **원본 해상도(3840)** 이며, 더 낮게 캡하려면 `deviceSizes`를 직접 좁혀야 한다.
 
 **결정 사항**
 
 | 항목 | 결정 | 근거 |
 | --- | --- | --- |
-| 해상도 후보 | 640 / 828 / 1080 / 1280 / 1920 px | 표시 폭 × DPR. 고DPR 데스크탑은 이론상 2560px지만 전송 절충으로 상한 1920px. |
+| 해상도 후보 | next/image 기본 `deviceSizes` = 640 / 750 / 828 / 1080 / 1200 / 1920 / 2048 / 3840 px (원본 3840이 상한) | `next.config`에서 안 좁혔으므로 기본값 사용. `sizes`로 슬롯 폭을 정하면 브라우저가 폭×DPR에 맞는 최소 후보를 고름. |
 | `sizes` | `(min-width: 1280px) 1280px, 100vw` | 컨테이너 1280 캡, 그 아래는 뷰포트 100% |
 | 포맷 | AVIF 우선, WebP fallback (미지원 시 JPEG) | 동일 화질에 JPEG 대비 50%+ 작음 |
 | 압축률(quality) | 75(default) | default값인 만큼 hero 사진 기준 화질 손실 미미할 것으로 예상. 실무였다면 디자이너와 같이 육안으로 확인해 봤을 듯합니다. |
-| 큰 이미지 방지 | 위 후보 + `sizes`로 뷰포트·DPR에 맞는 최소 이미지만 다운로드 | — |
+| 큰 이미지 방지 | `sizes`로 뷰포트·DPR에 맞는 **최소** 후보만 다운로드 | 단 `deviceSizes`를 안 좁혀 상한은 원본(3840) — 레티나 데스크탑(1280×2=2560)은 2048/3840 후보를 받을 수 있음. |
 
 ### Hero 이미지가 언제 발견되어 요청되는지, 이 페이지에서 요청 우선순위를 높일 이유가 있는지
 - 발견 시점: hero는 홈 데이터(~500ms) 대기 뒤 `Suspense` 경계 안에서 렌더되므로, 진입 즉시가 아니라 **경계가 스트리밍되는 ~500ms 뒤에 발견·요청**된다. (홈 HTML상 hero preload `<link as=image>`가 초기 `<head>`가 아니라 Suspense fallback보다 뒤에 방출됨 → LCP breakdown의 ② load delay ≈ 524ms와 일치.) 정적 hero를 셸(경계 밖)으로 빼면 초기 `<head>`에서 즉시 발견되게 만들 수 있다.
@@ -93,7 +94,7 @@
 
 ### LCP의 병목 구간과 선택한 변경의 인과관계
 - 병목 구간과 근거 수치: [LCP 4구간 관찰](#lcp를-서버-응답-대기-이미지-요청-시작-대기-이미지-전송-화면에-그려질-때까지의-시간으로-나눠-관찰) 참조 — 이미지 전송(Resource load duration) 7,904ms가 LCP의 93%를 차지하므로 이 전송 구간이 LCP의 병목.
-- 선택한 변경: [이미지 후보·포맷·압축률](#실제-표시-크기와-viewport에-맞는-이미지-후보포맷압축률을-선택하고-불필요하게-큰-이미지가-내려가지-않게) · [발견/요청·우선순위](#hero-이미지가-언제-발견되어-요청되는지-이-페이지에서-요청-우선순위를-높일-이유가-있는지) 참조 — next/image로 표시 폭·DPR에 맞는 srcset(640~1920) + AVIF/WebP + quality 75, LCP 요소라 `priority` 적용.
+- 선택한 변경: [이미지 후보·포맷·압축률](#실제-표시-크기와-viewport에-맞는-이미지-후보포맷압축률을-선택하고-불필요하게-큰-이미지가-내려가지-않게) · [발견/요청·우선순위](#hero-이미지가-언제-발견되어-요청되는지-이-페이지에서-요청-우선순위를-높일-이유가-있는지) 참조 — next/image로 표시 폭·DPR에 맞는 srcset(640~3840) + AVIF/WebP + quality 75, LCP 요소라 `priority` 적용.
 - 인과관계: 병목 구간이 이미지 전송이므로 전송 바이트 자체(7.5MB→수십KB)를 줄인 것이 LCP 하락을 위한 작업.
 
 ### Lighthouse FCP, LCP, CLS 5회 측정 값 after
@@ -162,7 +163,7 @@
 ## 🧾 3단계 — 동적 metadata와 Open Graph의 비용을 판단하기
 
 ### 3-1 normal·정상 empty·metadata query failure의 document 증거
-세 케이스 모두 실제 Chrome **View Source**(JS 실행 전 SSR document)로 확보 — `<head>` metadata를 하이라이트한 스크린샷.
+정상 empty·metadata query failure 두 케이스는 Chrome 개발자 도구(DevTools) **Elements 패널**로 확보 — 스트리밍 metadata라 `<head>`가 아니라 **body 끝**에 붙은 metadata 태그(title·og·twitter)를 하이라이트한 스크린샷. normal은 아래 초기 HTML(`step3-normal.html`)로 남긴다.
 - **normal** `/products`: `<title>상품 목록 | Commerce</title>` · desc `전체 · 최신순 · 총 30개` · og:image=첫 상품(동적). 홈 `/`: title=배너 제목 · og:image=배너.
 - **정상 empty** `/products?q=<무매칭 검색어>`: `<title>"…" 검색 결과 (0개) | Commerce</title>` · desc `총 0개` · og:image=`product-fallback.jpg`(OG fallback).
 - **metadata query failure** (`APP_ORIGIN=http://127.0.0.1:9`): 루트 공통 metadata 상속(`<title>Commerce</title>`). ↔ 3-4 대비.
@@ -176,6 +177,7 @@
 
 **metadata query failure**
 ![metadata query failure](recordings/step3-metadata-failure.jpg)
+- 스크린샷의 `<title>상품 목록 | Commerce`는 DevTools live DOM이라 클라이언트 `document.title` 동기화(`ProductList` useEffect)가 덮어쓴 값이다. `products/layout.tsx`엔 metadata가 없으므로 **서버(크롤러가 받는 SSR) title은 실패 시 루트 `Commerce`** 가 맞고, 같은 화면의 og:title·description·og:image가 루트값인 것으로 metadata 실패가 확인된다(목록 자체는 클라이언트가 정상 로드해 총 30개가 보임).
 
 ### 3-2 서버 호출 계수
 `src/app/api/products/route.ts` GET에 임시 `[TEMP-COUNT]`(+user-agent) 로그, `generateMetadata`·`ProductListSection`에 각각 실행 태그 로그를 남기고 브라우저로 `/products?scenario=slow` 접속.
@@ -248,7 +250,7 @@ failure 재현: `APP_ORIGIN=http://127.0.0.1:9 pnpm build`, `APP_ORIGIN=http://1
 **LCP element**
 
 ![LCP element after](images/LCP_element_after.jpg)
-- before와 비교: LCP 요소는 before/after 모두 **동일하게 hero 이미지**. Resource load duration이 7,950ms에서 270ms로 단축.
+- before와 비교: LCP 요소는 before/after 모두 **동일하게 hero 이미지**. Resource load duration이 7,904ms에서 270ms로 단축(4단계 재측정, 4-8 `fetchPriority` 적용 후).
 
 **Performance filmstrip**
 
@@ -262,7 +264,7 @@ failure 재현: `APP_ORIGIN=http://127.0.0.1:9 pnpm build`, `APP_ORIGIN=http://1
 - before와 비교:
   - **Hero 이미지 전송 크기**: 7.5MB → **130kB(AVIF)** 로 대폭 감소 — 이 구간이 LCP 병목이었으므로 가장 큰 개선.
   - **요청 시작 순서**: before는 Hero(`hero-original.jpg`) Request #19 -> after는 `preload` + `fetchPriority="high"`로 인하여 Hero(Request #18)
-  - **document 전송 크기**: 8.2KB → **9.0kB로 소폭 증가.** next/image가 초기 HTML에 ① `<head>` hero preload `<link rel="preload" as="image" imagesrcset=… fetchpriority="high">` 를 주입하고, ② `<img>` 에 여러 해상도 후보를 담은 `srcset`(640~1920)과 `sizes` 문자열을 추가하기 때문. 즉 preload 링크 + srcset 마크업 바이트가 document에 더 실린 것. Hero를 더 빨리·작게 받기 위한 **의도된 트레이드오프**(document +0.8KB ↔ 이미지 전송 7.5MB→130kB + LCP 대폭 단축).
+  - **document 전송 크기**: 8.2KB → **9.0kB로 소폭 증가.** next/image가 초기 HTML에 ① `<head>` hero preload `<link rel="preload" as="image" imagesrcset=… fetchpriority="high">` 를 주입하고, ② `<img>` 에 여러 해상도 후보를 담은 `srcset`(640~3840)과 `sizes` 문자열을 추가하기 때문. 즉 preload 링크 + srcset 마크업 바이트가 document에 더 실린 것. Hero를 더 빨리·작게 받기 위한 **의도된 트레이드오프**(document +0.8KB ↔ 이미지 전송 7.5MB→130kB + LCP 대폭 단축).
 
 ### 4-4 목록 최초 진입·갱신 화면 재녹화, 검색·카테고리·정렬·페이지 URL 복원 확인
 
@@ -296,17 +298,17 @@ Before와 After를 지표별로 다시 대조
 | LCP(중앙값) | 8.5s | 0.8s | ✅ 대폭 개선 — 선택한 병목과 직접 연결 |
 | FCP(중앙값) | 0.5s | 0.5s | 유지 — 최소값만 0.5→0.4s로 소폭변동 |
 | CLS | 0 | 0 | 유지 — Hero fallback·목록 스켈레톤 추가 후에도 shift 없음 |
-| Hero 이미지 전송 | 7.5MB / 7,904ms | 130kB(AVIF) / 530ms | ✅ 대폭 개선 |
-| LCP Element Render delay | 37ms | 62ms | ⚠️ 소폭 악화(+25ms) |
+| Hero 이미지 전송 | 7.5MB / 7,904ms | 130kB(AVIF) / 270ms | ✅ 대폭 개선 |
+| LCP Element Render delay | 37ms | 50ms | ⚠️ 소폭 악화(+13ms) |
 | document 전송 크기 | 8.2KB | 9.0kB | ⚠️ 소폭 악화(+0.8KB) |
 | 이미지 품질 | 원본 | quality 75 | 육안상 큰 차이가 없어보이므로 유지 |
 | 기존 기능(장바구니·위시리스트·필터·정렬·페이지) | 정상 | 정상 | 회귀 없음(4-5) |
 
 - **LCP가 1s → 0.8s로 한 번 더 내려간 이유**: 4-8의 `fetchPriority="high"` 적용으로 hero 요청 우선순위가 올라간 결과. 1단계 after(1.0s)보다 재측정(4-2)이 더 나은 값을 냈다.
 - **악화 항목 판단 — 둘 다 유지**:
-  - `Element Render delay 37→62ms`: next/image 디코딩·레이아웃 경로 차이로 렌더 단계가 ~25ms 늘었으나, 같은 LCP 안에서 전송이 7,904→530ms로 줄어든 이득(LCP 순감 ~7.7s)이 압도적이라 유지.
+  - `Element Render delay 37→50ms`: next/image 디코딩·레이아웃 경로 차이로 렌더 단계가 ~13ms 늘었으나, 같은 LCP 안에서 전송이 7,904→270ms로 줄어든 이득(LCP 순감 ~7.7s)이 압도적이라 유지.
   - `document 8.2→9.0KB(+0.8KB)`: preload `<link>` + `srcset`/`sizes` 마크업이 초기 HTML에 실린 결과(4-3). 이미지 전송 7.5MB→130kB 절감·LCP 대폭 단축을 위한 의도된 트레이드오프라 유지.
-- **결론**: **FCP만 줄고 LCP·CLS·이미지 품질·기존 기능이 나빠진 경우가 아니로 판단.** FCP는 유지, LCP가 크게 개선됐고, 악화는 렌더 딜레이 +25ms·document +0.8KB 두 가지.
+- **결론**: **FCP만 줄고 LCP·CLS·이미지 품질·기존 기능이 나빠진 경우가 아니로 판단.** FCP는 유지, LCP가 크게 개선됐고, 악화는 렌더 딜레이 +13ms·document +0.8KB 두 가지.
 
 ### 4-8 추가 발견 — hero 이미지 `priority` deprecation 대응
 
