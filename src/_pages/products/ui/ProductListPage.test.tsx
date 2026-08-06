@@ -28,6 +28,10 @@ const firstProduct = createProduct({
   id: "p1",
   name: "첫 번째 상품",
 });
+const prefetchedProduct = createProduct({
+  id: "p2",
+  name: "미리 가져온 상품",
+});
 
 function renderProductListPageClient({
   searchParams,
@@ -333,6 +337,49 @@ describe("ProductListPageClient", () => {
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
     expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
+  });
+
+  it("기존 목록 갱신에 실패하면 기존 상품 목록을 유지하고 다시 시도할 수 있다", async () => {
+    mockedGetProducts.mockImplementation((params = {}) => {
+      if (params.category === "goods") {
+        return Promise.reject(new Error("상품 목록을 불러오지 못했습니다."));
+      }
+
+      if (params.page === 2) {
+        return Promise.resolve({
+          products: [prefetchedProduct],
+          categories: [],
+          totalCount: 30,
+          page: 2,
+          pageSize: 12,
+        });
+      }
+
+      return Promise.resolve({
+        products: [firstProduct],
+        categories: [],
+        totalCount: 30,
+        page: 1,
+        pageSize: 12,
+      });
+    });
+
+    renderProductListPageClient({
+      searchParams: "",
+    });
+
+    expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "카테고리" }));
+    await userEvent.click(screen.getByRole("option", { name: "뷰티·잡화" }));
+
+    expect(
+      await screen.findByText("상품 목록을 갱신하지 못했습니다. 기존 목록을 계속 보여드립니다."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("첫 번째 상품")).toBeInTheDocument();
+    expect(screen.queryByText("미리 가져온 상품")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
+    expect(screen.getByLabelText("상품 목록")).toHaveAttribute("aria-busy", "false");
   });
 
   it("검색어는 debounce 완료 후 URL 상태와 조회 조건에 반영한다", async () => {
