@@ -21,9 +21,11 @@ export function Hero({ title, description }: HeroProps) {
         sizes={HERO_SIZES}
         priority
       />
+      {/* 페이지의 하나뿐인 h1이다. 같은 배너 문구를 위쪽 텍스트 블록과 중복해서
+          그리지 않고, 제목 소유권을 Hero로 모았다. */}
       <div className={styles.copy}>
         <p className={styles.eyebrow}>이번 주의 발견</p>
-        <h2 id="home-hero-title">{title}</h2>
+        <h1 id="home-hero-title">{title}</h1>
         <p>{description}</p>
       </div>
     </section>

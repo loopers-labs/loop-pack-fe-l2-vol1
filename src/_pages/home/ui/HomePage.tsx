@@ -54,11 +54,8 @@ export function HomePage() {
 
   return (
     <main className="shop-page">
-      <section className="shop-hero">
-        <p>{home.banner.description}</p>
-        <h1>{home.banner.title}</h1>
-      </section>
-      {/* 배너 문구가 위 h1과 겹치는 것은 렌더링 경계를 정할 때 함께 정리한다. */}
+      {/* Hero가 페이지 제목(h1)과 설명을 함께 소유한다 — 같은 배너 문구를
+          텍스트 블록과 두 번 그리지 않는다. */}
       <Hero title={home.banner.title} description={home.banner.description} />
       <section className="shop-section">
         <h2>카테고리</h2>

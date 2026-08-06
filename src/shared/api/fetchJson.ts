@@ -9,8 +9,19 @@ const isApiErrorResponse = (value: unknown): value is ApiErrorResponse => {
   return "message" in value && typeof value.message === "string";
 };
 
+// 브라우저에서는 상대 경로가 그대로 동작하지만, 서버(RSC·generateMetadata)에는
+// 기준 origin이 없다. 같은 query factory를 양쪽에서 쓰려면 여기서 한 번만 맞춘다.
+// APP_ORIGIN은 build와 runtime에 같은 값을 넣는다(닿지 않는 origin을 넣으면 실패를 재현할 수 있다).
+function resolveUrl(url: string): string {
+  if (typeof window !== "undefined" || !url.startsWith("/")) {
+    return url;
+  }
+  const origin = process.env.APP_ORIGIN ?? `http://localhost:${process.env.PORT ?? "3000"}`;
+  return `${origin}${url}`;
+}
+
 export async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+  const response = await fetch(resolveUrl(url));
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
     // 화면 문구는 각 화면이 소유한다. 여기서는 서버가 준 message와 status만 전달한다.
