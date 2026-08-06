@@ -1,3 +1,5 @@
+import { getAppOrigin } from './app-origin';
+
 /**
  * 공용 API Client
  * fetch는 4xx/5xx에서 에러를 던지지 않으므로 response.ok를 검사해 throw한다.
@@ -40,25 +42,13 @@ export async function apiClient<T>(path: string): Promise<T> {
 function resolveRequestUrl(path: string) {
   if (typeof window !== 'undefined') return path;
 
-  const url = buildAbsoluteUrl(path, process.env.APP_ORIGIN);
+  const origin = getAppOrigin();
 
-  if (!url) {
+  if (!origin) {
     throw new Error(
       '서버에서 API 주소를 만들지 못했습니다. APP_ORIGIN을 확인해주세요.',
     );
   }
 
-  return url;
-}
-
-function buildAbsoluteUrl(path: string, origin: string | undefined) {
-  try {
-    const url = new URL(path, origin);
-
-    return url.protocol === 'http:' || url.protocol === 'https:'
-      ? url.toString()
-      : null;
-  } catch {
-    return null;
-  }
+  return new URL(path, origin).toString();
 }
