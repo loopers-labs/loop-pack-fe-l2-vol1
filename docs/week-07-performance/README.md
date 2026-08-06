@@ -23,7 +23,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 기준선 | `6ff6885c` | 텍스트 한 줄 대기 화면 | 0.3 s | 0.7 s | 0 | — | 기준 |
 | R4 | `a0a6d7fb` | 대기 화면을 카드 골격 12장으로 | 0.2 s | 0.6 s | 0 | 화면 요건 + CLS 0 유지 | 유지 |
-| R5 | `a0fc24e9` | 조건이 바뀌어도 이전 목록 유지 | — | — | **갱신 중 0.33** | 갱신 화면 구분 | 유지(회귀 있음) |
+| R5 | `a0fc24e9` | 조건이 바뀌어도 이전 목록 유지 | — | — | **갱신 중 0.33** | 갱신 화면 구분 | 유지 · CLS는 개입 안 함 |
 
 - Chrome `151.0.7922.75` (arm64) · macOS `26.5.2` · V8 `15.1.206.10`
 - Lighthouse `13.4.0` · Chromium `151.0.0.0 with devtools`
@@ -72,7 +72,7 @@
 | R2 렌더링 경계 | [`r2-render-boundary/`](./r2-render-boundary/notes.md) | 완료 |
 | R3 카드 공간 예약 | [`r3-cls-reservation/`](./r3-cls-reservation/notes.md) | 완료 |
 | R4 목록 최초 진입 대기 화면 | [`r4-list-pending/`](./r4-list-pending/notes.md) | 완료 |
-| R5 갱신 중 이전 목록 유지 | [`r5-list-refresh/`](./r5-list-refresh/notes.md) | 완료 (CLS 회귀는 다음 라운드) |
+| R5 갱신 중 이전 목록 유지 | [`r5-list-refresh/`](./r5-list-refresh/notes.md) | 완료 (CLS는 개입하지 않음, 근거 기록) |
 
 라운드마다 폴더를 하나 만들고 그 안에 `notes.md`와 캡쳐를 함께 둔다. 캡쳐 이름은 `{순번}-{내용}.png`이고, 순번은 아래 체크리스트와 같다. 같은 순번은 라운드가 달라도 같은 화면을 가리킨다.
 
