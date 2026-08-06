@@ -1,5 +1,6 @@
+import { Suspense } from 'react'
 import HeroSection from './HeroSection'
-import HomeContent from './HomeContent'
+import HomeContentPrefetch from './HomeContentPrefetch'
 
 // 홈의 서버 셸이다. 느린 홈 응답과 무관한 것만 여기 둔다.
 //
@@ -16,7 +17,16 @@ export default function HomePage() {
   return (
     <main>
       <HeroSection title={heroTitle} description={heroDescription} />
-      <HomeContent />
+      {/* 서버 조회는 이 경계 안에서만 기다린다. Hero 셸은 먼저 전송된다. */}
+      <Suspense
+        fallback={
+          <section className="week05-section">
+            <p>Loading home…</p>
+          </section>
+        }
+      >
+        <HomeContentPrefetch />
+      </Suspense>
     </main>
   )
 }

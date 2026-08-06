@@ -5,7 +5,7 @@ import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
 import { Header } from '@/widgets/header'
 import { resetStores } from '@/test/resetStores'
 import type { Product } from '@/entities/product/model/product'
-import { HomePage } from '@/_pages/home'
+import { HomeContent } from '@/_pages/home'
 import { ProductListView } from '@/_pages/product-list'
 
 // 구현이 아니라 사용자에게 보이는 상태 계약을 검증한다.
@@ -111,7 +111,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
       vi.fn<typeof fetch>(() => Promise.resolve(jsonResponse(payload))),
     )
 
-    renderApp(<HomePage />)
+    renderApp(<HomeContent />)
 
     expect(await screen.findByRole('link', { name: 'Casual' })).toHaveAttribute(
       'href',
@@ -128,7 +128,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     renderApp(
       <>
         <Header />
-        <HomePage />
+        <HomeContent />
         <ProductListView />
       </>,
     )
@@ -154,7 +154,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     renderApp(
       <>
         <Header />
-        <HomePage />
+        <HomeContent />
       </>,
     )
 
@@ -222,7 +222,7 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
       ),
     )
 
-    renderApp(<HomePage />)
+    renderApp(<HomeContent />)
 
     expect(await screen.findByText('Could not load home.')).toBeInTheDocument()
     expect(

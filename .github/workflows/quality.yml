@@ -34,4 +34,8 @@ jobs:
             pnpm exec playwright install --with-deps chromium
           fi
       - name: Run quality checks
+        # 배포 URL 증거가 아니라 build 계약을 검증하는 값이다.
+        # 서버 metadata와 prefetch가 절대 URL을 만들려면 build 시점에 origin이 있어야 한다.
+        env:
+          APP_ORIGIN: http://127.0.0.1:3000
         run: pnpm check
