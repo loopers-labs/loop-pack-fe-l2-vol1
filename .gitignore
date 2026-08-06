@@ -42,3 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /my-doc
+
+# intelliJ
+.idea
+
+# claude local-only files
+.claude/settings.json
+docs/local/*

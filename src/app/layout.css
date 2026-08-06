@@ -31,13 +31,50 @@
   background: #ececec;
 }
 
+.week05-hero--banner {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+
+.week05-hero--banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 40%, rgb(0 0 0 / 55%));
+}
+
+.week05-hero--banner > * {
+  position: relative;
+  z-index: 2;
+}
+
+.week05-hero-image {
+  object-fit: cover;
+  z-index: 0;
+}
+
 .week05-section {
+  position: relative;
   margin-top: 40px;
 }
 
 .week05-section > h1,
 .week05-section > h2 {
   margin-bottom: 16px;
+}
+
+/* AI-generated : Week 7 Part 2 — 갱신 중(기존 목록 유지) 상태의 시각적 신호. 레이아웃 크기를 바꾸지 않도록 절대 위치 오버레이로 기존 목록 위에 떠서 "갱신 중"임을 알린다 */
+.week05-section__pending-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255 / 70%);
+  pointer-events: none;
 }
 
 .week05-categories a,
@@ -59,11 +96,80 @@
   gap: 8px;
 }
 
-.week05-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
+/* AI-generated : Week 7 Part 2 Round 7 — loading.tsx 스켈레톤. 실제 카드 한 줄 높이(실측 약 565px)에 맞춰
+   고정 높이를 주어, fallback이 실제 목록으로 교체될 때 아래 요소(Pagination 등)의 위치가 크게 튀지 않게 한다 */
+.week05-skeleton {
   background: #ececec;
+  border-radius: 2px;
+}
+
+.week05-skeleton-card {
+  height: 565px;
+  align-content: start;
+}
+
+.week05-skeleton-brand {
+  width: 40%;
+  height: 14px;
+}
+
+.week05-skeleton-name {
+  width: 85%;
+  height: 40px;
+}
+
+.week05-skeleton-price {
+  width: 30%;
+  height: 16px;
+}
+
+.week05-skeleton-count {
+  width: 72px;
+  height: 19px;
+}
+
+/* AI-generated : Week 7 Part 2 Round 9 — 스켈레톤에 Pagination 자리가 없어서, fallback↔실제 콘텐츠 전환 때
+   Pagination이 언마운트/재마운트되며 공식 CLS(had_recent_input:false)에 잡히는 시프트가 생겼다.
+   실제 Pagination과 같은 높이(34px)의 자리를 미리 잡아 그 이동을 없앤다 */
+.week05-skeleton-pagination {
+  width: 148px;
+  height: 34px;
+}
+
+.week05-skeleton-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.week05-skeleton-field {
+  width: 160px;
+  height: 65px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .week05-skeleton {
+    animation: week05-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes week05-skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* AI-generated : Week 7 Part 1 Round 4 — 카드 이미지가 width:100%(반응형)인데 next/image에 고정 width/height(400)를 주면 실제 렌더 폭보다 큰 srcset이 선택돼(예: 5열 그리드에서 실렌더 폭 ≈224px인데 400px 기준으로 다운로드) "compression/oversized" 경고가 뜨는 문제 — fill 모드로 바꾸면서 position 기준을 이 wrap이 담당하도록 분리. height:400px는 기존 <img width={400} height={400}>가 만들던 모양(폭은 그리드에 따라 가변, 높이는 400px 고정)을 그대로 유지하기 위한 값 — 용량 최적화 범위를 벗어나는 비율 변경은 하지 않는다 */
+.week05-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #ececec;
+  overflow: hidden;
+}
+
+.week05-image {
   object-fit: cover;
 }
 

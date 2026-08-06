@@ -15,7 +15,11 @@ function buildProductListParams(query: ProductListQuery): URLSearchParams {
   return params;
 }
 
-export async function fetchProductList(query: ProductListQuery): Promise<ProductListResponse> {
+/* AI-generated : Week 7 Part 2 — signal을 받아 apiResponseResult로 전달(AbortSignal 연결) */
+export async function fetchProductList(
+  query: ProductListQuery,
+  signal?: AbortSignal,
+): Promise<ProductListResponse> {
   const params = buildProductListParams(query);
-  return apiResponseResult(`/api/products?${params.toString()}`);
+  return apiResponseResult(`/api/products?${params.toString()}`, signal);
 }

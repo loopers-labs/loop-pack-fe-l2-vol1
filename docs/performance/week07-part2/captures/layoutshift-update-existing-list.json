@@ -1,0 +1,54 @@
+[
+  {
+    "args": {
+      "data": {
+        "cumulative_score": 0.03523008493126696,
+        "frame_max_distance": 1185,
+        "had_recent_input": false,
+        "impacted_nodes": [
+          {
+            "new_rect": [75, 887, 1200, 17],
+            "node_id": 18,
+            "old_rect": [75, 887, 1200, 17]
+          },
+          {
+            "new_rect": [319, 906, 225, 34],
+            "node_id": 19,
+            "old_rect": [1051, 906, 225, 34]
+          },
+          {
+            "new_rect": [563, 906, 224, 34],
+            "node_id": 20,
+            "old_rect": [0, 0, 0, 0]
+          },
+          {
+            "new_rect": [807, 906, 224, 34],
+            "node_id": 21,
+            "old_rect": [0, 0, 0, 0]
+          }
+        ],
+        "is_main_frame": true,
+        "last_input_timestamp": 0,
+        "overall_max_distance": 1185,
+        "region_rects": [
+          [75, 887, 1200, 17],
+          [319, 906, 225, 34],
+          [563, 906, 224, 34],
+          [807, 906, 224, 34],
+          [1051, 906, 225, 34]
+        ],
+        "score": 0.03523008493126696,
+        "weighted_score_delta": 0.03523008493126696
+      },
+      "frame": "31D2E95984B835DDF174EED5C828E5D0"
+    },
+    "cat": "loading",
+    "name": "LayoutShift",
+    "ph": "I",
+    "pid": 77760,
+    "s": "t",
+    "tid": 22757972,
+    "ts": 1476604695442,
+    "tts": 132299
+  }
+]

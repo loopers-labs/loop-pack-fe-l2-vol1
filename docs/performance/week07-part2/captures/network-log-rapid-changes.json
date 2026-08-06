@@ -1,0 +1,46 @@
+[
+  {
+    "type": "request",
+    "url": "http://localhost:3000/api/products?sort=latest&page=2&pageSize=12",
+    "t": 1785954112101
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3000/api/products?sort=latest&page=2&pageSize=12",
+    "status": 200,
+    "t": 1785954112655
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3000/api/products?category=casual&sort=latest&page=1&pageSize=12",
+    "t": 1785954113185
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3000/api/products?category=fashion&sort=latest&page=1&pageSize=12",
+    "t": 1785954113396
+  },
+  {
+    "type": "request",
+    "url": "http://localhost:3000/api/products?category=home&sort=latest&page=1&pageSize=12",
+    "t": 1785954113607
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3000/api/products?category=casual&sort=latest&page=1&pageSize=12&scenario=slow",
+    "status": 200,
+    "t": 1785954114691
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3000/api/products?category=fashion&sort=latest&page=1&pageSize=12&scenario=slow",
+    "status": 200,
+    "t": 1785954114904
+  },
+  {
+    "type": "response",
+    "url": "http://localhost:3000/api/products?category=home&sort=latest&page=1&pageSize=12&scenario=slow",
+    "status": 200,
+    "t": 1785954115113
+  }
+]

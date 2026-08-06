@@ -1,5 +1,6 @@
 import type { Category, CategoryId } from '@/entities/category/model/category';
 import type { Product } from '@/entities/product/model/product';
+import { HERO_BANNER_IMAGE } from '@/shared/lib/heroBanner';
 
 export const categories: Category[] = [
   { id: 'casual', name: '캐주얼' },
@@ -12,7 +13,7 @@ export const categories: Category[] = [
 export const homeBanner = {
   title: '매일 새롭게 발견하는 취향',
   description: '지금 가장 사랑받는 상품을 만나보세요.',
-  image: '/images/products/p6.jpg',
+  image: HERO_BANNER_IMAGE,
 };
 
 const sizeOptions = [
@@ -352,9 +353,8 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct);
 
-const mockDelayMs = process.env.NODE_ENV === 'test' ? 0 : 500;
-
-export const waitForMockApi = () =>
+export const waitForMockApi = (requestedDelayMs = 500) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, mockDelayMs);
+    const delayMs = process.env.NODE_ENV === 'test' ? 0 : requestedDelayMs;
+    setTimeout(resolve, delayMs);
   });

@@ -3,6 +3,8 @@
 > 이 문서는 `docs/assignments/week-06.md`의 RADIO 양식을 따른다.
 > "직접 작성"으로 표시된 항목은 아직 결정하지 않은 부분이다.
 
+> **리뷰 피드백 반영**: 5단계 삭제 시나리오(위시리스트)의 수정 파일 목록에서 `providers.tsx`(`useWishlistStore.persist.rehydrate()` 호출)가 빠져 있었고, I 섹션·FSD 이해 확인 질문 답변에 개명 전 이름(`widgets/body`)이 남아 있던 것을 실제 코드(`src/widgets/product-list-section`, `src/app/providers.tsx`) 기준으로 대조해 바로잡았다. 앞으로는 제출 전에 문서와 코드를 한 차례 대조하는 절차를 거친다.
+
 ## 0단계 — 동작 기준선
 
 폴더 이동 전, 현재 코드(`feat/week-06`, `pnpm dev` 기준)에서 아래 항목을 직접 확인했다.
@@ -95,7 +97,7 @@
 2. **FSD 레이어 골격은 있지만 세그먼트 내부 규칙이 러프함** — `dialog`/`select` 같은 compound 컴포넌트를 `shared/ui`로 어떻게 편입할지, 슬라이스 안에서 UI를 어떻게 합성할지가 정해지지 않았다. 너무 세밀하게 규칙을 만들면 오버엔지니어링이 될 수 있어, UI를 먼저 재정의하고 그 결과로 파일 구조를 도출하는 순서로 접근한다.
 3. **에러·로딩(Suspense) 경계가 구체적으로 정의되지 않음** — `error.tsx`가 프로젝트에 없고, `QueryState`의 `renderLoading`도 `placeholderData: keepPreviousData` 때문에 구조상 거의 도달 불가능하다(0단계에서 확인). **해결(4단계 참고)**: 로딩은 라우트 `loading.tsx` 하나로, 에러는 API 실패(인라인 `QueryState`/`ErrorRetry`)와 렌더링 버그(`error.tsx`)로 분리해서 정의했다. `QueryState`는 `renderLoading` prop을 제거해 단순화한다.
 4. **`/api/home`이 BFF 형태로 여러 도메인을 한 번에 묶어서 응답함** — `src/app/api/home/route.ts`가 `banner`(홈 전용) + `categories`(entities/category와 동일 데이터) + `popularProducts`/`newProducts`(entities/product를 `popular`/`latest` 정렬로 상위 6개만 자체 재정렬)를 한 응답으로 합쳐서 내려준다. 이미 `entities/product`에 동일한 정렬 옵션(`productsQueryOptions`)이 있는데도 홈은 별도 엔드포인트에서 정렬 로직을 중복 구현하고 있어, 도메인별 소유권이 불분명하다. **해결 방향**: 요청 자체는 쪼개지 않고(네트워크 워터폴 방지 요구사항 유지), `homeQueryOptions`는 페이지(`_api`)가 하나의 쿼리로 소유한다. `entities/product`(`popularProductsMapper`/`newProductsMapper`)와 `entities/category`(`categoriesMapper`)는 순수 mapper 함수만 export하고 `homeQueryOptions`를 직접 import하지 않는다(entity가 app 하위 파일을 import하면 역방향 의존이 되므로). 실제 `useQuery({ ...homeQueryOptions, select: mapper })` 연결은 페이지(`HomeView`)가 담당해 client 쪽 소유권을 정리한다. `route.ts`의 서버 쪽 정렬 로직 중복은 이번 전환 범위에서 제외한다(과제 문서가 `src/app/api` Route Handler를 전환 범위 제외로 허용).
-5. **테스트 코드가 같은 레이어의 다른 슬라이스를 직접 import함** — `src/widgets/product-card/ui/ProductCard.test.tsx`가 다른 widget인 `@/widgets/header/ui/Header`를 가져와 "ProductCard에서 찜/담기를 누르면 Header 카운트도 같이 바뀐다"를 검증한다. 검증 의도(Header·ProductCard가 공유하는 Zustand store 동기화)는 타당하지만, 같은 레이어의 다른 슬라이스를 직접 import하지 않는다는 규칙을 테스트 코드가 어기고 있고, 실제로는 두 widget의 "조합"을 검증하는 테스트가 `product-card` 슬라이스 한쪽에 얹혀 있는 상태다. **해결**: `ProductCard`가 entity로 옮겨가며 찜/담기를 직접 갖지 않게 되면 이 테스트가 검증하던 대상 자체가 사라진다. 이 통합 테스트는 `widgets/body/ui/Body.test.tsx`로 옮긴다 — `Body`가 `ProductCard`+`features`(찜/담기 버튼)를 실제로 조합하는 주체이므로, 거기서 `Body`+`Header`를 함께 렌더링해 store 동기화를 검증한다.
+5. **테스트 코드가 같은 레이어의 다른 슬라이스를 직접 import함** — `src/widgets/product-card/ui/ProductCard.test.tsx`가 다른 widget인 `@/widgets/header/ui/Header`를 가져와 "ProductCard에서 찜/담기를 누르면 Header 카운트도 같이 바뀐다"를 검증한다. 검증 의도(Header·ProductCard가 공유하는 Zustand store 동기화)는 타당하지만, 같은 레이어의 다른 슬라이스를 직접 import하지 않는다는 규칙을 테스트 코드가 어기고 있고, 실제로는 두 widget의 "조합"을 검증하는 테스트가 `product-card` 슬라이스 한쪽에 얹혀 있는 상태다. **해결**: `ProductCard`가 entity로 옮겨가며 찜/담기를 직접 갖지 않게 되면 이 테스트가 검증하던 대상 자체가 사라진다. 이 통합 테스트는 `widgets/product-list-section/ui/ProductListSection.test.tsx`로 옮긴다 — `ProductListSection`가 `ProductCard`+`features`(찜/담기 버튼)를 실제로 조합하는 주체이므로, 거기서 `ProductListSection`+`Header`를 함께 렌더링해 store 동기화를 검증한다.
 6. **캐시 정책 상수가 이름과 다른 곳에서 재사용됨** — `entities/product/model/constants.ts`의 `PRODUCT_PRICE_STALE_TIME`/`PRODUCT_PRICE_GC_TIME`는 이름상 "상품 가격" 전용 캐시 정책인데, `src/app/home/model/homeQueryOptions.ts`가 이를 그대로 가져다 배너·카테고리·인기/신상품이 섞인 홈 응답 전체의 캐시 정책으로 사용한다. 홈 데이터는 가격과 무관한데 이름이 "가격"인 상수를 재사용하고 있어 이름과 실제 쓰임이 어긋난다. **해결**: `homeQueryOptions`가 페이지 소유(`_api`)로 옮겨가면서 `entities/product`의 상수를 빌려 쓸 이유 자체가 없어졌다. 홈 쿼리는 자기 자신의 staleTime을 페이지 쪽에 독립적으로 정의한다. 값은 기존과 동일한 60초로 유지한다 — 인기/신상품도 결국 가격이 자주 바뀌는 상품이라 같은 민감도(짧은 재확인 주기)가 여전히 유효하기 때문이다.
 7. **`/` 경로가 홈이 아니라 `/home`으로 리다이렉트만 함** — `src/app/page.tsx`는 콘텐츠 없이 `redirect('/home')`만 수행하고, 실제 홈 콘텐츠는 `/home`에 있다. 일반적으로는 `/`가 곧 홈이어야 하는데 불필요한 리다이렉트 한 단계가 껴 있다. 이번 주에 Route Group(`src/app/(home)/page.tsx`)으로 전환해 `/` 경로에서 바로 홈 콘텐츠를 렌더링하고, 폴더명은 `(home)`으로 남겨 의도를 유지하기로 함.
 
@@ -242,7 +244,7 @@ src/
 
 ### 사용할 레이어만 선택한 근거
 
-- **사용**: `entities`, `features`, `widgets`, `shared` — 이미 코드에서 실제로 역할을 하고 있고, 이번 주 결정들(entity+feature 분리, `widgets/body` 등)도 전부 이 네 레이어 안에서 해결됨
+- **사용**: `entities`, `features`, `widgets`, `shared` — 이미 코드에서 실제로 역할을 하고 있고, 이번 주 결정들(entity+feature 분리, `widgets/product-list-section` 등)도 전부 이 네 레이어 안에서 해결됨
 - **미사용 — `_pages`**: 라우트 1개 : 페이지 조합 1개로 정확히 대응하고 여러 라우트가 공유하는 페이지 조합이 없어, 프레임워크 라우팅과 분리해야 할 이유가 없다. `src/app/**/_ui`(private folder)만으로 충분
 - **미사용 — `processes`**: 과제 문서가 사용하지 않는다고 명시. 이 프로젝트에 여러 페이지에 걸친 비즈니스 프로세스(예: 결제 단계)가 없어서 필요성도 없음
 
@@ -284,17 +286,17 @@ import { productsQueryOptions } from '@/entities/product/api/productsQueryOption
 
 ### 단계별 마이그레이션 계획과 검증 방법
 
-| 단계 | 작업                                                                                                                                                                            | 검증                                                                          |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1    | `src/components/ui/{dialog,select}` → `shared/ui/{dialog,select}` (경로만 이동, 로직 변경 없음)                                                                                 | `pnpm check`, `/examples` 페이지 육안 확인                                    |
-| 2    | cart/wishlist store(상태+액션 전부)를 `entities/{cart,wishlist}`로 이동, `useWishlistStore.test.ts`도 함께 이동. `features/{add-to-cart,toggle-wishlist}`는 버튼 UI만 새로 작성 | 이동한 스토어 테스트 통과, 찜·담기 동작 육안 확인                             |
-| 3    | `ProductCard`를 `widgets/product-card` → `entities/product/ui`로 이동, 찜/담기를 children으로 받게 변경                                                                         | 홈·목록에서 카드 렌더링 확인 (찜/담기는 4단계에서 Body 완성 후 확인)          |
-| 4    | `widgets/body` 생성(텍스트 슬롯 + 그리드), Home·Products가 이걸 쓰도록 교체. `ProductCard.test.tsx`의 "찜/담기 → Header 카운트 동기화" 검증을 `Body.test.tsx`로 이관            | 홈 "인기상품/신상품" 섹션, 목록 "총 N개" 섹션 육안 확인, `Body.test.tsx` 통과 |
-| 5    | `shared/ui/PageHeading` 생성, 배너/제목 영역 교체                                                                                                                               | 홈 배너, 목록 제목 육안 확인                                                  |
-| 6    | 홈 API 재구성 — `_api/homeQueryOptions.ts` + entities별 mapper 연결                                                                                                             | 홈 데이터 정상 로드, 카테고리 호버 프리페치 동작 확인                         |
-| 7    | `/` → Route Group `(home)`으로 전환, `HomeView`/`ProductView`를 `_ui`로 이동                                                                                                    | `/`, `/products` 라우팅 정상, `pnpm build`로 라우트 트리 확인                 |
-| 8    | `src/app/examples/{dialog,selectBox}` → `_dialog`/`_selectBox`, `src/examples/week-05-layout` → `docs/`로 이동                                                                  | `/examples` 페이지 정상 동작                                                  |
-| 9    | (4단계 별도) 에러 처리 경계 설계·구현                                                                                                                                           | 인위적 실패 재현으로 검증                                                     |
+| 단계 | 작업                                                                                                                                                                                               | 검증                                                                                        |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 1    | `src/components/ui/{dialog,select}` → `shared/ui/{dialog,select}` (경로만 이동, 로직 변경 없음)                                                                                                    | `pnpm check`, `/examples` 페이지 육안 확인                                                  |
+| 2    | cart/wishlist store(상태+액션 전부)를 `entities/{cart,wishlist}`로 이동, `useWishlistStore.test.ts`도 함께 이동. `features/{add-to-cart,toggle-wishlist}`는 버튼 UI만 새로 작성                    | 이동한 스토어 테스트 통과, 찜·담기 동작 육안 확인                                           |
+| 3    | `ProductCard`를 `widgets/product-card` → `entities/product/ui`로 이동, 찜/담기를 children으로 받게 변경                                                                                            | 홈·목록에서 카드 렌더링 확인 (찜/담기는 4단계에서 ProductListSection 완성 후 확인)          |
+| 4    | `widgets/product-list-section` 생성(텍스트 슬롯 + 그리드), Home·Products가 이걸 쓰도록 교체. `ProductCard.test.tsx`의 "찜/담기 → Header 카운트 동기화" 검증을 `ProductListSection.test.tsx`로 이관 | 홈 "인기상품/신상품" 섹션, 목록 "총 N개" 섹션 육안 확인, `ProductListSection.test.tsx` 통과 |
+| 5    | `shared/ui/PageHeading` 생성, 배너/제목 영역 교체                                                                                                                                                  | 홈 배너, 목록 제목 육안 확인                                                                |
+| 6    | 홈 API 재구성 — `_api/homeQueryOptions.ts` + entities별 mapper 연결                                                                                                                                | 홈 데이터 정상 로드, 카테고리 호버 프리페치 동작 확인                                       |
+| 7    | `/` → Route Group `(home)`으로 전환, `HomeView`/`ProductView`를 `_ui`로 이동                                                                                                                       | `/`, `/products` 라우팅 정상, `pnpm build`로 라우트 트리 확인                               |
+| 8    | `src/app/examples/{dialog,selectBox}` → `_dialog`/`_selectBox`, `src/examples/week-05-layout` → `docs/`로 이동                                                                                     | `/examples` 페이지 정상 동작                                                                |
+| 9    | (4단계 별도) 에러 처리 경계 설계·구현                                                                                                                                                              | 인위적 실패 재현으로 검증                                                                   |
 
 각 단계가 끝나면 공통으로 `pnpm check` 통과 + 0단계 체크리스트(검색·카테고리·정렬·페이지네이션·URL·장바구니/위시리스트 동기화) 중 해당 단계와 관련된 항목만 빠르게 재확인한다.
 
@@ -332,7 +334,7 @@ barrel을 안 쓰므로 "공개 파일"이 곧 다른 슬라이스가 import하�
 
 ### `ProductCard`와 장바구니·위시리스트 행위의 조합 방법
 
-`entities/product/ui/ProductCard`는 서브타이틀·타이틀·가격만 그리고 `children`으로 액션 영역을 받는다. `widgets/body`가 `ProductCard`(entity)와 `features/toggle-wishlist`·`features/add-to-cart`(버튼 UI, 내부적으로 `entities/wishlist`·`entities/cart`의 액션을 가져다 씀)를 조합해 `<ProductCard product={p}>{wishlistButton}{cartButton}</ProductCard>` 형태로 렌더링한다. entity가 feature를 직접 import하지 않고도(역방향 의존 없이) 상품 표현과 사용자 행위를 함께 보여줄 수 있다.
+`entities/product/ui/ProductCard`는 서브타이틀·타이틀·가격만 그리고 `children`으로 액션 영역을 받는다. `widgets/product-list-section`가 `ProductCard`(entity)와 `features/toggle-wishlist`·`features/add-to-cart`(버튼 UI, 내부적으로 `entities/wishlist`·`entities/cart`의 액션을 가져다 씀)를 조합해 `<ProductCard product={p}>{wishlistButton}{cartButton}</ProductCard>` 형태로 렌더링한다. entity가 feature를 직접 import하지 않고도(역방향 의존 없이) 상품 표현과 사용자 행위를 함께 보여줄 수 있다.
 
 ## O — Optimization
 
@@ -422,7 +424,7 @@ barrel을 안 쓰므로 "공개 파일"이 곧 다른 슬라이스가 import하�
 
 | 대상                                                               | 후보 A                                                                                          | 후보 B                                                                                                                                                | 최종 결정                                                | 기준                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ProductCard`                                                      | `entities/product/ui`                                                                           | `widgets/product-card`                                                                                                                                | **`entities/product/ui`, 찜/담기는 `children`으로 받음** | entity는 features를 import할 수 없다(역방향 의존). 찜/담기 없이 순수 상품 정보만 필요한 곳도 있을 수 있어, ProductCard는 서브타이틀·타이틀·가격만 그리고, 찜/담기 버튼(features)은 `widgets/body`가 `children`으로 조합해서 넘김                                                                                                                                                                                                                                                                                                                                                                                 |
+| `ProductCard`                                                      | `entities/product/ui`                                                                           | `widgets/product-card`                                                                                                                                | **`entities/product/ui`, 찜/담기는 `children`으로 받음** | entity는 features를 import할 수 없다(역방향 의존). 찜/담기 없이 순수 상품 정보만 필요한 곳도 있을 수 있어, ProductCard는 서브타이틀·타이틀·가격만 그리고, 찜/담기 버튼(features)은 `widgets/product-list-section`가 `children`으로 조합해서 넘김                                                                                                                                                                                                                                                                                                                                                                 |
 | 상품 목록 queryOptions                                             | `entities/product/api`                                                                          | 상품 목록 페이지의 `api`                                                                                                                              | **`entities/product/api` 유지**                          | `ProductView`(`useProductList`), `HomeView`(카테고리 호버 프리페치), `Header`(상품 메뉴 호버 프리페치) 3곳에서 이미 재사용 중 — "여러 페이지에서 재사용되는가" 기준을 명확히 충족                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 장바구니 store                                                     | `entities/cart/model`(상태·액션·read selector 전부) + `features/add-to-cart`(버튼 UI만)         | 통짜로 `features/cart/model` 유지                                                                                                                     | **entity+feature 분리**                                  | 카운트 조회(`Header`)처럼 도메인 상태를 읽기만 하는 소비처와, 토글이라는 사용자 행위를 수행하는 소비처(`ProductCard`)의 필요가 다르다. `Header`는 행위 없이 읽기만 하므로 feature를 몰라도 되게 만들고 싶다. **스토어 경계 확정**: Zustand는 상태·액션을 한 `create()`에 같이 두는 게 자연스러워, `setSingleIdInCart` 같은 액션 함수까지 `entities/cart`가 통째로 소유한다. `features/add-to-cart`는 이 스토어를 가져다(`entity → feature` 아니라 `feature → entity`이므로 허용) 버튼 마크업·`aria-label`만 구현한다                                                                                             |
 | 위시리스트 store                                                   | `entities/wishlist/model`(상태·액션·read selector 전부) + `features/toggle-wishlist`(버튼 UI만) | 통짜로 `features/wishlist/model` 유지                                                                                                                 | **entity+feature 분리**                                  | 장바구니 store와 동일한 기준. 과제 문서 예시 문장에도 `features/toggle-wishlist`라는 이름이 그대로 등장해 기대하는 분리 방향과 일치. 스토어 경계도 장바구니와 동일 — `entities/wishlist`가 액션까지 전부 소유, `features/toggle-wishlist`는 버튼 UI만                                                                                                                                                                                                                                                                                                                                                            |
@@ -486,16 +488,17 @@ React Error Boundary(`error.tsx` 포함)는 **렌더링 중** 발생하는 에�
 - `src/entities/wishlist/`(`model/useWishlistStore.ts`, `model/useWishlistStore.test.ts`)
 - `src/features/toggle-wishlist/`(`ui/ToggleWishlistButton.tsx`)
 
-**삭제 후 수정이 필요한 파일 (4개)**
+**삭제 후 수정이 필요한 파일 (5개)**
 
-| 파일                                                          | 수정 내용                                                                           |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `widgets/header/ui/Header.tsx`                                | `entities/wishlist`의 카운트 selector import 제거, "위시리스트 {count}" 마크업 제거 |
-| `widgets/header/ui/Header.test.tsx`                           | 위시리스트 카운트 검증 케이스 제거                                                  |
-| `widgets/product-list-section/ui/ProductListSection.tsx`      | `ToggleWishlistButton`을 `ProductCard`의 `children`으로 조합하던 부분 제거          |
-| `widgets/product-list-section/ui/ProductListSection.test.tsx` | 위시리스트 관련 검증(Header 카운트 동기화 중 위시리스트 부분) 제거                  |
+| 파일                                                          | 수정 내용                                                                                                                                               |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `widgets/header/ui/Header.tsx`                                | `entities/wishlist`의 카운트 selector import 제거, "위시리스트 {count}" 마크업 제거                                                                     |
+| `widgets/header/ui/Header.test.tsx`                           | 위시리스트 카운트 검증 케이스 제거                                                                                                                      |
+| `widgets/product-list-section/ui/ProductListSection.tsx`      | `ToggleWishlistButton`을 `ProductCard`의 `children`으로 조합하던 부분 제거                                                                              |
+| `widgets/product-list-section/ui/ProductListSection.test.tsx` | 위시리스트 관련 검증(Header 카운트 동기화 중 위시리스트 부분) 제거                                                                                      |
+| `src/app/providers.tsx`                                       | `useWishlistStore` import와 `MainProvider`의 `useWishlistStore.persist.rehydrate()` 호출 제거 — 안 지우면 삭제된 엔티티를 계속 import해서 빌드가 깨진다 |
 
-**판정**: 삭제 대상이 `entities/wishlist`, `features/toggle-wishlist` 두 슬라이스로 응집돼 있고, 수정 대상도 "위시리스트를 소비하는 쪽"(Header, ProductListSection) 4곳으로 grep(`wishlist`, `Wishlist`) 한 번이면 다 찾을 수 있다. `entities/product`(`ProductCard` 포함)·`features/product-filter`·페이지 쪽은 안 건드려도 될 것으로 보인다.
+**판정**: 삭제 대상이 `entities/wishlist`, `features/toggle-wishlist` 두 슬라이스로 응집돼 있고, 수정 대상도 "위시리스트를 소비하는 쪽"(Header, ProductListSection, `providers.tsx`) 5곳으로 grep(`wishlist`, `Wishlist`) 한 번이면 다 찾을 수 있다. `entities/product`(`ProductCard` 포함)·`features/product-filter`·페이지 쪽은 안 건드려도 될 것으로 보인다.
 
 ### 신상품 뱃지를 상품 카드에 추가한다면
 
@@ -507,7 +510,7 @@ React Error Boundary(`error.tsx` 포함)는 **렌더링 중** 발생하는 에�
 | `entities/product/ui/ProductCard.tsx`             | `isNewProduct(product)`가 true면 뱃지 렌더링                                                                                        |
 | `entities/product/ui/ProductCard.test.tsx` (선택) | 뱃지 노출 조건 테스트 추가                                                                                                          |
 
-**판정**: `ProductCard`가 홈·상품목록 양쪽에서 동일 컴포넌트로 재사용되고 있어서, `entities/product` 안에서만 고치면 두 화면 모두에 반영될 것으로 보인다. `widgets/body`, `HomeView`, `ProductView`, 다른 entity/feature는 안 건드려도 될 듯하다 — "이 상품이 신상품인가"라는 판단은 `Product` 도메인 지식에 가까워 `entities/product` 밖으로 새어나갈 이유가 딱히 없다고 봤다.
+**판정**: `ProductCard`가 홈·상품목록 양쪽에서 동일 컴포넌트로 재사용되고 있어서, `entities/product` 안에서만 고치면 두 화면 모두에 반영될 것으로 보인다. `widgets/product-list-section`, `HomeView`, `ProductView`, 다른 entity/feature는 안 건드려도 될 듯하다 — "이 상품이 신상품인가"라는 판단은 `Product` 도메인 지식에 가까워 `entities/product` 밖으로 새어나갈 이유가 딱히 없다고 봤다.
 
 ## Advanced (선택)
 
@@ -527,7 +530,7 @@ React Error Boundary(`error.tsx` 포함)는 **렌더링 중** 발생하는 에�
 **검증 결과**: `pnpm lint` 실행 결과 위반 2건 발견.
 
 - `entities/product/model/product.ts` → `entities/category`: 타입 전용 참조였음이 확인되어 예외 규칙으로 해소
-- `widgets/product-card/ui/ProductCard.test.tsx` → `widgets/header/ui/Header`: 문제 5번에서 이미 발견했던 실제 위반. **의도적으로 안 고치고 남겨둠** — 마이그레이션 3~4단계(`ProductCard`를 entity로 이동, 테스트를 `Body.test.tsx`로 이관)가 끝나면 자연히 해소되는 위반이라, 하네스가 실제로 유효하다는 증거로 남긴다. 즉 지금은 `pnpm check`가 이 1건 때문에 실패하는 상태이고, 이는 의도된 것이다.
+- `widgets/product-card/ui/ProductCard.test.tsx` → `widgets/header/ui/Header`: 문제 5번에서 이미 발견했던 실제 위반. **의도적으로 안 고치고 남겨둠** — 마이그레이션 3~4단계(`ProductCard`를 entity로 이동, 테스트를 `ProductListSection.test.tsx`로 이관)가 끝나면 자연히 해소되는 위반이라, 하네스가 실제로 유효하다는 증거로 남긴다. 즉 지금은 `pnpm check`가 이 1건 때문에 실패하는 상태이고, 이는 의도된 것이다.
 
 `typecheck`/`build`는 하네스 도입과 무관하게 정상 통과 확인.
 
@@ -537,13 +540,13 @@ R 섹션에서 정한 대로 처음엔 보류했지만, 기본 과제와 하네�
 
 ## FSD 이해 확인 질문
 
-1. `ProductCard`가 찜 버튼을 직접 import하면 **entity → feature 역방향 의존**을 어긴다. entity는 자기보다 상위인 features/widgets를 알아서는 안 되기 때문이다. 대신 `ProductCard`는 `children`으로 액션 영역을 받고, 실제 조합은 `widgets/body`(또는 page)에서 `<ProductCard>{찜버튼}{담기버튼}</ProductCard>` 형태로 한다.
+1. `ProductCard`가 찜 버튼을 직접 import하면 **entity → feature 역방향 의존**을 어긴다. entity는 자기보다 상위인 features/widgets를 알아서는 안 되기 때문이다. 대신 `ProductCard`는 `children`으로 액션 영역을 받고, 실제 조합은 `widgets/product-list-section`(또는 page)에서 `<ProductCard>{찜버튼}{담기버튼}</ProductCard>` 형태로 한다.
 
 2. 반드시 그런 것은 아니다 — 재사용 범위보다 "사용자 행위 단위인가"가 더 중요한 기준이라고 판단했다. `features/product-filter`는 현재 `/products` 한 페이지에서만 쓰이지만, 검색·정렬·페이지네이션이라는 명확한 사용자 행위이고 `model`(URL 파싱/상태)과 `ui`(폼)가 협력하는 단위라 feature로 유지했다.
 
 3. 아니다 — `formatPrice`가 콤마·통화 기호만 붙이는 순수 포맷팅이면 도메인 지식이 없으므로 `shared/lib`이 맞다. 하지만 회원 등급별 할인가 계산이나 상품별 특별 정책이 섞이는 순간 그건 비즈니스 로직이 되므로, "shared는 비즈니스 로직을 모른다"는 이 프로젝트의 원칙(`PageHeading`을 shared에 둔 이유와 반대되는 기준)에 따라 `entities/product`로 옮겨야 한다.
 
-4. `features/toggle-wishlist`와 `features/add-to-cart`는 서로를 import하지 않고, `widgets/body`가 둘 다 가져다 `ProductCard`의 `children`으로 함께 조합한다. widget 레벨에서 두 feature를 나란히 배치하는 방식이다.
+4. `features/toggle-wishlist`와 `features/add-to-cart`는 서로를 import하지 않고, `widgets/product-list-section`가 둘 다 가져다 `ProductCard`의 `children`으로 함께 조합한다. widget 레벨에서 두 feature를 나란히 배치하는 방식이다.
 
 5. 서버 응답(상품 조회 결과)의 SoT는 TanStack Query 캐시 하나, 클라이언트 로컬 상태(찜/장바구니)의 SoT는 Zustand 하나로 분리해서 유지했다. 둘을 복사해서 별도 `useState`나 다른 저장소에 옮기면 두 값이 어긋나는 동기화 버그가 생길 수 있어, 각 컴포넌트가 필요한 저장소를 직접 구독하게 했다.
 
