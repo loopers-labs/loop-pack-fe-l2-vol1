@@ -20,7 +20,7 @@ const ENDPOINT = '/products';
 /**
  * ProductListQuery(사용자 URL 상태)를 이 백엔드가 받는 쿼리스트링으로 옮긴다.
  * 계약 안에 가둬 두려고 export 하지 않는다.
- * scenario 는 검증 전용 제어값이라 여기 포함하지 않는다.
+ * scenario 도 서버 응답을 바꾸는 조건이므로 함께 옮긴다(근거는 model/types.ts).
  */
 const toSearchParams = (query: ProductListQuery): string => {
   const params = new URLSearchParams();
@@ -30,6 +30,7 @@ const toSearchParams = (query: ProductListQuery): string => {
   if (query.sort) params.set('sort', query.sort);
   if (query.page) params.set('page', String(query.page));
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
+  if (query.scenario) params.set('scenario', query.scenario);
 
   const queryString = params.toString();
 

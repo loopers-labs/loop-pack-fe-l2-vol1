@@ -15,7 +15,8 @@ interface ApiClientOptions {
  *
  * - 분리 근거 : fetch를 메서드 별로 쓸 수 있게 분리하지 없으면 각 service 함수가 fetch를 사용하기 위한 baseUrl 하드코딩, method 주입을 반복해서 적어야한다고 생각하였습니다.
  * 프로젝트에서 api 호출은 product 도메인 하나로 끝나지 않기 때문에 전역 레이어로 분리해도 괜찮다 판단하였고, Url QueryString 첨부는 사용하는 service 함수의 관심사라라고 생각하여 해당 클래스에서는 분리하였습니다.
- * - SSR 대응 : 브라우저는 상대경로(`/api`)면 현재 origin으로 해석되지만, 서버(SSR prefetch)에는 origin이 없어 절대 URL이 필요합니다. 서버에서는 `NEXT_PUBLIC_SITE_URL`(없으면 localhost)로 origin을 붙여 서버·클라 공용으로 씁니다.
+ * - SSR 대응 : 브라우저는 상대경로(`/api`)면 현재 origin으로 해석되지만, 서버(SSR prefetch)에는 origin이 없어 절대 URL이 필요합니다. 서버에서는 `APP_ORIGIN`(없으면 localhost)로 origin을 붙여 서버·클라 공용으로 씁니다.
+ *   `NEXT_PUBLIC_` 접두사를 쓰지 않습니다: 이 값은 서버 분기에서만 읽으므로 클라이언트 번들에 인라인될 이유가 없습니다.
  */
 class ApiClient implements ApiClientOptions {
   baseUrl: string;
@@ -27,7 +28,7 @@ class ApiClient implements ApiClientOptions {
   private resolveUrl(endpoint: string): string {
     const base =
       typeof window === 'undefined'
-        ? `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}${this.baseUrl}`
+        ? `${process.env.APP_ORIGIN ?? 'http://localhost:3000'}${this.baseUrl}`
         : this.baseUrl;
 
     return `${base}${endpoint}`;

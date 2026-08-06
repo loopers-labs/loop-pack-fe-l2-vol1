@@ -11,7 +11,9 @@ import { CATEGORY_FILTER_VALUES, type CategoryFilter, PRODUCT_SORT_VALUES } from
  * 조건의 원본은 URL 이다(nuqs). 공유, 새로고침, 앞뒤 이동에서 복원되어야 하기 때문.
  * 기본 정렬도 'latest'로 두고, API 요청에 sort=latest 를 명시한다(sort 생략은 4주차 호환용)
  * 필터 값 목록은 같은 슬라이스 config의 SSOT를 사용한다
- * scenario 는 검증 전용 제어값이라 URL 상태에 포함하지 않는다.
+ * scenario 는 사용자가 고르는 필터가 아니므로 여기서 다루지 않는다.
+ * URL 에는 실리지만, 읽어서 조회 조건에 붙이는 것은 조회하는 쪽(_pages/product-list)의 일이다.
+ * resetFilters 가 scenario 를 지우지 않는 것도 같은 이유다 — 이 훅의 소유가 아니다.
  *
  * 조회 조건(ProductListQuery)으로 조립하는 것은 이 훅의 일이 아니다.
  * 필터는 "사용자가 무엇을 골랐는가"까지만 알고, 그것으로 어떻게 조회할지는

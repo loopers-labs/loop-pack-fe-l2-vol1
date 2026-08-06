@@ -6,7 +6,7 @@ import type { ApiErrorResponse } from '@/shared/api/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 const sortValues = ['latest', 'popular', 'price-asc', 'price-desc'] as const satisfies readonly ProductSort[];
-const scenarioValues = ['empty', 'error'] as const satisfies readonly MockApiScenario[];
+const scenarioValues = ['empty', 'error', 'slow'] as const satisfies readonly MockApiScenario[];
 
 const isProductSort = (value: string): value is ProductSort => sortValues.some((sort) => sort === value);
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ProductLis
     return NextResponse.json({ message: '요청 조건을 확인해주세요.' }, { status: 400 });
   }
 
-  await waitForMockApi();
+  await waitForMockApi(scenario === 'slow' ? 1_500 : 500);
 
   if (scenario === 'error') {
     return NextResponse.json({ message: '상품 목록을 불러오지 못했습니다.' }, { status: 500 });
