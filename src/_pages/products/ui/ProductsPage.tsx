@@ -3,6 +3,7 @@ import type { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
 import { ProductList } from './ProductList';
+import { ProductListPending } from './ProductListPending';
 
 import { productQueries } from '@/entities/product';
 import {
@@ -30,13 +31,7 @@ export function ProductsPage({
       </section>
 
       <section className="week05-section" aria-label="상품 검색 결과">
-        <Suspense
-          fallback={
-            <p className="week05-status" role="status">
-              상품 목록을 불러오는 중입니다…
-            </p>
-          }
-        >
+        <Suspense fallback={<ProductListPending />}>
           <ProductListContent searchParams={searchParams} />
         </Suspense>
       </section>

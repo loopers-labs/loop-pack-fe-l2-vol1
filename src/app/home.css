@@ -129,6 +129,13 @@
   cursor: not-allowed;
 }
 
+.week05-skeleton,
+.week05-product-actions .week05-skeleton {
+  background: #ececec;
+  border-color: transparent;
+  color: transparent;
+}
+
 .week05-status,
 .week05-empty {
   padding: 48px 0;

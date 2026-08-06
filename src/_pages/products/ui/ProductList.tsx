@@ -3,6 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
+import { ProductListPending } from './ProductListPending';
+
 import { ProductCard, productQueries } from '@/entities/product';
 import { CartToggleButton } from '@/features/cart';
 import {
@@ -55,11 +57,7 @@ export function ProductList() {
   }
 
   if (!data) {
-    return (
-      <p className="week05-status" role="status">
-        상품 목록을 불러오는 중입니다…
-      </p>
-    );
+    return <ProductListPending />;
   }
 
   return (
