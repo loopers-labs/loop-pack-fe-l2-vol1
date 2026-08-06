@@ -64,6 +64,13 @@
 - **반증 방법**: 이미지 내용·비율·표시 크기를 유지한 채 전송 크기만 표시 크기 기준으로 줄여 같은 조건으로 재측정 — LCP가 측정 범위(16ms)보다 크게 줄지 않으면 가설을 기각한다.
 - **먼저 시도할 가장 작은 변경**: hero 이미지를 실제 표시 크기(모바일 412px 폭 × DPR 1.75 ≈ 720px)에 맞는 후보로 리사이즈·재인코딩해 전송 크기부터 줄인다.
 
-## 남은 0단계 항목
+## 증거 자산
 
-- [ ] DevTools 실측 녹화(filmstrip·Layout shifts track·slow 목록 2종) — 제출 증거용은 사용자가 직접. 위 관찰은 자동화 스크립트 기준.
+| 자산 | 위치 | 내용 |
+| --- | --- | --- |
+| Lighthouse filmstrip 8프레임 + final | `docs/perf/assets/before-filmstrip-*.jpg` | 표시 순서: 375ms 빈 화면 → 750ms **헤더+로딩 텍스트 먼저** → 1125ms~ hero 렌더 (관측 시간 기준. 스로틀 시뮬레이션에서는 hero 완성이 LCP 40.7s 시점) |
+| slow 목록 녹화 GIF (7프레임) | `docs/perf/assets/before-slow-list.gif` | 홈(hero) → 목록 → **갱신 시 목록 소멸+`불러오는 중…`** → 인기순 목록 → **새 키 검색 pending** → 결과 1개. `scenario=slow`는 앱 코드 무변경, 브라우저에서 `window.fetch`를 감싸 주입 |
+| Performance trace (DevTools에서 열기 가능) | `docs/notes/perf-week07/devtools-run-0.trace.json.gz` (개인 노트 영역, repo 미포함) | `--throttling-method=devtools --save-assets`로 생성. **주의: localhost는 devtools 방식 대역폭 제한이 완전히 적용되지 않아(해당 런 LCP 3.7s) 절대값 증거로 쓰지 않는다** — 요청 순서·의존 체인 확인용. 수치 증거는 위 시뮬레이트 5회 |
+| Lighthouse 원본 JSON (run1) | `docs/notes/perf-week07/run1.json` | 표의 모든 수치 출처. 재생성: `npx lighthouse http://localhost:3000/ --only-categories=performance --output=json --chrome-flags="--headless=new"` |
+
+Layout shifts: 시뮬레이트 5회·devtools 런 모두 CLS 0.000 — shift 이벤트 자체가 없어 track에 표시할 항목이 없다(hero `aspect-ratio` 선점 + `img` width/height).
