@@ -407,16 +407,32 @@ features에 내부(model 등)가 생기면 그 시점에 index를 추가한다 �
 
 ## 5단계 — 삭제 시나리오 자가 검증
 
+<!-- AI 초안 -->
+
+방법: 구조 지식만으로 목록을 먼저 쓰고, grep으로 대조했다(2026-08-06). 코드는 수정하지 않았다.
+
 **위시리스트 기능을 통째로 제거한다면**
 
-- 삭제할 폴더·파일:
-- 삭제 후 수정이 필요한 파일:
-- 판정:
+- 삭제할 폴더·파일 (통째, 2개 슬라이스):
+  - `entities/wishlist/` — `index.ts`, `model/store.ts`
+  - `features/toggle-wishlist/` — `ui/WishButton.tsx`
+- 삭제 후 수정이 필요한 파일 (조합 지점 3곳, 각각 몇 줄):
+  - `app/SiteHeader.tsx` — 배지 1줄 + import
+  - `_pages/home/ui/HomePage.tsx` — `WishButton` 2곳 + import
+  - `_pages/products/ui/ProductsPage.tsx` — `WishButton` 1곳 + import
+- grep 대조: 예측 목록과 일치. 잔존 참조는 `entities/product/ui/ProductCard.tsx`의 **주석** 1곳("담기·찜 같은 행위는 actions 슬롯으로")과 `examples/`(강사 자료)뿐 — 코드 참조 아님.
+- **판정: 응집 성공.** 삭제 대상이 기능명이 붙은 슬라이스 2개라 grep 없이 폴더명만으로 나열된다. 수정 대상 3곳도 전부 RFC I절이 문서화한 조합 지점이다. 전환 전에는 같은 실험에서 `shopStore.ts`·`ProductGrid.tsx`·`SiteHeader.tsx` **세 파일 모두를 열어 장바구니 코드와 분리하는 수술**이 필요했다(부록 A 피인용 표) — 삭제가 "폴더 제거 + 조합 줄 제거"로 바뀐 것이 이번 전환의 실측 성과다.
 
 **신상품 뱃지를 상품 카드에 추가한다면**
 
-- 터치할 파일:
-- 판정:
+- 터치할 파일 (전부 `entities/product` 슬라이스 내부):
+  - `entities/product/ui/ProductCard.tsx` — 뱃지 렌더
+  - `entities/product/model/`(신설) — "신상품" 판정 로직. `createdAt`은 현재 프론트 미사용(`types/commerce.ts` 정의뿐)이라 판정 규칙을 새로 정해야 하고, 그건 표현이 아니라 도메인 규칙이므로 model 세그먼트가 자리다
+  - `entities/product/index.ts` — 판정 로직을 카드 내부에서만 쓰면 **불변**, 외부 공개가 필요해지면 그때 export 추가
+- 페이지·features·shared 무접촉. 뱃지는 행위가 아니라 표현이므로 actions 슬롯이 아니라 카드 내부가 맞다.
+- **판정: 변경 반경을 자신 있게 예측할 수 있다** — 슬라이스 하나 안에서 끝난다. 주의점 하나를 기록해 둔다: 홈의 "신상품" 섹션은 서버가 고른 `newProducts`이고, 클라이언트가 `createdAt`으로 따로 판정하면 두 기준이 어긋날 수 있다. 구현 시 기준을 하나로 정해야 한다(서버 플래그를 받거나, 클라이언트 규칙을 서버와 합의).
+
+**파편화 발견 여부:** 없음. 이번 주에 추가로 고칠 것도 없다.
 
 ---
 
