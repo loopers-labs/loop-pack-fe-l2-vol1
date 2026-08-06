@@ -26,15 +26,15 @@
 
 **LCP element**
 
-![LCP element](images/LCP_element.jpg)
+![LCP element](images/step0-LCP_element.jpg)
 
 **Performance filmstrip**
 
-![Performance filmstrip](images/performance_filmstrip.jpg)
+![Performance filmstrip](images/step0-performance_filmstrip.jpg)
 
 **Network waterfall의 document·홈 데이터·Hero 이미지 요청 시작 순서와 전송 크기**
 
-![Network waterfall](images/network_warterfall.jpg)
+![Network waterfall](images/step0-network_warterfall.jpg)
 - 홈 데이터의 경우 React Query prefetch(dehydrate)로 서버에서 조회되어 브라우저 Network Waterfall에는 별도 요청이 나타나지 않음
 
 
@@ -50,7 +50,7 @@
 
 ### LCP를 서버 응답 대기, 이미지 요청 시작 대기, 이미지 전송, 화면에 그려질 때까지의 시간으로 나눠 관찰
 
-![LCP breakdown](images/LCP_breakdown.jpg)
+![LCP breakdown](images/step1-LCP_breakdown.jpg)
 - Time to first byte = 서버 응답 대기
 - Resource load delay = 이미지 요청 시작 대기
 - Resource load duration = 이미지 전송
@@ -109,7 +109,7 @@
 
 ### LCP를 서버 응답 대기, 이미지 요청 시작 대기, 이미지 전송, 화면에 그려질 때까지의 시간으로 나눠 관찰 after
 
-![LCP breakdown](images/LCP_breakdown_after.jpg)
+![LCP breakdown](images/step1-LCP_breakdown_after.jpg)
 
 **before와 비교하여 Resource load duration 7904ms -> 530ms로 감소, 다만 Element Render delay가 37ms -> 62ms로 미세하게 상승**
 
@@ -173,12 +173,12 @@
 
 **정상 empty**
 
-![정상 empty](recordings/step3-정상empty.jpg)
+![정상 empty](images/step3-정상empty.jpg)
 - metadata가 `<head>`가 아니라 문서 끝(body)에 붙는 건 Next의 **스트리밍 metadata**(기본): 느린 `generateMetadata`를 안 기다리고 셸을 먼저 보낸 뒤 완료되면 태그를 body에 추가한다. JS 실행 봇(Googlebot)은 최종 DOM으로 정상 인식하고, JS 미실행 봇(facebookexternalhit)엔 스트리밍을 꺼 `<head>`에 blocking으로 넣으므로 SEO·공유 카드 모두 문제없다.
 
 **metadata query failure**
 
-![metadata query failure](recordings/step3-metadata-failure.jpg)
+![metadata query failure](images/step3-metadata-failure.jpg)
 - 스크린샷의 `<title>상품 목록 | Commerce`는 DevTools live DOM이라 클라이언트 `document.title` 동기화(`ProductList` useEffect)가 덮어쓴 값이다. `products/layout.tsx`엔 metadata가 없으므로 **서버(크롤러가 받는 SSR) title은 실패 시 루트 `Commerce`** 가 맞고, 같은 화면의 og:title·description·og:image가 루트값인 것으로 metadata 실패가 확인된다(목록 자체는 클라이언트가 정상 로드해 총 30개가 보임).
 
 ### 3-2 서버 호출 계수
@@ -216,7 +216,7 @@
 - 일반 UA는 Next가 셸을 **즉시 스트리밍**(TTFB 5ms), 느린 섹션은 Suspense로 뒤따름. 크롤러 UA엔 **스트리밍을 끄고** 완성 문서를 다 만든 뒤 첫 바이트 → TTFB가 곧 slow 지연 전체.
 - 즉 "metadata가 slow 데이터를 기다린 비용"은 크롤러 TTFB로 드러나고, 일반 사용자는 이걸 느끼지 못함. total(완성 시점)은 양쪽 동일.
 - 터미널 증거 (두 UA curl 출력):
-![UA 타이밍 터미널](recordings/step3-UA타이밍-터미널.png)
+![UA 타이밍 터미널](images/step3-UA타이밍-터미널.png)
 
 ### 3-4 정상 empty와 metadata query failure가 서로 다른 fallback
 failure 재현: `APP_ORIGIN=http://127.0.0.1:9 pnpm build`, `APP_ORIGIN=http://127.0.0.1:9 pnpm start` → 서버 fetch base(:9) 도달 불가 → `fetchQuery` NetworkError → `generateMetadata` catch → `{}` → **루트 공통 metadata 상속**
@@ -252,17 +252,17 @@ failure 재현: `APP_ORIGIN=http://127.0.0.1:9 pnpm build`, `APP_ORIGIN=http://1
 
 **LCP element**
 
-![LCP element after](images/LCP_element_after.jpg)
+![LCP element after](images/step4-LCP_element_after.jpg)
 - before와 비교: LCP 요소는 before/after 모두 **동일하게 hero 이미지**. Resource load duration이 7,904ms에서 270ms로 단축(4단계 재측정, 4-8 `fetchPriority` 적용 후).
 
 **Performance filmstrip**
 
-![Performance filmstrip after](images/performance_filmstrip_after.jpg)
+![Performance filmstrip after](images/step4-performance_filmstrip_after.jpg)
 - before와 비교: 표시 순서(Header → 페이지 제목 → Hero)는 before/after 동일하나, Hero가 채워지는 시점이 크게 앞당겨짐
 
 **Network waterfall의 document·홈 데이터·Hero 이미지 요청 시작 순서와 전송 크기**
 
-![Network waterfall after](images/network_warterfall_after.jpg)
+![Network waterfall after](images/step4-network_warterfall_after.jpg)
 - 홈 데이터의 경우 React Query prefetch(dehydrate)로 서버에서 조회되어 브라우저 Network Waterfall에는 별도 요청이 나타나지 않음
 - before와 비교:
   - **Hero 이미지 전송 크기**: 7.5MB → **130kB(AVIF)** 로 대폭 감소 — 이 구간이 LCP 병목이었으므로 가장 큰 개선.
