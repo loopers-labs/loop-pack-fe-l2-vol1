@@ -10,9 +10,18 @@ import {
 import { Header } from '@/widgets/header/Header';
 import { ProductCard } from '@/widgets/product-card/ProductCard';
 import { SkeletonCard } from '@/shared/ui/SkeletonCard';
+import { ApiError } from '@/shared/api/fetcher';
 import { useProductPage } from '../model/useProductPage';
 import { useProductList } from '../model/useProductList';
 import { Product } from '@/entities/product/model';
+
+// [AI] TanStack Query v5의 error는 unknown 타입이므로 ApiError로 좁혀서 진짜 메시지를 꺼낸다.
+// ApiError가 아니면(예: 네트워크 단절) 기본 메시지로 대체한다.
+const getFailureReason = (error: unknown): string => {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof TypeError) return '네트워크 연결을 확인해 주세요.';
+  return '상품을 불러오지 못했습니다.';
+};
 
 export const ProductList = () => {
   const {
@@ -26,47 +35,67 @@ export const ProductList = () => {
     setSearchInput,
     query,
   } = useProductPage();
-  const { data, isPending, isError, isPlaceholderData, totalPages, totalCount, refetch } =
+  const { data, isPending, isError, error, isPlaceholderData, totalPages, totalCount, refetch } =
     useProductList(page, query);
 
+  // [AI] 상태를 "전체 교체형"과 "오버레이형"으로 분류한다.
+  // - 전체 교체(영역을 통째로 바꿈): data가 아예 없을 때만 → 최초 진입(skeleton), 최초 실패(에러 전체화면)
+  // - 오버레이(목록 위에 얹음): data가 있을 때 → 갱신 중(refresh-bar), 갱신 실패(에러 알림 + 기존 목록)
+  // isError와 error는 같은 신호(error truthy ⟺ isError true)라, isError로 먼저 return하면
+  // 갱신 실패 분기가 dead code가 된다. 그래서 "data 유무"를 전체 교체의 유일한 기준으로 쓴다.
   const renderResults = () => {
-    if (isPending)
-      return (
-        <div className="grid">
-          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      );
-
-    if (isError)
-      return (
-        <p role="alert">
-          상품을 불러오지 못했습니다.{' '}
-          <button type="button" onClick={() => refetch()}>
-            다시 시도
-          </button>
-        </p>
-      );
-    if (data?.products.length === 0) {
-      return (
-        <p>
-          category: {category}, searchInput: {searchInput}에 대한 검색 결과가 없습니다.
-        </p>
-      );
+    // 1) data가 없을 때만 전체 교체
+    if (!data) {
+      if (isPending)
+        return (
+          <div className="grid">
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        );
+      // [AI] 최초 실패 — 데이터가 아예 없는 상태에서의 실패.
+      // 500은 throwOnError로 app/error.tsx가 담당하므로 여기는 주로 4xx/네트워크.
+      if (isError)
+        return (
+          <p role="alert">
+            {getFailureReason(error)}{' '}
+            <button type="button" onClick={() => refetch()}>
+              다시 시도
+            </button>
+          </p>
+        );
+      return null;
     }
 
+    // 2) data가 있으면(성공/placeholder) 목록을 항상 그리고, 상태는 그 위에 오버레이.
     return (
       // [AI] .results를 relative로 두고, isPlaceholderData일 때 상단에 얇은 막대를 absolute로 띄운다.
       // absolute라 기존 목록을 비우거나 밀지 않아 갱신 중에도 레이아웃이 안정적이다(CLS 방지).
       <div className="results">
         {isPlaceholderData && <div className="refresh-bar" role="status" aria-label="갱신 중" />}
-        <p>총 {totalCount.toLocaleString()}개</p>
-        <div className="grid">
-          {data?.products.map((product: Product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {/* [AI] 갱신 실패 — 기존 목록은 유지한 채 에러 알림과 재시도만 얹는다. */}
+        {isError ? (
+          <p role="alert">
+            {getErrorMessage(error)} 이전 목록을 보여드려요.{' '}
+            <button type="button" onClick={() => refetch()}>
+              다시 시도
+            </button>
+          </p>
+        ) : (
+          <p>총 {totalCount.toLocaleString()}개</p>
+        )}
+        {data.products.length === 0 ? (
+          <p>
+            category: {category}, searchInput: {searchInput}에 대한 검색 결과가 없습니다.
+          </p>
+        ) : (
+          <div className="grid">
+            {data.products.map((product: Product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     );
   };

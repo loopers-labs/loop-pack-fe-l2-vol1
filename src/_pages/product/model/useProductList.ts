@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 export const useProductList = (page: number, query: object) => {
-  const { data, isPending, isError, isPlaceholderData, refetch } = useQuery(
+  const { data, isPending, isError, error, isPlaceholderData, refetch } = useQuery(
     productQueries.list(query)
   );
 
@@ -23,6 +23,7 @@ export const useProductList = (page: number, query: object) => {
     isPending,
     isError,
     isPlaceholderData,
+    error,
     totalPages,
     totalCount,
     refetch,
