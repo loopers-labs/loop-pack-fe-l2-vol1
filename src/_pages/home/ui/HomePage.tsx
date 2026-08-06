@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@/entities/product";
+import { HeroSection } from "@/examples/week-07-performance/HeroSection";
 import { ProductCardWithActions } from "@/widgets/product-card";
 import { homeQueryOptions } from "../api/homeQuery";
 
@@ -57,6 +58,9 @@ export function HomePage() {
         <p>{home.banner.description}</p>
         <h1>{home.banner.title}</h1>
       </section>
+      {/* 7주차 0단계 Before: 최적화하지 않은 원본 Hero를 그대로 붙여 LCP를 측정한다.
+          배너 문구가 위 h1과 겹치는 것은 1단계에서 렌더링 경계를 정할 때 함께 정리한다. */}
+      <HeroSection title={home.banner.title} description={home.banner.description} />
       <section className="shop-section">
         <h2>카테고리</h2>
         <div className="shop-categories">
