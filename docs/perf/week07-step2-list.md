@@ -42,4 +42,6 @@ Before(0단계)에서 확인한 문제 두 개에만 개입했다: ① 최초 �
 
 - `docs/perf/assets/after-list-states.gif` (9프레임) — ①→②→③→⑤→④→⑥ 순 재현 녹화
 - 원본 Lighthouse JSON: `docs/notes/perf-week07/` (개인 영역)
-- SHA: 코드 변경 커밋 참조 (`git log --oneline docs/perf/week07-step2-list.md` 직전 feat 커밋)
+- SHA: `1b1e64d` (2단계 코드+문서 커밋)
+
+주의: 위 재현은 2단계 시점(`1b1e64d`) 기준이다. **3단계(`268acdc`) 이후에는 조건 변경에 서버 경유 데이터가 함께 흐르므로 브라우저 fetch 주입만으로는 목록 에러가 재현되지 않는다** — 주입 지점이 서버로 이동했을 뿐, 실제 API 장애 시 클라 분기는 코드 불변으로 동작한다(`week07-step4-after.md`의 관찰·근거 참조).

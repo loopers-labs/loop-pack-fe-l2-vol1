@@ -39,6 +39,8 @@ After raw 5회: FCP 905/904/904/904/904 · LCP 3082/2914/2761/2760/2913 · CLS 0
 
 원인(Lighthouse culprit): `.copy` 박스 — 배너 문구 도착 시 정적 설명 1줄이 h2+p로 교체되며 박스가 위로 확장(absolute·bottom 고정이라 페이지 흐름은 무영향, 박스 자신의 이동만 계산됨). 1회성이고 good 임계(0.1)의 3%라 **"눈에 띄는 layout shift 아님"으로 수용**. min-height로 0을 만들 수 있으나 두 상태의 높이를 맞추는 매직 넘버가 생겨 개입하지 않는다 — 필요해지는 시점에 도입.
 
+(후기: 3단계의 서버 prefetch + hydration으로 배너 문구가 SSR에 포함되면서 이 교체 자체가 사라져 CLS 0.000으로 복귀했다 — `week07-step4-after.md`. 개입하지 않은 판단이 결과로 정당화됐다.)
+
 hero 컨테이너 자체는 `aspect-ratio` 선점 + `fill`이라 fallback(배경색)→이미지 교체에서 shift 0 유지.
 
 ## 초기 HTML 증거 (production document 응답)
