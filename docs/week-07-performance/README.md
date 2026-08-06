@@ -13,7 +13,7 @@
 | R1 | `cf571ae6` | `next/image` + `sizes` + `loading="eager"` | 0.3 s | 1.0 s | 0 | 이미지 전송 `7,368 → 399.7 KiB` | 유지 |
 | R2 | `f787a51a` | Hero 이미지·카드를 `Suspense` 밖으로 | 0.3 s | 0.9 s | 0.008 | 발견 지연 `520 → 10~30 ms` | 유지 |
 | R3 | `4070396f` | Hero 카드에 `min-height` 예약 | 0.3 s | 0.9 s | 0.006 | CLS `0.008 → 0.006` | 유지 |
-| R최종 After | | | | | | | |
+| R최종 After | `d3c6b8d5` | metadata 추가 후 재측정 | 0.3 s | 0.8 s | 0.006 | 발견 지연 `530 → 10~40 ms`, 전송 `7,368 → 409 KiB` | 유지 |
 
 지표는 5회 중앙값이다. **움직인 구간**은 라운드 `notes.md`의 "바뀐 구간" 표에서 가져온다.
 
@@ -74,6 +74,7 @@
 | R4 목록 최초 진입 대기 화면 | [`r4-list-pending/`](./r4-list-pending/notes.md) | 완료 |
 | R5 갱신 중 이전 목록 유지 | [`r5-list-refresh/`](./r5-list-refresh/notes.md) | 완료 (CLS는 개입하지 않음 · 2단계 6화면 재점검 포함) |
 | R6 metadata와 Open Graph | [`r6-metadata/`](./r6-metadata/notes.md) | 완료 (3단계 증거 포함) |
+| R최종 After | [`rf-after/`](./rf-after/notes.md) | 완료 (재측정 · 회귀 확인) |
 
 라운드마다 폴더를 하나 만들고 그 안에 `notes.md`와 캡쳐를 함께 둔다. 캡쳐 이름은 `{순번}-{내용}.png`이고, 순번은 아래 체크리스트와 같다. 같은 순번은 라운드가 달라도 같은 화면을 가리킨다.
 
