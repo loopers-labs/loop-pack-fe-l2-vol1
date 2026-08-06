@@ -1,11 +1,11 @@
 import styles from "./index.module.css";
 
-type HeroSectionProps = {
+type HeroProps = {
   title: string;
   description: string;
 };
 
-export function HeroSection({ title, description }: HeroSectionProps) {
+export function Hero({ title, description }: HeroProps) {
   return (
     <section className={styles.hero} aria-labelledby="week07-hero-title">
       {/* eslint-disable-next-line @next/next/no-img-element -- Week 7 intentionally starts with an unoptimized LCP image. */}

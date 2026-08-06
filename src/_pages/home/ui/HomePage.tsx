@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { homeQueries } from '@/_pages/home/api/homeQueries';
 import { ProductCard } from '@/widgets/product-card';
 import type { Category, Product } from '@/entities/product/model';
+import { Hero } from '@/widgets/hero';
 
 export function HomePage() {
   const { data, isLoading, isError, refetch } = useQuery(homeQueries.data());
@@ -21,10 +22,7 @@ export function HomePage() {
       )}
       {data && (
         <>
-          <section className="week05-hero">
-            <p>{data.banner.description}</p>
-            <h1>{data.banner.title}</h1>
-          </section>
+          <Hero title={data.banner.title} description={data.banner.description} />
           <section className="week05-section">
             <h2>카테고리</h2>
             <div className="week05-categories">
