@@ -17,6 +17,9 @@ type ProductCardProps = {
   bottomAction?: ReactNode;
 };
 
+const PRODUCT_CARD_IMAGE_SIZES =
+  "(min-width: 1024px) 224px, (min-width: 768px) 30vw, calc((100vw - 44px) / 2)";
+
 export function ProductCard({
   product,
   titleLevel = 2,
@@ -34,6 +37,7 @@ export function ProductCard({
           alt={product.imageAlt}
           width={400}
           height={400}
+          sizes={PRODUCT_CARD_IMAGE_SIZES}
         />
         {floatingAction !== undefined ? (
           <div className="absolute right-2 bottom-2" data-slot="floating-action">

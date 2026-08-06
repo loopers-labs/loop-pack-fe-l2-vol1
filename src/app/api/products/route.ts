@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
-import { PRODUCT_SORTS } from "@/entities/product";
-import type { ProductSort } from "@/entities/product";
-import type { ProductListResponse } from "@/_pages/products/api/productApi";
-import type { ApiErrorResponse, MockApiScenario } from "@/shared/api/types";
+import type {
+  ApiErrorResponse,
+  MockApiScenario,
+  ProductListResponse,
+  ProductSort,
+} from "@/types/commerce";
 
-const scenarioValues = ["empty", "error"] as const satisfies readonly MockApiScenario[];
+const sortValues = [
+  "latest",
+  "popular",
+  "price-asc",
+  "price-desc",
+] as const satisfies readonly ProductSort[];
+const scenarioValues = ["empty", "error", "slow"] as const satisfies readonly MockApiScenario[];
 
 const isProductSort = (value: string): value is ProductSort =>
-  PRODUCT_SORTS.some((sort) => sort === value);
+  sortValues.some((sort) => sort === value);
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);
@@ -46,7 +54,7 @@ export async function GET(
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  await waitForMockApi();
+  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
 
   if (scenario === "error") {
     return NextResponse.json({ message: "상품 목록을 불러오지 못했습니다." }, { status: 500 });

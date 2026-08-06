@@ -1,0 +1,50 @@
+## home-normal-document.html
+title: 매일 새롭게 발견하는 취향 | Commerce
+description: 지금 가장 사랑받는 상품을 만나보세요.
+og:title: 매일 새롭게 발견하는 취향
+og:description: 지금 가장 사랑받는 상품을 만나보세요.
+og:image: http://localhost:3001/images/products/p6.jpg
+h1 count: 0
+has main nav: true
+has products result region: false
+
+## products-normal-document.html
+title: 상품 목록 | Commerce
+description: 전체 카테고리의 최신순 상품 30개를 확인하세요.
+og:title: 상품 목록
+og:description: 전체 카테고리의 최신순 상품 30개를 확인하세요.
+og:image: http://localhost:3001/images/products/p26.jpg
+h1 count: 1
+has main nav: true
+has products result region: true
+
+## products-empty-document.html
+title: 존재하지않는상품 상품 | Commerce
+description: 뷰티·잡화 카테고리의 최신순 상품 검색 결과가 0개입니다.
+og:title: 존재하지않는상품 상품
+og:description: 뷰티·잡화 카테고리의 최신순 상품 검색 결과가 0개입니다.
+og:image: http://localhost:3001/images/week-07/hero-1600.webp
+h1 count: 1
+has main nav: true
+has products result region: true
+
+## products-query-failure-document.html
+title: Commerce
+description: Loopers 커머스에서 취향에 맞는 상품을 발견하세요.
+og:title: Commerce
+og:description: Loopers 커머스에서 취향에 맞는 상품을 발견하세요.
+og:image: http://127.0.0.1:9/images/week-07/hero-1600.webp
+h1 count: 1
+has main nav: true
+has products result region: true
+
+## products-slow-call-count-document.html
+title: 상품 목록 | Commerce
+description: 전체 카테고리의 최신순 상품 30개를 확인하세요.
+og:title: 상품 목록
+og:description: 전체 카테고리의 최신순 상품 30개를 확인하세요.
+og:image: http://localhost:3002/images/products/p26.jpg
+h1 count: 1
+has main nav: true
+has products result region: true
+

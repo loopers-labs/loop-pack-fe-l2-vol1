@@ -26,7 +26,8 @@ export function createApiUrl(path: string) {
     return path;
   }
 
-  const baseUrl = process.env.INTERNAL_API_BASE_URL ?? "http://localhost:3000";
+  const baseUrl =
+    process.env.INTERNAL_API_BASE_URL ?? process.env.APP_ORIGIN ?? "http://localhost:3000";
 
   return new URL(path, baseUrl).toString();
 }
