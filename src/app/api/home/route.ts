@@ -14,6 +14,7 @@ import type {
 const scenarioValues = [
   'empty',
   'error',
+  'slow',
 ] as const satisfies readonly MockApiScenario[];
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
@@ -31,7 +32,7 @@ export async function GET(
     );
   }
 
-  await waitForMockApi();
+  await waitForMockApi(scenario === 'slow' ? 1_500 : 500);
 
   if (scenario === 'error') {
     return NextResponse.json(
