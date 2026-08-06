@@ -5,8 +5,27 @@ import { HeaderNav } from './_components/HeaderNav';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Commerce',
-  description: 'Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.',
+  title: {
+    default: 'Aesthetic | 매일 새롭게 발견하는 취향',
+    template: '%s | Aesthetic',
+  },
+  description: '나다운 일상을 완성하는 라이프스타일 셀렉트숍. 패션, 뷰티, 홈데코, 디지털까지 — 취향을 발견하고, 공간에 감각을 더하세요.',
+  openGraph: {
+    title: 'Aesthetic | 매일 새롭게 발견하는 취향',
+    description: '나다운 일상을 완성하는 라이프스타일 셀렉트숍. 취향을 발견하고, 공간에 감각을 더하세요.',
+    siteName: 'Aesthetic',
+    locale: 'ko_KR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Aesthetic | 매일 새롭게 발견하는 취향',
+    description: '나다운 일상을 완성하는 라이프스타일 셀렉트숍. 취향을 발견하고, 공간에 감각을 더하세요.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -17,6 +36,13 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <link
+          rel="preload"
+          as="font"
+          href="/fonts/pretendard/PretendardVariable.subset.91.woff2"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link
           rel="preload"
           as="image"
