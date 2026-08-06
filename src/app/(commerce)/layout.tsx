@@ -1,4 +1,4 @@
-import { CommerceHeader } from "@/components/commerce/CommerceHeader";
+import { CommerceHeader } from "@/widgets/header";
 
 export default function CommerceLayout({ children }: { children: React.ReactNode }) {
   return (

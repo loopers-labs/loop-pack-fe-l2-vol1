@@ -1,10 +1,7 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { getQueryClient } from "../get-query-client";
-import { HomeErrorBoundary } from "@/features/home/HomeErrorBoundary";
-import { HomeLoading } from "@/features/home/HomeLoading";
-import { HomePageClient } from "@/features/home/HomePageClient";
-import { homeQueries } from "@/features/home/queries/homeQueries";
+import { getQueryClient } from "@/_app/config/getQueryClient";
+import { HomeErrorBoundary, HomeLoading, HomePageClient, homeQueries } from "@/_pages/home";
 
 export const dynamic = "force-dynamic";
 
