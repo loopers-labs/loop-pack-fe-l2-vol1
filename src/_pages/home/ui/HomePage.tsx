@@ -1,12 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { homeQueries } from '@/features/home/home.queries';
-import { SiteHeader } from '@/components/SiteHeader';
-import { ProductGrid } from '@/components/ProductGrid';
-import '@/examples/week-05-layout/week-05-layout.css';
+import { ProductGrid } from '@/entities/product';
+import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
+import { WishButton } from '@/features/toggle-wishlist/ui/WishButton';
+import { homeQueries } from '../api/home.queries';
 
-export default function Home() {
+export function HomePage() {
   const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
 
   if (isPending) return <p>불러오는 중…</p>;
@@ -22,9 +22,7 @@ export default function Home() {
     );
 
   return (
-    <main className="week05-page">
-      <SiteHeader />
-
+    <main>
       <section
         className="week05-hero"
         style={{
@@ -51,7 +49,18 @@ export default function Home() {
         {data.popularProducts.length === 0 ? (
           <p>인기 상품이 없어요.</p>
         ) : (
-          <ProductGrid products={data.popularProducts} />
+          <ProductGrid
+            products={data.popularProducts}
+            renderActions={(product) => (
+              <>
+                <WishButton productId={product.id} productName={product.name} />
+                <AddToCartButton
+                  productId={product.id}
+                  productName={product.name}
+                />
+              </>
+            )}
+          />
         )}
       </section>
 
@@ -60,7 +69,18 @@ export default function Home() {
         {data.newProducts.length === 0 ? (
           <p>신상품이 없어요.</p>
         ) : (
-          <ProductGrid products={data.newProducts} />
+          <ProductGrid
+            products={data.newProducts}
+            renderActions={(product) => (
+              <>
+                <WishButton productId={product.id} productName={product.name} />
+                <AddToCartButton
+                  productId={product.id}
+                  productName={product.name}
+                />
+              </>
+            )}
+          />
         )}
       </section>
     </main>

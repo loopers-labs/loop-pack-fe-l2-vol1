@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import '@/examples/week-05-layout/week-05-layout.css';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { QueryProvider } from '@/providers/QueryProvider';
+import { QueryProvider } from './providers';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCartCount, useWishCount } from '@/stores/shopStore';
+import { useCartCount } from '@/entities/cart';
+import { useWishCount } from '@/entities/wishlist';
 
 export function SiteHeader() {
   const cartCount = useCartCount();

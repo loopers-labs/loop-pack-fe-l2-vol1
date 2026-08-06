@@ -1,13 +1,14 @@
 'use client';
 
-import { Suspense, useState, type FormEvent } from 'react';
+import { Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { productQueries } from '@/features/products/products.queries';
-import { useProductFilters } from '@/features/products/useProductFilters';
-import { SiteHeader } from '@/components/SiteHeader';
-import { ProductGrid } from '@/components/ProductGrid';
+import { ProductGrid } from '@/entities/product';
+import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
+import { WishButton } from '@/features/toggle-wishlist/ui/WishButton';
 import type { ProductListQuery } from '@/types/commerce';
-import '@/examples/week-05-layout/week-05-layout.css';
+import { productQueries } from '../api/products.queries';
+import { useProductFilters } from '../model/useProductFilters';
+import { SearchForm } from './SearchForm';
 
 function ProductsResult({
   filters,
@@ -39,7 +40,18 @@ function ProductsResult({
   return (
     <>
       <p>총 {data.totalCount}개</p>
-      <ProductGrid products={data.products} />
+      <ProductGrid
+        products={data.products}
+        renderActions={(product) => (
+          <>
+            <WishButton productId={product.id} productName={product.name} />
+            <AddToCartButton
+              productId={product.id}
+              productName={product.name}
+            />
+          </>
+        )}
+      />
       <nav className="week05-pagination" aria-label="페이지 이동">
         <button
           type="button"
@@ -63,37 +75,8 @@ function ProductsResult({
   );
 }
 
-function SearchForm({
-  initialValue,
-  onSearch,
-}: {
-  initialValue: string;
-  onSearch: (q: string) => void;
-}) {
-  const [keyword, setKeyword] = useState(initialValue);
-
-  const onSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    onSearch(keyword);
-  };
-
-  return (
-    <form onSubmit={onSubmit}>
-      <label>
-        검색
-        <input
-          name="q"
-          placeholder="상품명 또는 브랜드"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-        />
-      </label>
-    </form>
-  );
-}
-
 // useProductFilters(내부 useSearchParams)는 정적 프리렌더 시 Suspense 경계가 필요하다.
-export default function ProductsPage() {
+export function ProductsPage() {
   return (
     <Suspense fallback={<p>불러오는 중…</p>}>
       <ProductsPageContent />
@@ -106,9 +89,7 @@ function ProductsPageContent() {
     useProductFilters();
 
   return (
-    <main className="week05-page">
-      <SiteHeader />
-
+    <main>
       <section className="week05-section">
         <h1>상품 목록</h1>
         <div className="week05-filters">

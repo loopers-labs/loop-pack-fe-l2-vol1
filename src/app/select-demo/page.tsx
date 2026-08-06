@@ -1,8 +1,8 @@
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
-import { useSelect } from '@/components/ui/select';
-import type { OptionState, UseSelect } from '@/components/ui/select';
+import { useSelect } from '@/shared/ui/select';
+import type { OptionState, UseSelect } from '@/shared/ui/select';
 
 // 세 데모 모두 같은 useSelect 로직을 쓴다. 다른 건 "옵션 생김새"뿐이다.
 // value가 옵션 "객체 전체"라, 선택 결과로 가격·배송을 바로 계산해 요약에 쓴다.
