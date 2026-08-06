@@ -28,7 +28,7 @@ metadata와 본문은 **같은 query factory**(`homeQueries.home()`·`productQue
 | `?page=2` | `상품 목록 · 2페이지 \| Commerce` (2페이지 이상 번호) | — |
 | `?category=fashion&sort=popular` | — | `패션 카테고리 · 인기순 — 상품 6개` (category·sort는 description) |
 
-**정상 empty (`?q=zzz`)**: title `"zzz" 검색 결과`, description `…조건에 맞는 상품이 0개입니다.`, **og:image는 fallback 유지**(`hero-original.jpg`).
+**정상 empty (`?q=zzz`)**: title `"zzz" 검색 결과`, description `…조건에 맞는 상품이 0개입니다.`, **og:image는 fallback 유지**(`p6.jpg` — 16KB 배너 정적 이미지. 처음엔 hero 원본이었으나 크롤러에 7.5MB를 주는 모순이라 교체).
 
 **metadata query failure** (`APP_ORIGIN=http://127.0.0.1:9`로 build+start — build 실패 없음): 홈·목록 모두 `<title>Commerce</title>` + 루트 description — **페이지별 빈 값이 아니라 root 공통 metadata 상속**. 정상 empty와 서로 다른 fallback임을 확인.
 

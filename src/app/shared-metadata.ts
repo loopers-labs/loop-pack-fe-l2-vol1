@@ -12,4 +12,5 @@ export const sharedOpenGraph = {
 
 // Open Graph fallback 이미지 — 정상 empty 등 페이지 이미지가 없을 때도 유지한다.
 // (metadataBase 기준 상대 경로로 절대화된다)
-export const FALLBACK_OG_IMAGE = '/images/week-07/hero-original.jpg';
+// hero 원본(7.5MB)이 아니라 배너 정적 이미지를 쓴다 — 크롤러가 받는 파일이므로 가벼워야 한다.
+export const FALLBACK_OG_IMAGE = '/images/products/p6.jpg';
