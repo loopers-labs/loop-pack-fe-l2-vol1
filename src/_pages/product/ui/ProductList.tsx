@@ -48,7 +48,13 @@ export const ProductList = () => {
           </button>
         </p>
       );
-    if (data?.products.length === 0) return <p>검색 결과가 없습니다.</p>;
+    if (data?.products.length === 0) {
+      return (
+        <p>
+          category: {category}, searchInput: {searchInput}에 대한 검색 결과가 없습니다.
+        </p>
+      );
+    }
 
     return (
       // [AI] .results를 relative로 두고, isPlaceholderData일 때 상단에 얇은 막대를 absolute로 띄운다.
