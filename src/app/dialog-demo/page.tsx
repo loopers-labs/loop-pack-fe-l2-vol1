@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog } from '@/shared/ui/dialog';
 
 // 같은 Dialog인데, ①은 상태를 스스로 들고(uncontrolled), ②는 부모가 든다(controlled).
 // open prop 유무 하나로 소유자가 갈린다 — 이번 주의 알맹이.
