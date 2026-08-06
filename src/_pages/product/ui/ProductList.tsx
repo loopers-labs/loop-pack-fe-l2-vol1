@@ -5,9 +5,11 @@
 import {
   isCategoryValue,
   isSortValue,
+  PAGE_SIZE,
 } from '@/features/product-filters/model/useProductListFilters';
 import { Header } from '@/widgets/header/Header';
 import { ProductCard } from '@/widgets/product-card/ProductCard';
+import { SkeletonCard } from '@/shared/ui/SkeletonCard';
 import { useProductPage } from '../model/useProductPage';
 import { useProductList } from '../model/useProductList';
 import { Product } from '@/entities/product/model';
@@ -27,7 +29,15 @@ export const ProductList = () => {
   const { data, isPending, isError, totalPages, totalCount, refetch } = useProductList(page, query);
 
   const renderResults = () => {
-    if (isPending) return <p>불러오는 중...</p>;
+    if (isPending)
+      return (
+        <div className="grid">
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      );
+
     if (isError)
       return (
         <p role="alert">

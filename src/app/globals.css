@@ -134,9 +134,61 @@ a {
 .image {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 1;
   background: #ececec;
   object-fit: cover;
+}
+
+/* 스켈레톤(pending UI) — ProductCard와 같은 .product/.image 자리를 쓴다.
+   진짜 카드로 바뀔 때 높이가 같아야 눈에 띄는 CLS가 생기지 않는다.
+   .image 뒤에 선언해서 .image의 solid 배경을 shimmer 그라데이션이 덮어쓰게 한다. */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #ececec 0%, #f5f5f5 50%, #ececec 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* brand 한 줄 — 실제 <p> 한 줄 높이에 가깝게 */
+.skeleton-text {
+  height: 16px;
+  border-radius: 2px;
+}
+
+.skeleton-text--brand {
+  width: 60%;
+}
+
+/* name은 heading이므로 살짝 더 키운다 */
+.skeleton-text--name {
+  width: 90%;
+  height: 20px;
+}
+
+.skeleton-text--price {
+  width: 40%;
+}
+
+/* 액션 버튼 자리 — .product > div:last-child가 flex row가 되므로
+   이 영역은 자동으로 12px gap짜리 버튼 줄이 된다. */
+.skeleton-action {
+  flex: 1;
+  height: 42px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
 }
 
 .filters label {

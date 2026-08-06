@@ -9,7 +9,7 @@ import type { Product } from '@/entities/product/model';
 export const ProductCard = ({ product, actions }: { product: Product; actions?: ReactNode }) => {
   return (
     <article className="product">
-      <Image className="image" src={product.image} alt={product.name} width={400} height={400} />
+      <Image className="image" src={product.image} alt={product.name} width={200} height={200} />
       <p>{product.brand}</p>
       <h2>{product.name}</h2>
       <strong>{product.price.toLocaleString()}원</strong>
