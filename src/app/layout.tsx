@@ -16,6 +16,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/images/week-07/hero-640.avif"
+          type="image/avif"
+          media="(max-width: 640px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/images/week-07/hero-1080.avif"
+          type="image/avif"
+          media="(min-width: 641px)"
+        />
+      </head>
       <body className="font-family-body antialiased min-h-screen bg-bg flex flex-col">
         <Providers>
           {/* 공통 헤더 */}

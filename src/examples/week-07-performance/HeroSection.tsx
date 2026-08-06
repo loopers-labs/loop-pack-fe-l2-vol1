@@ -11,12 +11,12 @@ export function HeroSection({ title, description }: HeroSectionProps) {
       <picture>
         <source
           srcSet="/images/week-07/hero-640.avif 640w, /images/week-07/hero-1080.avif 1080w, /images/week-07/hero-1920.avif 1920w"
-          sizes="100vw"
+          sizes="(max-width: 640px) 640px, (max-width: 1280px) 1080px, 1920px"
           type="image/avif"
         />
         <source
           srcSet="/images/week-07/hero-640.webp 640w, /images/week-07/hero-1080.webp 1080w, /images/week-07/hero-1920.webp 1920w"
-          sizes="100vw"
+          sizes="(max-width: 640px) 640px, (max-width: 1280px) 1080px, 1920px"
           type="image/webp"
         />
         <img
