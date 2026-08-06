@@ -10,7 +10,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | R0 Before | `4a04dddf` | 7.5MB 원본, `h1` 데이터 의존 | 0.3 s | 6.7 s | 0.004 | — | 기준 |
 | R1 | `cf571ae6` | `next/image` + `sizes` + `loading="eager"` | 0.3 s | 1.0 s | 0 | 이미지 전송 `7,368 → 399.7 KiB` | 유지 |
-| | | | | | | | |
+| R2 | `f787a51a` | Hero 이미지·카드를 `Suspense` 밖으로 | 0.3 s | 0.9 s | 0.008 | 발견 지연 `520 → 10~30 ms` | 유지 |
 | R최종 After | | | | | | | |
 
 지표는 5회 중앙값이다. **움직인 구간**은 라운드 `notes.md`의 "바뀐 구간" 표에서 가져온다.
@@ -56,7 +56,8 @@
 | 라운드 | 폴더 | 상태 |
 | --- | --- | --- |
 | R0 Before | [`r0-before/`](./r0-before/notes.md) | 완료 |
-| R1 Hero 이미지 | [`r1-hero-image/`](./r1-hero-image/notes.md) | 측정 중 |
+| R1 Hero 이미지 | [`r1-hero-image/`](./r1-hero-image/notes.md) | 완료 |
+| R2 렌더링 경계 | [`r2-render-boundary/`](./r2-render-boundary/notes.md) | 완료 |
 
 라운드마다 폴더를 하나 만들고 그 안에 `notes.md`와 캡쳐를 함께 둔다. 캡쳐 이름은 `{순번}-{내용}.png`이고, 순번은 아래 체크리스트와 같다. 같은 순번은 라운드가 달라도 같은 화면을 가리킨다.
 
