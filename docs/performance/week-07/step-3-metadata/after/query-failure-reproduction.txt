@@ -1,0 +1,13 @@
+APP_ORIGIN=http://127.0.0.1:9 pnpm build
+result: success
+
+APP_ORIGIN=http://127.0.0.1:9 PORT=3003 pnpm start
+result: server ready on http://localhost:3003
+
+curl http://localhost:3003/products
+result: status=200 start=1.040380 total=1.041598
+
+observed document:
+- products-query-failure-document.html
+- page metadata fetch failed against APP_ORIGIN=http://127.0.0.1:9
+- page returned empty metadata object, so root title/description/openGraph remained
