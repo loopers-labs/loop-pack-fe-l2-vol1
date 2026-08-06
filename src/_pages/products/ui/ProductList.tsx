@@ -7,7 +7,9 @@ import { productQueries } from "@/entities/product";
 import type { ProductListResponse } from "@/entities/product";
 import { ProductListSkeleton } from "./ProductListSkeleton";
 import { useProductListSearchParams } from "../model/useProductListSearchParams";
+import { buildProductListTitle } from "../model/productListMetadata";
 import { useDebouncedValue } from "@/shared/lib";
+import { SITE_NAME } from "@/shared/config";
 import { isServerError } from "@/shared/api";
 import { ProductListResult } from "./ProductListResult";
 import { SEARCH_DEBOUNCE_MS } from "@/features/search";
@@ -40,6 +42,19 @@ export function ProductList() {
     error,
     refetch,
   } = useQuery({ ...productQueries.list(activeQuery), throwOnError: false });
+
+  // generateMetadata 는 서버에서 URL 당 1회만 실행된다. nuqs 는 검색/필터를 shallow로
+  // 바꿔 서버를 안 거치므로, 그 경우 문서 title 이 갱신되지 않는다 → 표시 중인 조건에 맞춰 탭 title 을
+  // 클라이언트에서 동기화한다(서버 template "%s | Commerce" 와 같은 형태).
+  //
+  // title 만 동기화하는 이유: title 은 사용자가 탭에서 본다. description·og 는 크롤러만 읽고,
+  // 크롤러는 URL 을 서버에서 새로 받아 정확한 값을 얻으므로 클라이언트 동기화가 불필요하다.
+  // isPlaceholderData(전환 중 이전 결과 표시) 땐 자기 결과가 아니므로 0개 판정에서 제외한다.
+  const hasEmptyResult = !isPlaceholderData && data?.totalCount === 0;
+
+  useEffect(() => {
+    document.title = `${buildProductListTitle(activeQuery, hasEmptyResult)} | ${SITE_NAME}`;
+  }, [activeQuery, hasEmptyResult]);
 
   const currentListKey = productQueries.list(activeQuery).queryKey;
 

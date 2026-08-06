@@ -1,6 +1,12 @@
 import { Suspense } from "react";
 import { type SearchParams } from "nuqs/server";
-import { ProductListSection, ProductListSkeleton } from "@/_pages/products";
+import {
+  ProductListSection,
+  ProductListSkeleton,
+  generateProductListMetadata,
+} from "@/_pages/products";
+
+export const generateMetadata = generateProductListMetadata;
 
 export default function ProductListPage({
   searchParams,

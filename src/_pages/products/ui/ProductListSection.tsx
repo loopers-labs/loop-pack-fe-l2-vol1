@@ -1,12 +1,10 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import { createLoader, type SearchParams } from "nuqs/server";
+import { type SearchParams } from "nuqs/server";
 import { ProductList } from "./ProductList";
-import { productListParsers } from "../model/productListParsers";
+import { loadProductListParams } from "../model/productListParsers";
 import { resolveProductListQuery } from "@/entities/product";
 import { getQueryClient } from "@/shared/api";
 import { productQueries } from "@/entities/product";
-
-const loadProductListParams = createLoader(productListParsers);
 
 // async 서버 컴포넌트: 목록 prefetch await 를 page 가 아니라 Suspense 경계 '안'에서 수행한다.
 // 그래야 page 함수가 데이터에 막히지 않고 즉시 return → layout 의 헤더·필터 shell 이 먼저 스트리밍되고,
