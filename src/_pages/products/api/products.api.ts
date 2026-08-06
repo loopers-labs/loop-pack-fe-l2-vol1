@@ -1,5 +1,6 @@
 import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
 import { HttpError, InvalidResponseError } from '@/shared/api/errors';
+import { apiUrl } from '@/shared/api/base-url';
 
 function isProductListResponse(data: unknown): data is ProductListResponse {
   return (
@@ -22,7 +23,7 @@ export async function getProducts(
   if (query.page) params.set('page', String(query.page));
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
 
-  const res = await fetch(`/api/products?${params.toString()}`);
+  const res = await fetch(apiUrl(`/api/products?${params.toString()}`));
   if (!res.ok) {
     throw new HttpError(res.status, '상품 목록을 불러오지 못했습니다.');
   }
