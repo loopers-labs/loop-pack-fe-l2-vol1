@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { categories, homeBanner, products, waitForMockApi } from "@/app/api/_data/commerce";
+import { getHomeData, waitForMockApi } from "@/app/api/_data/commerce";
 import type { ApiErrorResponse, MockApiScenario } from "@/shared/api";
 import type { HomeResponse } from "@/_pages/home/model";
 
@@ -30,17 +30,5 @@ export async function GET(
     );
   }
 
-  const popularProducts = [...products]
-    .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating)
-    .slice(0, 6);
-  const newProducts = [...products]
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    .slice(0, 6);
-
-  return NextResponse.json({
-    banner: homeBanner,
-    categories,
-    popularProducts: scenario === "empty" ? [] : popularProducts,
-    newProducts: scenario === "empty" ? [] : newProducts,
-  });
+  return NextResponse.json(getHomeData(scenario));
 }

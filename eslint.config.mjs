@@ -62,6 +62,7 @@ const eslintConfig = defineConfig([
     ignores: ["**/*.test.{js,jsx,ts,tsx}", "**/*.spec.{js,jsx,ts,tsx}"],
     settings: {
       "boundaries/elements": [
+        { type: "app-data", pattern: "src/app/api/_data/*" },
         { type: "app", pattern: "src/app/*" },
         { type: "pages", pattern: "src/_pages/*" },
         { type: "widgets", pattern: "src/widgets/*" },
@@ -76,17 +77,19 @@ const eslintConfig = defineConfig([
         {
           default: "disallow",
           rules: [
-            { from: "app", allow: ["pages", "widgets", "features", "entities", "shared"] },
-            { from: "pages", allow: ["widgets", "features", "entities", "shared"] },
-            { from: "widgets", allow: ["features", "entities", "shared"] },
-            { from: "features", allow: ["entities", "shared"] },
-            { from: "entities", allow: ["shared"] },
+            { from: "app", allow: ["app-data", "pages", "widgets", "features", "entities", "shared"] },
+            { from: "pages", allow: ["app-data", "widgets", "features", "entities", "shared"] },
+            { from: "widgets", allow: ["app-data", "features", "entities", "shared"] },
+            { from: "features", allow: ["app-data", "entities", "shared"] },
+            { from: "entities", allow: ["app-data", "shared"] },
             { from: "shared", allow: [] },
+            { from: "app-data", allow: ["shared"] },
           ],
         },
       ],
     },
   },
+
   // prettier와 충돌하는 eslint 룰 비활성화 — 반드시 마지막에 위치
   prettierConfig,
 

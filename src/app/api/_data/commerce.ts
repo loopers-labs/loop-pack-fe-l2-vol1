@@ -1,4 +1,5 @@
 import type { Category, CategoryId, Product } from "@/entities/product/model";
+import type { MockApiScenario } from '@/shared/api';
 
 export const categories: Category[] = [
   { id: "casual", name: "캐주얼" },
@@ -356,3 +357,20 @@ export const waitForMockApi = (requestedDelayMs = 500) =>
     const delayMs = process.env.NODE_ENV === "test" ? 0 : requestedDelayMs;
     setTimeout(resolve, delayMs);
   });
+
+
+export function getHomeData(scenario: MockApiScenario | null) {
+  const popularProducts = [...products]
+    .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating)
+    .slice(0, 6);
+  const newProducts = [...products]
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .slice(0, 6);
+
+  return {
+    banner: homeBanner,
+    categories,
+    popularProducts: scenario === 'empty' ? [] : popularProducts,
+    newProducts: scenario === 'empty' ? [] : newProducts,
+  };
+}
