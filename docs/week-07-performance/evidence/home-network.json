@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-08-07T17:55:44.566Z",
+  "requests": [
+    {
+      "id": "F82B9C5546BB2BAA73528E840BEFD388",
+      "url": "http://localhost:3000/",
+      "type": "Document",
+      "startedAt": 154261.600725,
+      "status": 200,
+      "mimeType": "text/html",
+      "responseAt": 154261.618111,
+      "finishedAt": 154261.619145,
+      "encodedDataLength": 7542
+    },
+    {
+      "id": "30384.216",
+      "url": "http://localhost:3000/images/week-07/hero-1080.avif",
+      "type": "Image",
+      "startedAt": 154261.639564,
+      "status": 200,
+      "mimeType": "image/avif",
+      "responseAt": 154261.675835,
+      "finishedAt": 154261.676406,
+      "encodedDataLength": 60748
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "capturedAt": "2026-08-08T04:53:19.6245966+09:00",
+  "documentOrigin": "http://localhost:3001",
+  "buildAppOrigin": "http://127.0.0.1:9",
+  "runtimeAppOrigin": "http://127.0.0.1:9",
+  "procedure": "Built and started the production app with the same unreachable APP_ORIGIN, then captured /products with HTTP 200.",
+  "documents": {
+    "normal": {
+      "url": "http://localhost:3001/products",
+      "status": 200,
+      "title": "Aesthetic | 매일 새롭게 발견하는 취향",
+      "description": "나다운 일상을 완성하는 라이프스타일 셀렉트숍. 패션, 뷰티, 홈데코, 디지털까지 — 취향을 발견하고, 공간에 감각을 더하세요.",
+      "ogImage": null,
+      "hasMain": true,
+      "hasH1": true,
+      "hasNav": true
+    },
+    "empty": {
+      "url": "http://localhost:3001/products?scenario=empty",
+      "status": 200,
+      "title": "Aesthetic | 매일 새롭게 발견하는 취향",
+      "description": "나다운 일상을 완성하는 라이프스타일 셀렉트숍. 패션, 뷰티, 홈데코, 디지털까지 — 취향을 발견하고, 공간에 감각을 더하세요.",
+      "ogImage": null,
+      "hasMain": true,
+      "hasH1": true,
+      "hasNav": true
+    }
+  },
+  "timingsNote": "The timing samples below came from the earlier runtime-only check and are retained for reference; the final pass uses the document fields above, not these timings.",
+  "timings": {
+    "browser": [
+      {
+        "status": 200,
+        "timeStartTransferMs": 27.9,
+        "timeTotalMs": 30.6
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 20,
+        "timeTotalMs": 24.7
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 12.4,
+        "timeTotalMs": 16.1
+      }
+    ],
+    "facebookexternalhit": [
+      {
+        "status": 200,
+        "timeStartTransferMs": 16.6,
+        "timeTotalMs": 18.8
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 13.2,
+        "timeTotalMs": 16.5
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 13.6,
+        "timeTotalMs": 17.6
+      }
+    ]
+  }
+}

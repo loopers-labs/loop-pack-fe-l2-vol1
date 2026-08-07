@@ -1,0 +1,385 @@
+{
+  "capturedAt": "2026-08-07T17:55:40.955Z",
+  "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "profile": "isolated temporary Chrome profile",
+  "cache": "CDP Network.setCacheDisabled=true",
+  "initial": {
+    "url": "http://localhost:3000/products?scenario=slow",
+    "count": "총 30개",
+    "layoutShifts": [],
+    "cls": 0
+  },
+  "race": {
+    "url": "http://localhost:3000/products?scenario=slow&q=coat",
+    "input": "coat",
+    "count": "총 1개",
+    "fetching": false
+  },
+  "restored": {
+    "url": "http://localhost:3000/products?scenario=slow&q=coat&category=casual&sort=price-asc",
+    "input": "coat",
+    "category": "casual",
+    "sort": "price-asc",
+    "count": "총 0개",
+    "fetching": false,
+    "layoutShifts": [
+      {
+        "value": 0.00021636242311981382,
+        "startTime": 6458.199999988079
+      },
+      {
+        "value": 0.006464684734600086,
+        "startTime": 8746.199999988079
+      }
+    ],
+    "cls": 0.0066810471577198995
+  },
+  "canceledRequests": [
+    {
+      "id": "1A61A3F12882F0F3668A20EC8E349524",
+      "failedAt": 154246.979463,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.172",
+      "url": "http://localhost:3000/api/products?q=bag&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.486463,
+      "initiator": "script",
+      "failedAt": 154251.50352,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.174",
+      "url": "http://localhost:3000/api/products?sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.501556,
+      "initiator": "script",
+      "failedAt": 154251.508112,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.176",
+      "url": "http://localhost:3000/api/products?q=bag&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.507534,
+      "initiator": "script",
+      "failedAt": 154251.879655,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.177",
+      "url": "http://localhost:3000/api/products?q=coat&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.874726,
+      "initiator": "script",
+      "failedAt": 154251.883596,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.179",
+      "url": "http://localhost:3000/api/products?q=bag&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.881305,
+      "initiator": "script",
+      "failedAt": 154251.88467,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.184",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154254.16978,
+      "initiator": "script",
+      "failedAt": 154254.175032,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.185",
+      "url": "http://localhost:3000/api/products?q=coat&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154254.173877,
+      "initiator": "script",
+      "failedAt": 154254.176011,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.187",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=price-asc&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154255.98881,
+      "initiator": "script",
+      "failedAt": 154255.993653,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.188",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154255.99276,
+      "initiator": "script",
+      "failedAt": 154255.994412,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    }
+  ],
+  "requests": [
+    {
+      "id": "19968.157",
+      "url": "http://localhost:3000/api/products?sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154248.871092,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154250.39652,
+      "finishedAt": 154250.396038,
+      "encodedDataLength": 4124
+    },
+    {
+      "id": "19968.158",
+      "url": "http://localhost:3000/api/products?sort=latest&page=2&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154248.872129,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154250.406002,
+      "finishedAt": 154250.405543,
+      "encodedDataLength": 3920
+    },
+    {
+      "id": "19968.172",
+      "url": "http://localhost:3000/api/products?q=bag&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.486463,
+      "initiator": "script",
+      "failedAt": 154251.50352,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.173",
+      "url": "http://localhost:3000/api/products?q=bag&sort=latest&page=2&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.487174,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154253.036068,
+      "finishedAt": 154253.036429,
+      "encodedDataLength": 569
+    },
+    {
+      "id": "19968.174",
+      "url": "http://localhost:3000/api/products?sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.501556,
+      "initiator": "script",
+      "failedAt": 154251.508112,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.175",
+      "url": "http://localhost:3000/api/products?sort=latest&page=2&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.502214,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154253.037865,
+      "finishedAt": 154253.037797,
+      "encodedDataLength": 3920
+    },
+    {
+      "id": "19968.176",
+      "url": "http://localhost:3000/api/products?q=bag&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.507534,
+      "initiator": "script",
+      "failedAt": 154251.879655,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.177",
+      "url": "http://localhost:3000/api/products?q=coat&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.874726,
+      "initiator": "script",
+      "failedAt": 154251.883596,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.178",
+      "url": "http://localhost:3000/api/products?q=coat&sort=latest&page=2&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.875259,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154253.399641,
+      "finishedAt": 154253.398141,
+      "encodedDataLength": 569
+    },
+    {
+      "id": "19968.179",
+      "url": "http://localhost:3000/api/products?q=bag&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.881305,
+      "initiator": "script",
+      "failedAt": 154251.88467,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.180",
+      "url": "http://localhost:3000/api/products?q=coat&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154251.884136,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154253.435447,
+      "finishedAt": 154253.43505,
+      "encodedDataLength": 849
+    },
+    {
+      "id": "19968.184",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154254.16978,
+      "initiator": "script",
+      "failedAt": 154254.175032,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.185",
+      "url": "http://localhost:3000/api/products?q=coat&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154254.173877,
+      "initiator": "script",
+      "failedAt": 154254.176011,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.186",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154254.175605,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154255.723127,
+      "finishedAt": 154255.72364,
+      "encodedDataLength": 569
+    },
+    {
+      "id": "19968.187",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=price-asc&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154255.98881,
+      "initiator": "script",
+      "failedAt": 154255.993653,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.188",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154255.99276,
+      "initiator": "script",
+      "failedAt": 154255.994412,
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "id": "19968.189",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=price-asc&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154255.994068,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154257.532116,
+      "finishedAt": 154257.532717,
+      "encodedDataLength": 569
+    },
+    {
+      "id": "19968.190",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=latest&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154257.79951,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154259.321872,
+      "finishedAt": 154259.322162,
+      "encodedDataLength": 569
+    },
+    {
+      "id": "19968.191",
+      "url": "http://localhost:3000/api/products?q=coat&category=casual&sort=price-asc&page=1&pageSize=12&scenario=slow",
+      "method": "GET",
+      "type": "Fetch",
+      "startedAt": 154259.603808,
+      "initiator": "script",
+      "status": 200,
+      "mimeType": "application/json",
+      "protocol": "http/1.1",
+      "responseAt": 154261.126758,
+      "finishedAt": 154261.126113,
+      "encodedDataLength": 569
+    }
+  ]
+}
