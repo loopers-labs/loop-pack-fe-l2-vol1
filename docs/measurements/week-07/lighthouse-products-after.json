@@ -1,0 +1,100 @@
+{
+  "measuredSha": "36e31e0",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "url": "http://127.0.0.1:3210/products",
+    "build": "production (next build && next start)",
+    "tool": "Lighthouse 12.8.2 headless",
+    "preset": "mobile 기본 프리셋 412x823, DPR 1.75",
+    "throttlingMethod": "simulate",
+    "cpuThrottle": "4x",
+    "networkThrottle": "rttMs 150, throughputKbps 1638.4",
+    "blockedUrlPatterns": null,
+    "profile": "회차마다 새 사용자 프로필",
+    "runs": 5
+  },
+  "runs": [
+    {
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/products",
+      "fcp": 1204,
+      "lcp": 2466,
+      "cls": 0,
+      "tbt": 7,
+      "performanceScore": 97,
+      "lcpElement": "<h1>",
+      "heroRequest": null
+    },
+    {
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/products",
+      "fcp": 1205,
+      "lcp": 2455,
+      "cls": 0,
+      "tbt": 1,
+      "performanceScore": 97,
+      "lcpElement": "<h1>",
+      "heroRequest": null
+    },
+    {
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/products",
+      "fcp": 1205,
+      "lcp": 2465,
+      "cls": 0,
+      "tbt": 6,
+      "performanceScore": 97,
+      "lcpElement": "<h1>",
+      "heroRequest": null
+    },
+    {
+      "run": 4,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/products",
+      "fcp": 1205,
+      "lcp": 2454,
+      "cls": 0,
+      "tbt": 0,
+      "performanceScore": 97,
+      "lcpElement": "<h1>",
+      "heroRequest": null
+    },
+    {
+      "run": 5,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/products",
+      "fcp": 1205,
+      "lcp": 2466,
+      "cls": 0,
+      "tbt": 6,
+      "performanceScore": 97,
+      "lcpElement": "<h1>",
+      "heroRequest": null
+    }
+  ],
+  "summary": {
+    "fcp": {
+      "median": 1205,
+      "range": [1204, 1205]
+    },
+    "lcp": {
+      "median": 2465,
+      "range": [2454, 2466]
+    },
+    "cls": {
+      "median": 0,
+      "range": [0, 0]
+    },
+    "tbt": {
+      "median": 6,
+      "range": [0, 7]
+    },
+    "performanceScore": {
+      "median": 97,
+      "range": [97, 97]
+    }
+  }
+}

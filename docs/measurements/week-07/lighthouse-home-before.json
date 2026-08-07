@@ -1,0 +1,125 @@
+{
+  "measuredSha": "3aa1981",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "url": "http://127.0.0.1:3213/",
+    "build": "production (next build && next start)",
+    "tool": "Lighthouse 12.8.2 headless",
+    "preset": "mobile 기본 프리셋 412x823, DPR 1.75",
+    "throttlingMethod": "simulate",
+    "cpuThrottle": "4x",
+    "networkThrottle": "rttMs 150, throughputKbps 1638.4",
+    "blockedUrlPatterns": null,
+    "profile": "회차마다 새 사용자 프로필",
+    "runs": 5
+  },
+  "runs": [
+    {
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3213/",
+      "fcp": 1360,
+      "lcp": 42175,
+      "cls": 0.065,
+      "tbt": 13,
+      "performanceScore": 74,
+      "lcpElement": "<img class=\"week07-hero-image\" alt=\"\" width=\"3840\" height=\"2160\" src=\"/images/week-07/hero-original.jpg\">",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3213/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7545525,
+        "startTimeMs": 617
+      }
+    },
+    {
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3213/",
+      "fcp": 1363,
+      "lcp": 42184,
+      "cls": 0.065,
+      "tbt": 19,
+      "performanceScore": 74,
+      "lcpElement": "<img class=\"week07-hero-image\" alt=\"\" width=\"3840\" height=\"2160\" src=\"/images/week-07/hero-original.jpg\">",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3213/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7545525,
+        "startTimeMs": 626
+      }
+    },
+    {
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3213/",
+      "fcp": 1357,
+      "lcp": 42170,
+      "cls": 0.065,
+      "tbt": 11,
+      "performanceScore": 74,
+      "lcpElement": "<img class=\"week07-hero-image\" alt=\"\" width=\"3840\" height=\"2160\" src=\"/images/week-07/hero-original.jpg\">",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3213/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7545525,
+        "startTimeMs": 600
+      }
+    },
+    {
+      "run": 4,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3213/",
+      "fcp": 1357,
+      "lcp": 42169,
+      "cls": 0.065,
+      "tbt": 9,
+      "performanceScore": 74,
+      "lcpElement": "<img class=\"week07-hero-image\" alt=\"\" width=\"3840\" height=\"2160\" src=\"/images/week-07/hero-original.jpg\">",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3213/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7545525,
+        "startTimeMs": 598
+      }
+    },
+    {
+      "run": 5,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3213/",
+      "fcp": 1360,
+      "lcp": 42175,
+      "cls": 0.065,
+      "tbt": 14,
+      "performanceScore": 74,
+      "lcpElement": "<img class=\"week07-hero-image\" alt=\"\" width=\"3840\" height=\"2160\" src=\"/images/week-07/hero-original.jpg\">",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3213/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7545525,
+        "startTimeMs": 618
+      }
+    }
+  ],
+  "summary": {
+    "fcp": {
+      "median": 1360,
+      "range": [1357, 1363]
+    },
+    "lcp": {
+      "median": 42175,
+      "range": [42169, 42184]
+    },
+    "cls": {
+      "median": 0.065,
+      "range": [0.065, 0.065]
+    },
+    "tbt": {
+      "median": 13,
+      "range": [9, 19]
+    },
+    "performanceScore": {
+      "median": 74,
+      "range": [74, 74]
+    }
+  }
+}

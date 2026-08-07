@@ -1,0 +1,125 @@
+{
+  "measuredSha": "fff007f",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "url": "http://127.0.0.1:3210/",
+    "build": "production (next build && next start)",
+    "tool": "Lighthouse 12.8.2 headless",
+    "preset": "mobile 기본 프리셋 412x823, DPR 1.75",
+    "throttlingMethod": "simulate",
+    "cpuThrottle": "4x",
+    "networkThrottle": "rttMs 150, throughputKbps 1638.4",
+    "blockedUrlPatterns": ["*hero-original*"],
+    "profile": "회차마다 새 사용자 프로필",
+    "runs": 5
+  },
+  "runs": [
+    {
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 2259,
+      "lcp": 3270,
+      "cls": 0,
+      "tbt": 12,
+      "performanceScore": 90,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 0,
+        "startTimeMs": 51
+      }
+    },
+    {
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 2258,
+      "lcp": 3264,
+      "cls": 0,
+      "tbt": 7,
+      "performanceScore": 90,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 0,
+        "startTimeMs": 48
+      }
+    },
+    {
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 2258,
+      "lcp": 3263,
+      "cls": 0,
+      "tbt": 7,
+      "performanceScore": 90,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 0,
+        "startTimeMs": 40
+      }
+    },
+    {
+      "run": 4,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 2259,
+      "lcp": 3264,
+      "cls": 0,
+      "tbt": 6,
+      "performanceScore": 90,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 0,
+        "startTimeMs": 40
+      }
+    },
+    {
+      "run": 5,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 2258,
+      "lcp": 3258,
+      "cls": 0,
+      "tbt": 1,
+      "performanceScore": 90,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 0,
+        "startTimeMs": 45
+      }
+    }
+  ],
+  "summary": {
+    "fcp": {
+      "median": 2258,
+      "range": [2258, 2259]
+    },
+    "lcp": {
+      "median": 3264,
+      "range": [3258, 3270]
+    },
+    "cls": {
+      "median": 0,
+      "range": [0, 0]
+    },
+    "tbt": {
+      "median": 7,
+      "range": [1, 12]
+    },
+    "performanceScore": {
+      "median": 90,
+      "range": [90, 90]
+    }
+  }
+}

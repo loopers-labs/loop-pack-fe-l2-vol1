@@ -1,0 +1,80 @@
+{
+  "measuredSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "url": "http://127.0.0.1:3210/",
+    "build": "production (next build && next start)",
+    "variant": "fff007f 트리에서 Hero sizes만 36e31e0 상태(calc(100vw - 24px))로 임시 복원한 재현 측정이다. 36e31e0을 실제로 체크아웃해 빌드한 것이 아니다.",
+    "whyComparable": "36e31e0과 HEAD 사이의 커밋은 sizes 문자열과 /performance-lab/inp와 문서만 바꾼다. 홈 Hero에 영향을 주는 차이는 sizes 하나뿐이다.",
+    "viewports": "412x823 DPR 1.75 / 1280x900 DPR 1",
+    "cpuThrottle": "none",
+    "networkThrottle": "none",
+    "heroResponse": "bodyBytes는 응답 본문 크기다. Lighthouse의 transferSize와 헤더 포함 여부가 달라 값이 조금 다르다",
+    "pixelDiff": "object-fit: cover와 object-position이 고른 영역을 device px 해상도로 잘라 비교한다",
+    "note": "원본은 3840x2160. upscale이 1을 넘으면 확대되어 표시된다."
+  },
+  "runs": {
+    "mobile": {
+      "viewport": {
+        "width": 412,
+        "height": 823,
+        "dpr": 1.75
+      },
+      "box": {
+        "width": 388,
+        "height": 485
+      },
+      "boxRatio": 0.8,
+      "imageRatio": 1.778,
+      "bindingEdge": "height",
+      "drawnCssWidth": 862,
+      "devicePxNeeded": 1509,
+      "candidateWidthPx": 750,
+      "upscale": 2.01,
+      "objectFit": "cover",
+      "objectPosition": "56% 50%",
+      "pixelDiff": {
+        "comparedAt": "679x849 device px",
+        "objectPosition": "56% 50%",
+        "meanAbsDiff": 4.22,
+        "maxChannelDiff": 99,
+        "comparedPixels": 576471
+      },
+      "heroResponse": {
+        "bodyBytes": 31994,
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=750&q=75"
+      }
+    },
+    "desktop": {
+      "viewport": {
+        "width": 1280,
+        "height": 900,
+        "dpr": 1
+      },
+      "box": {
+        "width": 1232,
+        "height": 616
+      },
+      "boxRatio": 2,
+      "imageRatio": 1.778,
+      "bindingEdge": "width",
+      "drawnCssWidth": 1232,
+      "devicePxNeeded": 1232,
+      "candidateWidthPx": 1920,
+      "upscale": 0.64,
+      "objectFit": "cover",
+      "objectPosition": "50% 50%",
+      "pixelDiff": {
+        "comparedAt": "1232x616 device px",
+        "objectPosition": "50% 50%",
+        "meanAbsDiff": 2.15,
+        "maxChannelDiff": 29,
+        "comparedPixels": 758912
+      },
+      "heroResponse": {
+        "bodyBytes": 161628,
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75"
+      }
+    }
+  }
+}

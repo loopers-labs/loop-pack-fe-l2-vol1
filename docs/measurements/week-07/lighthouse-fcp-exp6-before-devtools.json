@@ -1,0 +1,91 @@
+{
+  "measuredSha": "3aa1981",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "url": "http://127.0.0.1:3211/",
+    "build": "production (next build && next start)",
+    "tool": "Lighthouse 12.8.2 headless",
+    "preset": "mobile 기본 프리셋 412x823, DPR 1.75",
+    "throttlingMethod": "devtools",
+    "cpuThrottle": "4x",
+    "networkThrottle": "rttMs 150, throughputKbps 1638.4",
+    "blockedUrlPatterns": null,
+    "profile": "회차마다 새 사용자 프로필",
+    "runs": 3
+  },
+  "runs": [
+    {
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3211/",
+      "fcp": 1668,
+      "lcp": 3518,
+      "cls": 0.065,
+      "tbt": 20,
+      "performanceScore": 79,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3211/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7305742,
+        "startTimeMs": 3456
+      }
+    },
+    {
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3211/",
+      "fcp": 1627,
+      "lcp": 3502,
+      "cls": 0.065,
+      "tbt": 7,
+      "performanceScore": 80,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3211/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7311742,
+        "startTimeMs": 3444
+      }
+    },
+    {
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3211/",
+      "fcp": 1624,
+      "lcp": 3507,
+      "cls": 0.065,
+      "tbt": 7,
+      "performanceScore": 80,
+      "lcpElement": "<h1>",
+      "heroRequest": {
+        "url": "http://127.0.0.1:3211/images/week-07/hero-original.jpg",
+        "candidateWidthPx": null,
+        "transferSize": 7311742,
+        "startTimeMs": 3447
+      }
+    }
+  ],
+  "summary": {
+    "fcp": {
+      "median": 1627,
+      "range": [1624, 1668]
+    },
+    "lcp": {
+      "median": 3507,
+      "range": [3502, 3518]
+    },
+    "cls": {
+      "median": 0.065,
+      "range": [0.065, 0.065]
+    },
+    "tbt": {
+      "median": 7,
+      "range": [7, 20]
+    },
+    "performanceScore": {
+      "median": 80,
+      "range": [79, 80]
+    }
+  }
+}
