@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-import { PRODUCT_LIST_DEFAULTS, getProductList, getProductById } from './productService';
+import { PRODUCT_LIST_DEFAULTS, fetchProductList, getProductById } from './productService';
 import type { ProductListQuery } from '@/entities/product/model/types';
 
 export function productListQueryOptions(params: ProductListQuery) {
@@ -13,7 +13,7 @@ export function productListQueryOptions(params: ProductListQuery) {
 
   return queryOptions({
     queryKey: ['products', { q, category, sort, page, pageSize }],
-    queryFn: () => getProductList({ q, category, sort, page, pageSize }),
+    queryFn: () => fetchProductList({ q, category, sort, page, pageSize }),
     staleTime: 0,
   });
 }
