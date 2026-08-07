@@ -25,7 +25,7 @@
   backdrop-filter: blur(8px);
 }
 
-.copy h2 {
+.copy h1 {
   margin: 6px 0 10px;
   font-size: clamp(28px, 4vw, 52px);
   line-height: 1.08;

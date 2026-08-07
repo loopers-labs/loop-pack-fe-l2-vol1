@@ -15,7 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Commerce',
+  title: {
+    template: '%s | Commerce',
+    default: 'Commerce',
+  },
   description: 'Loopers 커머스',
   openGraph: SITE_OPENGRAPH,
 };
