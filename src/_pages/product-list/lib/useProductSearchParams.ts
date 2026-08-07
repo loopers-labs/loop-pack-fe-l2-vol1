@@ -40,6 +40,7 @@ export function useProductSearchParams() {
     category: params.category,
     sort: params.sort,
     page: params.page,
+    scenario: params.scenario || undefined,
   };
 
   return {

@@ -14,6 +14,7 @@ export const searchParamsParsers = {
   category: parseAsStringLiteral(CATEGORY_OPTIONS).withDefault('all'),
   sort: parseAsStringLiteral(PRODUCT_SORTS).withDefault('latest'),
   page: parseAsInteger.withDefault(1),
+  scenario: parseAsString.withDefault(''),
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParsers);

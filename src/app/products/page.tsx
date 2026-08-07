@@ -93,7 +93,7 @@ export async function generateMetadata({
 async function ProductListLoader({
   searchParams,
 }: ProductListPageProps) {
-  const { q, category, sort, page } = await searchParamsCache.parse(searchParams);
+  const { q, category, sort, page, scenario } = await searchParamsCache.parse(searchParams);
   const queryClient = getQueryClient();
 
   const query = {
@@ -101,6 +101,7 @@ async function ProductListLoader({
     category,
     sort,
     page,
+    scenario: scenario || undefined,
   };
 
   await queryClient.ensureQueryData(productListQueryOptions(query));

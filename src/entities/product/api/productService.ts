@@ -71,6 +71,7 @@ export function buildProductListUrl(params: ProductListQuery): string {
     sort = PRODUCT_LIST_DEFAULTS.sort,
     page = PRODUCT_LIST_DEFAULTS.page,
     pageSize = PRODUCT_LIST_DEFAULTS.pageSize,
+    scenario,
   } = params;
 
   const sp = new URLSearchParams();
@@ -79,14 +80,18 @@ export function buildProductListUrl(params: ProductListQuery): string {
   sp.set('sort', sort);
   sp.set('page', String(page));
   sp.set('pageSize', String(pageSize));
+  if (scenario) sp.set('scenario', scenario);
 
   return `${getApiBase()}/api/products?${sp.toString()}`;
 }
 
 export async function fetchProductList(
   params: ProductListQuery,
+  options?: { signal?: AbortSignal },
 ): Promise<ProductListResponse> {
-  const res = await fetch(buildProductListUrl(params));
+  const res = await fetch(buildProductListUrl(params), {
+    signal: options?.signal,
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

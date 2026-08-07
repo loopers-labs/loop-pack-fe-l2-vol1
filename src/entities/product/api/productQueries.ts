@@ -9,11 +9,16 @@ export function productListQueryOptions(params: ProductListQuery) {
     sort = PRODUCT_LIST_DEFAULTS.sort,
     page = PRODUCT_LIST_DEFAULTS.page,
     pageSize = PRODUCT_LIST_DEFAULTS.pageSize,
+    scenario,
   } = params;
 
   return queryOptions({
-    queryKey: ['products', { q, category, sort, page, pageSize }],
-    queryFn: () => fetchProductList({ q, category, sort, page, pageSize }),
+    queryKey: ['products', { q, category, sort, page, pageSize, scenario }],
+    queryFn: ({ signal }) =>
+      fetchProductList(
+        { q, category, sort, page, pageSize, scenario },
+        { signal },
+      ),
     staleTime: 0,
   });
 }
