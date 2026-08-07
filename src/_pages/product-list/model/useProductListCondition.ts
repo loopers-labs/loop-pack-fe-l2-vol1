@@ -1,10 +1,9 @@
 'use client'
 
 import { useQueryStates } from 'nuqs'
-import type { ProductListCondition } from '@/_pages/product-list/api/productList'
 import {
+  createProductListCondition,
   hasNonDefaultFilters,
-  PRODUCT_PAGE_SIZE,
   productListScenarioSearchParams,
   productListSearchParams,
   productListUrlOptions,
@@ -21,11 +20,8 @@ export const useProductListCondition = () => {
   // 재현 조건은 읽기만 한다. setFilters가 소유하지 않아 초기화에도 살아남는다.
   const [{ scenario }] = useQueryStates(productListScenarioSearchParams)
 
-  const condition: ProductListCondition = {
-    ...filters,
-    pageSize: PRODUCT_PAGE_SIZE,
-    scenario,
-  }
+  // 조건 조립은 서버와 공유하는 함수 하나가 한다. 각자 조립하면 정규화가 갈린다.
+  const condition = createProductListCondition(filters, scenario)
 
   // 조건 초기화가 실제로 무언가를 바꾸는 상태인지 화면이 알아야 한다.
   return {

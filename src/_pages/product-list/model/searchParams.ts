@@ -1,5 +1,15 @@
-import { createParser, parseAsStringLiteral, type inferParserType } from 'nuqs'
-import { productListScenarioValues } from '@/_pages/product-list/api/productList'
+// parser는 서버 로더도 함께 쓰므로 동형 진입점에서 가져온다.
+// 'nuqs'는 client 전용이라 서버에서 평가하면 build가 멈춘다.
+import {
+  createParser,
+  parseAsStringLiteral,
+  type inferParserType,
+} from 'nuqs/server'
+import {
+  productListScenarioValues,
+  type ProductListCondition,
+  type ProductListScenario,
+} from '@/_pages/product-list/api/productList'
 import {
   categoryIds,
   sortValues,
@@ -55,3 +65,15 @@ export const hasNonDefaultFilters = (filters: ProductListFilters) =>
 export const productListUrlOptions = { history: 'push' as const }
 
 export const PRODUCT_PAGE_SIZE = 12
+
+// 조건 조립은 여기 한 곳에서만 한다. 서버와 브라우저가 각자 조립하면
+// 같은 URL인데 다른 query key와 다른 요청이 나가 hydration 직후 재요청이 생긴다.
+// pageSize는 URL에 없고 화면이 정한다.
+export const createProductListCondition = (
+  filters: ProductListFilters,
+  scenario: ProductListScenario,
+): ProductListCondition => ({
+  ...filters,
+  pageSize: PRODUCT_PAGE_SIZE,
+  scenario,
+})

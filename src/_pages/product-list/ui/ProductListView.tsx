@@ -8,37 +8,12 @@ import ProductGridFallback from '@/widgets/product-grid/ui/ProductGridFallback'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { productListQueries } from '@/_pages/product-list/api/productList'
 import { sortValues } from '@/entities/product/model/productListContract'
-import {
-  categoryFilterValues,
-  type CategoryFilter,
-} from '../model/searchParams'
+import { categoryFilterValues } from '../model/searchParams'
+import { productListLabels } from '../model/labels'
 import { describeEmptyResult } from '../model/emptyResult'
 import { useProductListCondition } from '../model/useProductListCondition'
-import type { ProductSort } from '@/entities/product/model/product'
 import ProductFilterSelect from './ProductFilterSelect'
 import SearchForm from './SearchForm'
-
-// 허용값 목록은 URL 계약이라 상수로 고정한다. parser가 컴파일 타임 유니온을 요구해서
-// 서버 응답으로 대체할 수 없다.
-//
-// URL parser는 storefront가 지원하는 category만 통과시킨다.
-// 따라서 목록의 필터와 조건 설명은 같은 영문 label 계약을 사용한다.
-// 서버가 새 category를 내려줘도 URL 계약에 추가되기 전에는 선택 조건이 되지 않는다.
-const categoryLabels: Record<CategoryFilter, string> = {
-  all: 'All',
-  casual: 'Casual',
-  fashion: 'Fashion',
-  goods: 'Beauty & Goods',
-  home: 'Home',
-  digital: 'Digital',
-}
-
-const sortLabels: Record<ProductSort, string> = {
-  latest: 'Newest',
-  popular: 'Popular',
-  'price-asc': 'Price: Low to high',
-  'price-desc': 'Price: High to low',
-}
 
 export default function ProductListView() {
   const { condition, setFilters, canResetFilters } = useProductListCondition()
@@ -87,9 +62,6 @@ export default function ProductListView() {
   const shownCondition = showsPreviousSelection
     ? lastShownCondition.current
     : condition
-
-  const categoryLabel = (value: CategoryFilter) => categoryLabels[value]
-  const sortLabel = (value: ProductSort) => sortLabels[value]
 
   // 검색, 카테고리, 정렬이 바뀌면 보던 페이지는 의미가 없다. 1페이지로 되돌린다.
   const handleSearch = (query: string) => {
@@ -236,8 +208,7 @@ export default function ProductListView() {
         {noticeRow}
         <p>
           {describeEmptyResult(shownCondition, {
-            category: categoryLabel,
-            sort: sortLabel,
+            ...productListLabels,
           })}
         </p>
         {canResetFilters ? (
@@ -278,40 +249,34 @@ export default function ProductListView() {
     )
   }
 
+  // main과 제목과 설명은 서버 셸이 소유한다. 여기는 URL 상태와 조회 결과만 다룬다.
   return (
-    <main>
-      <section className="product-list-hero">
-        <p className="product-list-eyebrow">SHOP</p>
-        <h1>Products</h1>
-        <p className="product-list-description">
-          Objects worth keeping, selected for everyday life.
-        </p>
-        <div className="week05-filters">
-          <SearchForm
-            key={condition.q}
-            initialQuery={condition.q}
-            onSearch={handleSearch}
-          />
-          <ProductFilterSelect
-            label="Category"
-            value={condition.category}
-            options={categoryFilterValues.map((value) => ({
-              value,
-              label: categoryLabel(value),
-            }))}
-            onChange={handleCategoryChange}
-          />
-          <ProductFilterSelect
-            label="Sort"
-            value={condition.sort}
-            options={sortValues.map((value) => ({
-              value,
-              label: sortLabels[value],
-            }))}
-            onChange={handleSortChange}
-          />
-        </div>
-      </section>
+    <>
+      <div className="week05-filters">
+        <SearchForm
+          key={condition.q}
+          initialQuery={condition.q}
+          onSearch={handleSearch}
+        />
+        <ProductFilterSelect
+          label="Category"
+          value={condition.category}
+          options={categoryFilterValues.map((value) => ({
+            value,
+            label: productListLabels.category(value),
+          }))}
+          onChange={handleCategoryChange}
+        />
+        <ProductFilterSelect
+          label="Sort"
+          value={condition.sort}
+          options={sortValues.map((value) => ({
+            value,
+            label: productListLabels.sort(value),
+          }))}
+          onChange={handleSortChange}
+        />
+      </div>
       {/* 이 알림은 결과 영역 밖에 둔다. aria-busy 영역 안의 변경은 보조 기술이 완료까지
           미룰 수 있는데, 완료 시점에는 이 문구가 이미 사라져 끝내 읽히지 않는다. */}
       <p className="visually-hidden" role="status">
@@ -324,6 +289,6 @@ export default function ProductListView() {
       >
         {results}
       </section>
-    </main>
+    </>
   )
 }

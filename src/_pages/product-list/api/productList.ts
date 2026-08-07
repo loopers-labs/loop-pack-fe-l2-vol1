@@ -5,6 +5,7 @@ import type {
   Product,
   ProductSort,
 } from '@/entities/product/model/product'
+import { apiUrl } from '@/shared/api/apiUrl'
 import { fetchJson } from '@/shared/api/http'
 
 // 상품 목록 화면의 조회 계약이다. 전송, query key, 캐시 정책을 한 자리에 둔다.
@@ -41,9 +42,16 @@ export type ProductListResponse = {
   pageSize: number
 }
 
-export const fetchProducts = (
+// origin은 서버만 넘긴다. 자기 주소를 몰라 절대 URL이 필요하기 때문이다.
+export interface ProductListRequestOptions {
+  origin?: string
+}
+
+// URL 조립은 이 함수 하나만 한다. metadata와 본문이 각자 조립하면
+// 같은 조건인데 다른 요청이 나가고, 요청 범위 공유의 캐시 키도 갈린다.
+export const productListRequestUrl = (
   condition: ProductListCondition,
-  signal?: AbortSignal,
+  origin?: string,
 ) => {
   const params = new URLSearchParams()
   // 빈 검색어는 조건이 아니므로 URL에서 뺀다. 나머지는 기본값도 명시한다.
@@ -54,19 +62,33 @@ export const fetchProducts = (
   params.set('pageSize', String(condition.pageSize))
   // 지원하지 않는 값과 부재는 조건이 아니다. 있을 때만 보내 평소 응답 시점을 유지한다.
   if (condition.scenario) params.set('scenario', condition.scenario)
-  return fetchJson<ProductListResponse>(`/api/products?${params}`, signal)
+  return apiUrl(`/api/products?${params}`, origin)
 }
+
+export const fetchProducts = (
+  condition: ProductListCondition,
+  options: ProductListRequestOptions = {},
+  signal?: AbortSignal,
+) =>
+  fetchJson<ProductListResponse>(
+    productListRequestUrl(condition, options.origin),
+    signal,
+  )
 
 // staleTime 30초: 조건 이동과 뒤로가기가 잦다. 캐시를 즉시 보여주고 오래되면 백그라운드 갱신한다.
 // gcTime 5분(기본값 명시): 조건을 바꿨다 되돌아오는 동선을 덮고도 남는 보관 기간이다.
+// key에 origin을 넣지 않는다. 서버가 채운 캐시를 브라우저가 그대로 이어받아야 한다.
 export const productListQueries = {
   all: () => ['products'] as const,
   lists: () => [...productListQueries.all(), 'list'] as const,
-  list: (condition: ProductListCondition) =>
+  list: (
+    condition: ProductListCondition,
+    options: ProductListRequestOptions = {},
+  ) =>
     queryOptions({
       // 일반에서 구체로 내려가는 계층이라 목록 전체와 특정 조건을 각각 조준할 수 있다.
       queryKey: [...productListQueries.lists(), condition],
-      queryFn: ({ signal }) => fetchProducts(condition, signal),
+      queryFn: ({ signal }) => fetchProducts(condition, options, signal),
       // 조건을 바꾸면 새 key라 데이터가 없어 화면이 통째로 비었다. 목록과 페이지네이션이
       // 사라지면 사용자는 어디까지 보고 있었는지도 잃는다. 이전 결과를 자리에 남긴다.
       // 대신 화면이 그것을 현재 조건의 결과처럼 보여주면 안 된다. isPlaceholderData로 구분한다.
