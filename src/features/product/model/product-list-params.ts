@@ -7,7 +7,7 @@ import {
 
 import { CATEGORY_FILTERS, PRODUCT_PAGE_SIZE } from './constants';
 
-import { PRODUCT_SORTS } from '@/entities/product';
+import { PRODUCT_LIST_SCENARIOS, PRODUCT_SORTS } from '@/entities/product';
 
 // 주소로 직접 들어와도, 폼으로 제출해도 같은 규칙을 써야 같은 검색이 같은 캐시를 쓴다.
 export const normalizeSearchQuery = (value: string) =>
@@ -21,6 +21,8 @@ export const conditionParsers = {
 
   category: parseAsStringLiteral(CATEGORY_FILTERS).withDefault('all'),
   sort: parseAsStringLiteral(PRODUCT_SORTS).withDefault('latest'),
+
+  scenario: parseAsStringLiteral(PRODUCT_LIST_SCENARIOS),
 
   page: createParser({
     parse: (value: string) => {
@@ -42,5 +44,6 @@ export const loadProductListConditions = createLoader(conditionParsers);
  */
 export const toProductListQuery = (conditions: ProductListConditions) => ({
   ...conditions,
+  scenario: conditions.scenario ?? null,
   pageSize: PRODUCT_PAGE_SIZE,
 });

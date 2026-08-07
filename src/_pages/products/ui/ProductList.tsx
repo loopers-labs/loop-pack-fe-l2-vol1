@@ -3,6 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
+import { ProductListPending } from './ProductListPending';
+
 import { ProductCard, productQueries } from '@/entities/product';
 import { CartToggleButton } from '@/features/cart';
 import {
@@ -25,7 +27,10 @@ export function ProductList() {
     ? countTotalPages(data.totalCount, data.pageSize)
     : null;
 
-  const { isPageOutOfRange } = usePageClamp(totalPages);
+  // 이전 목록을 보여주는 동안에는 현재 조건의 총 페이지 수를 아직 모른다.
+  const confirmedTotalPages = isPlaceholderData ? null : totalPages;
+
+  const { isPageOutOfRange } = usePageClamp(confirmedTotalPages);
 
   // 보정으로 주소가 바뀌기 전에 '99999 / 3' 같은 화면이 잠깐 보이지 않게 막는다.
   if (isPageOutOfRange) {
@@ -55,11 +60,7 @@ export function ProductList() {
   }
 
   if (!data) {
-    return (
-      <p className="week05-status" role="status">
-        상품 목록을 불러오는 중입니다…
-      </p>
-    );
+    return <ProductListPending />;
   }
 
   return (
@@ -77,16 +78,11 @@ export function ProductList() {
         </p>
       )}
       <p>총 {data.totalCount}개</p>
-      {isPlaceholderData && (
-        <p className="week05-status" role="status">
-          새 페이지를 불러오는 중입니다.
-        </p>
-      )}
       {data.totalCount === 0 ? (
         <p className="week05-empty">조건에 맞는 상품이 없습니다.</p>
       ) : (
         <>
-          <div className="week05-grid">
+          <div className="week05-grid" data-updating={isPlaceholderData}>
             {data.products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -111,7 +107,7 @@ export function ProductList() {
           <ProductListPagination
             page={data.page}
             totalPages={totalPages ?? 1}
-            isChangingPage={isPlaceholderData}
+            isUpdating={isPlaceholderData}
             onPageChange={changePage}
           />
         </>
@@ -123,19 +119,19 @@ export function ProductList() {
 function ProductListPagination({
   page,
   totalPages,
-  isChangingPage,
+  isUpdating,
   onPageChange,
 }: {
   page: number;
   totalPages: number;
-  isChangingPage: boolean;
+  isUpdating: boolean;
   onPageChange: (page: number) => void;
 }) {
   return (
     <nav className="week05-pagination" aria-label="페이지 이동">
       <button
         type="button"
-        disabled={page <= 1 || isChangingPage}
+        disabled={page <= 1 || isUpdating}
         onClick={() => {
           onPageChange(page - 1);
         }}
@@ -147,7 +143,7 @@ function ProductListPagination({
       </span>
       <button
         type="button"
-        disabled={page >= totalPages || isChangingPage}
+        disabled={page >= totalPages || isUpdating}
         onClick={() => {
           onPageChange(page + 1);
         }}

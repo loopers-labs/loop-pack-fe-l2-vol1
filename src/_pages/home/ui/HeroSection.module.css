@@ -18,6 +18,13 @@
   position: absolute;
   inset: auto auto clamp(20px, 5vw, 64px) clamp(20px, 5vw, 64px);
   width: min(440px, calc(100% - 40px));
+  /*
+   * 제목·설명은 홈 조회 뒤에 붙는다. 카드가 아래쪽 기준 배치라 자리를 안 잡아두면
+   * 카드가 위로 자라며 그 안의 문구가 밀린다.
+   * 가장 좁은 화면의 실측 높이를 최소치로 잡는다. 넓은 화면 기준으로 올리면
+   * 중간 폭에서 카드가 필요 이상으로 커져 디자인이 무너진다.
+   */
+  min-height: 132px;
   padding: clamp(18px, 3vw, 32px);
   background: rgb(255 253 248 / 88%);
   backdrop-filter: blur(8px);
