@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
   useQuery,
@@ -138,11 +138,20 @@ export function ProductListContent() {
   const queryClient = useQueryClient();
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [lastSuccessData, setLastSuccessData] =
+    useState<ProductListResponse | undefined>(undefined);
+
   const { data, isPlaceholderData, isError, isFetching, refetch } = useQuery({
     ...productListQueryOptions(query),
     placeholderData: keepPreviousData,
   });
 
+  if (data && data !== lastSuccessData) {
+    setLastSuccessData(data);
+  }
+
+  const displayData = data ?? lastSuccessData;
+  const isShowingFallback = !data && !!lastSuccessData;
 
   useEffect(() => {
     if (!data) return;
@@ -175,7 +184,7 @@ export function ProductListContent() {
     [setSearch],
   );
 
-  if (isError && !data) {
+  if (isError && !displayData) {
     return (
       <main className="px-8 py-10">
         <ProductListIntro />
@@ -197,13 +206,28 @@ export function ProductListContent() {
     );
   }
 
-  if (!data) return <ProductListSkeleton />;
+  if (!displayData) return <ProductListSkeleton />;
 
-  const { categories } = data;
+  const { categories } = displayData;
 
   return (
     <main className="px-8 py-10">
       <ProductListIntro />
+
+      {isShowingFallback && (
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">
+          <p className="text-sm text-text-secondary">
+            목록을 갱신하지 못했습니다.
+          </p>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-4">
         <input
@@ -238,7 +262,7 @@ export function ProductListContent() {
         </select>
       </div>
 
-      <ProductGrid data={data} isFetching={isFetching} isStale={isPlaceholderData} setPage={setPage} />
+      <ProductGrid data={displayData} isFetching={isFetching} isStale={isPlaceholderData || isShowingFallback} setPage={setPage} />
     </main>
   );
 }
