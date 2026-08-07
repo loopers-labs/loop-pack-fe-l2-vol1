@@ -652,23 +652,25 @@ selector 결과가 전부 새 참조가 되어 전원이 다시 렌더된다. �
 
 ## 14. 증거 원본과 재현 절차
 
-원본 Lighthouse와 Performance trace는 용량 때문에 커밋하지 않았다(리포트 20개, 약 16.8 MB).
-대신 측정 스크립트와 회차별 핵심 추출 JSON을 보관해, 보고한 수치를 기계적으로 확인하고 같은
-조건으로 재생산할 수 있게 했다.
+**원본 Lighthouse 리포트를 회차별로 보관했다.** 44개 회차를 `gzip -n`으로 개별 압축해
+5.7 MB로 커밋했고, `SHA256SUMS`와 `manifest.json`으로 무결성과 회차 대응을 확인할 수 있다.
+보고한 수치를 원본에서 직접 감사할 수 있다.
 
-**추출 JSON만으로 원본 trace의 진위를 감사할 수는 없다.** 값이 맞는지 확인하고 같은 절차를
-다시 밟는 데까지가 이 산출물의 범위다.
+| | 위치 |
+| --- | --- |
+| 원본 리포트 | [`docs/measurements/week-07/raw/`](measurements/week-07/raw) |
+| 추출 산출물 | [`docs/measurements/week-07/`](measurements/week-07) |
+| 측정 스크립트와 대응표 | [`scripts/measure/README.md`](../scripts/measure/README.md) |
 
-산출물은 [`docs/measurements/week-07/`](measurements/week-07)에, 스크립트와 대응표는
-[`scripts/measure/README.md`](../scripts/measure/README.md)에 있다. 각 JSON에는 그 값을 잰
-코드의 `measuredSha`와 봉투에 담은 시점의 `extractorSha`가 따로 들어 있다.
+각 추출 JSON에는 그 값을 잰 코드의 `measuredSha`와 봉투에 담은 시점의 `extractorSha`가 따로
+들어 있다. `manifest.json`은 추출 산출물과 원본 회차를 파일명과 해시로 잇는다.
 
 `render-scope.mjs`의 산출물만 없다. profiling build와 임시 계측이 있어야 도는데, 그 계측을
 커밋된 트리에 남길 수 없기 때문이다.
 
 | 증거 | 재현 |
 | --- | --- |
-| Lighthouse 5회 | `npx lighthouse@12.8.2 <URL> --only-categories=performance --output=json --chrome-flags="--headless=new --user-data-dir=<새 프로필>"` |
+| Lighthouse 5회 | 원본이 `raw/`에 있다. 다시 만들려면 `npx lighthouse@12.8.2 <URL> --only-categories=performance --output=json --chrome-flags="--headless=new --user-data-dir=<새 프로필>"` |
 | Hero 전송량과 요청 시작 | 위 JSON의 `audits["network-requests"].details.items`에서 `_next/image` 항목 |
 | Route Handler 실호출 | Route Handler에 임시 카운터와 로그를 넣고 document 1건 요청, 서버 로그 계수 후 계측 제거 |
 | 취소된 요청 | Playwright에서 `requestfailed` 이벤트로 `net::ERR_ABORTED` 수집 |

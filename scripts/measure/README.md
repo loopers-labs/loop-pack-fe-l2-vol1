@@ -1,11 +1,8 @@
 # 7주차 성능 측정 스크립트
 
-문서에 적은 수치를 다시 만들기 위한 스크립트다. 원본 Lighthouse와 Performance trace는
-용량 때문에 커밋하지 않았다. 대신 이 스크립트와 회차별 핵심 추출 JSON을 남겨,
-보고한 수치를 기계적으로 확인하고 같은 조건으로 재생산할 수 있게 했다.
-
-**추출 JSON만으로 원본 trace의 진위를 감사할 수는 없다.** 값이 맞는지 확인하고 같은
-절차를 다시 밟는 데까지가 이 산출물의 범위다.
+문서에 적은 수치를 다시 만들기 위한 스크립트다. 원본 Lighthouse 리포트는
+[`docs/measurements/week-07/raw/`](../../docs/measurements/week-07/raw)에 회차별로 보관돼 있고,
+이 스크립트가 그 원본에서 핵심 값을 뽑아 추출 JSON을 만든다.
 
 판단과 해석은 [`docs/week-07-performance.md`](../../docs/week-07-performance.md)에 있다.
 
@@ -30,6 +27,7 @@ export MEASURE_BASE_URL=http://127.0.0.1:3210
 | `cancellation.mjs` | `cancellation.json` | 낡은 요청의 취소와 최종 URL 정합성 |
 | `hydration.mjs` | `hydration-cost.json` | 브라우저 조회 횟수와 document 크기의 교환 |
 | `render-scope.mjs` | **산출물 없음** | 클릭 한 번이 다시 그린 카드 범위 |
+| `raw-manifest.mjs` | `raw/manifest.json`, `raw/SHA256SUMS` | 원본 리포트와 추출 산출물의 회차 대응과 무결성 |
 
 산출물은 전부 `docs/measurements/week-07/`에 있다.
 
@@ -74,7 +72,17 @@ node scripts/measure/cancellation.mjs
 node scripts/measure/hydration.mjs
 ```
 
-환경 변수로 조절한다. `MEASURE_SHA`(필수), `MEASURE_RUNS`(기본 5), `MEASURE_STEPS`(기본 3),
+추출 산출물을 다시 뽑았으면 manifest도 다시 만든다. 조건을 추출 JSON에서 그대로 옮겨 담는다.
+
+```bash
+node scripts/measure/raw-manifest.mjs
+pnpm exec prettier --write docs/measurements/week-07/raw/manifest.json
+```
+
+manifest는 `JSON.stringify`로 쓰므로 짧은 배열의 줄바꿈이 Prettier와 다르다. 커밋할 때는
+lint-staged가 정리하지만, 검사만 돌릴 때는 위처럼 한 번 맞춰 준다.
+
+환경 변수로 조절한다. `MEASURE_SHA`(필수), `MEASURE_VARIANT`(커밋 그대로가 아닌 상태에서 잰 경우), `MEASURE_RUNS`(기본 5), `MEASURE_STEPS`(기본 3),
 `MEASURE_LH_VERSION`(기본 12.8.2).
 
 ## `render-scope.mjs`만 다르다

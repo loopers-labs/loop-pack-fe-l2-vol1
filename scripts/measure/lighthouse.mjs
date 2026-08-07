@@ -16,6 +16,9 @@ const RUNS = Number(process.env.MEASURE_RUNS ?? 5)
 const TARGET = process.env.MEASURE_PATH ?? '/'
 const LABEL = process.env.MEASURE_LABEL ?? 'home'
 const RAW_DIR = process.env.MEASURE_LH_RAW_DIR
+// 커밋 그대로가 아닌 상태에서 잰 회차는 그 사실을 산출물에 남긴다. README에만 적으면
+// 기계 판독 정보만 보는 사람은 해당 커밋의 결과로 읽는다.
+const VARIANT = process.env.MEASURE_VARIANT
 
 const collect = async () => {
   const workDir = await mkdtemp(join(tmpdir(), 'lh-measure-'))
@@ -113,6 +116,7 @@ await writeResult(`lighthouse-${LABEL}.json`, {
     cpuThrottle: `${settings.throttling.cpuSlowdownMultiplier}x`,
     networkThrottle: `rttMs ${settings.throttling.rttMs}, throughputKbps ${settings.throttling.throughputKbps}`,
     blockedUrlPatterns: settings.blockedUrlPatterns ?? null,
+    ...(VARIANT ? { variant: VARIANT } : {}),
     profile: '회차마다 새 사용자 프로필',
     runs: runs.length,
   },

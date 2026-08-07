@@ -1,6 +1,6 @@
 {
   "measuredSha": "fff007f",
-  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "extractorSha": "d4353f65c551fd73f8589b6f14c6b563faf0e4b5",
   "conditions": {
     "url": "http://127.0.0.1:3210/",
     "build": "production (next build && next start)",
@@ -10,6 +10,7 @@
     "cpuThrottle": "4x",
     "networkThrottle": "rttMs 150, throughputKbps 1638.4",
     "blockedUrlPatterns": null,
+    "variant": "fff007f에서 홈 셸의 한글 제목과 설명만 라틴 문자로 임시 치환한 재현 측정이다. 해당 커밋을 그대로 빌드한 것이 아니다.",
     "profile": "회차마다 새 사용자 프로필",
     "runs": 3
   },
