@@ -31,14 +31,6 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="px-8 pt-10 pb-4">
-        <h1 className="font-family-display text-2xl font-normal text-text">
-          매일 새롭게 발견하는 취향
-        </h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          나다운 일상을 완성하는 라이프스타일 셀렉트숍
-        </p>
-      </section>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense
           fallback={

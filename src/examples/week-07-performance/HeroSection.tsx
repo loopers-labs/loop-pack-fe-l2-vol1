@@ -35,7 +35,7 @@ export function HeroSection({ title, description }: HeroSectionProps) {
         </div>
         {title && (
           <div className={styles.bottom}>
-            <h2 id="week07-hero-title" className={styles.title}>{title}</h2>
+            <h1 id="week07-hero-title" className={styles.title}>{title}</h1>
             {description && (
               <p className={styles.description}>{description}</p>
             )}
