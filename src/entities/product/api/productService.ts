@@ -89,9 +89,10 @@ export async function fetchProductList(
   params: ProductListQuery,
   options?: { signal?: AbortSignal },
 ): Promise<ProductListResponse> {
-  const res = await fetch(buildProductListUrl(params), {
-    signal: options?.signal,
-  });
+  const isServer = typeof window === 'undefined';
+  const res = isServer
+    ? await fetch(buildProductListUrl(params))
+    : await fetch(buildProductListUrl(params), { signal: options?.signal });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
