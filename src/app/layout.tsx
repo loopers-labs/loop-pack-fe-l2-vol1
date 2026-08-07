@@ -46,16 +46,9 @@ export default function RootLayout({
         <link
           rel="preload"
           as="image"
-          href="/images/week-07/hero-640.avif"
+          imageSrcSet="/images/week-07/hero-640.avif 640w, /images/week-07/hero-1080.avif 1080w, /images/week-07/hero-1920.avif 1920w"
+          imageSizes="(max-width: 1280px) 100vw, 1280px"
           type="image/avif"
-          media="(max-width: 640px)"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/images/week-07/hero-1080.avif"
-          type="image/avif"
-          media="(min-width: 641px)"
         />
       </head>
       <body className="font-family-body antialiased min-h-screen bg-bg flex flex-col">
