@@ -1,4 +1,7 @@
 import type { Category, CategoryId, Product } from "@/entities/product/model";
+import type { MockApiScenario } from '@/shared/api';
+import type { ProductListQuery, ProductListResponse } from '@/entities/product/model';
+
 
 export const categories: Category[] = [
   { id: "casual", name: "캐주얼" },
@@ -351,9 +354,69 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct);
 
-const mockDelayMs = process.env.NODE_ENV === "test" ? 0 : 500;
-
-export const waitForMockApi = () =>
+export const waitForMockApi = (requestedDelayMs = 500) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, mockDelayMs);
+    const delayMs = process.env.NODE_ENV === "test" ? 0 : requestedDelayMs;
+    setTimeout(resolve, delayMs);
   });
+
+
+export function getHomeData(scenario: MockApiScenario | null) {
+  const popularProducts = [...products]
+    .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating)
+    .slice(0, 6);
+  const newProducts = [...products]
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .slice(0, 6);
+
+  return {
+    banner: homeBanner,
+    categories,
+    popularProducts: scenario === 'empty' ? [] : popularProducts,
+    newProducts: scenario === 'empty' ? [] : newProducts,
+  };
+}
+
+
+export function getProductsData(
+  query: ProductListQuery & { scenario?: MockApiScenario | null },
+): ProductListResponse {
+  const { q = '', category, sort, page = 1, pageSize = 12, scenario } = query;
+  const normalizedQ = q.trim().toLocaleLowerCase('ko');
+
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      !category || category === 'all' || product.category === category;
+    const searchable = `${product.brand} ${product.name}`.toLocaleLowerCase('ko');
+    return matchesCategory && searchable.includes(normalizedQ);
+  });
+
+  const sortedProducts = [...filteredProducts];
+  if (sort) {
+    sortedProducts.sort((a, b) => {
+      switch (sort) {
+        case 'popular':
+          return b.reviewCount - a.reviewCount || b.rating - a.rating;
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'latest':
+          return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+      }
+    });
+  }
+
+  const start = (page - 1) * pageSize;
+  const pagedProducts = sortedProducts.slice(start, start + pageSize);
+  const responseProducts = scenario === 'empty' ? [] : pagedProducts;
+  const totalCount = scenario === 'empty' ? 0 : filteredProducts.length;
+
+  return {
+    products: responseProducts,
+    categories,
+    totalCount,
+    page,
+    pageSize,
+  };
+}
