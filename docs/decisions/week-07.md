@@ -170,22 +170,47 @@
 
 ### 기본 확인
 
-- 홈 title/description/OG:
-- 상품 목록 title/description/OG (검색어→title, category/sort→description, 2페이지 이상 page 번호):
-- shallow merge 확인 (siteName/locale/type 유지 여부):
+- 홈 title/description/OG: 완료. `generateMetadata`가 `getHomeServerData()`로 서버에서 직접 데이터 조회, title/description을 banner에서 생성. curl로 초기 HTML에 title/OG 태그/h1/전체 상품 데이터가 JS 실행 전에 포함됨을 확인
+- 상품 목록 title/description/OG (검색어→title, category/sort→description, 2페이지 이상 page 번호): 완료. 검색어 우선(`'니트' 검색 결과`), category/sort는 description(`뷰티·잡화 · 높은 가격순 카테고리의 상품 6개를...`), 2페이지 이상은 title에 페이지 번호(`상품 둘러보기 - 2페이지`) — curl로 3가지 케이스 모두 검증 완료
+- shallow merge 확인 (siteName/locale/type 유지 여부): 완료. `shared/config/site-metadata.ts`에 `SITE_OPENGRAPH` 공통 상수(siteName/locale/type) 작성, 루트 layout과 home/products의 generateMetadata가 이를 spread하여 사용. curl로 og:site_name/og:locale/og:type이 페이지별 og:title/description을 덮어써도 유지됨을 확인
+
+### server prefetch 구조 (1단계에서 이월된 h1/설명 문제도 함께 해결)
+
+- home, products 페이지 모두 Server Component로 전환, `getQueryClient()` + `prefetchQuery()` + `HydrationBoundary`로 서버에서 미리 가져온 데이터를 브라우저가 이어받도록 구성
+- Route Handler(`route.ts`)와 metadata/본문이 `commerce.ts`의 `getHomeData()`/`getProductsData()`를 공통으로 재사용 — HTTP 왕복 없이 서버 내부에서 직접 함수 호출
+- 1단계에서 미뤄뒀던 "h1/설명이 데이터 로딩과 무관하게 즉시 보이지 않던 문제"가 이 구조 도입으로 해결됨 (curl로 초기 HTML에 h1과 전체 데이터가 포함됨을 확인)
+- Hero의 제목을 h2에서 h1으로 변경 (페이지 대표 제목 역할)
 
 ### 케이스별 document 증거
 
 | 상황                                     | title/description | OG image | 비고 |
 | ---------------------------------------- | ----------------- | -------- | ---- |
-| normal                                   |                   |          |      |
-| 정상 empty (0건)                         |                   |          |      |
-| metadata query failure (APP_ORIGIN 끊음) |                   |          |      |
+| normal | `<title>매일 새롭게 발견하는 취향</title>` | `og:image` 정상 반영 | curl로 확인 완료 |
+| 정상 empty (0건) | `<title>상품 둘러보기</title>` / description "최신순 카테고리의 상품 0개를 확인해보세요." | - | `?scenario=empty`로 curl 검증 완료 |
+| metadata query failure | root 공통 metadata로 상속: `<title>Commerce</title>` | root 상속, 페이지별 이미지 없음 | 아래 메모 참고 |
+
+**메모 (query failure 케이스 재현 방법 변경)**: 과제 안내문이 제시한 재현법(`APP_ORIGIN`을 닿지 않는 origin으로 설정해 HTTP fetch 실패 유도)은 `generateMetadata`가 자기 자신의 Route Handler를 **HTTP로 호출하는 구조**를 전제로 함. 이번 구현은 안내문의 다른 원칙("Server Component는 자기 Route Handler를 HTTP로 호출하지 않는다")을 따라 `getHomeServerData()`/`getProductsServerData()`가 **HTTP 없이 서버 함수를 직접 호출**하도록 설계했기 때문에, `APP_ORIGIN` 재현법 자체가 적용되지 않음(끊어도 애초에 그 값을 참조하지 않아 실패가 발생하지 않음).
+
+대안으로 환경변수 `SIMULATE_METADATA_FAILURE=true`를 도입해 두 서버 함수가 강제로 reject하도록 만들고, `generateMetadata`에서 `try/catch`로 감싸 실패 시 빈 객체(`{}`)를 반환하도록 구현. 이러면 Next.js가 페이지별 metadata 없음으로 처리하고 루트 layout의 공통 metadata(title: "Commerce")를 그대로 상속함.
+
+검증:
+```bash
+SIMULATE_METADATA_FAILURE=true pnpm build && SIMULATE_METADATA_FAILURE=true pnpm start
+curl -s http://localhost:3000/ | grep -oE '<title>[^<]*</title>'
+# 결과: <title>Commerce</title>
+
+curl -s "http://localhost:3000/products?category=goods" | grep -oE '<title>[^<]*</title>'
+# 결과: <title>Commerce</title>
+```
+home, products 둘 다 root 공통 metadata로 정상 상속됨을 확인.
 
 ### 서버 호출 계수
 
-- 동일 slow Route Handler 호출 횟수 (임시 로그로 확인):
-- 계측 제거 여부:
+- **확인 완료**. `getHomeData()`에 임시 콘솔 로그(`[SERVER_CALL_COUNT]`) 추가 후 `pnpm build` 실행 결과, 빌드 시점에 **2회** 호출됨 (metadata용 1회 + 본문 prefetch용 1회) — 동일한 정적 페이지 생성 사이클 안에서.
+- 홈 라우트(`/`)는 `next build` 로그에서 `○ (Static) prerendered`로 표시됨. 즉 **빌드 시점에 한 번 미리 렌더링되고, 실제 사용자 요청(curl)에는 서버 함수가 다시 호출되지 않음**을 확인함 — `pnpm start` 후 `curl http://localhost:3000/`을 실행해도 서버 로그에 추가 호출이 찍히지 않았음.
+- **결론**: metadata와 본문이 같은 query factory(같은 데이터)를 사용하면서도 요청당 중복 호출이 발생하지 않는 이유는, 페이지 자체가 정적 프리렌더링 대상이라 빌드 시점 1회 생성 이후 캐시된 HTML을 재사용하기 때문. slow scenario의 지연은 빌드 시점에만 발생하고 실사용자 요청에는 영향 없음.
+- 계측 제거 여부: 확인 완료 후 임시 로그(console.log, eslint-disable 주석) 제거함. lint/typecheck 재통과 확인.
+
 
 ### UA별 응답 시점 비교
 
@@ -196,14 +221,14 @@ curl -A 'facebookexternalhit/1.1' -s -o /dev/null -w 'facebook start=%{time_star
 
 | UA                  | time_starttransfer | time_total |
 | ------------------- | ------------------ | ---------- |
-| normal              |                    |            |
-| facebookexternalhit |                    |            |
+| normal              | **진행 예정** |            |
+| facebookexternalhit | **진행 예정** |            |
 
 ### 접근성 체크
 
-- 주요 콘텐츠/탐색/상품 영역 역할이 마크업에 드러나는가:
-- href 링크로 주요 이동 제공되는가:
-- 의미 있는 이미지 alt 텍스트:
+- 주요 콘텐츠/탐색/상품 영역 역할이 마크업에 드러나는가: **확인 필요**
+- href 링크로 주요 이동 제공되는가: 카테고리, 페이지네이션 등 `<a href>` 형태로 확인됨 (curl 결과에서 육안 확인)
+- 의미 있는 이미지 alt 텍스트: 상품 이미지에 상품명이 alt로 들어가 있음 확인됨 (curl 결과). Hero 이미지는 `alt=""` (장식용 이미지로 처리, 텍스트가 별도로 있어 스크린리더 중복 방지 의도 — 재확인 필요)
 
 ---
 
