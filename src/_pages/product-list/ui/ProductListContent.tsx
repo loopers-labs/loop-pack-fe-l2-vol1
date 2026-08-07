@@ -3,14 +3,16 @@
 import { useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  useSuspenseQuery,
+  useQuery,
   useQueryClient,
+  keepPreviousData,
 } from '@tanstack/react-query';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { useProductSearchParams } from '../lib/useProductSearchParams';
 import { formatWon } from '@/shared/lib/format';
+import { ProductListSkeleton } from './ProductListSkeleton';
 import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/entities/product/model/types';
 
 function ProductActions({ product }: { product: Product }) {
@@ -45,10 +47,11 @@ function ProductActions({ product }: { product: Product }) {
 interface ProductGridProps {
   data: ProductListResponse;
   isFetching: boolean;
+  isStale: boolean;
   setPage: (page: number) => void;
 }
 
-function ProductGrid({ data, isFetching, setPage }: ProductGridProps) {
+function ProductGrid({ data, isFetching, isStale, setPage }: ProductGridProps) {
   const { products, totalCount, page, pageSize } = data;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -66,7 +69,9 @@ function ProductGrid({ data, isFetching, setPage }: ProductGridProps) {
           <p className="text-sm text-text-secondary">상품이 없습니다.</p>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
+        <div
+          className={`mt-4 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 transition-opacity ${isStale ? 'pointer-events-none opacity-50' : ''}`}
+        >
           {products.map((product) => (
             <article key={product.id} className="group">
               <Link href={`/products/${product.id}`}>
@@ -126,14 +131,20 @@ function ProductGrid({ data, isFetching, setPage }: ProductGridProps) {
 }
 
 export function ProductListContent() {
-  const { params, query, isPending, setCategory, setSort, setSearch, setPage } =
+  const { params, query, setCategory, setSort, setSearch, setPage } =
     useProductSearchParams();
 
   const queryClient = useQueryClient();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data } = useSuspenseQuery(productListQueryOptions(query));
+  const { data, isPlaceholderData, isError, isFetching, refetch } = useQuery({
+    ...productListQueryOptions(query),
+    placeholderData: keepPreviousData,
+  });
 
   useEffect(() => {
+    if (!data) return;
     const totalPages = Math.ceil(data.totalCount / data.pageSize);
     if (data.page < totalPages) {
       void queryClient.prefetchQuery(
@@ -142,14 +153,15 @@ export function ProductListContent() {
     }
   }, [data, query, queryClient]);
 
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     if (inputRef.current && inputRef.current !== document.activeElement) {
       inputRef.current.value = params.q ?? '';
     }
   }, [params.q]);
+
+  const handleRetry = useCallback(() => {
+    refetch().catch(() => {});
+  }, [refetch]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,6 +174,32 @@ export function ProductListContent() {
     [setSearch],
   );
 
+  if (isError && !data) {
+    return (
+      <main className="px-8 py-10">
+        <h1 className="font-family-display text-2xl font-normal text-text">
+          상품 목록
+        </h1>
+        <div className="flex min-h-[30vh] items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-text-secondary">
+              상품을 불러오지 못했습니다.
+            </p>
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!data) return <ProductListSkeleton />;
+
   const { categories } = data;
 
   return (
@@ -170,7 +208,21 @@ export function ProductListContent() {
         상품 목록
       </h1>
 
-      {/* 필터 */}
+      {isError && (
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">
+          <p className="text-sm text-text-secondary">
+            목록을 갱신하지 못했습니다.
+          </p>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
+
       <div className="mt-6 flex flex-wrap gap-4">
         <input
           ref={inputRef}
@@ -204,7 +256,7 @@ export function ProductListContent() {
         </select>
       </div>
 
-      <ProductGrid data={data} isFetching={isPending} setPage={setPage} />
+      <ProductGrid data={data} isFetching={isFetching} isStale={isPlaceholderData} setPage={setPage} />
     </main>
   );
 }
