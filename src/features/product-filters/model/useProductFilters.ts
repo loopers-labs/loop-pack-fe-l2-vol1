@@ -4,18 +4,16 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsStringLiteral,
+  useQueryState,
   useQueryStates,
 } from 'nuqs';
 import { productsQueries } from '@/entities/product/api/productsQueries';
+import { getProducts } from '@/entities/product/api/products';
 import { DEBOUNCE_DELAY } from '@/shared/constants/time';
+import type { MockApiScenario } from '@/shared/api';
 
 const categoryValues = [
-  'all',
-  'casual',
-  'fashion',
-  'goods',
-  'home',
-  'digital',
+  'all', 'casual', 'fashion', 'goods', 'home', 'digital',
 ] as const;
 const sortValues = ['latest', 'popular', 'price-asc', 'price-desc'] as const;
 
@@ -30,12 +28,12 @@ export function useProductFilters() {
     { history: 'push' },
   );
 
+  const [scenario] = useQueryState('scenario');
+
   const [searchInput, setSearchInput] = useState(filters.q);
-  // 마지막으로 URL에 반영한 값. debounce가 쓴 것인지 외부(뒤로/앞으로가기)가 바꾼 것인지 구분
   const lastCommitted = useRef(filters.q);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 뒤로/앞으로가기로 URL이 바뀌면 searchInput을 sync. 대기 중인 debounce도 취소
   useEffect(() => {
     if (filters.q !== lastCommitted.current) {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -53,9 +51,10 @@ export function useProductFilters() {
     }, DEBOUNCE_DELAY);
   };
 
-  const { data, isLoading, isFetching, isError, refetch } = useQuery(
-    productsQueries.productList(filters),
-  );
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
+    ...productsQueries.productList(filters),
+    queryFn: () => getProducts({ ...filters, scenario: scenario as MockApiScenario | null }),
+  });
 
   const totalPages = data ? Math.ceil(data.totalCount / data.pageSize) : 1;
 
@@ -66,15 +65,7 @@ export function useProductFilters() {
   }, [data, filters.page, totalPages, setFilters]);
 
   return {
-    filters,
-    setFilters,
-    searchInput,
-    handleSearchChange,
-    data,
-    isLoading,
-    isFetching,
-    isError,
-    refetch,
-    totalPages,
+    filters, setFilters, searchInput, handleSearchChange,
+    data, isLoading, isFetching, isError, refetch, totalPages,
   };
 }

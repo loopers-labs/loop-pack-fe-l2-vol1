@@ -21,10 +21,12 @@ type Props = {
 
 function normalizeQuery(params: Awaited<Props["searchParams"]>) {
   return {
-    q: params.q ?? "",
-    category: (params.category ?? "all") as CategoryId | "all",
-    sort: (params.sort ?? "latest") as ProductSort,
-    page: params.page ? Number(params.page) : 1,
+    filters: {
+      q: params.q ?? "",
+      category: (params.category ?? "all") as CategoryId | "all",
+      sort: (params.sort ?? "latest") as ProductSort,
+      page: params.page ? Number(params.page) : 1,
+    },
     scenario: (params.scenario ?? null) as MockApiScenario | null,
   };
 }
@@ -32,9 +34,9 @@ function normalizeQuery(params: Awaited<Props["searchParams"]>) {
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   try {
     const params = await searchParams;
-    const query = normalizeQuery(params);
-    const data = await getProductsServerData(query);
-    const { title, description } = buildProductsMetadataText({ query, data });
+    const { filters, scenario } = normalizeQuery(params);
+    const data = await getProductsServerData({ ...filters, scenario });
+    const { title, description } = buildProductsMetadataText({ query: filters, data });
 
     return {
       title,
@@ -53,16 +55,21 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function Page({ searchParams }: Props) {
   const params = await searchParams;
-  const query = normalizeQuery(params);
+  const { filters, scenario } = normalizeQuery(params);
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
-    ...productsQueries.productList(query),
-    queryFn: () => getProductsServerData(query),
+    ...productsQueries.productList(filters),
+    queryFn: () => getProductsServerData({ ...filters, scenario }),
   });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
+    <HydrationBoundary
+      state={dehydrate(queryClient, {
+        shouldDehydrateQuery: (cachedQuery) =>
+          cachedQuery.state.status === 'error' || cachedQuery.state.status === 'success',
+      })}
+    >
       <ProductListPage />
     </HydrationBoundary>
   );
