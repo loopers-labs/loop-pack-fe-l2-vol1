@@ -19,7 +19,7 @@ export function Hero({ title, description }: HeroProps) {
       />
       <div className={styles.copy}>
         <p className={styles.eyebrow}>이번 주의 발견</p>
-        <h2 id="week07-hero-title">{title}</h2>
+        <h1 id="week07-hero-title">{title}</h1>
         <p>{description}</p>
       </div>
     </section>
