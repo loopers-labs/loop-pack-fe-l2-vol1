@@ -1,5 +1,6 @@
 // 서버·클라 공용이라 parser 는 nuqs/server 에서 가져온다
 import {
+  createLoader,
   parseAsInteger,
   parseAsString,
   parseAsStringLiteral,
@@ -20,3 +21,7 @@ export const productListParsers = {
   ),
   page: parseAsInteger.withDefault(PRODUCT_LIST_DEFAULTS.page),
 };
+
+// 본문(ProductListSection)과 generateMetadata 가 같은 로더로 searchParams 를 읽어
+// 같은 URL 정규화·같은 queryKey·같은 GET 을 만들게 하는 단일 출처.
+export const loadProductListParams = createLoader(productListParsers);

@@ -4,3 +4,26 @@
   opacity: 0.6;
   transition: opacity 0.15s;
 }
+
+/* 갱신(refetch) 실패 시 기존 목록은 유지한 채 목록 위에 인라인으로 알리고 재시도를 제공한다.
+   색상·간격·모서리 토큰은 조상 .page 에서 상속받는다. */
+.updateError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.updateError button {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 14px;
+  cursor: pointer;
+}

@@ -4,6 +4,7 @@ export type {
   CategoryId,
   ProductSort,
   ProductListQuery,
+  MockApiScenario,
 } from "./model/product";
 export {
   CATEGORY_VALUES,

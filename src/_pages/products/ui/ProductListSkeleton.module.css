@@ -1,0 +1,67 @@
+/* 실제 목록(ProductGrid/ProductCard)의 grid·카드 비율을 미러해 로딩 중 공간을 예약한다.
+   grid 규칙은 ProductGrid 와 같은 값으로 자족적으로 둔다(서버 컴포넌트가 widget 배럴을 안 거치게).
+   색상·간격·모서리 토큰은 조상 .page 에서 상속받는다. */
+
+/* 카운트 줄(resultCount) 안에 들어가는 텍스트 자리 표시 — 여백·폰트 라인은 resultCount 가 담당. */
+.countBar {
+  display: inline-block;
+  width: 96px;
+  height: 15px;
+  border-radius: 4px;
+  background: var(--color-surface);
+}
+
+/* Pagination(버튼 높이 ≈ 41px + margin-top space-lg)과 같은 세로 공간을 예약하는 spacer. */
+.pagination {
+  height: 41px;
+  margin-top: var(--space-lg);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+  gap: 28px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.brand,
+.name,
+.price,
+.actions {
+  border-radius: 4px;
+  background: var(--color-surface);
+}
+
+.brand {
+  height: 14px;
+  width: 40%;
+}
+
+.name {
+  height: 32px;
+  width: 90%;
+}
+
+.price {
+  height: 18px;
+  width: 50%;
+  margin-top: 2px;
+}
+
+.actions {
+  height: 36px;
+  margin-top: var(--space-sm);
+  border-radius: var(--radius-sm);
+}
