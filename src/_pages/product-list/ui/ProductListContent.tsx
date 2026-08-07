@@ -76,7 +76,7 @@ function ProductGrid({ data, isFetching, isStale, setPage }: ProductGridProps) {
         >
           {products.map((product) => (
             <article key={product.id} className="group">
-              <Link href={`/products/${product.id}`}>
+              <Link href={`/products/${product.id}`} className="block">
                 <div className="aspect-square overflow-hidden rounded-xl bg-bg">
                   <img
                     src={product.image}
@@ -84,20 +84,22 @@ function ProductGrid({ data, isFetching, isStale, setPage }: ProductGridProps) {
                     className="size-full object-cover"
                   />
                 </div>
-                <p className="mt-2 text-[11px] text-text-caption">
-                  {product.brand}
-                </p>
-                <h2 className="mt-1 truncate text-sm text-text">
-                  {product.name}
-                </h2>
-                <strong className="mt-1 block text-sm font-semibold text-text">
-                  {formatWon(product.price)}
-                </strong>
-                {product.originalPrice && (
-                  <span className="text-xs text-text-caption line-through">
-                    {formatWon(product.originalPrice)}
-                  </span>
-                )}
+                <div className="min-h-[6.5rem]">
+                  <p className="mt-2 text-[11px] text-text-caption">
+                    {product.brand}
+                  </p>
+                  <h2 className="mt-1 truncate text-sm text-text">
+                    {product.name}
+                  </h2>
+                  <strong className="mt-1 block text-sm font-semibold text-text">
+                    {formatWon(product.price)}
+                  </strong>
+                  {product.originalPrice && (
+                    <span className="text-xs text-text-caption line-through">
+                      {formatWon(product.originalPrice)}
+                    </span>
+                  )}
+                </div>
               </Link>
               <ProductActions product={product} />
             </article>
@@ -194,7 +196,7 @@ export function ProductListContent() {
 
   if (isError && !displayData) {
     return (
-      <main className="px-8 py-10">
+      <main className="min-h-screen px-8 py-10">
         <ProductListIntro />
         <div className="flex min-h-[30vh] items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -219,7 +221,7 @@ export function ProductListContent() {
   const { categories } = displayData;
 
   return (
-    <main className="px-8 py-10">
+    <main className="min-h-screen px-8 py-10">
       <ProductListIntro />
 
       {isShowingFallback && (
