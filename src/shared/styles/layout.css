@@ -6,3 +6,16 @@
 .layout-section > h2 {
   margin-bottom: 16px;
 }
+
+/* 화면에는 안 보이지만 스크린 리더와 초기 HTML에는 남는 텍스트. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

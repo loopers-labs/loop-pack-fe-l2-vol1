@@ -22,7 +22,37 @@ describe('getProductList', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(getProductList({ page: 1 })).resolves.toEqual(response)
-    expect(fetchMock).toHaveBeenCalledWith('/api/products?page=1&pageSize=12')
+    // base origin은 실행 환경(APP_ORIGIN·PORT)에 따라 달라지므로 쿼리 직렬화 결과만 단언한다.
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/products?page=1&pageSize=12'),
+      { signal: undefined },
+    )
+  })
+
+  it('호출자가 넘긴 AbortSignal을 요청에 연결한다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ products: [] }))
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+
+    await getProductList({ page: 1 }, controller.signal)
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/products?page=1&pageSize=12'),
+      { signal: controller.signal },
+    )
+  })
+
+  it('취소된 요청은 네트워크 오류로 바꾸지 않는다', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new DOMException('The operation was aborted.', 'AbortError')),
+    )
+
+    await expect(getProductList({ page: 1 }, controller.signal)).rejects.toMatchObject({
+      name: 'AbortError',
+    })
   })
 
   it('HTTP 오류의 status를 보존한다', async () => {

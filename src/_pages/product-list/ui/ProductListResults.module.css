@@ -1,0 +1,46 @@
+/* 문서 흐름 밖에 둔다. 목록 위에 끼워 넣으면 그 아래 전체가 밀려 layout shift가 생긴다. */
+.refreshError {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #3d3d3d;
+  color: #fff;
+  font-size: 14px;
+}
+
+.refreshErrorMessage {
+  margin: 0;
+  text-align: center;
+}
+
+.refreshErrorRetry {
+  flex: none;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid #a5a5a5;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.refreshErrorRetry:focus-visible {
+  outline: 3px solid #7aa7ff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .refreshError {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+}

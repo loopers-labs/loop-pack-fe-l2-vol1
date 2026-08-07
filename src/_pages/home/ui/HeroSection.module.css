@@ -1,0 +1,91 @@
+.hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  color: #211b17;
+  background: #d8cebf;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.copy {
+  position: absolute;
+  inset: auto auto clamp(20px, 5vw, 64px) clamp(20px, 5vw, 64px);
+  width: min(440px, calc(100% - 40px));
+  padding: clamp(18px, 3vw, 32px);
+  background: rgb(255 253 248 / 88%);
+  backdrop-filter: blur(8px);
+}
+
+.copy h2 {
+  margin: 6px 0 10px;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.copy p {
+  line-height: 1.6;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    aspect-ratio: 4 / 5;
+  }
+
+  .image {
+    object-position: 56% center;
+  }
+}
+
+/* 스켈레톤은 .hero와 .copy를 그대로 재사용한다. 바깥 aspect-ratio가 같아
+   실제 Hero로 교체될 때 아래 콘텐츠가 밀리지 않는다. */
+.skeleton {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeletonEyebrow,
+.skeletonTitle,
+.skeletonDescription {
+  display: block;
+  border-radius: 4px;
+  background: #d8d8d8;
+}
+
+.skeletonEyebrow {
+  width: 96px;
+  height: 13px;
+}
+
+.skeletonTitle {
+  width: 100%;
+  height: clamp(28px, 4vw, 52px);
+  margin: 6px 0 10px;
+}
+
+.skeletonDescription {
+  width: 80%;
+  height: 16px;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
