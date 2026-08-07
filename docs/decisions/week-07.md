@@ -299,3 +299,8 @@ bd94e971e0fa65c54df07cd9670b849b240ddcb5
 | 시도한 변경 | 결과 | 되돌림/유지 여부 및 이유 |
 |-------------|------|----------------------------|
 | `prefetchQuery(...).catch(() => {})`로 에러 무시 | 에러가 캐시에 기록되지 않아 무한 스켈레톤 발생 | 되돌림 — `.catch` 제거, 대신 `shouldDehydrateQuery`로 에러 상태를 명시적으로 직렬화하도록 수정 |
+
+### 제출 후 self review 반영 사항
+
+- **Hero CSS 셀렉터 누락**: h2→h1으로 태그를 바꿨지만(3단계) `index.module.css`의 `.copy h2` 셀렉터를 같이 안 고쳐서 Hero 제목 스타일(font-size, letter-spacing 등)이 전혀 적용되지 않고 있었음. `.copy h1`으로 수정.
+- **title template 누락**: 루트 layout의 title이 단순 문자열('Commerce')로만 되어 있어, 페이지별 title이 사이트 이름과 조합되지 않고 있었음. `{ template: '%s | Commerce', default: 'Commerce' }`로 수정. 수정 후 재검증: 정상(`매일 새롭게 발견하는 취향 | Commerce`), query failure(`Commerce`, default 값), products(`뷰티·잡화 상품 | Commerce`) 모두 정상 확인.
