@@ -138,11 +138,11 @@ export function ProductListContent() {
   const queryClient = useQueryClient();
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
-
   const { data, isPlaceholderData, isError, isFetching, refetch } = useQuery({
     ...productListQueryOptions(query),
     placeholderData: keepPreviousData,
   });
+
 
   useEffect(() => {
     if (!data) return;
@@ -204,21 +204,6 @@ export function ProductListContent() {
   return (
     <main className="px-8 py-10">
       <ProductListIntro />
-
-      {isError && (
-        <div className="mt-4 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">
-          <p className="text-sm text-text-secondary">
-            목록을 갱신하지 못했습니다.
-          </p>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
-          >
-            다시 시도
-          </button>
-        </div>
-      )}
 
       <div className="mt-6 flex flex-wrap gap-4">
         <input
