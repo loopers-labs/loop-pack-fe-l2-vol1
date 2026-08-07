@@ -29,12 +29,12 @@ function PerformanceProductCard({
 }: {
   product: PerformanceLabProduct;
 }) {
-  const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds);
-  const toggleWishlist = usePerformanceWishlist(
-    (state) => state.toggleWishlist,
-  );
-  const selected = wishlistIds.includes(product.id);
-  const presentation = calculateCardPresentation(product.id, selected);
+  // 수정 (좁은 구독)
+const selected = usePerformanceWishlist((state) =>
+  state.wishlistIds.includes(product.id)
+);
+const toggleWishlist = usePerformanceWishlist((state) => state.toggleWishlist);
+const presentation = calculateCardPresentation(product.id, selected);
 
   return (
     <article className={styles.card}>
