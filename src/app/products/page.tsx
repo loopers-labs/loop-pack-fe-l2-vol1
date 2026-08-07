@@ -1,8 +1,9 @@
 import { Suspense } from "react";
-import { ProductsView } from "./ProductsView";
+import { ProductListPage } from "@/_pages/product-list/ui/ProductListPage";
 
-// nuqs(useSearchParams 기반)는 Suspense 경계가 필요하다. 실제 화면은 client에.
-export default function ProductsPage() {
+// nuqs(useSearchParams 기반)는 Suspense 경계가 필요하다.
+// 이 fallback은 "URL 조건을 아직 못 읽음"을 뜻하고, Query의 isPending("서버 응답 대기")과 범위가 다르다.
+export default function Page() {
   return (
     <Suspense
       fallback={
@@ -11,7 +12,7 @@ export default function ProductsPage() {
         </main>
       }
     >
-      <ProductsView />
+      <ProductListPage />
     </Suspense>
   );
 }
