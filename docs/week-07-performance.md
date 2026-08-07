@@ -28,7 +28,7 @@
 | 브라우저 · 버전         | Chrome 150.0.7871.188 (`--headless=new`) | 같음 |
 | Lighthouse 버전         | 13.4.1 | 같음 |
 | 브라우저 프로필         | 회차마다 새 `--user-data-dir` (확장·캐시·로그인 없음) | 같음 |
-| commit SHA              | `4f07c0ef` | `6220deef` |
+| commit SHA              | `4f07c0ef` | `ba80c1eb` |
 | 측정 날짜               | 2026-08-07 | 2026-08-07 |
 
 재현 명령 — 회차마다 `$PROF`를 새로 만든다.
@@ -76,8 +76,8 @@ Lighthouse는 Lab이다. **무엇이 느린가**에는 답하지만 **실제로 
 | 확인할 것                                             | 관찰 결과 |
 | ----------------------------------------------------- | --------- |
 | Lighthouse가 지목한 LCP element                       | Hero 원본 이미지 — `<img class="…HeroSection…image" alt="" width="3840" height="2160" src="/images/week-07/hero-original.jpg">` (selector: `body > main.shop-page > section.…hero > img.…image`) |
-| filmstrip의 Header · 페이지 제목 · Hero 표시 순서     | *(DevTools Performance 녹화에서 직접 확인)* |
-| Layout Shifts track에 기록된 이동                     | Lighthouse CLS는 5회 모두 0.0000. Hero가 `aspect-ratio: 16/9`로 공간을 예약한다. *(track에서 직접 대조)* |
+| filmstrip의 Header · 페이지 제목 · Hero 표시 순서     | Lighthouse `screenshot-thumbnails` 8프레임(5,601ms 간격). **5,601ms**에 Header·Hero 문구는 이미 보이지만 이미지 자리는 배경색 placeholder다. 마지막 프레임 **44,810ms**에서야 이미지가 채워진다 — 문구가 먼저, 이미지가 40초 뒤 |
+| Layout Shifts track에 기록된 이동                     | Lighthouse CLS는 5회 모두 0.0000. filmstrip에서도 이미지가 채워질 때 아래 콘텐츠가 밀리지 않는다 — Hero가 `aspect-ratio`로 공간을 미리 잡는다 |
 
 ### Before — Network waterfall
 
@@ -226,11 +226,25 @@ waterfall이 원인을 그대로 보여줬다. document 578ms → JS 부팅 → 
 | metadata query failure | `APP_ORIGIN=http://127.0.0.1:9`로 build·start → 홈·목록 모두 **root 공통 metadata 상속**, 페이지별 빈 값 없음, HTTP 200. build도 성공 |
 | UA 비교 | 일반 vs `facebookexternalhit` — 3회 반복 모두 차이 없음 (양쪽 `start`·`total` 모두 ~0.510s) |
 
+### 서버 호출 계수 — 처음 결론이 틀렸다
+
+`/products` document 응답이 일반 UA·crawler 모두 ~510ms이고 mock 지연이 500ms이므로, 처음에는 **"1회분이니 memoize되고 있다"** 고 적었다. **틀렸다.** 임시 서버 로그로 직접 세니 `/api/products`가 document 1회 요청에 **2회** 불렸다 — `generateMetadata`와 본문이 각각. 둘이 병렬로 돌아서 벽시계 시간이 안 늘었을 뿐이다. 과제가 경고한 *"Browser Network만 보고 호출 횟수를 판정하지 않는다"* 가 그대로 걸렸다.
+
+원인은 2단계에서 넣은 `signal`이었다. 같은 render/request 안의 native fetch는 **URL과 options가 "모두" 같을 때만** memoize되는데, TanStack이 호출마다 다른 `AbortSignal`을 준다. 자연 실험이 그대로 갈렸다.
+
+| queryFn | `signal` 전달 | document 1회당 Route Handler 호출 |
+| --- | --- | --- |
+| `homeQueryOptions` | 안 함 | **1회** |
+| `productListQueryOptions` (수정 전) | 함 | **2회** |
+| `productListQueryOptions` (수정 후) | 브라우저에서만 | **1회** |
+
+각 3회 반복해 같은 값을 얻었다. 수정은 `fetchJson`이 서버에서 `signal`을 붙이지 않게 한 것뿐이다(커밋 `ba80c1eb`) — 서버는 한 번에 끝나는 경로라 취소할 대상이 없다.
+
+계측은 관찰 뒤 제거했고 `git diff`로 잔여가 없음을 확인했다.
+
 ### metadata가 데이터를 기다린 비용
 
-`/products` document 응답이 일반 UA·crawler 모두 **~510ms**다. mock API 지연이 500ms이므로 이 값은 **1회분**이다. generateMetadata와 본문이 각각 호출했다면 ~1,010ms여야 한다 — 같은 request 안에서 native fetch가 memoize되고 있다는 간접 증거다.
-
-**남은 것**: 임시 서버 로그로 Route Handler 호출 횟수를 직접 세는 계수는 하지 않았다. 위 응답 시점은 간접 증거이므로, 제출 전에 서버 측 계수로 한 번 확정하는 편이 좋다.
+수정 후에도 document 응답은 ~510ms다. metadata가 데이터를 기다리는 비용은 mock 지연 1회분이고, 일반 UA와 `facebookexternalhit`가 같다(재측정 2회, 양쪽 `total` ~0.513s). crawler라고 더 빨리 주거나 더 기다리게 하지 않는다.
 
 ### 같은 경로에서 캐시 상태별 재현
 
@@ -248,10 +262,10 @@ waterfall이 원인을 그대로 보여줬다. document 578ms → JS 부팅 → 
 
 측정 조건은 0단계와 같다(같은 URL·행동·viewport·throttling·브라우저·Lighthouse·프로필 방식).
 
-| | Before `4f07c0ef` | After `6220deef` | 변화 |
+| | Before `4f07c0ef` | After `ba80c1eb` | 변화 |
 | --- | --- | --- | --- |
-| FCP 중앙값 | 1,353ms (폭 18ms) | 1,369ms (폭 101ms) | +16ms — 흔들림 폭 안 |
-| **LCP 중앙값** | **44,828ms** (폭 26ms) | **1,891ms** (폭 30ms) | **−42,937ms (−95.8%)** |
+| FCP 중앙값 | 1,353ms (폭 18ms) | 1,378ms (폭 124ms) | +25ms — 흔들림 폭 안 |
+| **LCP 중앙값** | **44,828ms** (폭 26ms) | **1,886ms** (폭 15ms) | **−42,942ms (−95.8%)** |
 | CLS | 0.0000 | 0.0000 | 변화 없음 |
 
 ### LCP 구간 비교
@@ -259,9 +273,9 @@ waterfall이 원인을 그대로 보여줬다. document 578ms → JS 부팅 → 
 | 구간 | Before | After | 변화 |
 | --- | --- | --- | --- |
 | TTFB | 2ms | 508ms | **+506ms** (서버가 데이터를 기다림) |
-| 발견 지연 | 3,344ms | 79ms | −3,265ms |
-| 다운로드 | 41,450ms | 1,283ms | −40,167ms |
-| 렌더 지연 | 31ms | 28ms | 변화 없음 |
+| 발견 지연 | 3,344ms | 71ms | −3,273ms |
+| 다운로드 | 41,450ms | 1,277ms | −40,173ms |
+| 렌더 지연 | 31ms | 24ms | 변화 없음 |
 
 ### Hero 이미지
 
@@ -269,7 +283,19 @@ waterfall이 원인을 그대로 보여줬다. document 578ms → JS 부팅 → 
 | --- | --- | --- |
 | LCP element | 원본 `<img>` 3840×2160 | `next/image` (`w=750`) |
 | 전송 크기 | 7,545,525B | 32,423B |
-| 요청 시작 | 3,345ms | 584ms |
+| 요청 시작 | 3,345ms | 584ms (document 완료보다 앞) |
+
+### After filmstrip — 표시 순서가 어떻게 달라졌나
+
+같은 방식으로 After 프레임을 뽑았다. 간격이 5,601ms → **375ms**로 줄었다(전체 기록 구간이 짧아졌다는 뜻이다).
+
+| 시점 | 화면 |
+| --- | --- |
+| 750ms | 아직 빈 화면 |
+| 1,875ms | Header · Hero 문구 · 카테고리 · "인기 상품"까지 보이고, Hero 이미지 자리만 placeholder |
+| 2,250ms | **Hero 이미지가 채워진다** (LCP 1,886ms 직후 프레임) |
+
+Before는 5,601ms 프레임에서 이미 문구가 보이고 이미지는 44,810ms에야 채워졌다. After는 **문구와 이미지 사이 간격이 40초에서 0.4초 미만으로 좁혀졌고**, 그 사이에 밀린 콘텐츠가 없다.
 
 ### 회귀 확인 (production build, 브라우저)
 
@@ -287,7 +313,7 @@ waterfall이 원인을 그대로 보여줬다. document 578ms → JS 부팅 → 
 ### 효과가 없거나 악화된 것
 
 - **TTFB +506ms** — 유일한 악화다. 서버가 홈 데이터를 기다리는 대가이고, 되돌리면 발견 지연 3.3초가 돌아온다. 순변화가 −42.9초라 유지한다.
-- **FCP는 사실상 그대로** (1,353 → 1,369ms, After 흔들림 폭 101ms 안). 이번 개입은 전부 LCP 경로를 겨냥했고 FCP는 목표가 아니었다. 셸을 먼저 흘려보내지 않는 한 여기서 더 줄지 않는다.
+- **FCP는 사실상 그대로** (1,353 → 1,378ms, After 흔들림 폭 124ms 안). 이번 개입은 전부 LCP 경로를 겨냥했고 FCP는 목표가 아니었다. 셸을 먼저 흘려보내지 않는 한 여기서 더 줄지 않는다.
 
 ## Advanced A — 관계없는 카드 렌더 (선택)
 
@@ -331,7 +357,7 @@ viewport 1280×900. 측정이 아니라 **배선이 의도대로 붙었는지**�
 | **AI가 구현 (기계적), 검토 후 채택** | 머지 충돌 해결 반영, eslint 설정 블록, `widgets/hero`, 서버 prefetch·`getQueryClient`·`fetchJson` origin 해석, 목록 6상태 UI와 스켈레톤, `resolveProductListQuery`, root/페이지 metadata, 이 문서. 결정을 코드로 옮긴 작업이고 새 설계를 얹지 않았다 |
 | **AI가 실행·기록 (측정)** | Lighthouse 4세트 20회(Before·1-a·1-b·최종), LCP 구간·waterfall, 초기 HTML 검증, 목록 6상태 브라우저 재현, metadata 6종 확인, `APP_ORIGIN` 실패 재현, UA 비교, 회귀 확인, 게이트 결과. 코드는 바꾸지 않고 실행 결과만 옮겼다 |
 
-### 아직 직접 확인하지 않은 것
+### 남은 것
 
-1. **서버 호출 계수** — 임시 서버 로그로 Route Handler 호출 횟수를 직접 세지 않았다. 응답 시점(~510ms = 1회분)은 간접 증거다.
-2. **filmstrip과 Layout Shifts track** — Lighthouse headless로만 쟀다. CLS는 전 구간 0.0000이지만 눈으로 대조하지 않았다.
+- **DevTools Performance의 Layout Shifts track 육안 대조** — CLS는 전 구간 5회 모두 0.0000이고 filmstrip에서도 밀림이 없지만, track 자체를 열어보지는 않았다.
+- **Advanced A** — 선택 과제이고, 클릭 병목을 측정으로 확인하기 전에는 넣지 않기로 했다.
