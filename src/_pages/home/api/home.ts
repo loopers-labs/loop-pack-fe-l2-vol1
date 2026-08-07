@@ -9,5 +9,8 @@ export async function getHome(): Promise<HomeResponse> {
 }
 
 export function getHomeServerData(): Promise<HomeResponse> {
+  if (process.env.SIMULATE_METADATA_FAILURE === 'true') {
+    return Promise.reject(new Error('홈 데이터 조회 실패 (시뮬레이션)'));
+  }
   return Promise.resolve(getHomeData(null));
 }

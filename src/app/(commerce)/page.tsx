@@ -7,18 +7,23 @@ import { HomePage } from "@/_pages/home/ui/HomePage";
 import { SITE_OPENGRAPH } from '@/shared/config/site-metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const home = await getHomeServerData();
+  try {
+    const home = await getHomeServerData();
 
-  return {
-    title: home.banner.title,
-    description: home.banner.description,
-    openGraph: {
-      ...SITE_OPENGRAPH,
+    return {
       title: home.banner.title,
       description: home.banner.description,
-      images: [home.banner.image],
-    },
-  };
+      openGraph: {
+        ...SITE_OPENGRAPH,
+        title: home.banner.title,
+        description: home.banner.description,
+        images: [home.banner.image],
+      },
+    };
+  } catch {
+    // 조회 실패 시 root 공통 metadata를 그대로 상속 (페이지별 빈 값을 만들지 않음)
+    return {};
+  }
 }
 
 export default async function Page() {

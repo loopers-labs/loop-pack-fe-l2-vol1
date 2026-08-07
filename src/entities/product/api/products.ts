@@ -19,5 +19,8 @@ export async function getProducts(
 export function getProductsServerData(
   query: ProductListQuery,
 ): Promise<ProductListResponse> {
+  if (process.env.SIMULATE_METADATA_FAILURE === 'true') {
+    return Promise.reject(new Error('상품 목록 조회 실패 (시뮬레이션)'));
+  }
   return Promise.resolve(getProductsData(query));
 }

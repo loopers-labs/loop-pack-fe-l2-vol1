@@ -7,6 +7,7 @@ import { buildProductsMetadataText } from "@/_pages/product-list/api/products-me
 import { ProductListPage } from "@/_pages/product-list/ui/ProductListPage";
 import type { CategoryId, ProductSort } from "@/entities/product/model";
 import { SITE_OPENGRAPH } from '@/shared/config/site-metadata';
+import type { MockApiScenario } from "@/shared/api";
 
 type Props = {
   searchParams: Promise<{
@@ -14,6 +15,7 @@ type Props = {
     category?: string;
     sort?: string;
     page?: string;
+    scenario?: string;
   }>;
 };
 
@@ -23,25 +25,30 @@ function normalizeQuery(params: Awaited<Props["searchParams"]>) {
     category: (params.category ?? "all") as CategoryId | "all",
     sort: (params.sort ?? "latest") as ProductSort,
     page: params.page ? Number(params.page) : 1,
+    scenario: (params.scenario ?? null) as MockApiScenario | null,
   };
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const params = await searchParams;
-  const query = normalizeQuery(params);
-  const data = await getProductsServerData(query);
-  const { title, description } = buildProductsMetadataText({ query, data });
+  try {
+    const params = await searchParams;
+    const query = normalizeQuery(params);
+    const data = await getProductsServerData(query);
+    const { title, description } = buildProductsMetadataText({ query, data });
 
-  return {
-    title,
-    description,
-    openGraph: {
-      ...SITE_OPENGRAPH,
+    return {
       title,
       description,
-      images: data.products[0]?.image ? [data.products[0].image] : undefined,
-    },
-  };
+      openGraph: {
+        ...SITE_OPENGRAPH,
+        title,
+        description,
+        images: data.products[0]?.image ? [data.products[0].image] : undefined,
+      },
+    };
+  } catch {
+    return {};
+  }
 }
 
 export default async function Page({ searchParams }: Props) {
