@@ -1,72 +1,118 @@
 'use client'
 
-import type { UseQueryResult } from '@tanstack/react-query'
+import type { QueryKey, UseQueryResult } from '@tanstack/react-query'
 
 import type { ProductListResponse } from '@/entities/product/model/types'
 import { InlineQueryError } from '@/shared/ui/InlineQueryError'
 import { useInlineQueryRetry } from '@/shared/ui/useInlineQueryRetry'
 import { ProductGrid } from '@/widgets/product-list/ui/ProductGrid'
+import { ProductListSkeleton } from '@/widgets/product-list/ui/ProductListSkeleton'
 
 type ProductListSectionProps = {
   readonly query: UseQueryResult<ProductListResponse>
+  readonly displayedData: ProductListResponse | undefined
+  readonly displayedDataKey: QueryKey | null
   readonly scope: string
 }
 
-export function ProductListSection({ query, scope }: ProductListSectionProps) {
+type DisplayedProductGridProps = {
+  readonly displayedData: ProductListResponse | undefined
+  readonly displayedDataKey: QueryKey | null
+}
+
+export function DisplayedProductGrid({
+  displayedData,
+  displayedDataKey,
+}: DisplayedProductGridProps) {
+  return (
+    <ProductGrid
+      key={JSON.stringify(displayedDataKey)}
+      products={displayedData?.products ?? []}
+      reserveTwelveSlots
+    />
+  )
+}
+
+export function ProductListSection({
+  query,
+  displayedData,
+  displayedDataKey,
+  scope,
+}: ProductListSectionProps) {
   const inlineQueryRetry = useInlineQueryRetry({
     scope,
     isFetching: query.isFetching,
     refetch: query.refetch,
   })
   const retryErrorMessage = inlineQueryRetry.message
+  const errorMessage = retryErrorMessage ?? query.error?.message ?? null
+  const isEmpty = displayedData?.products.length === 0
+  const emptyMessage =
+    displayedData !== undefined && displayedData.totalCount > 0
+      ? '현재 페이지에 표시할 상품이 없습니다.'
+      : '검색 결과가 없습니다.'
 
-  if (retryErrorMessage !== null) {
-    return (
-      <section aria-label="상품 검색 결과">
-        <InlineQueryError
-          message={retryErrorMessage}
-          isRetrying={inlineQueryRetry.isRetrying}
-          onRetry={() => {
-            inlineQueryRetry.retry(retryErrorMessage)
-          }}
-        />
-      </section>
-    )
-  }
-
-  switch (query.status) {
-    case 'pending':
-      return (
-        <section aria-label="상품 검색 결과">
-          <div className="py-20 text-center text-(--color-muted)">
+  return (
+    <section aria-label="상품 검색 결과" aria-busy={query.isFetching}>
+      <div className="mb-4 min-h-5 text-sm text-(--color-muted)">
+        {displayedData === undefined ? (
+          <p
+            role="status"
+            aria-live="polite"
+            aria-hidden={!query.isPending}
+            className={query.isPending ? undefined : 'invisible'}
+          >
             상품을 불러오는 중…
-          </div>
-        </section>
-      )
-    case 'error':
-      return (
-        <section aria-label="상품 검색 결과">
-          <InlineQueryError
-            message={query.error.message}
-            isRetrying={query.isFetching}
-            onRetry={() => {
-              inlineQueryRetry.retry(query.error.message)
-            }}
-          />
-        </section>
-      )
-    case 'success':
-      return (
-        <section aria-label="상품 검색 결과">
-          <p className="mb-4 text-sm text-(--color-muted)">
-            총 {String(query.data.totalCount)}개
           </p>
-          <ProductGrid products={query.data.products} />
-        </section>
-      )
-    default: {
-      const unreachableQuery: never = query
-      return unreachableQuery
-    }
-  }
+        ) : (
+          <p>
+            총{' '}
+            <span className="inline-block min-w-8 text-left tabular-nums">
+              {String(displayedData.totalCount)}
+            </span>
+            개
+          </p>
+        )}
+        {query.isFetching && displayedData !== undefined && (
+          <p role="status" aria-live="polite" className="sr-only">
+            상품 목록을 갱신하는 중…
+          </p>
+        )}
+      </div>
+
+      <div className="relative">
+        {displayedData === undefined && query.isPending ? (
+          <ProductListSkeleton />
+        ) : (
+          <DisplayedProductGrid
+            displayedData={displayedData}
+            displayedDataKey={displayedDataKey}
+          />
+        )}
+
+        {isEmpty && errorMessage === null && (
+          <p
+            role="status"
+            className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-(--color-muted)"
+          >
+            {emptyMessage}
+          </p>
+        )}
+
+        {errorMessage !== null && (
+          <div className="absolute inset-0 flex items-center justify-center p-6">
+            <div className="w-full max-w-sm">
+              <InlineQueryError
+                message={errorMessage}
+                isRetrying={inlineQueryRetry.isRetrying}
+                onRetry={() => {
+                  inlineQueryRetry.retry(errorMessage)
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
 }

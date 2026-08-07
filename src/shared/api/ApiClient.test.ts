@@ -1,7 +1,8 @@
 import { NetworkError } from 'ky'
 import { describe, expect, it } from 'vitest'
 
-import { apiClient, ApiClientError } from '@/shared/api/ApiClient'
+import { apiClient } from '@/shared/api/ApiClient'
+import { ApiClientError } from '@/shared/api/ApiClientError'
 
 describe('apiClient HTTP error boundary', () => {
   it('preserves a valid 400 status and server message', async () => {

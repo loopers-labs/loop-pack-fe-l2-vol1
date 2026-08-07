@@ -1,136 +1,112 @@
-import { describe, expect, it } from 'vitest'
+import { QueryClient } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
 
-import type { ProductListQuery } from '@/entities/product/model/types'
+import type { DiagnosticScenario } from '@/entities/product/model/DiagnosticScenario'
+import { ProductListRequestModel } from '@/entities/product/model/ProductListRequest'
+import { ProductQueryKeyFactory } from '@/entities/product/model/ProductQueryKeyFactory'
 
+import { ProductRepository } from './ProductRepository'
 import { ProductService } from './ProductService'
 
-describe('ProductService.queryKeyFactory.home', () => {
-  it('returns a stable home key', () => {
-    expect(ProductService.queryKeyFactory.home.all()).toEqual(['home'])
+const scenarioCases = [
+  {},
+  { scenario: 'slow' },
+  { scenario: 'empty' },
+  { scenario: 'error' },
+] as const satisfies ReadonlyArray<DiagnosticScenario>
+const baseRequest = ProductListRequestModel.normalize({})
+
+describe('ProductService query keys', () => {
+  it.each(scenarioCases)(
+    'contains the home diagnostic scenario descriptor',
+    (diagnosticScenario) => {
+      expect(ProductQueryKeyFactory.home(diagnosticScenario)).toEqual([
+        'home',
+        diagnosticScenario,
+      ])
+    },
+  )
+
+  it('uses the canonical product request key', () => {
+    expect(ProductQueryKeyFactory.productList(baseRequest)).toEqual([
+      'products',
+      'list',
+      baseRequest,
+    ])
   })
 })
 
-describe('ProductService.queryKeyFactory.product.list', () => {
-  it('returns a key containing the full ProductListQuery', () => {
-    const query: ProductListQuery = {
-      q: 'stanley',
-      category: 'fashion',
-      sort: 'price-asc',
-      page: 2,
-      pageSize: 12,
-    }
-    expect(ProductService.queryKeyFactory.product.list(query)).toEqual([
-      'products',
-      'list',
-      query,
-    ])
-  })
+describe('ProductService query functions', () => {
+  it.each(scenarioCases)(
+    'forwards the home diagnostic descriptor to the repository',
+    async (diagnosticScenario) => {
+      const repository = new ProductRepository()
+      const getHome = vi.spyOn(repository, 'getHome').mockResolvedValue({
+        banner: {
+          title: 'title',
+          description: 'description',
+          image: '/hero.jpg',
+        },
+        categories: [],
+        popularProducts: [],
+        newProducts: [],
+      })
+      const queryClient = new QueryClient()
 
-  it('reflects q changes in the key', () => {
-    const base: ProductListQuery = {
-      q: '',
-      category: 'all',
-      sort: 'latest',
-      page: 1,
-      pageSize: 12,
-    }
-    const a = ProductService.queryKeyFactory.product.list(base)
-    const b = ProductService.queryKeyFactory.product.list({
-      ...base,
-      q: 'stanley',
-    })
-    expect(a).not.toEqual(b)
-  })
+      await queryClient.fetchQuery(
+        new ProductService(repository).getHome(diagnosticScenario),
+      )
 
-  it('reflects category changes in the key', () => {
-    const base: ProductListQuery = {
-      q: '',
-      category: 'all',
-      sort: 'latest',
-      page: 1,
-      pageSize: 12,
-    }
-    const a = ProductService.queryKeyFactory.product.list(base)
-    const b = ProductService.queryKeyFactory.product.list({
-      ...base,
-      category: 'fashion',
-    })
-    expect(a).not.toEqual(b)
-  })
+      expect(getHome).toHaveBeenCalledWith(diagnosticScenario)
+    },
+  )
 
-  it('reflects sort changes in the key', () => {
-    const base: ProductListQuery = {
-      q: '',
-      category: 'all',
-      sort: 'latest',
-      page: 1,
-      pageSize: 12,
-    }
-    const a = ProductService.queryKeyFactory.product.list(base)
-    const b = ProductService.queryKeyFactory.product.list({
-      ...base,
-      sort: 'popular',
-    })
-    expect(a).not.toEqual(b)
-  })
+  it('forwards the canonical request and browser query signal', async () => {
+    const repository = new ProductRepository()
+    const getProductList = vi
+      .spyOn(repository, 'getProductList')
+      .mockResolvedValue({
+        products: [],
+        categories: [],
+        totalCount: 0,
+        page: 1,
+        pageSize: 12,
+      })
+    const queryClient = new QueryClient()
 
-  it('reflects page changes in the key', () => {
-    const base: ProductListQuery = {
-      q: '',
-      category: 'all',
-      sort: 'latest',
-      page: 1,
-      pageSize: 12,
-    }
-    const a = ProductService.queryKeyFactory.product.list(base)
-    const b = ProductService.queryKeyFactory.product.list({
-      ...base,
-      page: 2,
-    })
-    expect(a).not.toEqual(b)
-  })
+    await queryClient.fetchQuery(
+      new ProductService(repository).getProductList(baseRequest),
+    )
 
-  it('reflects pageSize changes in the key', () => {
-    const base: ProductListQuery = {
-      q: '',
-      category: 'all',
-      sort: 'latest',
-      page: 1,
-      pageSize: 12,
-    }
-    const a = ProductService.queryKeyFactory.product.list(base)
-    const b = ProductService.queryKeyFactory.product.list({
-      ...base,
-      pageSize: 24,
-    })
-    expect(a).not.toEqual(b)
-  })
-
-  it('produces equal keys for equal queries (cache hit)', () => {
-    const query: ProductListQuery = {
-      q: 'stanley',
-      category: 'fashion',
-      sort: 'price-asc',
-      page: 2,
-      pageSize: 12,
-    }
-    expect(ProductService.queryKeyFactory.product.list(query)).toEqual(
-      ProductService.queryKeyFactory.product.list({ ...query }),
+    expect(getProductList).toHaveBeenCalledWith(
+      baseRequest,
+      expect.any(AbortSignal),
     )
   })
 
-  it('does not include scenario in the query key contract', () => {
-    const query: ProductListQuery = {
-      q: '',
-      category: 'all',
-      sort: 'latest',
+  it('keeps previous data and handles browser product errors inline', () => {
+    const previousData = {
+      products: [],
+      categories: [],
+      totalCount: 0,
       page: 1,
       pageSize: 12,
     }
-    const key = ProductService.queryKeyFactory.product.list(
-      query,
-    ) as ReadonlyArray<unknown>
-    expect(key).not.toContain('scenario')
-    expect(JSON.stringify(key)).not.toContain('scenario')
+    const browserOptions = new ProductService().getProductList(baseRequest)
+    const placeholderData = browserOptions.placeholderData
+
+    expect(typeof placeholderData).toBe('function')
+    if (typeof placeholderData === 'function') {
+      expect(placeholderData(previousData, undefined)).toBe(previousData)
+    }
+    expect(browserOptions.staleTime).toBe(30_000)
+    expect(browserOptions.throwOnError).toBe(false)
+  })
+
+  it('does not apply browser presentation policy to home queries', () => {
+    const homeOptions = new ProductService().getHome({})
+
+    expect(homeOptions.placeholderData).toBeUndefined()
+    expect(homeOptions.throwOnError).toBeUndefined()
   })
 })

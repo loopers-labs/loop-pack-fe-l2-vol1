@@ -3,6 +3,29 @@
 Loopers 프론트엔드 과정(TypeScript · React · Next.js)의 과제 제출 & 피드백 레포입니다.
 4주차부터 이 레포가 **커머스 프로젝트(Next.js)** 본체가 됩니다.
 
+## 7주차 성능 개선 사례
+
+느린 Home API가 Hero의 DOM 삽입과 이미지 발견을 늦췄고, 원본 Hero는 `7,545,525 bytes`를 전송했습니다.
+
+적용 범위는 다음과 같습니다.
+
+- semantic shell로 API 응답 전에도 의미와 Hero 영역을 제공하고 최종 레이아웃의 geometry를 예약했습니다.
+- responsive Hero delivery로 전송량을 desktop `80,836 bytes`, mobile `32,294 bytes`로 줄였습니다.
+- 상품 목록의 여섯 상태와 대체 요청 취소 시 최신 URL·상태·결과의 무결성을 검증했습니다.
+- metadata, non-blocking prefetch/hydration과 초기 HTML 계약을 정리했습니다.
+
+| 지표 | Before          | After       | 판정                            |
+| ---- | --------------- | ----------- | ------------------------------- |
+| FCP  | `237.7291ms`    | `208.782ms` | Before 범위 내 변화로 결론 보류 |
+| LCP  | `6981.484125ms` | `693.173ms` | 개선 방향 확인                  |
+| CLS  | `0`             | `0`         | 변화 없음                       |
+
+회귀 검증은 기능, URL/state, responsive, 접근성, 시각 품질, hydration, CLS, FSD와 quality gate를 함께 다뤘습니다.
+
+`f4167e9`는 mobile 품질 문제로 rejected 처리했고, preload/priority gate는 source 실험 없이 닫았습니다. Advanced A는 median total `120ms < 200ms`여서 **NOT ENTERED**입니다.
+
+상세 근거: [전체 RFC](docs/rfc/week07-performance.md) · [Hero 실험](docs/rfc/week07-performance.md#hero-실험과-결정) · [After](docs/rfc/week07-performance.md#after) · [회귀 검증](docs/rfc/week07-performance.md#회귀-검증) · [Advanced gate](docs/rfc/week07-performance.md#advanced-a-진입-게이트)
+
 ## 시작하기
 
 필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`는 현재 권장 LTS를 고정하고, `package.json`의 Node.js 범위(`>=22.12.0`)는 지원 가능한 Node.js 22 이상을 허용합니다.
@@ -152,7 +175,8 @@ pnpm build
 
 - **홈 쿼리** — `staleTime: 60_000`(1분). 홈은 여러 섹션을 묶어 한 번에 가져오고 갱신 주기가 짧지 않아 1분 정도 신선도를 유지한다. `gcTime`은 기본값(5분)으로 두어 컴포넌트 언마운트 후 재방문 시 캐시를 재사용한다.
 - **목록 쿼리** — `staleTime: 30_000`(30초). 검색·카테고리·정렬·페이지 조건이 query key에 들어가 조건별 캐시가 만들어진다. 30초면 사용자가 같은 조건으로 돌아올 때 최신 결과를 다시 보여주면서도 짧은 시간 내 재방문은 캐시로 처리한다. `gcTime`은 기본값으로 두어 앞뒤 이동 중 캐시가 유지되도록 한다.
-- **scenario** — mock API 검증 전용 제어값. 사용자가 관리하는 URL 상태나 `ProductListQuery`에 포함하지 않는다. 서버에서 `MockApiScenario`로 구분한다.
+- **scenario** — mock API 검증 전용 제어값. 사용자가 관리하는 `ProductListQuery`와 필터 상태에는 포함하지 않지만, 진단 결과의 캐시 격리를 위해 product query key와 실제 GET에는 의도적으로 포함한다. 서버에서 `MockApiScenario`로 구분한다.
+- **목록 요청 취소 경계** — 브라우저 `getProductList` query function만 TanStack Query의 `signal`을 Ky에 전달해 대체된 요청을 취소한다. 같은 key·GET을 만드는 `getServerProductList` descriptor는 native fetch memoization 검증 자격을 보존하도록 signal을 전달하지 않으며, options에 `signal: undefined`도 만들지 않는다. 브라우저의 abort 관찰만으로 Route Handler 실행 중단이나 서버 call count 감소를 주장하지 않는다.
 
 ### 전역으로 올리지 않은 상태
 
@@ -186,7 +210,7 @@ pnpm build
 
 - **Zustand action + selector** — `src/entities/cart/model/CartStore.test.ts`, `src/entities/wishlist/model/WishlistStore.test.ts`. addToCart·removeFromCart·clearCart·toggleWishlist 액션이 items 집합을 의도대로 변경하는지, cartSelectors.count·isInCart·wishlistSelectors.count·isInWishlist가 store state에서 올바르게 파생되는지 검증한다. 개수를 별도 상태로 저장하지 않고 파생한다는 과제 계약을 테스트가 보호한다.
 - **Header 개수 파생** — count selector가 items 길이를 반환하고 추가·제거에 따라 정확히 증감하는지 검증한다. Header가 별도 count 상태를 두지 않는다는 계약을 보호.
-- **nuqs URL 조건 ↔ query key 일치** — `src/features/product-filter/model/useProductFilters.test.ts`에서 `productFilterParsers`의 기본값(q='', category='all', sort='latest', page=1)과 enum을 검증하고, `src/entities/product/api/ProductService.test.ts`에서 `queryKeyFactory.product.list(query)`가 ProductListQuery 전체를 key에 반영하는지, q·category·sort·page·pageSize 각 변경이 key를 바꾸는지, 동일 쿼리는 동일 key를 반환하는지, scenario가 key에 들어가지 않는지 검증한다.
+- **nuqs URL 조건 ↔ query key 일치** — `src/features/product-filter/model/useProductFilters.test.ts`에서 `productFilterParsers`의 기본값(q='', category='all', sort='latest', page=1)과 enum을 검증하고, `src/entities/product/api/ProductService.test.ts`에서 `queryKeyFactory.product.list(query, diagnosticScenario)`가 ProductListQuery 전체와 진단 descriptor를 key에 반영하는지, q·category·sort·page·pageSize·scenario 각 변경이 key를 바꾸는지, 동일 입력은 동일 key를 반환하는지 검증한다.
 - **홈·목록 store 동기화** — cart/wishlist entity 테스트가 각 store의 action·selector 계약을 보호하고, 홈·목록이 같은 store를 공유하는지와 route 전환 중 상태가 유지되는지는 dev 서버를 통한 브라우저 route-sync 흐름으로 확인한다. 별도의 자동화 store-sync 테스트 파일은 두지 않는다.
 
 **테스트 경계** — 단위 테스트는 순수 로직과 타입 계약만 검증한다. React 렌더링 결과, nuqs의 실제 URL 동기화, hydration 시점의 store 값 변화, 페이지 전환 중 카운트 유지는 dev 서버를 띄운 뒤 수동으로 확인한다(`검증 결과` 섹션). 이 경계를 둔 이유는 단위 테스트가 DOM·Next.js 라우터 없이 빠르게 돌고 상태 계약 자체를 명확히 검증하며, UI 흐름은 실제 라우터와 마운트 타이밍 위에서 확인하는 쪽이 신뢰도가 높기 때문이다.

@@ -4,6 +4,8 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import type { ReactNode } from 'react'
 
+import { getAppOrigin } from '@/shared/config/getAppOrigin'
+import { createSiteMetadata } from '@/shared/config/SiteMetadata'
 import { Header } from '@/widgets/header/ui/Header'
 
 import { Providers } from './providers'
@@ -18,10 +20,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-export const metadata: Metadata = {
-  title: 'Commerce',
-  description: 'Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.',
-}
+export const metadata: Metadata = createSiteMetadata(getAppOrigin())
 
 export default function RootLayout({
   children,

@@ -1,19 +1,10 @@
 import { default as ky, HTTPError } from 'ky'
 
+import {
+  API_ERROR_FALLBACK_MESSAGE,
+  ApiClientError,
+} from '@/shared/api/ApiClientError'
 import { ApiErrorResponseSchema } from '@/shared/api/ApiErrorResponse'
-
-const API_ERROR_FALLBACK_MESSAGE = '요청 중 오류가 발생했습니다.'
-
-export class ApiClientError extends Error {
-  readonly name = 'ApiClientError'
-
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message)
-  }
-}
 
 /**
  * 공통 ky 인스턴스.
