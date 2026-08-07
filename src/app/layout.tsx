@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_NAME = 'Commerce';
+// [AI] OG image 등 상대 경로를 절대 URL로 변환하는 기준. fetcher의 getBaseUrl과 동일 출처.
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 // [AI] 공통 Open Graph. Next는 페이지 openGraph를 root 것과 얕게 병합(통째로 교체)하므로,
 // 페이지에서 ...commonOpenGraph로 펼쳐 siteName/locale/type이 날아가지 않게 한다.
@@ -26,6 +28,8 @@ export const commonOpenGraph = {
 };
 
 export const metadata: Metadata = {
+  // [AI] 페이지에서 상대 경로 image를 줘도 절대 URL로 렌더되게 하는 기준점.
+  metadataBase: new URL(SITE_URL),
   // [AI] title template: 페이지가 title을 주면 "%s | Commerce"로 합성,
   // 안 주면 default 'Commerce' 사용. 메타데이터 경로 확인(line 136) 대응.
   title: {
