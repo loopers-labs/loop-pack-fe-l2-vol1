@@ -106,7 +106,7 @@ async function ProductListLoader({
     scenario: scenario || undefined,
   };
 
-  await queryClient.ensureQueryData(productListQueryOptions(query));
+  await queryClient.prefetchQuery(productListQueryOptions(query));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
