@@ -12,6 +12,7 @@ import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { useProductSearchParams } from '../lib/useProductSearchParams';
 import { formatWon } from '@/shared/lib/format';
+import { ProductListIntro } from './ProductListIntro';
 import { ProductListSkeleton } from './ProductListSkeleton';
 import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/entities/product/model/types';
 
@@ -177,9 +178,7 @@ export function ProductListContent() {
   if (isError && !data) {
     return (
       <main className="px-8 py-10">
-        <h1 className="font-family-display text-2xl font-normal text-text">
-          상품 목록
-        </h1>
+        <ProductListIntro />
         <div className="flex min-h-[30vh] items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <p className="text-sm text-text-secondary">
@@ -204,9 +203,7 @@ export function ProductListContent() {
 
   return (
     <main className="px-8 py-10">
-      <h1 className="font-family-display text-2xl font-normal text-text">
-        상품 목록
-      </h1>
+      <ProductListIntro />
 
       {isError && (
         <div className="mt-4 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">

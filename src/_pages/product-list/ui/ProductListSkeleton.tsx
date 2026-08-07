@@ -1,4 +1,5 @@
 import { PRODUCT_LIST_DEFAULTS } from '@/entities/product/api/productService';
+import { ProductListIntro } from './ProductListIntro';
 
 function CardSkeleton() {
   return (
@@ -14,9 +15,7 @@ function CardSkeleton() {
 export function ProductListSkeleton() {
   return (
     <main className="px-8 py-10">
-      <h1 className="font-family-display text-2xl font-normal text-text">
-        상품 목록
-      </h1>
+      <ProductListIntro />
       <div className="mt-6 flex flex-wrap gap-4">
         <div className="h-10 w-48 rounded-lg bg-border/40" />
         <div className="h-10 w-28 rounded-lg bg-border/40" />
