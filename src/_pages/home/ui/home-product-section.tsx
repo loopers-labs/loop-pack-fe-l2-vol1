@@ -1,4 +1,5 @@
-import { ProductCard, type Product } from "@/entities/product";
+import { ProductCard } from "@/entities/product";
+import type { Product } from "@/types/commerce";
 import { Placeholder } from "@/shared/ui/placeholder";
 import { ProductCardActions } from "@/widgets/product-card-actions";
 
