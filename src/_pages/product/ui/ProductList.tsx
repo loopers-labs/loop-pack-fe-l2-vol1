@@ -77,7 +77,7 @@ export const ProductList = () => {
         {/* [AI] 갱신 실패 — 기존 목록은 유지한 채 에러 알림과 재시도만 얹는다. */}
         {isError ? (
           <p role="alert">
-            {getErrorMessage(error)} 이전 목록을 보여드려요.{' '}
+            {getFailureReason(error)} 이전 목록을 보여드려요.{' '}
             <button type="button" onClick={() => refetch()}>
               다시 시도
             </button>
