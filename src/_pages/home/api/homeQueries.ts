@@ -1,11 +1,10 @@
 import { queryOptions } from '@tanstack/react-query';
-import { getHomeData } from './homeService';
-import type { HomeResponse } from './types';
+import { fetchHomeData } from './homeService';
 
 export function homeQueryOptions() {
   return queryOptions({
     queryKey: ['home'],
-    queryFn: (): HomeResponse => getHomeData(),
+    queryFn: ({ signal }) => fetchHomeData({ signal }),
     staleTime: 1 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

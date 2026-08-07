@@ -5,6 +5,7 @@ import { HeaderNav } from './_components/HeaderNav';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_ORIGIN ?? 'http://localhost:3000'),
   title: {
     default: 'Aesthetic | 매일 새롭게 발견하는 취향',
     template: '%s | Aesthetic',
