@@ -9,7 +9,6 @@ import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { formatWon, calcDiscount } from '@/shared/lib/format';
 import type { Product } from '@/entities/product/model/types';
-import {HeroSection} from "@/examples/week-07-performance/HeroSection";
 
 function ProductCard({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
@@ -84,14 +83,12 @@ export function HomeClient() {
     );
   }, [queryClient]); */
 
-  const { banner, categories, categoryThumbnails, popularProducts, newProducts } = data;
+  const { categories, categoryThumbnails, popularProducts, newProducts } = data;
 
   const isProductsEmpty = popularProducts.length === 0 && newProducts.length === 0;
 
   return (
     <>
-      {/* 배너 */}
-      <HeroSection title={banner.title} description={banner.description}/>
       {/* 기존 배너
       <section className="relative overflow-hidden bg-bg-card">
         <div className="relative h-[420px] md:h-[520px]">
