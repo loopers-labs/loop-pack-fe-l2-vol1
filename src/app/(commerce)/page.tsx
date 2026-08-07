@@ -4,6 +4,7 @@ import { getQueryClient } from "@/shared/api/get-query-client";
 import { homeQueries } from "@/_pages/home/api/homeQueries";
 import { getHomeServerData } from "@/_pages/home/api/home";
 import { HomePage } from "@/_pages/home/ui/HomePage";
+import { SITE_OPENGRAPH } from '@/shared/config/site-metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
   const home = await getHomeServerData();
@@ -12,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: home.banner.title,
     description: home.banner.description,
     openGraph: {
+      ...SITE_OPENGRAPH,
       title: home.banner.title,
       description: home.banner.description,
       images: [home.banner.image],

@@ -6,6 +6,7 @@ import { getProductsServerData } from "@/entities/product/api/products";
 import { buildProductsMetadataText } from "@/_pages/product-list/api/products-metadata";
 import { ProductListPage } from "@/_pages/product-list/ui/ProductListPage";
 import type { CategoryId, ProductSort } from "@/entities/product/model";
+import { SITE_OPENGRAPH } from '@/shared/config/site-metadata';
 
 type Props = {
   searchParams: Promise<{
@@ -35,6 +36,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title,
     description,
     openGraph: {
+      ...SITE_OPENGRAPH,
       title,
       description,
       images: data.products[0]?.image ? [data.products[0].image] : undefined,
