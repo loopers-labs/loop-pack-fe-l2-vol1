@@ -1,4 +1,6 @@
 import type { ProductListQuery, ProductListResponse } from '@/entities/product/model';
+// eslint-disable-next-line boundaries/element-types -- app-data(mock 백엔드)는 서버 전용 함수라 여러 레이어에서 직접 참조 가능해야 함
+import { getProductsData } from '@/app/api/_data/commerce';
 
 export async function getProducts(
   query: ProductListQuery,
@@ -12,4 +14,10 @@ export async function getProducts(
   const result = await fetch(`/api/products?${params.toString()}`);
   if (!result.ok) throw new Error('API 호출 실패');
   return result.json() as Promise<ProductListResponse>;
+}
+
+export function getProductsServerData(
+  query: ProductListQuery,
+): Promise<ProductListResponse> {
+  return Promise.resolve(getProductsData(query));
 }
