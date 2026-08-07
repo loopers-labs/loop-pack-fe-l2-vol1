@@ -1,0 +1,300 @@
+{
+  "measurement": {
+    "measuredAt": "2026-08-08",
+    "url": "http://localhost:3000/",
+    "beforeSha": "ee94807937573985e1f005fc2952243fad5f7945",
+    "afterSha": "a924f54f369719be27588b8d96a79dd9e9852373",
+    "build": "Next.js production build (webpack)",
+    "lighthouse": "12.8.2",
+    "browser": "Chrome 151.0.7922.76",
+    "browserProfile": "Isolated temporary profile with the same launch options for Before and After",
+    "loadCondition": "Cold load with cache disabled",
+    "viewport": {
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75
+    },
+    "throttlingMethod": "devtools",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.56,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "runs": 5
+  },
+  "before": {
+    "rows": [
+      {
+        "file": "run-01.report.json",
+        "fcp": 2699.001,
+        "lcp": 44791.392,
+        "cls": 0,
+        "score": 34
+      },
+      {
+        "file": "run-02.report.json",
+        "fcp": 2722.522,
+        "lcp": 45341.811,
+        "cls": 0,
+        "score": 32
+      },
+      {
+        "file": "run-03.report.json",
+        "fcp": 2740.078,
+        "lcp": 44718.146,
+        "cls": 0,
+        "score": 35
+      },
+      {
+        "file": "run-04.report.json",
+        "fcp": 2566.716,
+        "lcp": 44846.292,
+        "cls": 0,
+        "score": 36
+      },
+      {
+        "file": "run-05.report.json",
+        "fcp": 2852.073,
+        "lcp": 44883.112,
+        "cls": 0,
+        "score": 33
+      }
+    ],
+    "representative": {
+      "file": "run-04.report.json",
+      "fcp": 2566.716,
+      "lcp": 44846.292,
+      "cls": 0,
+      "score": 36,
+      "lcpBreakdown": [
+        {
+          "type": "table",
+          "headings": [
+            {
+              "key": "label",
+              "valueType": "text",
+              "label": "Subpart"
+            },
+            {
+              "key": "duration",
+              "valueType": "ms",
+              "label": "Duration"
+            }
+          ],
+          "items": [
+            {
+              "subpart": "timeToFirstByte",
+              "label": "Time to first byte",
+              "duration": 12.102
+            },
+            {
+              "subpart": "resourceLoadDelay",
+              "label": "Resource load delay",
+              "duration": 618.14
+            },
+            {
+              "subpart": "resourceLoadDuration",
+              "label": "Resource load duration",
+              "duration": 44140.562
+            },
+            {
+              "subpart": "elementRenderDelay",
+              "label": "Element render delay",
+              "duration": 75.488
+            }
+          ]
+        },
+        {
+          "type": "node",
+          "lhId": "page-0-IMG",
+          "path": "1,HTML,1,BODY,4,DIV,1,SECTION,0,IMG",
+          "selector": "body.font-family-body > div.flex-1 > section.HeroSection_hero__Mclti > img.HeroSection_image___5pS6",
+          "boundingRect": {
+            "top": 81,
+            "bottom": 596,
+            "left": 0,
+            "right": 412,
+            "width": 412,
+            "height": 515
+          },
+          "snippet": "<img class=\"HeroSection_image___5pS6\" src=\"/images/week-07/hero-original.jpg\" alt=\"\" width=\"3840\" height=\"2160\">",
+          "nodeLabel": "body.font-family-body > div.flex-1 > section.HeroSection_hero__Mclti > img.HeroSection_image___5pS6"
+        }
+      ],
+      "heroRequest": {
+        "url": "http://localhost:3000/images/week-07/hero-original.jpg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 628.46099999547,
+        "networkRequestTime": 631.2369999885559,
+        "networkEndTime": 44769.02300000191,
+        "finished": true,
+        "transferSize": 7545525,
+        "resourceSize": 7545239,
+        "statusCode": 200,
+        "mimeType": "image/jpeg",
+        "resourceType": "Image",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      }
+    },
+    "summary": {
+      "fcp": {
+        "median": 2722.522,
+        "min": 2566.716,
+        "max": 2852.073
+      },
+      "lcp": {
+        "median": 44846.292,
+        "min": 44718.146,
+        "max": 45341.811
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      }
+    }
+  },
+  "after": {
+    "rows": [
+      {
+        "file": "run-01.report.json",
+        "fcp": 2426.324,
+        "lcp": 2512.089,
+        "cls": 0,
+        "score": 66
+      },
+      {
+        "file": "run-02.report.json",
+        "fcp": 2197.645,
+        "lcp": 2258.436,
+        "cls": 0,
+        "score": 68
+      },
+      {
+        "file": "run-03.report.json",
+        "fcp": 2734.196,
+        "lcp": 2855.677,
+        "cls": 0,
+        "score": 63
+      },
+      {
+        "file": "run-04.report.json",
+        "fcp": 2130.969,
+        "lcp": 2262.094,
+        "cls": 0,
+        "score": 72
+      },
+      {
+        "file": "run-05.report.json",
+        "fcp": 2121.717,
+        "lcp": 2184.228,
+        "cls": 0,
+        "score": 74
+      }
+    ],
+    "representative": {
+      "file": "run-04.report.json",
+      "fcp": 2130.969,
+      "lcp": 2262.094,
+      "cls": 0,
+      "score": 72,
+      "lcpBreakdown": [
+        {
+          "type": "table",
+          "headings": [
+            {
+              "key": "label",
+              "valueType": "text",
+              "label": "Subpart"
+            },
+            {
+              "key": "duration",
+              "valueType": "ms",
+              "label": "Duration"
+            }
+          ],
+          "items": [
+            {
+              "subpart": "timeToFirstByte",
+              "label": "Time to first byte",
+              "duration": 9.838
+            },
+            {
+              "subpart": "resourceLoadDelay",
+              "label": "Resource load delay",
+              "duration": 649.467
+            },
+            {
+              "subpart": "resourceLoadDuration",
+              "label": "Resource load duration",
+              "duration": 1495.855
+            },
+            {
+              "subpart": "elementRenderDelay",
+              "label": "Element render delay",
+              "duration": 106.934
+            }
+          ]
+        },
+        {
+          "type": "node",
+          "lhId": "page-0-IMG",
+          "path": "1,HTML,1,BODY,4,DIV,0,MAIN,0,SECTION,0,PICTURE,2,IMG",
+          "selector": "main > section.HeroSection_hero__Mclti > picture > img.HeroSection_image___5pS6",
+          "boundingRect": {
+            "top": 81,
+            "bottom": 596,
+            "left": 0,
+            "right": 412,
+            "width": 412,
+            "height": 515
+          },
+          "snippet": "<img class=\"HeroSection_image___5pS6\" src=\"http://localhost:3000/images/week-07/hero-1080.avif\" alt=\"\" width=\"1920\" height=\"1080\" fetchpriority=\"high\" loading=\"eager\">",
+          "nodeLabel": "main > section.HeroSection_hero__Mclti > picture > img.HeroSection_image___5pS6"
+        }
+      ],
+      "heroRequest": {
+        "url": "http://localhost:3000/images/week-07/hero-1080.avif",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 657.7930000126362,
+        "networkRequestTime": 659.3880000114441,
+        "networkEndTime": 2153.6480000019073,
+        "finished": true,
+        "transferSize": 60748,
+        "resourceSize": 60448,
+        "statusCode": 200,
+        "mimeType": "image/avif",
+        "resourceType": "Image",
+        "priority": "Low",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      }
+    },
+    "summary": {
+      "fcp": {
+        "median": 2197.645,
+        "min": 2121.717,
+        "max": 2734.196
+      },
+      "lcp": {
+        "median": 2262.094,
+        "min": 2184.228,
+        "max": 2855.677
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      }
+    }
+  }
+}

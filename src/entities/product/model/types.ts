@@ -18,6 +18,7 @@ export type ProductListQuery = {
   sort?: ProductSort;
   page?: number;
   pageSize?: number;
+  scenario?: string;
 };
 
 export type SizeValue = { value: number; stock: number };

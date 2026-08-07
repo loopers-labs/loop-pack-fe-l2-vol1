@@ -59,3 +59,48 @@ export function getProductList(
 export function getProductById(id: string): Product | undefined {
   return products.find((p) => p.id === id);
 }
+
+function getApiBase(): string {
+  return typeof window === 'undefined' ? (process.env.APP_ORIGIN ?? '') : '';
+}
+
+export function buildProductListUrl(params: ProductListQuery): string {
+  const {
+    q,
+    category,
+    sort = PRODUCT_LIST_DEFAULTS.sort,
+    page = PRODUCT_LIST_DEFAULTS.page,
+    pageSize = PRODUCT_LIST_DEFAULTS.pageSize,
+    scenario,
+  } = params;
+
+  const sp = new URLSearchParams();
+  if (q) sp.set('q', q);
+  if (category && category !== 'all') sp.set('category', category);
+  sp.set('sort', sort);
+  sp.set('page', String(page));
+  sp.set('pageSize', String(pageSize));
+  if (scenario) sp.set('scenario', scenario);
+
+  return `${getApiBase()}/api/products?${sp.toString()}`;
+}
+
+export async function fetchProductList(
+  params: ProductListQuery,
+  options?: { signal?: AbortSignal },
+): Promise<ProductListResponse> {
+  const isServer = typeof window === 'undefined';
+  const res = isServer
+    ? await fetch(buildProductListUrl(params))
+    : await fetch(buildProductListUrl(params), { signal: options?.signal });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as { message?: string }).message ??
+        '상품 목록을 불러오지 못했습니다.',
+    );
+  }
+
+  return res.json() as Promise<ProductListResponse>;
+}

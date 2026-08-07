@@ -16,7 +16,7 @@ export function CartDialog() {
     enabled: !!lastAddedId,
   });
 
-  if (!lastAddedId || !product) return null;
+  if (!lastAddedId) return null;
 
   return (
     <Dialog open={!!lastAddedId} onOpenChange={() => clearLastAdded()}>
@@ -27,23 +27,25 @@ export function CartDialog() {
             장바구니에 담았습니다.
           </Dialog.Title>
 
-          <div className="mt-4 flex gap-3">
-            <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-bg">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="size-full object-cover"
-              />
+          {product && (
+            <div className="mt-4 flex gap-3">
+              <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-bg">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="size-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] text-text">
+                  {product.name}
+                </p>
+                <p className="mt-1 text-[14px] font-semibold text-text">
+                  {formatWon(product.price)}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] text-text">
-                {product.name}
-              </p>
-              <p className="mt-1 text-[14px] font-semibold text-text">
-                {formatWon(product.price)}
-              </p>
-            </div>
-          </div>
+          )}
 
           <div className="mt-6 flex gap-2">
             <Dialog.Close className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border text-[13px] font-medium text-text-secondary transition-colors hover:bg-bg">

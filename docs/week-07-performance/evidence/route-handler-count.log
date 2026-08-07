@@ -1,0 +1,5 @@
+request: GET /products?scenario=slow
+user-agent: facebookexternalhit/1.1
+response: status=200 bytes=48082
+[week07-route-count] /api/products?sort=latest&page=1&pageSize=12&scenario=slow
+observed Route Handler calls for this document request: 1
