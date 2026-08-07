@@ -1,17 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import {
-  categories,
-  homeBanner,
-  products,
-  waitForMockApi,
-} from '@/app/api/_data/commerce';
-import type { ApiErrorResponse, MockApiScenario } from '@/app/api/_data/types';
-import type { HomeResponse } from '@/entities/product';
+import { NextRequest, NextResponse } from "next/server";
+import { categories, homeBanner, products, waitForMockApi } from "@/app/api/_data/commerce";
+import type { ApiErrorResponse, MockApiScenario } from "@/app/api/_data/types";
+import type { HomeResponse } from "@/entities/product";
 
-const scenarioValues = [
-  'empty',
-  'error',
-] as const satisfies readonly MockApiScenario[];
+const scenarioValues = ["empty", "error", "slow"] as const satisfies
+  readonly MockApiScenario[];
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);
@@ -19,20 +12,20 @@ const isMockApiScenario = (value: string): value is MockApiScenario =>
 export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<HomeResponse | ApiErrorResponse>> {
-  const scenario = request.nextUrl.searchParams.get('scenario');
+  const scenario = request.nextUrl.searchParams.get("scenario");
 
   if (scenario !== null && !isMockApiScenario(scenario)) {
     return NextResponse.json(
-      { message: '요청 조건을 확인해주세요.' },
+      { message: "요청 조건을 확인해주세요." },
       { status: 400 },
     );
   }
 
-  await waitForMockApi();
+  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
 
-  if (scenario === 'error') {
+  if (scenario === "error") {
     return NextResponse.json(
-      { message: '홈 데이터를 불러오지 못했습니다.' },
+      { message: "홈 데이터를 불러오지 못했습니다." },
       { status: 500 },
     );
   }
@@ -47,7 +40,7 @@ export async function GET(
   return NextResponse.json({
     banner: homeBanner,
     categories,
-    popularProducts: scenario === 'empty' ? [] : popularProducts,
-    newProducts: scenario === 'empty' ? [] : newProducts,
+    popularProducts: scenario === "empty" ? [] : popularProducts,
+    newProducts: scenario === "empty" ? [] : newProducts,
   });
 }
