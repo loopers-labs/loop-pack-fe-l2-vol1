@@ -14,6 +14,7 @@ import { useProductSearchParams } from '../lib/useProductSearchParams';
 import { formatWon } from '@/shared/lib/format';
 import { ProductListIntro } from './ProductListIntro';
 import { ProductListSkeleton } from './ProductListSkeleton';
+import type { QueryKey } from '@tanstack/react-query';
 import type { CategoryOption, Product, ProductListResponse, ProductSort } from '@/entities/product/model/types';
 
 function ProductActions({ product }: { product: Product }) {
@@ -138,20 +139,27 @@ export function ProductListContent() {
   const queryClient = useQueryClient();
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [lastSuccessData, setLastSuccessData] =
-    useState<ProductListResponse | undefined>(undefined);
+  const queryOpts = productListQueryOptions(query);
+  const [lastSuccessKey, setLastSuccessKey] = useState<QueryKey>(queryOpts.queryKey);
 
   const { data, isPlaceholderData, isError, isFetching, refetch } = useQuery({
-    ...productListQueryOptions(query),
+    ...queryOpts,
     placeholderData: keepPreviousData,
   });
 
-  if (data && data !== lastSuccessData) {
-    setLastSuccessData(data);
+  if (data && !isPlaceholderData) {
+    const currentKey = JSON.stringify(queryOpts.queryKey);
+    const storedKey = JSON.stringify(lastSuccessKey);
+    if (currentKey !== storedKey) {
+      setLastSuccessKey(queryOpts.queryKey);
+    }
   }
 
-  const displayData = data ?? lastSuccessData;
-  const isShowingFallback = !data && !!lastSuccessData;
+  const fallbackData = (isError && !data)
+    ? queryClient.getQueryData<ProductListResponse>(lastSuccessKey)
+    : undefined;
+  const displayData = data ?? fallbackData;
+  const isShowingFallback = !data && !!fallbackData;
 
   useEffect(() => {
     if (!data) return;
