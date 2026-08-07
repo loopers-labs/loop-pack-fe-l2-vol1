@@ -66,7 +66,7 @@ function ProductGrid({ data, isFetching, setPage }: ProductGridProps) {
           <p className="text-sm text-text-secondary">상품이 없습니다.</p>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-6 md:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
           {products.map((product) => (
             <article key={product.id} className="group">
               <Link href={`/products/${product.id}`}>
