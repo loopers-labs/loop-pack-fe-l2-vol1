@@ -27,6 +27,9 @@ export const commonOpenGraph = {
   type: 'website' as const,
 };
 
+// [AI] OG 기본 이미지. 상품이 없는 페이지 등에서 fallback으로 쓴다 (홈 배너 이미지와 동일).
+export const DEFAULT_OG_IMAGE = '/images/products/p6.jpg';
+
 export const metadata: Metadata = {
   // [AI] 페이지에서 상대 경로 image를 줘도 절대 URL로 렌더되게 하는 기준점.
   metadataBase: new URL(SITE_URL),

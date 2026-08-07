@@ -6,7 +6,7 @@ import { ProductList } from '@/_pages/product/ui/ProductList';
 import { DEFAULT_PRODUCT_LIST_QUERY, productQueries } from '@/entities/product/api/queries';
 import type { ProductListQuery, ProductSort } from '@/entities/product/model';
 import { getQueryClient } from '@/shared/api/getQueryClient';
-import { commonOpenGraph } from '../layout';
+import { commonOpenGraph, DEFAULT_OG_IMAGE } from '../layout';
 
 // [AI] 정렬값 → 한국어 라벨. description에 노출된다.
 const SORT_LABELS: Record<ProductSort, string> = {
@@ -70,6 +70,13 @@ const buildCanonicalPath = (query: ProductListQuery): string => {
   return qs ? `/products?${qs}` : '/products';
 };
 
+// [AI] 빈 결과(totalCount 0)의 description을 조건에 맞게 만든다.
+const buildEmptyDescription = (query: ProductListQuery, categoryName: string): string => {
+  if (query.q) return `'${query.q}' 검색 결과가 없습니다. 다른 검색어나 필터를 시도해보세요.`;
+  if (query.category && query.category !== 'all') return `${categoryName} 상품이 없습니다.`;
+  return '일치하는 상품이 없습니다.';
+};
+
 // [AI] 상품 목록 metadata: 본문과 같은 query factory(productQueries.list)로
 // 카테고리명·전체개수·첫 이미지를 가져와 title·description·OG를 채운다.
 // 검색어→title, category·sort·전체개수→description, 2페이지 이상→title 규칙.
@@ -93,9 +100,13 @@ export const generateMetadata = async ({
     const baseTitle = query.q ? `'${query.q}' 검색 결과` : '상품 목록';
     const title = query.page && query.page > 1 ? `${baseTitle} - ${query.page}페이지` : baseTitle;
 
-    // [AI] category·sort·전체개수 → description
-    const description = `${categoryName} 상품 ${data.totalCount}건, ${sortLabel}으로 만나보세요.`;
-    const image = data.products[0]?.image;
+    // [AI] empty(totalCount 0): 조건에 맞게 "결과 없음" 설명. normal: 카테고리·개수·정렬 설명.
+    const description =
+      data.totalCount === 0
+        ? buildEmptyDescription(query, categoryName)
+        : `${categoryName} 상품 ${data.totalCount}건, ${sortLabel}으로 만나보세요.`;
+    // [AI] 빈 결과엔 첫 상품 이미지가 없으므로 사이트 대체 이미지로 fallback.
+    const image = data.products[0]?.image ?? DEFAULT_OG_IMAGE;
 
     return {
       title,
@@ -105,7 +116,7 @@ export const generateMetadata = async ({
         ...commonOpenGraph,
         title,
         description,
-        ...(image ? { images: [{ url: image }] } : {}),
+        images: [{ url: image }],
       },
     };
   } catch {
