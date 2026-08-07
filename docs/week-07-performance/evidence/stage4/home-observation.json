@@ -1,0 +1,96 @@
+{
+  "title": "매일 새롭게 발견하는 취향",
+  "h1": "Loopers 커머스",
+  "hero": {
+    "currentSrc": "http://localhost:3000/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=640&q=75",
+    "complete": true,
+    "naturalWidth": 412,
+    "naturalHeight": 231,
+    "rect": {
+      "x": 16,
+      "y": 239,
+      "width": 380,
+      "height": 475,
+      "top": 239,
+      "right": 396,
+      "bottom": 714,
+      "left": 16
+    }
+  },
+  "navigation": {
+    "startTime": 0,
+    "responseStart": 10.200000047683716,
+    "responseEnd": 1526.3999999761581,
+    "domContentLoadedEventEnd": 1528,
+    "loadEventEnd": 1528.2000000476837,
+    "transferSize": 9686
+  },
+  "resources": [
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=640&q=75",
+      "startTime": 14,
+      "duration": 10.200000047683716,
+      "transferSize": 24564
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp21.jpg&w=640&q=75",
+      "startTime": 1552.7000000476837,
+      "duration": 5.600000023841858,
+      "transferSize": 72202
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp11.jpg&w=640&q=75",
+      "startTime": 1552.8000000715256,
+      "duration": 5.099999904632568,
+      "transferSize": 5740
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp15.jpg&w=640&q=75",
+      "startTime": 1552.8000000715256,
+      "duration": 5.5,
+      "transferSize": 2898
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp8.jpg&w=640&q=75",
+      "startTime": 1552.8999999761581,
+      "duration": 7,
+      "transferSize": 5908
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp22.jpg&w=640&q=75",
+      "startTime": 1552.8999999761581,
+      "duration": 7.100000023841858,
+      "transferSize": 9008
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp30.jpg&w=640&q=75",
+      "startTime": 1552.8999999761581,
+      "duration": 12,
+      "transferSize": 9900
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp26.jpg&w=640&q=75",
+      "startTime": 1552.8999999761581,
+      "duration": 12.900000095367432,
+      "transferSize": 16786
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp6.jpg&w=640&q=75",
+      "startTime": 1553,
+      "duration": 13.200000047683716,
+      "transferSize": 8520
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp27.jpg&w=640&q=75",
+      "startTime": 1553,
+      "duration": 13.700000047683716,
+      "transferSize": 7392
+    },
+    {
+      "name": "http://localhost:3000/_next/image?url=%2Fimages%2Fproducts%2Fp24.jpg&w=640&q=75",
+      "startTime": 1553,
+      "duration": 20,
+      "transferSize": 8364
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "sha": "b021c86d",
+  "environment": {
+    "node": "v22.12.0",
+    "pnpm": "10.15.1",
+    "server": "next start"
+  },
+  "playwright": {
+    "passed": 14,
+    "failed": 0,
+    "covered": [
+      "mobile Hero load",
+      "search URL/GET/result consistency",
+      "category URL/GET/result consistency",
+      "sort URL/GET/result consistency",
+      "page URL/GET/result consistency",
+      "initial pending skeleton",
+      "refresh with previous list",
+      "empty result",
+      "initial failure and retry",
+      "refresh failure with previous list and retry",
+      "request cancellation",
+      "unexpected response Error Boundary",
+      "refresh CLS"
+    ]
+  },
+  "rapidChanges": {
+    "sequence": ["casual", "fashion", "goods", "digital"],
+    "aborted": ["casual", "fashion", "goods"],
+    "abortFailure": "net::ERR_ABORTED",
+    "finalRequest": {
+      "category": "digital",
+      "status": 200
+    },
+    "finalUrl": "http://localhost:3000/products?category=digital",
+    "finalProductIds": ["p24", "p22", "p30", "p21", "p25", "p23"]
+  },
+  "cls": {
+    "initial": 0,
+    "refresh": 0.0009431154855484824,
+    "threshold": 0.1,
+    "passed": true
+  },
+  "video": "products-regression.webm",
+  "videoScenario": "rapid category changes, cancellation, and final URL/result consistency"
+}

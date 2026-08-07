@@ -1,0 +1,200 @@
+{
+  "calls": [
+    {
+      "search": "?q=&category=all&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 87,
+      "endedAtMs": 1601,
+      "status": 200,
+      "failure": null
+    },
+    {
+      "search": "?q=&category=casual&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 1968,
+      "endedAtMs": 2304,
+      "status": null,
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "search": "?q=&category=fashion&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 2301,
+      "endedAtMs": 2647,
+      "status": null,
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "search": "?q=&category=goods&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 2645,
+      "endedAtMs": 2979,
+      "status": null,
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "search": "?q=&category=digital&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 2976,
+      "endedAtMs": 4487,
+      "status": 200,
+      "failure": null
+    }
+  ],
+  "snapshots": [
+    {
+      "label": "선택: casual",
+      "atMs": 1973,
+      "url": "http://localhost:3000/products?category=casual",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "true",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    },
+    {
+      "label": "선택: fashion",
+      "atMs": 2304,
+      "url": "http://localhost:3000/products?category=fashion",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "true",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    },
+    {
+      "label": "선택: goods",
+      "atMs": 2648,
+      "url": "http://localhost:3000/products?category=goods",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "true",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    },
+    {
+      "label": "선택: digital",
+      "atMs": 2980,
+      "url": "http://localhost:3000/products?category=digital",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "true",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    },
+    {
+      "label": "정착 후",
+      "atMs": 8314,
+      "url": "http://localhost:3000/products?category=digital",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "false",
+      "listCardCount": 6,
+      "listProductIds": [
+        "p24",
+        "p22",
+        "p30",
+        "p21",
+        "p25",
+        "p23"
+      ],
+      "totalCountText": "총 6개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    }
+  ],
+  "finalCategory": "digital",
+  "abortedCount": 3,
+  "abortedDetail": [
+    {
+      "search": "?q=&category=casual&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 1968,
+      "endedAtMs": 2304,
+      "status": null,
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "search": "?q=&category=fashion&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 2301,
+      "endedAtMs": 2647,
+      "status": null,
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "search": "?q=&category=goods&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 2645,
+      "endedAtMs": 2979,
+      "status": null,
+      "failure": "net::ERR_ABORTED"
+    }
+  ]
+}

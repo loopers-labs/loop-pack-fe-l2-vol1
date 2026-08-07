@@ -1,0 +1,58 @@
+{
+  "measurement": {
+    "sha": "b021c86d",
+    "url": "http://localhost:3000/",
+    "lighthouseVersion": "12.8.2",
+    "formFactor": "mobile",
+    "runs": 5,
+    "coldLoad": true
+  },
+  "performanceScore": {
+    "raw": [97, 97, 97, 97, 97],
+    "median": 97,
+    "min": 97,
+    "max": 97,
+    "range": 0
+  },
+  "fcpMs": {
+    "raw": [917.14, 906.93, 907.066, 905.594, 905.814],
+    "median": 906.93,
+    "min": 905.594,
+    "max": 917.14,
+    "range": 11.546
+  },
+  "lcpMs": {
+    "raw": [2655.71, 2640.395, 2641.599, 2637.391, 2639.721],
+    "median": 2640.395,
+    "min": 2637.391,
+    "max": 2655.71,
+    "range": 18.319
+  },
+  "cls": {
+    "raw": [0.00975189711122158, 0.00975189711122158, 0.00975189711122158, 0.00975189711122158, 0.00975189711122158],
+    "median": 0.00975189711122158,
+    "min": 0.00975189711122158,
+    "max": 0.00975189711122158,
+    "range": 0
+  },
+  "medianLcpRun": {
+    "run": 2,
+    "element": "body > main.week05-page > section.HeroSection-module__lqBdna__hero > img.HeroSection-module__lqBdna__image",
+    "resourceUrl": "http://localhost:3000/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=750&q=75",
+    "transferSizeBytes": 32423,
+    "resourceSizeBytes": 31994,
+    "mimeType": "image/webp",
+    "breakdownMs": {
+      "ttfb": 453.465,
+      "resourceLoadDelay": 163.4182115182728,
+      "resourceLoadDuration": 152.0807690845803,
+      "elementRenderDelay": 1871.4310193971464
+    }
+  },
+  "before": {
+    "sha": "ccd46b2f",
+    "fcpMedianMs": 919,
+    "lcpMedianMs": 40900,
+    "clsMedian": 0.016
+  }
+}

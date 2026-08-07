@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 
 // Select (Headless) — 4주차 1단계
 //
-// 로직(열기/닫기·선택값·키보드·품절 스킵)만 제공한다. JSX는 없다 — 생김새는 사용처가 그린다.
+// 로직(열기/닫기·선택값·키보드·비활성 스킵)만 제공한다. JSX는 없다 — 생김새는 사용처가 그린다.
 // value/onChange는 부모가 소유(컨트롤드)한다: 옵션 객체 전체를 그대로 주고받아야
 // 가격·배송 계산에 바로 쓸 수 있기 때문 (문자열 value였다면 호출부가 다시 options에서 찾아야 함).
 
 export interface SelectOptionLike {
   id: string
-  soldOut?: boolean
+  disabled?: boolean
 }
 
 interface UseSelectParams<T extends SelectOptionLike> {
@@ -60,7 +60,7 @@ export function useSelect<T extends SelectOptionLike>({
       ? options.findIndex((option) => option.id === value.id)
       : -1
     const isSelectedEnabled =
-      selectedIndex >= 0 && !options[selectedIndex].soldOut
+      selectedIndex >= 0 && !options[selectedIndex].disabled
     setHighlightedIndex(
       isSelectedEnabled ? selectedIndex : findNextEnabledIndex(options, -1, 1),
     )
@@ -70,11 +70,11 @@ export function useSelect<T extends SelectOptionLike>({
   const toggle = () => (isOpen ? close() : open())
 
   const highlight = (index: number) => {
-    if (!options[index]?.soldOut) setHighlightedIndex(index)
+    if (!options[index]?.disabled) setHighlightedIndex(index)
   }
 
   const selectOption = (option: T) => {
-    if (option.soldOut) return
+    if (option.disabled) return
     onChange(option)
     close()
   }
@@ -118,7 +118,7 @@ export function useSelect<T extends SelectOptionLike>({
   const getOptionState = (option: T, index: number): OptionState => ({
     selected: value?.id === option.id,
     highlighted: index === safeHighlightedIndex,
-    disabled: Boolean(option.soldOut),
+    disabled: Boolean(option.disabled),
   })
 
   return {
@@ -144,7 +144,7 @@ export function useSelect<T extends SelectOptionLike>({
   }
 }
 
-// 현재 인덱스에서 방향대로 훑되, 품절(disabled) 옵션은 건너뛴다.
+// 현재 인덱스에서 방향대로 훑되, 비활성(disabled) 옵션은 건너뛴다.
 // 끝까지 가도 활성 옵션이 없으면 원래 위치를 유지한다(경계에서 튕겨나가지 않음).
 function findNextEnabledIndex<T extends SelectOptionLike>(
   options: T[],
@@ -158,7 +158,7 @@ function findNextEnabledIndex<T extends SelectOptionLike>(
   for (let step = 0; step < count; step++) {
     index = index === -1 ? (direction === 1 ? 0 : count - 1) : index + direction
     if (index < 0 || index >= count) return current
-    if (!options[index].soldOut) return index
+    if (!options[index].disabled) return index
   }
   return current
 }

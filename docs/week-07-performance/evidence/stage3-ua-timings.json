@@ -1,0 +1,31 @@
+{
+  "sha": "16de222a",
+  "origin": "http://127.0.0.1:3103",
+  "method": "각 UA 1회 warm-up 후 curl 3회 raw",
+  "productsSlow": {
+    "url": "/products?scenario=slow",
+    "normal": [
+      { "timeStartTransfer": 0.010751, "timeTotal": 1.522214, "status": 200 },
+      { "timeStartTransfer": 0.009597, "timeTotal": 1.518097, "status": 200 },
+      { "timeStartTransfer": 0.010999, "timeTotal": 1.526553, "status": 200 }
+    ],
+    "facebookexternalhit": [
+      { "timeStartTransfer": 1.513844, "timeTotal": 1.514539, "status": 200 },
+      { "timeStartTransfer": 1.520002, "timeTotal": 1.520644, "status": 200 },
+      { "timeStartTransfer": 1.516488, "timeTotal": 1.51718, "status": 200 }
+    ]
+  },
+  "home": {
+    "url": "/",
+    "normal": [
+      { "timeStartTransfer": 0.010224, "timeTotal": 1.516633, "status": 200 },
+      { "timeStartTransfer": 0.009267, "timeTotal": 1.517178, "status": 200 },
+      { "timeStartTransfer": 0.009611, "timeTotal": 1.514287, "status": 200 }
+    ],
+    "facebookexternalhit": [
+      { "timeStartTransfer": 1.513918, "timeTotal": 1.514716, "status": 200 },
+      { "timeStartTransfer": 1.520048, "timeTotal": 1.520859, "status": 200 },
+      { "timeStartTransfer": 1.521866, "timeTotal": 1.522753, "status": 200 }
+    ]
+  }
+}

@@ -1,21 +1,9 @@
 import { useCallback } from 'react'
-import {
-  parseAsInteger,
-  parseAsString,
-  parseAsStringEnum,
-  useQueryStates,
-} from 'nuqs'
+import { useQueryStates } from 'nuqs'
 import type { CategoryId, ProductSort } from '@/entities/product'
-
-const categoryValues = [
-  'all',
-  'casual',
-  'fashion',
-  'goods',
-  'home',
-  'digital',
-] as const
-const sortValues = ['latest', 'popular', 'price-asc', 'price-desc'] as const
+import type { MockApiScenario } from '@/shared/api/types'
+import { normalizeProductListParams } from './productListParams'
+import { productListClientParsers } from './productListClientParsers'
 
 // URL에서 파서 기본값까지 적용해 확정된 조건. 타입의 ProductListQuery는 전 필드가
 // optional이라(요청 조립용) 여기서는 쓰지 않는다 — 읽는 쪽은 항상 값이 있다고 믿어도 된다.
@@ -24,6 +12,8 @@ export interface ProductListParams {
   category: CategoryId | 'all'
   sort: ProductSort
   page: number
+  pageSize: number
+  scenario: MockApiScenario | null
 }
 
 export interface UseProductListQueryResult {
@@ -39,19 +29,10 @@ export interface UseProductListQueryResult {
 // 필터(q·category·sort)가 바뀌면 page를 1로 되돌리고, 페이지 이동만 page를 바꾼다.
 // 한 번의 setQuery로 묶어 URL 변경·재요청·히스토리 항목이 각각 1번만 발생하게 한다.
 export function useProductListQuery(): UseProductListQueryResult {
-  const [query, setQuery] = useQueryStates(
-    {
-      q: parseAsString.withDefault(''),
-      category: parseAsStringEnum<CategoryId | 'all'>([
-        ...categoryValues,
-      ]).withDefault('all'),
-      sort: parseAsStringEnum<ProductSort>([...sortValues]).withDefault(
-        'latest',
-      ),
-      page: parseAsInteger.withDefault(1),
-    },
-    { history: 'push' },
-  )
+  const [urlQuery, setQuery] = useQueryStates(productListClientParsers, {
+    history: 'push',
+  })
+  const query = normalizeProductListParams(urlQuery)
 
   // setQuery는 nuqs가 메모이즈해 주므로 아래 setter들도 렌더 간 참조가 유지된다.
   const setSearch = useCallback(

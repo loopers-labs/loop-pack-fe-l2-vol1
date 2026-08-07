@@ -1,0 +1,56 @@
+{
+  "calls": [
+    {
+      "search": "?q=&category=all&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 85,
+      "endedAtMs": 1598,
+      "status": 200,
+      "failure": null
+    }
+  ],
+  "snapshots": [
+    {
+      "label": "API 응답 전",
+      "atMs": 73,
+      "url": "http://localhost:3000/products",
+      "statusText": null,
+      "skeletonVisible": true,
+      "skeletonCardCount": 12,
+      "listVisible": false,
+      "listAriaBusy": null,
+      "listCardCount": 0,
+      "listProductIds": [],
+      "totalCountText": null,
+      "emptyText": null,
+      "inlineErrorVisible": false
+    },
+    {
+      "label": "API 응답 후",
+      "atMs": 1955,
+      "url": "http://localhost:3000/products",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "false",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    }
+  ]
+}

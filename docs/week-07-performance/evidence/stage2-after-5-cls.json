@@ -1,0 +1,72 @@
+{
+  "initialCls": 0,
+  "initialShifts": [],
+  "refreshCls": 0.0009431154855484824,
+  "refreshShifts": [
+    {
+      "value": 0.0009431154855484824,
+      "sources": [
+        {
+          "node": "article.week05-product",
+          "text": "위키오위키오 3in1 거치대형 무선충전기 아이폰, 갤럭시, 스마트워치, 무선이어폰 동시충전20%39,900원49,900원찜담기",
+          "previousX": 360,
+          "previousY": 960,
+          "previousWidth": 224,
+          "previousHeight": 120,
+          "currentX": 360,
+          "currentY": 941,
+          "currentWidth": 224,
+          "currentHeight": 139
+        },
+        {
+          "node": "unknown",
+          "text": "",
+          "previousX": 360,
+          "previousY": 355,
+          "previousWidth": 1200,
+          "previousHeight": 17,
+          "currentX": 360,
+          "currentY": 355,
+          "currentWidth": 1200,
+          "currentHeight": 17
+        },
+        {
+          "node": "div.week05-product__actions",
+          "text": "찜담기",
+          "previousX": 360,
+          "previousY": 895.59375,
+          "previousWidth": 224,
+          "previousHeight": 44.40625,
+          "currentX": 360,
+          "currentY": 880.390625,
+          "currentWidth": 224,
+          "currentHeight": 40.609375
+        },
+        {
+          "node": "div.week05-product__actions",
+          "text": "찜담기",
+          "previousX": 1092,
+          "previousY": 895.59375,
+          "previousWidth": 224,
+          "previousHeight": 44.40625,
+          "currentX": 1092,
+          "currentY": 880.796875,
+          "currentWidth": 224,
+          "currentHeight": 40.203125
+        },
+        {
+          "node": "div.week05-product__actions",
+          "text": "찜담기",
+          "previousX": 604,
+          "previousY": 899.796875,
+          "previousWidth": 224,
+          "previousHeight": 40.203125,
+          "currentX": 604,
+          "currentY": 884.59375,
+          "currentWidth": 224,
+          "currentHeight": 36.40625
+        }
+      ]
+    }
+  ]
+}

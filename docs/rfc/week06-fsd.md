@@ -39,6 +39,7 @@
 
 - **`src/common/hooks/*`, `src/common/utils/{readUrlParam,escapeRegExp}.ts`, `src/common/services/httpClient.ts` 이동/삭제 안 함** — grep 전수 확인 결과 활성 Next 앱에서 아무도 참조하지 않고, 이미 마이그레이션 범위 밖인 Vite 잔재(`src/product/*`)에서만 쓰인다. 도메인 무관 제네릭이라 옮긴다면 `shared/lib`이 맞지만, 쓰는 곳 없는 코드를 새 구조에 우겨넣는 것은 FSD가 피하려는 "일단 만들어 둔 폴더"다.
 - **죽은 코드(`src/product`, `src/examples`, `src/market`, `src/App.tsx`, `src/main.tsx`) 이번 라운드 삭제 안 함** — 삭제는 구조 이동과 무관한 기능 변경이므로 원한다면 **별도 커밋(커밋 3)**으로 분리한다. 이번 RFC의 두 커밋 범위에는 넣지 않는다.
+  - _재제출 정정: 예고한 대로 별도 커밋 `9394f6a3`("chore: 죽은 코드 삭제")에서 이 파일들을 실제로 삭제했다(36개 파일, -1367줄). "이번 라운드 삭제 안 함"은 위 두 커밋(구조 이동·에러 재설계) 범위에 넣지 않는다는 뜻이었고, 삭제 자체는 그 뒤 커밋 3에서 수행됐다._
 - **`src/app/api/**`(Route Handler·mock fixture) 이동 안 함** — 과제 지시 범위 제외. 단 응답/도메인 타입은 재배치된 위치에서 그대로 import한다(아래 Interface 절의 백엔드 경계 참고).
 - **`processes` 레이어 안 만듦** — 여러 페이지를 넘나드는 다단계 플로우(체크아웃 등)가 아직 없다.
 - **포커스 트랩·ARIA(4주차 범위 밖), 제네릭 응답 타입 추상화, 상품 상세 페이지** — 현재 필요 없어 만들지 않는다.
@@ -327,6 +328,6 @@ React Error Boundary(및 Next `error.tsx`)는 **렌더링 중 throw된 오류만
 ## AI 활용 표기
 
 - 이 RFC와 마이그레이션 계획의 초안은 Claude Code로 작성했다.
-- **설계 검증**: 두 워크트리(`D:/Loopers`·`D:/loopersworktree`)에 각각 둔 초안을 비교·교차검증해 이 문서로 통합했다. 5개 핵심 결정(ProductCard 분리, cart/wishlist store 분리, queryOptions 위치, 응답 타입 위치, Badge 위치)을 적대적 리뷰로 다퉜고, 응답 타입·queryOptions를 `entities/product`로 두는 배치가 백엔드의 `_pages` 역참조를 없애는 선택임을 확인했다. *(두 워크트리 진행 방식의 "독립성" 서술은 제출 전 본인이 실제 이력과 대조해 확정할 것.)*
+- **설계 검증**: 5개 핵심 결정(ProductCard 분리, cart/wishlist store 분리, queryOptions 위치, 응답 타입 위치, Badge 위치)을 적대적 리뷰로 다퉜고, 응답 타입·queryOptions를 `entities/product`로 두는 배치가 백엔드의 `_pages` 역참조를 없애는 선택임을 확인했다.
 - **에러 전략 재검증**: "5xx→boundary, 4xx→inline"을 최종안으로 확정하기 전, 이를 적대적으로 공격했다 — 순수 보존안(인라인 유지 + 아무 경계 없음)은 "실제로 아무것도 안 잡는 `error.tsx`"를 만들고 4xx/5xx 구분을 버린다는 점이 드러나, **구조 이동(커밋1, 보존)과 에러 재설계(커밋2, 5xx 경계)를 분리하는 순서형**으로 결론냈다. 외부 근거는 [week06-error-handling-research.md](./week06-error-handling-research.md)에 출처와 함께 기록했다.
-- 모든 결정의 근거는 위 "애매한 파일 결정표"의 근거 칸과 각 절에 기록했다. 최종 검토는 제출 전 직접 진행한다.
+- 모든 결정의 근거는 위 "애매한 파일 결정표"의 근거 칸과 각 절에 기록했다. 최종 검토를 제출 전 직접 진행했다.

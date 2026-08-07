@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { categories, products, waitForMockApi } from '@/app/api/_data/commerce'
+import {
+  categories,
+  products,
+  waitForMockApi,
+  SLOW_MOCK_DELAY_MS,
+  DEFAULT_MOCK_DELAY_MS,
+} from '@/app/api/_data/commerce'
 import type { ProductListResponse } from '@/entities/product/api/types'
 import type { ProductSort } from '@/entities/product/model/types'
 import type { ApiErrorResponse, MockApiScenario } from '@/shared/api/types'
@@ -13,6 +19,7 @@ const sortValues = [
 const scenarioValues = [
   'empty',
   'error',
+  'slow',
 ] as const satisfies readonly MockApiScenario[]
 
 const isProductSort = (value: string): value is ProductSort =>
@@ -68,7 +75,9 @@ export async function GET(
     )
   }
 
-  await waitForMockApi()
+  await waitForMockApi(
+    scenario === 'slow' ? SLOW_MOCK_DELAY_MS : DEFAULT_MOCK_DELAY_MS,
+  )
 
   if (scenario === 'error') {
     return NextResponse.json(

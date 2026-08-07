@@ -9,6 +9,8 @@ interface ProductResultsProps {
   data: ProductListResponse
   onPageChange: (page: number) => void
   isPlaceholderData?: boolean
+  /** 결과가 0건일 때 어떤 조건으로 조회했는지 사용자에게 그대로 보여준다. */
+  conditionSummary: string
 }
 
 // 조회에 성공한 응답만 받는다. 로딩·에러는 호출부(useQuery 옆)에서 이미 걸러진다.
@@ -18,12 +20,15 @@ export function ProductResults({
   data,
   onPageChange,
   isPlaceholderData = false,
+  conditionSummary,
 }: ProductResultsProps): JSX.Element {
   return (
     <>
       <p>총 {data.totalCount}개</p>
       {data.products.length === 0 ? (
-        <p className="commerce-empty">검색 결과가 없습니다.</p>
+        <p className="commerce-empty">
+          {conditionSummary} 조건에 맞는 상품이 0개입니다.
+        </p>
       ) : (
         <div
           className={
@@ -31,8 +36,11 @@ export function ProductResults({
           }
           aria-busy={isPlaceholderData}
         >
-          {data.products.map((product) => (
-            <ProductCardWithActions key={product.id} product={product} />
+          {data.products.map((product, index) => (
+            <ProductCardWithActions
+              key={`product-slot-${index}`}
+              product={product}
+            />
           ))}
         </div>
       )}

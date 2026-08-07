@@ -355,9 +355,12 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct)
 
-const mockDelayMs = process.env.NODE_ENV === 'test' ? 0 : 500
+// mock API 지연: 정상은 500ms, scenario=slow(7주차 성능 실습 재현 조건)는 1500ms.
+export const DEFAULT_MOCK_DELAY_MS = 500
+export const SLOW_MOCK_DELAY_MS = 1500
 
-export const waitForMockApi = () =>
+export const waitForMockApi = (requestedDelayMs = DEFAULT_MOCK_DELAY_MS) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, mockDelayMs)
+    const delayMs = process.env.NODE_ENV === 'test' ? 0 : requestedDelayMs
+    setTimeout(resolve, delayMs)
   })

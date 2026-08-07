@@ -1,4 +1,5 @@
 import type { Category, CategoryId, Product, ProductSort } from '../model/types'
+import type { MockApiScenario } from '@/shared/api/types'
 
 // 상품 목록 조회 요청 조건. 전 필드 optional(요청 조립용) — URL 상태의
 // ProductListParams(전 필드 필수)와는 별개 타입이다.
@@ -8,6 +9,7 @@ export type ProductListQuery = {
   sort?: ProductSort
   page?: number
   pageSize?: number
+  scenario?: MockApiScenario | null
 }
 
 // 홈 응답은 배너+카테고리+상품을 묶은 합성 계약. banner는 상품 무관 필드지만

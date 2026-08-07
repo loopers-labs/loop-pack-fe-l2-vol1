@@ -1,0 +1,60 @@
+{
+  "sha": "16de222a",
+  "measuredAt": "2026-08-07",
+  "normalOrigin": "http://127.0.0.1:3103",
+  "normal": {
+    "url": "http://127.0.0.1:3103/products?category=fashion",
+    "status": 200,
+    "title": "패션 상품 | Loopers",
+    "description": "카테고리 패션 · 정렬 최신순 · 상품 6개",
+    "openGraph": {
+      "title": "패션 상품",
+      "description": "카테고리 패션 · 정렬 최신순 · 상품 6개",
+      "siteName": "Loopers",
+      "locale": "ko_KR",
+      "type": "website",
+      "image": "http://127.0.0.1:3103/images/products/p6.jpg"
+    },
+    "h1": "상품 목록",
+    "pageDescription": "카테고리와 정렬 조건으로 원하는 상품을 찾아보세요.",
+    "hasHeaderHrefLinks": true,
+    "hasNoIndex": false
+  },
+  "empty": {
+    "url": "http://127.0.0.1:3103/products?category=digital&scenario=empty",
+    "status": 200,
+    "title": "디지털 상품 | Loopers",
+    "description": "카테고리 디지털 · 정렬 최신순 · 상품 0개",
+    "openGraph": {
+      "title": "디지털 상품",
+      "description": "카테고리 디지털 · 정렬 최신순 · 상품 0개",
+      "siteName": "Loopers",
+      "locale": "ko_KR",
+      "type": "website",
+      "image": "http://127.0.0.1:3103/images/products/p1.jpg"
+    },
+    "h1": "상품 목록",
+    "hasNoIndex": false
+  },
+  "queryFailure": {
+    "buildAndRuntimeOrigin": "http://127.0.0.1:9",
+    "requestedUrl": "http://127.0.0.1:3103/products?category=fashion",
+    "build": "success",
+    "status": 200,
+    "timeStartTransferSeconds": 0.3228,
+    "timeTotalSeconds": 0.3277,
+    "title": "Loopers 커머스",
+    "description": "Loopers 커머스에서 카테고리별 인기 상품과 신상품을 만나보세요.",
+    "openGraph": {
+      "title": "Loopers 커머스",
+      "description": "Loopers 커머스에서 카테고리별 인기 상품과 신상품을 만나보세요.",
+      "siteName": "Loopers",
+      "locale": "ko_KR",
+      "type": "website",
+      "image": "http://127.0.0.1:9/images/products/p1.jpg"
+    },
+    "h1": "상품 목록",
+    "hasPageSpecificFashionMetadata": false,
+    "hasNoIndex": false
+  }
+}

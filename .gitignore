@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# playwright (관측 산출물 — 제출할 증거만 골라 docs/week-07-performance/로 복사한다)
+/test-results
+/playwright-report
+/blob-report
+
 # next.js
 /.next/
 /out/

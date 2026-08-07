@@ -1,37 +1,28 @@
 import { queryOptions } from '@tanstack/react-query'
-import { ApiError } from '@/shared/api/apiError'
 import type { ProductListQuery } from './types'
 import { fetchProducts } from './api'
 
 const PRODUCT_LIST_STALE_TIME = 30 * 1000
 const GC_TIME = 5 * 60 * 1000
-const SERVER_ERROR_STATUS = 500
 
 // 목록: 조건(q·category·sort·page)을 key와 요청에 모두 반영. 조건별 캐시 분리.
 // staleTime 30초 — 목록은 잠깐 캐시된 값을 보여줘도 손해가 없다(최종 검증은 상세·결제).
-// placeholderData: page만 바뀌면 직전 목록을 유지해 깜빡임을 막고, 필터가 바뀌면
-// undefined를 돌려 즉시 로딩을 보여준다(옛 결과가 새 조건 결과로 오인되지 않게).
-// throwOnError는 커밋 2(에러 경계 도입)에서 추가한다.
+//
+// placeholderData: 조건이 무엇이든 직전 결과를 유지한다. 7주차 관측에서 필터를 바꿀 때만
+// 목록이 통째로 사라지는 것이 확인됐다 — 사용자가 보던 화면을 1.5초 동안 잃는다.
+// 5주차에는 "옛 결과가 새 조건의 결과로 오인될까 봐" 필터 변경에서만 비웠는데,
+// 오인은 비우는 대신 aria-busy와 흐림 처리로 막는 것이 맞다. 목록을 지우면 오인은
+// 막아도 사용자는 맥락을 잃는다.
+//
+// signal: TanStack Query가 넘겨주는 AbortSignal을 fetch까지 전달한다.
+// 정합성은 아래 queryKey 분리가 이미 보장하고 있고, signal은 버려질 요청의
+// 네트워크 낭비를 줄이는 별개 목적이다.
 export function productListQueryOptions(query: ProductListQuery) {
   return queryOptions({
     queryKey: ['products', query] as const,
-    queryFn: () => fetchProducts(query),
+    queryFn: ({ signal }) => fetchProducts(query, signal),
     staleTime: PRODUCT_LIST_STALE_TIME,
     gcTime: GC_TIME,
-    placeholderData: (previousData, previousQuery) => {
-      const previous = previousQuery?.queryKey[1]
-      if (!previous) {
-        return undefined
-      }
-      const filterChanged =
-        previous.q !== query.q ||
-        previous.category !== query.category ||
-        previous.sort !== query.sort
-      return filterChanged ? undefined : previousData
-    },
-    // 5xx(서버 오류)만 route error.tsx 경계로 전파한다.
-    // 4xx(잘못된 조건)·빈 결과는 페이지의 isError 분기가 화면 안에서 처리한다.
-    throwOnError: (error) =>
-      error instanceof ApiError && error.status >= SERVER_ERROR_STATUS,
+    placeholderData: (previousData) => previousData,
   })
 }

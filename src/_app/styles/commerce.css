@@ -199,3 +199,60 @@
     gap: 24px 12px;
   }
 }
+
+/* 로딩 자리 예약 — 실제 카드와 같은 grid·비율·간격을 쓴다.
+   작은 spinner로 대체하면 교체 순간 아래 콘텐츠가 밀려 CLS가 생긴다. */
+.commerce-skeleton {
+  background: #ececec;
+}
+
+.commerce-skeleton--image {
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.commerce-skeleton--brand {
+  width: 45%;
+  height: 13px;
+}
+
+.commerce-skeleton--name {
+  width: 85%;
+  height: 15px;
+}
+
+.commerce-skeleton--price {
+  width: 55%;
+  height: 18px;
+}
+
+.commerce-skeleton--action {
+  flex: 1;
+  height: 35px;
+}
+
+.commerce-skeleton--heading {
+  width: 160px;
+  height: 24px;
+  margin-bottom: 16px;
+}
+
+.commerce-skeleton--chip {
+  width: 84px;
+  height: 35px;
+}
+
+/* 갱신 실패 — 목록을 지우지 않고 그 위에 인라인으로 알린다.
+   최초 실패(.commerce-status)와 달리 화면을 대체하지 않는다. */
+.commerce-inline-error {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid #e0c3c3;
+  background: #fdf4f4;
+  color: #8a4b4b;
+}
+
+.commerce-inline-error .commerce-retry-button {
+  margin-top: 0;
+  margin-left: 8px;
+}

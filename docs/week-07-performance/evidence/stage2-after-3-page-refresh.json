@@ -1,0 +1,104 @@
+{
+  "calls": [
+    {
+      "search": "?q=&category=all&sort=latest&page=1&scenario=slow",
+      "startedAtMs": 97,
+      "endedAtMs": 1612,
+      "status": 200,
+      "failure": null
+    },
+    {
+      "search": "?q=&category=all&sort=latest&page=2&scenario=slow",
+      "startedAtMs": 1978,
+      "endedAtMs": 3486,
+      "status": 200,
+      "failure": null
+    }
+  ],
+  "snapshots": [
+    {
+      "label": "이동 전 (1페이지)",
+      "atMs": 1943,
+      "url": "http://localhost:3000/products",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "false",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    },
+    {
+      "label": "이동 요청 직후",
+      "atMs": 2201,
+      "url": "http://localhost:3000/products?page=2",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "true",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    },
+    {
+      "label": "이동 완료 후",
+      "atMs": 3715,
+      "url": "http://localhost:3000/products?page=2",
+      "statusText": null,
+      "skeletonVisible": false,
+      "skeletonCardCount": 0,
+      "listVisible": true,
+      "listAriaBusy": "false",
+      "listCardCount": 12,
+      "listProductIds": [
+        "p30",
+        "p7",
+        "p16",
+        "p12",
+        "p9",
+        "p15",
+        "p8",
+        "p13",
+        "p4",
+        "p18",
+        "p21",
+        "p5"
+      ],
+      "totalCountText": "총 30개",
+      "emptyText": null,
+      "inlineErrorVisible": false
+    }
+  ]
+}

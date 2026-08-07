@@ -4,6 +4,8 @@ import {
   homeBanner,
   products,
   waitForMockApi,
+  SLOW_MOCK_DELAY_MS,
+  DEFAULT_MOCK_DELAY_MS,
 } from '@/app/api/_data/commerce'
 import type { HomeResponse } from '@/entities/product/api/types'
 import type { ApiErrorResponse, MockApiScenario } from '@/shared/api/types'
@@ -11,6 +13,7 @@ import type { ApiErrorResponse, MockApiScenario } from '@/shared/api/types'
 const scenarioValues = [
   'empty',
   'error',
+  'slow',
 ] as const satisfies readonly MockApiScenario[]
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
@@ -28,7 +31,9 @@ export async function GET(
     )
   }
 
-  await waitForMockApi()
+  await waitForMockApi(
+    scenario === 'slow' ? SLOW_MOCK_DELAY_MS : DEFAULT_MOCK_DELAY_MS,
+  )
 
   if (scenario === 'error') {
     return NextResponse.json(
