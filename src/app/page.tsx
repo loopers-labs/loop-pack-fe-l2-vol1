@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
-export const dynamic = 'force-dynamic';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from './getQueryClient';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
-import { getHomeData } from '@/_pages/home/api/homeService';
+import { getHomeData } from '@/_pages/home/api/homeData';
 import { HomeClient } from '@/_pages/home/ui/HomeClient';
 import { HeroSection } from '@/examples/week-07-performance/HeroSection';
 
