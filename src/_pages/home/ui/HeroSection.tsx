@@ -18,17 +18,23 @@ export default function HeroSection({ title, description }: HeroSectionProps) {
     <section className="week07-hero">
       {/* width와 height는 원본의 고유 비율이다. 표시 크기가 아니라 종횡비를 알려
           레이아웃이 밀리지 않게 한다. 실제 표시 폭은 sizes가 정한다.
-          sizes는 레이아웃 컨테이너 .week05-page의 폭을 구간별로 옮긴 값이다.
-          760px 이하에서 여백이 24px로 줄어드는 구간이 따로 있어 세 구간으로 적는다.
-          여기서 실제보다 좁게 신고하면 브라우저가 더 작은 후보를 골라 화질이 떨어진다.
-          1440px에 좌우 여백 48px을 더한 1488px이 컨테이너가 최대 폭에 닿는 지점이다. */}
+          sizes는 박스 폭이 아니라 object-fit: cover가 실제로 그리는 이미지 폭이다.
+          박스보다 좁게 신고하면 브라우저가 작은 후보를 골라 화질이 떨어진다.
+
+          760px 이하는 박스가 세로형(aspect-ratio 4/5)이라 높이가 크기를 정한다.
+          16:9 원본이 세로 박스를 덮으려면 좌우로 넘쳐 잘리므로, 그려지는 폭은
+          박스 폭 W가 아니라 W x 5/4 x 16/9 = W x 20/9다. W = 100vw - 24px를 넣으면
+          222.222vw - 53.333px가 된다.
+
+          그 위 구간은 박스가 가로형(16/8)이라 폭이 그대로 크기를 정한다. 여백은 48px이고,
+          1440px에 그 여백을 더한 1488px이 컨테이너가 최대 폭에 닿는 지점이다. */}
       <Image
         className="week07-hero-image"
         src="/images/week-07/hero-original.jpg"
         alt=""
         width={3840}
         height={2160}
-        sizes="(max-width: 760px) calc(100vw - 24px), (min-width: 1488px) 1440px, calc(100vw - 48px)"
+        sizes="(max-width: 760px) calc(222.222vw - 53.333px), (min-width: 1488px) 1440px, calc(100vw - 48px)"
         // 정적으로 알고 있는 LCP 후보를 초기 HTML에서 발견할 수 있게 한다.
         // Hero가 서버 셸에서 렌더링되어야 이 힌트가 첫 응답에 포함된다.
         preload

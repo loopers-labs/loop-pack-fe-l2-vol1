@@ -34,11 +34,11 @@ describe('HeroSection', () => {
     const srcSet = markup.match(/srcSet="([^"]*)"|srcset="([^"]*)"/)?.[0] ?? ''
     expect(srcSet.split(',').length).toBeGreaterThan(1)
 
-    // sizes가 없으면 브라우저는 100vw로 가정해서 필요 이상으로 큰 후보를 고른다.
-    // 반대로 실제보다 좁게 적으면 작은 후보를 골라 화질이 떨어진다.
-    // 레이아웃 컨테이너와 같은 값인지가 이 변경의 핵심이라 구간별로 고정한다.
-    // 760px 이하는 여백이 24px이라 별도 구간이다. 이 줄이 빠지면 모바일이 48px로 계산된다.
-    expect(markup).toContain('(max-width: 760px) calc(100vw - 24px)')
+    // sizes는 박스 폭이 아니라 object-fit: cover가 그리는 이미지 폭이어야 한다.
+    // 760px 이하 박스는 세로형(4/5)이라 16:9 원본이 좌우로 넘쳐 잘린다. 그려지는 폭은
+    // 박스 폭 W가 아니라 W x 20/9다. 박스 폭으로 적으면 후보가 절반이 되어 2배로 확대된다.
+    expect(markup).toContain('(max-width: 760px) calc(222.222vw - 53.333px)')
+    // 그 위 구간은 박스가 가로형(16/8)이라 폭이 그대로 크기를 정한다.
     expect(markup).toContain('(min-width: 1488px) 1440px')
 
     // 종횡비는 유지한다. Hero의 시각적 크기와 비율은 개선 대상이 아니다.

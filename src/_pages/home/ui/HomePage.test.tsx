@@ -52,7 +52,9 @@ describe('HomePage 셸', () => {
     expect(preloadLink).toMatch(/imagesrcset=/i)
     expect(preloadLink).toContain('%2Fimages%2Fweek-07%2Fhero-original.jpg')
     expect(preloadLink).toMatch(/imagesizes=/i)
-    expect(preloadLink).toContain('(max-width: 760px) calc(100vw - 24px)')
+    expect(preloadLink).toContain(
+      '(max-width: 760px) calc(222.222vw - 53.333px)',
+    )
   })
 
   it('pending 영역이 Hero를 대체하지 않고 그 아래에 온다', () => {
