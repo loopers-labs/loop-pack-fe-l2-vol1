@@ -3,7 +3,6 @@ import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '../getQueryClient';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
-import { fetchProductList } from '@/entities/product/api/productService';
 import { searchParamsCache } from '@/entities/product/lib/searchParamsParsers';
 import { ProductListErrorBoundary } from './_components/ProductListErrorBoundary';
 import { ProductListContent } from '@/_pages/product-list/ui/ProductListContent';
@@ -33,14 +32,17 @@ export async function generateMetadata({
   searchParams,
 }: ProductListPageProps): Promise<Metadata> {
   try {
-    const { q, category, sort, page } = await searchParamsCache.parse(searchParams);
+    const { q, category, sort, page, scenario } = await searchParamsCache.parse(searchParams);
 
-    const data = await fetchProductList({
+    const query = {
       q: q || undefined,
       category,
       sort,
       page,
-    });
+      scenario: scenario || undefined,
+    };
+    const queryClient = getQueryClient();
+    const data = await queryClient.fetchQuery(productListQueryOptions(query));
 
     const { products, categories, totalCount } = data;
     const categoryName =

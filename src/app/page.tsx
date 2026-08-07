@@ -4,12 +4,12 @@ import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from './getQueryClient';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
-import { getHomeData } from '@/_pages/home/api/homeData';
 import { HomeClient } from '@/_pages/home/ui/HomeClient';
 import { HeroSection } from '@/examples/week-07-performance/HeroSection';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { banner } = getHomeData();
+  const queryClient = getQueryClient();
+  const { banner } = await queryClient.fetchQuery(homeQueryOptions());
 
   return {
     title: banner.title,
