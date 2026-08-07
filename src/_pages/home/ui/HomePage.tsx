@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@/entities/product";
+import { Hero } from "@/widgets/hero";
 import { ProductCardWithActions } from "@/widgets/product-card";
 import { homeQueryOptions } from "../api/homeQuery";
 
@@ -53,10 +54,9 @@ export function HomePage() {
 
   return (
     <main className="shop-page">
-      <section className="shop-hero">
-        <p>{home.banner.description}</p>
-        <h1>{home.banner.title}</h1>
-      </section>
+      {/* Hero가 페이지 제목(h1)과 설명을 함께 소유한다 — 같은 배너 문구를
+          텍스트 블록과 두 번 그리지 않는다. */}
+      <Hero title={home.banner.title} description={home.banner.description} />
       <section className="shop-section">
         <h2>카테고리</h2>
         <div className="shop-categories">

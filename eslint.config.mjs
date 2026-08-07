@@ -54,6 +54,18 @@ export default defineConfig(
       "prefer-const": "error",
     },
   },
-
+  {
+    // 측정용 학습 픽스처: 제품 코드가 아니라 성능 Before를 재현하는 견본이다.
+    // 룰을 끄는 것이 아니라 적용 범위를 좁히는 선언 —
+    // 이유가 붙은 한 줄 억제만 허용하고, 파일 전체 억제는 여기서도 금지한다.
+    files: ["src/examples/**/*.{ts,tsx}"],
+    rules: {
+      "@eslint-community/eslint-comments/no-use": [
+        "error",
+        { allow: ["eslint-disable-next-line"] },
+      ],
+      "@eslint-community/eslint-comments/require-description": "error",
+    },
+  },
   eslintConfigPrettier,
 );
