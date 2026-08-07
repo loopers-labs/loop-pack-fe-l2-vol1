@@ -5,9 +5,7 @@
       "extractedArtifact": "lighthouse-fcp-exp1-hero-blocked.json",
       "measuredSha": "fff007f",
       "throttlingMethod": "simulate",
-      "blockedUrlPatterns": [
-        "*hero-original*"
-      ],
+      "blockedUrlPatterns": ["*hero-original*"],
       "url": "http://127.0.0.1:3210/",
       "runs": [
         {
@@ -46,9 +44,7 @@
       "extractedArtifact": "lighthouse-fcp-exp2-fonts-blocked.json",
       "measuredSha": "fff007f",
       "throttlingMethod": "simulate",
-      "blockedUrlPatterns": [
-        "*PretendardVariable*"
-      ],
+      "blockedUrlPatterns": ["*PretendardVariable*"],
       "url": "http://127.0.0.1:3210/",
       "runs": [
         {

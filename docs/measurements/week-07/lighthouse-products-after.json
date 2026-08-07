@@ -1,6 +1,6 @@
 {
   "measuredSha": "36e31e0",
-  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "extractorSha": "3e135615d135f96e4c8435fab971c8c0b2c2ce19",
   "conditions": {
     "url": "http://127.0.0.1:3210/products",
     "build": "production (next build && next start)",
@@ -19,11 +19,16 @@
       "lighthouseVersion": "12.8.2",
       "requestedUrl": "http://127.0.0.1:3210/products",
       "fcp": 1204,
+      "observedFcp": 73,
       "lcp": 2466,
       "cls": 0,
       "tbt": 7,
       "performanceScore": 97,
       "lcpElement": "<h1>",
+      "documentEndTimeMs": 514,
+      "stylesheetStartTimeMs": 35,
+      "renderBlockingSavingsMs": 581,
+      "stylesheetWastedMs": 301,
       "heroRequest": null
     },
     {
@@ -31,11 +36,16 @@
       "lighthouseVersion": "12.8.2",
       "requestedUrl": "http://127.0.0.1:3210/products",
       "fcp": 1205,
+      "observedFcp": 85,
       "lcp": 2455,
       "cls": 0,
       "tbt": 1,
       "performanceScore": 97,
       "lcpElement": "<h1>",
+      "documentEndTimeMs": 508,
+      "stylesheetStartTimeMs": 47,
+      "renderBlockingSavingsMs": 577,
+      "stylesheetWastedMs": 302,
       "heroRequest": null
     },
     {
@@ -43,11 +53,16 @@
       "lighthouseVersion": "12.8.2",
       "requestedUrl": "http://127.0.0.1:3210/products",
       "fcp": 1205,
+      "observedFcp": 87,
       "lcp": 2465,
       "cls": 0,
       "tbt": 6,
       "performanceScore": 97,
       "lcpElement": "<h1>",
+      "documentEndTimeMs": 510,
+      "stylesheetStartTimeMs": 49,
+      "renderBlockingSavingsMs": 581,
+      "stylesheetWastedMs": 302,
       "heroRequest": null
     },
     {
@@ -55,11 +70,16 @@
       "lighthouseVersion": "12.8.2",
       "requestedUrl": "http://127.0.0.1:3210/products",
       "fcp": 1205,
+      "observedFcp": 80,
       "lcp": 2454,
       "cls": 0,
       "tbt": 0,
       "performanceScore": 97,
       "lcpElement": "<h1>",
+      "documentEndTimeMs": 510,
+      "stylesheetStartTimeMs": 35,
+      "renderBlockingSavingsMs": 576,
+      "stylesheetWastedMs": 302,
       "heroRequest": null
     },
     {
@@ -67,11 +87,16 @@
       "lighthouseVersion": "12.8.2",
       "requestedUrl": "http://127.0.0.1:3210/products",
       "fcp": 1205,
+      "observedFcp": 75,
       "lcp": 2466,
       "cls": 0,
       "tbt": 6,
       "performanceScore": 97,
       "lcpElement": "<h1>",
+      "documentEndTimeMs": 511,
+      "stylesheetStartTimeMs": 38,
+      "renderBlockingSavingsMs": 581,
+      "stylesheetWastedMs": 302,
       "heroRequest": null
     }
   ],

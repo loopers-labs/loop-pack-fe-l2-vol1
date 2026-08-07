@@ -1,6 +1,4 @@
-// Lighthouse 5회를 돌리고 회차별 핵심 값과 Hero 요청 기록만 뽑는다.
-// 원본 리포트는 회차당 500KB가 넘어 저장소에 두지 않는다. 보고한 숫자를 기계적으로
-// 확인할 수 있는 최소 단위만 남긴다.
+// Lighthouse를 반복 실행하거나 보관한 원본에서 판단에 쓴 값을 뽑는다.
 //
 // MEASURE_LH_RAW_DIR을 주면 새로 돌리지 않고 그 디렉터리의 원본 리포트에서 추출한다.
 // 문서에 적은 값과 산출물을 같은 회차로 맞출 때 쓴다.
@@ -9,6 +7,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtemp, readFile, readdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { gunzipSync } from 'node:zlib'
 import { baseUrl, measuredSha, median, range, writeResult } from './harness.mjs'
 
 const LH_VERSION = process.env.MEASURE_LH_VERSION ?? '12.8.2'
@@ -16,6 +15,7 @@ const RUNS = Number(process.env.MEASURE_RUNS ?? 5)
 const TARGET = process.env.MEASURE_PATH ?? '/'
 const LABEL = process.env.MEASURE_LABEL ?? 'home'
 const RAW_DIR = process.env.MEASURE_LH_RAW_DIR
+const RAW_PREFIX = process.env.MEASURE_LH_RAW_PREFIX
 // 커밋 그대로가 아닌 상태에서 잰 회차는 그 사실을 산출물에 남긴다. README에만 적으면
 // 기계 판독 정보만 보는 사람은 해당 커밋의 결과로 읽는다.
 const VARIANT = process.env.MEASURE_VARIANT
@@ -46,8 +46,10 @@ const collect = async () => {
 }
 
 const fromRawDir = async () => {
-  const names = (await readdir(RAW_DIR)).filter((name) =>
-    name.endsWith('.json'),
+  const names = (await readdir(RAW_DIR)).filter(
+    (name) =>
+      (name.endsWith('.json') || name.endsWith('.json.gz')) &&
+      (!RAW_PREFIX || name.startsWith(RAW_PREFIX)),
   )
   return names.sort().map((name) => join(RAW_DIR, name))
 }
@@ -60,13 +62,21 @@ const isHeroRequest = (url) =>
 
 const extract = (report) => {
   const audits = report.audits
-  const hero = audits['network-requests'].details.items.find((item) =>
-    isHeroRequest(item.url),
+  const networkRequests = audits['network-requests'].details.items
+  const hero = networkRequests.find((item) => isHeroRequest(item.url))
+  const documentRequest = networkRequests.find(
+    (item) => item.resourceType === 'Document',
   )
+  const stylesheetRequest = networkRequests.find(
+    (item) => item.resourceType === 'Stylesheet',
+  )
+  const metrics = audits.metrics.details.items[0]
+  const renderBlocking = audits['render-blocking-resources']
   return {
     lighthouseVersion: report.lighthouseVersion,
     requestedUrl: report.requestedUrl,
     fcp: Math.round(audits['first-contentful-paint'].numericValue),
+    observedFcp: Math.round(metrics.observedFirstContentfulPaint),
     lcp: Math.round(audits['largest-contentful-paint'].numericValue),
     cls: Number(audits['cumulative-layout-shift'].numericValue.toFixed(3)),
     tbt: Math.round(audits['total-blocking-time'].numericValue),
@@ -74,9 +84,19 @@ const extract = (report) => {
     lcpElement:
       audits['largest-contentful-paint-element']?.details?.items?.[0]
         ?.items?.[0]?.node?.snippet ?? null,
+    documentEndTimeMs: documentRequest
+      ? Math.round(documentRequest.networkEndTime)
+      : null,
+    stylesheetStartTimeMs: stylesheetRequest
+      ? Math.round(stylesheetRequest.networkRequestTime)
+      : null,
+    renderBlockingSavingsMs:
+      Math.round(renderBlocking?.details?.overallSavingsMs) || null,
+    stylesheetWastedMs:
+      Math.round(renderBlocking?.details?.items?.[0]?.wastedMs) || null,
     heroRequest: hero
       ? {
-          url: hero.url.replace(baseUrl(), ''),
+          url: hero.url.replace(new URL(report.requestedUrl).origin, ''),
           // 원본을 그대로 내려보내면 후보 자체가 없다. 그때는 null이다.
           candidateWidthPx: new URL(hero.url).searchParams.get('w')
             ? Number(new URL(hero.url).searchParams.get('w'))
@@ -92,7 +112,10 @@ const files = RAW_DIR ? await fromRawDir() : await collect()
 const runs = []
 let settings = null
 for (const [index, file] of files.entries()) {
-  const report = JSON.parse(await readFile(file, 'utf8'))
+  const fileBuffer = await readFile(file)
+  const report = JSON.parse(
+    file.endsWith('.gz') ? gunzipSync(fileBuffer) : fileBuffer.toString('utf8'),
+  )
   settings ??= report.configSettings
   runs.push({ run: index + 1, ...extract(report) })
 }

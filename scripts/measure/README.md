@@ -21,7 +21,7 @@ export MEASURE_BASE_URL=http://127.0.0.1:3210
 
 | 스크립트 | 산출물 | 무엇을 재는가 |
 | --- | --- | --- |
-| `lighthouse.mjs` | `lighthouse-{home,products}-{before,after}.json` | FCP, LCP, CLS, TBT 5회와 Hero 요청 기록 |
+| `lighthouse.mjs` | `lighthouse-{home,products}-{before,after}.json` | 추정·관측 FCP, LCP, CLS, TBT, document·CSS와 Hero 요청 기록 |
 | `hero.mjs` | `hero-geometry.json`, `hero-geometry-before-sizes-fix.json` | cover가 그리는 폭, 선택된 후보, 배율, 원본 대비 픽셀 차이 |
 | `interaction.mjs` | `interaction-{before,after}.json` | 찜 클릭의 input delay, processing, presentation |
 | `cancellation.mjs` | `cancellation.json` | 낡은 요청의 취소와 최종 URL 정합성 |
@@ -60,7 +60,8 @@ export MEASURE_SHA=$(git rev-parse --short HEAD)
 MEASURE_PATH=/ MEASURE_LABEL=home node scripts/measure/lighthouse.mjs
 
 # 이미 받아 둔 원본 리포트에서 추출만 한다. 그때의 커밋을 MEASURE_SHA로 넘긴다
-MEASURE_SHA=3aa1981 MEASURE_LH_RAW_DIR=<원본 디렉터리> MEASURE_LABEL=home-before \
+MEASURE_SHA=3aa1981 MEASURE_LH_RAW_DIR=docs/measurements/week-07/raw \
+  MEASURE_LH_RAW_PREFIX=lighthouse-home-before-run- MEASURE_LABEL=home-before \
   node scripts/measure/lighthouse.mjs
 
 # 제출 당시 잰 상호작용 원값을 그대로 담는다
@@ -82,8 +83,9 @@ pnpm exec prettier --write docs/measurements/week-07/raw/manifest.json
 manifest는 `JSON.stringify`로 쓰므로 짧은 배열의 줄바꿈이 Prettier와 다르다. 커밋할 때는
 lint-staged가 정리하지만, 검사만 돌릴 때는 위처럼 한 번 맞춰 준다.
 
-환경 변수로 조절한다. `MEASURE_SHA`(필수), `MEASURE_VARIANT`(커밋 그대로가 아닌 상태에서 잰 경우), `MEASURE_RUNS`(기본 5), `MEASURE_STEPS`(기본 3),
-`MEASURE_LH_VERSION`(기본 12.8.2).
+환경 변수로 조절한다. `MEASURE_SHA`(필수), `MEASURE_VARIANT`(커밋 그대로가 아닌 상태에서 잰 경우),
+`MEASURE_LH_RAW_PREFIX`(raw 폴더에서 한 측정 그룹만 선택), `MEASURE_RUNS`(기본 5),
+`MEASURE_STEPS`(기본 3), `MEASURE_LH_VERSION`(기본 12.8.2).
 
 ## `render-scope.mjs`만 다르다
 
