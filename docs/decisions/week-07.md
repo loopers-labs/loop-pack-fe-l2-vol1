@@ -215,14 +215,17 @@ home, products 둘 다 root 공통 metadata로 정상 상속됨을 확인.
 ### UA별 응답 시점 비교
 
 ```bash
-curl -s -o /dev/null -w 'normal start=%{time_starttransfer} total=%{time_total}\n' "$APP_ORIGIN/products"
-curl -A 'facebookexternalhit/1.1' -s -o /dev/null -w 'facebook start=%{time_starttransfer} total=%{time_total}\n' "$APP_ORIGIN/products"
+curl -s -o /dev/null -w 'normal start=%{time_starttransfer} total=%{time_total}\n' "http://localhost:3000/products"
+curl -A 'facebookexternalhit/1.1' -s -o /dev/null -w 'facebook start=%{time_starttransfer} total=%{time_total}\n' "http://localhost:3000/products"
 ```
 
-| UA                  | time_starttransfer | time_total |
-| ------------------- | ------------------ | ---------- |
-| normal              | **진행 예정** |            |
-| facebookexternalhit | **진행 예정** |            |
+| UA | time_starttransfer | time_total |
+|----|---------------------|------------|
+| normal | 0.073s | 0.074s |
+| facebookexternalhit | 0.011s | 0.013s |
+
+**결론**: 두 UA 모두 매우 빠른 응답을 보이며, UA에 따른 별도 분기 처리는 구현하지 않았음. 응답 속도는 UA 처리 로직이 아니라 페이지가 정적/prerender된 결과를 서빙하기 때문으로 보임(서버 호출 계수 확인 결과와 일관됨). 두 UA 모두 OG 메타태그가 포함된 동일한 초기 HTML을 받아감을 확인함.
+
 
 ### 접근성 체크
 
