@@ -18,7 +18,9 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix"]
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
@@ -50,6 +52,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.3.0",
+    "sharp": "^0.35.3",
     "typescript": "^5",
     "typescript-eslint": "^8.65.0",
     "vitest": "^4.1.10"

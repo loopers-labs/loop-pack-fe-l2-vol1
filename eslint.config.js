@@ -8,7 +8,7 @@ import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
 import react from 'eslint-plugin-react';
 
 export default tseslint.config(
-  { ignores: ['dist', '.next', 'eslint.config.js'] },
+  { ignores: ['dist', '.next', 'eslint.config.js', 'scripts'] },
 
   js.configs.recommended,
   tseslint.configs.strict, // strict이 async/any 전파까지 잡아줌, strictTypeChecked보다 빠름
