@@ -29,9 +29,13 @@ function PerformanceProductCard({
 }: {
   product: PerformanceLabProduct
 }) {
-  const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds)
+  // 이 카드가 필요한 것은 자기 찜 여부 하나다. 배열 전체를 구독하면 토글로 새 배열이
+  // 만들어질 때마다 24개 카드의 selector 결과가 전부 달라져 전원이 다시 렌더된다.
+  // boolean으로 좁히면 다른 상품의 찜이 바뀌어도 결과가 같아 이 카드는 그대로 남는다.
+  const selected = usePerformanceWishlist((state) =>
+    state.wishlistIds.includes(product.id),
+  )
   const toggleWishlist = usePerformanceWishlist((state) => state.toggleWishlist)
-  const selected = wishlistIds.includes(product.id)
   const presentation = calculateCardPresentation(product.id, selected)
 
   return (
