@@ -31,6 +31,9 @@ export async function generateMetadata({
       title,
       description,
       images: [{ url: product.image }],
+      siteName: 'Aesthetic',
+      locale: 'ko_KR',
+      type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
