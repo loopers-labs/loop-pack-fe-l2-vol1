@@ -5,11 +5,12 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
 import { homeQueries } from '@/_pages/home/api/queries';
 import { HomeContent } from '@/_pages/home/ui/HomeContent';
-import { makeQueryClient } from '@/shared/api/queryClient';
+import { getQueryClient } from '@/shared/api/getQueryClient';
 
 const Home = async () => {
-  // [AI] 요청마다 새 QueryClient. 모듈 스코프 싱글턴을 쓰면 요청 간 캐시가 섞인다.
-  const queryClient = makeQueryClient();
+  // getQueryClient()는 서버에서 매 요청 새 인스턴스를 반환한다.
+  // 모듈 스코프 싱글턴을 쓰면 요청 간 캐시가 섞인다.
+  const queryClient = getQueryClient();
 
   // 클라이언트 useQuery와 같은 팩토리를 써야 query key가 일치해 캐시가 적중한다.
   await queryClient.prefetchQuery(homeQueries.home());
