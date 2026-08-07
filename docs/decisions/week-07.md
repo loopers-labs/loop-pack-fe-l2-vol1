@@ -238,66 +238,64 @@ curl -A 'facebookexternalhit/1.1' -s -o /dev/null -w 'facebook start=%{time_star
 ## 4단계 — After / 회귀 확인
 
 ### Commit SHA (After)
-
 ```
-（여기에 SHA）
+bd94e971e0fa65c54df07cd9670b849b240ddcb5
 ```
 
 ### Lighthouse 5회 raw 값 — 홈 cold load (Before와 동일 조건)
 
 | 지표 | 1회 | 2회 | 3회 | 4회 | 5회 | 중앙값 | 최솟값 | 최댓값 |
-| ---- | --- | --- | --- | --- | --- | ------ | ------ | ------ |
-| FCP  |     |     |     |     |     |        |        |        |
-| LCP  |     |     |     |     |     |        |        |        |
-| CLS  |     |     |     |     |     |        |        |        |
+|------|-----|-----|-----|-----|-----|--------|--------|--------|
+| FCP  | 267.7ms | 252.0ms | 257.4ms | 251.5ms | 255.4ms | 255.4ms | 251.5ms | 267.7ms |
+| LCP  | 1027.7ms | 852.0ms | 737.4ms | 811.5ms | 815.4ms | 815.4ms | 737.4ms | 1027.7ms |
+| CLS  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ### Before vs After 비교
 
 | 지표 | Before 중앙값 | After 중앙값 | 변화 | 측정 흔들림보다 큰 변화인가 |
-| ---- | ------------- | ------------ | ---- | --------------------------- |
-| FCP  |               |              |      |                             |
-| LCP  |               |              |      |                             |
-| CLS  |               |              |      |                             |
+|------|----------------|---------------|------|------------------------------|
+| FCP  | 261.0ms | 255.4ms | -5.6ms | 아니오 — 두 측정 모두 흔들림 범위(약 ±10~15ms) 안에 있어 유의미한 차이 아님 |
+| LCP  | 6813.0ms | 815.4ms | **-5997.6ms (약 88% 개선)** | 예 — Before/After 각각의 최솟값~최댓값 범위(6783~6824ms vs 737~1028ms)가 전혀 겹치지 않을 정도로 명확한 개선 |
+| CLS  | 0 | 0 | 0 | 변화 없음 (둘 다 0으로 안정적) |
 
 ### LCP 구간 비교
-
-- LCP element 변화:
-- Hero 전송 크기 변화:
-- 요청 시작 순서 변화:
-- 가장 길었던 구간이 어떻게 달라졌는가:
+- LCP element 변화: 없음 — Hero 이미지가 여전히 LCP 요소. 다만 원본 JPEG(`hero-original.jpg`)에서 `next/image`가 서빙하는 WebP로 실제 전송 리소스가 바뀜
+- Hero 전송 크기 변화: 7,545,239 bytes(~7.5MB) → 409,306 bytes(~400KB), 약 94.6% 감소
+- 요청 시작 순서 변화: Before는 `/api/home` 완료(500ms 지연) 후에야 Hero `<img>`가 DOM에 나타나 이미지 요청이 시작됐음. After는 server prefetch + HydrationBoundary 덕분에 데이터가 이미 채워진 상태로 초기 HTML이 도착하므로, Hero 이미지 요청이 문서 로드 초반에 바로 시작됨(curl로 초기 HTML에 이미 이미지 태그와 srcSet이 포함됨을 확인)
+- 가장 길었던 구간이 어떻게 달라졌는가: Before는 Lighthouse 시뮬레이션 기준 "이미지 전송" 구간이 압도적(7.5MB 이미지 → 약 5.9초 상당)이었음. After는 이미지 자체가 400KB로 줄어 이 구간이 사실상 사라졌고, 남은 LCP 시간(~800ms)은 대부분 초기 리소스 로딩(JS 청크, 폰트 등)과 렌더 지연에 해당하는 정상적인 수준
 
 ### 회귀 확인 체크리스트
+- [x] 검색/카테고리/정렬/페이지가 URL에서 복원되는가 — 확인 완료
+- [x] 뒤로가기/앞으로가기 동일 화면 복원 — 확인 완료 (카테고리 변경 후 뒤로가기/앞으로가기 정상 동작)
+- [x] 장바구니/위시리스트/Header 개수 유지 — 확인 완료 (담기/찜 클릭 시 Header 개수 반영, 새로고침 후에도 값 유지됨)
+- [x] 로딩/에러/빈 상태/재시도 유지 — **회귀 발견 및 수정 완료** (아래 상세 참고)
+- [x] FSD 의존 방향 / Public API 우회 없음 — 확인 완료. `eslint-plugin-boundaries` 규칙(entities/features/widgets 간 교차 참조 금지 등)이 lint에서 error 0건으로 통과함. app-data(mock 백엔드) 참조는 명시적 eslint-disable 주석과 근거를 남김
+- [x] `pnpm test` 통과 — 68개 테스트 전부 통과 확인
+- [x] `pnpm check` 통과 — **전체 통과 확인**. test(9 files, 68 tests 전부 통과) → lint(error 0, warning만 존재) → typecheck(에러 없음) → build(성공, Route 정상 생성) 순서로 전부 통과
 
-- [ ] 검색/카테고리/정렬/페이지가 URL에서 복원되는가
-- [ ] 뒤로가기/앞으로가기 동일 화면 복원
-- [ ] 장바구니/위시리스트/Header 개수 유지
-- [ ] 로딩/에러/빈 상태/재시도 유지
-- [ ] FSD 의존 방향 / Public API 우회 없음
-- [ ] `pnpm test` 통과
-- [ ] `pnpm check` 통과
+**관찰 사항 (회귀 아님, 참고 기록)**: 장바구니/위시리스트 개수가 새로고침 직후 잠깐 0으로 보였다가 실제 값으로 바뀌는 현상 확인됨. 원인은 `Providers.tsx`의 Zustand `persist.rehydrate()`가 `useEffect`(컴포넌트 마운트 후)에서 비동기로 실행되기 때문. 6주차부터 존재했고 이번 7주차 작업에서 변경한 부분이 아니므로 회귀 아님. 참고 기록만 남김(이번 과제 범위 밖).
+
+### 회귀 사례 상세: `/products?scenario=error`가 최초 실패 화면을 보여주지 못하던 문제
+
+**발견 경위**: 4단계 회귀 확인 중 `/products?scenario=error`를 열었더니, 스켈레톤이 잠깐 뜬 뒤 **정상 상품 목록**이 표시되는 것을 확인. 원래는 "오류가 발생했습니다 + 다시 시도" 화면이 떠야 하는데 나타나지 않음.
+
+**원인 진단 과정 (3중 원인)**:
+
+1. **queryKey 불일치**: `page.tsx`(서버)가 `prefetchQuery`를 호출할 때 `scenario`를 포함한 객체를 queryKey 생성에 사용했음. 반면 브라우저의 `useProductFilters`는 `scenario`를 모르는 순수 URL 필터(`q`, `category`, `sort`, `page`)만으로 queryKey를 만듦. 두 queryKey가 달라 브라우저가 서버의 prefetch 결과(에러 상태)를 캐시에서 찾지 못하고 완전히 새로운 pending 쿼리로 인식함.
+   - 반증 방법: curl로 dehydrated state를 직접 확인, `queryKey`가 서버와 브라우저에서 다르게 생성되는 것을 발견
+   - 해결: `filters`(순수 URL 필터)와 `scenario`를 분리해 queryKey에는 `filters`만, `queryFn` 호출 시에만 `scenario`를 추가로 전달
+
+2. **dehydrate 기본 옵션이 error 상태를 제외**: TanStack Query의 `dehydrate()`는 기본적으로 성공한 쿼리만 직렬화하고 에러 상태 쿼리는 브라우저로 넘기지 않는 경향이 있음 (queryKey를 맞춘 뒤에도 여전히 스켈레톤이 무한히 떠 있는 것으로 확인).
+   - 해결: `HydrationBoundary`의 `dehydrate(queryClient, { shouldDehydrateQuery })`에서 `status === 'error'`도 포함하도록 명시
+
+3. **브라우저의 자동 재요청이 scenario 없이 나감**: 위 두 가지를 고친 뒤에도 여전히 최종적으로 정상 화면이 뜸. curl로 dehydrated state를 확인해 서버가 `status: "error"`를 정확히 내려주는 것까지는 확인했으나, 브라우저 hydration 이후 TanStack Query가 mount 시 자동으로 refetch를 시도했고, 이때 사용하는 `getProducts()`(브라우저 fetch 함수)가 URL의 `scenario` 파라미터를 읽지 않아 정상 요청이 나가 정상 데이터를 받아버림.
+   - 해결: `useProductFilters`에서 `nuqs`의 `useQueryState('scenario')`로 URL의 scenario를 읽어, `getProducts` 호출 시 함께 전달하도록 수정. `getProducts` 함수 시그니처와 URLSearchParams 생성 로직에도 scenario 반영
+
+**검증**: 세 가지 원인을 모두 수정한 뒤 `/products?scenario=error` 접속 시 몇 초가 지나도 "오류가 발생했습니다" 화면이 유지됨을 확인. `?scenario=empty`, 정상 접속(scenario 없음)도 함께 재확인해 다른 케이스가 깨지지 않았음을 확인. `pnpm test` 68개 전체 통과.
+
+**배운 점**: server prefetch + hydration 구조에서는 "서버가 만든 queryKey"와 "브라우저가 참조하는 queryKey"가 정확히 일치해야 캐시가 제대로 이어받아짐. 테스트/디버그 목적의 파라미터(scenario)를 URL에 추가할 때는, 그 파라미터가 서버와 브라우저 양쪽의 데이터 페칭 경로에 일관되게 반영되는지 확인이 필요함.
 
 ### 효과 없었거나 악화된 변경
-
 | 시도한 변경 | 결과 | 되돌림/유지 여부 및 이유 |
-| ----------- | ---- | ------------------------ |
-|             |      |                          |
-
----
-
-## AI 활용 기록
-
-| 단계 | AI에게 준 근거 (raw 값/waterfall/URL 등) | AI 제안 | 직접 반증한 방법 | 채택/반려 |
-| ---- | ---------------------------------------- | ------- | ---------------- | --------- |
-|      |                                          |         |                  |           |
-
----
-
-## Technical Writing 초안 메모
-
-(제출 문서 작성 전, 여기에 단계별로 "왜 이렇게 판단했는지" 짧게 메모)
-
-- 0단계:
-- 1단계:
-- 2단계:
-- 3단계:
-- 4단계:
+|-------------|------|----------------------------|
+| `prefetchQuery(...).catch(() => {})`로 에러 무시 | 에러가 캐시에 기록되지 않아 무한 스켈레톤 발생 | 되돌림 — `.catch` 제거, 대신 `shouldDehydrateQuery`로 에러 상태를 명시적으로 직렬화하도록 수정 |
