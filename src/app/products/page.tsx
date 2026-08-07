@@ -5,8 +5,7 @@ import { getQueryClient } from '../getQueryClient';
 import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { searchParamsCache } from '@/entities/product/lib/searchParamsParsers';
 import { ProductListErrorBoundary } from './_components/ProductListErrorBoundary';
-import { ProductListContent } from '@/_pages/product-list/ui/ProductListContent';
-import { ProductListSkeleton } from '@/_pages/product-list/ui/ProductListSkeleton';
+import { ProductListContent, ProductListSkeleton } from '@/_pages/product-list';
 import type { ProductSort } from '@/entities/product/model/types';
 
 const OG_COMMON = {

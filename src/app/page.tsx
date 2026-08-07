@@ -3,8 +3,7 @@ import { Suspense } from 'react';
 
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from './getQueryClient';
-import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
-import { HomeClient } from '@/_pages/home/ui/HomeClient';
+import { HomeClient, homeQueryOptions } from '@/_pages/home';
 import { HeroSection } from '@/examples/week-07-performance/HeroSection';
 
 export async function generateMetadata(): Promise<Metadata> {

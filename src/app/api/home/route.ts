@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { waitForMockApi } from "@/app/api/_data/mock";
-import { getHomeData } from "@/_pages/home/api/homeData";
-import type { HomeResponse } from "@/_pages/home/api/types";
+import { getHomeData, type HomeResponse } from "@/_pages/home";
 import type { ApiErrorResponse, MockApiScenario } from "@/app/api/_data/types";
 
 const scenarioValues = ["empty", "error", "slow"] as const satisfies

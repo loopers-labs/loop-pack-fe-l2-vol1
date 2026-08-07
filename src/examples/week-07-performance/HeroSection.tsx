@@ -1,9 +1,9 @@
-import type { HomeResponse } from "@/_pages/home/api/types";
 import styles from "./HeroSection.module.css";
 
-type HeroSectionProps = Partial<
-  Pick<HomeResponse["banner"], "title" | "description">
->;
+interface HeroSectionProps {
+  title?: string;
+  description?: string;
+}
 
 export function HeroSection({ title, description }: HeroSectionProps) {
   return (
