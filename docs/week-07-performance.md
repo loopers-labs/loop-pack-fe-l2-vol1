@@ -316,6 +316,35 @@ production 빌드에서 확인했다.
 | 0건 | `?scenario=empty` 또는 `?q=니트` | 개수 0과 무엇을 걸어서 0건인지 설명하는 문장 |
 | 조회 실패 | `?scenario=error` (최초) | 실패 종류에 맞는 출구 하나 (재시도 / 초기화 / 홈) |
 
+### 최초 로딩은 한동안 이 표와 달랐다
+
+**이 표의 첫 줄이 코드와 어긋나 있었다.** 처음 제출한 구현에서 서버 Suspense fallback은
+빈 필터 컨테이너 하나였고, 카드 12개 skeleton은 `ProductListView` 안에만 있었다. 그
+컴포넌트는 서버 prefetch가 끝난 뒤에야 내려오므로, **hard navigation 최초 진입에서는
+`scenario=slow`의 1.5초 동안 제목 아래가 비어 있었다.** client 전환에서만 skeleton이
+보였고, 단위 테스트가 `ProductListView`만 렌더해서 이 경계를 검사하지 못했다.
+
+서버 fallback과 클라이언트 pending이 같은 `ProductResultsPending`을 쓰도록 고쳤다.
+
+| `scenario=slow` 첫 400 ms | 고치기 전 | 고친 뒤 |
+| --- | --- | --- |
+| 수신 | 9,635 B | **28,116 B** |
+| skeleton 카드 | **0개** | **12개** |
+| 개수 행 / 안내 행 / 페이지네이션 | 없음 | 있음 |
+| 결과 region과 `aria-busy` | 없음 | 있음 |
+
+필터 줄도 실제 클래스를 그대로 써서 높이를 맞췄다. 임의의 skeleton 막대로 채웠을 때는
+110 px로 실제 125 px보다 짧아 그리드가 15 px 밀렸다.
+
+```
+pending  gridTop 684, documentHeight 2338, 카드 12
+resolved gridTop 684, documentHeight 2338, 카드 12
+layout-shift 엔트리 없음
+```
+
+`ProductListPage.test.tsx`가 완료되지 않는 `searchParams`로 서버 fallback을 그대로 렌더해
+이 경계를 고정한다. fallback을 빈 `div`로 되돌리면 3건 중 2건이 실패하는 것을 확인했다.
+
 ### 레이아웃 이동 0
 
 skeleton은 카드 그리드만 잡으면 부족했다. 개수 행과 **성공 상태가 늘 비워 두는 안내 행**과

@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
-import ProductGridFallback from '@/widgets/product-grid/ui/ProductGridFallback'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { productListQueries } from '@/_pages/product-list/api/productList'
 import { sortValues } from '@/entities/product/model/productListContract'
@@ -13,6 +12,7 @@ import { productListLabels } from '../model/labels'
 import { describeEmptyResult } from '../model/emptyResult'
 import { useProductListCondition } from '../model/useProductListCondition'
 import ProductFilterSelect from './ProductFilterSelect'
+import ProductResultsPending from './ProductResultsPending'
 import SearchForm from './SearchForm'
 
 export default function ProductListView() {
@@ -142,23 +142,9 @@ export default function ProductListView() {
 
   let results: React.ReactNode
   if (isPending) {
-    // 텍스트 한 줄은 결과가 얼마나 들어올지 알려주지 않는다. 실제 목록과 같은 자리를 잡는다.
-    // 개수 행과 페이지네이션도 결과 블록의 일부라 함께 예약한다. 그리드만 잡으면
-    // 응답이 도착할 때 카드가 개수 행 높이만큼 아래로 내려간다.
-    results = (
-      <>
-        <p className="product-result-count" aria-hidden="true">
-          <span className="product-skeleton product-skeleton-count" />
-        </p>
-        {/* 성공 상태가 늘 비워 두는 안내 행이다. 여기서 빠지면 결과가 도착할 때
-            그 높이만큼 목록이 내려간다. */}
-        <div className="product-result-notice" aria-hidden="true" />
-        <ProductGridFallback count={condition.pageSize} />
-        <div className="week05-pagination" aria-hidden="true">
-          <span className="product-skeleton product-skeleton-pagination" />
-        </div>
-      </>
-    )
+    // 서버 Suspense fallback과 같은 것을 그린다. 둘이 갈라지면 hard navigation과
+    // client 전환에서 다른 화면을 보게 된다.
+    results = <ProductResultsPending count={condition.pageSize} />
   } else if (!shownList) {
     // 보여줄 목록이 하나도 없는 실패다. 화면 전체가 오류와 출구를 맡는다.
     // 실패 종류마다 열려 있는 길이 다르다. 셋 중 하나는 반드시 실제로 동작해야 한다.

@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import type { SearchParams } from 'nuqs/server'
+import ProductListPending from './ProductListPending'
 import ProductListPrefetch from './ProductListPrefetch'
 
 interface ProductListPageProps {
@@ -20,7 +21,9 @@ export default function ProductListPage({
           Objects worth keeping, selected for everyday life.
         </p>
       </section>
-      <Suspense fallback={<div className="week05-filters" />}>
+      {/* fallback이 결과가 들어올 자리를 실제 크기로 잡는다. 빈 div를 두면 조회가
+          끝날 때까지 제목 아래가 비어 있다. */}
+      <Suspense fallback={<ProductListPending />}>
         <ProductListPrefetch searchParams={searchParams} />
       </Suspense>
     </main>
