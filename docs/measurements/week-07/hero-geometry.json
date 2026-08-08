@@ -1,6 +1,6 @@
 {
-  "measuredSha": "fff007f",
-  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "measuredSha": "c564d23c",
+  "extractorSha": "c564d23c7b6c30ee15f875ad6ee738a46a7ec3a6",
   "conditions": {
     "url": "http://127.0.0.1:3210/",
     "build": "production (next build && next start)",

@@ -176,3 +176,29 @@ await writeResult('hero-geometry.json', {
   },
   runs,
 })
+
+// 여기부터는 기록이 아니라 판정이다.
+// sizes를 실제 렌더 폭보다 좁게 신고하면 전송량은 줄고 화면은 늘어난 이미지가 된다.
+// 눈으로 봐야 잡히는 결함이라 사람이 안 보면 그대로 배포된다. 배율을 판정선으로 고정한다.
+// 후보 폭이 이산값이라 딱 1.0으로 떨어지지 않는다. 반올림 여유만 남긴다.
+const MAX_UPSCALE = 1.05
+
+const enlarged = Object.entries(runs).filter(
+  ([, run]) => run.upscale !== null && run.upscale > MAX_UPSCALE,
+)
+
+for (const [viewportName, run] of Object.entries(runs)) {
+  process.stdout.write(
+    `${viewportName}: 그려지는 폭 ${run.drawnCssWidth} CSS px, 필요 ${run.devicePxNeeded} device px, 받은 후보 ${run.candidateWidthPx}w, 배율 ${run.upscale}\n`,
+  )
+}
+
+if (enlarged.length > 0) {
+  for (const [viewportName, run] of enlarged) {
+    process.stderr.write(
+      `${viewportName}에서 Hero가 ${run.upscale}배 확대된다. ` +
+        `sizes가 신고한 폭이 실제 렌더 폭 ${run.drawnCssWidth} CSS px보다 좁다.\n`,
+    )
+  }
+  process.exitCode = 1
+}
