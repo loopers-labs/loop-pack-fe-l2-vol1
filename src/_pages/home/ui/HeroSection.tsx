@@ -20,6 +20,9 @@ export function HeroSection() {
         alt=""
         fill
         priority
+        // priority는 preload와 lazy 해제만 한다 — fetchpriority는 파생되지 않아 명시한다
+        // (Lighthouse lcp-discovery의 priorityHinted 미충족 해소)
+        fetchPriority="high"
         sizes="(min-width: 1232px) 1200px, 100vw"
       />
       <div className={styles.copy}>
