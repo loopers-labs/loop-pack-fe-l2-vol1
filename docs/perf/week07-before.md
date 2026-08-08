@@ -31,7 +31,7 @@
 ## LCP element와 요청 체인
 
 - **LCP element**: `section.HeroSection-module__hero > img.HeroSection-module__image` — hero 원본 이미지.
-- **Network waterfall** (관측 시각, 스로틀 미적용 기준):
+- **Network waterfall** (관측 시각, 스로틀 미적용 기준 — **`run1` 1회분**. 5회 집계는 아래 구간 분해 표):
 
 | 시작 | 완료 | 요청 | 전송 크기 |
 | --- | --- | --- | --- |
@@ -40,7 +40,17 @@
 | **599ms** | 706ms | `/images/week-07/hero-original.jpg` | **7,369KB** |
 
 - **요청 시작 순서의 의미**: hero 이미지는 `/api/home` 응답이 와야 렌더되는 클라이언트 컴포넌트 안에 있어서, **데이터 조회가 끝난 뒤에야 발견·요청된다**. Lighthouse LCP discovery 체크: `Request is discoverable in initial document: false`, `fetchpriority=high: 미적용`.
-- **LCP 구간 분해** (관측 기준): TTFB 4ms → load delay 595ms(발견 지연 — api 대기) → load time 108ms → render delay 147ms. 스로틀 시뮬레이션에서는 load time이 지배: **7.2MB ÷ 1.47Mbps ≈ 39초**가 LCP 40.7초의 대부분이다.
+- **LCP 구간 분해** (`lcp-breakdown-insight`, **관측 시계 · 5회 중앙값(범위)**):
+
+| 구간 | 중앙값 | 범위 |
+| --- | --- | --- |
+| TTFB | 2ms | 2–4 |
+| load delay (발견 지연 — api 대기) | **587ms** | 583–595 |
+| load time (전송) | 32ms | 24–108 |
+| render delay | 92ms | 80–147 |
+| (참고) 요청 시작 시각 = TTFB + load delay | 589ms | 586–598 |
+
+  구간값은 관측 시계라 시뮬레이트 시계의 LCP(40,662ms)와 더해 맞출 수 없다 — 구간 합은 713ms다. 관측 로컬에는 대역폭 제한이 안 걸려 7.2MB가 32ms에 내려오지만, 시뮬레이트 가정에서는 **7.2MB ÷ 1.47Mbps ≈ 39초**가 되고 이것이 LCP 40.7초의 대부분이다. 반면 load delay 587ms는 두 시계 어느 쪽에도 그대로 남는다.
 - filmstrip 관찰: FCP(904ms)에 헤더+로딩 텍스트가 먼저 그려지고, hero는 전송 완료까지 배경색 박스로 남는다.
 - CLS 0인 이유: hero 컨테이너가 `aspect-ratio: 16/9`로 공간을 선점하고 `img`에 width/height가 있어 교체 시 밀림이 없다.
 
@@ -59,7 +69,7 @@
 
 ## 관찰 → 가설 → 반증 → 최소 변경 (0단계 요구)
 
-- **관찰한 사실**: LCP 요소는 hero `<img>`이고 중앙값 40.66s, 전송 7.2MB이며 요청은 `/api/home` 완료 후(599ms)에야 시작된다.
+- **관찰한 사실**: LCP 요소는 hero `<img>`이고 중앙값 40.66s, 전송 7.2MB이며 요청은 `/api/home` 완료 후(589ms · 5회 중앙값)에야 시작된다.
 - **원인 가설**: LCP의 지배 구간은 이미지 전송 시간(7.2MB ÷ 1.47Mbps ≈ 39s)이고, 부차 구간은 초기 문서에서 발견 불가한 요청 시작 지연(~600ms+)이다.
 - **반증 방법**: 이미지 내용·비율·표시 크기를 유지한 채 전송 크기만 표시 크기 기준으로 줄여 같은 조건으로 재측정 — LCP가 측정 범위(16ms)보다 크게 줄지 않으면 가설을 기각한다.
 - **먼저 시도할 가장 작은 변경**: hero 이미지를 실제 표시 크기(모바일 412px 폭 × DPR 1.75 ≈ 720px)에 맞는 후보로 리사이즈·재인코딩해 전송 크기부터 줄인다.

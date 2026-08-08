@@ -17,16 +17,16 @@ After raw 5회: FCP 905/904/904/904/904 · LCP 3082/2914/2761/2760/2913 · CLS 0
 
 ## 병목 구간별 인과 (완료조건: 구간과 변경의 인과관계)
 
-| LCP 구간 (관측 기준) | Before | After | 무엇이 바꿨나 |
+| LCP 구간 (관측 시계 · 5회 중앙값, 괄호는 범위) | Before | After | 무엇이 바꿨나 |
 | --- | --- | --- | --- |
-| TTFB | 4ms | 4ms | — |
-| **load delay (발견 지연)** | **595ms** | **37ms** | hero를 쿼리 경계 밖으로 → 정적 셸(초기 문서)에 `<img>`+`<link rel=preload imagesrcset>` 포함. `discoverable in initial document: false → true` |
-| **load time (전송)** | 108ms 관측 / **스로틀 ~39s** | 86ms | `next/image` srcset — 모바일 뷰포트가 750w 후보(**32KB**)를 받음. Before는 원본 **7,369KB** |
-| render delay | 147ms | 20ms | 조기 발견·조기 디코드의 부수 효과 |
+| TTFB | 2ms (2–4) | 2ms (2–4) | — |
+| **load delay (발견 지연)** | **587ms** (583–595) | **30ms** (30–37) | hero를 쿼리 경계 밖으로 → 정적 셸(초기 문서)에 `<img>`+`<link rel=preload imagesrcset>` 포함. `discoverable in initial document: false → true` |
+| **load time (전송)** | 32ms 관측 (24–108) / **스로틀 ~39s** | 5ms (5–86) | `next/image` srcset — 모바일 뷰포트가 750w 후보(**32KB**)를 받음. Before는 원본 **7,369KB** |
+| render delay | 92ms (80–147) | 28ms (20–31) | 조기 발견·조기 디코드의 부수 효과 |
 
-- 요청 시작: **599ms → 43ms** (문서 파싱 즉시)
+- 요청 시작(TTFB + load delay): **589ms → 32ms** (문서 파싱 즉시). 범위 586–598 → 32–41
 - LCP element: 변함없이 hero `<img>` — 시각적 크기·비율·주요 피사체·문구 유지(스크린샷 대조), 품질 저하로 수치만 줄이지 않음(같은 원본을 표시 폭 기준 후보로 제공, q75)
-- `priority`로 preload + `fetchpriority=high` — 이 페이지의 최상단 유일 대형 이미지라 우선순위를 높일 이유가 있다(0단계 discovery 체크 지적 해소)
+- `priority`로 preload — 이 페이지의 최상단 유일 대형 이미지라 우선순위를 높일 이유가 있다. **0단계 discovery 체크는 세 항목 중 하나만 해소됐다**: `requestDiscoverable` false → true, `eagerlyLoaded` true 유지, **`priorityHinted`는 false 그대로**. Next 16의 `priority`는 preload와 lazy 해제까지만 하고 `fetchPriority`를 파생시키지 않는다(`get-img-props.js:569,584`) → 후속 조치는 `week07-step4-after.md` 참조
 
 ## 변경 내용 (구조)
 
