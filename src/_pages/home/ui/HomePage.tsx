@@ -5,8 +5,11 @@ import { ProductGrid } from '@/entities/product';
 import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
 import { WishButton } from '@/features/toggle-wishlist/ui/WishButton';
 import { homeQueries } from '../api/home.queries';
+import { HeroSection } from './HeroSection';
 
-export function HomePage() {
+// hero(정적 소유)는 쿼리 경계 밖 — 홈 데이터가 늦거나 실패해도 헤더·h1·hero는 막히지 않는다.
+// 카테고리·상품 섹션(서버 소유)만 이 컴포넌트가 조회한다.
+function HomeContent() {
   const { data, isPending, isError, refetch } = useQuery(homeQueries.home());
 
   if (isPending) return <p>불러오는 중…</p>;
@@ -22,19 +25,7 @@ export function HomePage() {
     );
 
   return (
-    <main>
-      <section
-        className="week05-hero"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.85)), url(${data.banner.image})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <p>{data.banner.description}</p>
-        <h1>{data.banner.title}</h1>
-      </section>
-
+    <>
       <section className="week05-section" aria-label="카테고리">
         <h2>카테고리</h2>
         <ul>
@@ -83,6 +74,15 @@ export function HomePage() {
           />
         )}
       </section>
+    </>
+  );
+}
+
+export function HomePage() {
+  return (
+    <main>
+      <HeroSection />
+      <HomeContent />
     </main>
   );
 }
