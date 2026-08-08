@@ -17,13 +17,20 @@ APP_ORIGIN=http://127.0.0.1:3210 pnpm start -- -p 3210
 export MEASURE_BASE_URL=http://127.0.0.1:3210
 ```
 
+포트가 이미 쓰이고 있으면 `next start`는 조용히 죽고 이전 서버가 계속 응답한다. 그러면
+빌드에 넣은 변경이 아니라 옛 화면을 재게 된다. 실행 전에 `lsof -ti:3210`으로 비었는지 본다.
+
 ## 스크립트와 산출물
+
+`hero.mjs`만 판정을 한다. 나머지는 값을 기록한다.
 
 | 스크립트 | 산출물 | 무엇을 재는가 |
 | --- | --- | --- |
 | `lighthouse.mjs` | `lighthouse-{home,products}-{before,after}.json` | 추정·관측 FCP, LCP, CLS, TBT, document·CSS와 Hero 요청 기록 |
-| `hero.mjs` | `hero-geometry.json`, `hero-geometry-before-sizes-fix.json` | cover가 그리는 폭, 선택된 후보, 배율, 원본 대비 픽셀 차이 |
+| `hero.mjs` | `hero-geometry.json`, `hero-geometry-before-sizes-fix.json` | cover가 그리는 폭, 선택된 후보, 배율, 원본 대비 픽셀 차이. **배율이 1.05를 넘으면 실패한다** |
 | `interaction.mjs` | `interaction-{before,after}.json` | 찜 클릭의 input delay, processing, presentation |
+| `filmstrip.mjs` | `filmstrip/{before,after}/*.jpg` | 원본 리포트의 `screenshot-thumbnails`에서 뽑은 로딩 연속 화면. 재측정하지 않는다 |
+| `interaction-filmstrip.mjs` | `interaction-filmstrip/*.jpg` | 찜 클릭 전후의 연속 화면. Lighthouse에 없는 구간이라 CDP로 직접 모은다 |
 | `cancellation.mjs` | `cancellation.json` | 낡은 요청의 취소와 최종 URL 정합성 |
 | `hydration.mjs` | `hydration-cost.json` | 브라우저 조회 횟수와 document 크기의 교환 |
 | `render-scope.mjs` | **산출물 없음** | 클릭 한 번이 다시 그린 카드 범위 |

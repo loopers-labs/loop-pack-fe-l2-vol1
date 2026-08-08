@@ -823,7 +823,9 @@ selector 결과가 전부 새 참조가 되어 전원이 다시 렌더된다. �
 | --- | --- |
 | 배포 환경의 절대 Open Graph URL | **닫지 못했다.** 로컬 `127.0.0.1` origin으로만 확인했다. 배포해야 확인할 수 있다 |
 | 요구 문서 사이의 충돌 | **판단이 열려 있다.** 아래 참조 |
-| filmstrip과 trace 원본 | 보관하지 않았다. 14절에 재현 절차를 남겼다 |
+| filmstrip 원본 | **닫았다.** 원본 리포트의 `screenshot-thumbnails`에서 뽑아 `docs/measurements/week-07/filmstrip/`에 before/after 8프레임씩 보관한다 |
+| Interaction 연속 화면 | **닫았다.** Lighthouse는 클릭을 만들지 않아 리포트에 없다. `scripts/measure/interaction-filmstrip.mjs`가 CDP로 직접 모아 `docs/measurements/week-07/interaction-filmstrip/`에 보관한다 |
+| Interaction trace 원본 자체 | **닫지 못했다.** 보관한 것은 화면이고 trace는 아니다. 구간 값은 `scripts/measure/interaction.mjs`로 다시 난다 |
 
 ### 어느 문서가 최종 계약인가
 
