@@ -1,5 +1,4 @@
-// AI 생성: route.ts의 필터·정렬·페이징 계산을 순수 함수로 분리. SSR 시 서버가 자기 Route Handler를
-// HTTP로 재호출하지 않고 이 함수를 직접 호출하기 위함(docs/work/week-05/ssr-fetch-fix-plan.md).
+// AI 생성: route.ts의 필터·정렬·페이징 계산을 순수 함수로 분리(테스트 용이성).
 // 입력값 검증(400)과 목업 지연(waitForMockApi)은 HTTP 경계인 route.ts 책임으로 남긴다.
 // q는 이미 정규화(trim + ko 소문자)된 값이 들어온다고 가정한다 — route.ts·toProductListQuery가 모두 선행 처리한다.
 import { categories, products } from '../_data/commerce';

@@ -1,26 +1,15 @@
-import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
-import { createLoader } from 'nuqs/server';
-import { getQueryClient } from '@/shared/api/getQueryClient';
-import { productQueries } from '../api/productQueries';
-import { productListParsers } from '../model/productListFilters';
+import { connection } from 'next/server';
 import ProductListSection from './ProductListSection';
 
-// AI 생성: 클라이언트 useProductListFilters와 동일한 productListParsers로 searchParams를 파싱해야
-// 서버·클라이언트 쿼리 키가 일치한다(키가 어긋나면 hydration이 캐시 miss로 조용히 실패한다).
-const loadProductListFilters = createLoader(productListParsers);
+// AI 생성: week-07 2단계 — 본문 server prefetch(prefetchQuery + HydrationBoundary)를 제거하고 목록
+// 데이터의 소유권을 클라이언트 useQuery로 일원화했다. 서버가 1.5초를 통째로 기다린 뒤 문서를 응답하는
+// 대신, 셸을 즉시 내려보내고 데이터 없는 최초 진입은 그리드 스켈레톤이 담당한다.
+// 근거와 감수한 비용은 docs/work/week-07/product-list-pending-design.md 참고.
+//
+// connection()으로 요청 시점 렌더링을 명시해 라우트를 동적으로 유지한다 — nuqs가 서버 렌더에서 URL을
+// 읽어야 SSR이 그린 화면과 hydrate 이후의 query key가 같은 필터를 가리킨다.
+export default async function ProductListPage() {
+  await connection();
 
-// AI 생성: 이 Next.js 버전에서 searchParams는 Promise다. 위 loader로 파싱해 URL 필터에 맞는 목록을
-// 서버에서 미리 채운 뒤 dehydrate하여 클라이언트로 넘긴다. 로딩·에러는 ProductListSection이 결과
-// 영역 단위로 처리하므로(필터 컨트롤은 항상 렌더) 여기서는 Suspense·ErrorBoundary 경계를 두지 않는다.
-export default async function ProductListPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const filters = await loadProductListFilters(searchParams);
-
-  const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(productQueries.list(filters));
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <ProductListSection />
-    </HydrationBoundary>
-  );
+  return <ProductListSection />;
 }

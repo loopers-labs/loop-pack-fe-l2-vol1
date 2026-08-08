@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 7주차 성능 측정 원본 자산 — 로컬 기록용으로만 보관한다.
+# Lighthouse raw JSON·트레이스·filmstrip·재현 스크린샷은 용량이 커서 원격에 올리지 않는다.
+# 측정으로 얻은 수치와 판정은 docs/work/week-07/ 본문 문서에 옮겨 적었다.
+docs/work/week-07/measurements/

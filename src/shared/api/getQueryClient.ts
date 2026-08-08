@@ -1,7 +1,6 @@
-// AI 생성: SSR 프리페치용 서버 전용 QueryClient 팩토리. providers.tsx의 클라이언트 QueryClient와
-// 별개로, 요청마다 새 인스턴스를 만들어야 요청 간 캐시가 공유되지 않는다. React의 cache()로 감싸
-// 한 요청 안에서는 같은 인스턴스를 재사용한다(page.tsx에서 prefetch와 dehydrate가 같은 client를 쓰도록).
-import { cache } from 'react';
+// AI 생성: SSR 프리페치용 서버 전용 QueryClient 팩토리. 호출할 때마다 새 인스턴스를 만들어
+// generateMetadata와 본문이 캐시를 공유하지 않게 한다. 두 경로의 중복 요청은 같은 render/request에서
+// URL·options가 같은 native fetch가 memoization되어 사라진다.
 import { QueryClient } from '@tanstack/react-query';
 
-export const getQueryClient = cache(() => new QueryClient({ defaultOptions: { queries: { staleTime: 20 * 1000 } } }));
+export const getQueryClient = () => new QueryClient({ defaultOptions: { queries: { staleTime: 20 * 1000 } } });

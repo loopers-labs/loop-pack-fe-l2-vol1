@@ -9,8 +9,7 @@ describe('HeroSection', () => {
 
     expect(markup).toContain('매일 새롭게 발견하는 취향');
     expect(markup).toContain('지금 가장 사랑받는 상품을 만나보세요.');
-    expect(markup).toContain('src="/images/week-07/hero-original.jpg"');
-    expect(markup).toContain('width="3840"');
-    expect(markup).toContain('height="2160"');
+    expect(markup).toContain(encodeURIComponent('/images/week-07/hero-original.jpg'));
+    expect(markup).toContain('sizes="(max-width: 1200px) 100vw, 1200px"');
   });
 });

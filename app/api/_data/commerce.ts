@@ -355,8 +355,10 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct);
 
-export const waitForMockApi = (requestedDelayMs = 500) =>
+// AI 생성: 목업 지연 정책의 단일 출처. Route Handler(HTTP 경계)와 SSR 직접 호출 경로가 같은 함수를
+// 호출하도록 scenario를 그대로 받는다 — 두 경로가 각자 지연 값을 계산하면 곧 어긋난다.
+export const waitForMockApi = (scenario?: MockApiScenario | null) =>
   new Promise<void>((resolve) => {
-    const delayMs = process.env.NODE_ENV === 'test' ? 0 : requestedDelayMs;
+    const delayMs = process.env.NODE_ENV === 'test' ? 0 : scenario === 'slow' ? 1_500 : 500;
     setTimeout(resolve, delayMs);
   });

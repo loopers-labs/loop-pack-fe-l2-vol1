@@ -4,6 +4,7 @@ import './styles/globals.css';
 import './styles/commerce.css';
 import Providers from './providers';
 import { Header } from '@/widgets/header';
+import { commonOpenGraph, OG_FALLBACK_IMAGE, SITE_DESCRIPTION, SITE_NAME } from '@/shared/config/siteMetadata';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -16,8 +17,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Commerce',
-  description: 'Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.'
+  metadataBase: new URL(process.env.APP_ORIGIN ?? 'http://localhost:3000'),
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    ...commonOpenGraph,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [OG_FALLBACK_IMAGE]
+  }
 };
 
 export default function RootLayout({

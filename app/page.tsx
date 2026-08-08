@@ -1,4 +1,4 @@
-export { HomePage as default } from '@/_pages/home';
+export { HomePage as default, generateHomeMetadata as generateMetadata } from '@/_pages/home';
 
 // AI 생성: HomeSection이 apiFetch에 상대 경로('/api/home')를 넘긴다. Next.js는 실제 요청이 있을 때만
 // fetch의 상대 경로를 요청 origin 기준으로 풀어준다 — `next build`의 정적 생성 단계는 요청 컨텍스트가 없어

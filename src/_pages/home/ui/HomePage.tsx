@@ -15,12 +15,17 @@ export default async function HomePage() {
   await queryClient.prefetchQuery(homeQueries.detail());
 
   return (
-    <ErrorBoundary fallback={<HomeErrorFallback />}>
-      <Suspense fallback={<HomeLoadingFallback />}>
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          <HomeSection />
-        </HydrationBoundary>
-      </Suspense>
-    </ErrorBoundary>
+    <main className="page-container">
+      {/* AI 생성: week-07 3단계 — 배너 데이터와 무관한 정적 h1. Suspense 밖에 둬 초기 HTML에
+          항상 하나의 h1을 보장한다(hero의 h2는 그대로 유지). */}
+      <h1>이번 주 추천 상품</h1>
+      <ErrorBoundary fallback={<HomeErrorFallback />}>
+        <Suspense fallback={<HomeLoadingFallback />}>
+          <HydrationBoundary state={dehydrate(queryClient)}>
+            <HomeSection />
+          </HydrationBoundary>
+        </Suspense>
+      </ErrorBoundary>
+    </main>
   );
 }

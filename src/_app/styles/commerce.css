@@ -103,6 +103,13 @@
   gap: 8px;
 }
 
+/* 상품명이 1줄이든 2줄이든 같은 높이를 쓰게 해, pending 폴백이 실제 카드로 바뀔 때 아래가 밀리지 않게 한다.
+   이름을 잘라내지 않고 공간만 예약한다. */
+.product-card h2,
+.product-card h3 {
+  min-height: 2lh;
+}
+
 .product-card-image {
   display: block;
   width: 100%;
@@ -153,4 +160,44 @@
   .product-filters label {
     flex: 1 1 100%;
   }
+}
+
+/* 목록 pending 폴백과 갱신 표시 (week-07 2단계) */
+
+/* 카테고리 옵션은 서버 응답으로 채워진다. select 폭은 가장 긴 옵션이 정하므로 데이터가 도착하는
+   순간 66px→93px로 넓어지며 옆의 정렬 라벨을 밀어냈다(실측 CLS 0.000141). 채워진 뒤의 폭을
+   처음부터 예약해 옵션이 늘어나도 폭이 변하지 않게 한다. */
+.product-filters select[name='category'] {
+  min-width: 7rem;
+}
+
+.product-list-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* 갱신 실패 시 재시도 버튼이 나타나도 아래 목록이 밀리지 않도록 버튼 높이를 항상 예약한다 */
+  min-height: 38px;
+}
+
+/* 갱신 중이거나 갱신에 실패해 화면의 목록이 최신 결과가 아닐 때. opacity는 레이아웃에 영향을 주지 않는다 */
+.product-grid.is-stale {
+  opacity: 0.5;
+}
+
+.product-card-skeleton > p,
+.product-card-skeleton > strong {
+  min-height: 1lh;
+}
+
+/* 실제 카드와 같은 태그·텍스트를 두고 색만 감춘다. 텍스트가 만드는 상자 크기까지 같아야 교체 시 밀리지 않는다 */
+.product-card-skeleton > p,
+.product-card-skeleton > h2,
+.product-card-skeleton > strong,
+.product-card-skeleton button {
+  background: #ececec;
+  color: transparent;
+}
+
+.product-card-skeleton button {
+  border-color: #ececec;
 }
