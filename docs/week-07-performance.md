@@ -382,12 +382,13 @@ Query Cache이고 화면이 기억하는 것은 어느 key를 보고 있었는�
 
 ## 6. metadata
 
-세 화면의 metadata를 본문과 같은 조회 계약 위에 세웠다.
+각 페이지의 metadata 조회를 해당 페이지 본문 prefetch와 같은 query factory 위에 세웠다.
+다만 홈의 시각적 Hero는 이 응답을 직접 렌더하지 않는다. 그 경계와 대가는 아래에 따로 적는다.
 
 | 화면 | title | description |
 | --- | --- | --- |
 | root | `title.template`으로 `%s \| Loop Market` | 공통 |
-| `/` | 본문 Hero와 같은 문구 | 같은 조회 결과 |
+| `/` | 홈 `banner` 응답의 문구 | 홈 `banner` 응답 |
 | `/products` | `Search “니트” (page 2)` | `6 products in 뷰티·잡화, sorted by Popular.` |
 
 세 가지를 지켰다.
@@ -460,6 +461,18 @@ root를 상속했고, `/`와 `/products` 둘 다 같았다.
 카테고리가 없으면 id를 노출하지 않고 storefront 이름으로 축퇴한다.
 
 언어 통일은 이번 성능 범위가 아니라 별도 논리적 변경으로 남긴다.
+
+### 홈 Hero와 metadata가 갈리는 지점
+
+홈의 시각적 Hero 문구와 이미지는 초기 셸이 소유하는 정적 값이고, metadata는 `/api/home`의
+`banner` 응답을 사용한다. 현재 fixture에서는 화면 `<h1>`과 metadata 제목이 같지만 두 값은
+코드상 결합되어 있지 않다. `og:image`도 `/images/products/p6.jpg`인 반면 화면 Hero는
+`/images/week-07/hero-original.jpg`를 사용해 이미 서로 다르다.
+
+이 경계는 느린 홈 조회가 초기 셸과 Hero 이미지 발견을 막지 않게 하려고 선택했다. 따라서 서버
+배너가 바뀌면 공유 metadata만 바뀌고 화면 Hero는 그대로 남을 수 있다. 이번 범위에서는 측정으로
+확인한 LCP 경계를 유지하고, 화면과 공유 정보가 달라질 가능성을 한계로 남겼다. 두 값을 다시 같은
+응답에 묶는다면 초기 셸을 늦추지 않는 별도의 데이터 계약이나 전달 경계를 함께 설계해야 한다.
 
 ### metadata가 데이터를 기다리는 비용은 누구에게 청구되는가
 
