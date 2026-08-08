@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { categories } from '@/app/api/_data/commerce'
 import { categoryIds } from '@/entities/product/model/productListContract'
 import { GET } from './route'
@@ -23,6 +23,12 @@ const allProductIds = async (sort: string) => {
 const hugePositiveInteger = '9'.repeat(400)
 
 describe('GET /api/products', () => {
+  // slow 계약만 가짜 타이머와 NODE_ENV를 건드린다. 다른 케이스로 새지 않게 되돌린다.
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
+  })
+
   it('mock 데이터의 카테고리가 계약 허용값과 일치한다', () => {
     // 데이터에만 카테고리를 추가하면 route는 통과시키고 URL parser는 all로 되돌린다.
     expect(categories.map((category) => category.id)).toEqual([...categoryIds])
@@ -404,5 +410,44 @@ describe('GET /api/products', () => {
     expect(await errorResponse.json()).toEqual({
       message: '상품 목록을 불러오지 못했습니다.',
     })
+  })
+
+  // 7주차 측정용 재현 조건이다. 이 테스트가 지연을 고정하므로,
+  // 수치를 좋게 만들려고 지연을 줄이면 여기서 먼저 깨진다.
+  it('slow 시나리오는 정상과 같은 응답을 1.5초 뒤에 돌려준다', async () => {
+    vi.useFakeTimers()
+    // 지연은 테스트 환경에서 0으로 눌린다. 실제 대기 계약을 보려면 production으로 둔다.
+    vi.stubEnv('NODE_ENV', 'production')
+
+    let settled = false
+    const responsePromise = request('?scenario=slow').then((response) => {
+      settled = true
+      return response
+    })
+
+    await vi.advanceTimersByTimeAsync(1_499)
+    expect(settled).toBe(false)
+
+    await vi.advanceTimersByTimeAsync(1)
+    const response = await responsePromise
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.products).toHaveLength(12)
+    expect(body.totalCount).toBe(30)
+    expect(body.page).toBe(1)
+    expect(body.pageSize).toBe(12)
+  })
+
+  it('slow 시나리오의 응답 본문은 정상 응답과 같다', async () => {
+    // 지연만 다르고 데이터가 갈리면 Before/After를 같은 화면으로 비교할 수 없다.
+    const normal = await (
+      await request('?category=digital&sort=popular')
+    ).json()
+    const slow = await (
+      await request('?scenario=slow&category=digital&sort=popular')
+    ).json()
+
+    expect(slow).toEqual(normal)
   })
 })

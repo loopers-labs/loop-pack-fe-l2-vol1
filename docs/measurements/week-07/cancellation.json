@@ -1,0 +1,45 @@
+{
+  "measuredSha": "fff007f",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "url": "http://127.0.0.1:3210/products?scenario=slow",
+    "build": "production (next build && next start)",
+    "viewport": "1280x900 DPR 1",
+    "cpuThrottle": "none",
+    "networkThrottle": "none",
+    "action": "정렬을 3번 연속으로 바꾼다. scenario=slow라 응답은 1.5초 뒤에 온다.",
+    "note": "완료된 요청의 조건과 최종 URL이 같아야 하고, 오류 UI가 뜨면 안 된다."
+  },
+  "runs": [
+    {
+      "picked": ["Popular", "Price: Low to high", "Price: High to low"],
+      "requests": [
+        {
+          "order": 1,
+          "query": "?category=all&sort=popular&page=1&pageSize=12&scenario=slow",
+          "status": "CANCELLED",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "order": 2,
+          "query": "?category=all&sort=price-asc&page=1&pageSize=12&scenario=slow",
+          "status": "CANCELLED",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "order": 3,
+          "query": "?category=all&sort=price-desc&page=1&pageSize=12&scenario=slow",
+          "status": "finished"
+        }
+      ],
+      "final": {
+        "url": "?scenario=slow&sort=price-desc",
+        "countText": "30 products",
+        "noticeText": "(비어 있음)",
+        "cardCount": 12,
+        "statusText": "(비어 있음)",
+        "hasErrorUi": false
+      }
+    }
+  ]
+}

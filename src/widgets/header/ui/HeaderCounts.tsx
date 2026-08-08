@@ -10,8 +10,8 @@ export default function HeaderCounts() {
 
   return (
     <>
-      <span>위시리스트 {wishlistCount}</span>
-      <span>장바구니 {cartCount}</span>
+      <span>Wishlist {wishlistCount}</span>
+      <span>Bag {cartCount}</span>
     </>
   )
 }

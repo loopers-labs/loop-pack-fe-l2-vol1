@@ -1,0 +1,26 @@
+{
+  "measuredSha": "fff007f",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "baseUrl": "http://127.0.0.1:3210",
+    "build": "production (next build && next start)",
+    "viewport": "1280x900 DPR 1",
+    "cpuThrottle": "none",
+    "networkThrottle": "none",
+    "note": "browserApiRequests가 비어 있으면 서버가 넘긴 결과를 브라우저가 그대로 이어받은 것이다."
+  },
+  "runs": [
+    {
+      "path": "/",
+      "documentBytes": 32971,
+      "browserApiRequests": [],
+      "hasDehydratedState": true
+    },
+    {
+      "path": "/products",
+      "documentBytes": 30995,
+      "browserApiRequests": [],
+      "hasDehydratedState": true
+    }
+  ]
+}

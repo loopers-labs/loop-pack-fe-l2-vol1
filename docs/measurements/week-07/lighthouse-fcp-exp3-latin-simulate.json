@@ -1,0 +1,151 @@
+{
+  "measuredSha": "fff007f",
+  "extractorSha": "3e135615d135f96e4c8435fab971c8c0b2c2ce19",
+  "conditions": {
+    "url": "http://127.0.0.1:3210/",
+    "build": "production (next build && next start)",
+    "tool": "Lighthouse 12.8.2 headless",
+    "preset": "mobile 기본 프리셋 412x823, DPR 1.75",
+    "throttlingMethod": "simulate",
+    "cpuThrottle": "4x",
+    "networkThrottle": "rttMs 150, throughputKbps 1638.4",
+    "blockedUrlPatterns": null,
+    "variant": "fff007f에서 홈 셸의 한글 제목과 설명만 라틴 문자로 임시 치환한 재현 측정이다. 해당 커밋을 그대로 빌드한 것이 아니다.",
+    "profile": "회차마다 새 사용자 프로필",
+    "runs": 5
+  },
+  "runs": [
+    {
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 1357,
+      "observedFcp": 124,
+      "lcp": 3455,
+      "cls": 0,
+      "tbt": 37,
+      "performanceScore": 91,
+      "lcpElement": "<img alt=\"\" width=\"3840\" height=\"2160\" decoding=\"async\" data-nimg=\"1\" class=\"week07-hero-image\" style=\"color:transparent\" sizes=\"(max-width: 760px) calc(222.222vw - 53.333px), (min-width: 1488px) 1440px,…\" srcset=\"/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&amp;w=32&amp;q=75 32w, /_…\" src=\"http://127.0.0.1:3210/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.…\">",
+      "documentEndTimeMs": 564,
+      "stylesheetStartTimeMs": 54,
+      "renderBlockingSavingsMs": 711,
+      "stylesheetWastedMs": 302,
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 162058,
+        "startTimeMs": 52
+      }
+    },
+    {
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 1356,
+      "observedFcp": 81,
+      "lcp": 2841,
+      "cls": 0,
+      "tbt": 6,
+      "performanceScore": 95,
+      "lcpElement": "<img alt=\"\" width=\"3840\" height=\"2160\" decoding=\"async\" data-nimg=\"1\" class=\"week07-hero-image\" style=\"color:transparent\" sizes=\"(max-width: 760px) calc(222.222vw - 53.333px), (min-width: 1488px) 1440px,…\" srcset=\"/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&amp;w=32&amp;q=75 32w, /_…\" src=\"http://127.0.0.1:3210/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.…\">",
+      "documentEndTimeMs": 510,
+      "stylesheetStartTimeMs": 39,
+      "renderBlockingSavingsMs": 728,
+      "stylesheetWastedMs": 302,
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 162058,
+        "startTimeMs": 37
+      }
+    },
+    {
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 1357,
+      "observedFcp": 83,
+      "lcp": 2846,
+      "cls": 0,
+      "tbt": 9,
+      "performanceScore": 95,
+      "lcpElement": "<img alt=\"\" width=\"3840\" height=\"2160\" decoding=\"async\" data-nimg=\"1\" class=\"week07-hero-image\" style=\"color:transparent\" sizes=\"(max-width: 760px) calc(222.222vw - 53.333px), (min-width: 1488px) 1440px,…\" srcset=\"/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&amp;w=32&amp;q=75 32w, /_…\" src=\"http://127.0.0.1:3210/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.…\">",
+      "documentEndTimeMs": 509,
+      "stylesheetStartTimeMs": 39,
+      "renderBlockingSavingsMs": 724,
+      "stylesheetWastedMs": 302,
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 162058,
+        "startTimeMs": 37
+      }
+    },
+    {
+      "run": 4,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 1356,
+      "observedFcp": 84,
+      "lcp": 2773,
+      "cls": 0,
+      "tbt": 10,
+      "performanceScore": 96,
+      "lcpElement": "<img alt=\"\" width=\"3840\" height=\"2160\" decoding=\"async\" data-nimg=\"1\" class=\"week07-hero-image\" style=\"color:transparent\" sizes=\"(max-width: 760px) calc(222.222vw - 53.333px), (min-width: 1488px) 1440px,…\" srcset=\"/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&amp;w=32&amp;q=75 32w, /_…\" src=\"http://127.0.0.1:3210/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.…\">",
+      "documentEndTimeMs": 508,
+      "stylesheetStartTimeMs": 39,
+      "renderBlockingSavingsMs": 725,
+      "stylesheetWastedMs": 302,
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 162058,
+        "startTimeMs": 38
+      }
+    },
+    {
+      "run": 5,
+      "lighthouseVersion": "12.8.2",
+      "requestedUrl": "http://127.0.0.1:3210/",
+      "fcp": 1355,
+      "observedFcp": 79,
+      "lcp": 2840,
+      "cls": 0,
+      "tbt": 6,
+      "performanceScore": 95,
+      "lcpElement": "<img alt=\"\" width=\"3840\" height=\"2160\" decoding=\"async\" data-nimg=\"1\" class=\"week07-hero-image\" style=\"color:transparent\" sizes=\"(max-width: 760px) calc(222.222vw - 53.333px), (min-width: 1488px) 1440px,…\" srcset=\"/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&amp;w=32&amp;q=75 32w, /_…\" src=\"http://127.0.0.1:3210/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.…\">",
+      "documentEndTimeMs": 509,
+      "stylesheetStartTimeMs": 39,
+      "renderBlockingSavingsMs": 726,
+      "stylesheetWastedMs": 302,
+      "heroRequest": {
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75",
+        "candidateWidthPx": 1920,
+        "transferSize": 162058,
+        "startTimeMs": 37
+      }
+    }
+  ],
+  "summary": {
+    "fcp": {
+      "median": 1356,
+      "range": [1355, 1357]
+    },
+    "lcp": {
+      "median": 2841,
+      "range": [2773, 3455]
+    },
+    "cls": {
+      "median": 0,
+      "range": [0, 0]
+    },
+    "tbt": {
+      "median": 9,
+      "range": [6, 37]
+    },
+    "performanceScore": {
+      "median": 95,
+      "range": [91, 96]
+    }
+  }
+}

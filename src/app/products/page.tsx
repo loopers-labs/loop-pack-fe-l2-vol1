@@ -1,19 +1,17 @@
-import { Suspense } from 'react'
-import { ProductListView } from '@/_pages/product-list'
+import type { SearchParams } from 'nuqs/server'
+import {
+  generateProductListMetadata,
+  ProductListPage,
+} from '@/_pages/product-list'
 
-// 라우팅 진입점이다. 화면 조합은 페이지 슬라이스가 소유한다.
-// 이 Suspense는 데이터 로딩 경계가 아니다. useQueryStates가 useSearchParams 기반이라
-// 프리렌더 시점에 경계를 요구한다. 조회 로딩은 화면 안에서 isPending으로 처리한다.
-export default function Page() {
-  return (
-    <Suspense
-      fallback={
-        <main className="week05-section">
-          <p>상품 목록을 불러오는 중입니다.</p>
-        </main>
-      }
-    >
-      <ProductListView />
-    </Suspense>
-  )
+// 라우팅 진입점이다. 화면 조합과 metadata 계약은 페이지 슬라이스가 소유한다.
+// searchParams는 기다리지 않고 그대로 넘긴다. 여기서 await하면 셸까지 늦어진다.
+export const generateMetadata = generateProductListMetadata
+
+export default function Page({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
+  return <ProductListPage searchParams={searchParams} />
 }

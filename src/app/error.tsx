@@ -20,20 +20,20 @@ export default function ErrorBoundaryFallback({
 }: ErrorBoundaryFallbackProps) {
   return (
     <main className="week05-section">
-      <h1>화면을 그리지 못했습니다</h1>
+      <h1>Something went wrong</h1>
       <p>
-        잠시 후 다시 시도해주세요. 문제가 계속되면 아래 코드와 함께 알려주세요.
+        Try again in a moment. If the problem continues, share the code below.
       </p>
       {/* error.message를 그대로 보여주지 않는다. 예상 밖 오류의 메시지에는 내부 경로나
           모듈 이름이 섞일 수 있고, 사용자에게는 어차피 의미가 없다.
           digest는 Next가 붙이는 식별자이고 서버 로그와 대조할 수 있다. */}
-      {error.digest ? <p>오류 코드 {error.digest}</p> : null}
+      {error.digest ? <p>Error code {error.digest}</p> : null}
       {/* reset은 복구가 아니라 재시도다. 원인이 데이터라면 다시 그려서 벗어날 수 있고,
           영구적인 렌더 버그라면 같은 화면이 다시 나온다. 그래서 출구를 하나 더 둔다. */}
       <button type="button" onClick={reset}>
-        다시 시도
+        Try again
       </button>
-      <Link href="/">홈으로</Link>
+      <Link href="/">Go home</Link>
     </main>
   )
 }

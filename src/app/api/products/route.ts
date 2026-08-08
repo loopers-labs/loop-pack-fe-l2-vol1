@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { categories, products, waitForMockApi } from '@/app/api/_data/commerce'
+import {
+  categories,
+  MOCK_DELAY_MS,
+  products,
+  SLOW_SCENARIO_DELAY_MS,
+  waitForMockApi,
+} from '@/app/api/_data/commerce'
 import {
   isCategoryId,
   isProductSort,
@@ -11,6 +17,7 @@ import type { MockApiScenario } from '@/app/api/_data/commerce'
 const scenarioValues = [
   'empty',
   'error',
+  'slow',
 ] as const satisfies readonly MockApiScenario[]
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
@@ -42,7 +49,10 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  await waitForMockApi()
+  // slow는 정상과 같은 응답을 더 늦게 준다. 응답 본문은 갈라지지 않는다.
+  await waitForMockApi(
+    scenario === 'slow' ? SLOW_SCENARIO_DELAY_MS : MOCK_DELAY_MS,
+  )
 
   if (scenario === 'error') {
     return NextResponse.json(

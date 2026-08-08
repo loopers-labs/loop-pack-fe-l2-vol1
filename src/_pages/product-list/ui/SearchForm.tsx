@@ -15,25 +15,27 @@ export default function SearchForm({
 }: SearchFormProps) {
   const [draftQuery, setDraftQuery] = useState(initialQuery)
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     onSearch(draftQuery.trim())
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        검색
+    <form className="product-search" onSubmit={handleSubmit}>
+      <label className="product-search-field">
+        <span>Search</span>
         <input
           name="q"
           value={draftQuery}
           onChange={(event) => setDraftQuery(event.target.value)}
-          placeholder="상품명 또는 브랜드"
+          placeholder="Search products or brands"
         />
       </label>
       {/* 입력 하나짜리 폼은 Enter로도 제출되지만, 제출 수단이 보이지 않으면
           터치 환경과 보조 기술 사용자는 제출 방법을 찾을 수 없다. */}
-      <button type="submit">검색</button>
+      <button className="product-search-submit" type="submit">
+        Search
+      </button>
     </form>
   )
 }

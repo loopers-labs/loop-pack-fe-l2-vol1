@@ -19,6 +19,7 @@
 
 # production
 /build
+/storybook-static/
 
 # misc
 .DS_Store
@@ -32,6 +33,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# 값의 형식만 담은 예시는 재현에 필요해서 함께 둔다.
+!.env.example
 
 # vercel
 .vercel

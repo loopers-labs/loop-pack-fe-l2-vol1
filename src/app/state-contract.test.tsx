@@ -5,7 +5,7 @@ import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
 import { Header } from '@/widgets/header'
 import { resetStores } from '@/test/resetStores'
 import type { Product } from '@/entities/product/model/product'
-import { HomePage } from '@/_pages/home'
+import { HomeContent } from '@/_pages/home'
 import { ProductListView } from '@/_pages/product-list'
 
 // 구현이 아니라 사용자에게 보이는 상태 계약을 검증한다.
@@ -98,30 +98,55 @@ afterEach(() => {
 })
 
 describe('홈과 목록과 헤더는 같은 store를 본다', () => {
+  it('알려진 카테고리는 storefront 영문명을 쓰고 새 카테고리는 서버 이름을 보존한다', async () => {
+    const payload = {
+      ...homePayload,
+      categories: [
+        { id: 'casual', name: '캐주얼' },
+        { id: 'new-category', name: '새 카테고리' },
+      ],
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(() => Promise.resolve(jsonResponse(payload))),
+    )
+
+    renderApp(<HomeContent />)
+
+    expect(await screen.findByRole('link', { name: 'Casual' })).toHaveAttribute(
+      'href',
+      '/products?category=casual',
+    )
+    expect(screen.getByRole('link', { name: '새 카테고리' })).toHaveAttribute(
+      'href',
+      '/products?category=new-category',
+    )
+  })
+
   it('홈에서 담으면 목록의 같은 상품과 헤더 개수가 함께 바뀐다', async () => {
     stubCommerceApi()
     renderApp(
       <>
         <Header />
-        <HomePage />
+        <HomeContent />
         <ProductListView />
       </>,
     )
 
     // 홈과 목록이 다 뜬 다음에 조회한다. 상품A는 양쪽에 있어야 한다
-    await screen.findByText('총 2개')
+    await screen.findByText('2 products')
     await waitFor(() =>
-      expect(screen.getAllByLabelText('상품A 장바구니')).toHaveLength(2),
+      expect(screen.getAllByLabelText('상품A bag')).toHaveLength(2),
     )
-    const cartButtons = screen.getAllByLabelText('상품A 장바구니')
+    const cartButtons = screen.getAllByLabelText('상품A bag')
 
     fireEvent.click(cartButtons[0])
 
     cartButtons.forEach((button) => {
       expect(button).toHaveAttribute('aria-pressed', 'true')
     })
-    expect(screen.getByText('장바구니 1')).toBeInTheDocument()
-    expect(screen.getByText('위시리스트 0')).toBeInTheDocument()
+    expect(screen.getByText('Bag 1')).toBeInTheDocument()
+    expect(screen.getByText('Wishlist 0')).toBeInTheDocument()
   })
 
   it('위시리스트 토글은 장바구니 개수에 영향을 주지 않는다', async () => {
@@ -129,14 +154,14 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     renderApp(
       <>
         <Header />
-        <HomePage />
+        <HomeContent />
       </>,
     )
 
-    fireEvent.click(await screen.findByLabelText('상품B 위시리스트'))
+    fireEvent.click(await screen.findByLabelText('상품B wishlist'))
 
-    expect(screen.getByText('위시리스트 1')).toBeInTheDocument()
-    expect(screen.getByText('장바구니 0')).toBeInTheDocument()
+    expect(screen.getByText('Wishlist 1')).toBeInTheDocument()
+    expect(screen.getByText('Bag 0')).toBeInTheDocument()
   })
 })
 
@@ -152,11 +177,11 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     renderApp(<ProductListView />)
 
     expect(
-      await screen.findByText('상품 목록을 불러오지 못했습니다.'),
+      await screen.findByText('Could not load products.'),
     ).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
-    expect(await screen.findByText('총 2개')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByText('2 products')).toBeInTheDocument()
   })
 
   it('목록 조회가 실패해도 조건을 바꿀 수 있는 UI는 화면에 남는다', async () => {
@@ -172,16 +197,17 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
 
     renderApp(<ProductListView />, { onUrlUpdate })
 
-    await screen.findByText('상품 목록을 불러오지 못했습니다.')
+    await screen.findByText('Could not load products.')
 
-    expect(screen.getByLabelText('검색')).toBeInTheDocument()
-    expect(screen.getByLabelText('카테고리')).toBeInTheDocument()
-    expect(screen.getByLabelText('정렬')).toBeInTheDocument()
+    expect(screen.getByLabelText('Search')).toBeInTheDocument()
+    expect(
+      screen.getByRole('combobox', { name: /Category/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: /Sort/ })).toBeInTheDocument()
 
     // 남아 있기만 한 것이 아니라 조작되어야 한다.
-    fireEvent.change(screen.getByLabelText('카테고리'), {
-      target: { value: 'digital' },
-    })
+    fireEvent.click(screen.getByRole('combobox', { name: /Category/ }))
+    fireEvent.click(screen.getByRole('option', { name: 'Digital' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     expect(lastUrlUpdate(onUrlUpdate).searchParams.get('category')).toBe(
       'digital',
@@ -196,13 +222,11 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
       ),
     )
 
-    renderApp(<HomePage />)
+    renderApp(<HomeContent />)
 
+    expect(await screen.findByText('Could not load home.')).toBeInTheDocument()
     expect(
-      await screen.findByText('홈 데이터를 불러오지 못했습니다.'),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '다시 시도' }),
+      screen.getByRole('button', { name: 'Try again' }),
     ).toBeInTheDocument()
   })
 
@@ -226,9 +250,9 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     expect(
       await screen.findByText('요청 조건을 확인해주세요.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: '검색 조건 초기화' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     expect(lastUrlUpdate(onUrlUpdate).queryString).toBe('')
   })
@@ -249,11 +273,9 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
     expect(
       await screen.findByText('요청 조건을 확인해주세요.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
-    expect(
-      screen.queryByRole('button', { name: '검색 조건 초기화' }),
-    ).toBeNull()
-    expect(screen.getByRole('link', { name: '홈으로' })).toHaveAttribute(
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Reset filters' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute(
       'href',
       '/',
     )
@@ -267,10 +289,14 @@ describe('목록 조건의 원본은 URL이다', () => {
       searchParams: '?category=digital&sort=popular&page=2',
     })
 
-    await screen.findByText('총 2개')
+    await screen.findByText('2 products')
 
-    expect(screen.getByLabelText('카테고리')).toHaveValue('digital')
-    expect(screen.getByLabelText('정렬')).toHaveValue('popular')
+    expect(
+      screen.getByRole('combobox', { name: /Category/ }),
+    ).toHaveTextContent('Digital')
+    expect(screen.getByRole('combobox', { name: /Sort/ })).toHaveTextContent(
+      'Popular',
+    )
 
     const requestedUrl = String(fetchMock.mock.calls[0][0])
     expect(requestedUrl).toContain('category=digital')
@@ -284,10 +310,14 @@ describe('목록 조건의 원본은 URL이다', () => {
       searchParams: '?category=unknown&sort=cheapest&page=1.5',
     })
 
-    await screen.findByText('총 2개')
+    await screen.findByText('2 products')
 
-    expect(screen.getByLabelText('카테고리')).toHaveValue('all')
-    expect(screen.getByLabelText('정렬')).toHaveValue('latest')
+    expect(
+      screen.getByRole('combobox', { name: /Category/ }),
+    ).toHaveTextContent('All')
+    expect(screen.getByRole('combobox', { name: /Sort/ })).toHaveTextContent(
+      'Newest',
+    )
     const requestedUrl = String(fetchMock.mock.calls[0][0])
     expect(requestedUrl).toContain('category=all')
     expect(requestedUrl).toContain('sort=latest')
@@ -302,10 +332,9 @@ describe('목록 조건의 원본은 URL이다', () => {
       onUrlUpdate,
     })
 
-    await screen.findByText('총 2개')
-    fireEvent.change(screen.getByLabelText('카테고리'), {
-      target: { value: 'casual' },
-    })
+    await screen.findByText('2 products')
+    fireEvent.click(screen.getByRole('combobox', { name: /Category/ }))
+    fireEvent.click(screen.getByRole('option', { name: 'Casual' }))
 
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     const updated = lastUrlUpdate(onUrlUpdate).searchParams
@@ -320,20 +349,21 @@ describe('목록 조건의 원본은 URL이다', () => {
     const onUrlUpdate = vi.fn()
     renderApp(<ProductListView />, { searchParams: '?page=99', onUrlUpdate })
 
-    await screen.findByText(/없는 페이지/)
-    fireEvent.click(screen.getByRole('button', { name: '1페이지로 이동' }))
+    await screen.findByText(/does not exist/)
+    fireEvent.click(screen.getByRole('button', { name: 'Go to page 1' }))
 
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     // page=1은 기본값이라 URL에서 제거된다
     expect(lastUrlUpdate(onUrlUpdate).searchParams.get('page')).toBeNull()
   })
 
-  it('결과가 정말 없을 때만 조건 불일치 문구를 보여준다', async () => {
+  it('결과가 정말 없을 때만 0건 문구를 보여준다', async () => {
     stubCommerceApi({ products: [], totalCount: 0 })
     renderApp(<ProductListView />)
 
+    // 걸어둔 조건이 없으므로 필터를 언급하지 않는다.
     expect(
-      await screen.findByText('조건에 맞는 상품이 없습니다.'),
+      await screen.findByText('No products are available.'),
     ).toBeInTheDocument()
   })
 
@@ -342,13 +372,13 @@ describe('목록 조건의 원본은 URL이다', () => {
     const onUrlUpdate = vi.fn()
     renderApp(<ProductListView />, { onUrlUpdate })
 
-    await screen.findByText('총 2개')
-    const input = screen.getByLabelText('검색')
+    await screen.findByText('2 products')
+    const input = screen.getByLabelText('Search')
 
     fireEvent.change(input, { target: { value: '가디건' } })
     expect(onUrlUpdate).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: '검색' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled())
     const updated = lastUrlUpdate(onUrlUpdate).searchParams
     expect(updated.get('q')).toBe('가디건')

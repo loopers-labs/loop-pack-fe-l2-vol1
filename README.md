@@ -15,6 +15,20 @@ pnpm dev
 
 `pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 테스트, lint, 타입 검사, 프로덕션 빌드를 순서대로 실행하며 네 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
 
+### APP_ORIGIN
+
+서버가 자기 API를 부를 때 쓰는 origin입니다. 서버 metadata와 prefetch가 절대 URL을 만들어야 해서 필요하고, 브라우저 요청은 지금처럼 상대 경로를 씁니다. **기본값이 없어 값이 없거나 절대 URL이 아니면 build와 runtime이 즉시 실패합니다.** 조용한 기본값을 두면 build와 runtime의 불일치가 숨고 잘못된 절대 URL이 결과물에 굳기 때문입니다.
+
+build와 runtime에 같은 값을 넣습니다. 형식은 `.env.example`에 있습니다.
+
+```bash
+APP_ORIGIN=http://127.0.0.1:3210 pnpm build
+APP_ORIGIN=http://127.0.0.1:3210 pnpm start
+APP_ORIGIN=http://127.0.0.1:3210 pnpm check
+```
+
+CI에 넣는 값은 배포 URL 증거가 아니라 build 계약을 검증하는 값입니다.
+
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
 
 ## 구조 (최소 골격)

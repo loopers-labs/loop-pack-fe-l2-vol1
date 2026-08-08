@@ -21,11 +21,11 @@ export default function WishlistToggleButton({
   return (
     <button
       type="button"
-      aria-label={`${productName} 위시리스트`}
+      aria-label={`${productName} wishlist`}
       aria-pressed={isInWishlist}
       onClick={() => toggleWishlist(productId)}
     >
-      {isInWishlist ? '찜 해제' : '찜'}
+      {isInWishlist ? 'Remove' : 'Wishlist'}
     </button>
   )
 }

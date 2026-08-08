@@ -11,9 +11,9 @@ describe('루트 error 경계의 fallback', () => {
     render(<ErrorBoundaryFallback error={new Error('실패')} reset={vi.fn()} />)
 
     expect(
-      screen.getByRole('button', { name: '다시 시도' }),
+      screen.getByRole('button', { name: 'Try again' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '홈으로' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute(
       'href',
       '/',
     )
@@ -42,7 +42,7 @@ describe('루트 error 경계의 fallback', () => {
     const reset = vi.fn()
     render(<ErrorBoundaryFallback error={new Error('실패')} reset={reset} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
 
     expect(reset).toHaveBeenCalledOnce()
   })

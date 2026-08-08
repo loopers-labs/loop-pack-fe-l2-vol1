@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="650" viewBox="0 0 1120 650" role="img" aria-labelledby="title desc">
+  <title id="title">7주차 성능 최적화 구현 경계</title>
+  <desc id="desc">홈 스트리밍, 상품 목록 여섯 상태, 찜 렌더 범위를 나타낸다.</desc>
+  <defs>
+    <filter id="shadow"><feDropShadow dy="3" stdDeviation="6" flood-color="#0f172a" flood-opacity=".08"/></filter>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#64748b"/></marker>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#0f172a}.title{font-size:26px;font-weight:700}.sub{font-size:14px;fill:#64748b}.head{font-size:17px;font-weight:700}.label{font-size:14px;font-weight:650}.body{font-size:13px;fill:#475569}.small{font-size:12px;fill:#64748b;font-weight:600}.metric{font-size:13px;fill:#047857;font-weight:700}.panel{fill:#fff;stroke:#e2e8f0;filter:url(#shadow)}.blue{fill:#eff6ff;stroke:#93c5fd}.purple{fill:#f5f3ff;stroke:#c4b5fd}.green{fill:#ecfdf5;stroke:#6ee7b7}.gray{fill:#f8fafc;stroke:#cbd5e1}.orange{fill:#fff7ed;stroke:#fdba74}.line{fill:none;stroke:#64748b;stroke-width:1.5;marker-end:url(#arrow)}.dash{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:5 5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1120" height="650" rx="20" fill="#f8fafc"/>
+  <text x="48" y="48" class="title">실제 사용자 경로를 기준으로 나눈 구현 경계</text>
+  <text x="48" y="73" class="sub">데이터가 기다리는 위치, 상태의 소유자, 다시 렌더되는 범위만 표시했습니다.</text>
+
+  <rect x="36" y="98" width="1048" height="140" rx="16" class="panel"/>
+  <text x="60" y="130" class="head">① 홈 — 빠른 셸과 느린 데이터의 경계</text>
+  <rect x="60" y="150" width="238" height="62" rx="12" class="blue"/><text x="78" y="175" class="label">정적 RSC 셸 · Hero</text><text x="78" y="197" class="body">Header · h1 · 설명 · 이미지 URL</text>
+  <path d="M298 181H394" class="line"/><text x="322" y="169" class="small">첫 응답</text>
+  <rect x="394" y="150" width="214" height="62" rx="12" class="blue"/><text x="412" y="175" class="label">브라우저가 즉시 발견</text><text x="412" y="197" class="metric">Hero 요청 626 → 41 ms</text>
+  <path d="M179 212V224H704V212" class="dash"/><text x="326" y="232" class="small">Suspense 안에서만 대기</text>
+  <rect x="704" y="150" width="338" height="62" rx="12" class="purple"/><text x="722" y="175" class="label">느린 홈 조회 → 하단 콘텐츠</text><text x="722" y="197" class="body">카테고리 · 인기 상품 · 신상품</text>
+
+  <rect x="36" y="258" width="1048" height="244" rx="16" class="panel"/>
+  <text x="60" y="290" class="head">② 상품 목록 — URL 하나에서 여섯 화면으로</text>
+  <rect x="60" y="312" width="150" height="56" rx="11" class="blue"/><text x="78" y="336" class="label">URL</text><text x="78" y="356" class="body">q · category · sort · page</text>
+  <path d="M210 340H250" class="line"/>
+  <rect x="250" y="312" width="146" height="56" rx="11" class="purple"/><text x="268" y="336" class="label">정규화</text><text x="268" y="356" class="body">server · client 공유</text>
+  <path d="M396 340H436" class="line"/>
+  <rect x="436" y="312" width="150" height="56" rx="11" class="green"/><text x="454" y="336" class="label">Query key</text><text x="454" y="356" class="body">서버 상태 소유자</text>
+  <path d="M586 340H626" class="line"/>
+  <rect x="626" y="312" width="178" height="56" rx="11" class="green"/><text x="644" y="336" class="label">GET + AbortSignal</text><text x="644" y="356" class="body">늦은 이전 요청 취소</text>
+  <path d="M804 340H844" class="line"/>
+  <rect x="844" y="312" width="198" height="56" rx="11" class="green"/><text x="862" y="336" class="label">현재 결과</text><text x="862" y="356" class="body">URL과 화면 일치</text>
+  <path d="M511 368V396" class="line"/>
+
+  <rect x="60" y="396" width="148" height="72" rx="11" class="gray"/><text x="78" y="420" class="label">최초 pending</text><text x="78" y="441" class="body">목록 전체 자리</text><text x="78" y="459" class="metric">12개 skeleton</text>
+  <rect x="224" y="396" width="148" height="72" rx="11" class="gray"/><text x="242" y="420" class="label">갱신 중</text><text x="242" y="441" class="body">기존 목록 유지</text><text x="242" y="459" class="small">aria-busy</text>
+  <rect x="388" y="396" width="148" height="72" rx="11" class="gray"/><text x="406" y="420" class="label">성공 + 0건</text><text x="406" y="441" class="body">현재 조건 설명</text><text x="406" y="459" class="small">확정된 empty</text>
+  <rect x="552" y="396" width="148" height="72" rx="11" class="orange"/><text x="570" y="420" class="label">최초 실패</text><text x="570" y="441" class="body">목록 대신 오류</text><text x="570" y="459" class="small">복구 행동 제공</text>
+  <rect x="716" y="396" width="148" height="72" rx="11" class="orange"/><text x="734" y="420" class="label">갱신 실패</text><text x="734" y="441" class="body">보던 목록 유지</text><text x="734" y="459" class="small">재시도 제공</text>
+  <rect x="880" y="396" width="162" height="72" rx="11" class="gray"/><text x="898" y="420" class="label">취소</text><text x="898" y="441" class="body">오류로 노출 안 함</text><text x="898" y="459" class="small">현재 화면 보호</text>
+
+  <rect x="36" y="522" width="1048" height="98" rx="16" class="panel"/>
+  <text x="60" y="552" class="head">③ 찜 클릭 — 상태 구독과 렌더 범위</text>
+  <rect x="60" y="570" width="248" height="36" rx="10" class="orange"/><text x="78" y="593" class="label">wishlistIds 배열 전체 구독</text>
+  <path d="M308 588H408" class="line"/><text x="330" y="577" class="small">selector 축소</text>
+  <rect x="408" y="570" width="280" height="36" rx="10" class="green"/><text x="426" y="593" class="label">카드별 selected boolean 구독</text>
+  <path d="M688 588H786" class="line"/>
+  <rect x="786" y="570" width="256" height="36" rx="10" class="green"/><text x="804" y="593" class="metric">24개 → 1개 · 128 → 56 ms</text>
+</svg>
