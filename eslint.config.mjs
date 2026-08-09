@@ -14,7 +14,15 @@ import next from '@next/eslint-plugin-next'
 import prettier from 'eslint-config-prettier'
 
 export default defineConfig(
-  { ignores: ['.next', 'out', 'node_modules', 'next-env.d.ts'] },
+  {
+    ignores: [
+      '.next',
+      'out',
+      'storybook-static',
+      'node_modules',
+      'next-env.d.ts',
+    ],
+  },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,

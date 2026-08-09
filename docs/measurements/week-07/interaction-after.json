@@ -1,0 +1,91 @@
+{
+  "measuredSha": "3dc3726",
+  "extractorSha": "fff007f2b47bdef9c6ba78a0052e99cda6121a00",
+  "conditions": {
+    "url": "http://127.0.0.1:3210/performance-lab/inp?pageSize=24",
+    "build": "production (next build && next start)",
+    "viewport": "1280x900 DPR 1",
+    "cpuThrottle": "4x (CDP Emulation.setCPUThrottlingRate)",
+    "networkThrottle": "none",
+    "startState": "회차마다 새 문서, 같은 상품이 찜되지 않은 상태",
+    "entryFilter": "PerformanceObserver type=event, durationThreshold=16",
+    "grouping": "interactionId로 묶고 가장 긴 duration을 사용",
+    "note": "현장 INP가 아니라 INP에 영향을 주는 상호작용 지연 시간이다.",
+    "source": "제출 당시 측정한 원값을 그대로 담았다"
+  },
+  "runs": [
+    {
+      "run": 1,
+      "pressedBefore": "false",
+      "pressedAfter": "true",
+      "events": "pointerdown+pointerup+click",
+      "longest": "pointerdown",
+      "inputDelay": 11,
+      "processing": 1,
+      "presentation": 51,
+      "duration": 64
+    },
+    {
+      "run": 2,
+      "pressedBefore": "false",
+      "pressedAfter": "true",
+      "events": "pointerdown+pointerup+click",
+      "longest": "pointerdown",
+      "inputDelay": 2,
+      "processing": 1,
+      "presentation": 45,
+      "duration": 48
+    },
+    {
+      "run": 3,
+      "pressedBefore": "false",
+      "pressedAfter": "true",
+      "events": "pointerdown+pointerup+click",
+      "longest": "pointerdown",
+      "inputDelay": 3,
+      "processing": 1,
+      "presentation": 52,
+      "duration": 56
+    },
+    {
+      "run": 4,
+      "pressedBefore": "false",
+      "pressedAfter": "true",
+      "events": "pointerdown+pointerup+click",
+      "longest": "pointerdown",
+      "inputDelay": 3,
+      "processing": 1,
+      "presentation": 52,
+      "duration": 56
+    },
+    {
+      "run": 5,
+      "pressedBefore": "false",
+      "pressedAfter": "true",
+      "events": "pointerdown+pointerup+click",
+      "longest": "pointerdown",
+      "inputDelay": 3,
+      "processing": 1,
+      "presentation": 44,
+      "duration": 48
+    }
+  ],
+  "summary": {
+    "inputDelay": {
+      "median": 3,
+      "range": [2, 11]
+    },
+    "processing": {
+      "median": 1,
+      "range": [1, 1]
+    },
+    "presentation": {
+      "median": 51,
+      "range": [44, 52]
+    },
+    "duration": {
+      "median": 56,
+      "range": [48, 64]
+    }
+  }
+}

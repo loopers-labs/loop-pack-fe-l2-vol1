@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Week 06 예상 커밋 리뷰</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18201c;
+        --muted: #667069;
+        --paper: #fbfaf6;
+        --panel: #ffffff;
+        --line: #d9ddd9;
+        --green: #215c42;
+        --green-soft: #e9f2ec;
+        --amber: #8b5b12;
+        --amber-soft: #fff4dd;
+        --red: #8c332f;
+        --red-soft: #fbeceb;
+        --blue: #315d78;
+        --blue-soft: #eaf2f7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top right, #edf4ed 0, transparent 30rem),
+          var(--paper);
+        color: var(--ink);
+        font-family:
+          Pretendard,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.65;
+      }
+
+      main {
+        width: min(1080px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 64px 0 96px;
+      }
+
+      header {
+        margin-bottom: 40px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.25;
+        letter-spacing: -0.025em;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 5vw, 3.6rem);
+      }
+
+      h2 {
+        margin: 56px 0 18px;
+        font-size: 1.65rem;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 1.15rem;
+      }
+
+      p {
+        margin: 0 0 12px;
+      }
+
+      code {
+        padding: 0.12rem 0.34rem;
+        border-radius: 5px;
+        background: #f0f1ee;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.9em;
+      }
+
+      .lead {
+        max-width: 800px;
+        color: var(--muted);
+        font-size: 1.08rem;
+      }
+
+      .meta,
+      .legend,
+      .summary-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .meta {
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        margin-top: 28px;
+      }
+
+      .meta > div,
+      .summary-grid > article {
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .notice {
+        margin: 24px 0;
+        padding: 18px 20px;
+        border-left: 4px solid var(--green);
+        border-radius: 8px;
+        background: var(--green-soft);
+      }
+
+      .notice.warn {
+        border-color: var(--amber);
+        background: var(--amber-soft);
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      }
+
+      .summary-grid article strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .commit-list {
+        display: grid;
+        gap: 18px;
+      }
+
+      .commit {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel);
+        box-shadow: 0 8px 24px rgba(33, 56, 43, 0.055);
+      }
+
+      .commit-head {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .order {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--green);
+        color: white;
+        font-weight: 800;
+      }
+
+      .type {
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--blue-soft);
+        color: var(--blue);
+        font-size: 0.75rem;
+        font-weight: 800;
+      }
+
+      .commit-body {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .commit-body section {
+        min-width: 0;
+      }
+
+      .commit-body h4 {
+        margin: 0 0 8px;
+        color: var(--green);
+        font-size: 0.88rem;
+        letter-spacing: 0.02em;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .gate {
+        grid-column: 1 / -1;
+        padding: 12px 14px;
+        border-radius: 9px;
+        background: #f5f6f3;
+      }
+
+      .gate strong {
+        color: var(--green);
+      }
+
+      .blocker {
+        color: var(--red);
+        font-weight: 700;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f1f4f0;
+        font-size: 0.86rem;
+      }
+
+      footer {
+        margin-top: 56px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+      }
+
+      @media (max-width: 760px) {
+        main {
+          padding-top: 36px;
+        }
+
+        .commit-head {
+          grid-template-columns: auto 1fr;
+        }
+
+        .type {
+          grid-column: 2;
+          justify-self: start;
+        }
+
+        .commit-body {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="label">Reviewer memo · Week 06</span>
+        <h1>예상 커밋별 리뷰 포인트</h1>
+        <p class="lead">
+          현재 히스토리 이후에 예상되는 작업만 대상으로 한다. 구현 방법을 대신
+          결정하지 않고, 각 커밋이 하나의 논리적 변경인지와 과제·RFC·멘토링 피드백의
+          경계를 지키는지를 검토한다.
+        </p>
+
+        <div class="meta">
+          <div>
+            <span class="label">기준 HEAD</span>
+            <strong><code>99da85d</code></strong>
+          </div>
+          <div>
+            <span class="label">완료된 결정</span>
+            <strong>Decision 1–4</strong>
+          </div>
+          <div>
+            <span class="label">남은 핵심 결정</span>
+            <strong>Public API · Error Boundary</strong>
+          </div>
+          <div>
+            <span class="label">검증 기준선</span>
+            <strong>134 tests + lint + typecheck + build</strong>
+          </div>
+        </div>
+      </header>
+
+      <div class="notice">
+        <strong>리뷰 결론:</strong> 지금부터는 폴더를 바로 옮기면 안 된다. Decision 5와
+        6, 목표 트리, 파일 매핑이 먼저 확정되어야 이후 이동 커밋의 완료 조건을 판단할 수
+        있다. 멘토의 “경계를 먼저 지키라”는 피드백과도 일치한다.
+      </div>
+
+      <div class="notice warn">
+        <strong>현재 문서에서 먼저 고칠 사실:</strong>
+        Preflight에는 아직 Node 20.19.0에서 확인했다고 적혀 있으나 저장소의
+        <code>.nvmrc</code>와 실제 재검증 환경은 Node 24.17.0이다. 최종 설계 확정
+        커밋에 섞지 말고, 기준선 사실 정정으로 명시해야 한다.
+      </div>
+
+      <h2>예상 커밋 순서</h2>
+
+      <div class="commit-list">
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">1</span>
+            <h3>Public API 경계 결정</h3>
+            <span class="type">docs</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>이 커밋의 범위</h4>
+              <ul>
+                <li>외부 소비자가 있는 슬라이스만 Public API 필요 여부를 결정한다.</li>
+                <li>
+                  cart와 wishlist는 ProductGrid뿐 아니라 Header도 소비자 목록에 포함한다.
+                </li>
+                <li>
+                  <code>productListContract</code>의 소비자는 product-list 화면과 mock
+                  Route Handler 두 곳임을 반영한다.
+                </li>
+                <li>mock API가 FSD 프론트엔드 레이어 밖 코드라는 경계를 문서화한다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>Public API가 경로 단축이 아니라 숨길 구현을 실제로 숨기는가?</li>
+                <li>
+                  cart/wishlist의 Zustand store와 setter 계약은 외부에서 import할 수 없게
+                  남는가?
+                </li>
+                <li><code>export *</code> 없이 필요한 값만 명시적으로 공개하는가?</li>
+                <li>
+                  같은 슬라이스 내부 import까지 루트 Public API를 우회하게 만들지는 않는가?
+                </li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> 각 공개 항목마다 실제 외부 소비자를 말할 수 있고,
+              각 비공개 항목마다 숨겨야 하는 변경 이유를 말할 수 있어야 한다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">2</span>
+            <h3>에러·로딩 경계 결정</h3>
+            <span class="type">docs</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>이 커밋의 범위</h4>
+              <ul>
+                <li>4xx, 5xx, 네트워크, 타임아웃, 예상 밖 렌더링 오류를 표로 분리한다.</li>
+                <li>
+                  현재 <code>ApiError</code>의 status, 서버 message, retry 가능 여부를
+                  Decision 6의 입력으로 사용한다.
+                </li>
+                <li>
+                  Query <code>isPending</code>, nuqs를 위한 기존 Suspense, route
+                  <code>error.tsx</code>의 역할을 구분한다.
+                </li>
+                <li>이벤트 핸들러 오류가 Error Boundary 대상이 아님을 기록한다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>
+                  실패 시 검색 폼과 URL 조건을 유지해야 하는 사용자 흐름이 보존되는가?
+                </li>
+                <li>
+                  “5xx이므로 무조건 페이지 전체를 가린다”가 아니라 살아남아야 할 UI 범위로
+                  경계를 정했는가?
+                </li>
+                <li>
+                  <code>throwOnError</code> 조건이 에러 처리 표와 정확히 일치하는가?
+                </li>
+                <li>
+                  Suspense는 데이터 요청 단위가 아니라 고객이 하나로 인식하는 로딩 경험을
+                  기준으로 정했는가?
+                </li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> 각 실패가 어느 UI를 죽이고 무엇을 남기는지 한
+              문장으로 설명할 수 있어야 한다. 일반 API 실패와 예상 밖 렌더링 오류를 같은
+              fallback에 밀어 넣으면 반려한다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">3</span>
+            <h3>RADIO·목표 트리·파일 매핑 확정</h3>
+            <span class="type">docs</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>이 커밋의 범위</h4>
+              <ul>
+                <li>Decision 1–6의 결론만 RADIO 본문과 목표 트리에 반영한다.</li>
+                <li>현재 위치, 목표 위치, 레이어·슬라이스·세그먼트를 파일별로 매핑한다.</li>
+                <li>애매한 파일 5개 이상의 최종 결정표를 완성한다.</li>
+                <li>단계별 이동 순서와 각 단계의 검증 명령을 고정한다.</li>
+                <li>Node 기준선과 문서 내 중복 문장 등 현재 사실 오류를 정정한다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>목표 트리에 빈 폴더나 미래용 세그먼트가 없는가?</li>
+                <li>
+                  <code>src/app</code>은 Next 진입점만 남고 FSD page는
+                  <code>src/_pages</code>로 구분되는가?
+                </li>
+                <li>
+                  Product 타입, API 응답 타입, mock scenario 타입의 소유자를 각각 설명하는가?
+                </li>
+                <li>
+                  “shared를 강화”한다는 멘토 피드백을 도메인 코드까지 shared에 넣는 뜻으로
+                  오해하지 않았는가?
+                </li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> 이후 모든 이동 커밋의 대상 파일과 완료 조건이 이
+              문서만으로 예측되어야 한다. 구현하면서 소유자를 다시 고민해야 한다면 아직 이
+              커밋은 완료가 아니다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">4</span>
+            <h3>shared 기반 경계 이동</h3>
+            <span class="type">refactor</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>예상 작업</h4>
+              <ul>
+                <li><code>fetchJson</code>, <code>ApiError</code> 등 도메인 비인지 HTTP 기반 이동</li>
+                <li>화면과 mock API가 함께 쓰는 목록 조건 계약 이동</li>
+                <li><code>formatWon</code>의 정책성 여부를 확인한 뒤 위치 확정</li>
+                <li>이동한 계약의 단위 테스트를 같은 책임 가까이에 배치</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>shared가 특정 페이지의 문구·재시도 UI를 알지 않는가?</li>
+                <li>목록 조건 계약이 URL parser나 Next Request를 직접 알지 않는가?</li>
+                <li>서버의 엄격한 문자열 검증 동작이 이동 중 완화되지 않았는가?</li>
+                <li>단순 이동에 기능 변경이나 에러 정책 변경이 섞이지 않았는가?</li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> 테스트 134건과 <code>pnpm check</code> 통과,
+              공개 import 경로 외 deep import 없음.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">5</span>
+            <h3>product·cart·wishlist entity와 runtime 분리</h3>
+            <span class="type">refactor</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>예상 작업</h4>
+              <ul>
+                <li>Product 도메인 타입과 표현 UI를 product entity로 이동한다.</li>
+                <li>cart와 wishlist의 state, action, selector, UI, 전용 테스트를 분리한다.</li>
+                <li>두 capability는 하나의 Zustand runtime에서 조립한다.</li>
+                <li>Header가 count Public API만 소비하도록 유지한다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>
+                  프로젝트 전용 factory가 정말 capability 독립을 만들며, 단순히 Zustand
+                  타입을 감춘 래퍼만 늘린 것은 아닌가?
+                </li>
+                <li>cart 모델이 wishlist 타입이나 aggregate store 타입을 아는가?</li>
+                <li>Product가 cart/wishlist UI 또는 model을 import하는가?</li>
+                <li>
+                  같은 저장 방식을 쓴다는 이유만으로 비즈니스 변경 이유까지 다시 합치지는
+                  않았는가?
+                </li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> wishlist를 가정상 제거해도 cart 전용 모델·계약·
+              테스트가 수정되지 않아야 한다. runtime, ProductGrid, Header 조합은 수정 대상일
+              수 있다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">6</span>
+            <h3>ProductGrid widget 조합 경계 이동</h3>
+            <span class="type">refactor</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>예상 작업</h4>
+              <ul>
+                <li>ProductCard와 cart/wishlist 행위 UI를 widget에서 조합한다.</li>
+                <li>홈과 목록의 중복된 그리드·action 배치 규칙을 한 곳으로 옮긴다.</li>
+                <li>빈 상태, 총 개수, 페이지네이션은 page에 남긴다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>widget이 “천안 삼거리”, 즉 여러 경로가 만나는 조합 지점인가?</li>
+                <li>ProductCard가 action slot 또는 행위 구현을 알지 않는가?</li>
+                <li>화면별 빈 상태 정책까지 widget이 삼키지는 않았는가?</li>
+                <li>화면 차이를 수용하려고 boolean props가 계속 늘어나지는 않는가?</li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> action 구성 변경은 widget 하나에서 끝나고, 빈
+              결과 문구 변경은 각 page에서 끝나야 한다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">7</span>
+            <h3>home·product-list page 슬라이스 이동</h3>
+            <span class="type">refactor</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>예상 작업</h4>
+              <ul>
+                <li>각 page의 조회 전송, queryOptions, 캐시 정책을 해당 page에 응집한다.</li>
+                <li>product-list의 URL parser, condition 조립, SearchForm을 함께 이동한다.</li>
+                <li><code>src/app/**/page.tsx</code>는 얇은 라우팅 진입점으로 남긴다.</li>
+                <li>Query 데이터와 Zustand 데이터를 서로 복사하지 않는다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>home과 product-list가 같은 레이어에서 서로 import하지 않는가?</li>
+                <li>
+                  query key와 fetch 요청이 여전히 동일한
+                  <code>ProductListCondition</code> 객체를 사용하는가?
+                </li>
+                <li><code>pageSize</code> 조립이 한 곳에 남아 있는가?</li>
+                <li>검색·카테고리·정렬 변경 시 page 1 초기화 계약이 보존되는가?</li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> URL 공유·새로고침·앞뒤 이동, 범위 밖 페이지,
+              빈 검색 결과, 검색 제출 버튼 동작이 기존과 동일해야 한다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">8</span>
+            <h3>에러 경계와 로딩 UI 구현</h3>
+            <span class="type">feat</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>예상 작업</h4>
+              <ul>
+                <li>Decision 6에 정한 <code>throwOnError</code> 조건을 Query에 연결한다.</li>
+                <li>적절한 route segment에 <code>error.tsx</code>와 reset UI를 둔다.</li>
+                <li>복구 가능한 조회 실패는 필요한 화면·검색 조건을 남긴 채 재시도한다.</li>
+                <li>필요한 경우에만 Suspense 또는 loading UI의 범위를 조정한다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>재시도 불가능한 오류에 동작하지 않는 버튼이 다시 생기지 않았는가?</li>
+                <li><code>reset</code>이 실제 재요청 또는 렌더 복구로 이어지는가?</li>
+                <li>API 실패 하나가 Header와 검색 폼까지 불필요하게 지우지 않는가?</li>
+                <li>임시 검증용 throw 또는 scenario가 사용자 계약에 남지 않았는가?</li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> 4xx·5xx·네트워크·타임아웃·예상 밖 렌더링 오류를
+              각각 재현한 테스트 또는 명시적인 수동 검증 증거가 있어야 한다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">9</span>
+            <h3>삭제·변경 반경 검증</h3>
+            <span class="type">test / docs</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>필수 검증</h4>
+              <ul>
+                <li>위시리스트 제거 시 삭제 파일과 생존 수정 파일을 실제 트리에서 다시 센다.</li>
+                <li>신상품 배지 추가 시 Product 모델·UI·응답 mapper의 수정 반경을 예측한다.</li>
+                <li>파편화를 발견하면 이번 주 수정과 보류를 분리한다.</li>
+                <li>Advanced를 한다면 구현 전 예상과 실제 diff를 별도 커밋으로 비교한다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>
+                  wishlist 삭제 대상은 entity에 응집되고, runtime·ProductGrid·Header는 명시적
+                  연결 제거로 분류되는가?
+                </li>
+                <li>grep 결과 없이도 삭제·수정 대상을 트리에서 예측할 수 있는가?</li>
+                <li>신상품 배지가 cart/wishlist 또는 shared를 건드리지 않는가?</li>
+                <li>사고 실험의 예상과 실제 import graph가 일치하는가?</li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> “정확히 N개”라고 기록하면 파일명을 전부 열거해야
+              한다. 숫자와 목록이 다르면 숫자를 근거로 사용하지 않는다.
+            </div>
+          </div>
+        </article>
+
+        <article class="commit">
+          <div class="commit-head">
+            <span class="order">10</span>
+            <h3>최종 RFC·PR 자료 정리</h3>
+            <span class="type">docs</span>
+          </div>
+          <div class="commit-body">
+            <section>
+              <h4>예상 작업</h4>
+              <ul>
+                <li>Before/After 트리와 실제 이동 결과를 동기화한다.</li>
+                <li>단계별 검증 결과와 수동 확인 결과를 기록한다.</li>
+                <li>FSD 이해 확인 질문 6개에 프로젝트 기준으로 답한다.</li>
+                <li>AI 활용 부분과 AI 리뷰의 수용·반려 근거를 표시한다.</li>
+                <li>PR 본문에는 설계 결론과 결과만 요약하고 RFC를 반복하지 않는다.</li>
+              </ul>
+            </section>
+            <section>
+              <h4>리뷰 질문</h4>
+              <ul>
+                <li>문서의 목표 트리와 실제 <code>src</code> 트리가 일치하는가?</li>
+                <li>“예정”, “미정”, 과거 테스트 수 같은 낡은 문장이 남아 있지 않은가?</li>
+                <li>사용 라이브러리 버전과 Node 검증 버전이 정확한가?</li>
+                <li>장점뿐 아니라 감수한 비용과 Revisit 조건이 남아 있는가?</li>
+              </ul>
+            </section>
+            <div class="gate">
+              <strong>통과 기준:</strong> Node 24.17.0에서
+              <code>pnpm check</code> 통과, 작업 트리의 의도하지 않은 파일 없음, PR만 읽어도
+              RFC의 핵심 결정과 검증 결과를 찾을 수 있어야 한다.
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <h2>커밋 분리 원칙</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>함께 두어도 되는 것</th>
+            <th>반드시 분리할 것</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>파일 이동과 그 이동 때문에 필요한 import 경로 수정</td>
+            <td>구조 이동과 사용자 동작 변경</td>
+          </tr>
+          <tr>
+            <td>한 슬라이스의 구현 이동과 같은 책임의 테스트 이동</td>
+            <td>Decision 문서와 해당 Decision이 정하지 않은 구현</td>
+          </tr>
+          <tr>
+            <td>에러 경계 구현과 그 경계를 직접 검증하는 테스트</td>
+            <td>에러 정책 변경과 unrelated 접근성·스타일 수정</td>
+          </tr>
+          <tr>
+            <td>최종 RFC 사실 동기화와 검증 결과 기록</td>
+            <td>Advanced 기능과 기본 FSD 마이그레이션</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>리뷰 중 즉시 중단할 신호</h2>
+      <div class="summary-grid">
+        <article>
+          <strong class="blocker">소유권 재논의</strong>
+          구현 커밋에서 “이 파일은 어디에 둘까”가 다시 나오면 목표 트리 확정이 덜 된 것이다.
+        </article>
+        <article>
+          <strong class="blocker">shared의 도메인 창고화</strong>
+          여러 곳이 쓴다는 이유만으로 Product 정책이나 화면 문구가 shared로 내려가면 반려한다.
+        </article>
+        <article>
+          <strong class="blocker">페이지 전체 붕괴</strong>
+          한 조회 실패가 수정 가능한 검색 조건과 독립 UI까지 지우면 에러 경계를 다시 좁힌다.
+        </article>
+        <article>
+          <strong class="blocker">숫자만 있는 실측</strong>
+          파일 수·줄 수·삭제 반경이 파일 목록이나 명령 결과 없이 결론의 핵심 근거가 되면
+          확인을 요구한다.
+        </article>
+      </div>
+
+      <footer>
+        이 문서는 리뷰 기준만 제시한다. 커밋 생성, 스테이징, 브랜치 변경은 수행하지 않는다.
+      </footer>
+    </main>
+  </body>
+</html>

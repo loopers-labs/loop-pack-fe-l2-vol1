@@ -1,23 +1,24 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import Providers from './providers'
+import { getAppOrigin } from '@/shared/config/appOrigin'
+import { sharedOpenGraph } from '@/shared/config/metadata'
 import { Header } from '@/widgets/header'
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import './globals.css'
 import './commerce.css'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
-
+// 페이지가 자기 title을 정하면 template이 감싸고, 정하지 않으면 default를 쓴다.
+// description은 페이지가 덮기 전까지 쓰는 공통 fallback이라 지금 문구를 유지한다.
 export const metadata: Metadata = {
-  title: 'Commerce',
-  description: 'Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.',
+  // 상대 경로 이미지를 절대 URL로 해석하는 기준이다. 없으면 Next가 localhost를 써서
+  // 실행 환경과 무관한 주소가 결과물에 굳는다.
+  metadataBase: new URL(getAppOrigin()),
+  title: {
+    default: 'Loop Market',
+    template: '%s | Loop Market',
+  },
+  description: 'A curated commerce experience by Loopers.',
+  openGraph: sharedOpenGraph,
 }
 
 export default function RootLayout({
@@ -26,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ko" data-theme="light">
       <body>
         <Providers>
           <div className="week05-page">

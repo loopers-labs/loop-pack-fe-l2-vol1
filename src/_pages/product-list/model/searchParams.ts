@@ -1,4 +1,15 @@
-import { createParser, parseAsStringLiteral, type inferParserType } from 'nuqs'
+// parser는 서버 로더도 함께 쓰므로 동형 진입점에서 가져온다.
+// 'nuqs'는 client 전용이라 서버에서 평가하면 build가 멈춘다.
+import {
+  createParser,
+  parseAsStringLiteral,
+  type inferParserType,
+} from 'nuqs/server'
+import {
+  productListScenarioValues,
+  type ProductListCondition,
+  type ProductListScenario,
+} from '@/_pages/product-list/api/productList'
 import {
   categoryIds,
   sortValues,
@@ -34,6 +45,14 @@ export const productListSearchParams = {
 
 export type ProductListFilters = inferParserType<typeof productListSearchParams>
 
+// 재현 조건은 사용자 필터와 다른 그룹에 둔다. 같은 그룹이면 setFilters(null) 초기화가
+// 필터를 지울 때 재현 조건까지 함께 지운다. 그룹을 나누면 초기화의 사정권 밖에 남는다.
+// 기본값을 두지 않아 URL에 없으면 null이고, 지원하지 않는 값도 null로 읽는다.
+// 이때 주소창의 문자열은 그대로 남을 수 있다. 지우는 것이 아니라 요청 조건으로 쓰지 않는다.
+export const productListScenarioSearchParams = {
+  scenario: parseAsStringLiteral(productListScenarioValues),
+}
+
 // 기본값의 원본은 parser다. 화면이 기본값을 다시 적으면 두 곳이 갈린다.
 // 조건이 이미 기본값이면 초기화해도 URL과 query key가 그대로여서 아무 일도 일어나지 않는다.
 export const hasNonDefaultFilters = (filters: ProductListFilters) =>
@@ -46,3 +65,15 @@ export const hasNonDefaultFilters = (filters: ProductListFilters) =>
 export const productListUrlOptions = { history: 'push' as const }
 
 export const PRODUCT_PAGE_SIZE = 12
+
+// 조건 조립은 여기 한 곳에서만 한다. 서버와 브라우저가 각자 조립하면
+// 같은 URL인데 다른 query key와 다른 요청이 나가 hydration 직후 재요청이 생긴다.
+// pageSize는 URL에 없고 화면이 정한다.
+export const createProductListCondition = (
+  filters: ProductListFilters,
+  scenario: ProductListScenario,
+): ProductListCondition => ({
+  ...filters,
+  pageSize: PRODUCT_PAGE_SIZE,
+  scenario,
+})

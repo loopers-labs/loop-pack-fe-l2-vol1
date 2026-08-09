@@ -1,0 +1,78 @@
+{
+  "measuredSha": "4c635003",
+  "extractorSha": "4c635003f8f469403b542b453b46ce6694aaaffa",
+  "conditions": {
+    "url": "http://127.0.0.1:3210/",
+    "build": "production (next build && next start)",
+    "viewports": "412x823 DPR 1.75 / 1280x900 DPR 1",
+    "cpuThrottle": "none",
+    "networkThrottle": "none",
+    "heroResponse": "bodyBytes는 응답 본문 크기다. Lighthouse의 transferSize와 헤더 포함 여부가 달라 값이 조금 다르다",
+    "pixelDiff": "object-fit: cover와 object-position이 고른 영역을 device px 해상도로 잘라 비교한다",
+    "note": "원본은 3840x2160. upscale이 1을 넘으면 확대되어 표시된다."
+  },
+  "runs": {
+    "mobile": {
+      "viewport": {
+        "width": 412,
+        "height": 823,
+        "dpr": 1.75
+      },
+      "box": {
+        "width": 388,
+        "height": 485
+      },
+      "boxRatio": 0.8,
+      "imageRatio": 1.778,
+      "bindingEdge": "height",
+      "drawnCssWidth": 862,
+      "devicePxNeeded": 1509,
+      "candidateWidthPx": 1920,
+      "upscale": 0.79,
+      "objectFit": "cover",
+      "objectPosition": "56% 50%",
+      "pixelDiff": {
+        "comparedAt": "679x849 device px",
+        "objectPosition": "56% 50%",
+        "meanAbsDiff": 2.04,
+        "maxChannelDiff": 38,
+        "comparedPixels": 576471
+      },
+      "heroResponse": {
+        "bodyBytes": 161628,
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75"
+      }
+    },
+    "desktop": {
+      "viewport": {
+        "width": 1280,
+        "height": 900,
+        "dpr": 1
+      },
+      "box": {
+        "width": 1232,
+        "height": 616
+      },
+      "boxRatio": 2,
+      "imageRatio": 1.778,
+      "bindingEdge": "width",
+      "drawnCssWidth": 1232,
+      "devicePxNeeded": 1232,
+      "candidateWidthPx": 1920,
+      "upscale": 0.64,
+      "objectFit": "cover",
+      "objectPosition": "50% 50%",
+      "pixelDiff": {
+        "comparedAt": "1232x616 device px",
+        "objectPosition": "50% 50%",
+        "meanAbsDiff": 2.15,
+        "maxChannelDiff": 29,
+        "comparedPixels": 758912
+      },
+      "heroResponse": {
+        "bodyBytes": 161628,
+        "url": "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1920&q=75"
+      }
+    }
+  }
+}

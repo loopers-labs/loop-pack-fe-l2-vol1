@@ -1,0 +1,128 @@
+# 7주차 성능 측정 스크립트
+
+문서에 적은 수치를 다시 만들기 위한 스크립트다. 원본 Lighthouse 리포트는
+[`docs/measurements/week-07/raw/`](../../docs/measurements/week-07/raw)에 회차별로 보관돼 있고,
+이 스크립트가 그 원본에서 핵심 값을 뽑아 추출 JSON을 만든다.
+
+판단과 해석은 [`docs/week-07-performance.md`](../../docs/week-07-performance.md)에 있다.
+
+## 실행 전에
+
+production 서버가 떠 있어야 한다. 측정 대상 주소는 `MEASURE_BASE_URL`로 준다.
+
+```bash
+APP_ORIGIN=http://127.0.0.1:3210 pnpm build
+APP_ORIGIN=http://127.0.0.1:3210 pnpm start -- -p 3210
+
+export MEASURE_BASE_URL=http://127.0.0.1:3210
+```
+
+포트가 이미 쓰이고 있으면 `next start`는 조용히 죽고 이전 서버가 계속 응답한다. 그러면
+빌드에 넣은 변경이 아니라 옛 화면을 재게 된다. 실행 전에 `lsof -ti:3210`으로 비었는지 본다.
+
+## 판정
+
+`hero.mjs`만 판정을 한다. 나머지는 값을 기록한다.
+
+```bash
+APP_ORIGIN=http://127.0.0.1:3210 pnpm build
+pnpm check:hero
+```
+
+`check:hero`는 서버를 직접 띄우고 판정 뒤 정리한다. 포트가 이미 응답하면 옛 화면을 재지
+않도록 시작 전에 거절한다. 배율이 `1.05`를 넘으면 실패한다.
+
+**`pnpm check`에는 들어 있지 않다.** production 서버가 필요해 CI에서 그대로 돌릴 수 없다.
+`sizes`나 Hero 레이아웃을 건드렸으면 손으로 한 번 돌린다.
+
+## 스크립트와 산출물
+
+| 스크립트 | 산출물 | 무엇을 재는가 |
+| --- | --- | --- |
+| `lighthouse.mjs` | `lighthouse-{home,products}-{before,after}.json` | 추정·관측 FCP, LCP, CLS, TBT, document·CSS와 Hero 요청 기록 |
+| `hero.mjs` | `hero-geometry.json`, `hero-geometry-before-sizes-fix.json` | cover가 그리는 폭, 선택된 후보, 배율, 원본 대비 픽셀 차이. **배율이 1.05를 넘으면 실패한다** |
+| `interaction.mjs` | `interaction-{before,after}.json` | 찜 클릭의 input delay, processing, presentation |
+| `filmstrip.mjs` | `filmstrip/{before,after}/*.jpg` | 원본 리포트의 `screenshot-thumbnails`에서 뽑은 로딩 연속 화면. 재측정하지 않는다 |
+| `interaction-filmstrip.mjs` | `interaction-filmstrip/*.jpg` | 찜 클릭 전후의 연속 화면. Lighthouse에 없는 구간이라 CDP로 직접 모은다 |
+| `cancellation.mjs` | `cancellation.json` | 낡은 요청의 취소와 최종 URL 정합성 |
+| `hydration.mjs` | `hydration-cost.json` | 브라우저 조회 횟수와 document 크기의 교환 |
+| `render-scope.mjs` | **산출물 없음** | 클릭 한 번이 다시 그린 카드 범위 |
+| `raw-manifest.mjs` | `raw/manifest.json`, `raw/SHA256SUMS` | 원본 리포트와 추출 산출물의 회차 대응과 무결성 |
+
+산출물은 전부 `docs/measurements/week-07/`에 있다.
+
+`render-scope.mjs`만 산출물을 커밋하지 않았다. profiling build와 임시 계측이 있어야 도는데,
+그 계측을 커밋된 트리에 남길 수 없기 때문이다. 측정한 값(카드 24개에서 1개, 합계
+`actualDuration` 66ms에서 4ms)은 문서에만 있다.
+
+## 산출물의 SHA 두 가지
+
+`measuredSha`는 그 값을 잰 코드의 커밋이고, `extractorSha`는 값을 봉투에 담은 시점의 HEAD다.
+지난 측정을 담을 때 둘이 달라진다. `MEASURE_SHA`로 측정 대상 커밋을 반드시 넘겨야 한다.
+
+| 산출물 | measuredSha | 무엇의 값인가 |
+| --- | --- | --- |
+| `lighthouse-*-before.json` | `3aa1981` | 병합 시작점 |
+| `lighthouse-home-after.json` | `0785d2c` | Hero `sizes`를 고친 뒤 |
+| `lighthouse-products-after.json` | `36e31e0` | 목록은 이후 커밋이 건드리지 않는다 |
+| `interaction-before.json` | `36e31e0` | selector를 좁히기 전 |
+| `interaction-after.json` | `3dc3726` | selector를 좁힌 뒤 |
+| `hero-geometry-before-sizes-fix.json` | `fff007f` | `sizes`만 `36e31e0` 상태로 임시 복원한 재현 측정. 실제로 그 커밋을 빌드한 것이 아니라 `conditions.variant`에 밝혀 두었다 |
+
+`harness.mjs`는 브라우저 기동, 뷰포트, CPU 감속, 결과 봉투를 공유한다. 직접 실행하지 않는다.
+
+## 사용법
+
+```bash
+export MEASURE_SHA=$(git rev-parse --short HEAD)
+
+# Lighthouse 5회를 새로 돌린다
+MEASURE_PATH=/ MEASURE_LABEL=home node scripts/measure/lighthouse.mjs
+
+# 이미 받아 둔 원본 리포트에서 추출만 한다. 그때의 커밋을 MEASURE_SHA로 넘긴다
+MEASURE_SHA=3aa1981 MEASURE_LH_RAW_DIR=docs/measurements/week-07/raw \
+  MEASURE_LH_RAW_PREFIX=lighthouse-home-before-run- MEASURE_LABEL=home-before \
+  node scripts/measure/lighthouse.mjs
+
+# 제출 당시 잰 상호작용 원값을 그대로 담는다
+MEASURE_SHA=3dc3726 MEASURE_RUNS_FILE=<원값 JSON> MEASURE_LABEL=interaction-after \
+  node scripts/measure/interaction.mjs
+
+node scripts/measure/hero.mjs
+node scripts/measure/cancellation.mjs
+node scripts/measure/hydration.mjs
+```
+
+추출 산출물을 다시 뽑았으면 manifest도 다시 만든다. 조건을 추출 JSON에서 그대로 옮겨 담는다.
+
+```bash
+node scripts/measure/raw-manifest.mjs
+pnpm exec prettier --write docs/measurements/week-07/raw/manifest.json
+```
+
+manifest는 `JSON.stringify`로 쓰므로 짧은 배열의 줄바꿈이 Prettier와 다르다. 커밋할 때는
+lint-staged가 정리하지만, 검사만 돌릴 때는 위처럼 한 번 맞춰 준다.
+
+환경 변수로 조절한다. `MEASURE_SHA`(필수), `MEASURE_VARIANT`(커밋 그대로가 아닌 상태에서 잰 경우),
+`MEASURE_LH_RAW_PREFIX`(raw 폴더에서 한 측정 그룹만 선택), `MEASURE_RUNS`(기본 5),
+`MEASURE_STEPS`(기본 3), `MEASURE_LH_VERSION`(기본 12.8.2).
+
+## `render-scope.mjs`만 다르다
+
+이 스크립트는 profiling build와 임시 계측이 함께 있어야 동작한다. **계측은 측정 뒤 반드시
+되돌린다.** 커밋된 트리에 `<Profiler>`나 `window.__renders`가 남으면 안 된다.
+
+1. `src/app/performance-lab/inp/page.tsx`에서 카드마다 `<Profiler>`로 감싸고
+   `onRender`의 `id`, `phase`, `actualDuration`, `commitTime`을 `window.__renders`에 모은다.
+2. `pnpm next build --profile` 후 서버를 띄운다.
+3. `node scripts/measure/render-scope.mjs`
+4. 계측을 되돌리고 일반 build로 재빌드한다.
+
+## 스크립트로 남기지 않은 것
+
+- **Route Handler 실호출 계수** — Route Handler에 임시 카운터와 로그를 넣고 document를
+  한 번 요청해 서버 로그를 센다. production 코드를 건드려야 해서 스크립트로 두지 않았다.
+- **document 증거** — `curl -s <URL>`로 `<head>`를 확인한다.
+- **UA별 응답 시점** — `curl -w 'start=%{time_starttransfer} total=%{time_total}'`을
+  일반 UA와 `facebookexternalhit`으로 각각 보낸다.
+- **기능 회귀** — URL 복원, 뒤로 가기, store 공유, 빈 상태, 재시도는 화면에서 확인했다.

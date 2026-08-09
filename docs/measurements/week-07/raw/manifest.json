@@ -1,0 +1,361 @@
+{
+  "note": "각 원본 Lighthouse 리포트를 gzip -n으로 개별 보관한다. 추출 산출물과 회차가 1:1로 대응한다.",
+  "groups": [
+    {
+      "extractedArtifact": "lighthouse-fcp-exp1-hero-blocked.json",
+      "measuredSha": "fff007f",
+      "throttlingMethod": "simulate",
+      "blockedUrlPatterns": ["*hero-original*"],
+      "url": "http://127.0.0.1:3210/",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-fcp-exp1-hero-blocked-run-1.json.gz",
+          "sha256": "0521756e549ce1693f4d71551e89528e1df0111312e29b6fff754ab0abb39328",
+          "uncompressedSha256": "7fe00a380d07783b159881218c30c1324daa3d542178ffa22397ac0f75e13f56"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-fcp-exp1-hero-blocked-run-2.json.gz",
+          "sha256": "ae690de05647760225480005b8230026c955fab6b66475aa59bbc5be9da493d0",
+          "uncompressedSha256": "3a5cea8d64044e948b7e93971bdcd986ce0b7d55d45c137b96056014b890e052"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-fcp-exp1-hero-blocked-run-3.json.gz",
+          "sha256": "9cf149138c37c63445e87c69add939bd1de6e4db125d38edcf009ed1755c62b1",
+          "uncompressedSha256": "1a98551a2f22938ddd045406340e11f958d833fdbe638790108aeb659e89f6e0"
+        },
+        {
+          "run": 4,
+          "file": "lighthouse-fcp-exp1-hero-blocked-run-4.json.gz",
+          "sha256": "fef3f1faa5937fe16069835363d0ea3d4e5012017fa60ebf04d671fa9dabbf15",
+          "uncompressedSha256": "cf23a1f06dfd7d9851ee48929efa59b116d17bf57b3641593408732c4c6cc8de"
+        },
+        {
+          "run": 5,
+          "file": "lighthouse-fcp-exp1-hero-blocked-run-5.json.gz",
+          "sha256": "ff493c1625c3dcbcd3c8dcb58872dc8bf7a9ace08c2b689b7aac14d8c31652d0",
+          "uncompressedSha256": "ab97acc8457df48fa6db5d8459c896fb73aac54e47fe8f02fb6e3ff98fb5575a"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-fcp-exp2-fonts-blocked.json",
+      "measuredSha": "fff007f",
+      "throttlingMethod": "simulate",
+      "blockedUrlPatterns": ["*PretendardVariable*"],
+      "url": "http://127.0.0.1:3210/",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-fcp-exp2-fonts-blocked-run-1.json.gz",
+          "sha256": "5d5141c1ffedb2239fd720549f18156cea082d4c2edec238267e39402a70fe8e",
+          "uncompressedSha256": "972a2195b7b76e655a395d39b445f8f0e40a1b0d887e8964b732cc85f5c4d45f"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-fcp-exp2-fonts-blocked-run-2.json.gz",
+          "sha256": "d05bb46600cfd3241f95328b54b1ef542d2ad85576c6bd1ef1ea5ecbd5ea4bb9",
+          "uncompressedSha256": "69e60f26e0a4c31c1ef7b5e76452cfcd8b10d32ecab00b29167e33faa3cac2b4"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-fcp-exp2-fonts-blocked-run-3.json.gz",
+          "sha256": "2ccfe6095d9bd50f15130253a5afff4a74be724041023b7ad81bf1c3e495efd9",
+          "uncompressedSha256": "024da05188e94c29f944fc25263a5e0cdc1448d70b9c873a3ca12413c72a62bd"
+        },
+        {
+          "run": 4,
+          "file": "lighthouse-fcp-exp2-fonts-blocked-run-4.json.gz",
+          "sha256": "c32397a7cb7e11a040595269c81602510d1f202d50b37244226e7b1c9453881e",
+          "uncompressedSha256": "22d146d6cc175bc55c3324398576352f40be85c7570a69c84376229a5a173303"
+        },
+        {
+          "run": 5,
+          "file": "lighthouse-fcp-exp2-fonts-blocked-run-5.json.gz",
+          "sha256": "69925665088d2d13790d3505961051e704a8faec1a699a2419ef3629ea03c2e4",
+          "uncompressedSha256": "9c1867b3893cd1c7dc1cef75c8950aa98575a67f731c05d52effca0e588ae594"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-fcp-exp3-latin-simulate.json",
+      "measuredSha": "fff007f",
+      "throttlingMethod": "simulate",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3210/",
+      "variant": "fff007f에서 홈 셸의 한글 제목과 설명만 라틴 문자로 임시 치환한 재현 측정이다. 해당 커밋을 그대로 빌드한 것이 아니다.",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-fcp-exp3-latin-simulate-run-1.json.gz",
+          "sha256": "134ddaea61e2a1222f9680211a1a1403e2960ac01d3f1d62e85b1e879f5cbf4c",
+          "uncompressedSha256": "48ba9732522cf6381cc95025bf2f746edf27409404b3fce3bcdd250385d6fbaa"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-fcp-exp3-latin-simulate-run-2.json.gz",
+          "sha256": "45cc9da3b4067f52538102a4dc1c2c0ee7d698de00a242cd5ee187885e7fb725",
+          "uncompressedSha256": "7169180d5ebca6cc2e7a29198d8395c93366d2793110b182f0a023994d1f10a8"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-fcp-exp3-latin-simulate-run-3.json.gz",
+          "sha256": "aba619da1d5560ee869024edb83b5bb62e460e4aa948a169d3f1e2168be4f7b9",
+          "uncompressedSha256": "51bc543b1203d46d6c3d74ca98dccf8b76b2d35a2771453284cea1b351163ccb"
+        },
+        {
+          "run": 4,
+          "file": "lighthouse-fcp-exp3-latin-simulate-run-4.json.gz",
+          "sha256": "f439d79ddbf8184b78afd7c07666c5710068e26a307501eec1f9385c6bb70c8b",
+          "uncompressedSha256": "46e7b8d0974ca2d3c5c25c5262e635ef81b2b435b31815c34089122e60f5abc2"
+        },
+        {
+          "run": 5,
+          "file": "lighthouse-fcp-exp3-latin-simulate-run-5.json.gz",
+          "sha256": "10c0a7b1918aa4643146781201bca4ac00d833d9ba3c0a6bf40f7a45d135d9dc",
+          "uncompressedSha256": "b7ef999f20086510ffee09d7c9ef9391ddbca91e9efe58ca58c67af39924363e"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-fcp-exp4-korean-devtools.json",
+      "measuredSha": "fff007f",
+      "throttlingMethod": "devtools",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3210/",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-fcp-exp4-korean-devtools-run-1.json.gz",
+          "sha256": "ff2bce5a286228430b19a871414fc8b39b04f9df133887026f07e07ee071a966",
+          "uncompressedSha256": "915e6cfdce7e36cc494aa455ce32ebc80c5319b2573441f7e6436659ab7015bc"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-fcp-exp4-korean-devtools-run-2.json.gz",
+          "sha256": "fa402a7a5b094b80e2e9693d5eb2d5b6a4b4cdf6b66887c18fe30e99ef06ba3b",
+          "uncompressedSha256": "ee34b650e2ee7a18e511d19835a8062ba2d0230dc0decd030e25abf2da8b8ebd"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-fcp-exp4-korean-devtools-run-3.json.gz",
+          "sha256": "14d4c71f3808fb16c95b4883f4ad6d49f5cb25cb55691235dd096a2a7ae39be0",
+          "uncompressedSha256": "c66a165ad0cf030d30e4672b73dff260a22a8e8e0fcc2dc61123ef4311563d1c"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-fcp-exp5-latin-devtools.json",
+      "measuredSha": "fff007f",
+      "throttlingMethod": "devtools",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3210/",
+      "variant": "fff007f에서 홈 셸의 한글 제목과 설명만 라틴 문자로 임시 치환한 재현 측정이다. 해당 커밋을 그대로 빌드한 것이 아니다.",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-fcp-exp5-latin-devtools-run-1.json.gz",
+          "sha256": "6da70b9c77d1c746539b9d0c98d51a52b4a0a2435d578235bc0464147d155f9d",
+          "uncompressedSha256": "9e205d874f125a5857f2e155941611807e34cdee9c832b4d7b7ec95d7158d6a2"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-fcp-exp5-latin-devtools-run-2.json.gz",
+          "sha256": "1bb099e70d72697c1f285e55aceb20e14698fbb77e9aa59737f0dae31531a896",
+          "uncompressedSha256": "24ecd4afee7c5ffe70898a166cfe9ce1c8c37f8715f38815029ab3edb0780cdc"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-fcp-exp5-latin-devtools-run-3.json.gz",
+          "sha256": "6d9325084677e72a499b007087ee1738ec88f76cd9cb1cdfb1d734dc06297dac",
+          "uncompressedSha256": "0ece1f389887b02d7e72f5e2b22e3a767257924cb27c68d8b56736cb0a83f99d"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-fcp-exp6-before-devtools.json",
+      "measuredSha": "3aa1981",
+      "throttlingMethod": "devtools",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3211/",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-fcp-exp6-before-devtools-run-1.json.gz",
+          "sha256": "a6033e0fb6a5c7c4ce32935145ce5c920201f29495d43723055de1a6b8d6b84c",
+          "uncompressedSha256": "39bf9d2a0416a983999f2b750f4dd6fa3ca1f455b05314811edab73f3b9d3ff7"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-fcp-exp6-before-devtools-run-2.json.gz",
+          "sha256": "fca1a9480946ce51159a0061b103a11073e2b9cd391f341e961569b4a10a6ab6",
+          "uncompressedSha256": "05d79da7edc17f610a1b6d65d79d635696e3716d484c4324221712cf6dc6e485"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-fcp-exp6-before-devtools-run-3.json.gz",
+          "sha256": "b90e7dfea1359fc72b1aa30cb84706f749bd8f69f7f4067567ebbbe837f40eb5",
+          "uncompressedSha256": "ef471d9be7d2fa605df05bdc9928258888fdab41b35869bdd4cf25786b21f4fd"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-home-after.json",
+      "measuredSha": "0785d2c",
+      "throttlingMethod": "simulate",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3210/",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-home-after-run-1.json.gz",
+          "sha256": "80acb37c226a4471aa294c1fc1a796530283b3221417effad6e76f4b4f5f6b4a",
+          "uncompressedSha256": "db55f3d944c59cd327f016b5b36322fd0038b5a5904e62ec394431ddba3988ed"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-home-after-run-2.json.gz",
+          "sha256": "41d19888bcff91334ccaf597e217f5836ff9d74e10a8b3309d046e50055bc51b",
+          "uncompressedSha256": "1c7b96d15508d93775a6f8bb268ff50d3bff33fd479b6f937de771cd62b9162a"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-home-after-run-3.json.gz",
+          "sha256": "54c9a0ea5a8f7e471c9f37bc83a1183a1c2cf143b1b34ddc84b719d76f2354af",
+          "uncompressedSha256": "ebeb98a6191c31cbd41b8ff41727297a0720736e798f71da265c5e5ec69846cd"
+        },
+        {
+          "run": 4,
+          "file": "lighthouse-home-after-run-4.json.gz",
+          "sha256": "68c4de2d2d7679d4b85ea33db05646281410dad08486d3b4b083657e1f9a4750",
+          "uncompressedSha256": "bf7e5dcfd834d6cc7bba8ee38d3d9f5e73599ee922307893844e37d04692dace"
+        },
+        {
+          "run": 5,
+          "file": "lighthouse-home-after-run-5.json.gz",
+          "sha256": "69fae2a4b2c17b78516be12777cbcc6e351a99feeac061e3a7496879748136a7",
+          "uncompressedSha256": "2f5c6bdd36bf7ba37a12022aa0e8a665c309acf8450ecc8e65874601aed946b2"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-home-before.json",
+      "measuredSha": "3aa1981",
+      "throttlingMethod": "simulate",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3213/",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-home-before-run-1.json.gz",
+          "sha256": "ff05c896907236e45c3b000c157beadcb8b2a721e007570f97fecdd8764ccd2c",
+          "uncompressedSha256": "276db9417bbe58626c714aa6bf8a1351e8aa5053fc86497df32858bad367db70"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-home-before-run-2.json.gz",
+          "sha256": "a3074cb35650fab320c885cb9a04ccfa7994fb6433aa8f56d7f0c1ef3cec89ea",
+          "uncompressedSha256": "edb6e91d73953d44be5e4d6a06de8accb20ac29bc0b2996b438f9949c0d5f55e"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-home-before-run-3.json.gz",
+          "sha256": "249774c877c1bcff0ba734b9063ccc6d94adeca27dcc40ac55cde152107a1574",
+          "uncompressedSha256": "b83f7e9f8e819448f6bc4b7e408073ca81299634d6f8b6945d87edbb7cbadf35"
+        },
+        {
+          "run": 4,
+          "file": "lighthouse-home-before-run-4.json.gz",
+          "sha256": "4dcbb2fd6731065d0a6916c5c407f6fb2b2376278d39f9020018c9d40e822985",
+          "uncompressedSha256": "c3de22e1f429ed536ae4115ef66280d0c2707af089f0619a369b0f1ab3300d0d"
+        },
+        {
+          "run": 5,
+          "file": "lighthouse-home-before-run-5.json.gz",
+          "sha256": "cae1d7ac09b5ac66414db7ce8f310ff14ed3a27e8a143cb3f183daaef9adafb0",
+          "uncompressedSha256": "c398c4e8d85852c0d8d3e89cade20a28dba4c86367846a9c1193defc2f2cc1e3"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-products-after.json",
+      "measuredSha": "36e31e0",
+      "throttlingMethod": "simulate",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3210/products",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-products-after-run-1.json.gz",
+          "sha256": "8f92c2d1d22e7ca74124b104b7f8842e678bf48a21ab2bf36b13920f682c3c4a",
+          "uncompressedSha256": "855aa2f027fbc515840e4a7bf57d598b4df60dd7486c90ab3b3ec25220ebb0d0"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-products-after-run-2.json.gz",
+          "sha256": "60858cc49131e235422c93ac314649c62559768a5aeb3a079ebc572992060b55",
+          "uncompressedSha256": "649548a0105a6e7c2e77b6248229722bf90e6ae0ac59fd4208a4cc00fb61875a"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-products-after-run-3.json.gz",
+          "sha256": "8af1974187c216778264558587568ab53321a9ecc7a2b1e9b131de3f3a2c3172",
+          "uncompressedSha256": "7221511969d00b03a728d7c071a7c961129e437942ca8583f0147719591ef582"
+        },
+        {
+          "run": 4,
+          "file": "lighthouse-products-after-run-4.json.gz",
+          "sha256": "289d92b6d45421982145913e652b70b9cfe558b20adc193cb484303e424c7b3c",
+          "uncompressedSha256": "731d0a99a0bab8fd9c4c2450c196d5d8984788ab1376da901853853a2def92d7"
+        },
+        {
+          "run": 5,
+          "file": "lighthouse-products-after-run-5.json.gz",
+          "sha256": "ea6d353468b5cb4e1ccecfbc59e5e0fc54f0d38807674b46ed1c6ad7cfa663f5",
+          "uncompressedSha256": "5284b6689c4846a2bccdc5dd91cede491ad9d2833247834e0614a8c15da44513"
+        }
+      ]
+    },
+    {
+      "extractedArtifact": "lighthouse-products-before.json",
+      "measuredSha": "3aa1981",
+      "throttlingMethod": "simulate",
+      "blockedUrlPatterns": null,
+      "url": "http://127.0.0.1:3213/products",
+      "runs": [
+        {
+          "run": 1,
+          "file": "lighthouse-products-before-run-1.json.gz",
+          "sha256": "20b497ff10d7f2f0b9e0968013472f25ad88801dede9bfaa8009b8830a083902",
+          "uncompressedSha256": "3689cb58f148bc03795563d26bf70494478b853b134112bdc3301629a23d189f"
+        },
+        {
+          "run": 2,
+          "file": "lighthouse-products-before-run-2.json.gz",
+          "sha256": "6320cd6189d248ca8e686ab57461690bebc13dbc32311c8ce49c6116260cadae",
+          "uncompressedSha256": "2c803d0de2bbc79cb6f5e6e36903197619500ef420ffc180338697a51be72ede"
+        },
+        {
+          "run": 3,
+          "file": "lighthouse-products-before-run-3.json.gz",
+          "sha256": "91719d665be66e18ecd1c5f6afd57660129a1fcd643254fb3ee51508a348367c",
+          "uncompressedSha256": "71aa3d14cec4cb331de372ea13f47cc6c7ae44b4727f254efe459c50e9ca28d9"
+        },
+        {
+          "run": 4,
+          "file": "lighthouse-products-before-run-4.json.gz",
+          "sha256": "14a0a5145e42ec18fd7ff94c49704ee6168b1a1f850c69d4b8ef0937177060b7",
+          "uncompressedSha256": "7ee8409d755c3c04a92769c38c46243de7aabe86beca3a30958acf7394b03fea"
+        },
+        {
+          "run": 5,
+          "file": "lighthouse-products-before-run-5.json.gz",
+          "sha256": "2f7d1a4ce2650a9903edf2aceb1beb854431b2fb3783ccdc13e78b375aae59b1",
+          "uncompressedSha256": "600a42174b164d673eaf04515f0bb51e2c20268f93c5ed0f814e03768b5b1b88"
+        }
+      ]
+    }
+  ]
+}

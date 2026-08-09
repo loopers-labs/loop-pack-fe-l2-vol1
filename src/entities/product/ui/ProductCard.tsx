@@ -20,9 +20,11 @@ export default function ProductCard({ product, actions }: ProductCardProps) {
         width={400}
         height={400}
       />
-      <p>{product.brand}</p>
-      <h3>{product.name}</h3>
-      <strong>{formatWon(product.price)}</strong>
+      <p className="week05-product-brand">{product.brand}</p>
+      <h3 className="week05-product-name">{product.name}</h3>
+      <strong className="week05-product-price">
+        {formatWon(product.price)}
+      </strong>
       {actions ? <div>{actions}</div> : null}
     </article>
   )

@@ -5,7 +5,9 @@ import type {
 } from '@/entities/product/model/product'
 
 // mock API 전용 제어값이다. 사용자 URL 상태나 목록 조건 계약에 넣지 않는다.
-export type MockApiScenario = 'empty' | 'error'
+// slow는 7주차 측정용이다. 정상과 같은 응답을 1.5초 뒤에 돌려주는 재현 조건이며,
+// 개선의 대상이 아니다. 이 지연을 줄여서 좋아진 수치는 과제 결과가 아니다.
+export type MockApiScenario = 'empty' | 'error' | 'slow'
 
 export const categories: Category[] = [
   { id: 'casual', name: '캐주얼' },
@@ -358,9 +360,14 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct)
 
-const mockDelayMs = process.env.NODE_ENV === 'test' ? 0 : 500
+// 지연 길이는 호출자인 route가 정한다. scenario 판정을 여기로 내리면
+// 데이터 모듈이 URL 계약을 알게 되고, route마다 다른 지연을 줄 수도 없다.
+// 테스트에서는 어떤 요청 값이 와도 0으로 눌러 계약 검증이 실제로 기다리지 않게 한다.
+export const MOCK_DELAY_MS = 500
+export const SLOW_SCENARIO_DELAY_MS = 1_500
 
-export const waitForMockApi = () =>
+export const waitForMockApi = (requestedDelayMs = MOCK_DELAY_MS) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, mockDelayMs)
+    const delayMs = process.env.NODE_ENV === 'test' ? 0 : requestedDelayMs
+    setTimeout(resolve, delayMs)
   })

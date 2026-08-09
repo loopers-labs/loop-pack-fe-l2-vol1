@@ -1,73 +1,32 @@
-'use client'
+import { Suspense } from 'react'
+import HeroSection from './HeroSection'
+import HomeContentPrefetch from './HomeContentPrefetch'
 
-import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
-import { errorMessageOf, isRetryable } from '@/shared/api/http'
-import { homeQuery } from '@/_pages/home/api/home'
+// 홈의 서버 셸이다. 느린 홈 응답과 무관한 것만 여기 둔다.
+//
+// 이전에는 이 컴포넌트가 client였고 응답 전에 early return해서 Hero와 제목과 설명이
+// 초기 HTML에서 통째로 빠졌다. 그래서 브라우저는 LCP 후보 이미지의 존재조차
+// 응답이 온 뒤에야 알 수 있었다.
+//
+// 문구는 배너 응답이 아니라 이 셸이 소유한다. 화면에 보이던 문장을 그대로 옮겨서
+// 렌더링 경계만 바꾸고 콘텐츠는 건드리지 않는다. 응답의 banner는 계약 그대로 둔다.
+const heroTitle = '매일 새롭게 발견하는 취향'
+const heroDescription = '지금 가장 사랑받는 상품을 만나보세요.'
 
 export default function HomePage() {
-  const { data, isPending, isError, error, refetch } = useQuery(homeQuery())
-
-  if (isPending) {
-    return (
-      <main className="week05-section">
-        <p>홈을 불러오는 중입니다.</p>
-      </main>
-    )
-  }
-
-  if (isError) {
-    return (
-      <main className="week05-section">
-        <p>{errorMessageOf(error, '홈 데이터를 불러오지 못했습니다.')}</p>
-        {/* 400대는 같은 요청을 다시 보내도 같은 실패다. 홈에는 되돌릴 조건이 없으므로
-            재시도 대신 다른 화면으로 나가는 길을 준다. */}
-        {isRetryable(error) ? (
-          <button type="button" onClick={() => refetch()}>
-            다시 시도
-          </button>
-        ) : (
-          <Link href="/products">상품 목록으로</Link>
-        )}
-      </main>
-    )
-  }
-
-  const productSections = [
-    { title: '인기 상품', products: data.popularProducts },
-    { title: '신상품', products: data.newProducts },
-  ]
-
   return (
     <main>
-      <section className="week05-hero">
-        <p>{data.banner.description}</p>
-        <h1>{data.banner.title}</h1>
-      </section>
-
-      <section className="week05-section">
-        <h2>카테고리</h2>
-        <div className="week05-categories">
-          {data.categories.map((category) => (
-            <Link key={category.id} href={`/products?category=${category.id}`}>
-              {category.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* 상품이 비어도 배너와 카테고리는 그대로 둔다. 빈 것은 상품 섹션뿐이다. */}
-      {productSections.map(({ title, products }) => (
-        <section className="week05-section" key={title}>
-          <h2>{title}</h2>
-          {products.length === 0 ? (
-            <p>아직 보여줄 상품이 없습니다.</p>
-          ) : (
-            <ProductGrid products={products} />
-          )}
-        </section>
-      ))}
+      <HeroSection title={heroTitle} description={heroDescription} />
+      {/* 서버 조회는 이 경계 안에서만 기다린다. Hero 셸은 먼저 전송된다. */}
+      <Suspense
+        fallback={
+          <section className="week05-section">
+            <p>Loading home…</p>
+          </section>
+        }
+      >
+        <HomeContentPrefetch />
+      </Suspense>
     </main>
   )
 }
