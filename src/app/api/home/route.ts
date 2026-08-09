@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { categories, homeBanner, products, waitForMockApi } from "@/app/api/_data/commerce";
-import type { ApiErrorResponse, HomeResponse, MockApiScenario } from "@/types/commerce";
+import {
+  categories,
+  homeBanner,
+  products,
+  waitForMockApi,
+} from "@/app/api/_data/commerce";
+import type { ApiErrorResponse } from "@/shared/api";
+import type { MockApiScenario } from "@/entities/product";
+import type { HomeResponse } from "@/_pages/home";
 
-const scenarioValues = ["empty", "error", "slow"] as const satisfies
-  readonly MockApiScenario[];
+const scenarioValues = [
+  "empty",
+  "error",
+  "slow",
+] as const satisfies readonly MockApiScenario[];
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);

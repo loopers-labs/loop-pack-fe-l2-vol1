@@ -28,22 +28,12 @@ describe("GET /api/home", () => {
       { id: "home", name: "홈" },
       { id: "digital", name: "디지털" },
     ]);
-    expect(body.popularProducts.map((product: { id: string }) => product.id)).toEqual([
-      "p21",
-      "p11",
-      "p15",
-      "p8",
-      "p22",
-      "p30",
-    ]);
-    expect(body.newProducts.map((product: { id: string }) => product.id)).toEqual([
-      "p26",
-      "p6",
-      "p27",
-      "p24",
-      "p1",
-      "p28",
-    ]);
+    expect(
+      body.popularProducts.map((product: { id: string }) => product.id),
+    ).toEqual(["p21", "p11", "p15", "p8", "p22", "p30"]);
+    expect(
+      body.newProducts.map((product: { id: string }) => product.id),
+    ).toEqual(["p26", "p6", "p27", "p24", "p1", "p28"]);
   });
 
   it("keeps banner and categories in the empty scenario", async () => {
@@ -58,7 +48,9 @@ describe("GET /api/home", () => {
   it("returns a deterministic error scenario", async () => {
     const response = await request("?scenario=error");
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ message: "홈 데이터를 불러오지 못했습니다." });
+    expect(await response.json()).toEqual({
+      message: "홈 데이터를 불러오지 못했습니다.",
+    });
   });
 
   it("keeps the home response pending for 1.5 seconds in the slow scenario", async () => {
@@ -68,6 +60,7 @@ describe("GET /api/home", () => {
     let settled = false;
     const responsePromise = request("?scenario=slow").then((response) => {
       settled = true;
+
       return response;
     });
 
@@ -88,6 +81,8 @@ describe("GET /api/home", () => {
     const response = await request("?scenario=unknown");
 
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
+    expect(await response.json()).toEqual({
+      message: "요청 조건을 확인해주세요.",
+    });
   });
 });

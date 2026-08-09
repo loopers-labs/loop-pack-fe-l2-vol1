@@ -1,0 +1,19 @@
+/* app 라우트와 여러 페이지가 함께 쓰는 도메인 무관 레이아웃 유틸.
+   색상 토큰은 조상 .page(_app/styles/app.module.css) 에서 상속받는다. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.sectionTitle {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.status {
+  padding: 64px 0;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 16px;
+}

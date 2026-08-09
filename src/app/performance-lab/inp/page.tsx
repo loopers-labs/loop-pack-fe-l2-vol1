@@ -29,11 +29,14 @@ function PerformanceProductCard({
 }: {
   product: PerformanceLabProduct;
 }) {
-  const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds);
+  // 배열 전체가 아니라 자기 id의 boolean만 구독한다.
+  // 배열을 구독하면 토글마다 새 참조라 모든 카드가 리렌더되지만, boolean은 값이 안 바뀐 카드는 Object.is로 걸러져 리렌더링이 스킵된다.
+  const selected = usePerformanceWishlist((state) =>
+    state.wishlistIds.includes(product.id),
+  );
   const toggleWishlist = usePerformanceWishlist(
     (state) => state.toggleWishlist,
   );
-  const selected = wishlistIds.includes(product.id);
   const presentation = calculateCardPresentation(product.id, selected);
 
   return (

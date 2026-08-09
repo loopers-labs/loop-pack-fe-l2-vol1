@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Providers } from "./providers";
+import "@/_app/styles/globals.css";
+import { Providers } from "@/_app/providers";
+import { SITE_URL } from "@/shared/api";
+import { SITE_NAME, SITE_DESCRIPTION, baseOpenGraph } from "@/shared/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +16,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Commerce",
-  description: "Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.",
+  // 상대 image·url 을 절대 URL 로 바꾸는 기준. 서버 fetch base 와 같은 origin(APP_ORIGIN)을 쓴다.
+  metadataBase: new URL(SITE_URL),
+  // 자식 페이지 title 은 "%s | Commerce" 로 합성, 미지정 시 default 사용.
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    ...baseOpenGraph,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

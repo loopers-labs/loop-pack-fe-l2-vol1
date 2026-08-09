@@ -1,0 +1,37 @@
+/* 페이지네이션 — 도메인·URL 을 모르는 순수 컴포넌트의 스타일.
+   색상·간격·모서리 토큰은 조상 .page 에서 상속받는다. */
+.pagination {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--space-lg);
+}
+
+.pagination button {
+  padding: 10px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.pagination button:disabled {
+  color: var(--color-subtle);
+  cursor: not-allowed;
+}
+
+.pagination button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
