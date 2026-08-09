@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
 const request = (query = "") =>
@@ -21,6 +21,11 @@ const allProductIds = async (sort: string) => {
 const hugePositiveInteger = "9".repeat(400);
 
 describe("GET /api/products", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+  });
+
   it("preserves Week 04 field shape while using the mapped source identity", async () => {
     const response = await request();
     const body = await response.json();
@@ -67,7 +72,9 @@ describe("GET /api/products", () => {
       sizes: [],
     });
 
-    const allCategoryBody = await (await request("?category=all&pageSize=24")).json();
+    const allCategoryBody = await (
+      await request("?category=all&pageSize=24")
+    ).json();
     expect(allCategoryBody.totalCount).toBe(30);
   });
 
@@ -76,21 +83,50 @@ describe("GET /api/products", () => {
     const secondPageBody = await (await request("?page=2&pageSize=24")).json();
     const products = [...body.products, ...secondPageBody.products];
 
-    expect(products.filter((product: { id: string }) => ["p1", "p6", "p11", "p16", "p21"].includes(product.id)))
-      .toMatchObject([
-        {
-          id: "p1",
-          brand: "Loopers Select",
-          name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
-          category: "casual",
-          price: 79000,
-          originalPrice: null,
-        },
-        { id: "p6", name: "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502", category: "fashion", price: 69000 },
-        { id: "p11", brand: "인스테드", name: "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml", category: "goods", price: 48000, originalPrice: 58000 },
-        { id: "p16", brand: "스탠리", name: "스탠리 클래식 런치박스", category: "home", price: 75000, originalPrice: 89000 },
-        { id: "p21", brand: "메이커스", name: "메이커스 투명케이스", category: "digital", price: 23000, originalPrice: 29000 },
-      ]);
+    expect(
+      products.filter((product: { id: string }) =>
+        ["p1", "p6", "p11", "p16", "p21"].includes(product.id),
+      ),
+    ).toMatchObject([
+      {
+        id: "p1",
+        brand: "Loopers Select",
+        name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
+        category: "casual",
+        price: 79000,
+        originalPrice: null,
+      },
+      {
+        id: "p6",
+        name: "WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502",
+        category: "fashion",
+        price: 69000,
+      },
+      {
+        id: "p11",
+        brand: "인스테드",
+        name: "하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml",
+        category: "goods",
+        price: 48000,
+        originalPrice: 58000,
+      },
+      {
+        id: "p16",
+        brand: "스탠리",
+        name: "스탠리 클래식 런치박스",
+        category: "home",
+        price: 75000,
+        originalPrice: 89000,
+      },
+      {
+        id: "p21",
+        brand: "메이커스",
+        name: "메이커스 투명케이스",
+        category: "digital",
+        price: 23000,
+        originalPrice: 29000,
+      },
+    ]);
   });
 
   it("returns one unique local image for every product", async () => {
@@ -104,11 +140,15 @@ describe("GET /api/products", () => {
       expect(image).toMatch(/^\/images\/products\/p\d+\.jpg$/);
     });
     expect(new Set(images).size).toBe(30);
-    expect(images.some((image: string) => image.startsWith("http"))).toBe(false);
+    expect(images.some((image: string) => image.startsWith("http"))).toBe(
+      false,
+    );
   });
 
   it("searches explicit brands and source names without case sensitivity", async () => {
-    const response = await request("?q=%EC%8A%A4%ED%83%A0%EB%A6%AC&pageSize=24");
+    const response = await request(
+      "?q=%EC%8A%A4%ED%83%A0%EB%A6%AC&pageSize=24",
+    );
     const body = await response.json();
     expect(body.products.map((product: { id: string }) => product.id)).toEqual([
       "p16",
@@ -117,13 +157,19 @@ describe("GET /api/products", () => {
       "p20",
     ]);
 
-    const caseResponse = await request("?q=%20%20winter%20rocky%20%20&pageSize=24");
+    const caseResponse = await request(
+      "?q=%20%20winter%20rocky%20%20&pageSize=24",
+    );
     const caseBody = await caseResponse.json();
-    expect(caseBody.products.map((product: { id: string }) => product.id)).toEqual(["p1"]);
+    expect(
+      caseBody.products.map((product: { id: string }) => product.id),
+    ).toEqual(["p1"]);
   });
 
   it("filters category and sorts popularity deterministically", async () => {
-    const response = await request("?category=digital&sort=popular&pageSize=24");
+    const response = await request(
+      "?category=digital&sort=popular&pageSize=24",
+    );
     const body = await response.json();
     expect(body.products.map((product: { id: string }) => product.id)).toEqual([
       "p21",
@@ -135,12 +181,16 @@ describe("GET /api/products", () => {
     ]);
     expect(
       body.products
-        .filter((product: { id: string }) => ["p22", "p30"].includes(product.id))
-        .map((product: { id: string; rating: number; reviewCount: number }) => ({
-          id: product.id,
-          rating: product.rating,
-          reviewCount: product.reviewCount,
-        })),
+        .filter((product: { id: string }) =>
+          ["p22", "p30"].includes(product.id),
+        )
+        .map(
+          (product: { id: string; rating: number; reviewCount: number }) => ({
+            id: product.id,
+            rating: product.rating,
+            reviewCount: product.reviewCount,
+          }),
+        ),
     ).toEqual([
       { id: "p22", rating: 4.6, reviewCount: 689 },
       { id: "p30", rating: 4.5, reviewCount: 689 },
@@ -148,26 +198,146 @@ describe("GET /api/products", () => {
   });
 
   it.each([
-    ["latest", [
-      "p26", "p6", "p27", "p24", "p1", "p28", "p19", "p2", "p29", "p11",
-      "p22", "p3", "p30", "p7", "p16", "p12", "p9", "p15", "p8", "p13",
-      "p4", "p18", "p21", "p5", "p20", "p25", "p10", "p17", "p14", "p23",
-    ]],
-    ["popular", [
-      "p21", "p11", "p15", "p8", "p22", "p30", "p14", "p18", "p6", "p12",
-      "p23", "p16", "p5", "p25", "p20", "p10", "p1", "p24", "p13", "p7",
-      "p4", "p28", "p2", "p17", "p27", "p9", "p29", "p3", "p19", "p26",
-    ]],
-    ["price-asc", [
-      "p29", "p30", "p25", "p21", "p24", "p15", "p3", "p22", "p2", "p23",
-      "p17", "p20", "p11", "p28", "p14", "p9", "p12", "p19", "p6", "p13",
-      "p26", "p16", "p1", "p10", "p8", "p5", "p4", "p18", "p27", "p7",
-    ]],
-    ["price-desc", [
-      "p7", "p27", "p18", "p4", "p5", "p8", "p10", "p1", "p16", "p26",
-      "p6", "p13", "p19", "p12", "p9", "p14", "p28", "p11", "p20", "p17",
-      "p23", "p2", "p22", "p3", "p15", "p24", "p21", "p25", "p30", "p29",
-    ]],
+    [
+      "latest",
+      [
+        "p26",
+        "p6",
+        "p27",
+        "p24",
+        "p1",
+        "p28",
+        "p19",
+        "p2",
+        "p29",
+        "p11",
+        "p22",
+        "p3",
+        "p30",
+        "p7",
+        "p16",
+        "p12",
+        "p9",
+        "p15",
+        "p8",
+        "p13",
+        "p4",
+        "p18",
+        "p21",
+        "p5",
+        "p20",
+        "p25",
+        "p10",
+        "p17",
+        "p14",
+        "p23",
+      ],
+    ],
+    [
+      "popular",
+      [
+        "p21",
+        "p11",
+        "p15",
+        "p8",
+        "p22",
+        "p30",
+        "p14",
+        "p18",
+        "p6",
+        "p12",
+        "p23",
+        "p16",
+        "p5",
+        "p25",
+        "p20",
+        "p10",
+        "p1",
+        "p24",
+        "p13",
+        "p7",
+        "p4",
+        "p28",
+        "p2",
+        "p17",
+        "p27",
+        "p9",
+        "p29",
+        "p3",
+        "p19",
+        "p26",
+      ],
+    ],
+    [
+      "price-asc",
+      [
+        "p29",
+        "p30",
+        "p25",
+        "p21",
+        "p24",
+        "p15",
+        "p3",
+        "p22",
+        "p2",
+        "p23",
+        "p17",
+        "p20",
+        "p11",
+        "p28",
+        "p14",
+        "p9",
+        "p12",
+        "p19",
+        "p6",
+        "p13",
+        "p26",
+        "p16",
+        "p1",
+        "p10",
+        "p8",
+        "p5",
+        "p4",
+        "p18",
+        "p27",
+        "p7",
+      ],
+    ],
+    [
+      "price-desc",
+      [
+        "p7",
+        "p27",
+        "p18",
+        "p4",
+        "p5",
+        "p8",
+        "p10",
+        "p1",
+        "p16",
+        "p26",
+        "p6",
+        "p13",
+        "p19",
+        "p12",
+        "p9",
+        "p14",
+        "p28",
+        "p11",
+        "p20",
+        "p17",
+        "p23",
+        "p2",
+        "p22",
+        "p3",
+        "p15",
+        "p24",
+        "p21",
+        "p25",
+        "p30",
+        "p29",
+      ],
+    ],
   ])("returns the complete %s order", async (sort, expectedIds) => {
     expect(await allProductIds(sort)).toEqual(expectedIds);
   });
@@ -197,14 +367,18 @@ describe("GET /api/products", () => {
   ])("rejects invalid query %s", async (query) => {
     const response = await request(query);
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
+    expect(await response.json()).toEqual({
+      message: "요청 조건을 확인해주세요.",
+    });
   });
 
   it("validates request inputs before applying the error scenario", async () => {
     const response = await request("?scenario=error&page=0");
 
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
+    expect(await response.json()).toEqual({
+      message: "요청 조건을 확인해주세요.",
+    });
   });
 
   it("supports deterministic empty and error scenarios", async () => {
@@ -228,6 +402,33 @@ describe("GET /api/products", () => {
 
     const errorResponse = await request("?scenario=error");
     expect(errorResponse.status).toBe(500);
-    expect(await errorResponse.json()).toEqual({ message: "상품 목록을 불러오지 못했습니다." });
+    expect(await errorResponse.json()).toEqual({
+      message: "상품 목록을 불러오지 못했습니다.",
+    });
+  });
+
+  it("keeps the product response pending for 1.5 seconds in the slow scenario", async () => {
+    vi.useFakeTimers();
+    vi.stubEnv("NODE_ENV", "production");
+
+    let settled = false;
+    const responsePromise = request("?scenario=slow").then((response) => {
+      settled = true;
+
+      return response;
+    });
+
+    await vi.advanceTimersByTimeAsync(1_499);
+    expect(settled).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    const response = await responsePromise;
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.products).toHaveLength(12);
+    expect(body.totalCount).toBe(30);
+    expect(body.page).toBe(1);
+    expect(body.pageSize).toBe(12);
   });
 });
