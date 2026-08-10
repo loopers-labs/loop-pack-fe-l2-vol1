@@ -105,7 +105,7 @@ describe("HomePageClient", () => {
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
     expect(
-      await screen.findByRole("heading", { name: "매일 새롭게 발견하는 취향", level: 2 }),
+      await screen.findByRole("heading", { name: "매일 새롭게 발견하는 취향", level: 1 }),
     ).toBeInTheDocument();
     expect(mockedGetHome).toHaveBeenCalledTimes(2);
   });
@@ -154,7 +154,7 @@ describe("HomePageClient", () => {
     renderHomePageClient();
 
     expect(
-      await screen.findByRole("heading", { name: "매일 새롭게 발견하는 취향", level: 2 }),
+      await screen.findByRole("heading", { name: "매일 새롭게 발견하는 취향", level: 1 }),
     ).toBeInTheDocument();
     expect(document.querySelector('img[src="/images/week-07/hero-1600.webp"]')).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "뷰티·잡화" })).toHaveAttribute(
