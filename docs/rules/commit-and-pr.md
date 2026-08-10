@@ -11,8 +11,11 @@
 커밋 메시지는 Conventional Commits 형식을 따른다.
 
 ```txt
-type(scope): subject
+type: 한국어 설명
 ```
+
+- 설명은 한국어로 작성한다.
+- scope를 사용하지 않으며 `type(scope)` 형식은 허용하지 않는다.
 
 허용하는 type:
 
@@ -30,7 +33,7 @@ type(scope): subject
 ```txt
 chore: commitlint 게이트 추가
 
-docs(agent): AGENTS 진입점 설명 보강
+docs: 8주차 테스트 전략 문서화
 ```
 
 ## Git hook
@@ -44,7 +47,8 @@ docs(agent): AGENTS 진입점 설명 보강
 
 - `--no-verify`로 hook을 우회하지 않는다.
 - hook 실패는 메시지나 설정을 고쳐 해결한다.
-- 형식을 맞추기 위해 의미 없는 type이나 scope를 붙이지 않는다.
+- 형식을 맞추기 위해 의미 없는 type을 붙이지 않는다.
+- scope를 추가해 변경 범위를 표현하지 않는다. 변경 범위는 한국어 설명에 드러낸다.
 
 ## PR 설명 기준
 

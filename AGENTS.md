@@ -36,6 +36,7 @@
 - `any`, `as any`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `eslint-disable`로 문제를 숨기지 않는다.
 - 실패하는 lint, typecheck, build를 우회하지 않는다.
 - commitlint가 거부하는 커밋 메시지를 억지로 통과시키지 않는다.
+- 커밋 메시지는 `type: 한국어 설명` 형식을 사용하며 scope를 포함하지 않는다. 예: `docs: 8주차 테스트 전략 문서화`.
 - `--no-verify`로 Git hook을 우회하지 않는다.
 - 빈 `catch` 블록을 두지 않는다. 에러는 처리하거나 명시적으로 전파한다.
 - UI 변경은 접근성 요구사항을 함께 만족해야 한다.
