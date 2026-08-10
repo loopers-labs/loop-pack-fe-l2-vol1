@@ -11,12 +11,12 @@
 
 모든 작업에서 `docs/rules` 문서를 전부 먼저 읽을 필요는 없다. 아래 상황에 해당할 때 필요한 문서를 참조한다.
 
-- 코드 작성 방식, React/TypeScript 스타일, export 기준, 런타임 입력 검증 기준이 필요하면 `docs/rules/conventions.md`를 본다.
+- 코드 작성 규칙을 폭넓게 찾으려면 `docs/rules/conventions/README.md`에서 필요한 leaf를 고른다. TypeScript는 `docs/rules/conventions/typescript.md`, React/Hook/스타일은 `docs/rules/conventions/react.md`, 런타임 입력 검증은 `docs/rules/conventions/runtime-boundaries.md`, 파일/export와 AI 협업은 `docs/rules/conventions/exports-and-files.md`를 본다.
 - ESLint, Prettier, TypeScript 규칙의 의도나 금지 패턴을 확인해야 하면 `docs/rules/lint-and-format.md`를 본다.
-- 커밋 메시지 형식과 Git hook 게이트를 확인해야 하면 `docs/rules/commit-and-pr.md`를 본다.
-- 기능 배치, FSD 레이어, slice public API, `index.ts` export 기준이 필요하면 `docs/rules/fsd-architecture.md`를 본다. 이 저장소는 slice/entity root에 배럴 익스포트(`index.ts`)를 사용하지 않고 직접 파일 경로로 import한다. 단, 폴더로 승격한 컴포넌트 내부에서는 필요한 named export만 `index.ts`로 공개할 수 있다.
+- 커밋 메시지 형식과 Git hook 게이트는 `docs/rules/git/commits.md`, PR 설명 기준은 `docs/rules/git/pull-requests.md`를 본다.
+- 기능 배치와 FSD 레이어는 `docs/rules/architecture/fsd-layers.md`, slice import와 `index.ts` 기준은 `docs/rules/architecture/imports-and-public-api.md`, DTO/domain/Repository/Service 경계는 `docs/rules/architecture/domain-and-api-boundaries.md`를 본다. 이 저장소는 slice/entity root에 배럴 익스포트(`index.ts`)를 사용하지 않고 직접 파일 경로로 import한다. 단, 폴더로 승격한 컴포넌트 내부에서는 필요한 named export만 `index.ts`로 공개할 수 있다.
 - UI, form, interaction, loading/error/empty state를 바꾸면 `docs/rules/accessibility.md`를 본다.
-- 작업 완료 전 어떤 명령으로 검증할지 판단해야 하면 `docs/rules/testing.md`를 본다.
+- 작업 완료 전 명령과 변경 유형별 검증 기준은 `docs/rules/testing/verification.md`를 본다. 테스트 환경을 바꾸면 `docs/rules/testing/README.md`에서 Vitest, MSW, Playwright leaf를 고른다.
 - 변경 범위를 감사하거나 리뷰 기준을 맞춰야 하면 `docs/rules/audit.md`를 본다. OpenCode가 아닌 환경에서는 해당 문서와 `.opencode/agents/*.md`의 기준을 직접 적용한다.
 
 ## Source of Truth

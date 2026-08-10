@@ -1,8 +1,16 @@
 # 린트와 포맷 규칙
 
-이 문서는 현재 저장소에 적용된 ESLint, Prettier, TypeScript 규칙의 의도를 설명합니다. 실제 강제 규칙의 source of truth는 `eslint.config.mjs`, `.prettierrc`, `tsconfig*.json`입니다.
+## When to read
 
-## 실행 명령
+ESLint, Prettier, TypeScript 설정의 의도와 금지 패턴을 확인하거나 설정을 변경할 때 읽는다.
+
+## Source of truth
+
+실제 강제 규칙은 `eslint.config.mjs`, `.prettierrc`, `tsconfig*.json`이 우선한다. 이 문서는 그 규칙의 의도를 설명한다.
+
+## Rules
+
+### 실행 명령
 
 ```bash
 pnpm lint
@@ -14,7 +22,7 @@ pnpm build
 pnpm commitlint --edit <commit-msg-file>
 ```
 
-## Prettier
+### Prettier
 
 `.prettierrc` 기준:
 
@@ -25,7 +33,7 @@ pnpm commitlint --edit <commit-msg-file>
 
 Prettier는 포맷만 담당합니다. 코드 품질 판단은 ESLint와 TypeScript가 담당합니다.
 
-## TypeScript
+### TypeScript
 
 `tsconfig.json` 기준:
 
@@ -41,9 +49,9 @@ Prettier는 포맷만 담당합니다. 코드 품질 판단은 ESLint와 TypeScr
 
 사용하지 않는 코드, 런타임에 남는 TypeScript-only 문법, switch fallthrough는 허용하지 않습니다.
 
-## ESLint 핵심 규칙
+### ESLint 핵심 규칙
 
-### 우회 금지
+#### 우회 금지
 
 ESLint는 inline config를 허용하지 않습니다.
 
@@ -51,7 +59,7 @@ ESLint는 inline config를 허용하지 않습니다.
 - 사용하지 않는 disable 지시문은 error로 처리된다.
 - 규칙이 잘못되었다고 느껴지면 코드로 우회하지 말고 설정 변경의 근거를 문서화한다.
 
-### TypeScript
+#### TypeScript
 
 - strict type-aware rules를 사용한다.
 - `@typescript-eslint/no-explicit-any`: `any` 금지
@@ -65,7 +73,7 @@ ESLint는 inline config를 허용하지 않습니다.
 - Zod schema에서 파생되는 타입은 `z.infer<typeof Schema>`를 사용하고, schema와 같은 형태의 수동 타입을 중복 선언하지 않는다.
 - 런타임 검증이 필요한 경계에서는 `any`나 type assertion으로 외부 데이터를 믿지 않고 Zod `parse`/`safeParse`로 좁힌다.
 
-### React
+#### React
 
 - React recommended rules를 사용한다.
 - JSX runtime 설정을 사용한다.
@@ -83,13 +91,13 @@ ESLint는 inline config를 허용하지 않습니다.
 - `useSuspenseQuery`, `useSuspenseQueries`, `useSuspenseInfiniteQuery` import는 금지하고 `@suspensive/react-query`의 `SuspenseQuery`, `SuspenseQueries`, `SuspenseInfiniteQuery` 컴포넌트를 사용한다. `package.json`에서는 TanStack Query v5에 맞춰 `@suspensive/react-query`를 `@suspensive/react-query-5` alias로 설치한다.
 - JSX children에서 inline logical/ternary 조건 렌더링과 `.map()` 목록 렌더링을 제한한다. 조건은 `Show`, 목록은 `For`를 사용한다.
 
-### 접근성
+#### 접근성
 
 - `eslint-plugin-jsx-a11y` recommended 설정을 사용한다.
 - 정적 분석이 잡는 접근성 문제는 모두 수정한다.
 - 색 대비, 실제 키보드 흐름, 스크린 리더 문맥처럼 정적 분석이 놓치는 부분은 수동으로 확인한다.
 
-### 일반 JavaScript/TypeScript 품질
+#### 일반 JavaScript/TypeScript 품질
 
 - 모든 제어문은 중괄호를 사용한다.
 - `==`, `!=` 대신 `===`, `!==`를 사용한다.
@@ -104,7 +112,7 @@ ESLint는 inline config를 허용하지 않습니다.
 - FSD slice/entity root에는 `index.ts` Public API를 만들지 않고 실제 파일 경로를 직접 import한다. 폴더로 승격한 컴포넌트 내부의 선택적 `index.ts` 공개 경계에서는 필요한 named export만 명시하고 `export *`는 금지한다.
 - FSD `lib` segment에서 export되는 유틸리티는 namespace class의 static method로 묶는다. lint는 `lib` segment의 exported standalone function/arrow function을 제한하고, 세부 그룹명과 책임은 리뷰에서 확인한다. 단, React custom hook은 React 규약상 `use[A-Z0-9]...` 형태의 standalone function API가 필요하므로 이 제한에서 예외로 둔다.
 
-## lint-staged와 Git hook
+### lint-staged와 Git hook
 
 커밋 전 lint-staged가 실행됩니다.
 
@@ -118,3 +126,7 @@ ESLint는 inline config를 허용하지 않습니다.
 - 메시지는 Conventional Commits 형식을 따른다.
 
 `--no-verify`로 우회하지 않습니다. hook 실패는 코드, 설정, 커밋 메시지를 고쳐 해결합니다.
+
+## Verification
+
+변경한 설정이 담당하는 `pnpm lint`, `pnpm format:check`, `pnpm typecheck`를 직접 실행한다. 전체 완료 기준은 [`testing/verification.md`](testing/verification.md)를 따른다.

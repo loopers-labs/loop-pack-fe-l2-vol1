@@ -18,15 +18,18 @@ You audit whether code follows the repository's Feature-Sliced Design rules.
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/fsd-architecture.md`
-- `docs/rules/conventions.md`
+- `docs/rules/architecture/fsd-layers.md`
+- `docs/rules/architecture/imports-and-public-api.md`
+- `docs/rules/architecture/domain-and-api-boundaries.md`
+- `docs/rules/conventions/exports-and-files.md`
 
 ## Responsibilities
 
-- Check layer responsibility: `app`, `pages`, `widgets`, `features`, `entities`, `shared`.
-- Check import direction: `app -> pages -> widgets -> features -> entities -> shared`.
-- Check that slices expose cross-slice APIs through `index.ts` public APIs.
-- Detect deep imports into another slice's internal `ui`, `model`, `api`, or `lib` files.
+- Check layer responsibility: `app`, `views`, `widgets`, `features`, `entities`, `shared`. This repository uses `views` instead of the generic FSD `pages` name.
+- Check import direction: `app -> views -> widgets -> features -> entities -> shared`.
+- Check that consumers import actual module file paths and that slice/entity roots do not have `index.ts` public APIs.
+- Allow an `index.ts` only inside a promoted component folder, where it explicitly exposes necessary named exports without `export *` or internal implementation details.
+- Detect imports of implementation files that are explicitly private rather than treating this repository's required direct-file imports as deep-import violations.
 - Detect business/domain logic accumulating in bootstrap, route, page, or widget files.
 - Check co-location and folder promotion: code that moves together starts in one file, then graduates to a folder only when size, reuse, or responsibility split justifies it.
 - Check custom hook placement: state transitions, derived values, effects, and handler logic should live in co-located hooks or the slice `model`, not in UI component bodies.

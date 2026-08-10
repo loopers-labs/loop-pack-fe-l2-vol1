@@ -25,11 +25,11 @@ When changed files are needed, inspect the working tree with read-only git comma
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/conventions.md`
+- `docs/rules/conventions/README.md`
 - `docs/rules/lint-and-format.md`
-- `docs/rules/fsd-architecture.md`
+- `docs/rules/architecture/README.md`
 - `docs/rules/accessibility.md`
-- `docs/rules/testing.md`
+- `docs/rules/testing/verification.md`
 - `docs/rules/audit.md`
 
 ## Route to Auditors

@@ -232,4 +232,4 @@ pnpm build
 ### AI 활용
 
 - 상태 분류와 캐시 정책 설계, FSD 레이어 배치, persist·hydration 전략에 AI 도움을 받았습니다.
-- 최종 설계는 과제 명세의 checklist와 `docs/rules/fsd-architecture.md`를 기준으로 직접 검토했습니다.
+- 최종 설계는 과제 명세의 checklist와 `docs/rules/architecture/README.md`를 기준으로 직접 검토했습니다.

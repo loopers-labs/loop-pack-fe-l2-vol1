@@ -1,12 +1,16 @@
-# 커밋과 PR 규칙
+# 커밋 규칙
 
-이 문서는 커밋 메시지, Git hook, PR 설명의 의도를 설명합니다. 실제 커밋 메시지 검증의 source of truth는 `commitlint.config.cjs`이고, hook 실행 방식의 source of truth는 `.husky/*`입니다.
+## When to read
 
-## 목적
+커밋 메시지를 작성하거나 commitlint, lint-staged, Git hook 동작을 변경하거나 실패를 해결할 때 읽는다.
 
-커밋 메시지는 나중에 변경 이유를 추적하는 최소 단위입니다. AI가 만든 커밋도 사람이 만든 커밋과 같은 기준으로 읽혀야 하므로, 형식을 자동 검증합니다.
+## Source of truth
 
-## Commitlint
+실제 커밋 메시지 검증은 `commitlint.config.cjs`, hook 실행 방식은 `.husky/*`, staged 파일 처리는 `package.json`의 `lint-staged`가 우선한다.
+
+## Rules
+
+커밋 메시지는 나중에 변경 이유를 추적하는 최소 단위다. AI가 만든 커밋도 사람이 만든 커밋과 같은 기준으로 읽혀야 하므로 형식을 자동 검증한다.
 
 커밋 메시지는 Conventional Commits 형식을 따른다.
 
@@ -36,25 +40,23 @@ chore: commitlint 게이트 추가
 docs: 8주차 테스트 전략 문서화
 ```
 
-## Git hook
+### Git hook
 
 - `.husky/pre-commit`: staged 파일에 대해 lint-staged를 실행한다.
 - `.husky/commit-msg`: 커밋 메시지를 commitlint로 검증한다.
+- 두 hook 모두 `pnpm`을 우선 사용하고, 없으면 Corepack의 `pnpm`을 사용한다. 둘 다 없으면 실패하도록 둔다.
 
-두 hook 모두 `pnpm`을 우선 사용하고, 없으면 Corepack의 `pnpm`을 사용합니다. 둘 다 없으면 실패하도록 둡니다.
-
-## 우회 금지
+### 우회 금지
 
 - `--no-verify`로 hook을 우회하지 않는다.
 - hook 실패는 메시지나 설정을 고쳐 해결한다.
 - 형식을 맞추기 위해 의미 없는 type을 붙이지 않는다.
 - scope를 추가해 변경 범위를 표현하지 않는다. 변경 범위는 한국어 설명에 드러낸다.
 
-## PR 설명 기준
+## Verification
 
-PR 본문에는 최소한 다음을 남긴다.
+```bash
+pnpm commitlint --edit <commit-msg-file>
+```
 
-- 이번 변경의 설계 의도
-- AI가 생성한 부분과 사람이 직접 검토·수정한 부분
-- 실행했거나 의도적으로 생략한 검증 명령
-- 강한 lint 규칙이 있다면 그 규칙을 둔 이유와 조정 가능성
+커밋 시 pre-commit과 commit-msg hook을 우회하지 않고 통과해야 한다.
