@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useProductFilters } from '@/_pages/product-list/model/useProductFilters'
 import { SORT_OPTIONS } from '@/_pages/product-list/model/search-params'
-import type { Category } from '@/entities/product'
+import { PRODUCT_CATEGORY_FILTERS, type Category } from '@/entities/product'
 import styles from './ProductFilters.module.css'
 
 type ProductFiltersProps = {
@@ -25,8 +25,10 @@ export const ProductFilters = ({ categories }: ProductFiltersProps) => {
   }
 
   // select가 주는 event.target.value는 string이라, 유효한 리터럴 값으로 좁힌 뒤 세터에 넘긴다.
+  // 좁히는 기준은 URL이 허용하는 값 목록이다. 서버가 내려준 categories로 검증하면 조회가 실패해
+  // 목록이 비었을 때 카테고리 전환까지 막혀 실패 상태를 빠져나갈 수 없다.
   const handleCategoryChange = (value: string) => {
-    const nextCategory = value === 'all' ? 'all' : categories.find(({ id }) => id === value)?.id
+    const nextCategory = PRODUCT_CATEGORY_FILTERS.find((category) => category === value)
     if (!nextCategory) return
     setCategory(nextCategory)
   }

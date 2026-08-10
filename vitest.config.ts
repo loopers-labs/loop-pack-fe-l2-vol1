@@ -12,6 +12,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     // Route Handler 테스트는 app/ 아래에 있다. src만 보면 0개가 잡힌다.
-    include: ['src/**/*.test.ts', 'app/**/*.test.ts'],
+    // 컴포넌트 테스트는 .test.tsx라 확장자를 좁히면 조용히 스킵된다.
+    include: ['{src,app}/**/*.test.{ts,tsx}'],
   },
 })

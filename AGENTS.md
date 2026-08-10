@@ -6,15 +6,24 @@
 
 ## 프로젝트 구조
 
-- `src/app`: 페이지, 레이아웃, Route Handler와 라우트 전용 `_components`
-- `src/components/ui`: 재사용 가능한 공용 UI 컴포넌트
-- `src/hooks`: 공용 커스텀 훅
-- `src/utils`: 부수 효과가 없는 공용 유틸리티
-- `public`: 이미지와 폰트 등의 정적 자산
+Next.js 라우터는 저장소 루트의 `app/`이고, 화면 구현은 `src/` 아래 FSD 레이어에 둔다. `src/app`은 사용하지 않는다.
+
+- `app`: 라우트 파일(`layout.tsx`, `page.tsx`, `loading.tsx`, `error.tsx`)과 Route Handler
+  - `app/api`: mock 백엔드. `_data`에 fixture, `_types.ts`에 Route Handler 전용 응답 타입을 둔다
+- `src/_app`: 앱 초기화 — `providers`, `styles`, `ui`
+- `src/_pages`: 라우트 단위 조합과 페이지 고유 URL·화면 상태 — `home`, `product-list`
+- `src/widgets`: 여러 슬라이스를 조합하는 독립 UI 블록 — `header`, `product-card`
+- `src/features`: 사용자의 비즈니스 행위 — `add-to-cart`, `add-to-wishlist`
+- `src/entities`: 도메인 타입·상태와 도메인 자체의 표현 — `cart`, `product`, `wishlist`
+- `src/shared`: 도메인에 종속되지 않은 `api`, `lib`, `styles`, `ui`
+- `src/fonts`: 번들에 포함하는 폰트 파일
+- `public`: 이미지 등 정적 자산
 - `e2e`: Playwright E2E 테스트
 - `docs`: 주차별 과제 명세와 리뷰 기록
 
-라우트에서만 사용하는 UI는 해당 라우트의 `_components`에 두고, 여러 기능에서 재사용할 때만 공용 디렉터리로 이동한다.
+레이어 배치와 의존 방향, Public API 기준은 `.claude/rules/fsd-verification.md`를 따른다. 경계는 `eslint/fsd.config.mjs`의 `boundaries` 규칙으로도 검사한다.
+
+경로 별칭은 두 가지다. `@/*`는 `src/*`, `@app/*`는 루트 `app/*`을 가리킨다(`tsconfig.json`, `vitest.config.ts`).
 
 ## 개발 및 검증 명령어
 
@@ -23,14 +32,18 @@
 - `pnpm build`: 프로덕션 빌드를 생성하고 Next.js 통합 오류를 확인한다.
 - `pnpm start`: 완성된 프로덕션 빌드를 실행한다.
 - `pnpm lint`: Next.js 및 TypeScript ESLint 규칙을 검사한다.
+- `pnpm typecheck`: `tsc --noEmit`으로 타입을 검사한다.
 - `pnpm format`: Prettier로 저장소 전체를 포맷한다.
+- `pnpm test`: Vitest 단위 테스트를 1회 실행한다.
+- `pnpm test:watch`: Vitest를 watch 모드로 실행한다.
 - `pnpm test:e2e`: Chromium과 WebKit에서 Playwright 테스트를 실행한다.
+- `pnpm check`: `test → lint → typecheck → build`를 순서대로 실행한다.
 
-특정 테스트만 실행하려면 `pnpm exec playwright test e2e/home-select.spec.ts`를 사용한다.
+특정 테스트만 실행하려면 `pnpm exec vitest run app/api/products/route.test.ts` 또는 `pnpm exec playwright test e2e/home-select.spec.ts`를 사용한다.
 
 ## 코드 스타일 및 네이밍
 
-들여쓰기는 공백 두 칸을 사용하고, `src` 내부 import에는 `@/` 별칭을 활용한다. 포맷은 Prettier에 맡긴다. `any`, `@ts-ignore`, non-null assertion(`!`), 빈 `catch`, `debugger`, 처리하지 않은 Promise, 배럴 파일을 사용하지 않는다. 기존 유틸을 먼저 찾아 재사용하고, 공통 도메인 값과 타입은 `_types.ts` 등 한곳에서 관리한다.
+들여쓰기는 공백 두 칸을 사용하고, `src` 내부 import에는 `@/`, 루트 `app` 참조에는 `@app/` 별칭을 활용한다. 포맷은 Prettier에 맡긴다. `any`, `@ts-ignore`, non-null assertion(`!`), 빈 `catch`, `debugger`, 처리하지 않은 Promise, 배럴 파일을 사용하지 않는다. 기존 유틸을 먼저 찾아 재사용하고, 공통 도메인 값과 타입은 `_types.ts` 등 한곳에서 관리한다.
 
 - 컴포넌트 파일: `PascalCase` (`RootProvider.tsx`, `ProductCard.module.css`)
 - 훅 파일: `camelCase` (`usePostLike.ts`) — 파일명과 훅 이름을 일치시킨다
@@ -72,7 +85,7 @@ FSD 구조를 설계·변경·리뷰하거나 PR 전 셀프 리뷰를 수행할 
 
 ## 테스트 작성 기준
 
-테스트는 검증 목적을 충족하는 가장 저렴한 계층부터 선택한다. 순수 함수, Zustand action·selector, 상태 전이, parser와 formatter처럼 브라우저가 필요 없는 로직은 Vitest 또는 Jest 단위 테스트를 우선한다. 여러 모듈의 연결은 통합 테스트로 검증하고, 실제 라우팅·브라우저 API·키보드 조작·접근성 상태·브라우저별 차이처럼 브라우저 경계가 핵심인 흐름만 Playwright E2E로 검증한다. 같은 동작을 단위 테스트와 E2E에서 중복 검증하지 않으며, E2E에는 핵심 사용자 흐름과 브라우저 경계만 남긴다.
+테스트는 검증 목적을 충족하는 가장 저렴한 계층부터 선택한다. 순수 함수, Zustand action·selector, 상태 전이, parser와 formatter처럼 브라우저가 필요 없는 로직은 Vitest 단위 테스트를 우선한다. 단위 테스트 파일은 대상 파일 옆에 `<name>.test.ts` 또는 `<name>.test.tsx`로 두고, Vitest는 `src/**`와 `app/**`를 모두 수집한다(`vitest.config.ts`). 환경은 `node`이므로 컴포넌트는 DOM 대신 `renderToStaticMarkup` 같은 서버 렌더링으로 검증한다. 여러 모듈의 연결은 통합 테스트로 검증하고, 실제 라우팅·브라우저 API·키보드 조작·접근성 상태·브라우저별 차이처럼 브라우저 경계가 핵심인 흐름만 Playwright E2E로 검증한다. 같은 동작을 단위 테스트와 E2E에서 중복 검증하지 않으며, E2E에는 핵심 사용자 흐름과 브라우저 경계만 남긴다.
 
 E2E 테스트 파일은 `e2e/<feature>.spec.ts` 형식으로 작성하며 각 테스트는 독립적으로 실행할 수 있어야 한다. locator는 접근 가능한 role과 name을 우선 사용한다. 구현 세부 사항보다 사용자에게 보이는 결과, 키보드 조작, ARIA 상태, 이미지 로딩 여부를 검증한다. Chromium과 WebKit의 동작 차이를 고려하고, 공통 준비 과정은 필요한 경우 `test.beforeEach`에 둔다. 현재 별도의 커버리지 기준은 없다.
 
@@ -87,14 +100,16 @@ E2E 테스트 파일은 `e2e/<feature>.spec.ts` 형식으로 작성하며 각 �
 
 “정상 동작 확인”, “직접 테스트”, “브라우저에서 확인”처럼 사용자가 명시적으로 요청한 경우에만 런타임 검증을 수행한다. 단순한 구현, 수정, 검토 요청은 런타임 검증 요청으로 해석하지 않는다.
 
-현재 프로젝트에는 `pnpm check` 스크립트가 없으므로 기본 검증은 다음 명령어를 사용한다.
+기본 검증은 다음 명령어를 사용한다.
 
 ```bash
 pnpm lint
 pnpm exec tsc --noEmit
 ```
 
-변경 파일의 포맷이나 린트만 확인하면 되는 경우에는 해당 파일 범위에서만 정적 검사를 실행한다. `pnpm test:e2e`, `pnpm build`, `pnpm dev` 및 브라우저 기반 검증은 사용자가 요청한 경우에만 실행한다.
+`pnpm check`는 `test → lint → typecheck → build`를 모두 실행하므로 기본 검증에 사용하지 않는다. 과제 제출 전처럼 사용자가 전체 검증을 요청했을 때만 실행한다.
+
+변경 파일의 포맷이나 린트만 확인하면 되는 경우에는 해당 파일 범위에서만 정적 검사를 실행한다. `pnpm test`, `pnpm test:e2e`, `pnpm check`, `pnpm build`, `pnpm dev` 및 브라우저 기반 검증은 사용자가 요청한 경우에만 실행한다.
 
 인증, 라우팅, SSR·CSR 경계, 브라우저 API, 인쇄·PDF처럼 정적 검사만으로 결함 가능성을 충분히 낮추기 어려운 변경은 임의로 런타임 검증하지 않는다. 필요한 확인 항목과 이유를 설명하고 사용자에게 먼저 실행 허가를 요청한다.
 
