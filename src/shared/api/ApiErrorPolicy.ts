@@ -1,6 +1,6 @@
 import { NetworkError, TimeoutError } from 'ky'
 
-import { ApiClientError } from '@/shared/api/ApiClient'
+import { ApiClientError } from '@/shared/api/ApiClientError'
 
 export const ApiErrorPolicy = {
   retry: (failureCount: number, error: Error): boolean => {

@@ -2,7 +2,7 @@ import { NetworkError, TimeoutError } from 'ky'
 import { describe, expect, it } from 'vitest'
 import * as z from 'zod'
 
-import { ApiClientError } from '@/shared/api/ApiClient'
+import { ApiClientError } from '@/shared/api/ApiClientError'
 import { ApiErrorPolicy } from '@/shared/api/ApiErrorPolicy'
 
 const request = new Request('https://example.test')
