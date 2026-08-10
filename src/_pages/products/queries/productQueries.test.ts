@@ -1,4 +1,6 @@
+import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { server } from "@/shared/config/vitest/mswServer";
 import { productQueries } from "./productQueries";
 import type { ProductListQuery } from "../api/productApi";
 import type { QueryFunctionContext } from "@tanstack/react-query";
@@ -49,31 +51,25 @@ describe("productQueries", () => {
       page: 1,
       pageSize: 12,
     });
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          products: [],
-          categories: [],
-          totalCount: 0,
-          page: 1,
-          pageSize: 12,
-        }),
-      ),
+    let didRequest = false;
+    server.use(
+      http.get(`${TEST_API_ORIGIN}/api/products`, () => {
+        didRequest = true;
+
+        return HttpResponse.json(createProductListResponse());
+      }),
     );
+    abortController.abort();
 
-    await options.queryFn?.({
-      signal: abortController.signal,
-      queryKey: options.queryKey,
-      meta: undefined,
-      client: {} as QueryFunctionContext["client"],
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      `${TEST_API_ORIGIN}/api/products?category=all&page=1&pageSize=12`,
-      {
+    await expect(
+      options.queryFn?.({
         signal: abortController.signal,
-      },
-    );
+        queryKey: options.queryKey,
+        meta: undefined,
+        client: {} as QueryFunctionContext["client"],
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(didRequest).toBe(false);
   });
 
   it("서버 상품 목록 queryFn은 요청 취소 signal 없이 API 요청을 보낸다", async () => {
@@ -84,17 +80,15 @@ describe("productQueries", () => {
       page: 1,
       pageSize: 12,
     });
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          products: [],
-          categories: [],
-          totalCount: 0,
-          page: 1,
-          pageSize: 12,
-        }),
-      ),
+    let requestedUrl: string | undefined;
+    server.use(
+      http.get(`${TEST_API_ORIGIN}/api/products`, ({ request }) => {
+        requestedUrl = request.url;
+
+        return HttpResponse.json(createProductListResponse());
+      }),
     );
+    abortController.abort();
 
     await options.queryFn?.({
       signal: abortController.signal,
@@ -103,8 +97,16 @@ describe("productQueries", () => {
       client: {} as QueryFunctionContext["client"],
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      `${TEST_API_ORIGIN}/api/products?category=all&page=1&pageSize=12`,
-    );
+    expect(requestedUrl).toBe(`${TEST_API_ORIGIN}/api/products?category=all&page=1&pageSize=12`);
   });
 });
+
+function createProductListResponse() {
+  return {
+    products: [],
+    categories: [],
+    totalCount: 0,
+    page: 1,
+    pageSize: 12,
+  };
+}

@@ -22,6 +22,7 @@ export default defineConfig({
             "!src/entities/wishlist/model/wishlistStore.test.ts",
             "!src/shared/lib/debounce/useDebouncedValue.test.ts",
           ],
+          setupFiles: ["./src/shared/config/vitest/mswSetup.ts"],
         },
       },
       {
@@ -36,7 +37,10 @@ export default defineConfig({
             "src/entities/wishlist/model/wishlistStore.test.ts",
             "src/shared/lib/debounce/useDebouncedValue.test.ts",
           ],
-          setupFiles: ["./src/shared/config/vitest/setup.ts"],
+          setupFiles: [
+            "./src/shared/config/vitest/mswSetup.ts",
+            "./src/shared/config/vitest/setup.ts",
+          ],
         },
       },
     ],
