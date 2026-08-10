@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchQuery(homeQueries.main());
+  void queryClient.prefetchQuery(homeQueries.main());
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

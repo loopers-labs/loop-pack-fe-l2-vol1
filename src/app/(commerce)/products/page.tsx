@@ -42,7 +42,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const params = await loadProductListSearchParams(searchParams);
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchQuery(
+  void queryClient.prefetchQuery(
     productQueries.list({
       q: params.q,
       category: params.category,
