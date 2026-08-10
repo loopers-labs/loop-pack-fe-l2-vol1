@@ -163,6 +163,16 @@ Request failed with net::ERR_ABORTED
 - 기존 목록: 유지
 - 서버 응답 복사: 하지 않음. React Query 캐시에서 마지막 표시 query key의 데이터를 읽음.
 
+### 마지막 표시 query key 저장 방식
+
+갱신 실패에서는 서버 응답 데이터를 Zustand나 별도 로컬 state에 복사하지 않고, 마지막으로 실제 화면에 표시된 query key만 기억한 뒤 React Query 캐시에서 데이터를 읽는다.
+
+`useRef`로 마지막 성공 key를 보관하는 대안도 검토했다. 하지만 이 값은 갱신 실패 render 시점에 화면 데이터를 결정하는 데 필요하다. React 공식 문서와 `eslint-plugin-react-hooks/refs`는 render 중 `ref.current` 읽기를 권장하지 않으며, 현재 lint 설정에서도 `Cannot access refs during render`로 막힌다.
+
+`useState`로 key만 저장하는 방식도 검토했지만, 성공 query를 effect에서 동기적으로 state에 반영해야 해서 현재 lint의 `set-state-in-effect` 규칙에 걸린다.
+
+따라서 현재는 `useSyncExternalStore`로 마지막 표시 query key를 구독 가능한 snapshot처럼 관리한다. 여러 화면이 공유하는 전역 서버 상태는 아니고, 단일 목록 화면 안에서 "무엇을 마지막으로 보여줬는지"만 기억하는 용도다.
+
 ## 빈 결과
 
 검색어와 카테고리 조건이 성공적으로 반영된 뒤 결과가 0건이면 빈 상태를 표시한다.
