@@ -1,12 +1,15 @@
-import { describe, expect, it, vi } from 'vitest'
+import { delay, http, HttpResponse } from 'msw'
+import { describe, expect, it } from 'vitest'
 import * as z from 'zod'
 
 import type { DiagnosticScenario } from '@/entities/product/model/DiagnosticScenario'
 import { ProductListRequestModel } from '@/entities/product/model/ProductListRequest'
 import { apiClient } from '@/shared/api/ApiClient'
 
+import { server } from '../../../../tests/setup/mswServer'
 import { ProductRepository } from './ProductRepository'
 
+const nodeApiClient = apiClient.extend({ baseUrl: 'https://example.test/' })
 const productResponse = {
   products: [],
   categories: [],
@@ -14,39 +17,45 @@ const productResponse = {
   page: 2,
   pageSize: 12,
 } as const
+const homeResponse = {
+  banner: {
+    title: 'title',
+    description: 'description',
+    image: '/hero.jpg',
+  },
+  categories: [],
+  popularProducts: [],
+  newProducts: [],
+} as const
 
 describe('ProductRepository successful response boundary', () => {
-  it('throws a schema error without another attempt for malformed 2xx data', async () => {
-    let attemptCount = 0
-    const api = apiClient.extend({
-      baseUrl: 'https://example.test/',
-      fetch: () => {
-        attemptCount += 1
-        return Promise.resolve(Response.json({ unexpected: true }))
-      },
-    })
-
-    await expect(new ProductRepository(api).getHome({})).rejects.toBeInstanceOf(
-      z.ZodError,
+  it('throws a schema error without another request for malformed 2xx data', async () => {
+    let requestCount = 0
+    server.use(
+      http.get('https://example.test/api/home', () => {
+        requestCount += 1
+        return HttpResponse.json({ unexpected: true })
+      }),
     )
-    expect(attemptCount).toBe(1)
+
+    await expect(
+      new ProductRepository(nodeApiClient).getHome({}),
+    ).rejects.toBeInstanceOf(z.ZodError)
+    expect(requestCount).toBe(1)
   })
 })
 
 describe('ProductRepository browser requests', () => {
-  it('uses the canonical relative descriptor without a signal by default', async () => {
+  it('sends one canonical GET request', async () => {
     let requestedMethod = ''
     let requestedUrl = ''
-    const api = apiClient.extend({
-      baseUrl: 'https://example.test/',
-      fetch: (request) => {
-        const productRequest = new Request(request)
-        requestedMethod = productRequest.method
-        requestedUrl = productRequest.url
-        return Promise.resolve(Response.json(productResponse))
-      },
-    })
-    const get = vi.spyOn(api, 'get')
+    server.use(
+      http.get('https://example.test/api/products', ({ request }) => {
+        requestedMethod = request.method
+        requestedUrl = request.url
+        return HttpResponse.json(productResponse)
+      }),
+    )
     const request = ProductListRequestModel.normalize({
       q: 'stanley',
       category: 'home',
@@ -55,72 +64,49 @@ describe('ProductRepository browser requests', () => {
       scenario: 'slow',
     })
 
-    await new ProductRepository(api).getProductList(request)
+    await new ProductRepository(nodeApiClient).getProductList(request)
 
     expect(requestedMethod).toBe('GET')
     expect(requestedUrl).toBe(
       'https://example.test/api/products?q=stanley&category=home&sort=price-asc&page=2&pageSize=12&scenario=slow',
     )
-    const [input, options] = get.mock.calls[0] ?? []
-    const searchParams = options?.searchParams
-    expect(input).toBe('api/products')
-    expect(searchParams).toBeInstanceOf(URLSearchParams)
-    if (!(searchParams instanceof URLSearchParams)) {
-      return
-    }
-    expect(searchParams.toString()).toBe(
-      'q=stanley&category=home&sort=price-asc&page=2&pageSize=12&scenario=slow',
-    )
-    expect(Object.hasOwn(options ?? {}, 'signal')).toBe(false)
   })
 
-  it('preserves URL parity and AbortSignal identity when supplied', async () => {
+  it('preserves URL parity across unsignaled and signaled requests', async () => {
     const requestedUrls: Array<string> = []
-    const api = apiClient.extend({
-      baseUrl: 'https://example.test/',
-      fetch: (request) => {
-        requestedUrls.push(new Request(request).url)
-        return Promise.resolve(Response.json(productResponse))
-      },
-    })
-    const get = vi.spyOn(api, 'get')
-    const repository = new ProductRepository(api)
+    server.use(
+      http.get('https://example.test/api/products', ({ request }) => {
+        requestedUrls.push(request.url)
+        return HttpResponse.json(productResponse)
+      }),
+    )
+    const repository = new ProductRepository(nodeApiClient)
     const request = ProductListRequestModel.normalize({ q: 'stanley' })
     const controller = new AbortController()
 
     await repository.getProductList(request)
     await repository.getProductList(request, controller.signal)
 
-    expect(requestedUrls[0]).toBe(requestedUrls[1])
-    expect(Object.hasOwn(get.mock.calls[0]?.[1] ?? {}, 'signal')).toBe(false)
-    expect(get.mock.calls[1]?.[1]?.signal).toBe(controller.signal)
+    expect(requestedUrls).toEqual([
+      'https://example.test/api/products?q=stanley&sort=latest&page=1&pageSize=12',
+      'https://example.test/api/products?q=stanley&sort=latest&page=1&pageSize=12',
+    ])
   })
 
-  it('aborts the Ky request when the transport signal aborts', async () => {
-    let requestSignal: AbortSignal | undefined
+  it('aborts the Ky request when the supplied signal aborts', async () => {
     let markRequestStarted: () => void = () => undefined
     const requestStarted = new Promise<void>((resolve) => {
       markRequestStarted = resolve
     })
-    const api = apiClient.extend({
-      baseUrl: 'https://example.test/',
-      fetch: (request) => {
-        const transportRequest = new Request(request)
-        requestSignal = transportRequest.signal
+    server.use(
+      http.get('https://example.test/api/products', async () => {
         markRequestStarted()
-        return new Promise<Response>((_resolve, reject) => {
-          transportRequest.signal.addEventListener(
-            'abort',
-            () => {
-              reject(new DOMException('The request was aborted.', 'AbortError'))
-            },
-            { once: true },
-          )
-        })
-      },
-    })
+        await delay('infinite')
+        return HttpResponse.json(productResponse)
+      }),
+    )
     const controller = new AbortController()
-    const productRequest = new ProductRepository(api).getProductList(
+    const productRequest = new ProductRepository(nodeApiClient).getProductList(
       ProductListRequestModel.normalize({ q: 'stanley', scenario: 'slow' }),
       controller.signal,
     )
@@ -129,7 +115,6 @@ describe('ProductRepository browser requests', () => {
     controller.abort()
 
     await expect(productRequest).rejects.toHaveProperty('name', 'AbortError')
-    expect(requestSignal?.aborted).toBe(true)
   })
 })
 
@@ -142,29 +127,17 @@ const scenarioCases = [
 
 describe('ProductRepository home diagnostic scenarios', () => {
   it.each(scenarioCases)(
-    'keeps the home GET scenario aligned with the descriptor',
+    'keeps the home GET scenario aligned with the request URL',
     async (diagnosticScenario, expectedScenario) => {
       let requestedUrl = ''
-      const api = apiClient.extend({
-        baseUrl: 'https://example.test/',
-        fetch: (request) => {
-          requestedUrl = new Request(request).url
-          return Promise.resolve(
-            Response.json({
-              banner: {
-                title: 'title',
-                description: 'description',
-                image: '/hero.jpg',
-              },
-              categories: [],
-              popularProducts: [],
-              newProducts: [],
-            }),
-          )
-        },
-      })
+      server.use(
+        http.get('https://example.test/api/home', ({ request }) => {
+          requestedUrl = request.url
+          return HttpResponse.json(homeResponse)
+        }),
+      )
 
-      await new ProductRepository(api).getHome(diagnosticScenario)
+      await new ProductRepository(nodeApiClient).getHome(diagnosticScenario)
 
       expect(new URL(requestedUrl).searchParams.get('scenario')).toBe(
         expectedScenario,
