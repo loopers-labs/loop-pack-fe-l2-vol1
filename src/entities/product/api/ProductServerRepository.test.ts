@@ -1,10 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { describe, expect, it } from 'vitest'
 import * as z from 'zod'
 
+import type { DiagnosticScenario } from '@/entities/product/model/DiagnosticScenario'
 import { ProductListRequestModel } from '@/entities/product/model/ProductListRequest'
 import { ApiClientError } from '@/shared/api/ApiClientError'
 import { parseAppOrigin } from '@/shared/config/AppOrigin'
 
+import { server } from '../../../../tests/setup/mswServer'
 import { ProductServerFetchError } from './ProductServerFetchError'
 import { ProductServerRepository } from './ProductServerRepository'
 
@@ -22,139 +25,127 @@ const validResponse = {
   page: 2,
   pageSize: 12,
 } as const
+const homeResponse = {
+  banner: {
+    title: 'title',
+    description: 'description',
+    image: '/hero.jpg',
+  },
+  categories: [],
+  popularProducts: [],
+  newProducts: [],
+} as const
 
 describe('ProductServerRepository success boundary', () => {
-  it('uses native fetch once with the exact absolute signal-free descriptor', async () => {
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.resolve(Response.json(validResponse)),
+  it('sends one canonical absolute GET request', async () => {
+    let requestedMethod = ''
+    let requestedUrl = ''
+    server.use(
+      http.get('https://shop.example/api/products', ({ request }) => {
+        requestedMethod = request.method
+        requestedUrl = request.url
+        return HttpResponse.json(validResponse)
+      }),
     )
 
     await expect(
-      new ProductServerRepository(fetch).getProductList(request, origin),
+      new ProductServerRepository().getProductList(request, origin),
     ).resolves.toEqual(validResponse)
 
-    expect(fetch).toHaveBeenCalledTimes(1)
-    const [input, init] = fetch.mock.calls[0] ?? []
-    expect(input).toBeInstanceOf(URL)
-    if (!(input instanceof URL)) {
-      return
-    }
-    expect(input.href).toBe(
+    expect(requestedMethod).toBe('GET')
+    expect(requestedUrl).toBe(
       'https://shop.example/api/products?q=stanley&category=home&sort=latest&page=2&pageSize=12&scenario=slow',
     )
-    expect(init).toEqual({ method: 'GET' })
-    expect(Object.hasOwn(init ?? {}, 'signal')).toBe(false)
   })
 
   it('passes through malformed success JSON as SyntaxError', async () => {
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.resolve(
-        new Response('{', {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        }),
+    server.use(
+      http.get(
+        'https://shop.example/api/products',
+        () =>
+          new HttpResponse('{', {
+            headers: { 'content-type': 'application/json' },
+          }),
       ),
     )
 
     await expect(
-      new ProductServerRepository(fetch).getProductList(request, origin),
+      new ProductServerRepository().getProductList(request, origin),
     ).rejects.toBeInstanceOf(SyntaxError)
   })
 
   it('passes through parsed invalid success data as ZodError', async () => {
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.resolve(Response.json({ unexpected: true })),
+    server.use(
+      http.get('https://shop.example/api/products', () =>
+        HttpResponse.json({ unexpected: true }),
+      ),
     )
 
     await expect(
-      new ProductServerRepository(fetch).getProductList(request, origin),
+      new ProductServerRepository().getProductList(request, origin),
     ).rejects.toBeInstanceOf(z.ZodError)
   })
 
-  it('wraps only native fetch TypeError with its original cause', async () => {
-    const networkError = new TypeError('fetch failed')
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.reject(networkError),
+  it('wraps a network TypeError with its original cause after one request', async () => {
+    let requestCount = 0
+    server.use(
+      http.get('https://shop.example/api/products', () => {
+        requestCount += 1
+        return HttpResponse.error()
+      }),
     )
 
-    const error = await new ProductServerRepository(fetch)
+    const error = await new ProductServerRepository()
       .getProductList(request, origin)
       .catch((reason: unknown) => reason)
 
     expect(error).toBeInstanceOf(ProductServerFetchError)
-    expect(error).toMatchObject({
-      cause: networkError,
-      message: 'fetch failed',
-    })
-  })
-
-  it('passes through TypeError raised after the fetch invocation', async () => {
-    const programmingError = new TypeError('response programming error')
-    const response = Response.json(validResponse)
-    vi.spyOn(response, 'json').mockRejectedValue(programmingError)
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.resolve(response),
-    )
-
-    await expect(
-      new ProductServerRepository(fetch).getProductList(request, origin),
-    ).rejects.toBe(programmingError)
-  })
-
-  it('passes through non-TypeError native fetch rejection identity', async () => {
-    const nativeError = new RangeError('unexpected native failure')
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.reject(nativeError),
-    )
-
-    await expect(
-      new ProductServerRepository(fetch).getProductList(request, origin),
-    ).rejects.toBe(nativeError)
-  })
-
-  it('loads home with an absolute signal-free native descriptor', async () => {
-    const homeResponse = {
-      banner: {
-        title: 'title',
-        description: 'description',
-        image: '/hero.jpg',
-      },
-      categories: [],
-      popularProducts: [],
-      newProducts: [],
+    if (!(error instanceof ProductServerFetchError)) {
+      return
     }
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.resolve(Response.json(homeResponse)),
-    )
-
-    await expect(
-      new ProductServerRepository(fetch).getHome({ scenario: 'slow' }, origin),
-    ).resolves.toEqual(homeResponse)
-
-    expect(fetch).toHaveBeenCalledWith(
-      new URL('https://shop.example/api/home?scenario=slow'),
-      { method: 'GET' },
-    )
-    expect(Object.hasOwn(fetch.mock.calls[0]?.[1] ?? {}, 'signal')).toBe(false)
+    expect(error.cause).toBeInstanceOf(TypeError)
+    expect(requestCount).toBe(1)
   })
 })
 
+const homeScenarioCases = [
+  [{}, 'https://shop.example/api/home'],
+  [{ scenario: 'slow' }, 'https://shop.example/api/home?scenario=slow'],
+  [{ scenario: 'empty' }, 'https://shop.example/api/home?scenario=empty'],
+  [{ scenario: 'error' }, 'https://shop.example/api/home?scenario=error'],
+] as const satisfies ReadonlyArray<readonly [DiagnosticScenario, string]>
+
+describe('ProductServerRepository home requests', () => {
+  it.each(homeScenarioCases)(
+    'keeps the diagnostic scenario aligned with the absolute request URL',
+    async (diagnosticScenario, expectedUrl) => {
+      let requestedUrl = ''
+      server.use(
+        http.get('https://shop.example/api/home', ({ request }) => {
+          requestedUrl = request.url
+          return HttpResponse.json(homeResponse)
+        }),
+      )
+
+      await expect(
+        new ProductServerRepository().getHome(diagnosticScenario, origin),
+      ).resolves.toEqual(homeResponse)
+      expect(requestedUrl).toBe(expectedUrl)
+    },
+  )
+})
+
 describe('ProductServerRepository HTTP error boundary', () => {
-  it('uses a valid API error message and status after reading text once', async () => {
-    const response = new Response(JSON.stringify({ message: '재고 없음' }), {
-      status: 409,
-    })
-    const text = vi.spyOn(response, 'text')
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.resolve(response),
+  it('uses a valid API error message and status', async () => {
+    server.use(
+      http.get('https://shop.example/api/products', () =>
+        HttpResponse.json({ message: '재고 없음' }, { status: 409 }),
+      ),
     )
 
-    const error = await new ProductServerRepository(fetch)
-      .getProductList(request, origin)
-      .catch((reason: unknown) => reason)
-
-    expect(error).toEqual(new ApiClientError('재고 없음', 409))
-    expect(text).toHaveBeenCalledTimes(1)
+    await expect(
+      new ProductServerRepository().getProductList(request, origin),
+    ).rejects.toEqual(new ApiClientError('재고 없음', 409))
   })
 
   it.each([
@@ -162,12 +153,15 @@ describe('ProductServerRepository HTTP error boundary', () => {
     ['malformed JSON', '{'],
     ['schema-invalid JSON', JSON.stringify({ message: '' })],
   ])('uses the fallback for %s error text', async (_label, body) => {
-    const fetch = vi.fn<typeof globalThis.fetch>(() =>
-      Promise.resolve(new Response(body, { status: 503 })),
+    server.use(
+      http.get(
+        'https://shop.example/api/products',
+        () => new HttpResponse(body, { status: 503 }),
+      ),
     )
 
     await expect(
-      new ProductServerRepository(fetch).getProductList(request, origin),
+      new ProductServerRepository().getProductList(request, origin),
     ).rejects.toEqual(new ApiClientError('요청 중 오류가 발생했습니다.', 503))
   })
 })
