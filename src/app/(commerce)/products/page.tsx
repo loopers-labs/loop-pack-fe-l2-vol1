@@ -20,7 +20,7 @@ type ProductsPageProps = {
 
 export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
   const params = await loadProductListSearchParams(searchParams);
-  const query = productQueries.list({
+  const query = productQueries.serverList({
     q: params.q,
     category: params.category,
     sort: params.sort,
@@ -43,7 +43,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const queryClient = getQueryClient();
 
   void queryClient.prefetchQuery(
-    productQueries.list({
+    productQueries.serverList({
       q: params.q,
       category: params.category,
       sort: params.sort,
