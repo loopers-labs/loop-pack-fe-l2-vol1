@@ -9,6 +9,10 @@ import {
 
 import { productFilterParsers, type ProductFilters } from './useProductFilters'
 describe('productFilterParsers', () => {
+  it('does not expose diagnostic scenario as a user filter', () => {
+    expect(Object.keys(productFilterParsers)).not.toContain('scenario')
+  })
+
   it('q default is empty string', () => {
     expect(productFilterParsers.q.defaultValue).toBe('')
   })

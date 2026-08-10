@@ -1,10 +1,14 @@
+import type { DiagnosticScenario } from '@/entities/product/model/DiagnosticScenario'
+import {
+  type ProductListRequest,
+  ProductListRequestModel,
+} from '@/entities/product/model/ProductListRequest'
 import {
   homeResponseSchema,
   productListResponseSchema,
 } from '@/entities/product/model/ResponseSchema'
 import type {
   HomeResponse,
-  ProductListQuery,
   ProductListResponse,
 } from '@/entities/product/model/types'
 import { apiClient } from '@/shared/api/ApiClient'
@@ -14,25 +18,27 @@ export class ProductRepository {
 
   readonly endpoints = {
     home: 'api/home',
-    products: 'api/products',
   } as const
 
-  async getHome(): Promise<HomeResponse> {
-    const json = await this.api.get(this.endpoints.home).json<unknown>()
+  async getHome(diagnosticScenario: DiagnosticScenario): Promise<HomeResponse> {
+    const json = await this.api
+      .get(this.endpoints.home, {
+        searchParams: { scenario: diagnosticScenario.scenario },
+      })
+      .json<unknown>()
     return homeResponseSchema.parse(json)
   }
 
-  async getProductList(query: ProductListQuery): Promise<ProductListResponse> {
+  async getProductList(
+    request: ProductListRequest,
+    signal?: AbortSignal,
+  ): Promise<ProductListResponse> {
+    const descriptor = ProductListRequestModel.browserDescriptor(
+      request,
+      signal,
+    )
     const json = await this.api
-      .get(this.endpoints.products, {
-        searchParams: {
-          q: query.q || undefined,
-          category: query.category === 'all' ? undefined : query.category,
-          sort: query.sort,
-          page: query.page,
-          pageSize: query.pageSize,
-        },
-      })
+      .get(descriptor.input, descriptor.options)
       .json<unknown>()
     return productListResponseSchema.parse(json)
   }

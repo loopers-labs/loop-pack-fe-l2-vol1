@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { ProductListResponse } from '@/entities/product/model/types'
 import type { ApiErrorResponse } from '@/shared/api/ApiErrorResponse'
@@ -39,6 +39,11 @@ const allProductIds = async (sort: string) => {
 const hugePositiveInteger = '9'.repeat(400)
 
 describe('GET /api/products', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
+  })
+
   it('preserves Week 04 field shape while using the mapped source identity', async () => {
     const response = await request()
     const body = asList(await jsonBody(response))
@@ -410,5 +415,29 @@ describe('GET /api/products', () => {
     expect(await jsonBody(errorResponse)).toEqual({
       message: '상품 목록을 불러오지 못했습니다.',
     })
+  })
+
+  it('keeps the product response pending for 1.5 seconds in the slow scenario', async () => {
+    vi.useFakeTimers()
+    vi.stubEnv('NODE_ENV', 'production')
+
+    let settled = false
+    const responsePromise = request('?scenario=slow').then((response) => {
+      settled = true
+      return response
+    })
+
+    await vi.advanceTimersByTimeAsync(1_499)
+    expect(settled).toBe(false)
+
+    await vi.advanceTimersByTimeAsync(1)
+    const response = await responsePromise
+    const body = asList(await jsonBody(response))
+
+    expect(response.status).toBe(200)
+    expect(body.products).toHaveLength(12)
+    expect(body.totalCount).toBe(30)
+    expect(body.page).toBe(1)
+    expect(body.pageSize).toBe(12)
   })
 })

@@ -18,6 +18,7 @@ const sortValues = [
 const scenarioValues = [
   'empty',
   'error',
+  'slow',
 ] as const satisfies ReadonlyArray<MockApiScenario>
 
 const isProductSort = (value: string): value is ProductSort =>
@@ -73,7 +74,7 @@ export async function GET(
     )
   }
 
-  await waitForMockApi()
+  await waitForMockApi(scenario === 'slow' ? 1_500 : 500)
 
   if (scenario === 'error') {
     return NextResponse.json(

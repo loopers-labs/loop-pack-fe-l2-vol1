@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeResponse } from '@/entities/product/model/types'
 import type { ApiErrorResponse } from '@/shared/api/ApiErrorResponse'
@@ -22,6 +22,11 @@ const asHome = (body: HomeResponse | ApiErrorResponse): HomeResponse => {
 }
 
 describe('GET /api/home', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
+  })
+
   it('returns banner, categories, popular products, and new products', async () => {
     const response = await request()
     const body = asHome(await jsonBody(response))
@@ -72,6 +77,29 @@ describe('GET /api/home', () => {
     expect(await jsonBody(response)).toEqual({
       message: '홈 데이터를 불러오지 못했습니다.',
     })
+  })
+
+  it('keeps the home response pending for 1.5 seconds in the slow scenario', async () => {
+    vi.useFakeTimers()
+    vi.stubEnv('NODE_ENV', 'production')
+
+    let settled = false
+    const responsePromise = request('?scenario=slow').then((response) => {
+      settled = true
+      return response
+    })
+
+    await vi.advanceTimersByTimeAsync(1_499)
+    expect(settled).toBe(false)
+
+    await vi.advanceTimersByTimeAsync(1)
+    const response = await responsePromise
+    const body = asHome(await jsonBody(response))
+
+    expect(response.status).toBe(200)
+    expect(body.banner.image).toBe('/images/products/p6.jpg')
+    expect(body.popularProducts).toHaveLength(6)
+    expect(body.newProducts).toHaveLength(6)
   })
 
   it('rejects an unknown scenario', async () => {
