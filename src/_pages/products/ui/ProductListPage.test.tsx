@@ -1,28 +1,22 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListPageClient } from "./ProductListPage";
-import { getProducts } from "../api/productApi";
 import type { ProductListQuery, ProductListResponse } from "../api/productApi";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
-
-vi.mock("../api/productApi", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../api/productApi")>()),
-  getProducts: vi.fn(),
-}));
+import { server } from "@/shared/config/vitest/mswServer";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
 }));
-
-const mockedGetProducts = vi.mocked(getProducts);
 
 const firstProduct = createProduct({
   id: "p1",
@@ -32,6 +26,7 @@ const prefetchedProduct = createProduct({
   id: "p2",
   name: "미리 가져온 상품",
 });
+let productRequestUrls: string[] = [];
 
 function renderProductListPageClient({
   searchParams,
@@ -70,14 +65,12 @@ describe("ProductListPageClient", () => {
     useWishlistStore.setState({
       wishlistProductIdMap: {},
     });
-    mockedGetProducts.mockReset();
-    mockedGetProducts.mockResolvedValue({
-      products: [],
-      categories: [],
-      totalCount: 30,
-      page: 1,
-      pageSize: 12,
-    });
+    productRequestUrls = [];
+    mockProductsResponse(() =>
+      createProductListResponse({
+        totalCount: 30,
+      }),
+    );
   });
 
   afterEach(() => {
@@ -87,13 +80,12 @@ describe("ProductListPageClient", () => {
   });
 
   it("응답 이후 현재 page가 마지막 페이지를 넘으면 마지막 페이지로 replace한다", async () => {
-    mockedGetProducts.mockResolvedValue({
-      products: [],
-      categories: [],
-      totalCount: 30,
-      page: 100,
-      pageSize: 12,
-    });
+    mockProductsResponse(() =>
+      createProductListResponse({
+        totalCount: 30,
+        page: 100,
+      }),
+    );
 
     const { onUrlUpdate } = renderProductListPageClient({
       searchParams: "?page=100",
@@ -159,7 +151,7 @@ describe("ProductListPageClient", () => {
     });
 
     await waitFor(() => {
-      expect(mockedGetProducts).toHaveBeenCalled();
+      expect(productRequestUrls.length).toBeGreaterThan(0);
     });
 
     expect(onUrlUpdate).not.toHaveBeenCalled();
@@ -198,17 +190,15 @@ describe("ProductListPageClient", () => {
   });
 
   it("페이지 전환 중에는 이전 상품 목록을 유지하고 갱신 중 상태를 표시한다", async () => {
-    mockedGetProducts.mockImplementation((params = {}) => {
-      if (params.page === 3) {
+    mockProductsResponse((url) => {
+      if (url.searchParams.get("page") === "3") {
         return new Promise<ProductListResponse>(() => {});
       }
 
-      return Promise.resolve({
+      return createProductListResponse({
         products: [firstProduct],
-        categories: [],
         totalCount: 36,
         page: 2,
-        pageSize: 12,
       });
     });
 
@@ -232,13 +222,12 @@ describe("ProductListPageClient", () => {
   });
 
   it("페이지를 변경하면 상품 목록 필터 영역으로 스크롤한다", async () => {
-    mockedGetProducts.mockResolvedValue({
-      products: [firstProduct],
-      categories: [],
-      totalCount: 24,
-      page: 1,
-      pageSize: 12,
-    });
+    mockProductsResponse(() =>
+      createProductListResponse({
+        products: [firstProduct],
+        totalCount: 24,
+      }),
+    );
 
     renderProductListPageClient({
       searchParams: "?page=1",
@@ -254,13 +243,12 @@ describe("ProductListPageClient", () => {
   });
 
   it("다음 페이지가 있으면 현재 조건의 다음 페이지를 미리 가져온다", async () => {
-    mockedGetProducts.mockResolvedValue({
-      products: [firstProduct],
-      categories: [],
-      totalCount: 24,
-      page: 1,
-      pageSize: 12,
-    });
+    mockProductsResponse(() =>
+      createProductListResponse({
+        products: [firstProduct],
+        totalCount: 24,
+      }),
+    );
 
     renderProductListPageClient({
       searchParams: "?category=goods&sort=popular&page=1",
@@ -276,13 +264,13 @@ describe("ProductListPageClient", () => {
   });
 
   it("마지막 페이지이면 다음 페이지를 미리 가져오지 않는다", async () => {
-    mockedGetProducts.mockResolvedValue({
-      products: [firstProduct],
-      categories: [],
-      totalCount: 24,
-      page: 2,
-      pageSize: 12,
-    });
+    mockProductsResponse(() =>
+      createProductListResponse({
+        products: [firstProduct],
+        totalCount: 24,
+        page: 2,
+      }),
+    );
 
     renderProductListPageClient({
       searchParams: "?page=2",
@@ -300,15 +288,24 @@ describe("ProductListPageClient", () => {
   });
 
   it("상품 목록 요청이 실패하면 새로고침 없이 다시 시도할 수 있다", async () => {
-    mockedGetProducts
-      .mockRejectedValueOnce(new Error("상품 목록을 불러오지 못했습니다."))
-      .mockResolvedValueOnce({
+    let requestCount = 0;
+    mockProductsResponse(() => {
+      requestCount += 1;
+
+      if (requestCount === 1) {
+        return HttpResponse.json(
+          { message: "상품 목록을 불러오지 못했습니다." },
+          {
+            status: 500,
+          },
+        );
+      }
+
+      return createProductListResponse({
         products: [firstProduct],
-        categories: [],
         totalCount: 1,
-        page: 1,
-        pageSize: 12,
       });
+    });
 
     renderProductListPageClient({
       searchParams: "",
@@ -322,27 +319,27 @@ describe("ProductListPageClient", () => {
   });
 
   it("기존 목록 갱신에 실패하면 기존 상품 목록을 유지하고 다시 시도할 수 있다", async () => {
-    mockedGetProducts.mockImplementation((params = {}) => {
-      if (params.category === "goods") {
-        return Promise.reject(new Error("상품 목록을 불러오지 못했습니다."));
+    mockProductsResponse((url) => {
+      if (url.searchParams.get("category") === "goods") {
+        return HttpResponse.json(
+          { message: "상품 목록을 불러오지 못했습니다." },
+          {
+            status: 500,
+          },
+        );
       }
 
-      if (params.page === 2) {
-        return Promise.resolve({
+      if (url.searchParams.get("page") === "2") {
+        return createProductListResponse({
           products: [prefetchedProduct],
-          categories: [],
           totalCount: 30,
           page: 2,
-          pageSize: 12,
         });
       }
 
-      return Promise.resolve({
+      return createProductListResponse({
         products: [firstProduct],
-        categories: [],
         totalCount: 30,
-        page: 1,
-        pageSize: 12,
       });
     });
 
@@ -419,6 +416,37 @@ describe("ProductListPageClient", () => {
   });
 });
 
+function mockProductsResponse(
+  resolver: (url: URL) => ProductListResponse | Response | Promise<ProductListResponse | Response>,
+) {
+  server.use(
+    http.get("/api/products", async ({ request }) => {
+      productRequestUrls.push(request.url);
+
+      const response = await resolver(new URL(request.url));
+
+      if (response instanceof Response) {
+        return response;
+      }
+
+      return HttpResponse.json(response);
+    }),
+  );
+}
+
+function createProductListResponse(
+  response: Partial<ProductListResponse> = {},
+): ProductListResponse {
+  return {
+    products: [],
+    categories: [],
+    totalCount: 0,
+    page: 1,
+    pageSize: 12,
+    ...response,
+  };
+}
+
 function createProduct(product: Partial<Product> = {}): Product {
   return {
     id: "product-id",
@@ -438,13 +466,27 @@ function createProduct(product: Partial<Product> = {}): Product {
 }
 
 function expectGetProductsCalledWithParams(params: Partial<ProductListQuery>) {
-  expect(mockedGetProducts).toHaveBeenCalledWith(expect.objectContaining(params), {
-    signal: expect.any(AbortSignal),
-  });
+  expect(productRequestUrls.some((requestUrl) => requestUrlMatchesParams(requestUrl, params))).toBe(
+    true,
+  );
 }
 
 function expectGetProductsNotCalledWithParams(params: Partial<ProductListQuery>) {
-  expect(mockedGetProducts.mock.calls).not.toEqual(
-    expect.arrayContaining([[expect.objectContaining(params), expect.anything()]]),
+  expect(productRequestUrls.some((requestUrl) => requestUrlMatchesParams(requestUrl, params))).toBe(
+    false,
   );
+}
+
+function requestUrlMatchesParams(requestUrl: string, params: Partial<ProductListQuery>) {
+  const searchParams = new URL(requestUrl).searchParams;
+
+  return Object.entries(params).every(([key, value]) => {
+    const requestValue = searchParams.get(key);
+
+    if (value === "") {
+      return requestValue === null || requestValue === "";
+    }
+
+    return requestValue === String(value);
+  });
 }

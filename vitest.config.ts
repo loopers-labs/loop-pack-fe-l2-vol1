@@ -30,6 +30,11 @@ export default defineConfig({
         test: {
           name: "jsdom",
           environment: "jsdom",
+          environmentOptions: {
+            jsdom: {
+              url: "http://localhost:3000",
+            },
+          },
           include: [
             "src/**/*.test.tsx",
             "src/**/*.spec.tsx",

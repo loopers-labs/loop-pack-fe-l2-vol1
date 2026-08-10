@@ -1,27 +1,21 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommerceHeader } from "@/widgets/header";
 import { ProductListPageClient } from "./ProductListPage";
-import { getProducts } from "../api/productApi";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
-
-vi.mock("../api/productApi", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../api/productApi")>()),
-  getProducts: vi.fn(),
-}));
+import { server } from "@/shared/config/vitest/mswServer";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
 }));
-
-const mockedGetProducts = vi.mocked(getProducts);
 
 function renderProductListWithHeader() {
   const queryClient = new QueryClient({
@@ -52,19 +46,22 @@ describe("ProductListCommerceState", () => {
       wishlistProductIdMap: {},
       hasHydrated: true,
     });
-    mockedGetProducts.mockReset();
-    mockedGetProducts.mockResolvedValue({
-      products: [
-        createProduct({
-          id: "p1",
-          name: "첫 번째 상품",
+    server.use(
+      http.get("/api/products", () =>
+        HttpResponse.json({
+          products: [
+            createProduct({
+              id: "p1",
+              name: "첫 번째 상품",
+            }),
+          ],
+          categories: [],
+          totalCount: 1,
+          page: 1,
+          pageSize: 12,
         }),
-      ],
-      categories: [],
-      totalCount: 1,
-      page: 1,
-      pageSize: 12,
-    });
+      ),
+    );
   });
 
   afterEach(() => {
