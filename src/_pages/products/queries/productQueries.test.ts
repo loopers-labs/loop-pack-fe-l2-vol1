@@ -3,8 +3,11 @@ import { productQueries } from "./productQueries";
 import type { ProductListQuery } from "../api/productApi";
 import type { QueryFunctionContext } from "@tanstack/react-query";
 
+const TEST_API_ORIGIN = "http://test.local";
+
 describe("productQueries", () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -39,6 +42,7 @@ describe("productQueries", () => {
   });
 
   it("상품 목록 queryFn은 요청 취소 signal을 API 요청에 전달한다", async () => {
+    vi.stubEnv("APP_ORIGIN", TEST_API_ORIGIN);
     const abortController = new AbortController();
     const options = productQueries.list({
       category: "all",
@@ -64,12 +68,16 @@ describe("productQueries", () => {
       client: {} as QueryFunctionContext["client"],
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/products?category=all&page=1&pageSize=12", {
-      signal: abortController.signal,
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_API_ORIGIN}/api/products?category=all&page=1&pageSize=12`,
+      {
+        signal: abortController.signal,
+      },
+    );
   });
 
   it("서버 상품 목록 queryFn은 요청 취소 signal 없이 API 요청을 보낸다", async () => {
+    vi.stubEnv("APP_ORIGIN", TEST_API_ORIGIN);
     const abortController = new AbortController();
     const options = productQueries.serverList({
       category: "all",
@@ -95,6 +103,8 @@ describe("productQueries", () => {
       client: {} as QueryFunctionContext["client"],
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/products?category=all&page=1&pageSize=12");
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_API_ORIGIN}/api/products?category=all&page=1&pageSize=12`,
+    );
   });
 });

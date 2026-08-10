@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getHome } from "./homeApi";
 
+const TEST_API_ORIGIN = "http://test.local";
+
 describe("getHome", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -8,20 +10,22 @@ describe("getHome", () => {
   });
 
   it("기본 환경에서는 normal home API를 호출한다", async () => {
+    vi.stubEnv("APP_ORIGIN", TEST_API_ORIGIN);
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(createHomeResponse());
 
     await getHome();
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/home");
+    expect(fetchMock).toHaveBeenCalledWith(`${TEST_API_ORIGIN}/api/home`);
   });
 
   it("slow 관찰 환경에서는 API 요청에만 slow scenario를 붙인다", async () => {
+    vi.stubEnv("APP_ORIGIN", TEST_API_ORIGIN);
     vi.stubEnv("NEXT_PUBLIC_HOME_API_SCENARIO", "slow");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(createHomeResponse());
 
     await getHome();
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/home?scenario=slow");
+    expect(fetchMock).toHaveBeenCalledWith(`${TEST_API_ORIGIN}/api/home?scenario=slow`);
   });
 });
 
