@@ -210,6 +210,20 @@ Products slow 조건을 Lighthouse navigation과 DevTools Performance trace로 �
 
 따라서 이 trace의 LayoutShift는 skeleton/fallback 높이 불일치보다 slow API 응답 후 실제 상품 grid가 새 결과로 교체되며 생긴 카드 재배치로 판단한다. Lighthouse navigation CLS는 0이지만, 조건 변경 interaction trace에서는 이 재배치가 LayoutShift로 기록되므로 후속 관찰 대상으로 남긴다.
 
+### 추가 실험: min-height와 grid remount
+
+멘토 피드백 후 Chrome DevTools MCP로 같은 production slow 조건에서 `all` -> `casual` 카테고리 변경을 다시 재현했다.
+
+| 실험                                                   |   관찰 CLS | 판단                                                                 |
+| ------------------------------------------------------ | ---------: | -------------------------------------------------------------------- |
+| 기존 코드                                              | `0.253206` | 상품 `ARTICLE`가 기존 grid 위치에서 새 grid 위치로 이동하며 기록됨   |
+| 상품 목록 컨테이너에 현재 높이 `min-height` 임시 고정  | `0.253206` | 아래 영역 밀림은 줄일 수 있지만, grid 내부 카드 이동 source는 유지됨 |
+| `ProductGrid`를 결과 상품 id 목록 기준 `key`로 remount | `0.000166` | 카드 DOM 이동은 줄었지만, 하위 카드 DOM 재사용을 포기하는 비용 발생  |
+
+따라서 이 케이스의 주된 source는 목록 전체 높이 축소보다 같은 상품 카드 DOM이 새 결과 grid에서 다른 위치로 재사용되는 동작으로 판단했다. `ProductGrid`에 결과 id 기반 `key`를 주면 수치는 크게 줄었지만, 카드 하위 트리를 매번 remount해 포커스, 이미지, 내부 상태, 렌더 비용에 영향을 줄 수 있다.
+
+최종 코드에는 이 실험 변경을 반영하지 않았다. 현재 상품 카드는 가볍지만, CLS 수치를 줄이기 위해 DOM 재사용을 포기하는 방식은 과한 처방으로 판단했다. 실무 개선으로 이어간다면 단순 `key`보다 이전 grid와 새 grid를 분리한 전환 UI, 또는 결과 영역의 높이와 교체 타이밍을 함께 설계하는 방향을 우선 검토한다.
+
 ## 검증
 
 코드 변경 후 다음 검증을 통과했다.
@@ -235,4 +249,5 @@ pnpm format:check
 - active list request에는 `AbortSignal`을 전달해 이전 검색 요청이 `net::ERR_ABORTED`로 취소되는 것을 확인했다.
 - `prefetch`는 다음 페이지 체감 전환을 위한 캐시 warming으로 유지했다. prefetch 요청이 완료되어도 현재 화면의 active query 결과를 직접 덮지 않는다.
 - Lighthouse navigation CLS는 0이지만, 조건 변경 Performance trace에서는 slow API 응답 후 실제 상품 grid가 새 결과로 교체되는 시점에 카드 재배치가 LayoutShift로 기록됐다.
-- CLS를 더 줄이는 후속 실험으로는 active query 변경 시 grid remount 또는 overlay 전환이 있지만, 현재는 코드 복잡도와 UX 영향이 커서 적용하지 않았다.
+- 추가 실험에서 컨테이너 `min-height`는 카드 재배치 source를 줄이지 못했고, grid remount는 수치를 줄였지만 DOM 재사용을 포기하는 trade-off가 있어 최종 반영하지 않았다.
+- CLS를 더 줄이는 후속 실험으로는 이전 grid와 새 grid를 분리한 overlay 전환이 있지만, 현재는 코드 복잡도와 UX 영향이 커서 적용하지 않았다.
