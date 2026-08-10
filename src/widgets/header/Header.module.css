@@ -1,0 +1,23 @@
+.header,
+.header nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header {
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+@media (max-width: 480px) {
+  .header {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header nav {
+    width: 100%;
+  }
+}

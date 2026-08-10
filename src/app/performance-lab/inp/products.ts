@@ -10,16 +10,14 @@ export const performanceLabProducts: PerformanceLabProduct[] = Array.from(
     id: `p${index + 1}`,
     name: `성능 측정 상품 ${index + 1}`,
     image: `/images/products/p${index + 1}.jpg`,
-  }),
+  })
 );
 
-export function calculateCardPresentation(
-  productId: string,
-  selected: boolean,
-) {
+// [AI] starter의 function 선언을 func-style 규칙에 맞춰 화살표 함수로 변경.
+export const calculateCardPresentation = (productId: string, selected: boolean) => {
   const productSeed = Array.from(productId).reduce(
     (sum, character) => sum + character.charCodeAt(0),
-    selected ? 31 : 17,
+    selected ? 31 : 17
   );
   let checksum = productSeed;
 
@@ -28,4 +26,4 @@ export function calculateCardPresentation(
   }
 
   return checksum;
-}
+};
