@@ -2,7 +2,7 @@
 // Advanced C — 페이지 전환 중 기존 목록 유지(keepPreviousData) + 오류 재시도(에러 경계 위임)
 
 import { Component, type ReactNode } from "react";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   cleanup,
   fireEvent,
@@ -10,18 +10,14 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { ProductList } from "./ProductList";
-import { HttpError, makeQueryClient } from "@/shared/api";
-import { getProducts } from "@/entities/product/api/fetchProducts";
+import { makeQueryClient } from "@/shared/api";
 import type { Product, ProductListResponse } from "@/entities/product";
-
-vi.mock("@/entities/product/api/fetchProducts", () => ({
-  getProducts: vi.fn(),
-}));
-
-const getProductsMock = vi.mocked(getProducts);
+import { server } from "@/__tests__/msw/server";
+import { installProductListHandler } from "@/__tests__/msw/productListHandler";
 
 const BOUNDARY_FALLBACK = "목록 에러 경계";
 
@@ -89,15 +85,16 @@ function renderList(searchParams = "?page=1") {
   );
 }
 
-beforeEach(() => {
-  getProductsMock.mockReset();
-});
-
 afterEach(cleanup);
 
 describe("ProductList", () => {
   test("보여줄 데이터가 없는 서버 오류(5xx) 시 throw 해서 에러 경계로 넘어간다", async () => {
-    getProductsMock.mockRejectedValue(new HttpError(500, "서버 오류"));
+    // fetcher 바꿔치기 대신 MSW 로 500 을 돌려준다 — requestJson 이 HttpError 로 던져 경계로 넘어간다.
+    server.use(
+      http.get("/api/products", () =>
+        HttpResponse.json({ message: "서버 오류" }, { status: 500 }),
+      ),
+    );
     // 경계가 에러를 잡을 때 React 가 찍는 console.error 노이즈를 억제한다.
     const consoleError = vi
       .spyOn(console, "error")
@@ -117,9 +114,9 @@ describe("ProductList", () => {
     const page2Promise = new Promise<ProductListResponse>((resolve) => {
       resolvePage2 = resolve;
     });
-    getProductsMock.mockImplementation((query) =>
-      query.page === 1
-        ? Promise.resolve(makeResponse(1, [makeProduct("p1", "1페이지상품")]))
+    const requests = installProductListHandler((search) =>
+      search.get("page") === "1"
+        ? makeResponse(1, [makeProduct("p1", "1페이지상품")])
         : page2Promise,
     );
 
@@ -130,9 +127,7 @@ describe("ProductList", () => {
 
     // page 2 가 아직 도착 전이어도(전환 중) 이전 페이지 목록은 화면에 남아 있다
     await waitFor(() =>
-      expect(
-        getProductsMock.mock.calls.some((call) => call[0].page === 2),
-      ).toBe(true),
+      expect(requests.some((search) => search.get("page") === "2")).toBe(true),
     );
     expect(screen.getByText("1페이지상품")).toBeTruthy();
 
@@ -142,12 +137,12 @@ describe("ProductList", () => {
 
   test("현재 페이지가 정착하면 다음 페이지를 미리 prefetch 한다", async () => {
     // page 번호를 상품명에 담아 어느 페이지 요청인지 구분한다.
-    getProductsMock.mockImplementation((query) => {
-      const page = query.page ?? 1;
+    const requests = installProductListHandler((search) => {
+      const page = Number(search.get("page") ?? "1");
 
-      return Promise.resolve(
-        makeResponse(page, [makeProduct(`p-${page}`, `${page}페이지상품`)]),
-      );
+      return makeResponse(page, [
+        makeProduct(`p-${page}`, `${page}페이지상품`),
+      ]);
     });
 
     renderList("?page=1");
@@ -156,9 +151,7 @@ describe("ProductList", () => {
     // "다음"을 누르지 않아도, page 1 정착 직후 prefetch useEffect 가 page+1(=2)을 요청한다.
     // (page 1 에서 page 2 요청이 나올 경로는 이 prefetch 뿐이다.)
     await waitFor(() =>
-      expect(
-        getProductsMock.mock.calls.some((call) => call[0].page === 2),
-      ).toBe(true),
+      expect(requests.some((search) => search.get("page") === "2")).toBe(true),
     );
   });
 });

@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -9,5 +9,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    setupFiles: ["./src/__tests__/setup.ts"],
+    // e2e/ 는 Playwright(@playwright/test) 전용 — vitest 가 집어가면 test 러너가 충돌한다.
+    exclude: [...configDefaults.exclude, "e2e/**"],
   },
 });

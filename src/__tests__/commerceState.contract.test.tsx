@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Advanced D — 상태 아키텍처 테스트
 
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   act,
   cleanup,
@@ -26,14 +26,8 @@ import {
   productQueries,
   resolveProductListQuery,
 } from "@/entities/product";
-import { getProducts } from "@/entities/product/api/fetchProducts";
 import type { Product, ProductListResponse } from "@/entities/product";
-
-vi.mock("@/entities/product/api/fetchProducts", () => ({
-  getProducts: vi.fn(),
-}));
-
-const getProductsMock = vi.mocked(getProducts);
+import { installProductListHandler } from "@/__tests__/msw/productListHandler";
 
 // ProductCardActions 를 대체 — 담기·위시 버튼을 함께 렌더하는 테스트용 조합(실제로는 ProductCard 가 조합).
 function ProductActions({ productId }: { productId: string }) {
@@ -68,7 +62,6 @@ function makeResponse(page: number, products: Product[]): ProductListResponse {
 
 // 싱글톤 store 를 매 테스트 초기화한다. 토글이 persist 로 localStorage 에 쓰므로 그것도 비운다.
 beforeEach(() => {
-  getProductsMock.mockReset();
   localStorage.clear();
   useCartStore.setState({ ids: new Set(), hasHydrated: true });
   useWishlistStore.setState({ ids: new Set(), hasHydrated: true });
@@ -139,7 +132,9 @@ describe("헤더 개수 파생", () => {
 // 요구사항 3 — 계약: URL 조건이 곧 사용자가 보는 목록이다. URL 을 파싱한 조건과 목록 요청·queryKey 가 같은 하나를 가리킨다.
 describe("nuqs URL 조건과 TanStack Query query key 의 일치", () => {
   test("URL 조건이 그대로 목록 요청·queryKey 조건과 일치한다", async () => {
-    getProductsMock.mockResolvedValue(makeResponse(2, [makeProduct("p1")]));
+    const requests = installProductListHandler(() =>
+      makeResponse(2, [makeProduct("p1")]),
+    );
 
     render(
       <QueryClientProvider client={makeQueryClient()}>
@@ -161,9 +156,9 @@ describe("nuqs URL 조건과 TanStack Query query key 의 일치", () => {
     // 요청 인자와 queryKey 가 둘 다 이 하나를 가리켜야 "URL=보이는 목록"이 성립한다.
     const expectedCondition = normalizeProductListQuery(urlCondition);
 
-    // (1) URL 조건 그대로 getProducts 가 불린다.
+    // (1) URL 조건대로 실제 GET 요청이 나간다.
     await waitFor(() =>
-      expect(getProductsMock).toHaveBeenCalledWith(expectedCondition),
+      expect(requests.some((search) => search.get("page") === "2")).toBe(true),
     );
 
     // (2) 그 조건이 productQueries.list(URL 조건).queryKey 와 같은 조건을 가리킨다.
