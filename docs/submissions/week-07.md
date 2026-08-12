@@ -384,3 +384,78 @@ metadata와 본문 조회가 직렬이었다면 slow에서 `time_total`이 3초�
 - Route Handler 동작 동일: `/api/home` 기본 0.53s·slow 1.50s·error 500·잘못된 scenario 400,
   `/api/products` slow 1.51s·잘못된 page 400
 - `pnpm check`(test 78건+lint+typecheck+build) 통과
+
+## 후속 — `priority` → `preload` 교체 (`42a5a6dc`)
+
+Next 16에서 `next/image`의 `priority`가 deprecated 되었다(설치된 16.2.10 타입 정의에
+`@deprecated Use 'preload' prop instead`로 명시). 동작은 같고 이름만 바뀐 것이므로
+Hero의 `priority`를 `preload`로 교체했다. 교체 후 production document 응답에서
+`<link rel="preload" as="image" imageSrcSet="/_next/image?...">`가 이전과 동일하게
+생성되는 것을 확인했다 — 1단계의 "요청 시작" 개선(초기 HTML preload)에 회귀 없음.
+
+## Advanced A — 관계없는 카드 렌더 축소 (`/performance-lab/inp?pageSize=24`)
+
+### 측정 조건과 이번 측정의 한계
+
+- 실행: `pnpm build` → `pnpm start`(production). Before SHA `99bc535b`, After SHA `fd7c7b13`.
+  두 측정 모두 해당 SHA 코드에 아래 임시 render 계수만 더한 빌드로 진행했고, 계수는 기록 후 제거했다.
+- 원격 자동화 브라우저(창이 가려진 상태)로 측정해 과제 명시 조건과 두 가지 편차가 있다:
+  - **CPU 4x slowdown 미적용** — 자동화 확장으로는 DevTools CPU 스로틀을 걸 수 없다. 절대값은
+    4x 조건보다 작게 나오므로, 판단은 같은 조건의 Before/After 상대 비교로 했다.
+  - **presentation delay 측정 불가** — 창이 가려진 상태에서는 rAF·paint가 억제되어 Event Timing
+    항목이 확정되지 않았다(Interactions track 대체 수단도 같은 이유로 무효). 대신 document
+    capture 리스너(React 핸들러 실행 전)와 window bubble 리스너(React가 discrete 이벤트
+    업데이트를 동기 flush한 뒤) 사이 시간으로 **processing duration**을, capture 시각 −
+    `event.timeStamp`로 **input delay**를 측정했다.
+- 렌더 범위는 profiling build의 React Profiler 대신 카드 컴포넌트 본문에 임시
+  `window.__cardRenders` 계수를 넣어 클릭 전후 증가분으로 세었다(3단계 임시 서버 로그와 같은
+  '계측 후 제거' 방식). 창이 보이는 로컬 환경이라면 DevTools 4x + Interactions track +
+  profiling build Profiler로 같은 절차를 재현할 수 있고, 리렌더 계수가 24 → 1로 결정적이어서
+  상대 결론은 같을 것으로 판단한다.
+- 매 회차 절차: 페이지 리로드(모듈 스코프 store가 아니라 페이지 내 `create` store라 리로드로
+  미찜 상태 복원) → 24개 이미지 로드 완료 확인 → 같은 상품 p1("성능 측정 상품 1")의 찜 버튼
+  1회 클릭. pageSize 24와 카드 필수 계산은 그대로 두었다.
+
+### Before — 3회 측정과 원인
+
+| 회차       | input delay | processing | 리렌더된 카드 |
+| ---------- | ----------- | ---------- | ------------- |
+| 1          | 0.5 ms      | 29.2 ms    | 24 / 24       |
+| 2          | 0.4 ms      | 25.6 ms    | 24 / 24       |
+| 3          | 0.5 ms      | 25.8 ms    | 24 / 24       |
+| **중앙값** | 0.5 ms      | 25.8 ms    | 24            |
+
+- **원인**: 카드가 `usePerformanceWishlist((state) => state.wishlistIds)`로 배열 전체를
+  구독한다. toggle마다 새 배열 참조가 만들어져 클릭과 무관한 카드까지 24개 전부 리렌더되고,
+  카드마다 150,000회 루프(`calculateCardPresentation`)가 다시 실행된다. processing이 카드
+  1개분(~3ms대)의 약 24배 규모로 관찰된 것과 일치한다.
+- **반증 방법**: 셀렉터만 카드별 boolean 구독으로 좁혀 재측정했을 때 리렌더 계수와 processing이
+  줄지 않으면 이 가설을 기각한다.
+
+### 변경 — 가장 작은 개입 (`fd7c7b13`)
+
+```diff
+-  const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds);
+-  const toggleWishlist = usePerformanceWishlist((state) => state.toggleWishlist);
+-  const selected = wishlistIds.includes(product.id);
++  const selected = usePerformanceWishlist((state) => state.wishlistIds.includes(product.id));
++  const toggleWishlist = usePerformanceWishlist((state) => state.toggleWishlist);
+```
+
+셀렉터가 배열 대신 boolean을 반환하면 zustand 기본 strict equality 비교로 값이 바뀌지 않은
+카드는 리렌더를 건너뛴다. fixture 수(24), 카드 필수 계산, 찜 버튼의 즉각 피드백은 그대로다.
+
+### After — 같은 조건 3회
+
+| 회차       | input delay | processing | 리렌더된 카드 |
+| ---------- | ----------- | ---------- | ------------- |
+| 1          | 0.5 ms      | 3.7 ms     | 1 (p1)        |
+| 2          | 0.6 ms      | 3.1 ms     | 1 (p1)        |
+| 3          | 0.5 ms      | 3.7 ms     | 1 (p1)        |
+| **중앙값** | 0.5 ms      | 3.7 ms     | 1             |
+
+- processing 중앙값 25.8ms → **3.7ms**(−86%), 리렌더 24 → **1**. Before 3회 범위(25.6~~29.2ms)와
+  After 3회 범위(3.1~~3.7ms)가 겹치지 않아 측정 흔들림보다 큰 변화다.
+- 즉각 피드백 유지: 클릭한 카드는 클릭 직후 렌더에서 "찜 해제"·`aria-pressed="true"`로 바뀌고,
+  "화면 계산" 값도 selected 시드(31) 기준으로 재계산되어 표시된다.
+- 회귀 확인: `pnpm check`(test 78건+lint+typecheck+build) 통과, 임시 계수 코드는 측정 후 제거.
