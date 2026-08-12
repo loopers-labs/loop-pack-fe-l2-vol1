@@ -8,7 +8,6 @@ export const productListQueries = {
       queryKey: ["products", normalized] as const,
       queryFn: () => getProducts(normalized),
       staleTime: 60 * 1000,
-      gcTime: 5 * 60 * 1000,
       placeholderData: keepPreviousData,
     });
   },
