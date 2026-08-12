@@ -3,6 +3,7 @@ export { productListQueries } from "./api/queries";
 export {
   categoryFilterOptions,
   loadProductSearchParams,
+  serializeProductsUrl,
   sortFilterOptions,
   type ProductSearchState,
 } from "./lib/search-params";

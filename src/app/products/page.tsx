@@ -4,6 +4,7 @@ import {
   loadProductSearchParams,
   ProductListPage,
   productListQueries,
+  serializeProductsUrl,
   sortFilterOptions,
   type ProductSearchState,
 } from "@/_pages/products";
@@ -38,6 +39,7 @@ const buildDescription = (search: ProductSearchState, result: ProductListRespons
 
 export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
   const search = loadProductSearchParams(await searchParams);
+  const canonical = serializeProductsUrl("/products", search);
   const queryClient = getQueryClient();
 
   try {
@@ -49,16 +51,19 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
     return {
       title,
       description,
+      alternates: { canonical },
       openGraph: {
         ...sharedOpenGraph,
         title,
         description,
+        url: canonical,
         ...(firstProductImage !== undefined ? { images: [firstProductImage] } : {}),
       },
     };
   } catch {
-    // metadata 조회 실패 시 페이지별 빈 값 대신 root 공통 metadata를 상속한다
-    return {};
+    // metadata 조회 실패 시 title·description·og는 root 공통 metadata를 상속한다.
+    // canonical은 조회 결과와 무관하게 URL만으로 정해지므로 실패해도 유지한다
+    return { alternates: { canonical } };
   }
 }
 

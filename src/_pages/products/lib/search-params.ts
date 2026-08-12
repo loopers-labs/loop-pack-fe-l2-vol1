@@ -2,6 +2,7 @@ import type { CategoryId, ProductSort } from "@/types/commerce";
 import {
   createLoader,
   createParser,
+  createSerializer,
   parseAsNumberLiteral,
   parseAsString,
   parseAsStringLiteral,
@@ -56,3 +57,15 @@ export type ProductSearchState = inferParserType<typeof productSearchParsers>;
 
 // 서버(metadata)에서도 본문과 같은 파서로 URL 조건을 정규화한다
 export const loadProductSearchParams = createLoader(productSearchParsers);
+
+// 색인 대상 조건만 allowlist로 모은다. 측정용 scenario와 표시 옵션 pageSize는
+// 같은 목록의 다른 표현일 뿐이라 canonical에서 제외한다
+const canonicalSearchParsers = {
+  q: productSearchParsers.q,
+  category: productSearchParsers.category,
+  sort: productSearchParsers.sort,
+  page: productSearchParsers.page,
+};
+
+// 기본값과 같은 조건은 생략돼 같은 목록이 하나의 URL로 모인다
+export const serializeProductsUrl = createSerializer(canonicalSearchParsers);

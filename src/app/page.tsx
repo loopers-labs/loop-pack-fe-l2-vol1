@@ -17,16 +17,19 @@ export async function generateMetadata(): Promise<Metadata> {
       // 홈은 root template이 걸리지 않는 세그먼트라 접미사를 직접 붙이고 absolute로 고정한다
       title: { absolute: withSiteName(home.banner.title) },
       description: home.banner.description,
+      alternates: { canonical: "/" },
       openGraph: {
         ...sharedOpenGraph,
         title: home.banner.title,
         description: home.banner.description,
+        url: "/",
         images: [home.banner.image],
       },
     };
   } catch {
-    // metadata 조회 실패 시 페이지별 빈 값 대신 root 공통 metadata를 상속한다
-    return {};
+    // metadata 조회 실패 시 title·description·og는 root 공통 metadata를 상속한다.
+    // canonical은 조회 결과와 무관하게 URL만으로 정해지므로 실패해도 유지한다
+    return { alternates: { canonical: "/" } };
   }
 }
 
