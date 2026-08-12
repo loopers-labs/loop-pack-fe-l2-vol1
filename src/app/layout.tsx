@@ -1,3 +1,4 @@
+import { getAppOrigin } from '@/shared/config/appOrigin';
 import { COMMON_OPEN_GRAPH, SITE_DESCRIPTION, SITE_NAME, toOpenGraphImages } from '@/shared/config/siteMetadata';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -22,9 +23,10 @@ const geistMono = Geist_Mono({
  *   페이지가 title 을 아예 주지 않으면 default 가 쓰인다.
  * metadataBase: openGraph.images 에 상대 경로를 써도 절대 URL 로 바뀐다.
  *   build 와 runtime 에 같은 APP_ORIGIN 을 넣어야 공유 링크의 이미지 주소가 어긋나지 않는다.
+ *   이 줄은 모듈 로드 시점에 평가되므로, 값이 없으면 build 가 그 자리에서 실패한다.
  */
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_ORIGIN ?? 'http://localhost:3000'),
+  metadataBase: new URL(getAppOrigin()),
   title: {
     default: SITE_NAME,
     template: `%s · ${SITE_NAME}`,
