@@ -2,7 +2,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import type { Metadata } from "next";
 import { HomePage, homeQueries } from "@/_pages/home";
 import { getQueryClient } from "@/shared/api/get-query-client";
-import { sharedOpenGraph } from "@/shared/config/seo";
+import { sharedOpenGraph, withSiteName } from "@/shared/config/seo";
 
 // 홈 metadata는 요청 시점의 API 응답을 사용한다 (빌드 시점 고정 방지)
 export const dynamic = "force-dynamic";
@@ -14,7 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
     const home = await queryClient.fetchQuery(homeQueries.home());
 
     return {
-      title: home.banner.title,
+      // 홈은 root template이 걸리지 않는 세그먼트라 접미사를 직접 붙이고 absolute로 고정한다
+      title: { absolute: withSiteName(home.banner.title) },
       description: home.banner.description,
       openGraph: {
         ...sharedOpenGraph,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/app/providers";
-import { SITE_DESCRIPTION, SITE_NAME, sharedOpenGraph } from "@/shared/config/seo";
+import { SITE_DESCRIPTION, SITE_NAME, sharedOpenGraph, withSiteName } from "@/shared/config/seo";
 import { HeaderActions } from "@/widgets/header";
 import "./globals.css";
 import "./week-05-layout.css";
@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_ORIGIN ?? "http://localhost:3000"),
   title: {
-    template: `%s | ${SITE_NAME}`,
+    template: withSiteName("%s"),
     default: SITE_NAME,
   },
   description: SITE_DESCRIPTION,
