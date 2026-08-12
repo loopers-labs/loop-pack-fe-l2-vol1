@@ -1,17 +1,31 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import type { Metadata } from "next";
-import { HomePage, homeQueries } from "@/_pages/home";
+import { HomePage, homeQueries, loadHomeSearchParams } from "@/_pages/home";
+import { getHomeResponse } from "@/app/api/home/home-response";
 import { getQueryClient } from "@/shared/api/get-query-client";
 import { sharedOpenGraph, withSiteName } from "@/shared/config/seo";
+import type { MockApiScenario } from "@/types/commerce";
 
-// 홈 metadata는 요청 시점의 API 응답을 사용한다 (빌드 시점 고정 방지)
+// 홈 metadata는 요청 시점의 데이터를 사용한다 (빌드 시점 고정 방지)
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+type HomeProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+// 서버에서는 Route Handler HTTP 왕복 대신 데이터 함수를 직접 호출한다.
+// queryKey는 클라이언트 refetch(HTTP)와 같아 hydration 후 캐시가 이어진다
+const homeServerQuery = (scenario: MockApiScenario | null) => ({
+  ...homeQueries.home(scenario),
+  queryFn: () => getHomeResponse(scenario),
+});
+
+export async function generateMetadata({ searchParams }: HomeProps): Promise<Metadata> {
+  const { scenario } = loadHomeSearchParams(await searchParams);
   const queryClient = getQueryClient();
 
   try {
-    const home = await queryClient.fetchQuery(homeQueries.home());
+    const home = await queryClient.fetchQuery(homeServerQuery(scenario));
 
     return {
       // 홈은 root template이 걸리지 않는 세그먼트라 접미사를 직접 붙이고 absolute로 고정한다
@@ -34,14 +48,16 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// metadata와 본문은 각자 새 QueryClient를 쓰고, 같은 GET URL의 native fetch memoization으로 dedupe된다
-export default async function Home() {
+// prefetch를 await하지 않고 pending 상태로 dehydrate해 셸을 먼저 스트리밍한다.
+// metadata의 fetchQuery와는 데이터 함수의 React cache로 요청당 한 번만 실행된다
+export default async function Home({ searchParams }: HomeProps) {
+  const { scenario } = loadHomeSearchParams(await searchParams);
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(homeQueries.home());
+  void queryClient.prefetchQuery(homeServerQuery(scenario));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <HomePage />
+      <HomePage scenario={scenario} />
     </HydrationBoundary>
   );
 }

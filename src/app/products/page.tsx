@@ -8,12 +8,20 @@ import {
   sortFilterOptions,
   type ProductSearchState,
 } from "@/_pages/products";
+import { getProductListResponse } from "@/app/api/products/product-list-response";
 import { getQueryClient } from "@/shared/api/get-query-client";
 import { sharedOpenGraph } from "@/shared/config/seo";
 import type { ProductListResponse } from "@/types/commerce";
 
 type ProductsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+// 서버에서는 Route Handler HTTP 왕복 대신 데이터 함수를 직접 호출한다.
+// queryKey의 정규화된 조건을 그대로 넘겨 클라이언트 refetch(HTTP)와 키·조건을 일치시킨다
+const productListServerQuery = (search: ProductSearchState) => {
+  const options = productListQueries.list(search);
+  return { ...options, queryFn: () => getProductListResponse(options.queryKey[1]) };
 };
 
 const buildTitle = (search: ProductSearchState) => {
@@ -43,7 +51,7 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
   const queryClient = getQueryClient();
 
   try {
-    const result = await queryClient.fetchQuery(productListQueries.list(search));
+    const result = await queryClient.fetchQuery(productListServerQuery(search));
     const title = buildTitle(search);
     const description = buildDescription(search, result);
     const firstProduct = result.products[0];
@@ -75,11 +83,12 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
   }
 }
 
-// metadata와 본문은 각자 새 QueryClient를 쓰고, 같은 GET URL의 native fetch memoization으로 dedupe된다
+// prefetch를 await하지 않고 pending 상태로 dehydrate해 셸을 먼저 스트리밍한다.
+// metadata의 fetchQuery와는 데이터 함수의 React cache로 요청당 한 번만 실행된다
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const search = loadProductSearchParams(await searchParams);
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(productListQueries.list(search));
+  void queryClient.prefetchQuery(productListServerQuery(search));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
