@@ -209,14 +209,18 @@ describe("ProductListPageClient", () => {
   });
 
   describe("필터 조건 변경", () => {
-    it("카테고리를 변경하면 page를 1로 되돌린 조건으로 조회한다", async () => {
-      renderProductListPageClient({
+    it("카테고리를 변경하면 URL 상태와 조회 조건을 page 1 기준으로 갱신한다", async () => {
+      const { onUrlUpdate } = renderProductListPageClient({
         searchParams: "?category=all&sort=latest&page=3",
       });
 
       await userEvent.click(screen.getByRole("button", { name: "카테고리" }));
       await userEvent.click(screen.getByRole("option", { name: "뷰티·잡화" }));
 
+      expectUrlUpdatedWithParams(onUrlUpdate, {
+        category: "goods",
+        page: 1,
+      });
       await waitFor(() => {
         expectGetProductsCalledWithParams({
           category: "goods",
@@ -225,14 +229,18 @@ describe("ProductListPageClient", () => {
       });
     });
 
-    it("정렬을 변경하면 page를 1로 되돌린 조건으로 조회한다", async () => {
-      renderProductListPageClient({
+    it("정렬을 변경하면 URL 상태와 조회 조건을 page 1 기준으로 갱신한다", async () => {
+      const { onUrlUpdate } = renderProductListPageClient({
         searchParams: "?category=goods&sort=latest&page=3",
       });
 
       await userEvent.click(screen.getByRole("button", { name: "정렬" }));
       await userEvent.click(screen.getByRole("option", { name: "인기순" }));
 
+      expectUrlUpdatedWithParams(onUrlUpdate, {
+        sort: "popular",
+        page: 1,
+      });
       await waitFor(() => {
         expectGetProductsCalledWithParams({
           sort: "popular",
@@ -275,7 +283,7 @@ describe("ProductListPageClient", () => {
       expect(screen.getByLabelText("상품 목록")).toHaveAttribute("aria-busy", "true");
     });
 
-    it("페이지를 변경하면 상품 목록 필터 영역으로 스크롤한다", async () => {
+    it("페이지를 변경하면 URL 상태를 갱신하고 상품 목록 필터 영역으로 스크롤한다", async () => {
       mockProductsResponse(() =>
         createProductListResponse({
           products: [firstProduct],
@@ -283,7 +291,7 @@ describe("ProductListPageClient", () => {
         }),
       );
 
-      renderProductListPageClient({
+      const { onUrlUpdate } = renderProductListPageClient({
         searchParams: "?page=1",
       });
 
@@ -291,6 +299,9 @@ describe("ProductListPageClient", () => {
 
       await userEvent.click(screen.getByRole("button", { name: "다음" }));
 
+      expectUrlUpdatedWithParams(onUrlUpdate, {
+        page: 2,
+      });
       expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
         block: "start",
       });
@@ -452,11 +463,21 @@ describe("ProductListPageClient", () => {
       act(() => {
         vi.advanceTimersByTime(300);
       });
+      await act(async () => {
+        await vi.runOnlyPendingTimersAsync();
+      });
       vi.useRealTimers();
 
       await waitFor(() => {
         expectGetProductsCalledWithParams({
           q: "스탠리",
+        });
+      });
+
+      await waitFor(() => {
+        expectUrlUpdatedWithParams(onUrlUpdate, {
+          q: "스탠리",
+          page: 1,
         });
       });
     });
@@ -550,11 +571,45 @@ function expectGetProductsNotCalledWithParams(params: Partial<ProductListQuery>)
   );
 }
 
+function expectUrlUpdatedWithParams(
+  onUrlUpdate: ReturnType<typeof vi.fn<OnUrlUpdateFunction>>,
+  params: Partial<ProductListQuery>,
+) {
+  const calls = onUrlUpdate.mock.calls.map(([urlUpdate]) => urlUpdate.queryString);
+
+  expect(
+    calls.some((queryString) => queryStringMatchesParams(queryString, params)),
+    `expected URL update calls ${JSON.stringify(calls)} to include ${JSON.stringify(params)}`,
+  ).toBe(true);
+}
+
 function requestUrlMatchesParams(requestUrl: string, params: Partial<ProductListQuery>) {
   const searchParams = new URL(requestUrl).searchParams;
 
+  return searchParamsMatchValues(searchParams, params, {
+    allowDefaultOmission: false,
+  });
+}
+
+function queryStringMatchesParams(queryString: string, params: Partial<ProductListQuery>) {
+  const searchParams = new URLSearchParams(queryString);
+
+  return searchParamsMatchValues(searchParams, params, {
+    allowDefaultOmission: true,
+  });
+}
+
+function searchParamsMatchValues(
+  searchParams: URLSearchParams,
+  params: Partial<ProductListQuery>,
+  { allowDefaultOmission }: { allowDefaultOmission: boolean },
+) {
   return Object.entries(params).every(([key, value]) => {
     const requestValue = searchParams.get(key);
+
+    if (allowDefaultOmission && requestValue === null && isDefaultProductListParam(key, value)) {
+      return true;
+    }
 
     if (value === "") {
       return requestValue === null || requestValue === "";
@@ -562,4 +617,13 @@ function requestUrlMatchesParams(requestUrl: string, params: Partial<ProductList
 
     return requestValue === String(value);
   });
+}
+
+function isDefaultProductListParam(key: string, value: unknown) {
+  return (
+    (key === "q" && value === "") ||
+    (key === "category" && value === "all") ||
+    (key === "sort" && value === "latest") ||
+    (key === "page" && value === 1)
+  );
 }
