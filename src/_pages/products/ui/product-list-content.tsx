@@ -3,9 +3,8 @@
 import { ProductGridSkeleton } from "@/entities/product";
 import { CommerceApiError } from "@/shared/api/commerce-client";
 import { Placeholder } from "@/shared/ui/placeholder";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
-import type { ProductListResponse } from "@/types/commerce";
 import { productListQueries } from "../api/queries";
 import { productSearchParsers } from "../lib/search-params";
 import { ProductFilters } from "./product-filters";
@@ -15,22 +14,9 @@ export function ProductListContent() {
   const [search, setSearch] = useQueryStates(productSearchParsers, {
     history: "push",
   });
-  const queryClient = useQueryClient();
   const { data, isPending, isFetching, isError, error, refetch } = useQuery(
     productListQueries.list(search),
   );
-
-  // 갱신 실패 시 기존 목록 유지: 캐시에서 가장 최근 성공 응답을 읽는다 (로컬 복사 없음)
-  const staleResult =
-    isError && data === undefined
-      ? (queryClient
-          .getQueryCache()
-          .findAll({ queryKey: ["products"] })
-          .filter((query) => query.state.status === "success" && query.state.data !== undefined)
-          .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt)[0]?.state.data as
-          ProductListResponse | undefined)
-      : undefined;
-  const result = data ?? staleResult;
 
   const errorMessage =
     error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요.";
@@ -45,7 +31,7 @@ export function ProductListContent() {
         <section className="week05-section" aria-busy="true" aria-label="상품 목록 불러오는 중">
           <ProductGridSkeleton count={search.pageSize} />
         </section>
-      ) : isError && result === undefined ? (
+      ) : isError && data === undefined ? (
         <Placeholder
           role="alert"
           title="상품을 불러오지 못했어요"
@@ -56,7 +42,7 @@ export function ProductListContent() {
             </button>
           }
         />
-      ) : result === undefined ? null : (
+      ) : data === undefined ? null : (
         <>
           <p role={isError && !isFetching ? "alert" : "status"} aria-live="polite">
             {isFetching ? (
@@ -75,7 +61,7 @@ export function ProductListContent() {
             )}
           </p>
           <ProductListResults
-            result={result}
+            result={data}
             page={search.page}
             onPageChange={(page) => setSearch({ page })}
           />
