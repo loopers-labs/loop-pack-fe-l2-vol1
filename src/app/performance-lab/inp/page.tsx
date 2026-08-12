@@ -25,9 +25,8 @@ const usePerformanceWishlist = create<WishlistState>((set) => ({
 }));
 
 function PerformanceProductCard({ product }: { product: PerformanceLabProduct }) {
-  const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds);
+  const selected = usePerformanceWishlist((state) => state.wishlistIds.includes(product.id));
   const toggleWishlist = usePerformanceWishlist((state) => state.toggleWishlist);
-  const selected = wishlistIds.includes(product.id);
   const presentation = calculateCardPresentation(product.id, selected);
 
   return (
