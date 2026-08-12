@@ -38,6 +38,7 @@ function renderProductListWithHeader() {
 
 describe("ProductListCommerceState", () => {
   beforeEach(() => {
+    localStorage.clear();
     useCartStore.setState({
       cartProductIdMap: {},
       hasHydrated: true,
@@ -66,9 +67,10 @@ describe("ProductListCommerceState", () => {
 
   afterEach(() => {
     cleanup();
+    localStorage.clear();
   });
 
-  it("상품 카드 action은 커머스 헤더 개수에도 반영된다", async () => {
+  it("상품 카드 action을 토글하면 커머스 헤더 개수가 함께 증가하고 감소한다", async () => {
     renderProductListWithHeader();
 
     expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
@@ -80,6 +82,12 @@ describe("ProductListCommerceState", () => {
 
     expect(screen.getByLabelText("위시리스트 1")).toBeInTheDocument();
     expect(screen.getByLabelText("장바구니 1")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "1번 상품 위시리스트" }));
+    await userEvent.click(screen.getByRole("button", { name: "1번 상품 장바구니" }));
+
+    expect(screen.getByLabelText("위시리스트 0")).toBeInTheDocument();
+    expect(screen.getByLabelText("장바구니 0")).toBeInTheDocument();
   });
 });
 
