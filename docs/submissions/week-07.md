@@ -164,6 +164,8 @@
 - curl document 1회 (JS 없음): `/api/products` **1회** — generateMetadata의 서버 fetch만
 - 실제 브라우저 로드 1회 (JS 실행): **4회** — ① metadata 서버 fetch ② 본문 클라이언트 fetch (서버/클라이언트가 별개 실행이라 같은 URL이어도 memoization 대상 아님) ③④ Header `<Link href="/">`·`<Link href="/products">` prefetch가 각 라우트의 generateMetadata를 실행시켜 `/api/home`·기본 `/api/products` 추가 호출 — **동적 metadata의 숨은 비용**
 
+> 이 계수는 서버 prefetch 도입 전(`18bc4400`) 값이다. 이후 본문을 서버에서 prefetch하고 hydration으로 넘기면서 ②가 사라졌다. 재측정은 [After 이후 변경](#after-이후-변경--서버-prefetch와-queryclient-정리)에 있다.
+
 ### UA별 document 응답 시점 (`/products?scenario=slow`, 3회)
 
 | UA                  | time_starttransfer | time_total   | 해석                                                 |
@@ -211,3 +213,72 @@
 - FSD 의존 방향·슬라이스 Public API 우회 여부: 외부에서 `_pages` 내부 deep import 0건(모두 index 경유), shared→상위 레이어 역참조 0건, entities/widgets 방향 위반 0건 ✓
 - `pnpm check`(test+lint+typecheck+build) 통과
 - 홈 After 재녹화: [home-loading-after.gif](assets/week-07/home-loading-after.gif)
+
+## After 이후 변경 — 서버 prefetch와 QueryClient 정리
+
+After 측정(`18bc4400`) 이후 데이터 동기화 경로를 TanStack Query의
+[Advanced SSR 가이드](https://tanstack.com/query/latest/docs/framework/react/guides/advanced-ssr)에 맞춰 정리했다.
+**Lighthouse(FCP·LCP·CLS)는 재측정하지 않았다** — 아래 값은 데이터 경로 관련 재측정만이며,
+성능 지표를 다시 비교하려면 같은 조건으로 5회 재실행이 필요하다.
+
+- **측정 SHA**: `729c61c1d2b4c66beca56cb8b6b4be5f34ae2921`
+- **실행**: `APP_ORIGIN=http://localhost:3100 pnpm build` → `pnpm start -p 3001`
+  (`3100`은 서버 측 호출만 세는 계수용 프록시 → `3001`로 포워딩. 클라이언트는 상대 URL이라 프록시를 거치지 않아
+  서버 호출과 브라우저 호출이 자동으로 분리된다)
+
+### 변경 내역
+
+| 커밋                  | 내용                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `f0678347`·`ec54886c` | 홈·목록 서버 prefetch와 `HydrationBoundary` 적용                                                                                         |
+| `9cacfd65`            | 적용되지 않던 기본값 제거 — Provider의 `staleTime` 20초(각 쿼리가 자체 지정), 목록의 `gcTime` 5분(v5 클라이언트 기본값과 동일)           |
+| `293a0452`·`bdcbbe7c` | `getQueryClient()` 단일 팩토리로 통합. 서버는 호출마다 새 인스턴스, 브라우저는 모듈 단일 인스턴스 (`environmentManager.isServer()` 분기) |
+| `991bd77d`            | 갱신 실패 폴백에서 캐시 전체 스캔 제거                                                                                                   |
+
+`getQueryClient()`가 서버에서 호출마다 새 QueryClient를 만드는 동작은 그대로다.
+싱글턴은 브라우저 분기에만 있으므로 metadata와 본문은 여전히 캐시를 공유하지 않는다.
+
+### Route Handler 호출 계수 재측정 (계수용 프록시 → 측정 후 제거)
+
+| 상황                                        | 서버 측 `/api` 호출 | 브라우저 `/api` 호출 |
+| ------------------------------------------- | ------------------- | -------------------- |
+| curl document `/products` (JS 없음)         | **1회**             | —                    |
+| 브라우저 전체 로드 `/products?sort=popular` | **1회**             | **0건**              |
+| 브라우저 전체 로드 `/`                      | **1회**             | **0건**              |
+| 클라이언트 내비게이션 홈 → 상품             | **1회**             | **0건**              |
+
+- **memoization 유지**: `generateMetadata`와 본문이 각자 새 QueryClient로 각각 fetch하는데도 서버 측 호출은 1회다.
+  `fetchCommerceApi`가 옵션 없는 `fetch(url)`을 쓰기 때문에 URL·options가 모두 같아 memoization 대상이 된다.
+  queryFn에 `AbortSignal`을 넘기기 시작하면 호출마다 options가 달라져 이 dedupe가 깨진다.
+- **본문 클라이언트 fetch 소멸**: 3단계에서 관찰한 ②가 없어졌다. 서버 prefetch 결과가 hydration으로 넘어오고,
+  목록 `staleTime` 60초 안이라 마운트 시 재요청하지 않는다. 브라우저 네트워크 14건은 document·폰트·CSS·JS 청크뿐이다.
+- **③④(Link prefetch 유발 호출)는 이번 측정에서 재현되지 않았다.** 브라우저 네트워크에 RSC prefetch 요청 자체가
+  잡히지 않았다. 3단계 관찰을 부정하는 근거로 쓰기에는 조건이 다를 수 있어, 재현되지 않았다는 사실만 남긴다.
+
+### 하이드레이션 확인
+
+- `/products?category=digital` 전체 로드: 카드 6개 렌더, 캐시에 서버가 넣어준 키 1건, 클라이언트 `/api` 요청 0건
+- 클라이언트 내비게이션(상품 → 홈 → 상품): QueryClient가 **동일 인스턴스**로 유지(참조 비교), 캐시 3건 누적, `/api` 요청 0건
+- **초기 HTML 주의**: `/products` document에는 목록이 없고 Suspense fallback 마커(`<!--$?-->`)와 스켈레톤만 있다.
+  nuqs의 `useSearchParams`가 SSR에서 해당 서브트리를 지연시키기 때문이다.
+  dehydrate 페이로드는 RSC 스트림에 정상적으로 실려 있어 **클라이언트 캐시 동기화는 되고 SSR 렌더만 안 된다**.
+  홈은 `useSuspenseQuery`라 초기 HTML에 배너·인기 상품·신상품이 모두 들어간다.
+
+### 목록 갱신 실패 재검증 (`window.fetch`를 500으로 가로채 재현)
+
+| 경로                            | 결과                                                                                                                 |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 같은 조건 재요청 실패           | 목록 6개 **유지** + `role="alert"` "목록을 갱신하지 못했어요 (…) 다시 시도". 캐시 상태 `status: error` / `data` 유지 |
+| 조건 변경 후 실패 (패션→캐주얼) | pending 동안 이전 목록 유지 + "갱신하는 중…" → 실패 후 전체 실패 Placeholder, URL·셀렉트 모두 `casual`로 일치        |
+| 복구                            | 패치 해제 후 "다시 시도" → 총 6개 정상 복원                                                                          |
+
+2단계 상태표의 "갱신 실패 = 기존 목록 유지"는 React Query가 같은 키의 재요청 실패에서 `data`를 유지하기 때문에
+별도 폴백 없이 성립한다(`query.js`의 error 전이가 `...state`로 기존 `data`를 보존).
+조건을 바꾼 뒤의 실패는 그 조건의 최초 실패로 처리해 "현재 URL의 active query와 화면 결과 일치"를 지킨다.
+이전 구현은 캐시 전체에서 `dataUpdatedAt`이 가장 최근인 응답을 골랐기 때문에 `casual` URL 아래 `fashion` 목록이 남을 수 있었다.
+
+### 재시도 일시정지의 실제 원인
+
+2단계에 "패널이 비표시면 재시도가 일시정지된다"고 적었는데, 원인은 패널이 아니라 **탭 포커스**다.
+`retryer.js`의 `canContinue()`가 `focusManager.isFocused()`를 요구하고, `focusManager`는 **window**의
+`visibilitychange`를 듣는다. 탭이 hidden이면 `fetchStatus: "paused"`로 멈추고 재시도가 진행되지 않는다.
