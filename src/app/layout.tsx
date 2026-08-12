@@ -4,6 +4,11 @@ import './globals.css';
 import '@/examples/week-05-layout/week-05-layout.css';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { QueryProvider } from './providers';
+import {
+  APP_ORIGIN,
+  FALLBACK_OG_IMAGE,
+  sharedOpenGraph,
+} from './shared-metadata';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,9 +20,17 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+// 루트 공통 metadata — 페이지 metadata 조회가 실패하면 이 값이 그대로 상속된다.
 export const metadata: Metadata = {
-  title: 'Commerce',
-  description: 'Loopers 커머스 - 4주차부터 여기에 쌓아갑니다.',
+  metadataBase: new URL(APP_ORIGIN),
+  title: { default: 'Commerce', template: '%s | Commerce' },
+  description: '매일 새롭게 발견하는 취향 — Loopers 커머스',
+  openGraph: {
+    ...sharedOpenGraph,
+    title: 'Commerce',
+    description: '매일 새롭게 발견하는 취향 — Loopers 커머스',
+    images: [FALLBACK_OG_IMAGE],
+  },
 };
 
 export default function RootLayout({

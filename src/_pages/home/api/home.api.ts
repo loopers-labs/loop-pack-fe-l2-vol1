@@ -1,5 +1,6 @@
 import type { HomeResponse } from '@/types/commerce';
 import { HttpError, InvalidResponseError } from '@/shared/api/errors';
+import { apiUrl } from '@/shared/api/base-url';
 
 function isHomeResponse(data: unknown): data is HomeResponse {
   return (
@@ -14,7 +15,7 @@ function isHomeResponse(data: unknown): data is HomeResponse {
 }
 
 export async function getHome(): Promise<HomeResponse> {
-  const res = await fetch('/api/home');
+  const res = await fetch(apiUrl('/api/home'));
   if (!res.ok) {
     throw new HttpError(res.status, '홈 데이터를 불러오지 못했습니다.');
   }
