@@ -1,6 +1,8 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import type { Metadata } from "next";
 import {
   loadProductSearchParams,
+  ProductListPage,
   productListQueries,
   sortFilterOptions,
   type ProductSearchState,
@@ -8,8 +10,6 @@ import {
 import { getQueryClient } from "@/shared/api/get-query-client";
 import { sharedOpenGraph } from "@/shared/config/seo";
 import type { ProductListResponse } from "@/types/commerce";
-
-export { ProductListPage as default } from "@/_pages/products";
 
 type ProductsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -60,4 +60,17 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
     // metadata 조회 실패 시 페이지별 빈 값 대신 root 공통 metadata를 상속한다
     return {};
   }
+}
+
+// metadata와 본문은 각자 새 QueryClient를 쓰고, 같은 GET URL의 native fetch memoization으로 dedupe된다
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const search = loadProductSearchParams(await searchParams);
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(productListQueries.list(search));
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ProductListPage />
+    </HydrationBoundary>
+  );
 }
