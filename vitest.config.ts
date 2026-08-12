@@ -29,8 +29,10 @@ export default defineConfig({
             'src/features/toggle-wishlist/ui/ToggleWishlistButton.test.tsx',
             'src/features/add-to-cart/ui/AddToCartButton.test.tsx',
             'src/shared/ui/PageHeading/PageHeading.test.tsx',
+            'src/shared/ui/QueryState/QueryState.test.tsx',
             'src/app/error.test.tsx',
             'src/app/(home)/error.test.tsx',
+            'src/app/(home)/_ui/HomeView.test.tsx',
             'src/app/products/error.test.tsx',
           ],
         },
@@ -46,6 +48,10 @@ export default defineConfig({
         define: {
           'process.env': JSON.stringify({ NODE_ENV: 'test' }),
         },
+        /* AI-generated : next/navigation은 HomeView 한 곳에서만 쓰여 사전 스캔에 잡히지 않는다.
+           테스트 도중 처음 발견되면 재번들 → 페이지 리로드가 일어나 vi.mock 등록이 날아가고
+           useRouter가 실제 모듈로 로드돼 실패한다(Vite 의존성 캐시가 빈 상태에서만 재현) */
+        optimizeDeps: { include: ['next/navigation'] },
         test: {
           name: 'browser',
           include: [
@@ -58,8 +64,10 @@ export default defineConfig({
             'src/features/toggle-wishlist/ui/ToggleWishlistButton.test.tsx',
             'src/features/add-to-cart/ui/AddToCartButton.test.tsx',
             'src/shared/ui/PageHeading/PageHeading.test.tsx',
+            'src/shared/ui/QueryState/QueryState.test.tsx',
             'src/app/error.test.tsx',
             'src/app/(home)/error.test.tsx',
+            'src/app/(home)/_ui/HomeView.test.tsx',
             'src/app/products/error.test.tsx',
           ],
           setupFiles: ['./vitest.setup.ts'],

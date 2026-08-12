@@ -85,6 +85,29 @@ pnpm preview       # 빌드 결과물 미리보기
 
 > 구체적인 ✅/❌ 예시는 ~/.claude/skills/component-review/SKILL.md 참고
 
+## ● 성능 측정(Lighthouse) 규칙
+
+- **공식 수치는 사용자가 브라우저로 직접 측정한 값이다.** AI가 CLI(headless)로 측정한 값은 참고용·1차 확인용으로만 쓰고, 문서에도 "AI 1차 측정(참고)"처럼 구분해 표기한다 — headless CLI 실행은 확장 프로그램·실제 GPU·실제 캐시 상태가 없는 실제 브라우저 환경과 다를 수 있음이 실측으로 확인됨(같은 코드에서 600~700ms 차이).
+- **측정 프로토콜 고정(Part 1 이후 라운드부터 적용)**: 과거 라운드(Part 1의 Round 0~headerfix 등)마다 도구·환경이 달랐던 걸 소급 통일하지 않는다 — 그 시점 기록으로 그대로 두고 서로 ms 단위로 직접 비교하지 않는다. 대신 이후 모든 라운드는 아래로 고정한다:
+  - 도구: Lighthouse CLI가 아니라 **크롬 DevTools 패널**에서 사용자가 직접 실행
+  - 브라우저 프로필: 항상 **시크릿 창**
+  - URL: 홈은 `/`, 상품목록은 `/products`(쿼리 없이) 고정 — 쿼리 변형 테스트는 별도로 라벨링해 구분
+  - viewport·throttling: DevTools Performance 패널 기준 **network throttling "Fast 4G"**, 실제 디바이스의 DPR 그대로(에뮬레이션으로 DPR 1 강제하지 않음) — 2026-08-06 상품목록 측정에서 이 조건으로 처음 고정함
+  - 포트: 같은 비교 라인 안에서는 항상 동일 포트 유지
+  - 타이밍이 걸린 스크린샷(filmstrip 등)도 이 규칙을 따른다 — 사용자가 DevTools Performance 패널의 "Screenshots" 옵션으로 직접 녹화한다. 상태·동작 확인용 스크린샷(에러 배너 노출 여부 등 ms와 무관한 것)은 AI가 캡처해도 무방하다.
+- Before/After 모두 production build(`pnpm build && pnpm start`)로 실행한다.
+- 홈 cold load 기준으로 같은 viewport, 같은 CPU·network throttling 조건에서 Lighthouse를 5회 실행한다.
+- FCP·LCP·CLS는 5회 raw 값과 중앙값·최솟값·최댓값을 모두 남긴다.
+- Lighthouse 점수나 향상률에 합격선(threshold)을 두지 않는다.
+- 반드시 개선 후 체크할 것:
+  - LCP element
+  - Performance filmstrip에서 Header·페이지 제목·Hero 표시 순서
+  - Network waterfall에서 document·홈 데이터·Hero 이미지의 요청 시작 순서와 전송 크기
+  - `/api/products?scenario=slow`에서 "데이터 없는 최초 진입"과 "기존 목록이 있는 갱신"을 각각 녹화
+  - 검색·카테고리·정렬·페이지를 빠르게 연속으로 바꾼 뒤: 현재 URL의 active query와 화면 결과가 일치하는지, 이전 요청이 늦게 끝나도 현재 화면을 덮지 않는지 확인하고, 취소된 요청은 별도로 관찰
+- 관찰-가설-반증-변경은 각각 한 문장으로 기록한다: 관찰한 사실 / 원인 가설 / 가설을 반증할 방법 / 가장 먼저 시도할 가장 작은 변경.
+- Before/After의 commit SHA는 각각 기록한다. SHA를 제외한 나머지 측정 조건(URL·query string, 행동, viewport, CPU·network throttling, 브라우저·Lighthouse 버전, cold/warm navigation, 브라우저 프로필)은 Before/After에서 반드시 동일하게 유지한다.
+
 ## ● Never Do
 
 - 의도 없는 네이밍 금지 (`data`, `temp`, `doStuff`, `Comp`, `Card1`)

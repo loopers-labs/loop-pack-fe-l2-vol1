@@ -46,4 +46,16 @@ describe('useProductListParams와 query key 일치', () => {
       queryKey: ['products', { q: 'shoes', category: 'casual', sort: 'popular', page: 2 }],
     });
   });
+
+  it('page=0처럼 API가 거부하는 값은 파서가 1로 하한 보정해 400 에러 UI가 뜨지 않는다', () => {
+    const probe = renderWithSearchParams('?page=0');
+
+    expect(probe.page).toBe(1);
+  });
+
+  it('음수 page도 파서가 1로 하한 보정한다', () => {
+    const probe = renderWithSearchParams('?page=-5');
+
+    expect(probe.page).toBe(1);
+  });
 });
