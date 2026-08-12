@@ -36,6 +36,17 @@ describe("wishlist persistence", () => {
     });
   });
 
+  it.each([
+    ["undefined", undefined],
+    ["null", null],
+  ])("저장 상태가 %s이면 빈 위시리스트 상품 id map으로 복구한다", (_label, state) => {
+    const persistedState = normalizePersistedWishlistState(state);
+
+    expect(persistedState).toEqual({
+      wishlistProductIdMap: {},
+    });
+  });
+
   it("true 값을 가진 상품 id map 저장값만 유지한다", () => {
     const persistedState = normalizePersistedWishlistState({
       wishlistProductIdMap: { p1: true, p2: false, p3: true },
