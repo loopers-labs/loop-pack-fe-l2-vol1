@@ -181,6 +181,9 @@
 ## After
 
 - **After SHA**: `18bc44003be4d0fd0f2fcd86ad5e2b980471d532`
+- **최종 head와의 관계**: 3단계 제출 head `c923cfb7`은 측정 SHA와 다르지만, 두 커밋 사이
+  변경은 이 문서와 After GIF 2개뿐이다(`git diff 18bc4400..c923cfb7 --stat`).
+  측정 대상 실행 코드는 3단계 제출 상태와 동일하다
 - 측정 조건은 Before와 동일 (측정 조건 표), 실행만 `APP_ORIGIN=http://localhost:3000 pnpm build`→`pnpm start` (3단계 metadata의 서버 fetch용 origin 지정)
 
 ### Lighthouse 5회 raw 값 (Before와 같은 조건)
@@ -225,6 +228,9 @@ After 측정(`18bc4400`) 이후 데이터 동기화 경로를 TanStack Query의
 성능 지표를 다시 비교하려면 같은 조건으로 5회 재실행이 필요하다.
 
 - **측정 SHA**: `729c61c1d2b4c66beca56cb8b6b4be5f34ae2921`
+- **측정 SHA와 head의 관계**: 계수 재측정(`729c61c1`)과 UA 재측정(`68e80f18`) 사이의 코드
+  변경은 OG fallback 정적 에셋 교체(`68e80f18`)뿐이고, `68e80f18` 이후 이 절의 head
+  `9806af46`까지는 문서만 변경됐다
 - **실행**: `APP_ORIGIN=http://localhost:3100 pnpm build` → `pnpm start -p 3001`
   (`3100`은 서버 측 호출만 세는 계수용 프록시 → `3001`로 포워딩. 클라이언트는 상대 URL이라 프록시를 거치지 않아
   서버 호출과 브라우저 호출이 자동으로 분리된다)
@@ -277,6 +283,9 @@ After 측정(`18bc4400`) 이후 데이터 동기화 경로를 TanStack Query의
   일반 UA의 `time_total`은 두 측정에서 같은 1.5초대이기 때문이다. 셸을 먼저 보내려면 `await` 없이
   prefetch를 Suspense 경계 아래로 내려야 하는데, 그러면 2단계에서 맞춘 pending·갱신 화면 경계가 다시 흔들린다.
 
+> 이 악화는 이후 pending 쿼리 dehydrate 스트리밍(`e0d3eb4e`)으로 해소됐다.
+> 재측정은 [셸 스트리밍 복원](#셸-스트리밍-복원--서버-데이터-함수-직접-조회와-홈-slow-재측정)에 있다.
+
 ### 하이드레이션 확인
 
 - `/products?category=digital` 전체 로드: 카드 6개 렌더, 캐시에 서버가 넣어준 키 1건, 클라이언트 `/api` 요청 0건
@@ -304,3 +313,74 @@ After 측정(`18bc4400`) 이후 데이터 동기화 경로를 TanStack Query의
 2단계에 "패널이 비표시면 재시도가 일시정지된다"고 적었는데, 원인은 패널이 아니라 **탭 포커스**다.
 `retryer.js`의 `canContinue()`가 `focusManager.isFocused()`를 요구하고, `focusManager`는 **window**의
 `visibilitychange`를 듣는다. 탭이 hidden이면 `fetchStatus: "paused"`로 멈추고 재시도가 진행되지 않는다.
+
+## 셸 스트리밍 복원 — 서버 데이터 함수 직접 조회와 홈 slow 재측정
+
+앞 절에서 유지로 판단했던 "일반 UA 첫 바이트 1.5초" 트레이드오프를 해소하고,
+홈에서 재현할 수 없던 과제의 1.5초 slow 조건을 URL로 되살려 재측정했다.
+**Lighthouse(FCP·LCP·CLS)는 이번에도 재측정하지 않았다.**
+
+- **측정 SHA**: `e0d3eb4e` — 이 SHA 이후 head까지의 커밋은 이 문서 변경뿐이다
+  (측정 대상 실행 코드 = 최종 제출 상태)
+- **실행**: `pnpm build` → `pnpm start -p 3210`. 서버 조회가 HTTP 자기 호출이 아니게 되어
+  `APP_ORIGIN` 지정도 계수용 프록시도 더 이상 필요 없다
+
+### 변경 내역
+
+| 커밋       | 내용                                                                                                                                                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `8a560558` | mock 응답 생성을 Route Handler에서 서버 데이터 함수(`getHomeResponse`·`getProductListResponse`)로 분리. 에러는 자체 계약 `MockApiError`, dedupe는 React cache                                                                                  |
+| `e0d3eb4e` | 홈 URL scenario를 queryKey·조회 조건까지 전파(`/?scenario=slow` 재현), generateMetadata·본문 prefetch가 `APP_ORIGIN` HTTP 자기 호출 대신 데이터 함수를 직접 조회, prefetch를 await하지 않고 pending 쿼리를 dehydrate에 포함해 셸 우선 스트리밍 |
+
+pending 쿼리 dehydrate는 앞 절의 우려(prefetch를 Suspense 아래로 내리면 2단계 경계가 흔들린다)와
+달리 경계 구조를 그대로 두고 promise만 스트림에 싣는다. `useSuspenseQuery`·pending fallback·갱신
+화면은 변경 없이 유지된다.
+
+### UA별 document 응답 시점 재측정 (`scenario=slow`, 워밍업 1회 후 각 3회)
+
+| 경로        | UA                  | time_starttransfer | time_total   | 직전(`68e80f18`) 대비        |
+| ----------- | ------------------- | ------------------ | ------------ | ---------------------------- |
+| `/`         | 일반(curl 기본)     | 0.007~0.009s       | 1.516~1.521s | 홈 slow는 이번이 첫 기록     |
+| `/`         | facebookexternalhit | 1.512~1.517s       | 1.513~1.518s |                              |
+| `/products` | 일반(curl 기본)     | 0.007~0.018s       | 1.511~1.523s | **1.52s → 0.007s 복원**      |
+| `/products` | facebookexternalhit | 1.513~1.518s       | 1.513~1.520s | 변화 없음 — 완성된 head 대기 |
+
+크롤러가 metadata 완성(slow 조회)을 기다리는 비용은 동적 metadata를 쓰는 한 남는다. 일반
+사용자·크롤러 모두에게 첫 바이트를 앞당기려면 metadata를 조회와 무관한 정적 값으로 바꿔야 한다.
+
+### 홈 slow의 document·API·이미지 요청 순서 재기록
+
+스트림 청크 계측 (`/?scenario=slow`, node fetch로 청크 도착 시각 기록):
+
+| 시각   | 청크 | 내용                                                                                    |
+| ------ | ---- | --------------------------------------------------------------------------------------- |
+| 0.057s | 1    | 고정 셸 — 실제 크기 Hero fallback `<img>`(byte 305)·스켈레톤(`aria-busy`)·Suspense 마커 |
+| 1.552s | 7    | 배너 title·본문 데이터 — Suspense 경계 교체분                                           |
+| 1.552s | 9    | `og:title` — streaming metadata가 head가 아닌 body 끝에 합류                            |
+
+브라우저 전체 로드의 요청 순서 (총 15건):
+
+1. document `/?scenario=slow`
+2. 폰트 preload 2건
+3. **Hero 이미지** `/_next/image?url=…hero-original.jpg&w=3840` — 첫 flush의 셸에서 즉시 발견
+4. CSS 2건·JS 청크 9건
+5. `/api/home` 요청 **0건** — 조회 결과는 서버 prefetch가 RSC 스트림으로 전달
+
+→ 제목·설명은 조회 결과이므로 데이터 합류 시점(slow 1.55초)에 등장하는 것 자체는 그대로지만,
+이제 document가 조회를 기다리지 않고 같은 자리의 실제 크기 Hero fallback과 스켈레톤이 먼저
+표시된다. 기본 500ms 경로도 같은 구조다(셸 0.056s → 데이터 0.553s 합류).
+
+metadata와 본문 조회가 직렬이었다면 slow에서 `time_total`이 3초대였을 텐데 1.52초로 관찰돼
+최소한 병렬임은 확인했다. 요청당 1회 실행(React cache dedupe)은 별도로 계수하지 않았다.
+
+### 시나리오·API 회귀
+
+- `/?scenario=error`: document 200 + 셸 즉시 전송(0.006s) + fallback metadata(`<title>Commerce</title>`)
+  — 조회 실패가 문서 응답을 막지 않는다
+- 에러 경계 유지(브라우저 확인): 서버에서 거부된 pending promise는 redact되고 클라이언트가
+  `/api/...?scenario=error`로 3회 재시도(모두 500) 후 홈은 전역 에러 화면, 목록은 실패
+  Placeholder + "다시 시도"를 표시한다. 탭이 hidden이면 재시도가 시작되지 않아 스켈레톤이
+  유지되는데, 이는 위 "재시도 일시정지의 실제 원인"에 기록한 focusManager 동작이다
+- Route Handler 동작 동일: `/api/home` 기본 0.53s·slow 1.50s·error 500·잘못된 scenario 400,
+  `/api/products` slow 1.51s·잘못된 page 400
+- `pnpm check`(test 78건+lint+typecheck+build) 통과
