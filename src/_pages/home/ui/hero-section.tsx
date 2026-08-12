@@ -17,7 +17,7 @@ export function HeroSection({ title, description }: HeroSectionProps) {
         width={3840}
         height={2160}
         sizes="100vw"
-        priority
+        preload
       />
       {title !== undefined && (
         <div className={styles.copy}>
