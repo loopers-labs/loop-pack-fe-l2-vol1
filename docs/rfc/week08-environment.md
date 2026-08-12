@@ -137,6 +137,54 @@ config가 `jsdom`이어도 `// @vitest-environment node` 주석이 우선함을 
 
 ---
 
+## 6. E2E 테스트 실행 명령 분리
+
+### 결정: `pnpm test` 에서 E2E를 분리한다
+
+E2E(Playwright)는 `pnpm test` 에 포함하지 않고, **별도 명령 `pnpm test:e2e`** 로만 실행한다. `package.json` 의 `test` 와 `test:e2e` 스크립트 분리 구성을 그대로 유지한다.
+
+### 분리 근거
+
+#### 6-1. `pnpm test` 는 로컬에서 자주 실행되는 명령어다
+
+`pnpm test` 는 아래처럼 개발 중 잦은 실행이 일어나는 명령이다.
+
+- 코드 수정 → `pnpm test` / `pnpm test:watch` 로 회귀 확인
+- PR 직전 `pnpm check`(`test → lint → typecheck → build`) 체인에 포함
+
+이런 **잦은 실행 명령에 느린 E2E가 끼면 개발 피드백 사이클이 느려진다.**
+
+#### 6-2. 실행 비용이 단위/컴포넌트 테스트와 차원이 다르다
+
+| 항목      | 단위/컴포넌트 (Vitest) | E2E (Playwright)                               |
+| --------- | ---------------------- | ---------------------------------------------- |
+| 실행 시간 | ms 단위                | 수 초 ~ 수십 초                                |
+| 필요 환경 | Node만                 | 브라우저 + production build 서버(`pnpm start`) |
+| 안정성    | 결정적(deterministic)  | 타이밍/네트워크 영향으로 흔들림                |
+
+#### 6-3. 목적이 다르다
+
+- `pnpm test` → **개발 피드백용**, 빠르게 실패를 잡기 위함
+- `pnpm test:e2e` → **릴리스/PR 검증용**, 전체 흐름이 맞는지 확인
+
+#### 6-4. 현재 설정과 일관된다
+
+이미 프로젝트 구성이 분리를 전제로 하고 있다.
+
+- `vitest.config.ts`: `exclude: [...configDefaults.exclude, 'e2e/**']` 로 E2E 폴더 제외
+- `package.json`: `test` 와 `test:e2e` 를 별도 스크립트로 관리
+
+### 운영 가이드
+
+| 상황         | 실행 명령                               |
+| ------------ | --------------------------------------- |
+| 개발 중      | `pnpm test` / `pnpm test:watch`         |
+| PR 직전 / CI | `pnpm test` + `pnpm test:e2e` 각각 실행 |
+
+> CI 전용 통합 명령(예: `test:ci`)이 필요해지면 그때 추가로 검토한다.
+
+---
+
 ## 참고: 검토 후 선택하지 않은 대안
 
 | 대안                            | 선택하지 않은 이유                                                                                                                                          |
