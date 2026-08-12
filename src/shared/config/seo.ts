@@ -7,12 +7,12 @@ export const SITE_DESCRIPTION = "Loopers 커머스 - 4주차부터 여기에 쌓
 // root template과 홈이 같은 형식을 쓰도록 접미사를 한 곳에서 만든다
 export const withSiteName = (title: string) => `${title} | ${SITE_NAME}`;
 
-// OG 권장 크기에 맞춘 최적화 응답을 fallback 이미지로 사용.
-// 원본 3840x2160을 w=1200으로 줄인 결과라 크기가 확정적이다
+// OG 권장 크기(1200x630)로 미리 만들어 둔 정적 에셋을 fallback 이미지로 사용한다.
+// 크롤러는 이미지 최적화 협상을 하지 않으므로 옵티마이저 경로를 거칠 이유가 없다
 const OG_FALLBACK_IMAGE = {
-  url: "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1200&q=75",
+  url: "/images/og-default.jpg",
   width: 1200,
-  height: 675,
+  height: 630,
   alt: `${SITE_NAME} 대표 이미지`,
 };
 
