@@ -23,7 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
         title: home.banner.title,
         description: home.banner.description,
         url: "/",
-        images: [home.banner.image],
+        // 배너 이미지 크기는 API가 알려주지 않으므로 alt만 채운다
+        images: [{ url: home.banner.image, alt: home.banner.title }],
       },
     };
   } catch {

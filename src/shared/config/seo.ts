@@ -7,9 +7,14 @@ export const SITE_DESCRIPTION = "Loopers 커머스 - 4주차부터 여기에 쌓
 // root template과 홈이 같은 형식을 쓰도록 접미사를 한 곳에서 만든다
 export const withSiteName = (title: string) => `${title} | ${SITE_NAME}`;
 
-// OG 권장 크기에 맞춘 최적화 응답을 fallback 이미지로 사용
-export const OG_FALLBACK_IMAGE =
-  "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1200&q=75";
+// OG 권장 크기에 맞춘 최적화 응답을 fallback 이미지로 사용.
+// 원본 3840x2160을 w=1200으로 줄인 결과라 크기가 확정적이다
+const OG_FALLBACK_IMAGE = {
+  url: "/_next/image?url=%2Fimages%2Fweek-07%2Fhero-original.jpg&w=1200&q=75",
+  width: 1200,
+  height: 675,
+  alt: `${SITE_NAME} 대표 이미지`,
+};
 
 // 페이지 openGraph는 루트 openGraph를 shallow merge로 통째로 덮으므로,
 // 페이지마다 이 공통 객체를 spread 해 siteName·locale·type을 유지한다

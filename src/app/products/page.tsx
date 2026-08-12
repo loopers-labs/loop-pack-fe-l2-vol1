@@ -46,7 +46,7 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
     const result = await queryClient.fetchQuery(productListQueries.list(search));
     const title = buildTitle(search);
     const description = buildDescription(search, result);
-    const firstProductImage = result.products[0]?.image;
+    const firstProduct = result.products[0];
 
     return {
       title,
@@ -57,7 +57,15 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
         title,
         description,
         url: canonical,
-        ...(firstProductImage !== undefined ? { images: [firstProductImage] } : {}),
+        // 상품 이미지 크기는 API가 알려주지 않으므로 alt만 채운다.
+        // 0건이면 키를 만들지 않아 sharedOpenGraph의 fallback 이미지가 남는다
+        ...(firstProduct !== undefined
+          ? {
+              images: [
+                { url: firstProduct.image, alt: `${firstProduct.brand} ${firstProduct.name}` },
+              ],
+            }
+          : {}),
       },
     };
   } catch {
