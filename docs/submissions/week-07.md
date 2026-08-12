@@ -175,6 +175,9 @@
 
 → 크롤러에게는 slow API 1.5초가 그대로 첫 바이트 지연이 된다. 동적 metadata의 비용은 일반 사용자가 아니라 봇 응답 시점과 prefetch 유발 호출에서 드러남
 
+> 이 비교도 서버 prefetch 도입 전(`18bc4400`) 값이다. 이후 본문이 서버에서 데이터를 기다리게 되면서
+> 일반 UA의 스트리밍 이점이 사라졌다. 재측정은 [After 이후 변경](#ua별-document-응답-시점-재측정-일반-ua의-스트리밍-이점-상실)에 있다.
+
 ## After
 
 - **After SHA**: `18bc44003be4d0fd0f2fcd86ad5e2b980471d532`
@@ -254,6 +257,25 @@ After 측정(`18bc4400`) 이후 데이터 동기화 경로를 TanStack Query의
   목록 `staleTime` 60초 안이라 마운트 시 재요청하지 않는다. 브라우저 네트워크 14건은 document·폰트·CSS·JS 청크뿐이다.
 - **③④(Link prefetch 유발 호출)는 이번 측정에서 재현되지 않았다.** 브라우저 네트워크에 RSC prefetch 요청 자체가
   잡히지 않았다. 3단계 관찰을 부정하는 근거로 쓰기에는 조건이 다를 수 있어, 재현되지 않았다는 사실만 남긴다.
+
+### UA별 document 응답 시점 재측정 (일반 UA의 스트리밍 이점 상실)
+
+`68e80f18` production build, `APP_ORIGIN=http://localhost:3000`, `/products?scenario=slow`, 워밍업 1회 후 각 3회.
+
+| UA                  | time_starttransfer | time_total   | 3단계(`18bc4400`) 대비  |
+| ------------------- | ------------------ | ------------ | ----------------------- |
+| 일반(curl 기본)     | 1.518~1.530s       | 1.519~1.531s | **0.007s → 1.52s 악화** |
+| facebookexternalhit | 1.520~1.527s       | 1.521~1.528s | 변화 없음               |
+
+- **원인**: 본문 `page.tsx`가 `await queryClient.prefetchQuery(...)` 뒤에 JSX를 반환한다. 셸의 어느 부분도
+  렌더될 수 없어 스트리밍이 시작되지 못한다. metadata가 늦어서가 아니라 **본문이 먼저 막기 때문**이다.
+- **반증 확인**: 같은 응답에서 `og:title`이 byte 1316, `<body`가 byte 2409 — metadata가 body로 늦게 합류하지
+  않고 head에 완성된 채 전송됐다. 3단계에서 관찰한 streaming metadata 경로가 더 이상 동작하지 않는다는 증거다.
+- **트레이드오프 판단**: 서버 prefetch는 브라우저 `/api` 호출을 0건으로 만들고 목록 하이드레이션을 얻었지만,
+  그 대가로 일반 사용자의 첫 바이트가 slow API 1.5초를 그대로 기다리게 됐다. 이제 동적 metadata의 비용은
+  봇에만 국한되지 않는다. 되돌리지 않고 유지하는 이유는 이번 주 병목이 Hero LCP와 목록 상태 전환이고,
+  일반 UA의 `time_total`은 두 측정에서 같은 1.5초대이기 때문이다. 셸을 먼저 보내려면 `await` 없이
+  prefetch를 Suspense 경계 아래로 내려야 하는데, 그러면 2단계에서 맞춘 pending·갱신 화면 경계가 다시 흔들린다.
 
 ### 하이드레이션 확인
 
