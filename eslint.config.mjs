@@ -91,5 +91,26 @@ export default defineConfig(
     },
   },
 
+  {
+    // 테스트 환경 규약의 자물쇠다. `.test.ts`는 node 환경에서, `.test.tsx`는 jsdom에서 돈다
+    // (vitest.config.ts). 규약이 문서에만 있으면 DOM 테스트가 node 파일로 슬쩍 들어오고,
+    // 그날부터 DOM이 필요 없는 테스트까지 브라우저 흉내 환경을 세우게 된다.
+    files: ['**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@testing-library/*'],
+              message:
+                'DOM이 필요한 테스트는 jsdom 프로젝트가 맡는다. 파일 확장자를 .test.tsx로 바꾼다.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   prettier,
 )
