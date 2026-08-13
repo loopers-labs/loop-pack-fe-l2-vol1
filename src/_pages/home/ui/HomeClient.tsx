@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback } from 'react';
+// import { useCallback } from 'react';
 import Link from 'next/link';
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
-import { productListQueryOptions } from '@/entities/product/api/productQueries';
+// import { productListQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { formatWon, calcDiscount } from '@/shared/lib/format';
@@ -74,22 +74,22 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 export function HomeClient() {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
   const { data } = useSuspenseQuery(homeQueryOptions());
 
-  const prefetchProducts = useCallback(() => {
+  /* const prefetchProducts = useCallback(() => {
     void queryClient.prefetchQuery(
       productListQueryOptions({ category: 'all', sort: 'latest', page: 1 }),
     );
-  }, [queryClient]);
+  }, [queryClient]); */
 
-  const { banner, categories, categoryThumbnails, popularProducts, newProducts } = data;
+  const { categories, categoryThumbnails, popularProducts, newProducts } = data;
 
   const isProductsEmpty = popularProducts.length === 0 && newProducts.length === 0;
 
   return (
     <>
-      {/* 배너 */}
+      {/* 기존 배너
       <section className="relative overflow-hidden bg-bg-card">
         <div className="relative h-[420px] md:h-[520px]">
           <img
@@ -98,7 +98,7 @@ export function HomeClient() {
             className="absolute inset-0 size-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-text/60 via-text/30 to-transparent" />
-          <div className="relative mx-auto flex h-full max-w-5xl items-center px-8">
+          <div className="relative flex h-full items-center px-8">
             <div className="max-w-lg">
               <h2 className="font-family-display text-3xl font-light text-white md:text-[42px] md:leading-[1.2]">
                 {banner.title}
@@ -116,10 +116,10 @@ export function HomeClient() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* 카테고리 */}
-      <section className="mx-auto max-w-5xl px-8 py-14">
+      <section className="px-8 py-14">
         <h2 className="mb-8 font-family-display text-xl font-normal text-text">
           Shop by Categories
         </h2>
@@ -154,7 +154,7 @@ export function HomeClient() {
         </div>
       ) : popularProducts.length > 0 && (
         <section className="bg-bg-card py-14">
-          <div className="mx-auto max-w-5xl px-8">
+          <div className="px-8">
             <h2 className="mb-8 font-family-display text-xl font-normal text-text">
               인기 상품
             </h2>
@@ -169,7 +169,7 @@ export function HomeClient() {
 
       {/* 신상품 */}
       {!isProductsEmpty && newProducts.length > 0 && (
-        <section className="mx-auto max-w-5xl px-8 py-14">
+        <section className="px-8 py-14">
           <h2 className="mb-8 font-family-display text-xl font-normal text-text">
             신상품
           </h2>

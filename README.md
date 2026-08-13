@@ -17,6 +17,10 @@ pnpm dev
 
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
 
+## 기술 개선 기록
+
+- [7주차 — 초기 로딩 성능과 목록 상태 설계](./docs/week-07-performance/README.md)
+
 ## 구조 (최소 골격)
 
 ```

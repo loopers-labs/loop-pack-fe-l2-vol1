@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -46,3 +47,8 @@ next-env.d.ts
 
 # personal docs
 docs/user/
+
+# lighthouse reports
+lighthouse-*.json
+lighthouse-prod*
+lighthouse-report.*

@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-08-07T17:50:39.335Z",
+  "origin": "http://localhost:3000",
+  "documents": {
+    "normal": {
+      "url": "http://localhost:3000/products",
+      "status": 200,
+      "title": "지금 가장 사랑받는 아이템 | Aesthetic",
+      "description": "최신순 총 30개",
+      "ogImage": "http://localhost:3000/images/products/p26.jpg",
+      "hasMain": true,
+      "hasH1": true,
+      "hasNav": true
+    },
+    "empty": {
+      "url": "http://localhost:3000/products?scenario=empty",
+      "status": 200,
+      "title": "지금 가장 사랑받는 아이템 | Aesthetic",
+      "description": "조건에 맞는 상품이 없습니다.",
+      "ogImage": "http://localhost:3000/images/week-07/hero-1920.webp",
+      "hasMain": true,
+      "hasH1": true,
+      "hasNav": true
+    }
+  },
+  "timings": {
+    "browser": [
+      {
+        "status": 200,
+        "timeStartTransferMs": 32.5,
+        "timeTotalMs": 1551.8
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 33.2,
+        "timeTotalMs": 1552.6
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 16.2,
+        "timeTotalMs": 1531.2
+      }
+    ],
+    "facebookexternalhit": [
+      {
+        "status": 200,
+        "timeStartTransferMs": 1551.4,
+        "timeTotalMs": 1558.5
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 1530.9,
+        "timeTotalMs": 1535.9
+      },
+      {
+        "status": 200,
+        "timeStartTransferMs": 1540.4,
+        "timeTotalMs": 1545.7
+      }
+    ]
+  }
+}
