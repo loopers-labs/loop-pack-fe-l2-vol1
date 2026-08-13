@@ -14,13 +14,15 @@ export function CommerceHeaderCounts() {
   const cart = useCartHasHydrated() ? cartCount : PENDING_COUNT;
   const wishlist = useWishlistHasHydrated() ? wishlistCount : PENDING_COUNT;
 
+  // role="status" 로 개수 변화를 스크린리더가 알리게 한다(라이브 리전). status 는 콘텐츠에서
+  // 이름을 가져오지 않으므로, aria-label 로 "장바구니 N" 을 이름으로 줘 SR·테스트가 role·이름으로 짚게 한다.
   return (
     <div className={styles.headerCounts}>
-      <span>
-        장바구니 <span data-testid="cart-count">{cart}</span>
+      <span role="status" aria-label={`장바구니 ${cart}`}>
+        장바구니 {cart}
       </span>
-      <span>
-        위시리스트 <span data-testid="wishlist-count">{wishlist}</span>
+      <span role="status" aria-label={`위시리스트 ${wishlist}`}>
+        위시리스트 {wishlist}
       </span>
     </div>
   );
