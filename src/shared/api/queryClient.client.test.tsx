@@ -14,7 +14,9 @@ import { getQueryClient, makeQueryClient } from "./queryClient";
 import { productQueries } from "@/entities/product";
 import type { ProductListParams } from "@/entities/product";
 import type { ProductListResponse } from "@/entities/product";
-import { installProductListHandler } from "@/__tests__/msw/productListHandler";
+import { http, HttpResponse } from "msw";
+import { server } from "@/__tests__/msw/server";
+import { PRODUCTS_ENDPOINT } from "@/__tests__/msw/handlers";
 
 const RESPONSE: ProductListResponse = {
   products: [],
@@ -71,21 +73,29 @@ function renderClient(state: DehydratedState, probeQuery: ProductListParams) {
 describe("서버 prefetch → 클라 컴포넌트 핸드오프", () => {
   // 요구 3 — dehydrate·HydrationBoundary 로 캐시 전달
   test("요구3: dehydrate + HydrationBoundary 가 서버 캐시를 클라이언트에 전달한다", async () => {
-    installProductListHandler(() => RESPONSE);
+    server.use(http.get(PRODUCTS_ENDPOINT, () => HttpResponse.json(RESPONSE)));
     const state = await prefetchOnServer(QUERY);
     expect(state.queries).toHaveLength(1); // dehydrate 스냅샷에 쿼리가 담긴다
 
     renderClient(state, QUERY);
 
     // HydrationBoundary 로 넘어온 데이터가 로딩 없이 바로 보인다
-    expect(await screen.findByText("총 30개")).toBeTruthy();
+    expect(await screen.findByText("총 30개")).toBeInTheDocument();
     expect(screen.queryByText("불러오는 중")).toBeNull();
   });
 
   // 요구 4 — 초기 중복 요청 없음. (요구 2도 함께 커버: 서버가 "같은 팩토리 productQueries.list"로 prefetch 했기에 클라가 같은 조건 useQuery 에서 그 캐시를 재사용한다)
   test("요구4: prefetch 된 조건으로 mount 해도 초기 중복 요청이 없다", async () => {
-    // MSW 가 가로챈 요청을 기록한다 — fetcher 를 바꿔치기하지 않고 "몇 번 나갔는지"만 관찰.
-    const requests = installProductListHandler(() => RESPONSE);
+    // 나간 요청을 직접 기록한다 — "prefetch 후 mount 시 재요청 없음"(week5 Advanced B 성능 계약)을
+    // 확인하는 이 테스트 전용 관찰이라, 공용 헬퍼 없이 이 파일 안에만 인라인해 둔다.
+    const requests: URLSearchParams[] = [];
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        requests.push(new URL(request.url).searchParams);
+
+        return HttpResponse.json(RESPONSE);
+      }),
+    );
     const state = await prefetchOnServer(QUERY);
     expect(requests).toHaveLength(1); // 서버 prefetch 로 딱 1번 나갔다
 
