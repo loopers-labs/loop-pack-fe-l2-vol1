@@ -1,28 +1,6 @@
 // Advanced A — id 집합 영속 store 팩토리(cart·wishlist 가 공유하는 persist 로직) 테스트
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-
-// 노드 테스트 환경엔 localStorage 가 없다. persist 의 storage(localStorage)가 접근되기 전에
-// 인메모리 목을 전역에 심는다(팩토리는 skipHydration 라 생성 시엔 접근하지 않는다).
-function createLocalStorageMock(): Storage {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key) => (key in store ? store[key] : null),
-    setItem: (key, value) => {
-      store[key] = String(value);
-    },
-    removeItem: (key) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-    key: (index) => Object.keys(store)[index] ?? null,
-    get length() {
-      return Object.keys(store).length;
-    },
-  };
-}
+import { createLocalStorageMock } from "@/__tests__/helpers/localStorageMock";
 
 vi.stubGlobal("localStorage", createLocalStorageMock());
 
