@@ -10,18 +10,10 @@ import {
 import { Header } from '@/widgets/header/Header';
 import { ProductCard } from '@/widgets/product-card/ProductCard';
 import { SkeletonCard } from '@/shared/ui/SkeletonCard';
-import { ApiError } from '@/shared/api/fetcher';
+import { getFailureReason } from '@/shared/lib/getFailureReason';
 import { useProductPage } from '../model/useProductPage';
 import { useProductList } from '../model/useProductList';
 import { Product } from '@/entities/product/model';
-
-// [AI] TanStack Query v5의 error는 unknown 타입이므로 ApiError로 좁혀서 진짜 메시지를 꺼낸다.
-// ApiError가 아니면(예: 네트워크 단절) 기본 메시지로 대체한다.
-const getFailureReason = (error: unknown): string => {
-  if (error instanceof ApiError) return error.message;
-  if (error instanceof TypeError) return '네트워크 연결을 확인해 주세요.';
-  return '상품을 불러오지 못했습니다.';
-};
 
 export const ProductList = () => {
   const {
