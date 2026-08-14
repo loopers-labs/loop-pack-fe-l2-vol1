@@ -5,12 +5,12 @@ import type { ProductListResponse } from '@/entities/product/model';
 // [AI] MSW 기본 핸들러용 fixture 데이터. 라우트 핸들러의 정렬·필터링 로직을
 // 재현하지 않고, 통합 테스트에서 검증하기 좋은 최소 데이터만 제공한다.
 // 실패·빈 결과·지연은 테스트 안에서 server.use()로 덮어쓴다 (line 149).
-const categories = [
+export const categories = [
   { id: 'casual' as const, name: '캐주얼' },
   { id: 'digital' as const, name: '디지털' },
 ];
 
-const sampleProducts = [
+export const sampleProducts = [
   {
     id: 'test-1',
     brand: '테스트 브랜드',
