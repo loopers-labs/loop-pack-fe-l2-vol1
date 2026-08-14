@@ -1,6 +1,6 @@
-// @vitest-environment jsdom
 // [AI] useProductListFilters 훅의 URL 상태 계약 검증.
 // nuqs testing adapter로 URL ↔ state 동기화, history:'push', 필터 변경 시 page 리셋을 확인한다.
+// (.test.tsx는 config Test Projects가 자동으로 jsdom에서 돌린다.)
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderHook, act, cleanup } from '@testing-library/react';

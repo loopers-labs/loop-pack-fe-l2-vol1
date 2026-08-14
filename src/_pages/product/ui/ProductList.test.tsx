@@ -1,5 +1,5 @@
-// @vitest-environment jsdom
 // [AI] ProductList 목록 상태 통합 테스트 (week-08 2단계, items 4-7).
+// (.test.tsx는 config Test Projects가 자동으로 jsdom에서 돌린다.)
 // MSW로 목록 응답(성공/빈/에러/순차)을 제어하고, 상태 분기 렌더를 검증한다.
 // 기본 핸들러는 성공 경로만 두고, 빈/에러/지연은 각 테스트에서 server.use()로 덮어쓴다.
 // 에러 상태는 4xx로 만든다 — 5xx는 queryClient의 throwOnError가 error boundary로

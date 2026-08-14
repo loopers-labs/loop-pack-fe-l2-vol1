@@ -1,3 +1,6 @@
+// @vitest-environment node
+// [AI] 렌더 없이 renderToStaticMarkup 로직만 검증하는 테스트 — .tsx 기본(jsdom)을
+// node로 되돌리는 예외 (docs/rfc/week08-environment.md 섹션 1, .tsx+node 주석 예외).
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
