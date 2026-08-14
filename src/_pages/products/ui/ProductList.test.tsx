@@ -299,6 +299,32 @@ describe("week8 검증대상 8 — 카테고리 변경 → 목록 변경", () =>
     expect(await screen.findByText("홈상품")).toBeInTheDocument();
     expect(screen.getByText("패션상품")).toBeInTheDocument();
   });
+
+  test("경계: 다른 페이지를 보다가 카테고리를 바꾸면 1페이지로 리셋된다", async () => {
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        const category = params.get("category") ?? "all"; // 전체(all)는 요청에서 생략되어 null
+        const page = Number(params.get("page") ?? "1");
+
+        return HttpResponse.json(
+          makeResponse(
+            [makeProduct(`${category}-${page}`, `${category} ${page}페이지`)],
+            { totalCount: 30, page },
+          ),
+        );
+      }),
+    );
+
+    renderFiltersAndList("?page=2");
+    expect(await screen.findByText("all 2페이지")).toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText("카테고리"), "fashion");
+
+    // page 를 유지했다면 "fashion 2페이지"가 떠야 하지만, 리셋됐으므로 1페이지가 뜬다.
+    expect(await screen.findByText("fashion 1페이지")).toBeInTheDocument();
+    expect(screen.queryByText("fashion 2페이지")).toBeNull();
+  });
 });
 
 describe("week8 검증대상 9 — 정렬 변경 → 순서 변경", () => {
