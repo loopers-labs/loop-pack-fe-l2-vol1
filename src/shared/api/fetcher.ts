@@ -9,7 +9,7 @@ type FetcherOptions = {
   signal?: AbortSignal;
 };
 
-const buildQueryString = (query?: FetcherOptions['query']): string => {
+export const buildQueryString = (query?: FetcherOptions['query']): string => {
   if (!query) {
     return '';
   }
