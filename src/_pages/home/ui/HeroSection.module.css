@@ -1,0 +1,76 @@
+.hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  color: #211b17;
+  background: #d8cebf;
+}
+
+/* picture 는 레이아웃에 관여하지 않는다. 자리를 잡는 것은 안쪽 img 다. */
+.picture {
+  display: contents;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.copy {
+  position: absolute;
+  inset: auto auto clamp(20px, 5vw, 64px) clamp(20px, 5vw, 64px);
+  width: min(440px, calc(100% - 40px));
+  padding: clamp(18px, 3vw, 32px);
+  background: rgb(255 253 248 / 88%);
+  backdrop-filter: blur(8px);
+
+  /*
+   * 이 카드는 좌하단에 고정돼 있어 내용이 길어지면 위로 자란다.
+   * fallback 이 실제 문구보다 짧으면 교체 순간 윗변이 움직이므로,
+   * 문구가 차지할 수 있는 최대치를 미리 잡아 두 상태가 같은 박스를 쓰게 한다.
+   * 상하 padding + eyebrow 1줄 + 제목 2줄(line-height 1.08) + 여백 + 설명 2줄.
+   */
+  min-height: calc(clamp(18px, 3vw, 32px) * 2 + 16px + 6px + clamp(28px, 4vw, 52px) * 2.16 + 10px + 26px * 2);
+}
+
+.copy h2 {
+  margin: 6px 0 10px;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.copy p {
+  line-height: 1.6;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* 막대 높이가 1em 이라 각 요소의 font-size 를 따라간다. clamp() 구간에서도 어긋나지 않는다. */
+.copyFallback .bar {
+  display: block;
+  height: 1em;
+  margin: 0.04em 0;
+  background: rgb(33 27 23 / 12%);
+}
+
+.copyFallback .barShort {
+  width: 62%;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    aspect-ratio: 4 / 5;
+  }
+
+  .image {
+    object-position: 56% center;
+  }
+}

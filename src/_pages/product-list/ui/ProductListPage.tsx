@@ -1,10 +1,12 @@
 'use client';
 
-import { DEFAULT_PAGE_SIZE, ProductFilterForm, useProductFilterState } from '@/features/product-filter';
+import { ProductFilterForm, useProductFilterState } from '@/features/product-filter';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import type { ProductListQuery } from '../model/types';
+import { toProductListQuery } from '../model/toProductListQuery';
+import { PRODUCT_LIST_SCENARIOS } from '../model/types';
 import { ProductListResult } from './ProductListResult';
 
 /**
@@ -18,17 +20,16 @@ import { ProductListResult } from './ProductListResult';
  *
  * 필터가 고른 값을 조회 조건으로 조립하는 것은 조회하는 쪽인 이 슬라이스의 일이다.
  * pageSize 처럼 사용자가 고르지 않는 값이 여기서 붙는다.
+ *
+ * scenario 를 features/product-filter 의 파서에 넣지 않고 여기서 직접 읽는 이유:
+ * 그 슬라이스는 "사용자가 무엇을 골랐는가"까지만 안다. scenario 는 사용자의 선택이 아니라
+ * 서버 응답을 바꾸는 조회 조건이므로, pageSize 와 같은 자리에서 붙이는 것이 맞다.
  */
 export function ProductListPage() {
   const { state, setPage } = useProductFilterState();
+  const [scenario] = useQueryState('scenario', parseAsStringLiteral(PRODUCT_LIST_SCENARIOS));
 
-  const query: ProductListQuery = {
-    q: state.q,
-    category: state.category,
-    sort: state.sort,
-    page: state.page,
-    pageSize: DEFAULT_PAGE_SIZE,
-  };
+  const query = toProductListQuery(state, scenario ?? undefined);
 
   return (
     <>

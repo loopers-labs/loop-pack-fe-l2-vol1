@@ -13,3 +13,11 @@
 export { ProductFilterForm } from './ui/ProductFilterForm';
 export { useProductFilterState } from './model/useProductFilterState';
 export { DEFAULT_PAGE_SIZE } from './config/filters';
+
+/**
+ * 서버가 URL 을 클라이언트와 같은 규칙으로 읽기 위한 순수 함수.
+ * nuqs 는 클라이언트 전용이라 서버에는 없다. metadata 와 본문이 같은 조회 조건을
+ * 만들려면 정규화 규칙이 한 벌이어야 하므로 함수만 공개하고 파서·선택지는 계속 감춘다.
+ */
+export { parseFilterParams, DEFAULT_FILTER_STATE } from './model/parseFilterParams';
+export type { ProductFilterState, RawSearchParams } from './model/parseFilterParams';

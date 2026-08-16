@@ -1,0 +1,83 @@
+/*
+ * 최초 진입 pending.
+ * 실제 카드와 같은 골격(정사각 이미지 + 브랜드·이름·가격 3줄 + 버튼 줄)을 그려
+ * 목록이 몇 개나 올지 미리 보이게 하고, 교체 때 자리도 밀리지 않게 한다.
+ */
+.skeletonCard {
+  display: grid;
+  gap: 8px;
+}
+
+/*
+ * 실제 카드의 이미지 자리(.week05-image)와 같은 회색을 쓴다.
+ * 처음에는 어두운 색을 낮은 투명도로 깔았는데, 다크 모드에서 배경과 구분되지 않아
+ * 스켈레톤이 통째로 보이지 않았다. 배경색에 기대지 않는 불투명 회색으로 바꾼다.
+ */
+.skeletonCard > span {
+  display: block;
+  background: #ececec;
+}
+
+.skeletonBrand,
+.skeletonName,
+.skeletonPrice,
+.skeletonActions {
+  background: #d5d5d5;
+}
+
+.skeletonImage {
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.skeletonBrand {
+  width: 40%;
+  height: 1em;
+}
+
+.skeletonName {
+  width: 80%;
+  height: 1.2em;
+}
+
+.skeletonPrice {
+  width: 55%;
+  height: 1.2em;
+}
+
+.skeletonActions {
+  width: 70%;
+  height: 34px;
+}
+
+/*
+ * 갱신 중. 목록은 그대로 두고 흐리게만 만든다.
+ *
+ * 문구를 목록 위에 끼워 넣는 방식을 먼저 썼다가 되돌렸다.
+ * 조건부로 넣다 빼면 아래 목록이 그만큼 밀렸고(실측 shift 0.01447),
+ * 한 줄 자리를 예약해도 좁은 화면에서 문구가 두 줄로 감겨 여전히 밀렸다(0.00938).
+ *
+ * opacity 는 컴포지터에서만 처리되어 레이아웃을 건드리지 않는다.
+ * 자리를 정확히 맞추려 애쓰는 대신, 자리를 차지하지 않는 수단을 고른다.
+ * 보조기술에는 section 의 aria-busy 가 갱신 중임을 알린다.
+ */
+.updating {
+  opacity: 0.45;
+  transition: opacity 120ms ease-out;
+}
+
+/*
+ * 본문보다 약하게 보이되 색을 고정하지는 않는다.
+ * 이 앱은 prefers-color-scheme 으로 배경이 바뀌므로 색을 박으면 한쪽 테마에서 안 읽힌다.
+ */
+/*
+ * 최초 진입 안내 문구. 이 자리에는 앞선 콘텐츠가 없어 넣고 빼도 밀릴 것이 없다.
+ * 색을 고정하지 않는 이유는 prefers-color-scheme 으로 배경이 바뀌기 때문이다.
+ */
+.status {
+  opacity: 0.7;
+}
+
+.retryButton {
+  margin-left: 8px;
+}

@@ -34,4 +34,8 @@ jobs:
             pnpm exec playwright install --with-deps chromium
           fi
       - name: Run quality checks
+        # APP_ORIGIN 은 기본값이 없어 없으면 build 가 실패한다.
+        # 배포 환경과 마찬가지로 CI 도 값을 명시적으로 주입한다.
+        env:
+          APP_ORIGIN: http://localhost:3000
         run: pnpm check
