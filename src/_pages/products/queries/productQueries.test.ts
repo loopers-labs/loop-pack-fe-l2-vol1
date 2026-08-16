@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { server } from "@/shared/config/vitest/mswServer";
+import { createMockProductListResponse } from "@/shared/testing/commerceFixtures";
 import { productQueries } from "./productQueries";
 import type { ProductListQuery } from "../api/productApi";
 import type { QueryFunctionContext } from "@tanstack/react-query";
@@ -56,7 +57,7 @@ describe("productQueries", () => {
       http.get(`${TEST_API_ORIGIN}/api/products`, () => {
         didRequest = true;
 
-        return HttpResponse.json(createProductListResponse());
+        return HttpResponse.json(createMockProductListResponse());
       }),
     );
     abortController.abort();
@@ -85,7 +86,7 @@ describe("productQueries", () => {
       http.get(`${TEST_API_ORIGIN}/api/products`, ({ request }) => {
         requestedUrl = request.url;
 
-        return HttpResponse.json(createProductListResponse());
+        return HttpResponse.json(createMockProductListResponse());
       }),
     );
     abortController.abort();
@@ -100,13 +101,3 @@ describe("productQueries", () => {
     expect(requestedUrl).toBe(`${TEST_API_ORIGIN}/api/products?category=all&page=1&pageSize=12`);
   });
 });
-
-function createProductListResponse() {
-  return {
-    products: [],
-    categories: [],
-    totalCount: 0,
-    page: 1,
-    pageSize: 12,
-  };
-}

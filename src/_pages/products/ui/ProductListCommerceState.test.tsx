@@ -10,8 +10,11 @@ import { CommerceHeader } from "@/widgets/header";
 import { ProductListPageClient } from "./ProductListPage";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
-import type { Product } from "@/entities/product";
 import { server } from "@/shared/config/vitest/mswServer";
+import {
+  createMockProduct,
+  createMockProductListResponse,
+} from "@/shared/testing/commerceFixtures";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
@@ -49,18 +52,17 @@ describe("ProductListCommerceState", () => {
     });
     server.use(
       http.get("/api/products", () =>
-        HttpResponse.json({
-          products: [
-            createProduct({
-              id: "p1",
-              name: "첫 번째 상품",
-            }),
-          ],
-          categories: [],
-          totalCount: 1,
-          page: 1,
-          pageSize: 12,
-        }),
+        HttpResponse.json(
+          createMockProductListResponse({
+            products: [
+              createMockProduct({
+                id: "p1",
+                name: "첫 번째 상품",
+              }),
+            ],
+            totalCount: 1,
+          }),
+        ),
       ),
     );
   });
@@ -90,21 +92,3 @@ describe("ProductListCommerceState", () => {
     expect(screen.getByLabelText("장바구니 0")).toBeInTheDocument();
   });
 });
-
-function createProduct(product: Partial<Product> = {}): Product {
-  return {
-    id: "product-id",
-    brand: "Loopers Select",
-    name: "상품명",
-    category: "goods",
-    price: 10000,
-    originalPrice: null,
-    image: "/images/products/p1.jpg",
-    freeShipping: false,
-    sizes: [],
-    rating: 4.5,
-    reviewCount: 10,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    ...product,
-  };
-}

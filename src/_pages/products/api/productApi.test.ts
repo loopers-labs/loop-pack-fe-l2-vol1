@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { server } from "@/shared/config/vitest/mswServer";
+import { createMockProductListResponse } from "@/shared/testing/commerceFixtures";
 import { getProducts } from "./productApi";
 
 const TEST_API_ORIGIN = "http://test.local";
@@ -19,7 +20,7 @@ describe("getProducts", () => {
       http.get(`${TEST_API_ORIGIN}/api/products`, ({ request }) => {
         requestedUrl = request.url;
 
-        return HttpResponse.json(createProductListResponse());
+        return HttpResponse.json(createMockProductListResponse());
       }),
     );
 
@@ -44,7 +45,7 @@ describe("getProducts", () => {
       http.get(`${TEST_API_ORIGIN}/api/products`, () => {
         didRequest = true;
 
-        return HttpResponse.json(createProductListResponse());
+        return HttpResponse.json(createMockProductListResponse());
       }),
     );
     abortController.abort();
@@ -62,13 +63,3 @@ describe("getProducts", () => {
     expect(didRequest).toBe(false);
   });
 });
-
-function createProductListResponse() {
-  return {
-    products: [],
-    categories: [],
-    totalCount: 0,
-    page: 1,
-    pageSize: 12,
-  };
-}

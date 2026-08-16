@@ -11,18 +11,21 @@ import { ProductListPageClient } from "./ProductListPage";
 import type { ProductListQuery, ProductListResponse } from "../api/productApi";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
-import type { Product } from "@/entities/product";
 import { server } from "@/shared/config/vitest/mswServer";
+import {
+  createMockProduct,
+  createMockProductListResponse,
+} from "@/shared/testing/commerceFixtures";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
 }));
 
-const firstProduct = createProduct({
+const firstProduct = createMockProduct({
   id: "p1",
   name: "첫 번째 상품",
 });
-const prefetchedProduct = createProduct({
+const prefetchedProduct = createMockProduct({
   id: "p2",
   name: "미리 가져온 상품",
 });
@@ -67,7 +70,7 @@ describe("ProductListPageClient", () => {
     });
     productRequestUrls = [];
     mockProductsResponse(() =>
-      createProductListResponse({
+      createMockProductListResponse({
         totalCount: 30,
       }),
     );
@@ -94,7 +97,7 @@ describe("ProductListPageClient", () => {
       expect(screen.queryByText("첫 번째 상품")).not.toBeInTheDocument();
 
       deferredProductsResponse.resolve(
-        createProductListResponse({
+        createMockProductListResponse({
           products: [firstProduct],
           totalCount: 1,
         }),
@@ -106,7 +109,7 @@ describe("ProductListPageClient", () => {
 
     it("현재 URL 조건의 결과가 0건이면 빈 결과 안내를 보여준다", async () => {
       mockProductsResponse(() =>
-        createProductListResponse({
+        createMockProductListResponse({
           products: [],
           totalCount: 0,
         }),
@@ -131,7 +134,7 @@ describe("ProductListPageClient", () => {
   describe("URL 조건", () => {
     it("응답 이후 현재 page가 마지막 페이지를 넘으면 마지막 페이지로 replace한다", async () => {
       mockProductsResponse(() =>
-        createProductListResponse({
+        createMockProductListResponse({
           totalCount: 30,
           page: 100,
         }),
@@ -257,7 +260,7 @@ describe("ProductListPageClient", () => {
           return new Promise<ProductListResponse>(() => {});
         }
 
-        return createProductListResponse({
+        return createMockProductListResponse({
           products: [firstProduct],
           totalCount: 36,
           page: 2,
@@ -285,7 +288,7 @@ describe("ProductListPageClient", () => {
 
     it("페이지를 변경하면 URL 상태를 갱신하고 상품 목록 필터 영역으로 스크롤한다", async () => {
       mockProductsResponse(() =>
-        createProductListResponse({
+        createMockProductListResponse({
           products: [firstProduct],
           totalCount: 24,
         }),
@@ -309,7 +312,7 @@ describe("ProductListPageClient", () => {
 
     it("다음 페이지가 있으면 현재 조건의 다음 페이지를 미리 가져온다", async () => {
       mockProductsResponse(() =>
-        createProductListResponse({
+        createMockProductListResponse({
           products: [firstProduct],
           totalCount: 24,
         }),
@@ -330,7 +333,7 @@ describe("ProductListPageClient", () => {
 
     it("마지막 페이지이면 다음 페이지를 미리 가져오지 않는다", async () => {
       mockProductsResponse(() =>
-        createProductListResponse({
+        createMockProductListResponse({
           products: [firstProduct],
           totalCount: 24,
           page: 2,
@@ -368,7 +371,7 @@ describe("ProductListPageClient", () => {
           );
         }
 
-        return createProductListResponse({
+        return createMockProductListResponse({
           products: [firstProduct],
           totalCount: 1,
         });
@@ -401,14 +404,14 @@ describe("ProductListPageClient", () => {
         }
 
         if (url.searchParams.get("page") === "2") {
-          return createProductListResponse({
+          return createMockProductListResponse({
             products: [prefetchedProduct],
             totalCount: 30,
             page: 2,
           });
         }
 
-        return createProductListResponse({
+        return createMockProductListResponse({
           products: [firstProduct],
           totalCount: 30,
         });
@@ -526,37 +529,6 @@ function mockProductsResponse(
       return HttpResponse.json(response);
     }),
   );
-}
-
-function createProductListResponse(
-  response: Partial<ProductListResponse> = {},
-): ProductListResponse {
-  return {
-    products: [],
-    categories: [],
-    totalCount: 0,
-    page: 1,
-    pageSize: 12,
-    ...response,
-  };
-}
-
-function createProduct(product: Partial<Product> = {}): Product {
-  return {
-    id: "product-id",
-    brand: "Loopers Select",
-    name: "상품명",
-    category: "goods",
-    price: 10000,
-    originalPrice: null,
-    image: "/images/products/p1.jpg",
-    freeShipping: false,
-    sizes: [],
-    rating: 4.5,
-    reviewCount: 10,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    ...product,
-  };
 }
 
 function expectGetProductsCalledWithParams(params: Partial<ProductListQuery>) {
