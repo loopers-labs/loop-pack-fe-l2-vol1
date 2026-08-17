@@ -196,3 +196,49 @@ describe('ProductList — 담기 → 헤더 개수 (item 12)', () => {
     expect(second).toHaveTextContent('담기 해제');
   });
 });
+
+// [AI] 위시리스트 토글 wiring — 장바구니(item 12)와 대칭 구조.
+// E2E(cart-wishlist.spec.ts)에 있던 "위시리스트 토글이 버튼 상태와 헤더 개수에
+// 즉시 반영된다"를 통합으로 이관했다. wiring 검증은 jsdom+MSW로 결정적으로 가능하고,
+// E2E는 persist 복원·hydration 안전성 등 플랫폼 경로에 집중한다(층 분리).
+describe('ProductList — 찜하기 → 헤더 개수 (item 12 대칭)', () => {
+  it('찜을 누르면 헤더 위시리스트 개수가 오르고, 다시 누르면 내려간다', async () => {
+    const user = userEvent.setup();
+    renderProductList();
+
+    await screen.findByRole('heading', { name: '테스트 상품 1' }); // 첫 대기(비동기 경계)
+
+    expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
+
+    const wishlistButton = screen.getByRole('button', { name: '테스트 상품 1 위시리스트' });
+    await user.click(wishlistButton);
+
+    expect(screen.getByText('위시리스트 1')).toBeInTheDocument();
+    expect(wishlistButton).toHaveTextContent('찜 해제');
+
+    await user.click(wishlistButton);
+
+    expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
+    expect(wishlistButton).toHaveTextContent('찜');
+  });
+
+  it('item 12 대칭 경계: 서로 다른 상품의 찜은 독립적으로 토글된다', async () => {
+    const user = userEvent.setup();
+    renderProductList();
+
+    await screen.findByRole('heading', { name: '테스트 상품 1' });
+
+    const first = screen.getByRole('button', { name: '테스트 상품 1 위시리스트' });
+    const second = screen.getByRole('button', { name: '테스트 상품 2 위시리스트' });
+
+    await user.click(first);
+    await user.click(second);
+
+    expect(screen.getByText('위시리스트 2')).toBeInTheDocument();
+
+    await user.click(first);
+
+    expect(screen.getByText('위시리스트 1')).toBeInTheDocument();
+    expect(second).toHaveTextContent('찜 해제');
+  });
+});
