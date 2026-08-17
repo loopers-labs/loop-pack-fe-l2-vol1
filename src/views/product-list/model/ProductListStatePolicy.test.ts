@@ -115,6 +115,43 @@ describe('ProductListStatePolicy with QueryObserver', () => {
     expect(state.lastSuccessfulKey).toBeNull()
   })
 
+  it('ProductListStatePolicy resolve with a pending result and only other cached data returns no displayed data', () => {
+    // Arrange
+    const pending = createDeferred<ProductListResponse>()
+    const queryClient = new QueryClient()
+    const currentKey = ProductQueryKeyFactory.productList(firstPageQuery)
+    const otherKey = ProductQueryKeyFactory.productList({
+      ...firstPageQuery,
+      page: 2,
+    })
+    queryClient.setQueryData(otherKey, firstPage)
+    const observer = new QueryObserver<
+      ProductListResponse,
+      Error,
+      ProductListResponse,
+      ProductListResponse,
+      ProductListKey
+    >(
+      queryClient,
+      queryOptions(firstPageQuery, () => pending.promise),
+    )
+
+    const result = observer.getCurrentResult()
+
+    // Act
+    const state = ProductListStatePolicy.resolve({
+      query: result,
+      currentKey,
+      lastSuccessfulKey: null,
+      queryClient,
+    })
+
+    // Assert
+    expect(result.isPending).toBe(true)
+    expect(state.displayedData).toBeUndefined()
+    expect(state.lastSuccessfulKey).toBeNull()
+  })
+
   it('ProductListStatePolicy resolve with placeholder data retains the previous data and key', () => {
     // Arrange
     const pending = createDeferred<ProductListResponse>()

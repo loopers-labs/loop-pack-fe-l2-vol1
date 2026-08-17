@@ -104,6 +104,21 @@ describe('ProductListRouteParams', () => {
     ).toBe('q=stanley&category=home&sort=price-desc&page=2')
   })
 
+  it('omits default q and category from canonical search', () => {
+    const request = ProductListRouteParams.toRequest({
+      q: '',
+      category: 'all',
+      sort: 'latest',
+      page: '1',
+      pageSize: '12',
+      scenario: 'slow',
+    })
+
+    expect(
+      ProductListRouteParams.canonicalSearchParams(request).toString(),
+    ).toBe('sort=latest&page=1')
+  })
+
   it('treats an empty repeated record value as missing', () => {
     expect(ProductListRouteParams.toRequest({ q: [], pageSize: '24' })).toEqual(
       {

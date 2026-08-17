@@ -203,3 +203,73 @@ history 동작이라는 각 방법론의 핵심 계약을 노린 곳이어서 �
 | ---------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
 | 다음에 한다      | reload 뒤 cart·wishlist persist hydration과 손상값 복구 E2E | middleware·hydration은 바뀔 가능성이 있고 재방문 상태 유실 비용이 크다      |
 | 앞으로도 안 한다 | ProductCard class·DOM 구조·middleware 조합 snapshot         | 자주 바뀌는 구현 세부사항이고 공개 동작 테스트가 같은 실패를 더 잘 설명한다 |
+
+## Advanced — Stryker 변형 테스트
+
+### 범위 한정
+
+Stryker 대상은 1단계에서 **단위**로 분류한 세 파일로 한정했다. 통합·E2E가 걸리는
+파일까지 넣으면 끝나지 않기 때문이다.
+
+| 파일                                                     | 이유                                |
+| -------------------------------------------------------- | ----------------------------------- |
+| `src/views/product-list/model/ProductListStatePolicy.ts` | 1단계 직접 선택한 순수 정책         |
+| `src/entities/product/model/ProductListRouteParams.ts`   | URL → request → query key 순수 변환 |
+| `src/entities/product/model/ProductQueryKeyFactory.ts`   | query key 생성, 부수효과 없음       |
+
+### 도구 버전과 설정
+
+- `@stryker-mutator/core` 10.0.0
+- `@stryker-mutator/vitest-runner` 10.0.0
+- 설정: `stryker.config.mjs`, Stryker 전용 `vitest.stryker.config.ts`
+- Vitest projects(`test.projects`)는 Stryker가 직접 읽지 못하므로 Node 단위 테스트만
+  실행하는 별도 config를 두었다.
+
+### 실행 결과
+
+측정일 2026-08-18, Apple M2 Max, 32 GiB RAM, Node.js 24.9.0.
+
+| 실행    | 변형 수 | killed | survived | no cov | errors | mutation score | wall-clock |
+| ------- | ------: | -----: | -------: | -----: | -----: | -------------: | ---------: |
+| 최초    |      46 |     41 |        5 |      0 |      0 |          89.13 |       9.0s |
+| 보강 후 |      46 |     45 |        1 |      0 |      0 |          97.83 |       9.0s |
+
+### 살아남은 변형 분석
+
+최초 살아남은 5개 중 **의미 있는 변형**은 3개였다.
+
+| 위치                                                        | 변형                           | 의미 있는 변형? | 대응                                                             |
+| ----------------------------------------------------------- | ------------------------------ | --------------- | ---------------------------------------------------------------- |
+| `ProductListRouteParams.ts:45` `request.q !== ''`           | `true`로 강제                  | 예              | `omits default q and category from canonical search` 테스트 추가 |
+| `ProductListRouteParams.ts:48` `request.category !== 'all'` | `true`로 강제                  | 예              | 위 테스트에서 함께 검증                                          |
+| `ProductListStatePolicy.ts:38` `lastSuccessfulKey === null` | `false`로 강제                 | 예              | pending + 다른 key 캐시 데이터가 없음을 확인하는 테스트 추가     |
+| `ProductListRouteParams.ts:45` 비교 문자열                  | `'')` → `"Stryker was here!")` | 아니오          | 의미가 동일해 죽일 수 없음                                       |
+| `ProductListRouteParams.ts:48` 비교 문자열                  | `'all'` → `""`                 | 아니오          | 의미가 동일해 죽일 수 없음                                       |
+
+보강 후 살아남은 1개는 `ProductListStatePolicy.ts:38`의 `lastSuccessfulKey === null` →
+`false` 변형이다. 이 변형은 `queryClient.getQueryData(null)`이 내부적으로 `undefined`를
+반환하기 때문에, 변형 전후 모두 `retainedData`가 `undefined`가 되어 동작이 달라지지
+않는다. 공개 계약상으로는 동등한 변형이므로 **죽일 수 없는 변형**으로 기록한다.
+
+### 도구가 추가로 찾아준 것
+
+손으로 한 Stage 3 실험은 의도적으로 망가뜨린 3곳을 모두 잡았다. Stryker는 그보다
+세밀한 경계에서 부족했던 것을 찾아줬다.
+
+- **기본값 q/category 생략**: canonical search params가 URL에서 기본값을 빼는
+  계약을 테스트로 보호하지 않았다면, `if (true)` 변형이 살아남았을 것이다. 이는
+  실제로는 URL에 불필요한 `q=`/`category=all`을 남기게 만드는 버그다.
+- **cold pending 상태의 캐시 격리**: 다른 key의 데이터가 있을 때 pending 상태가 그
+  데이터를 보여주지 않는지 테스트하지 않으면, `lastSuccessfulKey === null` 체크가
+  제거되어도 발견되지 않는다. 실제 버그는 아니지만 정책 의도를 명확히 고정한다.
+
+### 상시 사용 판단
+
+Stryker는 단위 로직 범위에서 **9초**면 돌아간다. 실행 비용이 낮고, 테스트가 의도를
+제대로 고정하고 있는지 기계적으로 확인해주는 가치가 있다. 다만 통합·E2E 파일까지
+범위를 넓히면 실행 시간이 급격히 늘어날 것이고, 실패 비용이 크지 않은 UI 세부사항
+mutation은 소음이 될 수 있다.
+
+판단: **단위 로직 파일 한정 범위에서 CI나 로컬 사전 검증에 상시 사용한다.**
+통합·E2E 범위까지 확장하지는 않는다. `pnpm check`에는 포함하지 않고 별도
+`pnpm test:mutate` 명령으로 둔다.
