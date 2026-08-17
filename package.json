@@ -15,6 +15,7 @@
     "architecture:check": "vitest run fsdImportBoundaries",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:mock-api": "node --test e2e/mock-api/server.test.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
