@@ -182,6 +182,21 @@ control 조작, `history: 'push'` URL 갱신, MSW 요청과 표시 결과를 한
 각 항목의 Stage 2 테스트에는 위 표에 대응하는 정상과 경계를 모두 둔다. 통합의 기본
 MSW handler에는 성공만 두고 빈 결과·오류는 해당 테스트에서 덮어쓴다.
 
+## Stage 3 — 자가 검증 기록
+
+세 방법론마다 한 곳씩 구현을 망가뜨렸다. 테스트 코드는 건드리지 않았고, 최종 커밋에
+망가뜨린 코드는 남기지 않았다.
+
+| #   | 방법 | 망가뜨린 곳                                              | 어떻게 바꿨나                                                   | 결과 | 실패한 테스트                                                                                                                                                                                                                                                                  | 실패 메시지로 원인 짐작                                                                                               |
+| --- | ---- | -------------------------------------------------------- | --------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| 1   | 단위 | `src/views/product-list/model/ProductListStatePolicy.ts` | `!query.isPlaceholderData`를 `query.isPlaceholderData`로 뒤집음 | 잡힘 | `ProductListStatePolicy resolve with placeholder data retains the previous data and key`, `ProductListStatePolicy resolve with a successful empty result returns the current empty data`                                                                                       | `displayedDataKey`가 page=2/null이 되어, 정상 성공 데이터를 최신 성공 key로 기록하지 못한다는 의도가 명확히 드러남    |
+| 2   | 통합 | `src/shared/ui/useInlineQueryRetry.ts`                   | `retry` 내부의 `refetch()` 호출 제거                            | 잡힘 | `Product list retry - when a retry fails - keeps the alert visible`, `Product list retry - when a retry succeeds after an initial failure - removes the alert and shows products`                                                                                              | requestCount=1이고 상품 heading이 없어, 재시도가 실제 요청을 보내지 않았음을 즉시 알 수 있음                          |
+| 3   | E2E  | `src/features/product-filter/model/useProductFilters.ts` | `history: 'push'`를 `history: 'replace'`로 변경                 | 잡힘 | `Product list browser history - when the browser moves back after two filter changes - restores the previous filter and result`, `Product list browser history - when the browser moves forward after returning to the previous filter - restores the later filter and result` | 뒤로 가기/앞으로 가기 복원 실패. 첫 번째는 셀렉터 값이 `home`이 아니었고, 두 번째는 `category=home` URL 대기 타임아웃 |
+
+세 실험이 전부 한 번에 잡혔기 때문에 쉬운 곳만 고른 것이 아닌지 다시 점검했다. 단위는
+placeholder 분기라는 눈에 잘 띄지 않는 조건, 통합은 retry의 실제 네트워크 호출, E2E는
+history 동작이라는 각 방법론의 핵심 계약을 노린 곳이어서 의미가 있다.
+
 ### 목록 밖 결정
 
 | 판단             | 대상                                                        | 변경 빈도와 실패 비용                                                       |
