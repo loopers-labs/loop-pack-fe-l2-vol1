@@ -29,6 +29,8 @@ next-env.d.ts
 .sisyphus
 .omo
 .playwright-mcp/
+.stryker-tmp/
+reports/mutation/
 
 # debug
 npm-debug.log*

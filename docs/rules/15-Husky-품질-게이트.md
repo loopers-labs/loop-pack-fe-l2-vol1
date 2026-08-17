@@ -35,6 +35,7 @@ pnpm commitlint --edit <commit-msg-file>
 - single quote 사용
 - trailing comma 사용
 - print width 80
+- 마크다운 파일은 `proseWrap: preserve`로 작성자가 의도한 줄바꿈을 유지한다. 한국어처럼 공백 없이 연속된 문자열이 많은 문서에서 80자 기준으로 어색하게 끊어지는 것을 막기 위함이다.
 
 Prettier는 포맷만 담당한다. 코드 품질 판단은 ESLint와 TypeScript가 담당한다.
 
