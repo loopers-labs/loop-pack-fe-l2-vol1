@@ -136,23 +136,17 @@ const getFailureReason = (error: unknown): string => {
 
 ---
 
-## 4. 목록 밖 — 다음에 할 것(AI 활용) / 앞으로도 안 할 것(직접 선정)
+## 4. 목록 밖 — 다음에 할 것 / 앞으로도 안 할 것 (직접 선정)
 
-### 다음에 하면 좋겠다 — `useProductList`의 prefetch 로직 (`useProductList.ts:15-19`)
+### 다음에 하면 좋겠다 — persist 새로고침 복원 + hydration mismatch 통합 검증
 
-```ts
-useEffect(() => {
-  if (page >= totalPages) return;
-  const nextQuery = { ...query, page: page + 1 };
-  queryClient.prefetchQuery(productQueries.list(nextQuery));
-});
-```
+담기·찜으로 persist 상태를 만들고 새로고침하면 헤더 개수가 복원되며(화면 단언), 콘솔에 hydration mismatch 경고가 없다(콘솔 도청 단언).
 
 **근거:**
 
-- **변경 빈도: 중간.** 페이지네이션 전략(어디까지 미리 가져올지, placeholderData 정책)을 바꿀 때마다 이 로직이 손된다.
-- **실패 비용: 중간.** 깨지면 "다음 페이지" 클릭 시 로딩이 길어져 사용자가 멈칫한다. 치명적이진 않지만 UX 직결.
-- **판단:** 변경 빈도 × 실패 비용 둘 다 중간이라 ROI가 양수. 다음 주기에 단위(페이지 → 다음 페이지 쿼리 생성) + 통합(prefetch hit 확인)으로 검증할 가치가 있다.
+- **변경 빈도: 중간.** `hasHydrated` 플래그와 `onRehydrateStorage`(`store.ts:46-51`), `partialize` 저장 스키마, Header가 persist 개수를 렌더하는 구조가 리팩터·persist 버전업(migrate) 때 손될 수 있다.
+- **실패 비용: 높음.** SSR 환경에서는 브라우저의 localStorage를 읽을 수 없어서, 서버가 그린 HTML(개수 항상 0)과 persist 값을 아는 클라이언트의 첫 렌더가 어긋나는 **hydration mismatch 우려가 구조적으로 존재**한다. React 19는 mismatch 시 해당 서브트리를 클라이언트에서 다시 렌더하므로 깜빡임 등 사용자 경험 결함으로 나타날 수 있다. 특히 mismatch는 콘솔에 경고만 남기고 화면은 수습되는 결함이라, 화면 단언(복원 확인)만으로는 잡을 수 없고 콘솔 도청 단언이 반드시 필요하다.
+- **판단:** 변경 빈도 중간 × 실패 비용 높음 → ROI 양수. 다음 주기에 E2E 한 건으로 검증할 가치가 있다.
 
 ### 앞으로도 안 하겠다 — `isCategoryValue` / `isSortValue` 타입 가드 (`useProductListFilters.ts:38-42`)
 
