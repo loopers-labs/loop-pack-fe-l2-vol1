@@ -1,1 +1,3 @@
-pnpm lint-staged
+# [AI] 커밋 직전 검사: 스테이징된 파일의 lint/format 자동 수정 + 전체 테스트 녹색 확인.
+# 테스트 파일 작성 중에는 pnpm test <파일명>으로 단독 실행해 빠르게 확인한다(수동, hook 아님).
+pnpm lint-staged && pnpm test
