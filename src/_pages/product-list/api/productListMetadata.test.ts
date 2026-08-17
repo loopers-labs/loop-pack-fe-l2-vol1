@@ -1,5 +1,7 @@
+import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SearchParams } from 'nuqs/server'
+import { server } from '@/test/msw/server'
 import type { Product } from '@/entities/product/model/product'
 import { generateProductListMetadata } from './productListMetadata'
 import type { ProductListResponse } from './productList'
@@ -37,24 +39,22 @@ const listResponse = (
 
 // 조회는 GET URL을 키로 요청 범위를 공유한다. 사례마다 다른 origin을 써서
 // 어떤 응답이 어느 사례의 것인지 흐려지지 않게 한다.
+// 응답은 MSW가 네트워크에서 만든다. fetch를 바꿔치기하면 서버가 실제로 요청을
+// 내보내는지, 상태 코드를 어떻게 읽는지가 검증에서 빠진다.
 let originSeq = 0
-const stubApi = (respond: () => Response) => {
+const stubApi = (resolver: Parameters<typeof http.get>[1]) => {
   originSeq += 1
   vi.stubEnv('APP_ORIGIN', `http://products-${originSeq}.test`)
-  vi.stubGlobal(
-    'fetch',
-    vi.fn<typeof fetch>(() => Promise.resolve(respond())),
-  )
+  server.use(http.get('*/api/products', resolver))
 }
 
 const stubList = (overrides: Partial<ProductListResponse> = {}) =>
-  stubApi(() => new Response(JSON.stringify(listResponse(overrides))))
+  stubApi(() => HttpResponse.json(listResponse(overrides)))
 
 const metadataFor = (searchParams: SearchParams) =>
   generateProductListMetadata({ searchParams: Promise.resolve(searchParams) })
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   vi.unstubAllEnvs()
 })
 
@@ -144,23 +144,18 @@ describe('상품 목록 metadata 실패 정책', () => {
   })
 
   it('예상 가능한 조회 실패는 아무 필드도 정하지 않아 root를 상속한다', async () => {
-    stubApi(() => new Response(null, { status: 500 }))
+    stubApi(() => new HttpResponse(null, { status: 500 }))
     expect(await metadataFor({})).toEqual({})
   })
 
   it('요청이 나가지 못한 실패도 root를 상속한다', async () => {
-    originSeq += 1
-    vi.stubEnv('APP_ORIGIN', `http://products-${originSeq}.test`)
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() => Promise.reject(new TypeError('offline'))),
-    )
+    stubApi(() => HttpResponse.error())
     expect(await metadataFor({})).toEqual({})
   })
 
   it('예상 밖 오류는 삼키지 않는다', async () => {
     // 200인데 본문이 JSON이 아니다. 계약이 깨진 것이라 화면이 복구 방법을 모른다.
-    stubApi(() => new Response('<html>'))
+    stubApi(() => new HttpResponse('<html>'))
     await expect(metadataFor({})).rejects.toThrow()
   })
 })

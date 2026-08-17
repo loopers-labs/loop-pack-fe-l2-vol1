@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { HttpResponse, http } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
 import { Header } from '@/widgets/header'
-import { resetStores } from '@/test/resetStores'
+import { server } from '@/test/msw/server'
 import type { Product } from '@/entities/product/model/product'
 import { HomeContent } from '@/_pages/home'
 import { ProductListView } from '@/_pages/product-list'
@@ -48,19 +49,29 @@ const listPayload = {
   pageSize: 12,
 }
 
-// 응답은 실제 Response로 만든다. 부분 객체를 캐스팅하면 본문 파싱 경로가 실물과 달라진다.
-// Response는 본문을 한 번만 읽을 수 있어서 호출마다 새로 만든다.
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status })
+// 응답은 MSW가 네트워크에서 만든다. 앱의 fetch는 그대로 두어야 URL 조립과 상태 코드
+// 해석까지 검증 안에 남는다. 이 파일은 화면 계약이 대상이라 응답 본문을 직접 정한다.
+const respondWithProducts = (
+  resolver: Parameters<typeof http.get>[1],
+): URL[] => {
+  const requestedUrls: URL[] = []
+  server.use(
+    http.get('*/api/products', (info) => {
+      requestedUrls.push(new URL(info.request.url))
+      return resolver(info)
+    }),
+  )
+  return requestedUrls
+}
+
+const respondWithHome = (resolver: Parameters<typeof http.get>[1]) => {
+  server.use(http.get('*/api/home', resolver))
+}
 
 const stubCommerceApi = (listOverrides: Partial<typeof listPayload> = {}) => {
   const list = { ...listPayload, ...listOverrides }
-  const fetchMock = vi.fn<typeof fetch>((input) => {
-    const payload = String(input).startsWith('/api/home') ? homePayload : list
-    return Promise.resolve(jsonResponse(payload))
-  })
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
+  respondWithHome(() => HttpResponse.json(homePayload))
+  return respondWithProducts(() => HttpResponse.json(list))
 }
 
 const lastUrlUpdate = (spy: ReturnType<typeof vi.fn>): UrlUpdateEvent => {
@@ -89,14 +100,6 @@ const renderApp = (
   )
 }
 
-beforeEach(() => {
-  resetStores()
-})
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
-
 describe('홈과 목록과 헤더는 같은 store를 본다', () => {
   it('알려진 카테고리는 storefront 영문명을 쓰고 새 카테고리는 서버 이름을 보존한다', async () => {
     const payload = {
@@ -106,10 +109,7 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
         { id: 'new-category', name: '새 카테고리' },
       ],
     }
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() => Promise.resolve(jsonResponse(payload))),
-    )
+    respondWithHome(() => HttpResponse.json(payload))
 
     renderApp(<HomeContent />)
 
@@ -167,12 +167,14 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
 
 describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다', () => {
   it('목록 실패 시 에러 화면을 보여주고, 재시도가 성공하면 목록으로 복귀한다', async () => {
-    // 첫 요청만 500, 재시도부터 성공하는 스텁
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(new Response(null, { status: 500 }))
-      .mockImplementation(() => Promise.resolve(jsonResponse(listPayload)))
-    vi.stubGlobal('fetch', fetchMock)
+    // 첫 요청만 500, 재시도부터 성공한다.
+    let attempts = 0
+    respondWithProducts(() => {
+      attempts += 1
+      return attempts === 1
+        ? new HttpResponse(null, { status: 500 })
+        : HttpResponse.json(listPayload)
+    })
 
     renderApp(<ProductListView />)
 
@@ -187,12 +189,7 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
   it('목록 조회가 실패해도 조건을 바꿀 수 있는 UI는 화면에 남는다', async () => {
     // Decision 6의 핵심이다. 조회 실패를 Error Boundary로 올리면 필터까지 사라져
     // 사용자가 조건을 바꿔 벗어날 길이 닫힌다. 그래서 결과 영역 안에서 처리한다.
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() =>
-        Promise.resolve(new Response(null, { status: 500 })),
-      ),
-    )
+    respondWithProducts(() => new HttpResponse(null, { status: 500 }))
     const onUrlUpdate = vi.fn()
 
     renderApp(<ProductListView />, { onUrlUpdate })
@@ -215,12 +212,7 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
   })
 
   it('홈 실패 시 에러 화면과 재시도 버튼을 보여준다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() =>
-        Promise.resolve(new Response(null, { status: 500 })),
-      ),
-    )
+    respondWithHome(() => new HttpResponse(null, { status: 500 }))
 
     renderApp(<HomeContent />)
 
@@ -231,12 +223,10 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
   })
 
   it('조건이 거절되면 서버 메시지를 보여주고 재시도 대신 조건 초기화를 준다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() =>
-        Promise.resolve(
-          jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400),
-        ),
+    respondWithProducts(() =>
+      HttpResponse.json(
+        { message: '요청 조건을 확인해주세요.' },
+        { status: 400 },
       ),
     )
     const onUrlUpdate = vi.fn()
@@ -259,12 +249,10 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
 
   it('되돌릴 조건이 없으면 초기화 대신 화면 밖으로 나가는 길을 준다', async () => {
     // 조건이 이미 기본값이면 초기화해도 query key가 그대로라 아무 일도 일어나지 않는다.
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() =>
-        Promise.resolve(
-          jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400),
-        ),
+    respondWithProducts(() =>
+      HttpResponse.json(
+        { message: '요청 조건을 확인해주세요.' },
+        { status: 400 },
       ),
     )
 
@@ -284,7 +272,7 @@ describe('요청 실패는 전용 화면과 상황에 맞는 출구를 가진다
 
 describe('목록 조건의 원본은 URL이다', () => {
   it('URL의 조건이 화면과 API 요청에 그대로 나타난다', async () => {
-    const fetchMock = stubCommerceApi()
+    const requestedUrls = stubCommerceApi()
     renderApp(<ProductListView />, {
       searchParams: '?category=digital&sort=popular&page=2',
     })
@@ -298,14 +286,14 @@ describe('목록 조건의 원본은 URL이다', () => {
       'Popular',
     )
 
-    const requestedUrl = String(fetchMock.mock.calls[0][0])
+    const requestedUrl = requestedUrls[0].search
     expect(requestedUrl).toContain('category=digital')
     expect(requestedUrl).toContain('sort=popular')
     expect(requestedUrl).toContain('page=2')
   })
 
   it('잘못된 URL 조건은 화면과 API 요청 모두 기본값으로 수렴한다', async () => {
-    const fetchMock = stubCommerceApi()
+    const requestedUrls = stubCommerceApi()
     renderApp(<ProductListView />, {
       searchParams: '?category=unknown&sort=cheapest&page=1.5',
     })
@@ -318,7 +306,7 @@ describe('목록 조건의 원본은 URL이다', () => {
     expect(screen.getByRole('combobox', { name: /Sort/ })).toHaveTextContent(
       'Newest',
     )
-    const requestedUrl = String(fetchMock.mock.calls[0][0])
+    const requestedUrl = requestedUrls[0].search
     expect(requestedUrl).toContain('category=all')
     expect(requestedUrl).toContain('sort=latest')
     expect(requestedUrl).toContain('page=1')
