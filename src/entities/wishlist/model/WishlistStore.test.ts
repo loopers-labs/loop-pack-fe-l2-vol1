@@ -134,30 +134,53 @@ describe('wishlistSelectors', () => {
     resetWishlist()
   })
 
-  it('count returns 0 when empty', () => {
-    expect(wishlistSelectors.count(useWishlistStore.getState())).toBe(0)
+  it('wishlistSelectors.count with an empty wishlist returns zero', () => {
+    // Arrange
+    const state = useWishlistStore.getState()
+
+    // Act
+    const count = wishlistSelectors.count(state)
+
+    // Assert
+    expect(count).toBe(0)
   })
 
-  it('count derives from items length', () => {
+  it('wishlistSelectors.count when products are selected returns the number of distinct items', () => {
+    // Arrange
     const { toggleWishlist } = useWishlistStore.getState()
     toggleWishlist('p1')
     toggleWishlist('p2')
     toggleWishlist('p3')
-    expect(wishlistSelectors.count(useWishlistStore.getState())).toBe(3)
+
+    // Act
+    const count = wishlistSelectors.count(useWishlistStore.getState())
+
+    // Assert
+    expect(count).toBe(3)
   })
 
-  it('count decreases when an item is removed', () => {
+  it('wishlistSelectors.count when a wishlist item is removed returns the retained item count', () => {
+    // Arrange
     const { toggleWishlist, removeFromWishlist } = useWishlistStore.getState()
     toggleWishlist('p1')
     toggleWishlist('p2')
+
+    // Act
     removeFromWishlist('p1')
+
+    // Assert
     expect(wishlistSelectors.count(useWishlistStore.getState())).toBe(1)
   })
 
-  it('count stays accurate after toggle off', () => {
+  it('wishlistSelectors.count when the only selected item is toggled off returns zero', () => {
+    // Arrange
     const { toggleWishlist } = useWishlistStore.getState()
     toggleWishlist('p1')
+
+    // Act
     toggleWishlist('p1')
+
+    // Assert
     expect(wishlistSelectors.count(useWishlistStore.getState())).toBe(0)
   })
 

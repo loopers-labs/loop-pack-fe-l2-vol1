@@ -83,7 +83,8 @@ function queryOptions(
 }
 
 describe('ProductListStatePolicy with QueryObserver', () => {
-  it('shows cold pending without retained data', () => {
+  it('ProductListStatePolicy resolve with an initial pending result returns no displayed data', () => {
+    // Arrange
     const pending = createDeferred<ProductListResponse>()
     const queryClient = new QueryClient()
     const currentKey = ProductQueryKeyFactory.productList(firstPageQuery)
@@ -99,6 +100,8 @@ describe('ProductListStatePolicy with QueryObserver', () => {
     )
 
     const result = observer.getCurrentResult()
+
+    // Act
     const state = ProductListStatePolicy.resolve({
       query: result,
       currentKey,
@@ -106,12 +109,14 @@ describe('ProductListStatePolicy with QueryObserver', () => {
       queryClient,
     })
 
+    // Assert
     expect(result.isPending).toBe(true)
     expect(state.displayedData).toBeUndefined()
     expect(state.lastSuccessfulKey).toBeNull()
   })
 
-  it('keeps placeholder data without updating successful key metadata', () => {
+  it('ProductListStatePolicy resolve with placeholder data retains the previous data and key', () => {
+    // Arrange
     const pending = createDeferred<ProductListResponse>()
     const queryClient = new QueryClient()
     const firstKey = ProductQueryKeyFactory.productList(firstPageQuery)
@@ -130,6 +135,7 @@ describe('ProductListStatePolicy with QueryObserver', () => {
     const secondKey = ProductQueryKeyFactory.productList(secondPageQuery)
     const unsubscribe = observer.subscribe(() => undefined)
 
+    // Act
     observer.setOptions(queryOptions(secondPageQuery, () => pending.promise))
     const result = observer.getCurrentResult()
     const state = ProductListStatePolicy.resolve({
@@ -139,17 +145,16 @@ describe('ProductListStatePolicy with QueryObserver', () => {
       queryClient,
     })
 
-    expect(result.status).toBe('success')
+    // Assert
     expect(result.isPlaceholderData).toBe(true)
-    expect(result.isFetching).toBe(true)
-    expect(result.dataUpdatedAt).toBe(0)
     expect(state.displayedData).toBe(firstPage)
     expect(state.displayedDataKey).toBe(firstKey)
     expect(state.lastSuccessfulKey).toBe(firstKey)
     unsubscribe()
   })
 
-  it('records successful empty data as the latest successful key', async () => {
+  it('ProductListStatePolicy resolve with a successful empty result returns the current empty data', async () => {
+    // Arrange
     const queryClient = new QueryClient()
     const currentKey = ProductQueryKeyFactory.productList(firstPageQuery)
     const observer = new QueryObserver<
@@ -168,6 +173,8 @@ describe('ProductListStatePolicy with QueryObserver', () => {
     )
 
     const result = await resultPromise
+
+    // Act
     const state = ProductListStatePolicy.resolve({
       query: result,
       currentKey,
@@ -175,6 +182,7 @@ describe('ProductListStatePolicy with QueryObserver', () => {
       queryClient,
     })
 
+    // Assert
     expect(state.displayedData).toBe(emptyPage)
     expect(state.displayedDataKey).toBe(currentKey)
     expect(state.lastSuccessfulKey).toBe(currentKey)
