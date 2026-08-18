@@ -3,8 +3,9 @@ import { Suspense } from 'react';
 
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from './getQueryClient';
-import { getHomeData, HomeClient, homeQueryOptions } from '@/_pages/home';
-import type { MockApiScenario } from '@/app/api/_data/types';
+import { HomeClient, homeQueryOptions } from '@/_pages/home';
+import { getHomeData } from '@/app/api/_data/homeService';
+import type { MockApiScenario } from '@/types/commerce';
 import { HeroSection } from '@/examples/week-07-performance/HeroSection';
 
 interface HomeDataProps {

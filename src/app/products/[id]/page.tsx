@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '../../getQueryClient';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
-import { getProductById } from '@/entities/product/api/productService';
 import { ProductDetailContent } from '@/_pages/product-detail';
 
 interface ProductDetailPageProps {
@@ -13,9 +12,12 @@ export async function generateMetadata({
   params,
 }: ProductDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = getProductById(id);
+  const queryClient = getQueryClient();
+  let product;
 
-  if (!product) {
+  try {
+    product = await queryClient.fetchQuery(productDetailQueryOptions(id));
+  } catch {
     return { title: '상품을 찾을 수 없습니다' };
   }
 

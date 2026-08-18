@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { waitForMockApi } from "@/app/api/_data/mock";
-import { getProductById, getProductList } from "@/entities/product/api/productService";
+import { getProductById, getProductList } from "@/app/api/_data/productService";
 import {
   PRODUCT_SORTS,
   CATEGORY_OPTIONS,
 } from "@/entities/product/model/types";
 import type {
+  Product,
   ProductListResponse,
   ProductSort,
 } from "@/entities/product/model/types";
 import type {
   ApiErrorResponse,
   MockApiScenario,
-} from "@/app/api/_data/types";
+} from "@/types/commerce";
 
 const scenarioValues = ["empty", "error", "slow"] as const satisfies readonly MockApiScenario[];
 
@@ -27,7 +28,7 @@ const isPositiveInteger = (value: string | null) =>
 
 export async function GET(
   request: NextRequest,
-): Promise<NextResponse<ProductListResponse | ApiErrorResponse>> {
+): Promise<NextResponse<Product | ProductListResponse | ApiErrorResponse>> {
   const params = request.nextUrl.searchParams;
   const scenario = params.get("scenario");
   const q = params.get("q")?.trim().toLocaleLowerCase("ko") ?? "";
@@ -78,13 +79,7 @@ export async function GET(
         { status: 404 },
       );
     }
-    return NextResponse.json({
-      products: [product],
-      categories: [],
-      totalCount: 1,
-      page: 1,
-      pageSize: 1,
-    });
+    return NextResponse.json(product);
   }
 
   if (scenario === "error") {

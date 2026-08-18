@@ -26,6 +26,30 @@ describe("GET /api/products", () => {
     vi.unstubAllEnvs();
   });
 
+  it("returns a single product by id", async () => {
+    const response = await request("?id=p1");
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: "p1",
+      brand: "Loopers Select",
+      name: "[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG",
+      category: "casual",
+      price: 79000,
+    });
+    expect(body.products).toBeUndefined();
+  });
+
+  it("returns 404 when the product does not exist", async () => {
+    const response = await request("?id=missing-product");
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      message: "상품을 찾을 수 없습니다.",
+    });
+  });
+
   it("preserves Week 04 field shape while using the mapped source identity", async () => {
     const response = await request();
     const body = await response.json();

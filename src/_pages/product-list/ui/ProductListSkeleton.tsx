@@ -1,4 +1,4 @@
-import { PRODUCT_LIST_DEFAULTS } from '@/entities/product/api/productService';
+import { PRODUCT_LIST_DEFAULTS } from '@/entities/product/model/constants';
 import { ProductListIntro } from './ProductListIntro';
 
 function CardSkeleton() {

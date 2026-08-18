@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-import type { HomeResponse } from './types';
+import type { HomeResponse } from '@/types/commerce';
 
 const HOME_STALE_TIME_MS = 1 * 60 * 1000;
 const HOME_GC_TIME_MS = 10 * 60 * 1000;
