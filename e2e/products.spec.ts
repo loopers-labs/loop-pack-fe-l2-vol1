@@ -52,4 +52,30 @@ test.describe("상품 목록 E2E", () => {
     await expect(page.getByRole("button", { name: "다시 시도" })).toBeVisible();
     await expect(page.getByLabel("상품 목록")).not.toBeVisible();
   });
+
+  test("URL query로 직접 진입하면 필터 상태와 상품 목록을 복원한다", async ({ page }) => {
+    await page.goto("/products?q=스탠리&category=home&sort=price-desc");
+
+    await expect(page.getByRole("textbox", { name: "검색" })).toHaveValue("스탠리");
+    await expect(page.getByRole("button", { name: "카테고리" })).toContainText("홈");
+    await expect(page.getByRole("button", { name: "정렬" })).toContainText("높은 가격순");
+    await expect(page.getByRole("heading", { name: "스탠리 클래식 런치박스" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).not.toBeVisible();
+  });
+
+  test("새로고침해도 URL query 기반 필터 상태와 상품 목록을 유지한다", async ({ page }) => {
+    await page.goto("/products?q=스탠리&category=home&sort=price-desc");
+
+    await expect(page.getByRole("heading", { name: "스탠리 클래식 런치박스" })).toBeVisible();
+
+    await page.reload();
+
+    await expect(page.getByRole("textbox", { name: "검색" })).toHaveValue("스탠리");
+    await expect(page.getByRole("button", { name: "카테고리" })).toContainText("홈");
+    await expect(page.getByRole("button", { name: "정렬" })).toContainText("높은 가격순");
+    await expect(page.getByRole("heading", { name: "스탠리 클래식 런치박스" })).toBeVisible();
+    await expect(page).toHaveURL(/q=%EC%8A%A4%ED%83%A0%EB%A6%AC/);
+    await expect(page).toHaveURL(/category=home/);
+    await expect(page).toHaveURL(/sort=price-desc/);
+  });
 });
