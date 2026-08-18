@@ -43,9 +43,20 @@ const eslintConfig = defineConfig([
   //
   // ignores: 데모·예제는 전환 범위 밖으로 두기로 했으므로 검사 대상에서 제외한다.
   // 이 경로를 빼지 않으면 범위 외 코드 때문에 strict 를 켤 수 없다.
+  //
+  // src/test/** 와 *.dom.test.* 도 같은 이유로 뺀다. 테스트 하네스는 어느 레이어에도
+  // 속하지 않아 no-unknown-files 에 걸리고, 통합 테스트는 widgets(헤더)와 _pages(목록)를
+  // 한 화면에 올려 검증하는 것이 정상이라 레이어 규칙을 그대로 적용할 수 없다.
+  // 프로덕션 코드의 의존 방향은 그대로 강제된다 — 면제 대상은 테스트뿐이다.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/examples/**", "src/services/**", "src/shared/ui/**/components/*-demo.tsx"],
+    ignores: [
+      "src/examples/**",
+      "src/services/**",
+      "src/shared/ui/**/components/*-demo.tsx",
+      "src/test/**",
+      "src/**/*.dom.test.{ts,tsx}",
+    ],
     plugins: { boundaries },
     // recommended 의 settings 는 elements 가 빈 배열이다. 여기서 실제 정의로 덮는다.
     settings: {

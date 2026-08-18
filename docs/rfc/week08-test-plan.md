@@ -2,7 +2,7 @@
 
 | 항목      | 내용                                                                                                   |
 | --------- | ------------------------------------------------------------------------------------------------------ |
-| 상태      | 초안 (테스트 코드 작성 전)                                                                             |
+| 상태      | 0단계 구현 완료 · 1단계 설계 확정 (2단계 착수 전)                                                      |
 | 기준 커밋 | `d7ae9e9`                                                                                              |
 | 대상      | `src/**` — 특히 `_pages/product-list`, `features/product-filter`, `entities/cart`, `entities/wishlist` |
 | 원칙      | 이 문서는 **테스트 코드보다 먼저 커밋한다.** 표를 채운 뒤에 배치를 바꾸면 문서를 먼저 고친다.          |
@@ -56,7 +56,7 @@ src/examples/week-07-performance/HeroSection.test.tsx   ← renderToStaticMarkup
 명령은 여전히 `vitest run` 하나다. 두 프로젝트가 한 번에 돈다.
 
 ```ts
-// vitest.config.ts (예정)
+// vitest.config.ts — 구현된 값 (resolve.alias 는 생략)
 projects: [
   {
     test: {
@@ -132,22 +132,32 @@ mock API의 지연은 `waitForMockApi` 가 `NODE_ENV === 'test'` 일 때 0ms로 
 2. `localStorage.clear()`
 3. `cleanup()` (Testing Library), `server.resetHandlers()`
 
-"파일을 단독으로 돌리든 순서를 바꿔 돌리든 같은 결과"는 이 셋으로 확보한다. 2단계에서 `vitest run --sequence.shuffle` 로 한 번 확인한다.
+"파일을 단독으로 돌리든 순서를 바꿔 돌리든 같은 결과"는 이 셋으로 확보한다. 확인은 `vitest run --sequence.shuffle` 로 하되 **2단계 완료 시점에** 한다 — 0단계에는 DOM 테스트가 한 파일뿐이라 순서를 섞어도 증명되는 것이 없다(0.9-3).
 
 ---
 
 ### 0.6 Playwright — production build 위에서
 
 ```ts
-// playwright.config.ts (예정)
+// playwright.config.ts — 구현된 값
+const APP_ORIGIN = process.env.APP_ORIGIN ?? 'http://localhost:3000';
+const port = Number(new URL(APP_ORIGIN).port || 3000);
+
 webServer: {
-  command: 'pnpm start',
-  url: 'http://localhost:3000',
-  reuseExistingServer: !process.env.CI,
+  command: `pnpm start -p ${port}`,
+  url: APP_ORIGIN,
+  env: { APP_ORIGIN },
+  reuseExistingServer: false,
 },
 ```
 
-`pnpm dev` 로 돌리지 않는다. 이 앱은 서버 컴포넌트 prefetch + `APP_ORIGIN` 절대 URL 분기가 있어서 dev와 production의 동작이 갈릴 여지가 있다. 그리고 mock API의 500ms 지연은 production에서만 나타난다 — **E2E가 잡아야 할 대기 문제가 dev에서는 아예 재현되지 않는다.**
+`pnpm dev` 로 돌리지 않는다. 이 앱은 서버 컴포넌트에서 자기 자신에게 요청을 보내고(`generateMetadata` → `apiClient` → `getAppOrigin`) `APP_ORIGIN` 절대 URL 분기가 있어서 dev와 production의 동작이 갈릴 여지가 있다. 그리고 mock API의 500ms 지연은 production에서만 나타난다 — **E2E가 잡아야 할 대기 문제가 dev에서는 아예 재현되지 않는다.**
+
+**서버는 Playwright가 직접 띄운다 (`reuseExistingServer: false`).** 이 옵션이 켜져 있으면 Playwright는 해당 URL이 응답하는지만 보고 그게 우리 앱인지는 확인하지 않는다. 재사용으로 아끼는 것은 기동 시간 몇 초이고, 잃는 것은 **"방금 통과한 E2E가 무엇을 상대로 통과했는가"에 대한 확신**이다. production build를 검증하겠다고 정한 이상 그 build를 직접 띄우는 것이 앞뒤가 맞는다.
+
+**포트는 `APP_ORIGIN` 에서 파생시킨다.** 이 값은 build 시 `metadataBase` 로, runtime 에는 `generateMetadata` 가 `getAppOrigin()` 으로 **자기 자신에게 fetch** 할 때의 origin 으로 쓰인다. 서버를 다른 포트로 띄우면 그 self-fetch 가 엉뚱한 곳으로 나가고, `page.tsx` 의 `catch` 가 실패를 삼켜 **metadata 만 조용히 비어 나간다.** 포트를 별도 설정으로 두면 이 둘이 어긋날 수 있으므로 env 하나로 build·runtime·Playwright 를 함께 몬다.
+
+기본값은 3000이고, 다른 포트를 쓰려면 `APP_ORIGIN=http://localhost:3100 pnpm check` 처럼 한 곳만 바꾸면 된다.
 
 `pnpm start` 는 빌드 산출물을 요구하므로 `pnpm build` 가 선행돼야 한다. 명령 배치(0.7)가 이 순서를 보장한다.
 
@@ -171,16 +181,65 @@ CI는 이미 `pnpm exec playwright --version` 이 성공하면 Chromium을 받�
 
 ---
 
-### 0.8 셋업 시간 비교 — 측정 예정
+### 0.8 셋업 시간 비교 — 실측
 
-전부 jsdom으로 돌렸을 때와 분리했을 때를 비교해 기록한다. 0단계 구현 후 채운다.
+`vitest run` 출력의 `Duration ...` 줄을 그대로 옮겼다. 같은 6개 파일 44개 테스트, 3회 실행 중앙값이다.
 
-| 구성                         | transform | setup | collect | tests | 총  |
-| ---------------------------- | --------- | ----- | ------- | ----- | --- |
-| 전부 jsdom 단일 프로젝트     | –         | –     | –       | –     | –   |
-| **node / jsdom 분리 (채택)** | –         | –     | –       | –     | –   |
+| 구성                         | transform | setup     | import | tests | environment | 총        |
+| ---------------------------- | --------- | --------- | ------ | ----- | ----------- | --------- |
+| 전부 jsdom 단일 프로젝트     | 376ms     | 1.45s     | 302ms  | 303ms | 3.02s       | 1.15s     |
+| **node / jsdom 분리 (채택)** | 163ms     | **121ms** | 281ms  | 255ms | **272ms**   | **705ms** |
 
-`vitest run` 출력의 `Duration ... (transform, setup, collect, tests, environment, prepare)` 줄을 그대로 옮긴다. 3회 실행 중 중앙값을 쓴다.
+`setup` 12배, `environment` 11배 차이다. (setup·environment는 워커별 합계라 벽시계 `총`보다 클 수 있다.)
+
+프로젝트를 따로 돌리면 어디서 값이 나오는지가 더 분명하다.
+
+| 프로젝트          | 파일 | 테스트 | setup   | environment |
+| ----------------- | ---- | ------ | ------- | ----------- |
+| `node` (기존 5개) | 5    | 41     | **0ms** | **0ms**     |
+| `jsdom` (신규)    | 1    | 3      | 179ms   | 401ms       |
+
+**분리의 값어치가 이 한 줄이다** — 기존 5개는 DOM 환경 비용을 한 푼도 내지 않는다. 전부 jsdom으로 뒀다면 테스트가 늘 때마다 이 비용이 파일 수에 비례해 쌓인다.
+
+측정 방법: 임시 config(`environment: 'jsdom'` 단일, 같은 `setupFiles`)를 만들어 대조군을 재고 삭제했다. 커밋에 남기지 않았다.
+
+---
+
+### 0.9 계획이 틀린 곳 — 구현하며 드러난 것
+
+문서를 먼저 쓰고 구현했더니 **계획 한 곳이 실제로 틀렸고, 검증 기준 하나는 시점이 일렀다.** 고친 내용과 왜 미리 못 봤는지를 남긴다.
+
+#### (1) `src/test/` 는 lint를 통과하지 못한다
+
+0.2에서 테스트 인프라를 `src/test/` 에 두기로 했다. 이 레포는 `eslint-plugin-boundaries` 를 `configs.strict` 로 쓰는데, strict 는 `no-unknown-files` 를 켠다. `src/test/` 는 `boundaries/elements` 의 어느 타입(app·pages·widgets·features·entities·shared)에도 안 붙는다.
+
+실측:
+
+```
+src/test/__probe.ts
+  1:1  error  File does not match any file pattern and does not belong to
+               any known element   boundaries/no-unknown-files
+```
+
+우회로로 루트 `test/` 를 시도했더니 이번엔 반대편이 걸렸다.
+
+```
+src/_pages/product-list/ui/__probe.dom.test.tsx
+  1:23  error  Dependencies to unknown elements and files are not allowed
+                boundaries/no-unknown-dependencies
+```
+
+**해결**: `eslint.config.mjs` 의 기존 `ignores` 를 넓혀 `src/test/**` 와 `src/**/*.dom.test.{ts,tsx}` 를 뺐다. 새 관례를 만들지 않고 이미 있던 escape hatch(`src/examples/**`, `src/services/**`)와 같은 방식을 썼다.
+
+면제가 타당한 근거는 따로 있다. **통합 테스트는 레이어를 가로지르는 것이 정상이다** — 헤더(widgets)와 목록(\_pages)을 한 화면에 올려야 12번 항목을 검증할 수 있다. FSD 의존 방향은 프로덕션 코드를 위한 규칙이고, 테스트에 그대로 적용하면 검증 자체가 불가능해진다. 프로덕션 코드의 강제는 그대로 남는다.
+
+**왜 미리 못 봤나**: 0단계 계획을 세울 때 vitest·MSW·Playwright만 봤고 **lint 하네스를 검토 대상에 넣지 않았다.** `pnpm check` 가 `test → lint → typecheck → build` 네 단계인데 테스트 도구만 확인한 셈이다.
+
+#### (2) 검증 기준 하나를 2단계로 미뤘다
+
+0.5에 적은 `vitest run --sequence.shuffle` 확인은 0단계에서 하지 않는다. DOM 테스트가 한 파일뿐이라 순서를 섞어도 증명되는 게 없다. 격리 검증은 통합 테스트가 여럿 생기는 **2단계 완료 시점**으로 옮긴다. `afterEach` 의 store·`localStorage` 초기화 코드는 지금 들어가 있다.
+
+**왜 미리 못 봤나**: 검증 항목을 "무엇을 확인하는가"로만 적고 **"그 시점에 확인이 가능한가"** 를 따지지 않았다. 계획서의 완료조건은 그 단계에서 실제로 판정될 수 있어야 한다.
 
 ---
 
@@ -290,12 +349,24 @@ CI는 이미 `pnpm exec playwright --version` 이 성공하면 Chromium을 받�
 
 이 문서만 읽고 2·3단계에 무엇이 들어갈지 예측할 수 있어야 한다는 완료조건에 대한 답이다.
 
+**0단계에서 이미 만든 것** (하네스 + 스모크 2개. 15개 검증 항목은 여기 없다.)
+
+```
+vitest.config.ts                    ← node / jsdom projects 분리
+playwright.config.ts                ← production build, APP_ORIGIN 파생 포트, 서버 재사용 금지
+eslint.config.mjs                   ← boundaries ignores 확장 (0.9-1)
+src/test/fixtures.ts                ← 응답 계약만 지키는 픽스처 (mock 데이터를 import 하지 않는다)
+src/test/handlers.ts                ← 성공 경로 기본 핸들러
+src/test/server.ts                  ← setupServer
+src/test/setup.dom.ts               ← jest-dom · MSW 수명주기 · store/localStorage 초기화
+src/test/renderWithProviders.tsx    ← QueryClient(retry:false) + NuqsTestingAdapter
+src/test/harness.dom.test.tsx       ← jsdom 스모크 3개
+e2e/harness.spec.ts                 ← E2E 스모크 2개
+```
+
 **2단계에 생길 파일**
 
 ```
-src/test/setup.dom.ts                                    ← MSW·jest-dom·store 초기화
-src/test/handlers.ts                                     ← 성공 경로 기본 핸들러
-src/test/renderWithProviders.tsx                         ← QueryClient(retry:false) + NuqsTestingAdapter
 src/entities/cart/model/useCartStore.test.ts             ← 1
 src/entities/wishlist/model/useWishlistStore.test.ts     ← 1
 src/features/product-filter/model/parseFilterParams.test.ts  ← 3
