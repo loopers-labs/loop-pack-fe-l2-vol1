@@ -1,22 +1,9 @@
-import type { Category, Product } from "@/entities/product";
+export class MockApiError extends Error {
+  readonly status: number;
 
-export type MockApiScenario = "empty" | "error" | "slow";
-
-export type ApiErrorResponse = {
-  message: string;
-};
-
-export type HomeResponse = {
-  banner: { title: string; description: string; image: string };
-  categories: Category[];
-  popularProducts: Product[];
-  newProducts: Product[];
-};
-
-export type ProductListResponse = {
-  products: Product[];
-  categories: Category[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-};
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "MockApiError";
+    this.status = status;
+  }
+}

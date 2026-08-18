@@ -1,13 +1,7 @@
-import type { Category, Product } from "@/entities/product";
+import type { HomeResponse, MockApiScenario } from "@/types/commerce";
 import { fetchCommerceApi } from "@/shared/api/commerce-client";
 
-export type HomeResponse = {
-  banner: { title: string; description: string; image: string };
-  categories: Category[];
-  popularProducts: Product[];
-  newProducts: Product[];
-};
-
-export function getHome(): Promise<HomeResponse> {
-  return fetchCommerceApi<HomeResponse>("/api/home");
+export function getHome(scenario: MockApiScenario | null): Promise<HomeResponse> {
+  const query = scenario === null ? "" : `?scenario=${scenario}`;
+  return fetchCommerceApi<HomeResponse>(`/api/home${query}`);
 }

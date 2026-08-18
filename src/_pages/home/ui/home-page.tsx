@@ -1,52 +1,32 @@
 "use client";
 
-import { ProductGridSkeleton } from "@/entities/product";
+import { Suspense } from "react";
 import { CommerceApiError } from "@/shared/api/commerce-client";
-import { Placeholder } from "@/shared/ui/placeholder";
-import { useQuery } from "@tanstack/react-query";
-import { homeQueries } from "../api/queries";
-import { HomeBanner } from "./home-banner";
-import { HomeCategoryLinks } from "./home-category-links";
-import { HomeProductSection } from "./home-product-section";
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
+import { useQueryErrorResetBoundary } from "@tanstack/react-query";
+import type { MockApiScenario } from "@/types/commerce";
+import { HomeContent } from "./home-content";
+import { HomeErrorFallback } from "./home-error-fallback";
+import { HomePendingFallback } from "./home-pending-fallback";
 
-export function HomePage() {
-  const { data: home, isLoading, isError, error, refetch } = useQuery(homeQueries.home());
+const isServerError = (error: Error) => error instanceof CommerceApiError && error.status >= 500;
 
-  if (isLoading) {
-    return (
-      <section className="week05-section" aria-busy="true" aria-label="홈 불러오는 중">
-        <ProductGridSkeleton />
-      </section>
-    );
-  }
+type HomePageProps = {
+  scenario: MockApiScenario | null;
+};
 
-  if (isError) {
-    return (
-      <Placeholder
-        role="alert"
-        title="상품을 불러오지 못했어요"
-        description={
-          error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요."
-        }
-        action={
-          <button type="button" onClick={() => refetch()}>
-            다시 시도
-          </button>
-        }
-      />
-    );
-  }
-
-  if (home === undefined) {
-    return null;
-  }
+export function HomePage({ scenario }: HomePageProps) {
+  const { reset } = useQueryErrorResetBoundary();
 
   return (
-    <>
-      <HomeBanner banner={home.banner} />
-      <HomeCategoryLinks categories={home.categories} />
-      <HomeProductSection title="인기 상품" products={home.popularProducts} />
-      <HomeProductSection title="신상품" products={home.newProducts} />
-    </>
+    <ErrorBoundary
+      onReset={reset}
+      shouldCatch={(error) => !isServerError(error)}
+      fallback={(error, retry) => <HomeErrorFallback error={error} retry={retry} />}
+    >
+      <Suspense fallback={<HomePendingFallback />}>
+        <HomeContent scenario={scenario} />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
