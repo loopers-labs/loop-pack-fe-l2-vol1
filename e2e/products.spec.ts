@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 const mockApiPort = process.env.MOCK_API_PORT ?? "4010";
 const mockApiBaseURL = `http://127.0.0.1:${mockApiPort}`;
@@ -13,6 +14,11 @@ async function setMockApiScenario(scenario: { products?: "success" | "empty" | "
     headers: { "content-type": "application/json" },
     body: JSON.stringify(scenario),
   });
+}
+
+async function selectFilterOption(page: Page, label: string, option: string) {
+  await page.getByRole("button", { name: label }).click();
+  await page.getByText(option).click();
 }
 
 test.beforeEach(async () => {
@@ -77,5 +83,34 @@ test.describe("상품 목록 E2E", () => {
     await expect(page).toHaveURL(/q=%EC%8A%A4%ED%83%A0%EB%A6%AC/);
     await expect(page).toHaveURL(/category=home/);
     await expect(page).toHaveURL(/sort=price-desc/);
+  });
+
+  test("뒤로 가기와 앞으로 가기로 URL query 기반 필터 상태를 복원한다", async ({ page }) => {
+    await page.goto("/products");
+
+    await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).toBeVisible();
+
+    await page.getByRole("textbox", { name: "검색" }).fill("스탠리");
+    await expect(page).toHaveURL(/q=%EC%8A%A4%ED%83%A0%EB%A6%AC/);
+
+    await selectFilterOption(page, "카테고리", "홈");
+    await selectFilterOption(page, "정렬", "높은 가격순");
+
+    await expect(page).toHaveURL(/q=%EC%8A%A4%ED%83%A0%EB%A6%AC/);
+    await expect(page).toHaveURL(/category=home/);
+    await expect(page).toHaveURL(/sort=price-desc/);
+    await expect(page.getByRole("heading", { name: "스탠리 클래식 런치박스" })).toBeVisible();
+
+    await page.goBack();
+
+    await expect(page.getByRole("button", { name: "정렬" })).toContainText("최신순");
+    await expect(page).not.toHaveURL(/sort=price-desc/);
+
+    await page.goForward();
+
+    await expect(page.getByRole("textbox", { name: "검색" })).toHaveValue("스탠리");
+    await expect(page.getByRole("button", { name: "카테고리" })).toContainText("홈");
+    await expect(page.getByRole("button", { name: "정렬" })).toContainText("높은 가격순");
+    await expect(page.getByRole("heading", { name: "스탠리 클래식 런치박스" })).toBeVisible();
   });
 });
