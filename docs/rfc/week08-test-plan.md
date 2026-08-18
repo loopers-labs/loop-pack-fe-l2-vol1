@@ -482,5 +482,100 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 
 통합 테스트의 네트워크는 MSW로 가로챘고, 실패·지연·빈 결과는 각 테스트 안에서 handler를 덮어써 기본 성공 handler가 다른 테스트에 영향을 주지 않게 했다. E2E는 별도 mock API 서버의 `POST /__test__/scenario`와 `POST /__test__/reset`으로 응답 상태를 제어한다. 테스트용 상태를 사용자 URL에 넣지 않아, 실제 앱의 URL query 계약과 테스트 제어 채널을 분리했다.
 
+## 3단계: 테스트가 실제 회귀를 잡는지 확인
+
+2단계에서 만든 테스트가 실제로 의미 있는 회귀를 잡는지 확인하기 위해 구현 코드만 잠시 망가뜨렸다. 실험 후에는 변경을 되돌리고, 원래 테스트가 다시 통과하는지 확인했다.
+
+|   # | 방법론      | 망가뜨린 곳                                                                                                                | 테스트 파일                                                                                                      | 어떻게 바꿨나                                                         | 결과 | 실패한 테스트                                                                                                                 |
+| --: | ----------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------- |
+|   1 | 단위 테스트 | [`src/shared/lib/id-set/idSet.ts`](../../src/shared/lib/id-set/idSet.ts)                                                   | [`src/shared/lib/id-set/idSet.test.ts`](../../src/shared/lib/id-set/idSet.test.ts)                               | `included === true` 조건을 `included`로 느슨하게 바꿨다.              | 잡힘 | `normalizeIdSet > true 값으로 표시된 상품 id만 유지한다`                                                                      |
+|   2 | 단위 테스트 | [`src/_pages/products/queries/productQueries.ts`](../../src/_pages/products/queries/productQueries.ts)                     | [`src/_pages/products/queries/productQueries.test.ts`](../../src/_pages/products/queries/productQueries.test.ts) | 상품 목록 query key에서 `sort`를 제외했다.                            | 잡힘 | `productQueries > 상품 목록 query key는 조회 조건 전체를 포함한다`                                                            |
+|   3 | 통합 테스트 | [`src/_pages/products/model/useProductListSearchParams.ts`](../../src/_pages/products/model/useProductListSearchParams.ts) | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)       | 카테고리 변경 시 `page: 1` 초기화를 제거했다.                         | 잡힘 | `ProductListPageClient > 필터 조건 변경 > 카테고리를 변경하면 URL 상태와 조회 조건을 page 1 기준으로 갱신한다`                |
+|   4 | 통합 테스트 | [`src/_pages/products/ui/ProductListResults.tsx`](../../src/_pages/products/ui/ProductListResults.tsx)                     | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)       | retry callback에서 `productsQuery.refetch()` 호출을 제거했다.         | 잡힘 | `ProductListPageClient > 에러 상태 > 최초 상품 목록 요청이 실패하면 실패 화면을 보여주고 다시 시도 성공 후 목록으로 복구한다` |
+|   5 | E2E 테스트  | [`src/_pages/products/model/useProductListSearchParams.ts`](../../src/_pages/products/model/useProductListSearchParams.ts) | [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                             | `useQueryStates`의 기본 history 옵션을 `push`에서 `replace`로 바꿨다. | 잡힘 | `상품 목록 E2E > 뒤로 가기와 앞으로 가기로 URL query 기반 필터 상태를 복원한다`                                               |
+
+첫 번째 실험에서는 persist 저장값에 문자열 `"true"`가 섞여 들어왔을 때도 id set에 남는 회귀를 만들었다. 테스트는 `{ p1: true, p3: true, p4: true }`가 실제 결과로 나왔고, 기대값에는 `p3`가 없어야 한다고 실패했다. 실패 메시지에서 잘못 남은 id가 바로 보였기 때문에 원인을 추측하기 쉬웠다.
+
+```text
+AssertionError: expected { p1: true, p3: true, p4: true } to deeply equal { p1: true, p4: true }
+```
+
+```ts
+// 변경 전
+if (key.trim().length > 0 && included === true) {
+  idSet[key] = true;
+}
+
+// 실험
+if (key.trim().length > 0 && included) {
+  idSet[key] = true;
+}
+```
+
+두 번째 실험에서는 정렬 조건이 React Query cache key에서 빠지는 회귀를 만들었다. 테스트는 기대 query key에는 `sort: "popular"`가 있어야 하는데 실제 query key에는 `sort`가 없다고 실패했다. 실패 메시지의 diff에 빠진 필드가 직접 표시되어, URL 조건별 cache 분리 계약이 깨졌다는 원인을 바로 추측할 수 있었다.
+
+```text
+-     "sort": "popular",
+```
+
+```ts
+// 변경 전
+const productListQueryKey = (params: ProductListQuery) =>
+  [...productQueriesAll(), "list", params] as const;
+
+// 실험
+const productListQueryKey = ({ sort: _sort, ...params }: ProductListQuery) =>
+  [...productQueriesAll(), "list", params] as const;
+```
+
+세 번째 실험에서는 사용자가 3페이지에서 카테고리를 바꿔도 `page`가 1로 초기화되지 않는 회귀를 만들었다. 통합 테스트는 URL update call이 `?category=goods&sort=latest&page=3`으로 남았고, 기대한 `{ category: "goods", page: 1 }`을 포함하지 않는다고 실패했다. 실패 메시지에서 이전 page가 유지된 사실이 드러나므로, 필터 변경 시 page 초기화가 빠졌다는 원인을 추측할 수 있었다.
+
+```text
+AssertionError: expected URL update calls ["?category=goods&sort=latest&page=3"] to include {"category":"goods","page":1}: expected false to be true
+```
+
+```ts
+// 변경 전
+void setParams({ category, page: 1 });
+
+// 실험
+void setParams({ category });
+```
+
+네 번째 실험에서는 실패 화면의 retry 버튼은 그대로 보이지만 실제 재요청은 하지 않는 회귀를 만들었다. 테스트는 다시 시도 버튼을 누른 뒤 성공 목록의 `"첫 번째 상품"`을 찾지 못해 실패했다. 실패 출력에 실패 화면 DOM이 길게 함께 나와 원인이 아주 직접적으로 보이지는 않았지만, 테스트 이름과 `findByText("첫 번째 상품")` 실패 위치를 보면 retry가 성공 목록으로 복구하지 못했다는 사실은 추적할 수 있었다.
+
+```text
+TestingLibraryElementError: Unable to find an element with the text: 첫 번째 상품.
+```
+
+```tsx
+// 변경 전
+onRetry={() => void productsQuery.refetch()}
+
+// 실험
+onRetry={() => undefined}
+```
+
+다섯 번째 실험에서는 필터 조작이 브라우저 history entry를 쌓지 않고 현재 entry를 교체하도록 바꿨다. E2E는 `page.goBack()` 이후 정렬 버튼이 `"최신순"`으로 돌아오는지 확인하다가 실패했다. 실패 메시지는 정렬 버튼 자체를 찾지 못했다고 나왔다. `replace`로 인해 기대한 필터 이전 상태가 history에 남지 않아, 뒤로 가기가 상품 목록의 이전 필터 상태가 아닌 다른 document 상태로 이동한 회귀라고 판단했다.
+
+```text
+Error: expect(locator).toContainText(expected) failed
+Locator: getByRole('button', { name: '정렬' })
+Expected substring: "최신순"
+Error: element(s) not found
+```
+
+```ts
+// 변경 전
+const [params, setParams] = useQueryStates(productListSearchParams, {
+  history: "push",
+});
+
+// 실험
+const [params, setParams] = useQueryStates(productListSearchParams, {
+  history: "replace",
+});
+```
+
 [products-page]: ../../src/app/(commerce)/products/page.tsx
 [home-page]: ../../src/app/(commerce)/page.tsx
