@@ -59,6 +59,17 @@ test.describe("상품 목록 E2E", () => {
     await expect(page.getByLabel("상품 목록")).not.toBeVisible();
   });
 
+  test("mock API가 지연 응답하면 로딩 상태를 거쳐 상품 목록을 보여준다", async ({ page }) => {
+    await setMockApiScenario({ products: "slow" });
+
+    const navigation = page.goto("/products", { waitUntil: "commit" });
+
+    await expect(page.getByLabel("상품을 불러오는 중입니다.")).toBeVisible();
+    await navigation;
+    await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).toBeVisible();
+    await expect(page.getByLabel("상품을 불러오는 중입니다.")).not.toBeVisible();
+  });
+
   test("URL query로 직접 진입하면 필터 상태와 상품 목록을 복원한다", async ({ page }) => {
     await page.goto("/products?q=스탠리&category=home&sort=price-desc");
 
