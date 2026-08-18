@@ -15,6 +15,8 @@
     "test": "vitest run --project=unit --project=dom",
     "test:watch": "vitest --project=unit --project=dom",
     "test:storybook": "vitest run --project=storybook",
+    "test:e2e": "APP_ORIGIN=http://127.0.0.1:3000 pnpm build && pnpm test:e2e:prebuilt",
+    "test:e2e:prebuilt": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "format": "prettier --write .",
@@ -24,7 +26,7 @@
     "architecture:evidence": "node scripts/architecture/review.mjs --json",
     "architecture:test": "node --test scripts/architecture/review.test.mjs",
     "check:local": "pnpm architecture:check && pnpm architecture:test && pnpm test && pnpm test:storybook && pnpm lint && pnpm typecheck",
-    "check": "pnpm architecture:check && pnpm test && pnpm test:storybook && pnpm lint && pnpm typecheck && pnpm build && pnpm build:storybook",
+    "check": "pnpm architecture:check && pnpm test && pnpm test:storybook && pnpm lint && pnpm typecheck && pnpm build && pnpm build:storybook && pnpm test:e2e:prebuilt",
     "prepare": "husky",
     "check:hero": "node scripts/measure/gate.mjs"
   },
@@ -49,6 +51,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@next/eslint-plugin-next": "16.2.10",
+    "@playwright/test": "^1.62.1",
     "@storybook/addon-a11y": "^10.5.5",
     "@storybook/addon-vitest": "^10.5.5",
     "@storybook/nextjs-vite": "^10.5.5",
