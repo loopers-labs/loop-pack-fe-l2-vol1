@@ -197,3 +197,42 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ── 목록 상태 표시 (7주차 2단계) ────────────────────────────── */
+
+/* 갱신 중에도 목록은 자리를 지킨다. 흐리게만 해서 "지금 바뀌는 중"을 보인다. */
+.shop-list-updating {
+  opacity: 0.55;
+  transition: opacity 120ms ease-out;
+}
+
+.shop-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #eef2f7;
+  color: #384654;
+}
+
+.shop-notice-error {
+  background: #fdecec;
+  color: #8a2020;
+}
+
+/* 스켈레톤은 실제 카드와 같은 자리를 차지한다 — 교체될 때 아래가 밀리지 않게. */
+.shop-skeleton-block {
+  background: #ececec;
+}
+
+.shop-skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.shop-skeleton-line-short {
+  width: 60%;
+}
