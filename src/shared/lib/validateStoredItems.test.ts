@@ -15,6 +15,10 @@ describe('isStoredItem', () => {
     expect(isStoredItem({})).toBe(false);
   });
 
+  it('id가 빈 문자열이면 거른다', () => {
+    expect(isStoredItem({ id: '' })).toBe(false);
+  });
+
   it('객체가 아니면 거른다', () => {
     expect(isStoredItem(null)).toBe(false);
     expect(isStoredItem('p1')).toBe(false);
