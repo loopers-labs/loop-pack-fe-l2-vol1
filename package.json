@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test:watch": "vitest",
     "test": "vitest run",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build",
+    "test:e2e": "playwright test",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
     "prepare": "husky"
   },
   "dependencies": {
