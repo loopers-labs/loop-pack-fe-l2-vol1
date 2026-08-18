@@ -44,12 +44,14 @@ const eslintConfig = defineConfig([
     },
   },
 
-  // 테스트·API 데이터 파일은 magic number 허용
+  // 테스트·API 데이터·mock 시나리오 파일은 magic number 허용
   {
     files: [
       "**/*.test.{ts,tsx}",
       "src/app/api/_data/**",
       "src/app/api/*/route.ts",
+      "src/entities/product/api/products.ts",
+      "src/_pages/home/api/home.ts",
     ],
     rules: {
       "no-magic-numbers": "off",
@@ -78,10 +80,10 @@ const eslintConfig = defineConfig([
           default: "disallow",
           rules: [
             { from: "app", allow: ["app-data", "pages", "widgets", "features", "entities", "shared"] },
-            { from: "pages", allow: ["app-data", "widgets", "features", "entities", "shared"] },
-            { from: "widgets", allow: ["app-data", "features", "entities", "shared"] },
-            { from: "features", allow: ["app-data", "entities", "shared"] },
-            { from: "entities", allow: ["app-data", "shared"] },
+            { from: "pages", allow: ["widgets", "features", "entities", "shared"] },
+            { from: "widgets", allow: ["features", "entities", "shared"] },
+            { from: "features", allow: ["entities", "shared"] },
+            { from: "entities", allow: ["shared"] },
             { from: "shared", allow: [] },
             { from: "app-data", allow: ["shared"] },
           ],
