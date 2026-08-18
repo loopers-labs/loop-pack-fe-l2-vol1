@@ -10,6 +10,10 @@ import { useCartStore } from '@/entities/cart/model/cartStore';
 import { formatWon, calcDiscount } from '@/shared/lib/format';
 import type { Product } from '@/entities/product/model/types';
 
+interface HomeClientProps {
+  scenario?: string;
+}
+
 function ProductCard({ product }: { product: Product }) {
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
   const toggle = useWishlistStore((s) => s.toggle);
@@ -73,9 +77,9 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-export function HomeClient() {
+export function HomeClient({ scenario }: HomeClientProps) {
   // const queryClient = useQueryClient();
-  const { data } = useSuspenseQuery(homeQueryOptions());
+  const { data } = useSuspenseQuery(homeQueryOptions(scenario));
 
   /* const prefetchProducts = useCallback(() => {
     void queryClient.prefetchQuery(

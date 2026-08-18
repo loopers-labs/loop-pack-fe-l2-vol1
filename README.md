@@ -13,6 +13,12 @@ pnpm install
 pnpm dev
 ```
 
+홈과 상품 목록의 서버 Hydration은 같은 Route Handler URL을 사용합니다. 로컬 실행 전 실제 서버 주소를 `.env.local`의 `APP_ORIGIN`에 지정하세요.
+
+```dotenv
+APP_ORIGIN=http://localhost:3000
+```
+
 `pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 테스트, lint, 타입 검사, 프로덕션 빌드를 순서대로 실행하며 네 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
 
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
