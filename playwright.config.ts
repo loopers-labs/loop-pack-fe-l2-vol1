@@ -27,13 +27,13 @@ export default defineConfig({
     {
       command: `MOCK_API_PORT=${mockApiPort} node e2e/mock-api/server.mjs`,
       url: `${mockApiBaseURL}/__test__/health`,
-      reuseExistingServer: !isCI,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
     {
-      command: `INTERNAL_API_BASE_URL=${mockApiBaseURL} NEXT_PUBLIC_API_BASE_URL=${mockApiBaseURL} pnpm start --hostname 127.0.0.1 --port ${port}`,
+      command: `INTERNAL_API_BASE_URL=${mockApiBaseURL} NEXT_PUBLIC_API_BASE_URL=${mockApiBaseURL} pnpm build && INTERNAL_API_BASE_URL=${mockApiBaseURL} NEXT_PUBLIC_API_BASE_URL=${mockApiBaseURL} pnpm start --hostname 127.0.0.1 --port ${port}`,
       url: baseURL,
-      reuseExistingServer: !isCI,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
   ],

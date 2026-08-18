@@ -17,7 +17,7 @@ const categories = [
 const products = [
   createProduct({
     id: "p1",
-    name: "Winter Rocky Pants",
+    name: "E2E Mock Backpack",
     category: "casual",
     price: 79000,
     reviewCount: 312,
