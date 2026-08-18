@@ -8,7 +8,7 @@ describe("normalizeIdSet", () => {
     expect(idSet).toEqual({ p1: true, p2: true });
   });
 
-  it.each([null, "wrong", ["p1"]])(
+  it.each([undefined, null, "wrong", ["p1"]])(
     "객체가 아닌 값이나 배열 %j은 빈 id set으로 정규화한다",
     (value) => {
       const idSet = normalizeIdSet(value);

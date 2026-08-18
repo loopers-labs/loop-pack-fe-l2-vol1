@@ -148,7 +148,7 @@ E2E는 `pnpm test`에는 넣지 않았다. 브라우저 실행과 production 서
 
 ```text
 pnpm check
-- Vitest: 29 files, 138 tests passed
+- Vitest: 29 files, 140 tests passed
 - lint: passed
 - typecheck: passed
 - next build: passed
@@ -603,15 +603,47 @@ const [params, setParams] = useQueryStates(productListSearchParams, {
 });
 ```
 
+## Advanced: mutation testing
+
+테스트가 회귀를 실제로 잡는지 더 확인하려고 `@stryker-mutator`를 추가했다. mutation testing은 production code를 일부러 바꾼 뒤 테스트가 그 변경을 잡는지 보는 방식이다. 3단계에서 사람이 직접 했던 회귀 실험을 도구로 자동화한 것에 가깝다.
+
+처음부터 전체 `src`를 대상으로 삼지는 않았다. Next page, React component, E2E까지 한 번에 넣으면 실행 시간이 커지고, 살아남은 mutant를 해석하기도 어려워진다. 그래서 이번 과제에서 단위 테스트로 검증하기로 한 순수 로직과 query 계약부터 mutation 대상으로 잡았다.
+
+```js
+mutate: [
+  "src/shared/lib/id-set/idSet.ts",
+  "src/_pages/products/model/searchParams.ts",
+  "src/_pages/products/queries/productQueries.ts",
+  "src/entities/cart/model/cartPersistence.ts",
+  "src/entities/wishlist/model/wishlistPersistence.ts",
+];
+```
+
+첫 실행 결과는 `107`개 mutant 중 `102`개가 killed, `5`개가 survived였고 mutation score는 `95.33%`였다. survived를 보니 `productQueries`의 `staleTime`, `throwOnError`, `normalizeIdSet(undefined)`처럼 실제 계약으로 둘 만한 부분이 있었다. 그래서 테스트를 보강했다.
+
+- `productQueries.list()`와 `productQueries.serverList()`의 `throwOnError`가 모두 `false`인지 확인했다.
+- 클라이언트와 서버 상품 목록 query option의 `staleTime`이 `1000 * 60`으로 같은지 확인했다.
+- `normalizeIdSet(undefined)`가 빈 id set으로 정규화되는지 확인했다.
+
+보강 후에는 `107`개 mutant 중 `106`개가 killed, `1`개가 survived였고 mutation score는 `99.07%`가 됐다. 남은 mutant는 `page < 1` 조건이 `page <= 1`로 바뀌는 경우다.
+
+```diff
+- if (!Number.isInteger(parsed) || parsed < 1) {
++ if (!Number.isInteger(parsed) || parsed <= 1) {
+```
+
+이 mutant는 `page=1`을 invalid로 판단하더라도 `withDefault(1)`을 거치면서 최종 params가 다시 `page: 1`이 된다. 사용자가 관찰하는 결과가 같아서 equivalent mutant에 가깝다고 판단했다. 이 경우 production code에 Stryker ignore 주석을 추가하기보다, 결과와 판단을 문서에 남기는 쪽을 선택했다.
+
 ## 체크리스트 대응 요약
 
-| 단계  | 확인한 내용                                                                                                                                                                                                                                |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0단계 | `node`/`jsdom` 환경을 분리했고, 환경 셋업 시간을 비교했다. MSW는 unhandled request를 에러로 막고, HTTP 클라이언트를 직접 mock하지 않는다. Playwright는 production build 위에서 돌며, E2E는 `pnpm test`와 분리하고 `pnpm check`에 포함했다. |
-| 1단계 | 15개 항목마다 방법론, 관련 코드, 선택 이유, 빨간불이 되면 알 수 있는 내용을 적었다. 애매했던 판단 2개와 목록 밖 테스트 판단도 별도로 남겼다.                                                                                               |
-| 2단계 | 15개 항목을 테스트 파일에 매핑했고, 정상 케이스와 경계 케이스를 함께 정리했다. 통합 테스트는 MSW, E2E는 mock API 서버로 네트워크 경계를 세웠다.                                                                                            |
-| 3단계 | 단위·통합·E2E 방법론별로 실제 구현을 망가뜨려 테스트 실패를 확인했다. 실패 메시지와 원인을 기록했고, 실험 코드는 최종 상태에 남기지 않았다.                                                                                                |
-| 공통  | `it.skip`, 의미 없는 `toBeTruthy()`, 스냅샷 대체 검증은 쓰지 않았다. 최종 기준 `pnpm check`는 Vitest 29 files, 138 tests와 Playwright 8 tests까지 통과했다.                                                                                |
+| 단계     | 확인한 내용                                                                                                                                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0단계    | `node`/`jsdom` 환경을 분리했고, 환경 셋업 시간을 비교했다. MSW는 unhandled request를 에러로 막고, HTTP 클라이언트를 직접 mock하지 않는다. Playwright는 production build 위에서 돌며, E2E는 `pnpm test`와 분리하고 `pnpm check`에 포함했다. |
+| 1단계    | 15개 항목마다 방법론, 관련 코드, 선택 이유, 빨간불이 되면 알 수 있는 내용을 적었다. 애매했던 판단 2개와 목록 밖 테스트 판단도 별도로 남겼다.                                                                                               |
+| 2단계    | 15개 항목을 테스트 파일에 매핑했고, 정상 케이스와 경계 케이스를 함께 정리했다. 통합 테스트는 MSW, E2E는 mock API 서버로 네트워크 경계를 세웠다.                                                                                            |
+| 3단계    | 단위·통합·E2E 방법론별로 실제 구현을 망가뜨려 테스트 실패를 확인했다. 실패 메시지와 원인을 기록했고, 실험 코드는 최종 상태에 남기지 않았다.                                                                                                |
+| Advanced | `@stryker-mutator`로 순수 로직과 query 계약에 mutation testing을 돌렸다. 보강 후 mutation score는 `99.07%`이고, 남은 1개는 `withDefault(1)` 때문에 최종 결과가 같은 equivalent mutant로 판단했다.                                          |
+| 공통     | `it.skip`, 의미 없는 `toBeTruthy()`, 스냅샷 대체 검증은 쓰지 않았다. 최종 기준 `pnpm check`는 Vitest 29 files, 140 tests와 Playwright 8 tests까지 통과했다.                                                                                |
 
 [products-page]: ../../src/app/(commerce)/products/page.tsx
 [home-page]: ../../src/app/(commerce)/page.tsx

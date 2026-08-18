@@ -42,6 +42,14 @@ describe("productQueries", () => {
 
   it("상품 목록 조회 실패는 Error Boundary로 전파하지 않는다", () => {
     expect(productQueries.list().throwOnError).toBe(false);
+    expect(productQueries.serverList().throwOnError).toBe(false);
+  });
+
+  it("상품 목록 조회 결과는 클라이언트와 서버에서 같은 시간 동안 fresh 상태로 유지한다", () => {
+    const expectedStaleTime = 1000 * 60;
+
+    expect(productQueries.list().staleTime).toBe(expectedStaleTime);
+    expect(productQueries.serverList().staleTime).toBe(expectedStaleTime);
   });
 
   it("상품 목록 queryFn은 요청 취소 signal을 API 요청에 전달한다", async () => {
