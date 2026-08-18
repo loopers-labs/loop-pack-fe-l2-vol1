@@ -1,7 +1,7 @@
 import type { ProductListQuery, ProductListResponse } from '@/entities/product/model';
 import type { MockApiScenario } from '@/shared/api';
-// eslint-disable-next-line boundaries/element-types -- app-data(mock 백엔드)는 서버 전용 함수라 여러 레이어에서 직접 참조 가능해야 함
-import { getProductsData } from '@/app/api/_data/commerce';
+// eslint-disable-next-line boundaries/element-types -- mock data-access 임시 예외: entities/server 영역으로 옮기고 server-only 경계 명시 후 제거
+import { getProductsData, waitForMockApi } from '@/app/api/_data/commerce';
 
 export async function getProducts(
   query: ProductListQuery & { scenario?: MockApiScenario | null },
@@ -18,14 +18,17 @@ export async function getProducts(
   return result.json() as Promise<ProductListResponse>;
 }
 
-export function getProductsServerData(
+export async function getProductsServerData(
   query: ProductListQuery & { scenario?: MockApiScenario | null },
 ): Promise<ProductListResponse> {
   if (process.env.SIMULATE_METADATA_FAILURE === 'true') {
-    return Promise.reject(new Error('상품 목록 조회 실패 (시뮬레이션)'));
+    throw new Error('상품 목록 조회 실패 (시뮬레이션)');
   }
   if (query.scenario === 'error') {
-    return Promise.reject(new Error('상품 목록을 불러오지 못했습니다.'));
+    throw new Error('상품 목록을 불러오지 못했습니다.');
   }
-  return Promise.resolve(getProductsData(query));
+  if (query.scenario === 'slow') {
+    await waitForMockApi(1_500);
+  }
+  return getProductsData(query);
 }

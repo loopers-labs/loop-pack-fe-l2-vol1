@@ -5,10 +5,16 @@ import { homeQueries } from "@/_pages/home/api/homeQueries";
 import { getHomeServerData } from "@/_pages/home/api/home";
 import { HomePage } from "@/_pages/home/ui/HomePage";
 import { SITE_OPENGRAPH } from '@/shared/config/site-metadata';
+import type { MockApiScenario } from '@/shared/api';
 
-export async function generateMetadata(): Promise<Metadata> {
+type Props = {
+  searchParams: Promise<{ scenario?: string }>;
+};
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   try {
-    const home = await getHomeServerData();
+    const { scenario } = await searchParams;
+    const home = await getHomeServerData(scenario as MockApiScenario | undefined);
 
     return {
       title: home.banner.title,
@@ -26,12 +32,13 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function Page() {
+export default async function Page({ searchParams }: Props) {
+  const { scenario } = await searchParams;
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
     ...homeQueries.data(),
-    queryFn: getHomeServerData,
+    queryFn: () => getHomeServerData(scenario as MockApiScenario | undefined),
   });
 
   return (
