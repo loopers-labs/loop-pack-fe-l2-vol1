@@ -2,8 +2,10 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, delay, http } from "msw";
 import { describe, expect, it } from "vitest";
+import { products } from "@/app/api/_data/commerce";
 import { PRODUCTS_ENDPOINT, productListResponse } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
+import { createRequestLog } from "@/test/requests";
 import { BOUNDARY_FALLBACK, TestErrorBoundary, renderWithProviders } from "@/test/render";
 import { ProductListPage } from "./ProductListPage";
 
@@ -57,10 +59,18 @@ describe("4번 — 목록 로딩 → 성공", () => {
 
 describe("5번 — 목록 빈 결과", () => {
   it("0건이면 어떤 조건으로 걸러 0건인지 URL 조건을 그대로 적는다", async () => {
+    const log = createRequestLog();
+
+    // 핸들러가 검색어를 **읽어서** 0건을 고른다.
+    // 무조건 0건을 돌려주면 params.set("q", query.q)를 지워도 통과한다 —
+    // 화면 문구는 nuqs의 q를 보고 만들어지므로 요청이 비어도 똑같이 보인다.
     server.use(
-      http.get(PRODUCTS_ENDPOINT, () =>
-        HttpResponse.json(productListResponse({ products: [], totalCount: 0 })),
-      ),
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        const matched = log.record(request).get("q") === "없는상품" ? [] : products;
+        return HttpResponse.json(
+          productListResponse({ products: matched, totalCount: matched.length }),
+        );
+      }),
     );
 
     renderWithProviders(<ProductListPage />, { searchParams: "?q=없는상품&category=fashion" });
@@ -69,9 +79,29 @@ describe("5번 — 목록 빈 결과", () => {
       await screen.findByText('검색어 "없는상품" · 카테고리 패션에 맞는 상품이 없습니다. (0개)'),
     ).toBeInTheDocument();
 
+    // 검색어가 실제로 요청에 실렸는가 — 화면 문구만으로는 알 수 없다.
+    expect(log.last().get("q")).toBe("없는상품");
+
     // 0건에 그리드·페이지네이션이 남으면 빈 자리가 목록처럼 보인다.
     expect(screen.queryByText(/총 \d+개/)).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "페이지 이동" })).not.toBeInTheDocument();
+  });
+
+  it("검색어를 지우면 요청에서도 빠진다", async () => {
+    const log = createRequestLog();
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        log.record(request);
+        return HttpResponse.json(productListResponse());
+      }),
+    );
+
+    renderWithProviders(<ProductListPage />);
+    await screen.findByText(/총 \d+개/);
+
+    // 빈 검색어는 기본값이라 URL에도, 요청에도 실리지 않는다.
+    // 빈 문자열로 q=를 보내면 서버가 "빈 문자열 검색"으로 받는다.
+    expect(log.last().has("q")).toBe(false);
   });
 
   it("조건이 하나도 없을 때 0건이면 전체 조건이라고 적는다", async () => {
