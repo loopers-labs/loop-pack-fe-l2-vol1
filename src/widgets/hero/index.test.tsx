@@ -1,0 +1,19 @@
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+
+describe("Hero", () => {
+  it("renders the existing banner contract as a stable hero", async () => {
+    const { Hero } = await import("./index");
+
+    const markup = renderToStaticMarkup(
+      <Hero
+        title="매일 새롭게 발견하는 취향"
+        description="지금 가장 사랑받는 상품을 만나보세요."
+      />,
+    );
+
+    expect(markup).toContain("매일 새롭게 발견하는 취향");
+    expect(markup).toContain("지금 가장 사랑받는 상품을 만나보세요.");
+    expect(markup).toContain("hero-original.jpg");
+  });
+});

@@ -41,6 +41,7 @@
     "eslint-plugin-boundaries": "^7.1.0",
     "globals": "^17.9.0",
     "lint-staged": "^17.3.0",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }
