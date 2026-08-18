@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { NuqsTestingAdapter, type OnUrlUpdateFunction } from "nuqs/adapters/testing";
-import type { ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 
 // 테스트 전용 QueryClient. retry를 끈다 —
 // 앱 기본값(retry: 1)이면 에러 케이스가 재시도를 기다리다 타임아웃 난다.
@@ -10,6 +10,30 @@ export function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: 60 * 1000 } },
   });
+}
+
+// 5xx가 경계로 전파되는 것을 확인하는 자리.
+// 통합 테스트는 app/products/error.tsx(라우트 경계)를 렌더하지 않으므로,
+// 같은 역할의 경계를 테스트가 직접 세워 fallback이 뜨는 것으로 전파를 본다.
+// 400만 검증하면 throwOnError를 () => false로 바꿔도 초록불이라 이게 필요하다.
+export const BOUNDARY_FALLBACK = "경계가 오류를 받았습니다";
+
+type BoundaryProps = { children: ReactNode };
+type BoundaryState = { failed: boolean };
+
+export class TestErrorBoundary extends Component<BoundaryProps, BoundaryState> {
+  state: BoundaryState = { failed: false };
+
+  static getDerivedStateFromError(): BoundaryState {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return <p role="alert">{BOUNDARY_FALLBACK}</p>;
+    }
+    return this.props.children;
+  }
 }
 
 type RenderOptions = {

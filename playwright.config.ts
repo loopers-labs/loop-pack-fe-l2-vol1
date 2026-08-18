@@ -21,5 +21,8 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !isCI,
     timeout: 180_000,
+    // 서버가 자기 Route Handler를 부를 절대 주소. 기본값이 없어서 안 주면 빌드가 죽는다
+    // (src/shared/config/appOrigin.ts). E2E가 띄우는 서버도 예외가 아니다.
+    env: { APP_ORIGIN: baseURL },
   },
 });
