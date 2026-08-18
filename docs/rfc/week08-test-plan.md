@@ -40,11 +40,11 @@ CSS import는 별도 mock을 추가하지 않았다. CSS module을 import하는 
 
 같은 테스트 묶음을 기준으로 `vitest run` 출력의 environment 시간을 비교했다.
 
-| 기준                           | Test files | Tests | Duration | Environment |
-| ------------------------------ | ---------: | ----: | -------: | ----------: |
-| 전부 `jsdom`                   |         25 |   114 |    3.07s |      14.69s |
-| `node`/`jsdom` 분리 직후       |         25 |   114 |    3.06s |       8.36s |
-| MSW와 E2E 설정까지 반영한 현재 |         25 |   114 |    3.05s |       8.28s |
+| 기준                          | Test files | Tests | Duration | Environment |
+| ----------------------------- | ---------: | ----: | -------: | ----------: |
+| 전부 `jsdom`                  |         25 |   114 |    3.07s |      14.69s |
+| `node`/`jsdom` 분리 직후      |         25 |   114 |    3.06s |       8.36s |
+| MSW와 초기 E2E 설정 반영 시점 |         25 |   114 |    3.05s |       8.28s |
 
 전체 실행 시간은 큰 차이가 나지 않았지만, 환경 셋업 시간은 줄었다. 테스트 수가 더 늘어나면 DOM이 필요 없는 테스트를 `node`에 두는 효과가 더 커질 수 있다.
 
@@ -96,34 +96,59 @@ Playwright는 production build 위에서만 돌게 했다. `pnpm check`는 다�
 pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e
 ```
 
-`pnpm test:e2e`는 Playwright가 `pnpm start`로 production 서버를 띄운 뒤 Chromium에서 테스트를 실행한다. `pnpm build`는 `check`에서 명시적으로 한 번만 실행한다.
+`pnpm test:e2e`는 Playwright가 mock API 서버와 Next production 서버를 함께 띄운 뒤 Chromium에서 테스트를 실행한다. 브라우저 요청과 서버 컴포넌트의 prefetch 요청이 같은 mock API를 보도록, E2E 실행에서는 두 API base URL을 모두 mock API origin으로 맞춘다.
 
 ```ts
-webServer: {
-  command: `pnpm start --hostname 127.0.0.1 --port ${port}`,
-  url: baseURL,
-}
+webServer: [
+  {
+    command: `MOCK_API_PORT=${mockApiPort} node e2e/mock-api/server.mjs`,
+    url: `${mockApiBaseURL}/__test__/health`,
+  },
+  {
+    command: `INTERNAL_API_BASE_URL=${mockApiBaseURL} NEXT_PUBLIC_API_BASE_URL=${mockApiBaseURL} pnpm build && INTERNAL_API_BASE_URL=${mockApiBaseURL} NEXT_PUBLIC_API_BASE_URL=${mockApiBaseURL} pnpm start --hostname 127.0.0.1 --port ${port}`,
+    url: baseURL,
+  },
+];
 ```
+
+`INTERNAL_API_BASE_URL`은 서버 런타임 fetch를 mock API로 보내고, `NEXT_PUBLIC_API_BASE_URL`은 브라우저 번들 안의 클라이언트 fetch를 mock API로 보낸다. `NEXT_PUBLIC_*` 값은 build 시점에 번들에 들어가므로, E2E에서는 start 전에 같은 값으로 production build를 다시 만든다.
+
+slow, empty, error 같은 테스트 상태는 `/products?scenario=...`처럼 사용자 URL에 섞지 않았다. 대신 Playwright 테스트가 mock API의 제어 endpoint를 호출해 다음 응답 상태를 바꾼다.
+
+```ts
+await fetch(`${mockApiBaseURL}/__test__/scenario`, {
+  method: "POST",
+  body: JSON.stringify({ products: "slow" }),
+});
+
+await page.goto("/products");
+```
+
+이렇게 하면 앱의 URL schema와 `nuqs` 파싱에는 테스트 전용 query가 들어가지 않는다. mock API 서버는 실제 HTTP 서버라서 Playwright의 `page.route()`가 잡지 못하는 서버 컴포넌트 prefetch와 브라우저 fetch를 같은 방식으로 다룰 수 있다.
+
+mock API는 전역 scenario state를 쓰므로 Playwright worker는 1개로 제한했다. 테스트마다 `POST /__test__/reset`으로 상태를 되돌려 테스트 간 응답 조건이 새지 않게 했다.
 
 E2E는 `pnpm test`에는 넣지 않았다. 브라우저 실행과 production 서버 기동 비용이 있어 빠른 피드백용 명령과 분리하는 편이 낫다고 봤다. 대신 제출과 CI 기준인 `pnpm check`에는 포함했다.
 
 - `pnpm test`: Vitest 단위/통합 테스트
+- `pnpm test:mock-api`: E2E mock API 서버 단위 테스트
 - `pnpm test:e2e`: Playwright E2E
 - `pnpm test:e2e:headed`: 브라우저 창을 띄워 E2E 확인
 - `pnpm test:e2e:ui`: Playwright UI 모드
+- `pnpm dev:e2e`: mock API와 Next production 서버를 함께 띄워 수동 확인
 - `pnpm check`: Vitest, lint, typecheck, production build, E2E 전체 검증
 
 ### 최종 검증
 
-0단계 설정 이후 `pnpm check`를 실행해 통과를 확인했다.
+2단계 E2E 보강 이후 `pnpm check`로 전체 검증을 실행해 통과를 확인했다.
 
 ```text
 pnpm check
-- Vitest: 25 files, 114 tests passed
+- Vitest: 29 files, 138 tests passed
 - lint: passed
 - typecheck: passed
 - next build: passed
-- Playwright Chromium: 1 passed
+- Playwright Chromium: 8 passed
 ```
 
 Playwright 첫 실행 때는 두 가지를 확인했다.
@@ -151,7 +176,7 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 | 카테고리 변경 → 목록 변경           | 통합 테스트 | `category` query와 목록이 함께 바뀐다.                             |
 | 정렬 변경 → 순서 변경               | 통합 테스트 | `sort` query와 목록 순서가 함께 바뀐다.                            |
 | 페이지 이동 → 목록 변경             | 통합 테스트 | `page` query, 새 요청 결과, 목록 시작점 스크롤이 함께 맞물린다.    |
-| 조작이 URL에 반영 · URL로 재진입    | 통합 테스트 | URL query가 필터 UI와 요청 조건으로 복원된다.                      |
+| 조작이 URL에 반영 · URL로 재진입    | 통합 + E2E  | 조작은 URL query와 요청 조건에 반영되고, 직접 진입도 복원된다.     |
 | 담기 → 헤더 개수 · 다시 누르면 빠짐 | 통합 테스트 | store 변경이 Header 개수에 반영되고 toggle 제거도 된다.            |
 | 뒤로·앞으로 가기로 필터 복원        | E2E 테스트  | history 이동 후 URL, 필터, 목록이 복원된다.                        |
 | 새로고침해도 필터 상태 유지         | E2E 테스트  | document 재요청 후에도 URL 조건이 유지된다.                        |
@@ -216,7 +241,7 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 
 통합 테스트로는 클라이언트 React Query가 데이터 없는 최초 상태에서 pending UI를 보여주고, MSW 성공 응답 뒤 실제 상품 목록을 렌더링하는지 확인한다.
 
-서버 Suspense fallback이 document 진입 시 먼저 보이는지는 App Router streaming과 production build 동작이 포함되므로 E2E에서 확인한다. 이때 `/products?scenario=slow`로 진입해 fallback이 먼저 보이고, 이후 실제 목록으로 교체되는지 본다.
+서버 Suspense fallback이 document 진입 시 먼저 보이는지는 App Router streaming과 production build 동작이 포함되므로 E2E에서 확인한다. 이때 사용자 URL에는 테스트용 query를 붙이지 않고, mock API 제어 endpoint로 products 응답만 `slow`로 바꾼 뒤 `/products`에 진입한다. 테스트는 `page.goto("/products", { waitUntil: "commit" })`로 document 응답이 시작된 직후를 먼저 보고, fallback이 보인 다음 실제 목록으로 교체되는지 확인한다.
 
 이 테스트가 빨간불이 되면 최초 진입에서 목록 크기를 예상할 수 있는 pending UI가 빠졌거나, 서버 Suspense fallback이 slow 목록 데이터에 막혀 먼저 보이지 않는다는 뜻이다. 또는 성공 응답을 받은 뒤 현재 URL 조건에 맞는 상품 id와 개수가 grid에 반영되지 않는다는 뜻이다.
 
@@ -247,7 +272,7 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 
 최초 실패는 이전에 보여줄 목록이 없기 때문에 목록 대신 실패 이유와 다시 시도할 방법을 보여줘야 한다. 클라이언트 통합 테스트에서는 MSW로 500 응답을 만들고, `productApi`가 `response.ok` 실패를 에러로 바꾸는지, `ProductListResults`가 그 에러를 `ProductListContent`에 넘겨 실패 UI를 보여주는지 확인한다.
 
-서버 진입에서는 `page.tsx`가 `prefetchQuery`를 `void`로 시작하기 때문에 실패 응답이 document render 자체를 막으면 안 된다. E2E에서는 `/products?scenario=error`로 진입했을 때 페이지 shell이 깨지지 않고, 이후 상품 목록 영역에 실패 화면과 retry가 보이는지 확인한다.
+서버 진입에서는 `page.tsx`가 `prefetchQuery`를 `void`로 시작하기 때문에 실패 응답이 document render 자체를 막으면 안 된다. E2E에서는 mock API 제어 endpoint로 products 응답만 `error`로 바꾼 뒤 `/products`에 진입한다. 이때 페이지 shell이 깨지지 않고, 이후 상품 목록 영역에 실패 화면과 retry가 보이는지 확인한다.
 
 이 테스트가 빨간불이 되면 최초 실패가 빈 결과나 로딩 상태처럼 보이거나, 사용자가 다시 시도할 방법을 찾을 수 없다는 뜻이다. 또는 서버 prefetch 실패가 document 렌더링을 막아 상품 목록 페이지 자체가 깨지고 있다는 뜻이다.
 
@@ -315,13 +340,13 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
   - [`src/_pages/products/ui/ProductListPage.tsx`](../../src/_pages/products/ui/ProductListPage.tsx)
   - [`src/_pages/products/ui/ProductFilters.tsx`](../../src/_pages/products/ui/ProductFilters.tsx)
   - [`src/_pages/products/ui/ProductListResults.tsx`](../../src/_pages/products/ui/ProductListResults.tsx)
-- 방법론: 통합 테스트
+- 방법론: 통합 테스트 + E2E 테스트
 
 상품 목록의 검색, 카테고리, 정렬, 페이지 상태는 `nuqs`를 통해 URL query로 관리한다. 이 항목은 사용자의 조작이 URL query에 반영되는지, 그리고 URL query로 진입했을 때 같은 조건이 필터 UI와 목록 요청에 사용되는지를 확인하는 것이 핵심이다.
 
-URL은 브라우저 기능과 맞닿아 있어 E2E로 볼 수도 있다. 하지만 이 항목에서 지키려는 것은 주소창 자체보다 `nuqs`가 만든 query 상태가 필터 UI와 React Query 요청 조건으로 이어지는 계약이다. 이 계약은 `NuqsTestingAdapter`와 MSW로 빠르게 검증할 수 있다. 반면 뒤로·앞으로 가기와 새로고침은 실제 브라우저 history와 document 재요청이 중요하므로 E2E로 남긴다.
+일반적인 검색·카테고리·정렬·페이지 조작이 URL query와 React Query 요청 조건으로 이어지는 계약은 `NuqsTestingAdapter`와 MSW를 쓰는 통합 테스트에서 확인한다. 반면 URL query로 직접 진입하는 흐름은 실제 document 요청, 서버 `searchParams` 파싱, hydration 이후 필터 UI 복원이 함께 맞아야 하므로 E2E에서도 확인한다.
 
-이 테스트가 빨간불이 되면 필터 조작이 URL에 남지 않거나, URL로 다시 진입했을 때 검색·카테고리·정렬·페이지 조건이 요청 조건으로 복원되지 않는다는 뜻이다.
+이 테스트가 빨간불이 되면 필터 조작이 URL에 남지 않거나, URL로 다시 진입했을 때 검색·카테고리·정렬·페이지 조건이 필터 UI와 요청 조건으로 복원되지 않는다는 뜻이다.
 
 ### 담기 → 헤더 개수 · 다시 누르면 빠짐
 
@@ -401,9 +426,9 @@ URL은 브라우저 기능과 맞닿아 있어 E2E로 볼 수도 있다. 하지�
 
 #### 조작이 URL에 반영 · URL로 재진입
 
-이 항목은 통합 테스트와 E2E 테스트 사이에서 고민했다. URL은 브라우저 주소창과 history에 걸쳐 있는 상태라 E2E로 보는 것도 자연스럽다. 다만 여기서 확인하려는 핵심은 실제 브라우저 navigation이 아니라, `nuqs`가 만든 query 상태가 필터 UI와 React Query 요청 조건으로 이어지는 계약이다. 이 계약은 `NuqsTestingAdapter`와 MSW를 쓰는 통합 테스트에서 더 빠르고 세밀하게 확인할 수 있다.
+이 항목은 어떤 부분을 통합 테스트로 두고, 어떤 부분을 E2E로 올릴지 고민했다. URL은 브라우저 주소창과 history에 걸쳐 있는 상태라 전부 E2E로 보는 것도 자연스럽다. 다만 일반 조작에서 확인하려는 핵심은 실제 브라우저 navigation이 아니라, `nuqs`가 만든 query 상태가 필터 UI와 React Query 요청 조건으로 이어지는 계약이다. 이 계약은 `NuqsTestingAdapter`와 MSW를 쓰는 통합 테스트에서 더 빠르고 세밀하게 확인할 수 있다.
 
-만약 E2E로 골랐다면 실제 주소창까지 확인할 수 있다는 장점은 있지만, 테스트가 느려지고 실패 원인이 브라우저 navigation인지 query 상태 연결인지 좁히기 어려워진다. 그래서 뒤로·앞으로 가기와 새로고침은 E2E로 남기고, 일반 조작과 URL 반영은 통합 테스트로 정했다.
+만약 전부 E2E로 골랐다면 실제 주소창까지 확인할 수 있다는 장점은 있지만, 테스트가 느려지고 실패 원인이 브라우저 navigation인지 query 상태 연결인지 좁히기 어려워진다. 그래서 일반 조작과 URL 반영은 통합 테스트로 보고, URL 직접 진입·뒤로/앞으로 가기·새로고침처럼 실제 브라우저 경계가 중요한 흐름은 E2E로 남겼다.
 
 #### 목록 로딩 → 성공
 
@@ -413,17 +438,19 @@ URL은 브라우저 기능과 맞닿아 있어 E2E로 볼 수도 있다. 하지�
 
 ### 이번 목록 밖의 테스트 판단
 
-#### 다음에는 하면 좋겠다: 갱신 실패 시 기존 목록 유지
+#### 다음에는 하면 좋겠다: 홈 페이지 주요 상품 액션 E2E
 
 - 관련 코드:
-  - [`src/_pages/products/model/useRetainedProductListDataOnRefreshError.ts`](../../src/_pages/products/model/useRetainedProductListDataOnRefreshError.ts)
-  - [`src/_pages/products/ui/ProductListResults.tsx`](../../src/_pages/products/ui/ProductListResults.tsx)
+  - [`src/app/(commerce)/page.tsx`][home-page]
+  - [`src/_pages/home/ui/HomePageClient.tsx`](../../src/_pages/home/ui/HomePageClient.tsx)
+  - [`src/widgets/product-card/ui/ProductCardActionButton.tsx`](../../src/widgets/product-card/ui/ProductCardActionButton.tsx)
+  - [`src/widgets/header/ui/CommerceHeader.tsx`](../../src/widgets/header/ui/CommerceHeader.tsx)
 
-핵심 구매 흐름과 URL-query 계약은 이번 15개 안에 넣었다. 그래서 목록 밖에 남은 항목 중에서는 `useRetainedProductListDataOnRefreshError`가 다음 후보로 적절하다고 봤다.
+핵심 구매 흐름과 URL-query 계약은 이번 15개 안에 넣었다. 갱신 실패 시 기존 목록을 유지하는 흐름도 `ProductListPage.test.tsx`에서 통합 테스트로 확인했다. 그래서 목록 밖에 남은 항목 중에서는 홈 페이지의 주요 상품 action을 production E2E로 확인하는 것이 다음 후보로 적절하다고 봤다.
 
-이 로직은 기존 목록이 있는 상태에서 검색, 카테고리, 정렬, 페이지 조건을 바꿨을 때 새 요청이 실패하더라도 방금 보던 목록을 유지하기 위한 장치다. 변경 빈도는 높지 않을 수 있지만, 실패 비용은 비교적 크다. 이 흐름이 깨지면 사용자는 이미 보던 목록을 잃고 에러 화면만 보게 되거나, 현재 URL 조건과 화면에 남은 목록의 관계를 이해하기 어려워질 수 있다.
+홈 페이지는 이번 15개에서 Products 페이지보다 우선순위를 낮췄지만, 실제 사용자는 홈에서 상품을 보고 바로 장바구니나 위시리스트를 누를 수 있다. 이 흐름이 깨지면 진입 첫 화면에서 구매 의도가 끊긴다. 변경 빈도는 높지 않지만, 실패 비용은 사용자 경로 기준으로 작지 않다.
 
-이번 15개에서는 최초 실패와 retry 복구를 먼저 다룬다. 갱신 실패는 이전 성공 데이터와 새 실패 상태를 함께 다뤄야 해서 조건이 더 복잡하므로, 그다음 테스트 후보로 남긴다.
+다만 이번 15개에서는 상품 목록의 URL 상태, 목록 요청, pending/error/empty, Header count를 우선 검증했다. 홈 action E2E까지 바로 넣으면 브라우저 테스트 시간이 늘고, Products에서 이미 같은 store 연결을 확인한 부분과 일부 겹친다. 그래서 다음 후보로 남긴다.
 
 #### 앞으로도 안 하겠다: 상품 카드의 시각 스타일 세부값
 
@@ -431,4 +458,29 @@ URL은 브라우저 기능과 맞닿아 있어 E2E로 볼 수도 있다. 하지�
 
 이 영역까지 테스트하면 작은 스타일 변경마다 테스트가 깨져 유지 비용이 더 커진다. 대신 상품명, 가격, 이미지 대체 텍스트, 담기/찜 action처럼 사용자가 실제로 의미를 얻거나 조작하는 부분만 테스트 대상으로 둔다.
 
+## 2단계: 정한 대로 테스트 구현
+
+1단계에서 고른 15개 항목은 실제 테스트로 옮겼다. 단위 테스트는 DOM 없이 model과 query 계약을 확인하고, 통합 테스트는 Testing Library와 MSW로 사용자 조작부터 요청 조건과 화면 결과까지 본다. E2E는 production build 위에서 실제 document 진입, 새로고침, history, hydration 이후 store 연결을 확인한다.
+
+| 1단계 항목                          | 구현 위치                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 장바구니·위시리스트 개수 파생       | [`src/entities/cart/model/selectors.test.ts`](../../src/entities/cart/model/selectors.test.ts), [`src/entities/wishlist/model/selectors.test.ts`](../../src/entities/wishlist/model/selectors.test.ts)                                                                                                                                 |
+| URL 조건 → query key                | [`src/_pages/products/model/searchParams.test.ts`](../../src/_pages/products/model/searchParams.test.ts), [`src/_pages/products/queries/productQueries.test.ts`](../../src/_pages/products/queries/productQueries.test.ts), [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx) |
+| 순수 로직                           | [`src/shared/lib/id-set/idSet.test.ts`](../../src/shared/lib/id-set/idSet.test.ts), [`src/entities/cart/model/cartPersistence.test.ts`](../../src/entities/cart/model/cartPersistence.test.ts), [`src/entities/wishlist/model/wishlistPersistence.test.ts`](../../src/entities/wishlist/model/wishlistPersistence.test.ts)             |
+| 목록 로딩 → 성공                    | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx), [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                       |
+| 목록 빈 결과                        | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx), [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                       |
+| 목록 에러                           | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx), [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                       |
+| 에러에서 재시도로 복구              | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             |
+| 카테고리 변경 → 목록 변경           | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             |
+| 정렬 변경 → 순서 변경               | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             |
+| 페이지 이동 → 목록 변경             | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             |
+| 조작이 URL에 반영 · URL로 재진입    | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx), [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                       |
+| 담기 → 헤더 개수 · 다시 누르면 빠짐 | [`src/_pages/products/ui/ProductListCommerceState.test.tsx`](../../src/_pages/products/ui/ProductListCommerceState.test.tsx)                                                                                                                                                                                                           |
+| 뒤로·앞으로 가기로 필터 복원        | [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                                                                                                                                   |
+| 새로고침해도 필터 상태 유지         | [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                                                                                                                                   |
+| 목록 진입 → 담기 → 헤더 확인        | [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                                                                                                                                   |
+
+통합 테스트의 네트워크는 MSW로 가로챘고, 실패·지연·빈 결과는 각 테스트 안에서 handler를 덮어써 기본 성공 handler가 다른 테스트에 영향을 주지 않게 했다. E2E는 별도 mock API 서버의 `POST /__test__/scenario`와 `POST /__test__/reset`으로 응답 상태를 제어한다. 테스트용 상태를 사용자 URL에 넣지 않아, 실제 앱의 URL query 계약과 테스트 제어 채널을 분리했다.
+
 [products-page]: ../../src/app/(commerce)/products/page.tsx
+[home-page]: ../../src/app/(commerce)/page.tsx
