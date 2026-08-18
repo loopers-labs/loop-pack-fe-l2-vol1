@@ -1,6 +1,7 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { ConfigError, requireAppOrigin } from "@/shared/config";
 import { getQueryClient } from "@/_app/getQueryClient";
 import { productListQueryOptions } from "@/_pages/product-list/api/productListQuery";
 import { categoryOptions, sortOptions } from "@/_pages/product-list/config/options";
@@ -49,12 +50,23 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       description,
       openGraph: { ...commonOpenGraph, title, description, images },
     };
-  } catch {
+  } catch (error) {
+    // 설정 누락은 삼키지 않는다 — 재시도해도 같고, 삼키면 잘못된 배포가 조용히 산다.
+    if (error instanceof ConfigError) {
+      throw error;
+    }
     return {};
   }
 }
 
 export default async function Page({ searchParams }: PageProps) {
+  // 설정 누락은 렌더 전에 멈춘다.
+  // generateMetadata에서 던져도 Next는 루트 metadata로 폴백해 200을 준다(실측: title이
+  // "상품 목록 · Commerce" → "Commerce"로 떨어지고 로그에만 남는다). 본문의 prefetchQuery는
+  // 설계상 실패를 삼키므로 거기서도 안 드러난다. 그래서 여기서 명시적으로 확인한다 —
+  // 이게 없으면 잘못 배포된 서버가 200을 돌려주고 헬스체크를 통과한다.
+  requireAppOrigin();
+
   const query = resolveProductListQuery(await searchParams);
   const queryClient = getQueryClient();
   await queryClient.prefetchQuery(productListQueryOptions(query));

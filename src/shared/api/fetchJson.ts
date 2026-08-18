@@ -1,3 +1,4 @@
+import { requireAppOrigin } from "@/shared/config";
 import { HttpError } from "./HttpError";
 import type { ApiErrorResponse } from "./types";
 
@@ -11,13 +12,12 @@ const isApiErrorResponse = (value: unknown): value is ApiErrorResponse => {
 
 // 브라우저에서는 상대 경로가 그대로 동작하지만, 서버(RSC·generateMetadata)에는
 // 기준 origin이 없다. 같은 query factory를 양쪽에서 쓰려면 여기서 한 번만 맞춘다.
-// APP_ORIGIN은 build와 runtime에 같은 값을 넣는다(닿지 않는 origin을 넣으면 실패를 재현할 수 있다).
+// origin은 requireAppOrigin()이 소유한다 — 기본값을 두지 않는 이유는 거기 적었다.
 function resolveUrl(url: string): string {
   if (typeof window !== "undefined" || !url.startsWith("/")) {
     return url;
   }
-  const origin = process.env.APP_ORIGIN ?? `http://localhost:${process.env.PORT ?? "3000"}`;
-  return `${origin}${url}`;
+  return `${requireAppOrigin()}${url}`;
 }
 
 // signal은 선택이다 — 넘기면 더는 필요 없어진 요청을 브라우저가 실제로 끊는다.
