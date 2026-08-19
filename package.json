@@ -18,7 +18,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
     "prepare": "husky"
   },
   "lint-staged": {
