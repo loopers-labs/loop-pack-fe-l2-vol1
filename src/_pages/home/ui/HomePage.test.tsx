@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from './HomePage';
 
@@ -42,8 +42,18 @@ const renderUntilAllReady = async () => {
 };
 
 describe('HomePage', () => {
-  // getQueryClient는 브라우저 환경에서 싱글턴이라 앞 회차의 결과가 다음 회차로 새어 나간다.
-  beforeEach(() => getQueryClient().clear());
+  /**
+   * 서버 렌더를 검증하는 파일이라 node 환경에서 돈다.
+   * 서버의 apiClient는 상대 경로를 해석하지 못해 APP_ORIGIN으로 절대 URL을 만든다.
+   */
+  beforeEach(() => {
+    vi.stubEnv('APP_ORIGIN', 'https://commerce.example');
+    getQueryClient().clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
 
   // renderToStaticMarkup은 셸만 동기로 그린다. 이미지가 여기 있다는 건 조회를 안 기다린다는 뜻이다.
   it('홈 조회 전에도 배너 이미지와 카드를 보여준다', () => {
