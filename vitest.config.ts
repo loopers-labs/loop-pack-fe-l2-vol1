@@ -10,7 +10,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     // tsconfig의 "@/*" -> "./src/*" 별칭을 Vitest에도 동일하게 적용
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@tests': fileURLToPath(new URL('./tests', import.meta.url)),
+    },
   },
   test: {
     restoreMocks: true,
@@ -20,6 +23,7 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
+          setupFiles: ['./vitest.msw.setup.ts'],
           // JSX를 쓰지만 react-dom/server만 써서 DOM이 필요 없어 예외처리
           include: ['src/**/*.test.ts', 'src/_pages/home/ui/HomePage.test.tsx'],
         },
@@ -29,7 +33,7 @@ export default defineConfig({
         test: {
           name: 'jsdom',
           environment: 'jsdom',
-          setupFiles: ['./vitest.setup.ts'],
+          setupFiles: ['./vitest.msw.setup.ts', './vitest.setup.ts'],
           include: ['src/**/*.test.tsx', 'tests/**/*.test.tsx'],
           exclude: [
             ...configDefaults.exclude,
