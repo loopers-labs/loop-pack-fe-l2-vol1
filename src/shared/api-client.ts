@@ -1,3 +1,5 @@
+import { environmentManager } from '@tanstack/react-query';
+
 import { getAppOrigin } from './app-origin';
 
 /**
@@ -40,7 +42,7 @@ export async function apiClient<T>(path: string): Promise<T> {
  * 서버에서만 APP_ORIGIN을 붙여 호출부가 한 벌의 상대 경로를 그대로 쓰게 한다.
  */
 function resolveRequestUrl(path: string) {
-  if (typeof window !== 'undefined') return path;
+  if (!environmentManager.isServer()) return path;
 
   const origin = getAppOrigin();
 

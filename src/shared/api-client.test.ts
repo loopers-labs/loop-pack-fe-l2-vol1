@@ -1,6 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { environmentManager } from '@tanstack/react-query';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { apiClient } from './api-client';
+
+const APP_ORIGIN = 'https://commerce.example';
 
 const mockFetch = (response: {
   ok: boolean;
@@ -29,11 +32,14 @@ const mockUnparsableFetch = (response: { ok: boolean; status: number }) => {
   );
 };
 
-// 서버에는 window가 없다. jsdom 환경에서 서버 분기를 확인하려면 지워야 한다.
-const mockServerEnvironment = (appOrigin?: string) => {
-  vi.stubGlobal('window', undefined);
-  vi.stubEnv('APP_ORIGIN', appOrigin);
-};
+/**
+ * 서버인지 브라우저인지는 apiClient가 실제로 묻는 곳(environmentManager)에 직접 넣는다.
+ * 전역 window를 지워 서버인 척하면 판정 로직까지 흉내내는 셈이라, 실제 판정이 바뀌어도 통과한다.
+ */
+beforeEach(() => {
+  environmentManager.setIsServer(() => true);
+  vi.stubEnv('APP_ORIGIN', APP_ORIGIN);
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -85,6 +91,7 @@ describe('apiClient', () => {
   });
 
   it('브라우저에서는 상대 경로 그대로 요청한다', async () => {
+    environmentManager.setIsServer(() => false);
     mockFetch({ ok: true, status: 200, body: {} });
 
     await apiClient('/api/products?page=2');
@@ -93,18 +100,15 @@ describe('apiClient', () => {
   });
 
   it('서버에서는 APP_ORIGIN을 붙인 절대 URL로 요청한다', async () => {
-    mockServerEnvironment('https://commerce.example');
     mockFetch({ ok: true, status: 200, body: {} });
 
     await apiClient('/api/products?page=2');
 
-    expect(fetch).toHaveBeenCalledWith(
-      'https://commerce.example/api/products?page=2',
-    );
+    expect(fetch).toHaveBeenCalledWith(`${APP_ORIGIN}/api/products?page=2`);
   });
 
   it('서버에서 APP_ORIGIN이 없으면 설정 오류로 throw한다', async () => {
-    mockServerEnvironment();
+    vi.stubEnv('APP_ORIGIN', undefined);
     mockFetch({ ok: true, status: 200, body: {} });
 
     await expect(apiClient('/api/home')).rejects.toThrow('APP_ORIGIN');
@@ -112,7 +116,7 @@ describe('apiClient', () => {
   });
 
   it('서버에서 APP_ORIGIN이 URL 형식이 아니면 설정 오류로 throw한다', async () => {
-    mockServerEnvironment('commerce.example');
+    vi.stubEnv('APP_ORIGIN', 'commerce.example');
     mockFetch({ ok: true, status: 200, body: {} });
 
     await expect(apiClient('/api/home')).rejects.toThrow('APP_ORIGIN');
@@ -120,7 +124,7 @@ describe('apiClient', () => {
   });
 
   it('서버에서 APP_ORIGIN이 http·https가 아니면 설정 오류로 throw한다', async () => {
-    mockServerEnvironment('ftp://commerce.example');
+    vi.stubEnv('APP_ORIGIN', 'ftp://commerce.example');
     mockFetch({ ok: true, status: 200, body: {} });
 
     await expect(apiClient('/api/home')).rejects.toThrow('APP_ORIGIN');
