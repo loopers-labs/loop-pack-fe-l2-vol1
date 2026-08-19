@@ -53,6 +53,7 @@ describe('서버 loader와 브라우저 hook', () => {
         sort: 'latest',
         page: 1,
         pageSize: 12,
+        scenario: null,
       },
     ]);
   });

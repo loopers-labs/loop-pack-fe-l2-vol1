@@ -35,7 +35,7 @@ export function HomeContent() {
     );
   }
 
-  const { banner, categories, popularProducts, newProducts } = data;
+  const { categories, popularProducts, newProducts } = data;
 
   return (
     <>
@@ -51,14 +51,6 @@ export function HomeContent() {
           </button>
         </p>
       )}
-
-      <section
-        className="week05-hero"
-        style={{ backgroundImage: `url(${banner.image})` }}
-      >
-        <p>{banner.description}</p>
-        <h1>{banner.title}</h1>
-      </section>
 
       <section className="week05-section">
         <h2>카테고리</h2>
