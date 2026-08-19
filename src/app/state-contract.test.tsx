@@ -149,6 +149,54 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
     expect(screen.getByText('Wishlist 0')).toBeInTheDocument()
   })
 
+  it('담은 상품을 다시 누르면 헤더 개수가 0으로 돌아온다', async () => {
+    stubCommerceApi()
+    renderApp(
+      <>
+        <Header />
+        <ProductListView />
+      </>,
+    )
+
+    await screen.findByText('2 products')
+    const cartButton = screen.getByLabelText('상품A bag')
+
+    fireEvent.click(cartButton)
+    expect(screen.getByText('Bag 1')).toBeInTheDocument()
+
+    fireEvent.click(cartButton)
+
+    // 담기와 빼기가 같은 버튼이다. 빼는 경로가 끊기면 개수는 늘기만 한다.
+    expect(screen.getByText('Bag 0')).toBeInTheDocument()
+    expect(cartButton).toHaveAttribute('aria-pressed', 'false')
+    expect(cartButton).toHaveTextContent('Add to bag')
+  })
+
+  it('두 상품을 담고 하나만 빼면 나머지 하나는 헤더에 남는다', async () => {
+    stubCommerceApi()
+    renderApp(
+      <>
+        <Header />
+        <ProductListView />
+      </>,
+    )
+
+    await screen.findByText('2 products')
+
+    fireEvent.click(screen.getByLabelText('상품A bag'))
+    fireEvent.click(screen.getByLabelText('상품B bag'))
+    expect(screen.getByText('Bag 2')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('상품A bag'))
+
+    // 빼기가 목록 전체를 비우거나 다른 상품까지 건드리면 여기서 0이 된다.
+    expect(screen.getByText('Bag 1')).toBeInTheDocument()
+    expect(screen.getByLabelText('상품B bag')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
   it('위시리스트 토글은 장바구니 개수에 영향을 주지 않는다', async () => {
     stubCommerceApi()
     renderApp(
