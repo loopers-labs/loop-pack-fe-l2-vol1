@@ -1,32 +1,24 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from './HomePage';
 
-import { getQueryClient } from '@/shared/get-query-client';
+import { HOME_RESPONSE } from '@tests/msw/fixtures';
+import { server } from '@tests/msw/server';
 
 vi.mock('next/server', () => ({ connection: () => Promise.resolve() }));
 
-const HOME_RESPONSE = {
-  banner: {
-    title: '매일 새롭게 발견하는 취향',
-    description: '지금 가장 사랑받는 상품을 만나보세요.',
-    image: '/images/products/p6.jpg',
-  },
-  categories: [{ id: 'living', name: '리빙' }],
-  popularProducts: [],
-  newProducts: [],
-};
-
-const mockHome = (response: { ok: boolean; body: unknown }) =>
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue({
-      ok: response.ok,
-      status: response.ok ? 200 : 500,
-      json: () => Promise.resolve(response.body),
-    }),
+// 성공은 기본 핸들러가 맡는다. 여기서는 예외 경로만 덮는다.
+const failHome = () =>
+  server.use(
+    http.get('*/api/home', () =>
+      HttpResponse.json(
+        { message: '홈 데이터를 불러오지 못했습니다.' },
+        { status: 500 },
+      ),
+    ),
   );
 
 const renderUntilAllReady = async () => {
@@ -48,7 +40,6 @@ describe('HomePage', () => {
    */
   beforeEach(() => {
     vi.stubEnv('APP_ORIGIN', 'https://commerce.example');
-    getQueryClient().clear();
   });
 
   afterEach(() => {
@@ -66,28 +57,23 @@ describe('HomePage', () => {
   });
 
   it('홈 조회 뒤에는 배너에 이미지와 문구가 함께 보인다', async () => {
-    mockHome({ ok: true, body: HOME_RESPONSE });
-
     const markup = await renderUntilAllReady();
 
     expect(markup).toContain('hero-original.jpg');
     expect(markup).toContain('width="3840"');
     expect(markup).toContain('height="2160"');
-    expect(markup).toContain('매일 새롭게 발견하는 취향');
-    expect(markup).toContain('지금 가장 사랑받는 상품을 만나보세요.');
+    expect(markup).toContain(HOME_RESPONSE.banner.title);
+    expect(markup).toContain(HOME_RESPONSE.banner.description);
   });
 
   it('홈 조회가 실패해도 배너 이미지는 남고 문구만 비운다', async () => {
-    mockHome({
-      ok: false,
-      body: { message: '홈 데이터를 불러오지 못했습니다.' },
-    });
+    failHome();
 
     const markup = await renderUntilAllReady();
 
     expect(markup).toContain('hero-original.jpg');
     expect(markup).toContain('이번 주의 발견');
-    expect(markup).not.toContain('매일 새롭게 발견하는 취향');
+    expect(markup).not.toContain(HOME_RESPONSE.banner.title);
     expect(markup).not.toContain('Switched to client rendering');
   });
 });

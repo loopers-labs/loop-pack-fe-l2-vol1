@@ -1,42 +1,22 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { http, HttpResponse } from 'msw';
+import { describe, expect, it } from 'vitest';
 
 import { HomeContent } from '@/_pages/home/ui/HomeContent';
-import type { HomeResponse, Product } from '@/entities/product';
 import { productQueries } from '@/entities/product';
-import { getHome } from '@/entities/product/api/fetch-product';
+import { HOME_RESPONSE } from '@tests/msw/fixtures';
+import { server } from '@tests/msw/server';
 
-vi.mock('@/entities/product/api/fetch-product', () => ({
-  getHome: vi.fn(),
-  getProducts: vi.fn(),
-}));
-
-const PRODUCT: Product = {
-  id: 'p9',
-  brand: 'Loopers Select',
-  name: '오크 원형 사이드 테이블',
-  category: 'home',
-  price: 89000,
-  originalPrice: null,
-  image: '/images/products/p9.jpg',
-  freeShipping: true,
-  sizes: [],
-  rating: 4.7,
-  reviewCount: 128,
-  createdAt: '2026-01-01T00:00:00.000Z',
-};
-
-const HOME_RESPONSE: HomeResponse = {
-  banner: {
-    title: '배너 제목',
-    description: '배너 설명',
-    image: '/banner.jpg',
-  },
-  categories: [{ id: 'home', name: '홈' }],
-  popularProducts: [PRODUCT],
-  newProducts: [],
-};
+const failHome = () =>
+  server.use(
+    http.get('*/api/home', () =>
+      HttpResponse.json(
+        { message: '홈 데이터를 불러오지 못했습니다.' },
+        { status: 500 },
+      ),
+    ),
+  );
 
 function renderHome(queryClient: QueryClient) {
   render(
@@ -52,9 +32,7 @@ function createTestQueryClient() {
 
 describe('홈 조회 실패 인라인 처리', () => {
   it('보여줄 데이터가 없는 실패는 콘텐츠 영역 에러 화면으로 처리한다', async () => {
-    vi.mocked(getHome).mockRejectedValue(
-      new Error('홈 데이터를 불러오지 못했습니다.'),
-    );
+    failHome();
 
     renderHome(createTestQueryClient());
 
@@ -67,9 +45,7 @@ describe('홈 조회 실패 인라인 처리', () => {
   });
 
   it('보여줄 데이터가 있는 재조회 실패는 화면을 유지하고 배너를 띄운다', async () => {
-    vi.mocked(getHome).mockRejectedValue(
-      new Error('홈 데이터를 불러오지 못했습니다.'),
-    );
+    failHome();
 
     const queryClient = createTestQueryClient();
 
