@@ -41,6 +41,14 @@ describe('상품 쿼리 키', () => {
     expect(productQueries.all()).toEqual(['products']);
   });
 
+  it('목록 키에는 조회 조건이 그대로 실린다', () => {
+    expect(productQueries.list(CONDITIONS).queryKey).toEqual([
+      'products',
+      'list',
+      CONDITIONS,
+    ]);
+  });
+
   it('모든 키가 루트 키로 시작해 한 번에 무효화할 수 있다', () => {
     const all = productQueries.all();
 
