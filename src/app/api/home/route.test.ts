@@ -5,13 +5,13 @@ import { GET } from "./route";
 const request = (query = "") =>
   GET(new NextRequest(`http://localhost/api/home${query}`));
 
-describe("GET /api/home", () => {
+describe("홈 API 조회", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
   });
 
-  it("returns banner, categories, popular products, and new products", async () => {
+  it("정상 요청은 배너, 카테고리, 인기 상품과 신상품을 반환한다", async () => {
     const response = await request();
     const body = await response.json();
 
@@ -46,22 +46,30 @@ describe("GET /api/home", () => {
     ]);
   });
 
-  it("keeps banner and categories in the empty scenario", async () => {
-    const response = await request("?scenario=empty");
-    const body = await response.json();
-    expect(body.banner).toBeDefined();
-    expect(body.categories).toHaveLength(5);
-    expect(body.popularProducts).toEqual([]);
-    expect(body.newProducts).toEqual([]);
+  it("빈 시나리오에서도 배너와 카테고리를 유지하고 상품 목록만 비운다", async () => {
+    const [normalResponse, emptyResponse] = await Promise.all([
+      request(),
+      request("?scenario=empty"),
+    ]);
+    const [normalBody, emptyBody] = await Promise.all([
+      normalResponse.json(),
+      emptyResponse.json(),
+    ]);
+
+    expect(emptyResponse.status).toBe(200);
+    expect(emptyBody.banner).toEqual(normalBody.banner);
+    expect(emptyBody.categories).toEqual(normalBody.categories);
+    expect(emptyBody.popularProducts).toEqual([]);
+    expect(emptyBody.newProducts).toEqual([]);
   });
 
-  it("returns a deterministic error scenario", async () => {
+  it("에러 시나리오는 500 상태와 고정된 오류 메시지를 반환한다", async () => {
     const response = await request("?scenario=error");
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ message: "홈 데이터를 불러오지 못했습니다." });
   });
 
-  it("keeps the home response pending for 1.5 seconds in the slow scenario", async () => {
+  it("느린 시나리오는 1.5초 뒤 정상 데이터를 반환한다", async () => {
     vi.useFakeTimers();
     vi.stubEnv("NODE_ENV", "production");
 
@@ -84,7 +92,7 @@ describe("GET /api/home", () => {
     expect(body.newProducts).toHaveLength(6);
   });
 
-  it("rejects an unknown scenario", async () => {
+  it("알 수 없는 시나리오는 400 상태를 반환한다", async () => {
     const response = await request("?scenario=unknown");
 
     expect(response.status).toBe(400);

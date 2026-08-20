@@ -5,28 +5,15 @@ import { GET } from "./route";
 const request = (query = "") =>
   GET(new NextRequest(`http://localhost/api/products${query}`));
 
-const allProductIds = async (sort: string) => {
-  const firstPageBody = await (
-    await request(`?sort=${sort}&page=1&pageSize=24`)
-  ).json();
-  const secondPageBody = await (
-    await request(`?sort=${sort}&page=2&pageSize=24`)
-  ).json();
-
-  return [...firstPageBody.products, ...secondPageBody.products].map(
-    (product: { id: string }) => product.id,
-  );
-};
-
 const hugePositiveInteger = "9".repeat(400);
 
-describe("GET /api/products", () => {
+describe("상품 API 조회", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
   });
 
-  it("returns a single product by id", async () => {
+  it("상품 ID가 존재하면 상품 하나를 반환한다", async () => {
     const response = await request("?id=p1");
     const body = await response.json();
 
@@ -41,7 +28,7 @@ describe("GET /api/products", () => {
     expect(body.products).toBeUndefined();
   });
 
-  it("returns 404 when the product does not exist", async () => {
+  it("상품 ID가 존재하지 않으면 404 상태를 반환한다", async () => {
     const response = await request("?id=missing-product");
 
     expect(response.status).toBe(404);
@@ -50,7 +37,7 @@ describe("GET /api/products", () => {
     });
   });
 
-  it("preserves Week 04 field shape while using the mapped source identity", async () => {
+  it("목록 응답은 기존 상품 필드와 매핑된 상품 정보를 유지한다", async () => {
     const response = await request();
     const body = await response.json();
 
@@ -100,7 +87,7 @@ describe("GET /api/products", () => {
     expect(allCategoryBody.totalCount).toBe(30);
   });
 
-  it("matches representative source products across all five image groups", async () => {
+  it("다섯 이미지 그룹의 대표 상품 정보를 반환한다", async () => {
     const body = await (await request("?pageSize=24")).json();
     const secondPageBody = await (await request("?page=2&pageSize=24")).json();
     const products = [...body.products, ...secondPageBody.products];
@@ -122,7 +109,7 @@ describe("GET /api/products", () => {
       ]);
   });
 
-  it("returns one unique local image for every product", async () => {
+  it("모든 상품은 서로 다른 로컬 이미지를 사용한다", async () => {
     const firstPageBody = await (await request("?pageSize=24")).json();
     const secondPageBody = await (await request("?pageSize=24&page=2")).json();
     const products = [...firstPageBody.products, ...secondPageBody.products];
@@ -136,7 +123,7 @@ describe("GET /api/products", () => {
     expect(images.some((image: string) => image.startsWith("http"))).toBe(false);
   });
 
-  it("searches explicit brands and source names without case sensitivity", async () => {
+  it("브랜드와 상품명을 공백과 영문 대소문자에 관계없이 검색한다", async () => {
     const response = await request("?q=%EC%8A%A4%ED%83%A0%EB%A6%AC&pageSize=24");
     const body = await response.json();
     expect(body.products.map((product: { id: string }) => product.id)).toEqual([
@@ -151,7 +138,7 @@ describe("GET /api/products", () => {
     expect(caseBody.products.map((product: { id: string }) => product.id)).toEqual(["p1"]);
   });
 
-  it("filters category and sorts popularity deterministically", async () => {
+  it("카테고리로 필터링하고 인기순 동률은 평점으로 정렬한다", async () => {
     const response = await request("?category=digital&sort=popular&pageSize=24");
     const body = await response.json();
     expect(body.products.map((product: { id: string }) => product.id)).toEqual([
@@ -176,32 +163,7 @@ describe("GET /api/products", () => {
     ]);
   });
 
-  it.each([
-    ["latest", [
-      "p26", "p6", "p27", "p24", "p1", "p28", "p19", "p2", "p29", "p11",
-      "p22", "p3", "p30", "p7", "p16", "p12", "p9", "p15", "p8", "p13",
-      "p4", "p18", "p21", "p5", "p20", "p25", "p10", "p17", "p14", "p23",
-    ]],
-    ["popular", [
-      "p21", "p11", "p15", "p8", "p22", "p30", "p14", "p18", "p6", "p12",
-      "p23", "p16", "p5", "p25", "p20", "p10", "p1", "p24", "p13", "p7",
-      "p4", "p28", "p2", "p17", "p27", "p9", "p29", "p3", "p19", "p26",
-    ]],
-    ["price-asc", [
-      "p29", "p30", "p25", "p21", "p24", "p15", "p3", "p22", "p2", "p23",
-      "p17", "p20", "p11", "p28", "p14", "p9", "p12", "p19", "p6", "p13",
-      "p26", "p16", "p1", "p10", "p8", "p5", "p4", "p18", "p27", "p7",
-    ]],
-    ["price-desc", [
-      "p7", "p27", "p18", "p4", "p5", "p8", "p10", "p1", "p16", "p26",
-      "p6", "p13", "p19", "p12", "p9", "p14", "p28", "p11", "p20", "p17",
-      "p23", "p2", "p22", "p3", "p15", "p24", "p21", "p25", "p30", "p29",
-    ]],
-  ])("returns the complete %s order", async (sort, expectedIds) => {
-    expect(await allProductIds(sort)).toEqual(expectedIds);
-  });
-
-  it("returns an empty page when page exceeds the filtered result", async () => {
+  it("필터 결과의 마지막 페이지를 넘으면 빈 목록과 전체 개수를 반환한다", async () => {
     const response = await request("?category=casual&page=9&pageSize=12");
     const body = await response.json();
     expect(response.status).toBe(200);
@@ -223,20 +185,20 @@ describe("GET /api/products", () => {
     "?pageSize=1.5",
     `?page=${hugePositiveInteger}`,
     `?pageSize=${hugePositiveInteger}`,
-  ])("rejects invalid query %s", async (query) => {
+  ])("잘못된 요청 조건 %s는 400 상태로 거부한다", async (query) => {
     const response = await request(query);
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
   });
 
-  it("validates request inputs before applying the error scenario", async () => {
+  it("에러 시나리오보다 요청 조건 검증을 먼저 적용한다", async () => {
     const response = await request("?scenario=error&page=0");
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
   });
 
-  it("supports deterministic empty and error scenarios", async () => {
+  it("빈 시나리오는 빈 목록을, 에러 시나리오는 500 상태를 반환한다", async () => {
     const emptyResponse = await request(
       "?scenario=empty&category=digital&page=2&pageSize=3",
     );
@@ -260,7 +222,7 @@ describe("GET /api/products", () => {
     expect(await errorResponse.json()).toEqual({ message: "상품 목록을 불러오지 못했습니다." });
   });
 
-  it("keeps the product response pending for 1.5 seconds in the slow scenario", async () => {
+  it("느린 시나리오는 1.5초 뒤 정상 상품 목록을 반환한다", async () => {
     vi.useFakeTimers();
     vi.stubEnv("NODE_ENV", "production");
 

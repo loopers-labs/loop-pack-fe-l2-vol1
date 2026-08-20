@@ -68,7 +68,11 @@ export async function GET(
 
   const id = params.get("id");
 
-  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
+  if (scenario === "slow") {
+    await waitForMockApi(1_500);
+  } else {
+    await waitForMockApi();
+  }
 
   if (id) {
     const product = getProductById(id);

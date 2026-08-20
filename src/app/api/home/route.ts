@@ -25,7 +25,11 @@ export async function GET(
     );
   }
 
-  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
+  if (scenario === "slow") {
+    await waitForMockApi(1_500);
+  } else {
+    await waitForMockApi();
+  }
 
   if (scenario === "error") {
     return NextResponse.json(
