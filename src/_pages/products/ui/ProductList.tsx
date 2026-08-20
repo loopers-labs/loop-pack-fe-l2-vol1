@@ -8,14 +8,12 @@ import { ProductListPending } from './ProductListPending';
 import { ProductCard, productQueries } from '@/entities/product';
 import { CartToggleButton } from '@/features/cart';
 import {
+  countTotalPages,
   toProductListQuery,
   usePageClamp,
   useProductListUrlState,
 } from '@/features/product';
 import { WishlistToggleButton } from '@/features/wishlist';
-
-const countTotalPages = (totalCount: number, pageSize: number) =>
-  Math.max(1, Math.ceil(totalCount / pageSize));
 
 export function ProductList() {
   const { conditions, changePage } = useProductListUrlState();
