@@ -226,25 +226,22 @@ describe('에러에서 재시도로 복구 (1단계 7번)', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('재시도도 실패하면 실패 화면을 그대로 유지한다', async () => {
+  it('재시도하는 동안 스켈레톤으로 돌아갔다가, 그 시도도 실패하면 실패 화면으로 돌아온다', async () => {
     const user = userEvent.setup();
-    const requests = failProducts();
+    failProducts();
 
     renderWithProviders(<ProductsPage />);
     await screen.findByRole('alert', {}, { timeout: RETRY_TIMEOUT });
-    const failedBefore = requests.length;
 
     await user.click(screen.getByRole('button', { name: '다시 시도' }));
 
-    await waitFor(
-      () => {
-        expect(requests.length).toBeGreaterThan(failedBefore);
-      },
-      { timeout: RETRY_TIMEOUT },
-    );
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      '상품을 불러오지 못했어요.',
-    );
+    // 보여줄 데이터가 없는 쿼리를 다시 조회하면 status가 pending으로 돌아간다
+    // (query-core의 fetchState: data === undefined면 error를 지우고 status를 pending으로).
+    // 그래서 재시도가 끝날 때까지 화면은 스켈레톤이고, 최종 실패 후에 실패 화면으로 돌아온다.
+    expect(skeleton()).toBeInTheDocument();
+    expect(
+      await screen.findByRole('alert', {}, { timeout: RETRY_TIMEOUT }),
+    ).toHaveTextContent('상품을 불러오지 못했어요.');
   });
 });
 
