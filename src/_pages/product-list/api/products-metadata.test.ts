@@ -49,7 +49,9 @@ describe('buildProductsMetadataText — 정상 케이스', () => {
       query: { category: 'fashion', sort: 'price-asc' },
       data: { ...baseData, totalCount: 25 },
     });
-    expect(result.description).toBe('패션 · 낮은 가격순 카테고리의 상품 25개를 확인해보세요.');
+    expect(result.description).toBe(
+      '패션 · 낮은 가격순 카테고리의 상품 25개를 확인해보세요.',
+    );
   });
 });
 
@@ -76,7 +78,9 @@ describe('buildProductsMetadataText — 경계 케이스', () => {
       data: baseData,
     });
     expect(result.title).toBe('상품 둘러보기');
-    expect(result.description).toBe('카테고리와 가격 조건으로 상품 10개를 찾아보세요.');
+    expect(result.description).toBe(
+      '카테고리와 가격 조건으로 상품 10개를 찾아보세요.',
+    );
   });
 
   it('검색어·카테고리·정렬이 전부 없으면 description은 기본 문구다', () => {
@@ -84,6 +88,8 @@ describe('buildProductsMetadataText — 경계 케이스', () => {
       query: {},
       data: { ...baseData, totalCount: 0 },
     });
-    expect(result.description).toBe('카테고리와 가격 조건으로 상품 0개를 찾아보세요.');
+    expect(result.description).toBe(
+      '카테고리와 가격 조건으로 상품 0개를 찾아보세요.',
+    );
   });
 });

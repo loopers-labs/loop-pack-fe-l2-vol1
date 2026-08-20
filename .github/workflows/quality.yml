@@ -1,6 +1,6 @@
 name: Quality
 
-"on":
+'on':
   push:
     branches:
       - main
