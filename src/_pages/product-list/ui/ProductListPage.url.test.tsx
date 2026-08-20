@@ -17,7 +17,6 @@ const successResponse: ProductListResponse = {
   pageSize: 12,
 };
 
-// onUrlUpdate 콜백을 직접 확인해야 하므로, 이 테스트만 별도로 provider를 구성함
 function renderWithUrlSpy(onUrlUpdate: (event: UrlUpdateEvent) => void) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -33,6 +32,10 @@ function renderWithUrlSpy(onUrlUpdate: (event: UrlUpdateEvent) => void) {
 }
 
 describe('ProductListPage — 조작이 URL에 반영 (항목 11)', () => {
+  // 정상: 1) 카테고리를 변경하면 URL에 category가 반영됨
+  //       2) 정렬을 변경하면 URL에 sort가 반영됨
+  // 경계: 3) 카테고리와 정렬을 연속으로 바꾸면 URL에 두 값이 함께 반영됨(이전 값이 안 사라짐)
+  //       4) 검색어를 입력하면(디바운스 후) URL에 q가 반영됨
   it('카테고리를 변경하면 URL 쿼리스트링에 category가 반영된다', async () => {
     server.use(
       http.get('/api/products', () => HttpResponse.json(successResponse)),
@@ -63,5 +66,39 @@ describe('ProductListPage — 조작이 URL에 반영 (항목 11)', () => {
     expect(onUrlUpdate).toHaveBeenCalled();
     const lastCall = onUrlUpdate.mock.calls.at(-1)?.[0];
     expect(lastCall?.searchParams.get('sort')).toBe('price-desc');
+  });
+
+  it('카테고리와 정렬을 연속으로 바꾸면 URL에 두 값이 함께 반영된다', async () => {
+    server.use(
+      http.get('/api/products', () => HttpResponse.json(successResponse)),
+    );
+    const onUrlUpdate = vi.fn<(event: UrlUpdateEvent) => void>();
+
+    renderWithUrlSpy(onUrlUpdate);
+    await screen.findByText('상품이 없습니다.');
+
+    await userEvent.selectOptions(screen.getByLabelText('카테고리'), '패션');
+    await userEvent.selectOptions(screen.getByLabelText('정렬'), '높은 가격순');
+
+    const lastCall = onUrlUpdate.mock.calls.at(-1)?.[0];
+    expect(lastCall?.searchParams.get('category')).toBe('fashion');
+    expect(lastCall?.searchParams.get('sort')).toBe('price-desc');
+  });
+
+  it('검색어를 입력하면 디바운스 후 URL에 q가 반영된다', async () => {
+    server.use(
+      http.get('/api/products', () => HttpResponse.json(successResponse)),
+    );
+    const onUrlUpdate = vi.fn<(event: UrlUpdateEvent) => void>();
+
+    renderWithUrlSpy(onUrlUpdate);
+    await screen.findByText('상품이 없습니다.');
+
+    await userEvent.type(screen.getByLabelText('검색'), '가디건');
+
+    await vi.waitFor(() => {
+      const lastCall = onUrlUpdate.mock.calls.at(-1)?.[0];
+      expect(lastCall?.searchParams.get('q')).toBe('가디건');
+    });
   });
 });
