@@ -9,7 +9,7 @@ import type { ProductListQuery } from '@/entities/product/model/types';
 export function productListQueryOptions(params: ProductListQuery) {
   const {
     q,
-    category,
+    category = PRODUCT_LIST_DEFAULTS.category,
     sort = PRODUCT_LIST_DEFAULTS.sort,
     page = PRODUCT_LIST_DEFAULTS.page,
     pageSize = PRODUCT_LIST_DEFAULTS.pageSize,
