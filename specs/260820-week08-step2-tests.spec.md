@@ -131,35 +131,18 @@
 
   조건 하나만 보면 파서가 나머지를 흘려도 통과한다. 실제 버그는 `page`만 살고 `sort`가 `latest`로 돌아가는 쪽에서 난다. 셋 다 기본값이 아니라서 "파싱 실패 시 조용히 기본값" 경로도 함께 걸린다.
 
-- **D11: 항목 7의 경계는 시간이 아니라 신호로 연다** — "재조회 중에는 다시 시도 버튼이 잠긴다"는 **요청이 아직 안 끝난 순간**에만 참이다. 핸들러가 즉시 응답하면 클릭하자마자 요청이 끝나 단언 시점에는 이미 버튼이 풀려 있다. 흔한 해법인 `delay(100)`은 "100ms면 충분하겠지"라는 **시간 가정**이라, CI가 느리면 이유 없이 깨진다.
+- **D11: 항목 7의 경계는 응답을 주지 않는 핸들러로 잡는다** — "재조회 중에는 다시 시도 버튼이 잠긴다"는 **요청이 아직 안 끝난 순간**에만 참이다. 핸들러가 곧바로 응답하면 클릭하자마자 조회가 끝나 단언 시점에는 버튼이 풀려 있다. 흔한 해법인 `delay(100)`은 "100ms면 충분하겠지"라는 **시간 가정**이라, 느린 기계에서 이유 없이 깨진다.
 
-  응답 시점을 테스트가 직접 쥐면 시간이 사라진다. 다만 **핸들러가 실제로 시작했는지도 기다려야 한다** — 클릭 직후 핸들러가 아직 안 돌았을 수 있고, 그때 잠금을 단언하면 무엇을 봤는지 알 수 없다. 문(gate) 하나로는 부족하고 둘이 필요하다.
+  MSW의 `delay('infinite')`는 응답을 아예 주지 않는다. 조회 중인 상태가 그대로 멈춰 있으므로 단언이 그 순간을 놓칠 수 없다.
 
   ```ts
-  const requestStarted = Promise.withResolvers<void>();
-  const responseGate = Promise.withResolvers<void>();
+  server.use(http.get('*/api/products', () => delay('infinite')));
+  await user.click(retryButton);
 
-  server.use(
-    http.get('*/api/products', async () => {
-      requestStarted.resolve();
-      await responseGate.promise;
-
-      return HttpResponse.json(productListResponse());
-    }),
-  );
-
-  try {
-    await user.click(retryButton);
-    await requestStarted.promise; // 요청이 핸들러에 도달했다
-    expect(retryButton).toBeDisabled(); // 응답은 아직 안 왔음이 보장된다
-  } finally {
-    responseGate.resolve(); // 단언이 실패해도 요청을 풀어준다
-  }
-
-  expect(await screen.findByText(totalCountText)).toBeInTheDocument();
+  expect(retryButton).toBeDisabled();
   ```
 
-  `finally`가 없으면 중간 단언이 실패했을 때 요청이 영영 안 풀려 그 파일이 매달린다. 느리든 빠르든 결과가 같고 `sleep`도 없다.
+  `sleep`도 시간 가정도 없다. 이 테스트는 복구까지 보지 않는다 — 복구는 항목 7의 정상 케이스가 맡는다.
 
 ## 구현 계획
 
@@ -270,6 +253,34 @@
 `e2e/dialog.spec.ts`에는 `waitForTimeout(200)`(36행)과 조건부 `test.skip`(57행)이 있다. 7주차 것이고 15개 항목 밖이지만, 과제가 E2E에 `sleep`을 · 체크리스트가 `it.skip`을 금지하므로 `e2e/` 안에 남아 있는 것 자체가 판정 대상이 된다. `waitForTimeout`은 "스크롤이 **일어나지 않았다**"는 부정 단언이라 대기가 필요한 자리이고, `test.skip`은 스크롤바가 폭을 차지하지 않는 환경을 걸러내는 런타임 분기라 비활성화와는 다르다. T8에서 조건 기반으로 바꿀 수 있는지 보고, 안 되면 왜 필요한지 주석으로 남긴다.
 
 `pnpm check` 시간은 T8에서 재서 0단계 기록(25초) 옆에 적는다. 빌드는 실행당 한 번이라 E2E 테스트 3개 → 7개가 곧 두 배가 되지는 않는다. 실측이 크게 늘면 그때 E2E를 어느 명령에 둘지 0단계 판단을 다시 본다.
+
+## 테스트하다 발견한 것
+
+고치지 않고 기록만 남긴다. 이번 주는 무엇을 지킬지 정하고 고정하는 주차이고, 아래 둘은 구현 설계를 다시 봐야 하는 일이라 별도로 다룬다.
+
+### 조건을 바꿔 조회하다 실패하면 보고 있던 목록이 사라진다
+
+`queries.ts`는 이렇게 약속한다.
+
+```ts
+/**
+ * 조건이 무엇이 바뀌든 새 목록이 올 때까지 이전 목록을 유지한다.
+ * 목록을 즉시 비우면 사용자가 최초 진입과 갱신을 구분할 수 없다.
+ */
+placeholderData: keepPreviousData,
+```
+
+실제로는 새 조건의 조회가 **실패**하면 이 약속이 깨진다. TanStack은 에러 상태에서 `placeholderData`를 적용하지 않아 `data`가 `undefined`가 되고, `ProductList`는 `!data && isError` 분기를 타 전체 에러 화면을 그린다. 사용자는 카테고리 하나를 눌렀다가 보고 있던 목록을 통째로 잃는다.
+
+목록을 유지한 채 배너만 띄우는 분기는 **이미 데이터가 있는 같은 조건을 다시 조회하다 실패**할 때만 나온다. 사용자 조작으로는 도달할 수 없고 배경 재조회가 유일한 경로다(목록 쿼리의 `staleTime`이 1분이라 창 포커스 재조회도 곧바로는 일어나지 않는다). 통합 테스트가 `queryClient.refetchQueries()`로 그 배경 재조회를 흉내내는 이유다.
+
+고치려면 이전 데이터를 어디서 붙들지 정해야 한다. 로컬 state로 복제하는 것은 컨벤션 4번과 부딪히므로 캐시에서 직전 조건의 데이터를 읽는 쪽이 맞아 보이는데, 설계 판단이 필요하다.
+
+### 에러 화면의 다시 시도 버튼은 잠길 일이 없다
+
+`ProductList.tsx`의 두 `다시 시도` 버튼은 모두 `disabled={isFetching}`을 걸고 있지만, **에러 화면 쪽은 도달할 수 없다.** 데이터 없는 쿼리를 다시 조회하면 TanStack이 `isError`를 내려 status를 pending으로 되돌리고, 화면은 에러 화면 대신 대기 화면으로 바뀐다. 그 버튼이 보이는 동안 `isFetching`은 항상 `false`다.
+
+배너 쪽 잠금은 정상 동작하며, 항목 7의 경계를 거기서 확인하는 이유다.
 
 ## 감수한 것
 
