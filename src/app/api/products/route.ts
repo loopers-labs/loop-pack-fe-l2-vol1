@@ -14,6 +14,7 @@ import type {
   ApiErrorResponse,
   MockApiScenario,
 } from "@/types/commerce";
+import { parsePositiveInteger } from "@/shared/lib/parsePositiveInteger";
 
 const scenarioValues = ["empty", "error", "slow"] as const satisfies readonly MockApiScenario[];
 
@@ -22,9 +23,6 @@ const isProductSort = (value: string): value is ProductSort =>
 
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);
-
-const isPositiveInteger = (value: string | null) =>
-  value !== null && /^[1-9]\d*$/.test(value);
 
 export async function GET(
   request: NextRequest,
@@ -36,8 +34,8 @@ export async function GET(
   const sort = params.get("sort");
   const pageValue = params.get("page") ?? "1";
   const pageSizeValue = params.get("pageSize") ?? "12";
-  const page = Number(pageValue);
-  const pageSize = Number(pageSizeValue);
+  const page = parsePositiveInteger(pageValue);
+  const pageSize = parsePositiveInteger(pageSizeValue);
 
   if (scenario !== null && !isMockApiScenario(scenario)) {
     return NextResponse.json(
@@ -56,11 +54,12 @@ export async function GET(
   const validCategory =
     category === null ||
     (CATEGORY_OPTIONS as readonly string[]).includes(category);
-  const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page);
-  const validPageSize =
-    isPositiveInteger(pageSizeValue) && Number.isSafeInteger(pageSize) && pageSize <= 24;
-
-  if (!validCategory || !validPage || !validPageSize) {
+  if (
+    !validCategory ||
+    page === null ||
+    pageSize === null ||
+    pageSize > 24
+  ) {
     return NextResponse.json(
       { message: "요청 조건을 확인해주세요." },
       { status: 400 },
