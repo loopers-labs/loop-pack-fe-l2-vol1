@@ -243,12 +243,14 @@ export function ProductListContent() {
         <input
           ref={inputRef}
           type="text"
+          aria-label="상품 검색"
           placeholder="상품명 또는 브랜드"
           defaultValue={params.q}
           onChange={handleSearchChange}
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
         />
         <select
+          aria-label="카테고리"
           value={params.category}
           onChange={(e) => setCategory(e.target.value as CategoryOption)}
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
@@ -261,6 +263,7 @@ export function ProductListContent() {
           ))}
         </select>
         <select
+          aria-label="정렬"
           value={params.sort}
           onChange={(e) => setSort(e.target.value as ProductSort)}
           className="rounded-lg border border-border bg-bg-card px-4 py-2 text-sm text-text"
