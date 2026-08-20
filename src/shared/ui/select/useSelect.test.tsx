@@ -1,6 +1,8 @@
+// @vitest-environment jsdom
+
 import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { render, screen } from '@testing-library/react';
+import { renderHook, act , render, screen } from '@testing-library/react';
+
 import userEvent from '@testing-library/user-event';
 import { useSelect } from '.';
 import type { SelectOption } from '.';

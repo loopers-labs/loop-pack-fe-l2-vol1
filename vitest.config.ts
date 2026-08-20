@@ -8,7 +8,8 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "jsdom",
+    include: ["src/**/*.test.{ts,tsx}"],
+    environment: "node",
     setupFiles: ["./src/test-setup.ts"],
   },
 });
