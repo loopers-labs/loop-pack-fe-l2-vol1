@@ -13,7 +13,12 @@ import { DEBOUNCE_DELAY } from '@/shared/constants/time';
 import type { MockApiScenario } from '@/shared/api';
 
 const categoryValues = [
-  'all', 'casual', 'fashion', 'goods', 'home', 'digital',
+  'all',
+  'casual',
+  'fashion',
+  'goods',
+  'home',
+  'digital',
 ] as const;
 const sortValues = ['latest', 'popular', 'price-asc', 'price-desc'] as const;
 
@@ -53,10 +58,13 @@ export function useProductFilters() {
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     ...productsQueries.productList(filters),
-    queryFn: () => getProducts({ ...filters, scenario: scenario as MockApiScenario | null }),
+    queryFn: () =>
+      getProducts({ ...filters, scenario: scenario as MockApiScenario | null }),
   });
 
-  const totalPages = data ? Math.ceil(data.totalCount / data.pageSize) : 1;
+  const totalPages = data
+    ? Math.max(1, Math.ceil(data.totalCount / data.pageSize))
+    : 1;
 
   useEffect(() => {
     if (data && filters.page > totalPages) {
@@ -65,7 +73,15 @@ export function useProductFilters() {
   }, [data, filters.page, totalPages, setFilters]);
 
   return {
-    filters, setFilters, searchInput, handleSearchChange,
-    data, isLoading, isFetching, isError, refetch, totalPages,
+    filters,
+    setFilters,
+    searchInput,
+    handleSearchChange,
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+    totalPages,
   };
 }
