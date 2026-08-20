@@ -26,6 +26,7 @@ export function ProductList() {
     : null;
 
   // 이전 목록을 보여주는 동안에는 현재 조건의 총 페이지 수를 아직 모른다.
+  // 그 값으로 보정하면 캐시가 만료된 뒤 뒤로 왔을 때 엉뚱한 페이지로 밀어낸다.
   const confirmedTotalPages = isPlaceholderData ? null : totalPages;
 
   const { isPageOutOfRange } = usePageClamp(confirmedTotalPages);
