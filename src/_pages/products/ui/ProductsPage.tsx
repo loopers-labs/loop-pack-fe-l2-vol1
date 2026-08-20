@@ -7,28 +7,10 @@ import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
 import { WishButton } from '@/features/toggle-wishlist/ui/WishButton';
 import type { ProductListQuery } from '@/types/commerce';
 import { productQueries } from '../api/products.queries';
+import { CATEGORY_OPTIONS, describeFilters } from '../model/describeFilters';
 import { useProductFilters } from '../model/useProductFilters';
 import { SearchForm } from './SearchForm';
 import { ProductsSkeleton } from './ProductsSkeleton';
-
-const CATEGORY_OPTIONS = [
-  { value: 'all', label: '전체' },
-  { value: 'casual', label: '캐주얼' },
-  { value: 'fashion', label: '패션' },
-  { value: 'goods', label: '뷰티·잡화' },
-  { value: 'home', label: '홈' },
-  { value: 'digital', label: '디지털' },
-] as const;
-
-// 성공 + 0건 화면용 — 현재 URL 조건을 문구로 명시한다.
-function describeFilters(filters: ProductListQuery): string {
-  const parts: string[] = [];
-  if (filters.q) parts.push(`검색 "${filters.q}"`);
-  const category = CATEGORY_OPTIONS.find((c) => c.value === filters.category);
-  if (category && category.value !== 'all')
-    parts.push(`카테고리 ${category.label}`);
-  return parts.length > 0 ? parts.join(' · ') : '전체 목록';
-}
 
 /*
  * 목록의 여섯 상태 (2단계 상태 표):
