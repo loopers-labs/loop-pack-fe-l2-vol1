@@ -144,10 +144,13 @@ webServer: {
 | 상대 경로 요청을 MSW가 가로채나 | 가로챈다. `getProducts({ category: 'casual', page: 2 })`가 만든 요청이 `http://localhost:3000/api/products?category=casual&page=2`로 관측됐다 — jsdom base URL 설정이 실제로 필요한 조각이었다 |
 | 모킹 안 된 요청이 조용히 나가나 | 안 나간다. 임시로 `fetch('/api/unknown')`을 던져 보니 `[MSW] Cannot bypass a request when using the "error" strategy`로 테스트가 실패했다 (확인 후 프로브 파일 삭제) |
 | HTTP 클라이언트 바꿔치기 | 없음. 앱 코드는 native `fetch`를 그대로 쓴다 |
+| Playwright가 production build 위에서 도나 | 돈다. `pnpm check`의 `build` 다음 `test:e2e`가 `pnpm start`로 그 산출물을 띄우고 통과 |
 
-0단계 환경 확인용으로 남긴 테스트:
+0단계 환경 확인용으로 남긴 테스트 2개:
 
-- `src/_pages/products/api/products.api.dom.test.ts` — 브라우저 환경에서의 요청 경로 + 계약 위반 → `InvalidResponseError` 변환
+- `src/_pages/products/api/products.api.dom.test.ts` — 브라우저 환경에서의 요청 경로 + 계약 위반 → `InvalidResponseError` 변환 (2단계 이후에도 유지)
+- `src/app/SiteHeader.dom.test.tsx` — jsdom + Testing Library 확인용. 2단계에서 12번 테스트가 같은 것을 더 넓게 검증하므로 **흡수하고 삭제**했다
+- `e2e/smoke.spec.ts` — production build 확인용. 15번 E2E가 같은 여정을 밟으므로 **흡수하고 삭제**했다
 
 ---
 
@@ -198,16 +201,18 @@ E2E로 옮겼다면 같은 규칙을 훨씬 비싸게 재게 된다. 프로덕�
 
 ## 2단계 — 구현 계획
 
-| 파일 | 항목 | 환경 |
-| --- | --- | --- |
-| `src/entities/cart/model/store.test.ts` | 1 | node |
-| `src/entities/wishlist/model/store.test.ts` | 1 | node |
-| `src/_pages/products/model/productFilters.test.ts` | 2 | node |
-| `src/_pages/products/model/describeFilters.test.ts` | 3 | node |
-| `src/_pages/products/ui/ProductsPage.dom.test.tsx` | 4 · 5 · 6 · 7 · 8 · 9 · 10 · 11 | jsdom |
-| `src/features/add-to-cart/ui/AddToCartButton.dom.test.tsx` | 12 | jsdom |
-| `e2e/filters.spec.ts` | 13 · 14 | Chromium / production |
-| `e2e/cart.spec.ts` | 15 | Chromium / production |
+| 파일 | 항목 | 환경 | 테스트 |
+| --- | --- | --- | --- |
+| `src/entities/cart/model/store.test.ts` | 1 | node | 6 |
+| `src/entities/wishlist/model/store.test.ts` | 1 | node | 4 |
+| `src/_pages/products/model/productFilters.test.ts` | 2 | node | 8 |
+| `src/_pages/products/model/describeFilters.test.ts` | 3 | node | 6 |
+| `src/_pages/products/ui/ProductsPage.dom.test.tsx` | 4 · 5 · 6 · 7 · 8 · 9 · 10 · 11 | jsdom | 18 |
+| `src/features/add-to-cart/ui/AddToCartButton.dom.test.tsx` | 12 | jsdom | 6 |
+| `e2e/filters.spec.ts` | 13 · 14 | Chromium / production | 4 |
+| `e2e/cart.spec.ts` | 15 | Chromium / production | 3 |
+
+`pnpm test` 12개 파일 91개 통과(node 9파일 65개 · dom 3파일 26개), `pnpm test:e2e` 7개 통과. `pnpm check` 전체 통과.
 
 지킬 규칙:
 
@@ -217,6 +222,16 @@ E2E로 옮겼다면 같은 규칙을 훨씬 비싸게 재게 된다. 프로덕�
 - **`waitFor`는 첫 대기에만.** `await screen.findByRole(...)` 하나로 비동기 경계를 넘고, 그 뒤 단언은 동기로 한다.
 - **단위 항목은 DOM 없이 통과한다.** 1·2·3번을 컴포넌트 렌더로 통과시키면 배치가 어긋난 것이다.
 - **E2E는 조건 기반 대기만.** `sleep`·고정 타임아웃 금지. 프로덕션 mock API의 500ms는 `expect(...).toBeVisible()`의 자동 대기로 흡수한다. 셀렉터는 role + name으로 정리한다.
+
+### 2단계에서 실제로 지킨 것 · 걸린 것
+
+- **`getByTestId`는 한 번도 쓰지 않았다.** 6주차에 붙여 둔 접근성 속성(`aria-label="상품 검색 결과"`, `role="alert"`, `role="status"`, 담기 버튼의 `"{상품명} 장바구니"`)으로 전부 닿았다. 테스트를 쓰면서 마크업을 고칠 일도 없었다.
+- **`waitFor`는 첫 대기에만.** 각 테스트는 `findBy*` 하나로 비동기 경계를 넘고 나머지 단언은 동기다. 예외는 "요청이 나갔는지"를 보는 자리(`requests.at(-1)`)인데, 화면에 드러나지 않는 값이라 폴링 외에는 방법이 없어 그 한 줄만 `waitFor`로 감쌌다.
+- **문구 단언은 요소 단위로.** `총 {n}개` 같은 JSX는 텍스트 노드가 쪼개져 `getByText('총 2개')`가 안 맞는다. 사용자가 인식하는 단위인 영역(`getByRole('region', { name: '상품 검색 결과' })`)을 잡고 `toHaveTextContent`로 확인했다.
+- **실패 경로는 화면과 같은 재시도 정책을 그대로 태운다.** `createAppQueryClient()`를 쓰므로 `HttpError`는 1회 재시도(기본 지연 1초)를 지나 실패 UI에 도달한다. 그래서 에러 계열 테스트에만 `timeout: 3000`을 명시했다 — 테스트를 빠르게 만들려고 `retry: false`로 바꾸면 실제 화면과 다른 경로를 재게 된다.
+- **격리 확인.** 각 파일 단독 실행 통과, `--sequence.shuffle`(seed 7·42)로 순서를 섞어도 91개 전부 통과. zustand 스토어가 다음 테스트로 넘어가지 않는지는 12번 파일 마지막에 그 자체를 확인하는 테스트로 못박았다.
+
+**E2E가 내 테스트의 버그를 먼저 잡았다.** 14번(새로고침 유지)에서 정렬을 바꾼 직후 첫 상품명을 읽고 새로고침 뒤와 비교했는데 값이 달랐다. 구현 문제가 아니라 `keepPreviousData` 때문이었다 — 요청이 끝나기 전에는 직전 조건의 목록이 그대로 보이므로, 그때 읽은 이름은 새 조건의 첫 상품이 아니다. "갱신 중…" 표시가 떴다가 사라지는 것을 기다린 뒤 읽도록 고쳤다. 조건 기반 대기를 쓰라는 규칙이 왜 있는지가 여기서 그대로 드러났다.
 
 ---
 
@@ -271,7 +286,7 @@ E2E로 옮겼다면 같은 규칙을 훨씬 비싸게 재게 된다. 프로덕�
 1. 프로덕션 코드 3곳 변경 (위 절)
 2. **이 문서** — 테스트 코드보다 먼저
 3. 0단계 환경·MSW·Playwright 설정 + 셋업 시간 실측 ✅
-4. 2단계 구현 (단위 → 통합 → E2E)
+4. 2단계 구현 (단위 → 통합 → E2E) ✅
 5. 3단계 실험 기록 (망가뜨린 코드는 되돌린 상태로)
 
 1~3은 한 커밋으로 묶지 않는다. 설계 문서가 테스트 코드보다 먼저 커밋돼야 하므로 2와 3 사이에 커밋 경계를 둔다.
