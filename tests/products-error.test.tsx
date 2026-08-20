@@ -6,7 +6,7 @@ import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { describe, expect, it } from 'vitest';
 
 import { ProductList } from '@/_pages/products/ui/ProductList';
-import { PRODUCT_LIST_RESPONSE } from '@tests/msw/fixtures';
+import { PRODUCTS } from '@tests/msw/fixtures';
 import { server } from '@tests/msw/server';
 
 const failProductList = () =>
@@ -22,7 +22,7 @@ const failProductList = () =>
 // 성공은 기본 핸들러가 맡는다. 실패 핸들러를 걷어내면 성공 경로로 돌아간다.
 const restoreProductList = () => server.resetHandlers();
 
-const totalCountText = `총 ${PRODUCT_LIST_RESPONSE.totalCount}개`;
+const totalCountText = `총 ${PRODUCTS.length}개`;
 
 function renderProductList() {
   const queryClient = new QueryClient({
