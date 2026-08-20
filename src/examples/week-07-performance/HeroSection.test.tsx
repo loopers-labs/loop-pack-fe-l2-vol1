@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-describe("HeroSection", () => {
-  it("renders the existing banner contract as a stable hero", async () => {
+describe("홈 Hero 섹션", () => {
+  it("배너 문구와 반응형 이미지 계약을 유지한다", async () => {
     const { HeroSection } = await import("./HeroSection");
 
     const markup = renderToStaticMarkup(
