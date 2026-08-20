@@ -35,7 +35,7 @@ Vitest 4에서 `environmentMatchGlobs`는 제거됐다(`vitest` 4.1.10 타입에
 | **`test.projects` 2개 (node / dom)** | 환경별 `setupFiles` 분리, 리포터가 프로젝트별로 나뉘어 셋업 시간이 그대로 보인다 | ✅ |
 
 ```ts
-// vitest.config.ts (계획)
+// vitest.config.ts (실제 적용)
 test: {
   projects: [
     {
@@ -44,7 +44,7 @@ test: {
         name: 'node',
         environment: 'node',
         include: ['src/**/*.test.{ts,tsx}'],
-        exclude: ['src/**/*.dom.test.tsx'],
+        exclude: ['src/**/*.dom.test.{ts,tsx}'],
       },
     },
     {
@@ -52,7 +52,7 @@ test: {
       test: {
         name: 'dom',
         environment: 'jsdom',
-        include: ['src/**/*.dom.test.tsx'],
+        include: ['src/**/*.dom.test.{ts,tsx}'],
         setupFiles: ['./vitest.setup.dom.ts'],
         environmentOptions: { jsdom: { url: 'http://localhost:3000' } },
       },
@@ -61,7 +61,7 @@ test: {
 }
 ```
 
-- **파일명 규칙: `*.dom.test.tsx`만 jsdom, 나머지는 전부 node.** 기존 5개를 한 개도 옮기지 않고 끝난다. 확장자 기준(`.tsx` = DOM)은 위에서 본 이유로 쓸 수 없다.
+- **파일명 규칙: `*.dom.test.{ts,tsx}`만 jsdom, 나머지는 전부 node.** 기존 5개를 한 개도 옮기지 않고 끝났다. 확장자 기준(`.tsx` = DOM)은 위에서 본 이유로 쓸 수 없다. `.ts`도 규칙에 넣은 이유는 JSX 없이 DOM 환경만 필요한 테스트가 있기 때문이다(브라우저 경계에서의 `getProducts` 확인).
 - `extends: true`로 루트의 `resolve.alias`(`@` → `src`)를 두 프로젝트가 그대로 상속한다.
 - `jsdom.url`을 `http://localhost:3000`으로 고정하는 이유: `apiUrl()`은 클라이언트에서 **상대 경로**를 반환한다(`src/shared/api/base-url.ts`). jsdom의 기본 base URL은 `about:blank`이라 상대 경로 `fetch`가 해석되지 않고, MSW가 가로챌 대상 자체가 만들어지지 않는다.
 
@@ -81,9 +81,16 @@ happy-dom이 더 빠르지만 jsdom을 쓴다. 이번 주 통합 테스트의 �
 ```
 src/shared/test/msw/handlers.ts   기본(성공) 핸들러
 src/shared/test/msw/server.ts     setupServer
+src/shared/test/fixtures.ts       Product·Home 고정 데이터 빌더
 src/shared/test/render.tsx        QueryClientProvider + NuqsTestingAdapter 래퍼
 vitest.setup.dom.ts               jest-dom · MSW 생명주기 · 스토어 리셋
+playwright.config.ts              production build 위 E2E
+e2e/                              Playwright spec
 ```
+
+픽스처는 스타터의 mock 데이터(`src/app/api/_data/commerce.ts`)를 쓰지 않고 `makeProduct`/`makeProductList`로 직접 만든다. 스타터 데이터가 바뀌면 관계없는 테스트가 무더기로 깨지고, 각 테스트가 무엇을 전제했는지도 파일 밖으로 새어 나가기 때문이다.
+
+`pnpm install`이 msw의 build script를 무시한다는 경고가 뜨는데 승인하지 않는다. 그 스크립트는 브라우저용 service worker(`public/mockServiceWorker.js`)를 까는 것이고, 여기서는 node/jsdom의 `setupServer`만 쓴다. E2E는 모킹 없이 실제 Route Handler를 탄다.
 
 `src/shared/`에 두는 이유: 기존 `@` alias를 그대로 쓸 수 있고(루트 `tests/`에 두면 상대 경로가 길어지거나 alias를 하나 더 만들어야 한다), 도메인을 모르는 재사용 코드라는 shared의 정의에도 맞는다. 앱 코드는 이 경로를 import하지 않으므로 번들에 들어가지 않는다.
 
@@ -112,17 +119,35 @@ webServer: {
 
 - **`pnpm test`에 넣지 않는다.** vitest는 초 단위고 watch로 계속 돌리는 명령이다. E2E는 빌드 산출물 + 브라우저 + 500ms 고정 지연이 붙어 분 단위다. 매 저장마다 돌 수 없는 것을 같은 명령에 묶으면 둘 다 안 쓰게 된다.
 - 대신 **`pnpm check`의 마지막**에 붙인다: `test → lint → typecheck → build → test:e2e`. `build`가 방금 만든 산출물을 `pnpm start`가 그대로 쓰므로 빌드는 1회다. CI(`quality.yml`)는 이미 `pnpm check` 하나만 돌리고 Playwright 설치 분기도 갖고 있어 워크플로 수정이 필요 없다.
-- 대안이었던 `command: 'pnpm build && pnpm start'`는 `pnpm check` 안에서 빌드를 두 번 돌린다. 그래서 안 쓴다. 대가로 **`pnpm test:e2e` 단독 실행은 `pnpm build` 선행이 필요**하고, 이 제약을 `playwright.config.ts` 주석에 남긴다.
+- 대안이었던 `command: 'pnpm build && pnpm start'`는 `pnpm check` 안에서 빌드를 두 번 돌린다. 그래서 안 쓴다. 대가로 **`pnpm test:e2e` 단독 실행은 `pnpm build` 선행이 필요**하고, 이 제약은 `playwright.config.ts` 주석에 남겼다.
 
-### 셋업 시간 비교 (0단계 구현 후 채운다)
+### 셋업 시간 비교 (실측)
 
-| 구성 | Test Files | environment | Duration |
-| --- | --- | --- | --- |
-| 현재 (전부 node, DOM 테스트 없음) | 5 | **0ms** | 186ms |
-| 분리 (node + dom projects) | 채움 | 채움 | 채움 |
-| 전부 jsdom | 채움 | 채움 | 채움 |
+같은 머신에서 연속 3회 실행한 중앙값이다. 아래 두 구성은 **같은 테스트 7개 파일(44개)** 을 돌린 결과라 그대로 비교된다.
 
-같은 머신·연속 실행으로 3회 중앙값을 기록한다.
+| 구성 | Test Files | environment | setup | Duration |
+| --- | --- | --- | --- | --- |
+| 작업 전 (전부 node, DOM 테스트 없음) | 5 (41 tests) | 0ms | 0ms | 186ms |
+| **분리 (node + dom projects)** | 7 (44 tests) | **580ms** | **259ms** | **581ms** |
+| 전부 jsdom (순진한 단일 설정) | 7 (44 tests) | 3.69s | 1.72s | 981ms |
+
+- **DOM 환경 셋업 비용이 6.4배(580ms → 3.69s)** 다. jsdom이 필요한 파일은 7개 중 2개인데, 전부 jsdom으로 돌리면 나머지 5개가 매번 브라우저 흉내 환경을 세운다.
+- setup(= `vitest.setup.dom.ts` 실행: jest-dom matcher 등록 + MSW 기동)도 6.6배다. 전부 jsdom 구성에서는 DOM도 네트워크도 안 쓰는 API 라우트 테스트까지 MSW 서버를 세우고 끈다.
+- 전체 실행 시간 차이는 1.7배(581ms → 981ms)로 아직 작다. **문제는 비율이 아니라 기울기다** — 위 두 비용은 DOM이 필요 없는 테스트가 늘어날 때마다 파일 수에 비례해 쌓이고, 이 레포에서 앞으로 늘어날 단위 테스트가 정확히 그런 테스트다.
+
+### 0단계에서 실제로 확인한 것
+
+| 확인 | 결과 |
+| --- | --- |
+| 기존 테스트 5개 | 그대로 통과 (node 프로젝트, 41 tests) |
+| DOM/비DOM 한 명령 동시 실행 | `pnpm test` 한 번에 7 파일 44개 통과 |
+| 상대 경로 요청을 MSW가 가로채나 | 가로챈다. `getProducts({ category: 'casual', page: 2 })`가 만든 요청이 `http://localhost:3000/api/products?category=casual&page=2`로 관측됐다 — jsdom base URL 설정이 실제로 필요한 조각이었다 |
+| 모킹 안 된 요청이 조용히 나가나 | 안 나간다. 임시로 `fetch('/api/unknown')`을 던져 보니 `[MSW] Cannot bypass a request when using the "error" strategy`로 테스트가 실패했다 (확인 후 프로브 파일 삭제) |
+| HTTP 클라이언트 바꿔치기 | 없음. 앱 코드는 native `fetch`를 그대로 쓴다 |
+
+0단계 환경 확인용으로 남긴 테스트:
+
+- `src/_pages/products/api/products.api.dom.test.ts` — 브라우저 환경에서의 요청 경로 + 계약 위반 → `InvalidResponseError` 변환
 
 ---
 
@@ -245,7 +270,7 @@ E2E로 옮겼다면 같은 규칙을 훨씬 비싸게 재게 된다. 프로덕�
 
 1. 프로덕션 코드 3곳 변경 (위 절)
 2. **이 문서** — 테스트 코드보다 먼저
-3. 0단계 환경·MSW·Playwright 설정 + 셋업 시간 실측
+3. 0단계 환경·MSW·Playwright 설정 + 셋업 시간 실측 ✅
 4. 2단계 구현 (단위 → 통합 → E2E)
 5. 3단계 실험 기록 (망가뜨린 코드는 되돌린 상태로)
 
