@@ -4,7 +4,7 @@ import { renderWithProviders } from '@/test/renderWithProviders';
 import { server } from '@/test/server';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, delay, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { ProductListPage } from './ProductListPage';
@@ -259,6 +259,30 @@ describe('상품 목록', () => {
 
       await waitFor(() => expect(productNames()).toEqual(['비싼 것', '싼 것']));
     });
+
+    /**
+     * 경계 — 뒤쪽 페이지에서 정렬을 바꾸면 1페이지 결과부터 봐야 한다.
+     *
+     * 3단계 실험 4에서 `setSort` 의 `page: 1` 을 지웠는데 **어떤 테스트도 잡지 못했다.**
+     * 항목 8(카테고리)에는 같은 경계가 있었지만 항목 9에는 없어서, 세 setter 가 공유하는
+     * 성질을 둘만 검증하고 있었다. 정렬이 바뀌면 3페이지의 내용은 완전히 다른 상품이므로
+     * 그대로 머무르면 사용자는 엉뚱한 곳에 떨어진다.
+     */
+    it('3페이지에서 정렬을 바꾸면 페이지가 1로 돌아간다', async () => {
+      const user = userEvent.setup();
+      const many = Array.from({ length: 30 }, (_, index) =>
+        makeProduct({ id: `p${index + 1}`, name: `상품 ${index + 1}`, price: (index + 1) * 1_000 }),
+      );
+      server.use(listHandler(many));
+
+      renderWithProviders(<ProductListPage />, { searchParams: '?page=3' });
+
+      expect(await within(results()).findByText('3 / 3')).toBeInTheDocument();
+
+      await user.selectOptions(screen.getByRole('combobox', { name: '정렬' }), 'price-desc');
+
+      expect(await within(results()).findByText('1 / 3')).toBeInTheDocument();
+    });
   });
 
   describe('항목 10 — 페이지 이동', () => {
@@ -296,6 +320,30 @@ describe('상품 목록', () => {
       expect(await within(results()).findByText('2 / 2')).toBeInTheDocument();
       await waitFor(() => expect(screen.getByRole('button', { name: '다음' })).toBeDisabled());
       expect(screen.getByRole('button', { name: '이전' })).not.toBeDisabled();
+    });
+
+    /**
+     * 경계 — 다음 페이지를 기다리는 동안에는 또 넘기지 못해야 한다.
+     *
+     * 3단계 실험 5에서 두 버튼의 `isPlaceholderData` 가드를 지웠는데 **아무 테스트도 잡지 못했다.**
+     * 1단계 경계 표에 "로딩 중 연타로 페이지가 건너뛴다"를 적어 두고도 그걸 겨냥한 케이스가 없었다.
+     * 가드가 없으면 2페이지를 기다리는 중 한 번 더 눌러 3페이지로 건너뛴다.
+     */
+    it('다음 페이지를 기다리는 동안에는 페이지 이동 버튼을 누를 수 없다', async () => {
+      const user = userEvent.setup();
+      server.use(listHandler(many));
+
+      renderWithProviders(<ProductListPage />);
+
+      expect(await within(results()).findByText('1 / 2')).toBeInTheDocument();
+
+      // 다음 요청은 응답하지 않게 막아 "기다리는 중" 상태를 붙들어 둔다.
+      server.use(http.get('/api/products', () => delay('infinite')));
+
+      await user.click(screen.getByRole('button', { name: '다음' }));
+
+      await waitFor(() => expect(screen.getByRole('button', { name: '다음' })).toBeDisabled());
+      expect(screen.getByRole('button', { name: '이전' })).toBeDisabled();
     });
   });
 });
