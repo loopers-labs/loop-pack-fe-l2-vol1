@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ProductGrid } from "@/widgets/product-card";
 import { mapProductToCardItem } from "@/entities/product";
 import { Pagination } from "./Pagination";
 import { ProductListContent } from "./ProductListContent";
 import { PRODUCT_LIST_PAGE_SIZE } from "../model/constants";
+import { useRetainedProductListDataOnRefreshError } from "../model/useRetainedProductListDataOnRefreshError";
 import { productQueries } from "../queries/productQueries";
 import type { ProductCategoryFilter, ProductSort } from "../model/types";
 
@@ -29,20 +30,27 @@ export function ProductListResults({
   onPageReplace,
 }: ProductListResultsProps) {
   const queryClient = useQueryClient();
-  const productsQuery = useQuery(
-    productQueries.list({
-      q: params.q,
-      category: params.category,
-      sort: params.sort,
-      page: params.page,
-      pageSize: PRODUCT_LIST_PAGE_SIZE,
-    }),
+  const productListQueryOptions = useMemo(
+    () =>
+      productQueries.list({
+        q: params.q,
+        category: params.category,
+        sort: params.sort,
+        page: params.page,
+        pageSize: PRODUCT_LIST_PAGE_SIZE,
+      }),
+    [params.category, params.page, params.q, params.sort],
   );
-
-  const totalCount = productsQuery.data?.totalCount ?? 0;
+  const productsQuery = useQuery(productListQueryOptions);
+  const displayData = useRetainedProductListDataOnRefreshError({
+    queryClient,
+    queryKey: productListQueryOptions.queryKey,
+    queryResult: productsQuery,
+  });
+  const totalCount = displayData?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PRODUCT_LIST_PAGE_SIZE));
   const hasNextPage = params.page < totalPages;
-  const products = productsQuery.data?.products.map(mapProductToCardItem) ?? [];
+  const products = displayData?.products.map(mapProductToCardItem) ?? [];
 
   useEffect(() => {
     if (productsQuery.data === undefined) {
@@ -86,7 +94,7 @@ export function ProductListResults({
 
   return (
     <ProductListContent
-      isLoading={productsQuery.isPending}
+      isLoading={productsQuery.isPending && displayData === undefined}
       error={productsQuery.error}
       isEmpty={products.length === 0}
       totalCount={totalCount}

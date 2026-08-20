@@ -3,7 +3,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ProductSection } from "@/widgets/product-card";
 import { CategoryNav } from "./CategoryNav";
-import { HomeHero } from "./HomeHero";
+import { HeroSection } from "./HeroSection";
 import { homeQueries } from "../queries/homeQueries";
 
 export function HomePageClient() {
@@ -11,7 +11,7 @@ export function HomePageClient() {
 
   return (
     <>
-      <HomeHero banner={data.banner} />
+      <HeroSection title={data.banner.title} description={data.banner.description} />
       <CategoryNav categories={data.categories} />
       <ProductSection title="인기 상품" products={data.popularProducts} />
       <ProductSection title="신상품" products={data.newProducts} />

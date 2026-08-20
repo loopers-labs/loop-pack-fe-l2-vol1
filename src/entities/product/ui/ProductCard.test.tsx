@@ -42,7 +42,13 @@ describe("ProductCard", () => {
   it("action slot이 없어도 상품 정보를 렌더링한다", () => {
     render(<ProductCard product={product} />);
 
-    expect(screen.getByRole("img", { name: "테스트 상품" })).toBeInTheDocument();
+    const productImage = screen.getByRole("img", { name: "테스트 상품" });
+
+    expect(productImage).toBeInTheDocument();
+    expect(productImage).toHaveAttribute(
+      "sizes",
+      "(min-width: 1024px) 224px, (min-width: 768px) 30vw, calc((100vw - 44px) / 2)",
+    );
     expect(screen.getByRole("heading", { name: "테스트 상품" })).toBeInTheDocument();
     expect(screen.getByText("Loopers Select")).toBeInTheDocument();
     expect(screen.getByText("10,000원")).toBeInTheDocument();

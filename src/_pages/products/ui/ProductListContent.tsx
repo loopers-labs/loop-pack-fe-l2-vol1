@@ -29,7 +29,9 @@ export function ProductListContent({
     );
   }
 
-  if (error !== null) {
+  const hasProducts = !isEmpty;
+
+  if (error !== null && !hasProducts) {
     return (
       <div className="grid gap-3 rounded-gds-md bg-white px-5 py-8 text-sm text-gds-gray-700 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
         <p>상품 목록을 불러오지 못했습니다.</p>
@@ -47,6 +49,7 @@ export function ProductListContent({
   return (
     <>
       <ProductResultSummary totalCount={totalCount} />
+      {error !== null ? <ProductRefreshError onRetry={onRetry} /> : null}
       {isEmpty ? (
         <p className="mt-6 rounded-gds-md bg-white px-5 py-8 text-sm text-gds-gray-700 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
           조건에 맞는 상품이 없습니다.
@@ -55,5 +58,23 @@ export function ProductListContent({
         children
       )}
     </>
+  );
+}
+
+function ProductRefreshError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div
+      className="mt-4 mb-6 flex flex-wrap items-center justify-between gap-3 rounded-gds-md bg-white px-5 py-4 text-sm text-gds-gray-700 shadow-[inset_0_0_0_1px_var(--color-gds-red-500)]"
+      role="status"
+    >
+      <p>상품 목록을 갱신하지 못했습니다. 기존 목록을 계속 보여드립니다.</p>
+      <button
+        className="w-fit cursor-pointer rounded-gds-sm border border-gds-cta bg-gds-cta px-4 py-2 text-sm font-semibold text-white hover:bg-gds-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
+        type="button"
+        onClick={onRetry}
+      >
+        다시 시도
+      </button>
+    </div>
   );
 }

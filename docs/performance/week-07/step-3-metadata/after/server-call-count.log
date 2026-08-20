@@ -1,0 +1,10 @@
+
+> commerce@0.1.0 start /Users/kmw/Projects/loop-pack-fe-l2-vol1
+> next start
+
+▲ Next.js 16.2.10
+- Local:         http://localhost:3002
+- Network:       http://192.168.35.137:3002
+✓ Ready in 67ms
+[product-route-call] /api/products?category=all&sort=latest&page=1&pageSize=12&scenario=slow ua=node
+[product-route-call] /api/products?category=all&sort=latest&page=1&pageSize=12&scenario=slow ua=node
