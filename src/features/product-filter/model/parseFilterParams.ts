@@ -26,6 +26,15 @@ const oneOf = <T extends string>(values: readonly T[], value: string | undefined
   values.some((allowed) => allowed === value) ? (value as T) : fallback;
 
 /**
+ * 조회할 수 있는 페이지 번호인가.
+ *
+ * 서버(이 파일)와 클라이언트(useProductFilterState 의 nuqs 파서)가 **같은 판정을 써야 한다.**
+ * 규칙을 두 벌로 두었더니 `?page=0` 을 서버는 1 로, 클라이언트는 0 으로 읽어
+ * 1페이지 상품을 보면서 "0 / 3" 이라고 적힌 화면이 나왔다.
+ */
+export const isReachablePage = (page: number): boolean => Number.isSafeInteger(page) && page >= 1;
+
+/**
  * 원시 search params 를 검증된 필터 조건으로 정규화한다.
  *
  * 클라이언트는 nuqs 로 같은 일을 하지만 서버에는 nuqs 가 없다.
@@ -43,6 +52,6 @@ export function parseFilterParams(params: RawSearchParams): ProductFilterState {
     q: first(params.q)?.trim() ?? DEFAULT_FILTER_STATE.q,
     category: oneOf(CATEGORY_FILTER_VALUES, first(params.category), DEFAULT_FILTER_STATE.category),
     sort: oneOf(PRODUCT_SORT_VALUES, first(params.sort), DEFAULT_FILTER_STATE.sort),
-    page: Number.isSafeInteger(page) && page >= 1 ? page : DEFAULT_FILTER_STATE.page,
+    page: isReachablePage(page) ? page : DEFAULT_FILTER_STATE.page,
   };
 }
