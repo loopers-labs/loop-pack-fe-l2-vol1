@@ -23,7 +23,9 @@ export function renderWithProviders(
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <NuqsTestingAdapter searchParams={searchParams}>{ui}</NuqsTestingAdapter>
+      <NuqsTestingAdapter searchParams={searchParams} hasMemory>
+        {ui}
+      </NuqsTestingAdapter>
     </QueryClientProvider>,
   );
 }
