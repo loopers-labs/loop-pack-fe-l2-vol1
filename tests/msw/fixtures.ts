@@ -27,7 +27,7 @@ export const HOME_RESPONSE: HomeResponse = {
     description: '배너 설명',
     image: '/banner.jpg',
   },
-  categories: CATEGORIES,
+  categories: [{ id: 'home', name: '홈' }],
   popularProducts: [PRODUCT],
   newProducts: [],
 };
