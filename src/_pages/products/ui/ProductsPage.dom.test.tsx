@@ -117,6 +117,9 @@ describe('목록 빈 결과 (1단계 5번)', () => {
       '검색 "없는상품" 조건에 맞는 상품이 없어요. (0개)',
     );
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0);
+    // 0건이어도 페이지는 1/1이다 — 0으로 나눈 "1 / 0" 같은 표시가 나오면 안 된다.
+    // (3단계 실험 5에서 살아남은 변경을 잡기 위해 추가)
+    expect(pagination()).toHaveTextContent('1 / 1');
   });
 
   it('총 개수는 있는데 그 페이지가 비면 0건 문구를 보여주고 총 개수는 그대로 둔다', async () => {
