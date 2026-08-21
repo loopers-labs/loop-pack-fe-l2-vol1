@@ -11,6 +11,9 @@ const wishlistProductIds = () => useWishlistStore.getState().productIds;
 
 const wishlistCount = () => wishlistProductIds().length;
 
+const isInWishlist = (productId: string) =>
+  wishlistProductIds().includes(productId);
+
 const toggleWishlist = (productId: string) =>
   useWishlistStore.getState().actions.toggle(productId);
 
@@ -28,7 +31,9 @@ it('이미 찜한 상품을 다시 누르면 그 상품만 빠진다', () => {
 
   toggleWishlist('p1');
 
-  expect(wishlistProductIds()).toEqual(['p2']);
+  expect(wishlistCount()).toBe(1);
+  expect(isInWishlist('p1')).toBe(false);
+  expect(isInWishlist('p2')).toBe(true);
 });
 
 it('찜한 상품을 모두 풀면 개수가 0으로 돌아온다', () => {

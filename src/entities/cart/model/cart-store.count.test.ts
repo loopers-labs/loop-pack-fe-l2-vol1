@@ -11,6 +11,8 @@ const cartProductIds = () => useCartStore.getState().productIds;
 
 const cartCount = () => cartProductIds().length;
 
+const isInCart = (productId: string) => cartProductIds().includes(productId);
+
 const toggleCart = (productId: string) =>
   useCartStore.getState().actions.toggle(productId);
 
@@ -28,7 +30,9 @@ it('이미 담은 상품을 다시 누르면 그 상품만 빠진다', () => {
 
   toggleCart('p1');
 
-  expect(cartProductIds()).toEqual(['p2']);
+  expect(cartCount()).toBe(1);
+  expect(isInCart('p1')).toBe(false);
+  expect(isInCart('p2')).toBe(true);
 });
 
 it('담은 상품을 모두 빼면 개수가 0으로 돌아온다', () => {
