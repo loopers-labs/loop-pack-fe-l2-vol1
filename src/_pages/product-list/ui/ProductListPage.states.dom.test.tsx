@@ -49,6 +49,8 @@ describe("4번 — 목록 로딩 → 성공", () => {
     renderWithProviders(<ProductListPage />);
 
     // 창 중간(1초 시점)에도 여전히 대기 중이어야 한다 — 조기에 빈 화면이 되면 안 된다.
+    // 여기서만 실제로 시간을 흘린다. 조건 기반 대기는 상태가 "바뀌는" 것을 기다리는
+    // 도구여서, "1초 동안 바뀌지 않는다"는 단언에는 쓸 수 없다.
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     expect(screen.getByText(/불러오는 중/)).toBeInTheDocument();
     expect(listRegion()).toHaveAttribute("aria-busy", "true");

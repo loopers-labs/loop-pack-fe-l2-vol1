@@ -6,8 +6,8 @@ const alias = {
 };
 
 // DOM이 필요한 테스트만 파일명으로 표시한다(*.dom.test.tsx).
-// 접미사로 가른 이유는 docs/rfc/week08-test-plan.md에 적었다 — 요약하면
-// grep으로 즉시 보이고, 프로젝트별 setupFiles가 파일 단위로 정확히 붙는다.
+// 접미사로 가른 이유는 docs/rfc/week08-test-plan.md에 적었다. 요약하면
+// include/exclude 한 줄로 갈리고, 프로젝트별 setupFiles가 파일 단위로 정확히 붙는다.
 const DOM_TESTS = "src/**/*.dom.test.{ts,tsx}";
 const ALL_TESTS = "src/**/*.test.{ts,tsx}";
 
