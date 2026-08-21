@@ -18,14 +18,16 @@ describe('useWishlistStore', () => {
     expect(state.has('p2')).toBe(true);
   });
 
-  it('같은 상품을 다시 누르면 찜이 해제되어 원래 개수로 돌아간다', () => {
+  it('두 상품 중 하나를 다시 누르면 그 상품만 찜에서 빠진다', () => {
     const { toggle } = useWishlistStore.getState();
 
     toggle('p1');
+    toggle('p2');
     toggle('p1');
 
     const state = useWishlistStore.getState();
-    expect(state.ids.size).toBe(0);
+    expect(state.ids.size).toBe(1);
     expect(state.has('p1')).toBe(false);
+    expect(state.has('p2')).toBe(true);
   });
 });

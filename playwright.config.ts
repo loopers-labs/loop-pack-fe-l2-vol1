@@ -20,7 +20,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm start',
+    command: 'node node_modules/next/dist/bin/next start',
     url: BASE_URL,
     reuseExistingServer: false,
     env: {

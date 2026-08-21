@@ -13,9 +13,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "next build && playwright test",
     "test:watch": "vitest",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && playwright test",
     "prepare": "husky"
   },
   "lint-staged": {

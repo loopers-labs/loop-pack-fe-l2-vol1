@@ -247,33 +247,79 @@ describe('ProductListContent', () => {
     expect(categorySelect).toHaveValue('fashion');
   });
 
-  it('가격 낮은순을 선택하면 요청 결과 순서대로 모든 상품을 보여준다', async () => {
+  it('2페이지에서 가격 낮은순을 선택하면 1페이지의 정렬 결과를 보여준다', async () => {
+    const secondPageProduct = makeProduct('page-2', '두 번째 페이지 상품');
     const expensive = makeProduct('expensive', '고가 상품', 100000);
     const cheap = makeProduct('cheap', '저가 상품', 10000);
     const samePrice = makeProduct('same-price', '동일 가격 상품', 10000);
     server.use(
       http.get('*/api/products', ({ request }) => {
-        const sort = new URL(request.url).searchParams.get('sort');
-        const products =
-          sort === 'price-asc'
-            ? [cheap, samePrice, expensive]
-            : [expensive, cheap, samePrice];
-        return HttpResponse.json(makeResponse(products));
+        const url = new URL(request.url);
+        const sort = url.searchParams.get('sort');
+        const page = url.searchParams.get('page') ?? '1';
+
+        if (sort === 'price-asc' && page === '1') {
+          return HttpResponse.json(
+            makeResponse([cheap, samePrice, expensive]),
+          );
+        }
+
+        return HttpResponse.json(
+          makeResponse([secondPageProduct], {
+            page: 2,
+            pageSize: 1,
+            totalCount: 2,
+          }),
+        );
       }),
     );
     const user = userEvent.setup();
 
-    renderProductList();
-    await screen.findByRole('heading', { name: '고가 상품' });
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: '정렬' }),
-      'price-asc',
-    );
+    renderProductList({ searchParams: '?page=2' });
+    await screen.findByRole('heading', { name: '두 번째 페이지 상품' });
+    const sortSelect = screen.getByRole('combobox', { name: '정렬' });
+    await user.selectOptions(sortSelect, 'price-asc');
 
     const productNames = (await screen.findAllByRole('heading', { level: 2 })).map(
       (heading) => heading.textContent,
     );
     expect(productNames).toEqual(['저가 상품', '동일 가격 상품', '고가 상품']);
+    expect(sortSelect).toHaveValue('price-asc');
+  });
+
+  it('2페이지에서 검색하면 검색어를 요청에 보내고 1페이지 결과를 보여준다', async () => {
+    const secondPageProduct = makeProduct('page-2', '두 번째 페이지 상품');
+    const searchResult = makeProduct('search-result', '검색된 셔츠');
+    server.use(
+      http.get('*/api/products', ({ request }) => {
+        const url = new URL(request.url);
+        const query = url.searchParams.get('q');
+        const page = url.searchParams.get('page') ?? '1';
+
+        if (query === '셔츠' && page === '1') {
+          return HttpResponse.json(makeResponse([searchResult]));
+        }
+
+        return HttpResponse.json(
+          makeResponse([secondPageProduct], {
+            page: 2,
+            pageSize: 1,
+            totalCount: 2,
+          }),
+        );
+      }),
+    );
+    const user = userEvent.setup();
+
+    renderProductList({ searchParams: '?page=2' });
+    await screen.findByRole('heading', { name: '두 번째 페이지 상품' });
+
+    await user.type(screen.getByRole('textbox', { name: '상품 검색' }), '셔츠');
+
+    expect(
+      await screen.findByRole('heading', { name: '검색된 셔츠' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('2 / 2')).not.toBeInTheDocument();
   });
 
   it('다음 페이지로 이동하면 다른 상품을 보여주고 페이지 경계 버튼을 바꾼다', async () => {
