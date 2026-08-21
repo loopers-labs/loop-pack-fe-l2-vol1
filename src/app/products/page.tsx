@@ -1,17 +1,17 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import type { Metadata } from "next";
 import {
+  buildDescription,
+  buildTitle,
   loadProductSearchParams,
   ProductListPage,
   productListQueries,
   serializeProductsUrl,
-  sortFilterOptions,
   type ProductSearchState,
 } from "@/_pages/products";
 import { getProductListResponse } from "@/app/api/products/product-list-response";
 import { getQueryClient } from "@/shared/api/get-query-client";
 import { sharedOpenGraph } from "@/shared/config/seo";
-import type { ProductListResponse } from "@/types/commerce";
 
 type ProductsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -22,27 +22,6 @@ type ProductsPageProps = {
 const productListServerQuery = (search: ProductSearchState) => {
   const options = productListQueries.list(search);
   return { ...options, queryFn: () => getProductListResponse(options.queryKey[1]) };
-};
-
-const buildTitle = (search: ProductSearchState) => {
-  const q = search.q.trim();
-  const base = q === "" ? "상품 목록" : `"${q}" 검색 결과`;
-  return search.page >= 2 ? `${base} ${search.page}페이지` : base;
-};
-
-const buildDescription = (search: ProductSearchState, result: ProductListResponse) => {
-  const categoryName =
-    search.category === "all"
-      ? "전체"
-      : (result.categories.find((category) => category.id === search.category)?.name ??
-        search.category);
-  const sortLabel =
-    sortFilterOptions.find((option) => option.value === search.sort)?.label ?? search.sort;
-
-  if (result.totalCount === 0) {
-    return `${categoryName} 카테고리(${sortLabel}) 조건에 맞는 상품이 0개입니다. 다른 조건으로 검색해 보세요.`;
-  }
-  return `${categoryName} 카테고리 상품 ${result.totalCount}개를 ${sortLabel}으로 만나보세요.`;
 };
 
 export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
