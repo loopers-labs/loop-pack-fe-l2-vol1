@@ -226,8 +226,10 @@ describe("11번 — 조작이 URL에 반영 · URL로 재진입", () => {
     expect(params?.get("category")).toBe("fashion");
 
     // 기본값은 nuqs가 URL에서 지운다. page:1로 되돌린 것이 "page=1"이 아니라
-    // "키가 없음"으로 나타난다 — 문자열 포함 검사는 ?page=10에도 걸리므로 키로 본다.
-    expect(params?.has("page")).toBe(false);
+    // "키가 없음"으로 나타난다. 문자열 포함 검사는 ?page=10에도 걸리므로 키로 본다.
+    // has()로 boolean을 단언하면 실패가 "expected true to be false"로만 남아
+    // 어떤 키가 남았는지 말해주지 않는다 — 키 목록을 그대로 대조한다.
+    expect([...(params?.keys() ?? [])]).not.toContain("page");
   });
 
   it("그 URL로 다시 들어오면 같은 화면이 복원된다", async () => {

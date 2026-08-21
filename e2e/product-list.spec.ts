@@ -59,6 +59,10 @@ test.describe("13번 — 뒤로·앞으로 가기로 필터 복원", () => {
 
     await page.goBack();
 
+    // 돌아간 자리가 목록인지 URL로 먼저 본다. 라벨부터 조회하면 히스토리가 앱 밖으로
+    // 나갔을 때 "element(s) not found"만 남아 셀렉터 문제처럼 읽힌다.
+    await expect(page).toHaveURL(/category=digital/);
+
     // 정렬 변경만 되돌아가고 카테고리는 유지되어야 한다.
     await expect(page.getByLabel("정렬")).toHaveValue("latest");
     await expect(page.getByLabel("카테고리")).toHaveValue("digital");

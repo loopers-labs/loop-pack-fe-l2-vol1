@@ -151,8 +151,10 @@ describe("6번 — 목록 에러", () => {
       </TestErrorBoundary>,
     );
 
-    expect(await screen.findByText(BOUNDARY_FALLBACK)).toBeInTheDocument();
-    expect(screen.queryByText(/검색 조건을 확인해 주세요/)).not.toBeInTheDocument();
+    // 인라인 에러와 경계 fallback 둘 다 role="alert"다. 어느 쪽이 그려졌는지를 문구로
+    // 가른다. 경계 문구를 findByText로 기다리면 실패 메시지가 "없다"까지만 말하고,
+    // 500이 인라인으로 샜다는 사실은 DOM 덤프를 읽어야 나온다.
+    expect(await screen.findByRole("alert")).toHaveTextContent(BOUNDARY_FALLBACK);
     expect(screen.queryByRole("button", { name: "다시 시도" })).not.toBeInTheDocument();
   });
 
@@ -166,7 +168,7 @@ describe("6번 — 목록 에러", () => {
       </TestErrorBoundary>,
     );
 
-    expect(await screen.findByText(BOUNDARY_FALLBACK)).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(BOUNDARY_FALLBACK);
   });
 });
 
