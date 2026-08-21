@@ -80,7 +80,7 @@ describe('ProductListContent', () => {
     useWishlistStore.setState({ ids: new Set() });
   });
 
-  it('느린 응답을 기다리는 동안 필터를 숨기고 성공 후 상품과 전체 개수를 보여준다', async () => {
+  it('느린 응답 동안 로딩 안내를 보여주고 성공 후 상품과 전체 개수로 바꾼다', async () => {
     server.use(
       http.get('*/api/products', async () => {
         await delay(50);
@@ -90,11 +90,15 @@ describe('ProductListContent', () => {
 
     renderProductList();
 
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '상품을 불러오는 중입니다.',
+    );
     expect(screen.queryByRole('combobox', { name: '카테고리' })).not.toBeInTheDocument();
 
     expect(
       await screen.findByRole('heading', { name: '테스트 상품' }),
     ).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByText('총 1개')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: '카테고리' })).toBeInTheDocument();
   });

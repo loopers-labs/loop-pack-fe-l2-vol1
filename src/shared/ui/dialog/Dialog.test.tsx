@@ -54,8 +54,8 @@ function CustomClassNameDialog() {
       <Dialog.Trigger>
         <span>열기</span>
       </Dialog.Trigger>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/30" />
-      <Dialog.Content className="fixed inset-0 z-[51] flex items-center justify-center p-6">
+      <Dialog.Overlay className="custom-overlay" />
+      <Dialog.Content className="custom-content">
         <div className="rounded-2xl bg-white p-7">
           <Dialog.Title>Custom Dialog</Dialog.Title>
           <Dialog.Close>닫기</Dialog.Close>
@@ -190,11 +190,11 @@ describe('Dialog', () => {
 
       await user.click(screen.getByText('열기'));
       const dialog = screen.getByRole('dialog');
-      expect(dialog).toHaveClass('p-6');
+      expect(dialog).toHaveClass('custom-content');
 
       const overlay = document.querySelector('[aria-hidden="true"]');
       expect(overlay).toBeInTheDocument();
-      expect(overlay).toHaveClass('bg-black/30');
+      expect(overlay).toHaveClass('custom-overlay');
 
       await user.click(overlay as HTMLElement);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
