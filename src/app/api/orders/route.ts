@@ -4,6 +4,7 @@ import {
   addOrder,
   isAuthScenario,
   isKnownProductId,
+  isRecord,
   listOrders,
   readSessionToken,
   SCENARIO_COOKIE,
@@ -71,7 +72,11 @@ const parseItems = (value: unknown): OrderItem[] | null => {
 
   const items: OrderItem[] = [];
   for (const entry of value) {
-    const { productId, quantity } = (entry ?? {}) as Record<string, unknown>;
+    if (!isRecord(entry)) {
+      return null;
+    }
+
+    const { productId, quantity } = entry;
     if (typeof productId !== "string" || !isKnownProductId(productId)) {
       return null;
     }
@@ -99,7 +104,7 @@ export async function POST(
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  const items = parseItems((body as Record<string, unknown> | null)?.items);
+  const items = isRecord(body) ? parseItems(body.items) : null;
   if (items === null) {
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }

@@ -68,6 +68,9 @@ const authScenarios = ["invalid", "expired", "error", "slow"] as const satisfies
 export const isAuthScenario = (value: string): value is AuthScenario =>
   authScenarios.some((scenario) => scenario === value);
 
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
 export const findAccount = (email: string, password: string): AuthUser | null => {
   if (password !== TEST_PASSWORD) {
     return null;

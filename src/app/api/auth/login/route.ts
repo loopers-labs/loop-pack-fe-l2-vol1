@@ -4,6 +4,7 @@ import {
   createSessionToken,
   findAccount,
   isAuthScenario,
+  isRecord,
   SCENARIO_COOKIE,
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
@@ -29,7 +30,11 @@ export async function POST(
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  const { email, password } = (body ?? {}) as Record<string, unknown>;
+  if (!isRecord(body)) {
+    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+  }
+
+  const { email, password } = body;
   if (typeof email !== "string" || typeof password !== "string") {
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
