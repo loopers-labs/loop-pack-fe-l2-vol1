@@ -32,6 +32,8 @@ export const HOME_RESPONSE: HomeResponse = {
   newProducts: [],
 };
 
+// 홈만 13개로 pageSize(12)를 넘겨 홈에도 2페이지가 있게 둔다.
+// 홈이 1페이지뿐이면 page 초과 보정이 "조건 변경 시 1페이지로 리셋" 누락을 가린다.
 const HOME_PRODUCT_COUNT = 13;
 
 const OTHER_PRODUCT_COUNT = 12;
@@ -68,6 +70,9 @@ const interleaved = homeProducts.flatMap((homeProduct, index) => {
   return otherProduct ? [homeProduct, otherProduct] : [homeProduct];
 });
 
+// price·createdAt은 인덱스 단조라 기본 순서 = latest = price-desc로 셋이 같다.
+// price-asc만 기본 순서와 달라 정렬 테스트는 price-asc를 쓴다.
+// reviewCount는 가운데가 높은 텐트 모양이라 popular가 네 번째 순서를 만들지만 아직 쓰는 테스트는 없다.
 export const PRODUCTS: Product[] = interleaved.map((product, index) => {
   const distanceToEdge = Math.min(index, interleaved.length - 1 - index);
 
