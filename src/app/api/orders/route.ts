@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { waitForMockApi } from "@/app/api/_data/commerce";
 import {
   addOrder,
   isAuthScenario,
@@ -9,6 +8,7 @@ import {
   readSessionToken,
   SCENARIO_COOKIE,
   SESSION_COOKIE,
+  waitForAuthApi,
 } from "@/app/api/_data/auth";
 import type {
   AuthErrorResponse,
@@ -38,7 +38,7 @@ const resolveSession = async (request: NextRequest): Promise<Resolved> => {
     };
   }
 
-  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
+  await waitForAuthApi(scenario === "slow" ? 1_500 : 500);
 
   if (scenario === "error") {
     return {

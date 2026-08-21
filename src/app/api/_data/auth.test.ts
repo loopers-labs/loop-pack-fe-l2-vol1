@@ -5,6 +5,7 @@ import {
   createSessionToken,
   findAccount,
   isAuthScenario,
+  isKnownProductId,
   listOrders,
   readSessionToken,
   resetOrders,
@@ -88,6 +89,13 @@ describe("scenario values", () => {
   });
 });
 
+describe("product id format", () => {
+  it("accepts p1 through p30 and rejects anything outside that range", () => {
+    expect(["p1", "p9", "p10", "p29", "p30"].every(isKnownProductId)).toBe(true);
+    expect(["p0", "p31", "p999", "p", "p01", "x1", ""].some(isKnownProductId)).toBe(false);
+  });
+});
+
 describe("orders", () => {
   afterEach(() => {
     resetOrders();
@@ -102,13 +110,18 @@ describe("orders", () => {
     expect(listOrders("u999")).toEqual([]);
   });
 
-  it("computes the total price from product data", () => {
-    const order = addOrder(accounts[0].id, [
+  it("keeps the requested items and numbers each order", () => {
+    const first = addOrder(accounts[0].id, [
       { productId: "p1", quantity: 2 },
       { productId: "p2", quantity: 1 },
     ]);
+    const second = addOrder(accounts[0].id, [{ productId: "p3", quantity: 1 }]);
 
-    expect(order.totalPrice).toBe(79000 * 2 + 39000);
-    expect(order.id).toMatch(/^o[1-9]\d*$/);
+    expect(first.items).toEqual([
+      { productId: "p1", quantity: 2 },
+      { productId: "p2", quantity: 1 },
+    ]);
+    expect(first.id).toBe("o1");
+    expect(second.id).toBe("o2");
   });
 });

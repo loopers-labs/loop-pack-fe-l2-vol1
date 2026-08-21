@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { waitForMockApi } from "@/app/api/_data/commerce";
 import {
   createSessionToken,
   findAccount,
@@ -8,6 +7,7 @@ import {
   SCENARIO_COOKIE,
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
+  waitForAuthApi,
 } from "@/app/api/_data/auth";
 import type { AuthErrorResponse, SessionResponse } from "@/app/api/_data/auth";
 
@@ -39,7 +39,7 @@ export async function POST(
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
+  await waitForAuthApi(scenario === "slow" ? 1_500 : 500);
 
   if (scenario === "error") {
     return NextResponse.json({ message: "로그인에 실패했습니다." }, { status: 500 });

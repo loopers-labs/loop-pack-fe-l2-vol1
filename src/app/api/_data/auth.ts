@@ -1,8 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { products } from "@/app/api/_data/commerce";
 
-// 인증 응답 계약. 6주차에 src/types를 해체한 구조에서도 그대로 쓸 수 있게
-// 이 파일에 함께 둔다. 본인 구조에 맞는 자리로 옮겨도 된다
+// 이 파일은 다른 모듈에 의존하지 않는다. 6주차에 구조를 바꾼 뒤에도 그대로 동작해야
+// 하므로 응답 타입, 지연, 상품 id 검증을 모두 여기서 처리한다
+
+// 인증 응답 계약. 본인 구조에 맞는 자리로 옮겨도 된다
 export type AuthUser = {
   id: string;
   name: string;
@@ -33,7 +34,6 @@ export type Order = {
   id: string;
   createdAt: string;
   items: OrderItem[];
-  totalPrice: number;
 };
 
 export type OrderCreateRequest = {
@@ -137,16 +137,11 @@ let orderSequence = 0;
 
 export const addOrder = (userId: string, items: OrderItem[]): Order => {
   orderSequence += 1;
-  const totalPrice = items.reduce((sum, item) => {
-    const product = products.find((candidate) => candidate.id === item.productId);
-    return sum + (product?.price ?? 0) * item.quantity;
-  }, 0);
 
   const order: Order = {
     id: `o${orderSequence}`,
     createdAt: new Date().toISOString(),
     items,
-    totalPrice,
   };
 
   ordersByUser.set(userId, [...(ordersByUser.get(userId) ?? []), order]);
@@ -160,5 +155,12 @@ export const resetOrders = () => {
   orderSequence = 0;
 };
 
+// 상품 데이터를 참조하지 않고 id 형식만 확인한다. mock 상품은 p1 ~ p30이다
 export const isKnownProductId = (productId: string) =>
-  products.some((product) => product.id === productId);
+  /^p(?:[1-9]|1\d|2\d|30)$/.test(productId);
+
+// 지연은 이 파일에서 처리한다. test 환경에서는 기다리지 않는다
+export const waitForAuthApi = (requestedDelayMs = 500) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, process.env.NODE_ENV === "test" ? 0 : requestedDelayMs);
+  });

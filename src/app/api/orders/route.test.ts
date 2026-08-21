@@ -46,8 +46,8 @@ describe("POST /api/orders", () => {
 
     expect(response.status).toBe(201);
     expect(body.order).toMatchObject({
+      id: "o1",
       items: [{ productId: "p1", quantity: 2 }],
-      totalPrice: 158000,
     });
   });
 
