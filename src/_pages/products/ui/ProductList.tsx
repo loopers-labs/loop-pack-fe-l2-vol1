@@ -1,11 +1,16 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { hashKey, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { ProductListPending } from './ProductListPending';
 
-import { ProductCard, productQueries } from '@/entities/product';
+import {
+  ProductCard,
+  productQueries,
+  type ProductListResponse,
+} from '@/entities/product';
 import { CartToggleButton } from '@/features/cart';
 import {
   countTotalPages,
@@ -17,17 +22,40 @@ import { WishlistToggleButton } from '@/features/wishlist';
 
 export function ProductList() {
   const { conditions, changePage } = useProductListUrlState();
+  const queryClient = useQueryClient();
+  const productListQuery = productQueries.list(toProductListQuery(conditions));
+  const currentQueryHash = hashKey(productListQuery.queryKey);
+  const [lastSuccessfulQueryKey, setLastSuccessfulQueryKey] = useState<
+    typeof productListQuery.queryKey | null
+  >(null);
 
   const { data, isError, error, isPlaceholderData, isFetching, refetch } =
-    useQuery(productQueries.list(toProductListQuery(conditions)));
+    useQuery(productListQuery);
 
-  const totalPages = data
-    ? countTotalPages(data.totalCount, data.pageSize)
+  if (
+    data !== undefined &&
+    !isPlaceholderData &&
+    (!lastSuccessfulQueryKey ||
+      hashKey(lastSuccessfulQueryKey) !== currentQueryHash)
+  ) {
+    setLastSuccessfulQueryKey(productListQuery.queryKey);
+  }
+
+  const lastSuccessfulData = lastSuccessfulQueryKey
+    ? queryClient.getQueryData<ProductListResponse>(lastSuccessfulQueryKey)
+    : undefined;
+  const visibleData = data ?? lastSuccessfulData;
+  const isShowingPreviousData =
+    isPlaceholderData ||
+    (data === undefined && lastSuccessfulData !== undefined);
+
+  const totalPages = visibleData
+    ? countTotalPages(visibleData.totalCount, visibleData.pageSize)
     : null;
 
   // 이전 목록을 보여주는 동안에는 현재 조건의 총 페이지 수를 아직 모른다.
   // 그 값으로 보정하면 캐시가 만료된 뒤 뒤로 왔을 때 엉뚱한 페이지로 밀어낸다.
-  const confirmedTotalPages = isPlaceholderData ? null : totalPages;
+  const confirmedTotalPages = isShowingPreviousData ? null : totalPages;
 
   const { isPageOutOfRange } = usePageClamp(confirmedTotalPages);
 
@@ -40,7 +68,7 @@ export function ProductList() {
     );
   }
 
-  if (!data && isError) {
+  if (!visibleData && isError) {
     return (
       <div className="week05-error" role="alert">
         <p>{error.message}</p>
@@ -58,7 +86,7 @@ export function ProductList() {
     );
   }
 
-  if (!data) {
+  if (!visibleData) {
     return <ProductListPending />;
   }
 
@@ -76,13 +104,13 @@ export function ProductList() {
           </button>
         </p>
       )}
-      <p>총 {data.totalCount}개</p>
-      {data.totalCount === 0 ? (
+      <p>총 {visibleData.totalCount}개</p>
+      {visibleData.totalCount === 0 ? (
         <p className="week05-empty">조건에 맞는 상품이 없습니다.</p>
       ) : (
         <>
-          <div className="week05-grid" data-updating={isPlaceholderData}>
-            {data.products.map((product) => (
+          <div className="week05-grid" data-updating={isShowingPreviousData}>
+            {visibleData.products.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -104,9 +132,9 @@ export function ProductList() {
           </div>
           {/* 이전 목록을 보여주는 동안엔 URL이 아니라 응답의 page를 써 상품과 번호를 함께 바꾼다. */}
           <ProductListPagination
-            page={data.page}
+            page={visibleData.page}
             totalPages={totalPages ?? 1}
-            isUpdating={isPlaceholderData}
+            isUpdating={isShowingPreviousData}
             onPageChange={changePage}
           />
         </>

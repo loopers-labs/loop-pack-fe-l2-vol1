@@ -11,6 +11,18 @@ const totalCountText = `총 ${PRODUCTS.length}개`;
 
 const firstProductName = PRODUCTS[0].name;
 
+const casualProduct = PRODUCTS.find((product) => product.category === 'casual');
+
+if (!casualProduct) {
+  throw new Error('조건 변경 테스트에 사용할 캐주얼 상품이 없습니다.');
+}
+
+const casualProductName = casualProduct.name;
+
+const homeProductCount = PRODUCTS.filter(
+  (product) => product.category === 'home',
+).length;
+
 const LIST_ERROR_MESSAGE = '상품 목록을 불러오지 못했습니다.';
 
 const failProductList = () =>
@@ -108,6 +120,37 @@ describe('목록 조회 실패', () => {
     expect(
       screen.getByRole('heading', { name: firstProductName }),
     ).toBeInTheDocument();
+  });
+
+  it('조건 변경이 실패하면 직전 목록을 유지하고 재시도 성공 후 새 목록으로 교체한다', async () => {
+    const { user } = renderProductList();
+
+    expect(await screen.findByText(totalCountText)).toBeInTheDocument();
+
+    failProductList();
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: '카테고리' }),
+      'home',
+    );
+
+    const banner = await screen.findByRole('alert');
+
+    expect(banner).toHaveTextContent('새 목록을 불러오지 못했습니다.');
+    expect(screen.getByText(totalCountText)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: casualProductName }),
+    ).toBeInTheDocument();
+
+    restoreProductList();
+    await user.click(within(banner).getByRole('button', { name: '다시 시도' }));
+
+    expect(
+      await screen.findByText(`총 ${homeProductCount}개`),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: casualProductName }),
+    ).not.toBeInTheDocument();
   });
 });
 
