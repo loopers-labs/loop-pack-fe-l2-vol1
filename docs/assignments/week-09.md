@@ -66,7 +66,7 @@ query string(`?scenario=expired`)이 우선이고, 없으면 `scenario` 쿠키�
 | --- | --- |
 | `provider.ts` | 분석 도구를 감싸는 인터페이스. GA4 · GTM · Amplitude 붙이는 자리를 주석으로 안내해요 |
 | `consoleProvider.ts` | 개발 중 확인용. 콘솔에 찍고 `window.__analytics`에도 쌓습니다 |
-| `tracker.ts` | `track()` · `identify()` · `reset()`. 초기화 전 이벤트를 큐에 담아 두고, 초기화 후 흘려보냅니다 |
+| `logger.ts` | `track()` · `identify()` · `reset()`. 초기화 전 이벤트를 큐에 담아 두고, 초기화 후 흘려보냅니다 |
 
 `track()`은 초기화 전에 불러도 됩니다. 큐에 담아 두고 초기화 후 순서대로 보내요. 공통 프로퍼티는 `setCommonProperties()`로 넣고, 이벤트 발생 시점에 평가됩니다.
 

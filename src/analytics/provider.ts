@@ -3,7 +3,7 @@ export type EventProperties = Record<string, unknown>;
 /**
  * 분석 도구 하나를 감싸는 인터페이스.
  *
- * 화면 코드는 이 인터페이스를 모른다. `tracker.ts`의 `track()`만 부르고,
+ * 화면 코드는 이 인터페이스를 모른다. `logger.ts`의 `track()`만 부르고,
  * 어디로 보낼지는 프로바이더를 등록해 결정한다.
  */
 export interface AnalyticsProvider {

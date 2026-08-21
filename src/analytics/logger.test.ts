@@ -8,7 +8,7 @@ import {
   resetAnalyticsForTest,
   setCommonProperties,
   track,
-} from "./tracker";
+} from "./logger";
 
 type Recorded =
   | { type: "track"; event: string; properties: EventProperties }
@@ -28,7 +28,7 @@ const createRecorder = (overrides: Partial<AnalyticsProvider> = {}) => {
   return { provider, recorded };
 };
 
-describe("tracker", () => {
+describe("analytics logger", () => {
   afterEach(() => {
     resetAnalyticsForTest();
     vi.restoreAllMocks();
