@@ -55,6 +55,8 @@
     "@storybook/addon-a11y": "^10.5.5",
     "@storybook/addon-vitest": "^10.5.5",
     "@storybook/nextjs-vite": "^10.5.5",
+    "@stryker-mutator/core": "^10.0.0",
+    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
