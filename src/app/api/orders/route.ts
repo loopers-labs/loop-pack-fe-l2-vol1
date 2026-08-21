@@ -9,17 +9,17 @@ import {
   SCENARIO_COOKIE,
   SESSION_COOKIE,
 } from "@/app/api/_data/auth";
-import type { ApiErrorResponse } from "@/types/commerce";
 import type {
+  AuthErrorResponse,
   AuthUser,
   OrderCreateResponse,
   OrderItem,
   OrderListResponse,
-} from "@/types/auth";
+} from "@/app/api/_data/auth";
 
 type Resolved =
   | { ok: true; user: AuthUser; scenario: string | null }
-  | { ok: false; response: NextResponse<ApiErrorResponse> };
+  | { ok: false; response: NextResponse<AuthErrorResponse> };
 
 const resolveSession = async (request: NextRequest): Promise<Resolved> => {
   const scenario =
@@ -86,7 +86,7 @@ const parseItems = (value: unknown): OrderItem[] | null => {
 
 export async function POST(
   request: NextRequest,
-): Promise<NextResponse<OrderCreateResponse | ApiErrorResponse>> {
+): Promise<NextResponse<OrderCreateResponse | AuthErrorResponse>> {
   const resolved = await resolveSession(request);
   if (!resolved.ok) {
     return resolved.response;
@@ -109,7 +109,7 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-): Promise<NextResponse<OrderListResponse | ApiErrorResponse>> {
+): Promise<NextResponse<OrderListResponse | AuthErrorResponse>> {
   const resolved = await resolveSession(request);
   if (!resolved.ok) {
     return resolved.response;

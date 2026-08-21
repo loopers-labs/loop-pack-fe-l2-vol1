@@ -8,12 +8,11 @@ import {
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
 } from "@/app/api/_data/auth";
-import type { ApiErrorResponse } from "@/types/commerce";
-import type { SessionResponse } from "@/types/auth";
+import type { AuthErrorResponse, SessionResponse } from "@/app/api/_data/auth";
 
 export async function POST(
   request: NextRequest,
-): Promise<NextResponse<SessionResponse | ApiErrorResponse>> {
+): Promise<NextResponse<SessionResponse | AuthErrorResponse>> {
   const scenario =
     request.nextUrl.searchParams.get("scenario") ??
     request.cookies.get(SCENARIO_COOKIE)?.value ??

@@ -1,6 +1,52 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { products } from "@/app/api/_data/commerce";
-import type { AuthScenario, AuthUser, Order, OrderItem } from "@/types/auth";
+
+// 인증 응답 계약. 6주차에 src/types를 해체한 구조에서도 그대로 쓸 수 있게
+// 이 파일에 함께 둔다. 본인 구조에 맞는 자리로 옮겨도 된다
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type AuthScenario = "invalid" | "expired" | "error" | "slow";
+
+export type AuthErrorResponse = {
+  message: string;
+};
+
+export type LoginRequest = {
+  email: string;
+  password: string;
+};
+
+export type SessionResponse = {
+  user: AuthUser;
+};
+
+export type OrderItem = {
+  productId: string;
+  quantity: number;
+};
+
+export type Order = {
+  id: string;
+  createdAt: string;
+  items: OrderItem[];
+  totalPrice: number;
+};
+
+export type OrderCreateRequest = {
+  items: OrderItem[];
+};
+
+export type OrderCreateResponse = {
+  order: Order;
+};
+
+export type OrderListResponse = {
+  orders: Order[];
+};
 
 export const SESSION_COOKIE = "session";
 export const SCENARIO_COOKIE = "scenario";
