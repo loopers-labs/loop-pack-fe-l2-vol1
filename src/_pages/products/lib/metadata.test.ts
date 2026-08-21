@@ -54,6 +54,20 @@ describe("buildDescription", () => {
     );
   });
 
+  it("여러 카테고리 중 검색 조건과 id가 일치하는 것의 이름을 고른다", () => {
+    expect(
+      buildDescription(
+        searchState({ category: "digital" }),
+        listResponse({
+          categories: [
+            { id: "casual", name: "캐주얼" },
+            { id: "digital", name: "디지털" },
+          ],
+        }),
+      ),
+    ).toBe("디지털 카테고리 상품 3개를 최신순으로 만나보세요.");
+  });
+
   it("응답에 없는 카테고리 id는 id 그대로 노출한다", () => {
     expect(
       buildDescription(searchState({ category: "casual" }), listResponse({ categories: [] })),

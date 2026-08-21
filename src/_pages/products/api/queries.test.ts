@@ -30,6 +30,10 @@ it("공백뿐인 검색어는 빈 검색어와 같은 queryKey를 만든다", ()
   );
 });
 
+it("목록 쿼리는 1분 staleTime 캐시 정책을 유지한다", () => {
+  expect(productListQueries.list(params()).staleTime).toBe(60_000);
+});
+
 it("page만 달라도 서로 다른 queryKey가 나온다", () => {
   expect(productListQueries.list(params({ page: 2 })).queryKey).not.toEqual(
     productListQueries.list(params()).queryKey,
