@@ -4,11 +4,13 @@ import {
   findAccount,
   isAuthScenario,
   isRecord,
+  waitForAuthApi,
+} from "@/app/api/_data/auth";
+import {
   SCENARIO_COOKIE,
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
-  waitForAuthApi,
-} from "@/app/api/_data/auth";
+} from "@/app/api/_data/auth-cookies";
 import type { AuthErrorResponse, SessionResponse } from "@/app/api/_data/auth";
 
 export async function POST(

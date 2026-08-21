@@ -1,11 +1,7 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import {
-  accounts,
-  SCENARIO_COOKIE,
-  SESSION_COOKIE,
-  TEST_PASSWORD,
-} from "@/app/api/_data/auth";
+import { accounts, TEST_PASSWORD } from "@/app/api/_data/auth";
+import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
 import { POST as login } from "./login/route";
 import { POST as logout } from "./logout/route";
 import { GET as me } from "./me/route";

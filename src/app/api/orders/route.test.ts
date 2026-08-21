@@ -1,12 +1,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  accounts,
-  createSessionToken,
-  resetOrders,
-  SCENARIO_COOKIE,
-  SESSION_COOKIE,
-} from "@/app/api/_data/auth";
+import { accounts, createSessionToken, resetOrders } from "@/app/api/_data/auth";
+import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
 import { GET, POST } from "./route";
 
 const withCookies = (request: NextRequest, cookies: Record<string, string>) => {

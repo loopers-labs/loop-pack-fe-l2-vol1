@@ -9,9 +9,9 @@ import {
   listOrders,
   readSessionToken,
   resetOrders,
-  SESSION_TTL_SECONDS,
   TEST_PASSWORD,
 } from "./auth";
+import { SESSION_TTL_SECONDS } from "./auth-cookies";
 
 const NOW = Date.parse("2026-08-21T00:00:00.000Z");
 

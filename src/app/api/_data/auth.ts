@@ -1,7 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
 
-// 이 파일은 다른 모듈에 의존하지 않는다. 6주차에 구조를 바꾼 뒤에도 그대로 동작해야
-// 하므로 응답 타입, 지연, 상품 id 검증을 모두 여기서 처리한다
+// 이 파일은 node:crypto 를 쓴다. Node 런타임(API 라우트)에서만 import 해야 한다.
+// Edge 런타임에서 쿠키 이름이 필요하면 auth-cookies.ts 에서 가져온다.
+//
+// 6주차에 구조를 바꾼 뒤에도 그대로 동작해야 하므로 응답 타입, 지연,
+// 상품 id 검증을 모두 여기서 처리한다
 
 // 인증 응답 계약. 본인 구조에 맞는 자리로 옮겨도 된다
 export type AuthUser = {
@@ -48,9 +52,6 @@ export type OrderListResponse = {
   orders: Order[];
 };
 
-export const SESSION_COOKIE = "session";
-export const SCENARIO_COOKIE = "scenario";
-export const SESSION_TTL_SECONDS = 60 * 60;
 export const TEST_PASSWORD = "looper1234";
 
 // ponytail: mock 백엔드라 비밀 값을 코드에 둔다. 실제 서비스라면 환경 변수만 허용한다

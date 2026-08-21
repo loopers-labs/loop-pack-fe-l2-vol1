@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   isAuthScenario,
   readSessionToken,
-  SCENARIO_COOKIE,
-  SESSION_COOKIE,
   waitForAuthApi,
 } from "@/app/api/_data/auth";
+import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
 import type { AuthErrorResponse, SessionResponse } from "@/app/api/_data/auth";
 
 export async function GET(
