@@ -34,6 +34,7 @@ GET    /api/orders        200 { orders } | 401
 
 - 세션은 서명된 httpOnly 쿠키(`session`)예요. 서버에 세션 저장소가 없습니다.
 - 응답 타입은 `src/app/api/_data/auth.ts`에 함께 들어 있어요. 6주차에 `src/types`를 해체한 구조와 충돌하지 않게 한 자리입니다. 본인 구조에 맞는 곳으로 옮겨도 됩니다.
+- 인증 API는 `src/app/api/_data/commerce.ts`의 `products`와 `waitForMockApi`를 참조해요. **이 파일을 다른 곳으로 옮겼다면 import 경로를 고쳐야 합니다.** 옮긴 구조를 되돌릴 필요는 없고, 두 줄만 맞추면 돼요.
 - 회원가입은 없어요. 계정 8개가 준비되어 있습니다.
 
     ```
