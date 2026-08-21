@@ -131,18 +131,18 @@
 
 피드백이 빠른 것부터 — 단위 → 통합 → E2E 순서로 구현하고 방법론 단위로 커밋한다.
 
-| 방법론 | 파일                                                                             | 담당 항목 |
-| ------ | -------------------------------------------------------------------------------- | --------- |
-| 단위   | `src/shared/lib/create-selection-store.test.ts`                                  | 1         |
-| 단위   | `src/_pages/products/api/queries.test.ts`                                        | 2         |
-| 단위   | `src/_pages/products/lib/metadata.test.ts` (※ `lib/metadata.ts` 추출 선행, §2.2) | 3         |
-| 통합   | `src/_pages/products/ui/product-list-content.states.dom.test.tsx`                | 4·5·6·7   |
-| 통합   | `src/_pages/products/ui/product-list-content.filters.dom.test.tsx`               | 8·9·10    |
-| 통합   | `src/_pages/products/ui/product-list-content.url.dom.test.tsx`                   | 11        |
-| 통합   | `src/widgets/header/ui/header-actions.dom.test.tsx` (0단계 스모크 파일 확장)     | 12        |
-| E2E    | `e2e/filter-history.spec.ts`                                                     | 13        |
-| E2E    | `e2e/filter-reload.spec.ts`                                                      | 14        |
-| E2E    | `e2e/wishlist-journey.spec.ts`                                                   | 15        |
+| 방법론 | 파일                                                                                                                                                                                                                                                                                                  | 담당 항목 |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| 단위   | `src/shared/lib/create-selection-store.test.ts`                                                                                                                                                                                                                                                       | 1         |
+| 단위   | `src/_pages/products/api/queries.test.ts`                                                                                                                                                                                                                                                             | 2         |
+| 단위   | `src/_pages/products/lib/metadata.test.ts` (※ `lib/metadata.ts` 추출 선행, §2.2)                                                                                                                                                                                                                      | 3         |
+| 통합   | `src/_pages/products/ui/product-list-content.states.dom.test.tsx`                                                                                                                                                                                                                                     | 4·5·6·7   |
+| 통합   | `src/_pages/products/ui/product-list-content.filters.dom.test.tsx`                                                                                                                                                                                                                                    | 8·9·10    |
+| 통합   | `src/_pages/products/ui/product-list-content.url.dom.test.tsx`                                                                                                                                                                                                                                        | 11        |
+| 통합   | `src/_pages/products/ui/wishlist-header-sync.dom.test.tsx` (※ 위치 정정 — 초판은 widgets/header의 스모크 파일 확장이었으나, widgets 파일은 상위 레이어 `@/_pages`를 import할 수 없다는 FSD lint 하네스가 테스트 파일에도 적용된다. 두 슬라이스를 함께 렌더하는 조합 지점은 상위인 `_pages` 쪽이 맞다) | 12        |
+| E2E    | `e2e/filter-history.spec.ts`                                                                                                                                                                                                                                                                          | 13        |
+| E2E    | `e2e/filter-reload.spec.ts`                                                                                                                                                                                                                                                                           | 14        |
+| E2E    | `e2e/wishlist-journey.spec.ts`                                                                                                                                                                                                                                                                        | 15        |
 
 ### 5.2 대기·격리 규칙
 
