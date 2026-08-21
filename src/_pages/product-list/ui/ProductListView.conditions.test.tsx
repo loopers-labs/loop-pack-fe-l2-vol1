@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { HttpResponse, http } from 'msw'
+import { describe, expect, it, onTestFinished } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react'
+import { server } from '@/test/msw/server'
 import ProductListView from './ProductListView'
 
 // 조건을 바꾸면 목록이 실제로 바뀌는지 확인한다.
@@ -174,5 +176,60 @@ describe('조작은 주소에 남고 주소로 다시 들어올 수 있다', () 
     await addressCarries('q=스탠리')
     await shownCount(4)
     expect(productCards()).toHaveLength(4)
+  })
+})
+
+describe('같은 조건으로 돌아오면 캐시를 쓰고 다시 묻지 않는다', () => {
+  // 조건을 되돌리는 동선은 잦다. 그때마다 다시 물으면 사용자는 이미 본 목록을 또 기다린다.
+  // 이 성질은 화면 문구가 아니라 나간 요청의 수로만 보인다.
+  const countRequests = () => {
+    const requestedCategories: string[] = []
+    const recordCategory = ({ request }: { request: Request }) => {
+      const params = new URL(request.url).searchParams
+      requestedCategories.push(params.get('category') ?? 'all')
+    }
+    server.events.on('request:start', recordCategory)
+    onTestFinished(() => {
+      server.events.removeListener('request:start', recordCategory)
+    })
+    return requestedCategories
+  }
+
+  it('카테고리를 바꿨다 되돌리면 처음 조건은 다시 요청하지 않는다', async () => {
+    const requested = countRequests()
+    const user = renderList()
+    await shownCount(30)
+
+    await chooseOption(user, /Category/, 'Digital')
+    await shownCount(6)
+    await chooseOption(user, /Category/, 'All')
+    await shownCount(30)
+
+    // 되돌아온 조건은 캐시에 있고 아직 신선하다. 세 번째 요청이 있으면 정책이 죽은 것이다.
+    expect(requested).toEqual(['all', 'digital'])
+  })
+})
+
+describe('0건 응답에는 페이지네이션이 없다', () => {
+  // 총 페이지 계산의 최소 1 보정이 왜 화면에 드러나지 않는지를 고정한다.
+  // 0건은 페이지 이동이 그려지지 않는 자리라 그 보정은 도달하지 않는다.
+  // 언젠가 0건에도 페이지 이동을 그리기 시작하면 이 테스트가 먼저 깨진다.
+  it('결과가 0건이면 페이지 이동 영역 자체가 그려지지 않는다', async () => {
+    server.use(
+      http.get('*/api/products', () =>
+        HttpResponse.json({
+          products: [],
+          categories: [],
+          totalCount: 0,
+          page: 1,
+          pageSize: 12,
+        }),
+      ),
+    )
+    renderList()
+
+    await screen.findByText('0 products')
+    expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull()
+    expect(screen.queryByText('1 / 1')).toBeNull()
   })
 })

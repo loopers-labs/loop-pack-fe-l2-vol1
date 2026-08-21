@@ -206,10 +206,16 @@ describe('홈과 목록과 헤더는 같은 store를 본다', () => {
       </>,
     )
 
-    fireEvent.click(await screen.findByLabelText('상품B wishlist'))
+    const wishlistButton = await screen.findByLabelText('상품B wishlist')
+    expect(wishlistButton).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.click(wishlistButton)
 
     expect(screen.getByText('Wishlist 1')).toBeInTheDocument()
     expect(screen.getByText('Bag 0')).toBeInTheDocument()
+    // 버튼 자신도 찜 여부를 읽어야 한다. 개수만 보면 카드가 상태를 잃어도 통과한다.
+    expect(wishlistButton).toHaveAttribute('aria-pressed', 'true')
+    expect(wishlistButton).toHaveTextContent('Remove')
   })
 })
 
