@@ -1,7 +1,7 @@
 import type { AnalyticsProvider, EventProperties } from "./provider";
 
 /**
- * 계측 전송 계층.
+ * 이벤트 로거.
  *
  * 화면 코드는 `track()`만 부른다. 어디로 보낼지, 초기화가 끝났는지,
  * 공통 프로퍼티가 무엇인지는 이 파일이 처리한다.
