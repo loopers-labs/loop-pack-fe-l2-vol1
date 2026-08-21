@@ -49,7 +49,11 @@ describe("GET /api/home", () => {
   it("keeps banner and categories in the empty scenario", async () => {
     const response = await request("?scenario=empty");
     const body = await response.json();
-    expect(body.banner).toBeDefined();
+    expect(body.banner).toEqual({
+      title: "매일 새롭게 발견하는 취향",
+      description: "지금 가장 사랑받는 상품을 만나보세요.",
+      image: "/images/products/p6.jpg",
+    });
     expect(body.categories).toHaveLength(5);
     expect(body.popularProducts).toEqual([]);
     expect(body.newProducts).toEqual([]);
