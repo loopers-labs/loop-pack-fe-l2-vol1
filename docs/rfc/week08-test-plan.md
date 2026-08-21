@@ -88,3 +88,32 @@ if (process.env.SIMULATE_METADATA_FAILURE === 'true') {
 `src/shared/ui/dialog`, `src/shared/ui/select`(TextSelect, ThumbnailSelect, SizeSelect)는 4주차에 만든 컴포넌트로, 실제로 import해서 쓰는 곳이 현재 코드베이스 어디에도 없습니다(`grep`으로 확인했습니다).
 
 **변경 빈도**는 화면에 연결되어 있지 않으니 지금 당장 바뀔 일이 없다고 판단했습니다. **실패 비용**도 낮습니다(사용자가 실제로 마주치는 화면이 아니므로, 여기서 버그가 나도 서비스에 영향이 없습니다). 또한 4주차에서 이미 훅/컴포넌트 단위로 자체 테스트를 마친 영역이라(`week-04-dialog.md`, `week-04-select.md` 참고), 8주차 범위(목록·카트·필터 흐름)와 무관한 재검증에 시간을 쓰는 것보다 우선순위가 낮다고 판단했습니다.
+
+
+## 3단계 자가 검증 (실험 기록)
+
+방법론(단위/통합/E2E)마다 구현을 한 곳씩 일부러 망가뜨려서, 2단계에서 작성한 테스트가 실제로 그 문제를 잡아내는지 확인했습니다. 실험이 끝난 뒤에는 모두 원래 코드로 복구했습니다.
+
+#### 실험 기록
+
+| # | 방법론 | 망가뜨린 곳 | 어떻게 바꿨나 | 결과 | 실패한 테스트 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 단위 | `src/_pages/product-list/api/products-metadata.ts` | 페이지 번호 표시 문구에서 `- ` 하이픈 제거 (`` `${title} - ${page}페이지` `` → `` `${title} ${page}페이지` ``) | 잡힘 | `buildProductsMetadataText — 경계 케이스 > page가 2 이상이면 title 끝에 페이지 번호가 붙는다` |
+| 2 | 통합 | `src/_pages/product-list/ui/ProductListPage.tsx` | 에러 UI를 렌더하는 조건을 `isError`에서 `false`로 고정 | 잡힘 | `ProductListPage — 목록 에러 (항목 6)` 3개, `ProductListPage — 에러에서 재시도로 복구 (항목 7)` 3개, 총 7개 |
+| 3 | E2E | `src/features/product-filters/model/useProductFilters.ts` | `useQueryStates`의 `history: 'push'`를 `history: 'replace'`로 변경 | 잡힘 | `e2e/filter-navigation.spec.ts`의 뒤로가기 관련 테스트 3개 (`뒤로가기를 누르면 이전 카테고리 필터로 복원된다`, `뒤로갔다가 다시 앞으로가면 나중 상태로 복원된다`, `카테고리를 3번 바꾼 뒤 뒤로가기 2번 하면 첫 번째 상태로 복원된다`) |
+
+#### 실패 메시지로 원인을 알 수 있었는지
+
+**실험 1 (단위)**: 알 수 있었습니다. `Expected: "홈 상품 - 3페이지"` / `Received: "홈 상품 3페이지"`로 하이픈 누락이 원인임이 바로 드러났습니다.
+
+**실험 2 (통합)**: 알 수 있었습니다. `Unable to find an element with the text: 오류가 발생했습니다.` 메시지와 함께 출력된 DOM에 `<section aria-label="상품 검색 결과" class="week05-section" />`만 비어 있는 게 보여서, 에러 UI 자체가 렌더되지 않고 있다는 걸 바로 파악할 수 있었습니다.
+
+**실험 3 (E2E)**: 부분적으로만 알 수 있었습니다. `Received string: "about:blank"`를 보고 "뒤로가기를 눌렀을 때 history 스택에 갈 곳이 없다"는 것까지는 추측할 수 있었지만, 정확히 `history: 'replace'`가 원인이라는 것까지는 메시지만으로는 알 수 없었고 코드를 직접 확인해야 했습니다.
+
+#### 부가 발견 — 실제 버그 수정
+
+3단계 실험과는 별개로, 2단계에서 항목 5(목록 빈 결과)의 경계 케이스 테스트를 작성하던 중 실제 버그를 발견했습니다. `totalCount: 0`일 때 페이지네이션이 "1 / 0"으로 표시되는 문제였고, `useProductFilters.ts`의 `totalPages` 계산에 `Math.max(1, ...)`를 추가해 최소값을 보정했습니다. (커밋: `fix: totalCount가 0일 때 totalPages 최소값 1로 보정`)
+
+#### 완료 확인
+
+세 실험 모두 원래 코드로 복구했으며, `pnpm test`와 `pnpm test:e2e` 전체가 다시 통과하는 것을 확인했습니다.
