@@ -1,7 +1,10 @@
+import { createSerializer } from 'nuqs/server';
 import { describe, expect, it } from 'vitest';
 
 import {
+  conditionParsers,
   loadProductListConditions,
+  type ProductListConditions,
   toProductListQuery,
 } from './product-list-params';
 
@@ -10,7 +13,23 @@ import {
 const conditionsFor = (searchParams: string) =>
   toProductListQuery(loadProductListConditions(searchParams));
 
-describe('URL에서 조회 조건 읽기', () => {
+const serializeConditions = createSerializer(conditionParsers);
+
+describe('URL 조회 조건', () => {
+  it('필터 객체를 주소로 만든 뒤 다시 읽으면 같은 조건이 된다', () => {
+    const conditions = {
+      q: '의자',
+      category: 'home',
+      sort: 'popular',
+      scenario: null,
+      page: 3,
+    } satisfies ProductListConditions;
+
+    expect(loadProductListConditions(serializeConditions(conditions))).toEqual(
+      conditions,
+    );
+  });
+
   it('조건이 모두 담긴 주소는 그 조건 그대로 읽힌다', () => {
     expect(conditionsFor('?q=의자&category=home&sort=popular&page=3')).toEqual({
       q: '의자',
