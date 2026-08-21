@@ -100,7 +100,7 @@ CI 쪽은 손댈 것이 없다. 코스가 제공한 `.github/workflows/quality.y
 
 400만 검증하면 `throwOnError: (error) => isServerFault(error)`를 `() => false`로 바꿔도 초록불이다. 400은 원래 인라인이라 화면이 그대로 나오기 때문이다. 그러면 이 테스트가 지키는 건 4xx가 인라인이라는 사실 하나뿐이고, 정작 위험한 회귀인 5xx의 인라인 유출은 아무도 안 본다.
 
-그래서 두 방향으로 쓴다. 400은 목록 자리에 실패 문구와 "다시 시도"가 보이는 것으로, 500은 경계로 전파되는 것으로 확인한다. 통합 테스트는 `app/products/error.tsx`를 렌더하지 않으므로 테스트가 직접 React ErrorBoundary로 감싸 fallback이 뜨는 것을 본다. 이때 인라인 문구가 보이지 않는 것까지 `queryBy*`로 함께 단언한다.
+그래서 두 방향으로 쓴다. 400은 목록 자리에 실패 문구와 "다시 시도"가 보이는 것으로, 500은 경계로 전파되는 것으로 확인한다. 통합 테스트는 `app/products/error.tsx`를 렌더하지 않으므로 테스트가 직접 React ErrorBoundary로 감싸 fallback이 뜨는 것을 본다. 인라인 에러와 fallback이 둘 다 role="alert"이므로 알림 하나를 잡아 문구로 가른다(3단계에서 고친 자리다).
 
 3단계 변이와 짝이다. `isServerFault`의 `>= 500`을 `>= 600`으로 바꾸면 500이 인라인으로 새는데, 400만 보고 있었다면 그 변이가 살아남는다.
 
@@ -123,7 +123,7 @@ CI 쪽은 손댈 것이 없다. 코스가 제공한 `.github/workflows/quality.y
 3. 캡처한 `queryString`으로 `renderWithProviders`를 새로 호출한다.
 4. select 값·목록 내용·나간 요청이 캡처 시점과 같은지 확인한다.
 
-기본값 생략은 문자열 포함 검사(`toContain("page=1")`)가 아니라 키 부재를 직접 단언한다. `expect(event.searchParams.has("page")).toBe(false)`. 문자열 검사는 `?page=10`이 `page=1`을 포함해서 통과하는 함정이 있다.
+기본값 생략은 문자열 포함 검사(`toContain("page=1")`)가 아니라 키로 본다. 문자열 검사는 `?page=10`이 `page=1`을 포함해서 통과하는 함정이 있다. 키 목록을 그대로 대조하면(`not.toContain("page")`) 실패할 때 어떤 키가 남았는지도 메시지에 들어온다(3단계에서 고친 자리다).
 
 ### 애매했던 판단 두 개
 
