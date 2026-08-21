@@ -17,11 +17,14 @@ export function renderWithProviders(
     defaultOptions: { queries: { retry: false } },
   });
 
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <NuqsTestingAdapter searchParams={searchParams} onUrlUpdate={onUrlUpdate}>
-        {ui}
-      </NuqsTestingAdapter>
-    </QueryClientProvider>,
-  );
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <NuqsTestingAdapter searchParams={searchParams} onUrlUpdate={onUrlUpdate} hasMemory>
+          {ui}
+        </NuqsTestingAdapter>
+      </QueryClientProvider>,
+    ),
+  };
 }
