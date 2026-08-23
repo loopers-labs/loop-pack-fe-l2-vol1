@@ -1,4 +1,6 @@
+import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { server } from '@/test/msw/server'
 import { createHomeMetadata, generateHomeMetadata } from './homeMetadata'
 import type { HomeResponse } from './home'
 
@@ -16,8 +18,11 @@ const homeResponse = {
   newProducts: [],
 } satisfies HomeResponse
 
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status })
+// 응답은 MSW가 네트워크에서 만든다. fetch를 바꿔치기하면 서버가 실제로 요청을
+// 내보내는지, 상태 코드를 어떻게 읽는지가 검증에서 빠진다.
+const respondWithHome = (resolver: Parameters<typeof http.get>[1]) => {
+  server.use(http.get('*/api/home', resolver))
+}
 
 // 사례마다 독립된 origin으로 식별한다. readHome이 origin을 키로 조회를 공유하므로,
 // 어떤 응답이 어느 사례의 것인지 흐려지지 않게 한다.
@@ -28,17 +33,13 @@ const stubOrigin = () => {
 }
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   vi.unstubAllEnvs()
 })
 
 describe('홈 metadata', () => {
   it('정상 응답이면 배너에서 title과 description과 image를 만든다', async () => {
     stubOrigin()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() => Promise.resolve(jsonResponse(homeResponse))),
-    )
+    respondWithHome(() => HttpResponse.json(homeResponse))
 
     expect(await generateHomeMetadata()).toMatchObject({
       title: '배너 제목',
@@ -53,12 +54,7 @@ describe('홈 metadata', () => {
 
   it('예상 가능한 조회 실패는 아무 필드도 정하지 않아 root를 상속한다', async () => {
     stubOrigin()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() =>
-        Promise.resolve(new Response(null, { status: 500 })),
-      ),
-    )
+    respondWithHome(() => new HttpResponse(null, { status: 500 }))
 
     // 빈 문자열로 덮으면 root의 title과 description까지 지워진다.
     expect(await generateHomeMetadata()).toEqual({})
@@ -66,10 +62,7 @@ describe('홈 metadata', () => {
 
   it('요청이 나가지 못한 실패도 root를 상속한다', async () => {
     stubOrigin()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() => Promise.reject(new TypeError('offline'))),
-    )
+    respondWithHome(() => HttpResponse.error())
 
     expect(await generateHomeMetadata()).toEqual({})
   })
@@ -77,10 +70,7 @@ describe('홈 metadata', () => {
   it('예상 밖 오류는 삼키지 않는다', async () => {
     stubOrigin()
     // 200인데 본문이 JSON이 아니다. 계약이 깨진 것이라 화면이 복구 방법을 모른다.
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(() => Promise.resolve(new Response('<html>'))),
-    )
+    respondWithHome(() => new HttpResponse('<html>'))
 
     await expect(generateHomeMetadata()).rejects.toThrow()
   })

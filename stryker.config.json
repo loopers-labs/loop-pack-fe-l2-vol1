@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "pnpm",
+  "testRunner": "vitest",
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "reporters": ["json", "progress"],
+  "coverageAnalysis": "perTest",
+  "timeoutMS": 30000,
+  "mutate": [
+    "src/entities/cart/model/cart.ts",
+    "src/entities/wishlist/model/wishlist.ts",
+    "src/_pages/product-list/model/emptyResult.ts",
+    "src/_pages/product-list/model/searchParams.ts",
+    "src/_pages/product-list/api/productList.ts",
+    "src/shared/lib/parsePositiveInteger.ts",
+    "src/shared/lib/formatWon.ts"
+  ]
+}

@@ -1,43 +1,28 @@
-import {
-  afterEach,
-  describe,
-  expect,
-  it,
-  vi,
-  type MockedFunction,
-} from 'vitest'
+import { HttpResponse, delay, http } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
+import { server } from '@/test/msw/server'
 import {
   ApiError,
   NetworkError,
+  REQUEST_TIMEOUT_MS,
   errorMessageOf,
   fetchJson,
   isExpectedFailure,
   isRetryable,
   isTimeout,
-  REQUEST_TIMEOUT_MS,
 } from './http'
 
 // 전송 계층이 실패를 어떤 형태로 올리는지 검증한다.
 // 실패는 status와 서버 메시지를 구조로 남겨야 소비자가 문자열을 파싱하지 않는다.
-// 응답은 실제 Response로 만든다. 부분 객체를 캐스팅하면 본문 파싱 경로가 실물과 달라진다.
+//
+// 응답은 MSW가 네트워크에서 만든다. fetch를 바꿔치기하면 이 파일이 검증하려는 것
+// (요청이 나가고, 상태 코드를 읽고, 중단 신호가 전달되는 경로)이 통째로 빠진다.
+// 도메인 API가 아니라 전송 자체가 대상이라 이 파일 전용 origin을 쓴다.
+const TRANSPORT_URL = 'http://transport.test/things'
 
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status })
-
-const stubFetch = (response: Response) => {
-  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(response)
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
+const respondWith = (resolver: Parameters<typeof http.get>[1]) => {
+  server.use(http.get(TRANSPORT_URL, resolver))
 }
-
-const signalOf = (fetchMock: MockedFunction<typeof fetch>) => {
-  const signal = fetchMock.mock.calls[0][1]?.signal
-  if (!signal) throw new Error('요청에 중단 신호가 걸리지 않았다')
-  return signal
-}
-
-// AbortSignal.reason은 DOM 타입 정의상 any다. 이 함수 하나로 가두고 밖으로는 unknown만 낸다.
-const abortReasonOf = (signal: AbortSignal): unknown => signal.reason
 
 // 실패를 기대하는 테스트가 매번 캐스팅하지 않도록, 여기서 타입을 좁혀서 돌려준다.
 const rejectionOf = async (pending: Promise<unknown>): Promise<unknown> =>
@@ -56,60 +41,45 @@ const apiErrorOf = async (pending: Promise<unknown>): Promise<ApiError> => {
   return thrown
 }
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
-
 describe('fetchJson', () => {
-  it('fetch 자체의 실패를 NetworkError로 구분한다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>().mockRejectedValue(new TypeError('Failed to fetch')),
-    )
+  it('요청이 나가지 못하면 NetworkError로 구분한다', async () => {
+    // 연결 자체가 실패하는 경우다. 응답이 없으므로 status가 없다.
+    respondWith(() => HttpResponse.error())
 
-    await expect(fetchJson('/api/things')).rejects.toBeInstanceOf(NetworkError)
+    await expect(fetchJson(TRANSPORT_URL)).rejects.toBeInstanceOf(NetworkError)
   })
 
   it('성공 응답의 본문을 그대로 돌려준다', async () => {
-    stubFetch(jsonResponse({ ok: true }))
+    respondWith(() => HttpResponse.json({ ok: true }))
 
-    await expect(fetchJson('/api/things')).resolves.toEqual({ ok: true })
+    await expect(fetchJson(TRANSPORT_URL)).resolves.toEqual({ ok: true })
   })
 
-  it('호출자의 취소 신호를 fetch까지 전달한다', async () => {
-    const fetchMock = stubFetch(jsonResponse({}))
+  it('호출자가 취소하면 진행 중인 요청이 중단된다', async () => {
+    respondWith(async () => {
+      await delay('infinite')
+      return HttpResponse.json({})
+    })
     const controller = new AbortController()
 
-    await fetchJson('/api/things', controller.signal)
-
-    // 타임아웃과 합쳐진 신호라 동일 객체는 아니다. 취소가 전달되는지로 검증한다.
-    const passedSignal = signalOf(fetchMock)
-    expect(passedSignal.aborted).toBe(false)
+    const pending = rejectionOf(fetchJson(TRANSPORT_URL, controller.signal))
     controller.abort()
-    expect(passedSignal.aborted).toBe(true)
+    const error = await pending
+
+    // 취소는 실패가 아니다. NetworkError로 승격하면 화면이 오류를 띄운다.
+    expect(error).toBeInstanceOf(DOMException)
+    expect((error as DOMException).name).toBe('AbortError')
+    expect(error).not.toBeInstanceOf(NetworkError)
   })
 
-  it('호출자가 신호를 주지 않아도 타임아웃 신호를 건다', async () => {
-    const fetchMock = stubFetch(jsonResponse({}))
-
-    await fetchJson('/api/things')
-
-    expect(signalOf(fetchMock).aborted).toBe(false)
-  })
-
-  it('응답이 오지 않으면 타임아웃으로 요청을 끊는다', async () => {
-    const neverResolving = vi.fn<typeof fetch>((_input, init) => {
-      const signal = init?.signal
-      return new Promise<Response>((_resolve, reject) => {
-        signal?.addEventListener('abort', () => {
-          reject(abortReasonOf(signal))
-        })
-      })
+  it('호출자가 신호를 주지 않아도 응답이 없으면 타임아웃으로 끊는다', async () => {
+    respondWith(async () => {
+      await delay('infinite')
+      return HttpResponse.json({})
     })
-    vi.stubGlobal('fetch', neverResolving)
 
     vi.useFakeTimers()
-    const pending = rejectionOf(fetchJson('/api/things'))
+    const pending = rejectionOf(fetchJson(TRANSPORT_URL))
     await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS)
     const error = await pending
     vi.useRealTimers()
@@ -117,18 +87,42 @@ describe('fetchJson', () => {
     expect(isTimeout(error)).toBe(true)
   })
 
-  it('HTTP 실패는 throw로 승격된다. 쿼리가 에러 상태를 알 수 있는 유일한 길이다', async () => {
-    stubFetch(new Response(null, { status: 500 }))
+  it('타임아웃 직전까지는 요청을 끊지 않는다', async () => {
+    respondWith(async () => {
+      await delay('infinite')
+      return HttpResponse.json({})
+    })
 
-    const error = await apiErrorOf(fetchJson('/api/things'))
+    vi.useFakeTimers()
+    const settled = vi.fn()
+    const pending = fetchJson(TRANSPORT_URL).then(settled, settled)
+    await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS - 1)
+    expect(settled).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(1)
+    await pending
+    vi.useRealTimers()
+
+    expect(settled).toHaveBeenCalledOnce()
+  })
+
+  it('HTTP 실패는 throw로 승격된다. 쿼리가 에러 상태를 알 수 있는 유일한 길이다', async () => {
+    respondWith(() => new HttpResponse(null, { status: 500 }))
+
+    const error = await apiErrorOf(fetchJson(TRANSPORT_URL))
 
     expect(error.status).toBe(500)
   })
 
   it('실패 응답의 status와 서버 메시지를 구조로 전달한다', async () => {
-    stubFetch(jsonResponse({ message: '요청 조건을 확인해주세요.' }, 400))
+    respondWith(() =>
+      HttpResponse.json(
+        { message: '요청 조건을 확인해주세요.' },
+        { status: 400 },
+      ),
+    )
 
-    const error = await apiErrorOf(fetchJson('/api/things'))
+    const error = await apiErrorOf(fetchJson(TRANSPORT_URL))
 
     expect(error.status).toBe(400)
     expect(error.serverMessage).toBe('요청 조건을 확인해주세요.')
@@ -136,9 +130,11 @@ describe('fetchJson', () => {
 
   it('본문이 JSON이 아니면 status만 남기고 원래 실패를 가리지 않는다', async () => {
     // 프록시 오류 페이지나 빈 본문이 여기 해당한다.
-    stubFetch(new Response('<html>Bad Gateway</html>', { status: 502 }))
+    respondWith(
+      () => new HttpResponse('<html>Bad Gateway</html>', { status: 502 }),
+    )
 
-    const error = await apiErrorOf(fetchJson('/api/things'))
+    const error = await apiErrorOf(fetchJson(TRANSPORT_URL))
 
     expect(error.status).toBe(502)
     expect(error.serverMessage).toBeUndefined()

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  categories,
   MOCK_DELAY_MS,
-  products,
   SLOW_SCENARIO_DELAY_MS,
+  categories,
   waitForMockApi,
 } from '@/app/api/_data/commerce'
+import { selectProducts } from '@/app/api/_data/selectProducts'
 import {
   isCategoryId,
   isProductSort,
@@ -26,7 +26,7 @@ const isMockApiScenario = (value: string): value is MockApiScenario =>
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams
   const scenario = params.get('scenario')
-  const q = params.get('q')?.trim().toLocaleLowerCase('ko') ?? ''
+  const q = params.get('q') ?? ''
   const category = params.get('category')
   const sort = params.get('sort')
   const page = parsePositiveInteger(params.get('page') ?? '1')
@@ -61,41 +61,14 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      category === null || category === 'all' || product.category === category
-    const searchable = `${product.brand} ${product.name}`.toLocaleLowerCase(
-      'ko',
-    )
-    return matchesCategory && searchable.includes(q)
-  })
-
-  const sortedProducts = [...filteredProducts]
-
-  if (sort !== null) {
-    sortedProducts.sort((a, b) => {
-      switch (sort) {
-        case 'popular':
-          return b.reviewCount - a.reviewCount || b.rating - a.rating
-        case 'price-asc':
-          return a.price - b.price
-        case 'price-desc':
-          return b.price - a.price
-        case 'latest':
-          return Date.parse(b.createdAt) - Date.parse(a.createdAt)
-      }
-    })
-  }
-
-  const start = (page - 1) * pageSize
-  const pagedProducts = sortedProducts.slice(start, start + pageSize)
-  const responseProducts = scenario === 'empty' ? [] : pagedProducts
-  const totalCount = scenario === 'empty' ? 0 : filteredProducts.length
+  // 고르는 규칙은 selectProducts 하나가 소유한다. 테스트의 mock 서버도 같은 것을 쓴다.
+  const selection = selectProducts({ q, category, sort, page, pageSize })
+  const isEmptyScenario = scenario === 'empty'
 
   return NextResponse.json({
-    products: responseProducts,
+    products: isEmptyScenario ? [] : selection.products,
     categories,
-    totalCount,
+    totalCount: isEmptyScenario ? 0 : selection.totalCount,
     page,
     pageSize,
   })

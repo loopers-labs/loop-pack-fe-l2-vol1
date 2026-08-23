@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  categories,
-  homeBanner,
   MOCK_DELAY_MS,
-  products,
   SLOW_SCENARIO_DELAY_MS,
   waitForMockApi,
 } from '@/app/api/_data/commerce'
+import { selectHome } from '@/app/api/_data/selectHome'
 import type { MockApiScenario } from '@/app/api/_data/commerce'
 
 const scenarioValues = [
@@ -40,17 +38,12 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const popularProducts = [...products]
-    .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating)
-    .slice(0, 6)
-  const newProducts = [...products]
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    .slice(0, 6)
+  // 응답을 만드는 규칙은 selectHome 하나가 소유한다. 테스트의 mock 서버도 같은 것을 쓴다.
+  const home = selectHome()
 
   return NextResponse.json({
-    banner: homeBanner,
-    categories,
-    popularProducts: scenario === 'empty' ? [] : popularProducts,
-    newProducts: scenario === 'empty' ? [] : newProducts,
+    ...home,
+    popularProducts: scenario === 'empty' ? [] : home.popularProducts,
+    newProducts: scenario === 'empty' ? [] : home.newProducts,
   })
 }

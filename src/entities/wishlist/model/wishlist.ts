@@ -8,9 +8,20 @@ interface WishlistState {
   toggleWishlist: (productId: string) => void
 }
 
-// cart에도 같은 모양의 함수가 있다. 공통으로 빼지 않는 근거는 RFC Decision 1에 있다.
-const toggleId = (ids: string[], id: string) =>
-  ids.includes(id) ? ids.filter((existing) => existing !== id) : [...ids, id]
+// 찜 규칙과 파생을 React 밖의 순수 함수로 둔다. cart에도 같은 모양의 함수가 있고,
+// 공통으로 빼지 않는 근거는 RFC Decision 1에 있다.
+
+// 같은 상품을 다시 누르면 빠진다. 나머지는 찜한 순서를 유지한다.
+export const toggleWishlistId = (ids: readonly string[], productId: string) =>
+  ids.includes(productId)
+    ? ids.filter((existing) => existing !== productId)
+    : [...ids, productId]
+
+// 개수는 별도 상태가 아니라 찜한 ID 목록에서 파생한다.
+export const wishlistCountOf = (ids: readonly string[]) => ids.length
+
+export const isInWishlistIds = (ids: readonly string[], productId: string) =>
+  ids.includes(productId)
 
 const initialWishlistState = { wishlistIds: [] as string[] }
 
@@ -18,14 +29,16 @@ const initialWishlistState = { wishlistIds: [] as string[] }
 const useWishlistStore = create<WishlistState>((set) => ({
   ...initialWishlistState,
   toggleWishlist: (productId) =>
-    set((state) => ({ wishlistIds: toggleId(state.wishlistIds, productId) })),
+    set((state) => ({
+      wishlistIds: toggleWishlistId(state.wishlistIds, productId),
+    })),
 }))
 
 export const useWishlistCount = () =>
-  useWishlistStore((state) => state.wishlistIds.length)
+  useWishlistStore((state) => wishlistCountOf(state.wishlistIds))
 
 export const useIsInWishlist = (productId: string) =>
-  useWishlistStore((state) => state.wishlistIds.includes(productId))
+  useWishlistStore((state) => isInWishlistIds(state.wishlistIds, productId))
 
 export const useToggleWishlist = () =>
   useWishlistStore((state) => state.toggleWishlist)

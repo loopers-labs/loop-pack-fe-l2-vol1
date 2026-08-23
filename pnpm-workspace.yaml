@@ -1,3 +1,6 @@
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+  # msw의 설치 스크립트는 package.json에 msw.workerDirectory가 있을 때만 일한다.
+  # 우리는 node에서 가로채기만 해서 그 설정이 없다. 아무 일도 하지 않을 스크립트를 돌리지 않는다.
+  - msw

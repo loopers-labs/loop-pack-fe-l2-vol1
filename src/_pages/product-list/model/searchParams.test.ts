@@ -95,3 +95,39 @@ describe('화면 기본값', () => {
     expect(PRODUCT_PAGE_SIZE).toBeGreaterThan(0)
   })
 })
+
+describe('되돌릴 조건이 있는지 판정', () => {
+  // 이 판정 하나가 화면의 조건 초기화 출구를 켜고 끈다.
+  // 네 조건 중 하나만 기본값을 벗어나도 되돌릴 것이 있다.
+  // Stryker가 각 절을 false로 바꿔도 살아남던 자리라, 절마다 하나씩 고정한다.
+  const defaults = { q: '', category: 'all', sort: 'latest', page: 1 } as const
+
+  it('네 조건이 모두 기본값이면 되돌릴 것이 없다', () => {
+    expect(hasNonDefaultFilters({ ...defaults })).toBe(false)
+  })
+
+  it('검색어만 있어도 되돌릴 것이 있다', () => {
+    expect(hasNonDefaultFilters({ ...defaults, q: '니트' })).toBe(true)
+  })
+
+  it('카테고리만 골라도 되돌릴 것이 있다', () => {
+    expect(hasNonDefaultFilters({ ...defaults, category: 'digital' })).toBe(
+      true,
+    )
+  })
+
+  it('정렬만 바꿔도 되돌릴 것이 있다', () => {
+    expect(hasNonDefaultFilters({ ...defaults, sort: 'price-asc' })).toBe(true)
+  })
+
+  it('페이지만 넘겨도 되돌릴 것이 있다', () => {
+    expect(hasNonDefaultFilters({ ...defaults, page: 3 })).toBe(true)
+  })
+})
+
+describe('q parser의 쓰기 방향', () => {
+  it('주소에 쓸 때도 앞뒤 공백을 잘라 같은 검색어가 두 주소를 갖지 않게 한다', () => {
+    // 읽기만 정규화하면 폼을 거치지 않고 조건을 넣는 경로에서 공백이 주소에 남는다.
+    expect(productListSearchParams.q.serialize('  니트  ')).toBe('니트')
+  })
+})

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   fireEvent,
   render,
@@ -9,12 +9,14 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react'
 import type { Product } from '@/entities/product/model/product'
+import { deferredGet } from '@/test/msw/deferredGet'
 import { resetStores } from '@/test/resetStores'
 import { PRODUCT_PAGE_SIZE } from '../model/searchParams'
 import ProductListView from './ProductListView'
 
 // 조건을 바꾸는 동안 사용자가 무엇을 보는지 고정한다.
-// 응답을 직접 잡고 있어야 "기다리는 중"의 화면을 검사할 수 있어서 fetch를 수동으로 푼다.
+// "기다리는 중"의 화면을 보려면 응답 시점을 쥐고 있어야 한다. 앱의 fetch를 바꿔치기하는
+// 대신 MSW 핸들러가 응답을 붙들고 있게 해서, 요청은 평소처럼 나가고 전송 계층도 그대로 돈다.
 
 const makeProduct = (id: string, name: string): Product => ({
   id,
@@ -48,35 +50,13 @@ const emptyResponse = () => ({
   pageSize: 12,
 })
 
-// 호출마다 resolve를 밖으로 꺼내 둔다. 응답 시점을 테스트가 정한다.
+// 응답 시점을 테스트가 정한다. 요청은 실제로 나가고 MSW가 잡는다.
 const deferredFetch = () => {
-  const pending: Array<(response: Response) => void> = []
-  const fetchMock = vi.fn<typeof fetch>(
-    () => new Promise<Response>((resolve) => pending.push(resolve)),
-  )
-  vi.stubGlobal('fetch', fetchMock)
-
-  const takeNext = () => {
-    const resolve = pending.shift()
-    if (!resolve) throw new Error('대기 중인 요청이 없다')
-    return resolve
-  }
-
+  const api = deferredGet('*/api/products')
   return {
-    settle: (body: unknown) => takeNext()(new Response(JSON.stringify(body))),
-    // 중단이 아니라 실제 실패 응답이어야 갱신 실패와 취소가 섞이지 않는다.
-    fail: () =>
-      takeNext()(
-        new Response(
-          JSON.stringify({ message: '상품 목록을 불러오지 못했습니다.' }),
-          { status: 500 },
-        ),
-      ),
+    ...api,
     requestedPages: () =>
-      fetchMock.mock.calls.map((call) =>
-        new URL(String(call[0]), 'http://test').searchParams.get('page'),
-      ),
-    callCount: () => fetchMock.mock.calls.length,
+      api.requestedUrls.map((url) => url.searchParams.get('page')),
   }
 }
 
@@ -123,10 +103,6 @@ beforeEach(() => {
   // URL은 문서 하나를 공유한다. 앞 테스트가 남긴 조건이 다음 테스트의 시작점이 되지 않게 한다.
   window.history.replaceState(null, '', '/products')
   window.dispatchEvent(new PopStateEvent('popstate'))
-})
-
-afterEach(() => {
-  vi.unstubAllGlobals()
 })
 
 describe('조건을 바꾸는 동안의 목록', () => {

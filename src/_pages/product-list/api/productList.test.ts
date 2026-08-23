@@ -1,8 +1,11 @@
+import { HttpResponse, http } from 'msw'
 import { keepPreviousData } from '@tanstack/react-query'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { server } from '@/test/msw/server'
 import {
   fetchProducts,
   productListQueries,
+  productListRequestUrl,
   productListScenarioValues,
   type ProductListCondition,
 } from './productList'
@@ -10,6 +13,9 @@ import {
 // 조건 객체 하나가 key와 요청 양쪽의 근원이다. key만 다르거나 요청만 다르면
 // 캐시가 화면과 어긋난다. 그래서 key 계층과 요청 URL을 같은 파일에서 검증한다.
 // 실패 표현과 타임아웃은 전송 계층의 책임이라 shared/api/http.test.ts가 맡는다.
+//
+// URL 조립은 순수 함수라 네트워크 없이 확인한다. 그다음 실제로 나간 요청을 MSW로 받아
+// 조립한 URL이 그대로 전송되는지까지 이어서 본다. 조립만 보면 요청 경로가 바뀌어도 통과한다.
 
 const defaultCondition: ProductListCondition = {
   q: '',
@@ -20,76 +26,109 @@ const defaultCondition: ProductListCondition = {
   scenario: null,
 }
 
-const emptyListResponse = () =>
-  new Response(
-    JSON.stringify({
-      products: [],
-      categories: [],
-      totalCount: 0,
-      page: 1,
-      pageSize: 12,
+// 서버 실행은 자기 주소를 몰라 절대 URL을 만들어 요청한다. node 환경의 fetch도 같다.
+const TEST_ORIGIN = 'http://app.test'
+
+// 나간 요청을 그대로 받아 둔다. 응답 본문은 이 파일의 관심사가 아니라 최소로 둔다.
+const recordRequestedUrls = () => {
+  const requested: string[] = []
+  server.use(
+    http.get('*/api/products', ({ request }) => {
+      requested.push(request.url)
+      return HttpResponse.json({
+        products: [],
+        categories: [],
+        totalCount: 0,
+        page: 1,
+        pageSize: 12,
+      })
     }),
   )
-
-const stubFetch = () => {
-  const fetchMock = vi
-    .fn<typeof fetch>()
-    .mockImplementation(() => Promise.resolve(emptyListResponse()))
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
+  return requested
 }
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
-
-describe('fetchProducts', () => {
-  it('기본 정렬을 포함한 모든 조건을 명시해 요청한다', async () => {
-    const fetchMock = stubFetch()
-
-    await fetchProducts(defaultCondition)
-
-    expect(String(fetchMock.mock.calls[0][0])).toBe(
+describe('productListRequestUrl', () => {
+  it('기본 정렬을 포함한 모든 조건을 명시해 조립한다', () => {
+    expect(productListRequestUrl(defaultCondition)).toBe(
       '/api/products?category=all&sort=latest&page=1&pageSize=12',
     )
   })
 
-  it('검색어가 있으면 q를 포함하고, 비어 있으면 뺀다', async () => {
-    const fetchMock = stubFetch()
+  it('빈 검색어는 조건이 아니므로 URL에서 뺀다', () => {
+    expect(productListRequestUrl(defaultCondition)).not.toContain('q=')
+    expect(productListRequestUrl({ ...defaultCondition, q: '니트' })).toContain(
+      'q=%EB%8B%88%ED%8A%B8',
+    )
+  })
 
-    await fetchProducts({
-      q: '니트',
-      category: 'casual',
-      sort: 'price-asc',
-      page: 2,
-      pageSize: 12,
-      scenario: null,
+  it('origin을 받으면 절대 URL로, 받지 않으면 상대 경로로 만든다', () => {
+    // 브라우저는 상대 경로를 쓴다. origin은 전송 위치일 뿐이라 조건에 넣지 않는다.
+    expect(productListRequestUrl(defaultCondition, TEST_ORIGIN)).toBe(
+      `${TEST_ORIGIN}/api/products?category=all&sort=latest&page=1&pageSize=12`,
+    )
+  })
+})
+
+describe('fetchProducts', () => {
+  it('조립한 URL이 그대로 요청으로 나간다', async () => {
+    const requested = recordRequestedUrls()
+
+    await fetchProducts(
+      {
+        q: '니트',
+        category: 'casual',
+        sort: 'price-asc',
+        page: 2,
+        pageSize: 12,
+        scenario: null,
+      },
+      { origin: TEST_ORIGIN },
+    )
+
+    expect(requested).toEqual([
+      `${TEST_ORIGIN}/api/products?q=%EB%8B%88%ED%8A%B8&category=casual&sort=price-asc&page=2&pageSize=12`,
+    ])
+  })
+
+  it('응답 본문을 조회 결과로 돌려준다', async () => {
+    server.use(
+      http.get('*/api/products', () =>
+        HttpResponse.json({
+          products: [],
+          categories: [],
+          totalCount: 7,
+          page: 1,
+          pageSize: 12,
+        }),
+      ),
+    )
+
+    const response = await fetchProducts(defaultCondition, {
+      origin: TEST_ORIGIN,
     })
 
-    const requestedUrl = String(fetchMock.mock.calls[0][0])
-    expect(requestedUrl).toContain('q=%EB%8B%88%ED%8A%B8')
-    expect(requestedUrl).toContain('category=casual')
-    expect(requestedUrl).toContain('sort=price-asc')
-    expect(requestedUrl).toContain('page=2')
+    expect(response.totalCount).toBe(7)
   })
 
   // 재현 조건은 응답 시점을 바꾸므로 실제 요청까지 내려가야 한다.
   // 여기서 끊기면 URL에 slow를 넣어도 평소 응답이 와서 Before를 녹화할 수 없다.
   it('재현 조건이 있으면 scenario를 요청에 붙이고, 없으면 뺀다', async () => {
-    const fetchMock = stubFetch()
+    const requested = recordRequestedUrls()
 
     // 세 값 모두 실제 요청까지 내려가야 여섯 상태를 화면에서 재현할 수 있다.
     for (const scenario of productListScenarioValues) {
-      await fetchProducts({ ...defaultCondition, scenario })
+      await fetchProducts(
+        { ...defaultCondition, scenario },
+        { origin: TEST_ORIGIN },
+      )
     }
-    const requested = fetchMock.mock.calls.map((call) => String(call[0]))
     productListScenarioValues.forEach((scenario, index) => {
       expect(requested[index]).toContain(`scenario=${scenario}`)
     })
 
-    await fetchProducts(defaultCondition)
-    expect(requested.length).toBe(productListScenarioValues.length)
-    expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('scenario')
+    await fetchProducts(defaultCondition, { origin: TEST_ORIGIN })
+    expect(requested).toHaveLength(productListScenarioValues.length + 1)
+    expect(requested.at(-1)).not.toContain('scenario')
   })
 })
 
