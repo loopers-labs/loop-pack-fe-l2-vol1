@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { GET } from "./route";
 
 const request = (query = "") =>
@@ -11,7 +11,7 @@ describe("GET /api/home", () => {
     vi.unstubAllEnvs();
   });
 
-  it("returns banner, categories, popular products, and new products", async () => {
+  test("returns banner, categories, popular products, and new products", async () => {
     const response = await request();
     const body = await response.json();
 
@@ -36,7 +36,7 @@ describe("GET /api/home", () => {
     ).toEqual(["p26", "p6", "p27", "p24", "p1", "p28"]);
   });
 
-  it("keeps banner and categories in the empty scenario", async () => {
+  test("keeps banner and categories in the empty scenario", async () => {
     const response = await request("?scenario=empty");
     const body = await response.json();
     expect(body.banner).toBeDefined();
@@ -45,7 +45,7 @@ describe("GET /api/home", () => {
     expect(body.newProducts).toEqual([]);
   });
 
-  it("returns a deterministic error scenario", async () => {
+  test("returns a deterministic error scenario", async () => {
     const response = await request("?scenario=error");
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({
@@ -53,7 +53,7 @@ describe("GET /api/home", () => {
     });
   });
 
-  it("keeps the home response pending for 1.5 seconds in the slow scenario", async () => {
+  test("keeps the home response pending for 1.5 seconds in the slow scenario", async () => {
     vi.useFakeTimers();
     vi.stubEnv("NODE_ENV", "production");
 
@@ -77,7 +77,7 @@ describe("GET /api/home", () => {
     expect(body.newProducts).toHaveLength(6);
   });
 
-  it("rejects an unknown scenario", async () => {
+  test("rejects an unknown scenario", async () => {
     const response = await request("?scenario=unknown");
 
     expect(response.status).toBe(400);

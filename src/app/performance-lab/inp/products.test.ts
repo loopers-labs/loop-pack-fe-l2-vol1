@@ -1,14 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, test } from "vitest";
 
 describe("Advanced A performance products", () => {
-  it("provides exactly 24 unique cards for the measurement route", async () => {
+  test("provides exactly 24 unique cards for the measurement route", async () => {
     const { performanceLabProducts } = await import("./products");
 
     expect(performanceLabProducts).toHaveLength(24);
-    expect(new Set(performanceLabProducts.map((product) => product.id)).size).toBe(24);
+    expect(
+      new Set(performanceLabProducts.map((product) => product.id)).size,
+    ).toBe(24);
   });
 
-  it("keeps the required presentation calculation deterministic and observable", async () => {
+  test("keeps the required presentation calculation deterministic and observable", async () => {
     const { calculateCardPresentation } = await import("./products");
 
     const first = calculateCardPresentation("p1", false);
