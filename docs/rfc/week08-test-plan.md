@@ -82,6 +82,18 @@ afterAll(() => {
 -> MSW handler
 ```
 
+React Query와 URL 상태를 감싸는 render 경계도 공통 helper로 모았다. `renderWithAppProviders`는 production 코드와 같은 `createAppQueryClient()`를 사용하고, URL 상태가 필요한 테스트만 `NuqsTestingAdapter`를 켠다. 이렇게 해서 QueryClient의 `retry`, `staleTime`, dehydration 정책이나 `NuqsTestingAdapter`의 `hasMemory` 같은 전제가 테스트 파일마다 달라지지 않게 했다.
+
+```text
+테스트 컴포넌트
+-> renderWithAppProviders
+-> createAppQueryClient()
+-> 선택적으로 NuqsTestingAdapter
+-> Testing Library render
+```
+
+기존에는 컴포넌트 테스트에서 `new QueryClient({ retry: false })`를 직접 만들었다. 지금은 앱 QueryClient의 실제 설정인 `retry: 1`을 그대로 사용한다. 그래서 에러 UI 테스트도 첫 실패 즉시 실패 화면이 보인다고 가정하지 않고, 자동 retry까지 실패한 뒤 에러 화면이 나타나는지 확인한다.
+
 API 함수와 query factory 테스트도 `fetch` spy 대신 실제 `fetch`를 호출하고, MSW handler에서 `request.url`을 관찰한다. AbortSignal은 원본 객체 참조를 직접 비교하지 않았다. MSW handler에서 보이는 `request.signal`은 fetch option으로 넘긴 signal과 같은 참조라고 보장하기 어렵기 때문이다. 대신 이미 abort된 signal을 넘겼을 때 요청이 handler까지 도달하지 않고 `AbortError`로 실패하는 동작을 검증했다.
 
 현재 기준으로 아래 검색 결과는 없다.

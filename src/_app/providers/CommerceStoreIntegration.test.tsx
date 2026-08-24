@@ -1,8 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +9,7 @@ import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
 import { server } from "@/shared/config/vitest/mswServer";
+import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
 import { ProductSection } from "@/widgets/product-card";
 
 vi.mock("next/image", () => ({
@@ -18,26 +17,20 @@ vi.mock("next/image", () => ({
 }));
 
 function renderHomeSectionWithProductList() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-
   const sharedProduct = createProduct({
     id: "p1",
     name: "같은 상품",
   });
 
-  render(
-    <QueryClientProvider client={queryClient}>
-      <NuqsTestingAdapter searchParams="" hasMemory>
-        <ProductSection title="인기 상품" products={[sharedProduct]} />
-        <ProductListPageClient />
-      </NuqsTestingAdapter>
-    </QueryClientProvider>,
+  renderWithAppProviders(
+    <>
+      <ProductSection title="인기 상품" products={[sharedProduct]} />
+      <ProductListPageClient />
+    </>,
+    {
+      route: "/products",
+      withNuqs: true,
+    },
   );
 }
 

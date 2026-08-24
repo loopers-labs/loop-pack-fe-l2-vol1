@@ -1,5 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { createElement, Suspense } from "react";
@@ -12,28 +11,21 @@ import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 import type { Product } from "@/entities/product";
 import { server } from "@/shared/config/vitest/mswServer";
+import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
 }));
 
-function renderHomePageClient() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+const queryRetryTimeout = { timeout: 3000 };
 
-  render(
-    <QueryClientProvider client={queryClient}>
-      <HomeErrorBoundary>
-        <Suspense fallback={<HomeLoading />}>
-          <HomePageClient />
-        </Suspense>
-      </HomeErrorBoundary>
-    </QueryClientProvider>,
+function renderHomePageClient() {
+  renderWithAppProviders(
+    <HomeErrorBoundary>
+      <Suspense fallback={<HomeLoading />}>
+        <HomePageClient />
+      </Suspense>
+    </HomeErrorBoundary>,
   );
 }
 
@@ -60,20 +52,26 @@ describe("HomePageClient", () => {
   });
 
   it("홈 데이터 요청이 실패하면 에러 상태와 다시 시도 버튼을 보여준다", async () => {
+    let requestCount = 0;
     server.use(
-      http.get("/api/home", () =>
-        HttpResponse.json(
+      http.get("/api/home", () => {
+        requestCount += 1;
+
+        return HttpResponse.json(
           { message: "홈 데이터를 불러오지 못했습니다." },
           {
             status: 500,
           },
-        ),
-      ),
+        );
+      }),
     );
 
     renderHomePageClient();
 
-    expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("홈 데이터를 불러오지 못했습니다.", {}, queryRetryTimeout),
+    ).toBeInTheDocument();
+    expect(requestCount).toBe(2);
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
   });
 
@@ -83,7 +81,7 @@ describe("HomePageClient", () => {
       http.get("/api/home", () => {
         requestCount += 1;
 
-        if (requestCount === 1) {
+        if (requestCount <= 2) {
           return HttpResponse.json(
             { message: "홈 데이터를 불러오지 못했습니다." },
             {
@@ -113,14 +111,17 @@ describe("HomePageClient", () => {
 
     renderHomePageClient();
 
-    expect(await screen.findByText("홈 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("홈 데이터를 불러오지 못했습니다.", {}, queryRetryTimeout),
+    ).toBeInTheDocument();
+    expect(requestCount).toBe(2);
 
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
     expect(
       await screen.findByRole("heading", { name: "매일 새롭게 발견하는 취향", level: 1 }),
     ).toBeInTheDocument();
-    expect(requestCount).toBe(2);
+    expect(requestCount).toBe(3);
   });
 
   it("상품 배열이 비어 있으면 상품 섹션의 빈 상태를 보여준다", async () => {

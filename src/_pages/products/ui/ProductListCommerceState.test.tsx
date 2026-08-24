@@ -1,8 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,27 +13,22 @@ import {
   createMockProduct,
   createMockProductListResponse,
 } from "@/shared/testing/commerceFixtures";
+import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
 }));
 
 function renderProductListWithHeader() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
+  renderWithAppProviders(
+    <>
+      <CommerceHeader />
+      <ProductListPageClient />
+    </>,
+    {
+      route: "/products",
+      withNuqs: true,
     },
-  });
-
-  render(
-    <QueryClientProvider client={queryClient}>
-      <NuqsTestingAdapter searchParams="" hasMemory>
-        <CommerceHeader />
-        <ProductListPageClient />
-      </NuqsTestingAdapter>
-    </QueryClientProvider>,
   );
 }
 

@@ -1,8 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
@@ -16,6 +14,7 @@ import {
   createMockProduct,
   createMockProductListResponse,
 } from "@/shared/testing/commerceFixtures";
+import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
@@ -29,6 +28,7 @@ const prefetchedProduct = createMockProduct({
   id: "p2",
   name: "미리 가져온 상품",
 });
+const queryRetryTimeout = { timeout: 3000 };
 let productRequestUrls: string[] = [];
 
 function renderProductListPageClient({
@@ -38,23 +38,12 @@ function renderProductListPageClient({
   searchParams: string;
   onUrlUpdate?: ReturnType<typeof vi.fn<OnUrlUpdateFunction>>;
 }) {
-  window.history.replaceState(null, "", `/products${searchParams}`);
-
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
+  renderWithAppProviders(<ProductListPageClient />, {
+    route: "/products",
+    searchParams,
+    onUrlUpdate,
+    withNuqs: true,
   });
-
-  render(
-    <QueryClientProvider client={queryClient}>
-      <NuqsTestingAdapter searchParams={searchParams} hasMemory onUrlUpdate={onUrlUpdate}>
-        <ProductListPageClient />
-      </NuqsTestingAdapter>
-    </QueryClientProvider>,
-  );
 
   return { onUrlUpdate };
 }
@@ -362,7 +351,7 @@ describe("ProductListPageClient", () => {
       mockProductsResponse(() => {
         requestCount += 1;
 
-        if (requestCount === 1) {
+        if (requestCount <= 2) {
           return HttpResponse.json(
             { message: "상품 목록을 불러오지 못했습니다." },
             {
@@ -381,7 +370,10 @@ describe("ProductListPageClient", () => {
         searchParams: "",
       });
 
-      expect(await screen.findByText("상품 목록을 불러오지 못했습니다.")).toBeInTheDocument();
+      expect(
+        await screen.findByText("상품 목록을 불러오지 못했습니다.", {}, queryRetryTimeout),
+      ).toBeInTheDocument();
+      expect(requestCount).toBe(2);
       expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
       expect(screen.queryByText("조건에 맞는 상품이 없습니다.")).not.toBeInTheDocument();
       expect(screen.queryByLabelText("상품 목록")).not.toBeInTheDocument();
@@ -389,12 +381,18 @@ describe("ProductListPageClient", () => {
       await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
       expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
+      expect(requestCount).toBe(3);
       expect(screen.queryByText("상품 목록을 불러오지 못했습니다.")).not.toBeInTheDocument();
     });
 
     it("기존 목록 갱신에 실패하면 기존 상품 목록을 유지하고 다시 시도할 수 있다", async () => {
+      let failedVisibleRefreshRequestCount = 0;
       mockProductsResponse((url) => {
         if (url.searchParams.get("category") === "goods") {
+          if (url.searchParams.get("page") !== "2") {
+            failedVisibleRefreshRequestCount += 1;
+          }
+
           return HttpResponse.json(
             { message: "상품 목록을 불러오지 못했습니다." },
             {
@@ -427,8 +425,13 @@ describe("ProductListPageClient", () => {
       await userEvent.click(screen.getByRole("option", { name: "뷰티·잡화" }));
 
       expect(
-        await screen.findByText("상품 목록을 갱신하지 못했습니다. 기존 목록을 계속 보여드립니다."),
+        await screen.findByText(
+          "상품 목록을 갱신하지 못했습니다. 기존 목록을 계속 보여드립니다.",
+          {},
+          queryRetryTimeout,
+        ),
       ).toBeInTheDocument();
+      expect(failedVisibleRefreshRequestCount).toBe(2);
       expect(screen.getByText("첫 번째 상품")).toBeInTheDocument();
       expect(screen.queryByText("미리 가져온 상품")).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
