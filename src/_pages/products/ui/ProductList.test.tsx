@@ -149,7 +149,7 @@ describe("week8 검증대상 5 — 목록 빈 결과", () => {
   });
 
   test("경계: 총 개수는 있으나 현재 페이지에 상품이 없으면 그 페이지가 비었음을 알린다", async () => {
-    // 경계: 전체 건수(30)는 있지만 이 페이지의 products 가 빈 응답 → 0건 안내와 다른 문구.
+    // 전체 건수(30)는 있지만 이 페이지의 products 가 빈 응답 → 0건 안내와 다른 문구.
     server.use(
       http.get(PRODUCTS_ENDPOINT, () =>
         HttpResponse.json(makeResponse([], { totalCount: 30, page: 1 })),
@@ -328,8 +328,8 @@ describe("week8 검증대상 8 — 카테고리 변경 → 목록 변경", () =>
 });
 
 describe("week8 검증대상 9 — 정렬 변경 → 순서 변경", () => {
-  test("정렬을 바꾸면 보이는 상품이 가격 순서대로 재배열된다", async () => {
-    // 실제 가격을 가진 상품들 — 목이 서버처럼 sort 파라미터대로 이 데이터를 정렬해 돌려준다.
+  // 목이 서버처럼 sort 파라미터대로 같은 상품 집합을 정렬해 돌려준다.
+  function mockPriceSortedProducts() {
     const products = [
       { ...makeProduct("mid", "중간가격"), price: 20000 },
       { ...makeProduct("high", "높은가격"), price: 30000 },
@@ -349,18 +349,26 @@ describe("week8 검증대상 9 — 정렬 변경 → 순서 변경", () => {
         return HttpResponse.json(makeResponse(sorted));
       }),
     );
+  }
 
+  test("높은 가격순으로 바꾸면 비싼 상품이 먼저 오도록 재배열된다", async () => {
+    mockPriceSortedProducts();
     renderFiltersAndList();
     await screen.findByText("중간가격");
 
     await userEvent.selectOptions(screen.getByLabelText("정렬"), "price-desc");
 
-    // 높은 가격이 먼저 오도록 전체 순서가 재배열된다.
     await waitFor(() => expect(firstProductName()).toBe("높은가격"));
     expect(productNames()).toEqual(["높은가격", "중간가격", "낮은가격"]);
+  });
 
-    // 경계: 낮은 가격순으로 바꾸면 순서가 뒤집힌다.
+  test("경계: 낮은 가격순으로 바꾸면 싼 상품이 먼저 오도록 재배열된다", async () => {
+    mockPriceSortedProducts();
+    renderFiltersAndList();
+    await screen.findByText("중간가격");
+
     await userEvent.selectOptions(screen.getByLabelText("정렬"), "price-asc");
+
     await waitFor(() => expect(firstProductName()).toBe("낮은가격"));
     expect(productNames()).toEqual(["낮은가격", "중간가격", "높은가격"]);
   });

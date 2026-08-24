@@ -33,7 +33,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("week8 검증대상 12 — 담기 → 헤더 개수 · 다시 누르면 빠짐", () => {
-  test("담으면 헤더 개수가 오르고, 다시 누르면 원래대로 빠진다", async () => {
+  test("담으면 헤더 개수가 오른다", async () => {
     render(
       <>
         <CommerceHeaderCounts />
@@ -47,8 +47,20 @@ describe("week8 검증대상 12 — 담기 → 헤더 개수 · 다시 누르면
     expect(
       screen.getByRole("button", { name: "장바구니", pressed: true }),
     ).toBeInTheDocument();
+  });
 
-    // 경계: 담긴 상품을 다시 누르면 빠지고 개수가 원복된다.
+  test("경계: 담긴 상품을 다시 누르면 헤더 개수가 0으로 원복된다", async () => {
+    render(
+      <>
+        <CommerceHeaderCounts />
+        <ProductActions productId="p1" />
+      </>,
+    );
+
+    // 뺄 게 있어야 하므로 먼저 담는다(전제). 초점은 다시 눌러 원복되는 것.
+    await userEvent.click(screen.getByRole("button", { name: "장바구니" }));
+    expect(cartStatus()).toHaveAccessibleName("장바구니 1");
+
     await userEvent.click(screen.getByRole("button", { name: "장바구니" }));
     expect(cartStatus()).toHaveAccessibleName("장바구니 0");
     expect(
