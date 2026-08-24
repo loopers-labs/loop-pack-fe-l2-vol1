@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { products } from '@/entities/product/api/commerce';
+import { products } from '@/app/api/_data/commerce';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const productEntries = products.map((product) => ({

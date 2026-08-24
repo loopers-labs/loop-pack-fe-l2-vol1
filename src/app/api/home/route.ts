@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { waitForMockApi } from "@/app/api/_data/mock";
-import { getHomeData, type HomeResponse } from "@/_pages/home";
-import type { ApiErrorResponse, MockApiScenario } from "@/app/api/_data/types";
+import { getHomeData } from "@/app/api/_data/homeService";
+import type {
+  ApiErrorResponse,
+  HomeResponse,
+  MockApiScenario,
+} from "@/types/commerce";
 
 const scenarioValues = ["empty", "error", "slow"] as const satisfies
   readonly MockApiScenario[];
@@ -21,7 +25,11 @@ export async function GET(
     );
   }
 
-  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
+  if (scenario === "slow") {
+    await waitForMockApi(1_500);
+  } else {
+    await waitForMockApi();
+  }
 
   if (scenario === "error") {
     return NextResponse.json(

@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
+
+import '@/test/setupDom';
 import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { render, screen } from '@testing-library/react';
+import { renderHook, act , render, screen } from '@testing-library/react';
+
 import userEvent from '@testing-library/user-event';
 import { useSelect } from '.';
 import type { SelectOption } from '.';
@@ -111,6 +114,26 @@ describe('useSelect', () => {
 
       await user.keyboard('{Escape}');
       expect(screen.queryByTestId('option-0')).not.toBeInTheDocument();
+    });
+
+    it('외부 영역을 클릭하면 닫힌다', async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <TestSelect />
+          <button type="button">외부 영역</button>
+        </>,
+      );
+
+      await user.click(screen.getByRole('combobox'));
+      expect(
+        screen.getByRole('option', { name: /사과/ }),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: '외부 영역' }));
+      expect(
+        screen.queryByRole('option', { name: /사과/ }),
+      ).not.toBeInTheDocument();
     });
 
     it('ArrowDown으로 열 수 있다', async () => {
@@ -253,21 +276,21 @@ describe('useSelect', () => {
       expect(props['aria-hidden']).toBe(true);
     });
 
-    it('getItemProps가 상태 data 속성을 반환한다', () => {
+    it('getItemProps가 일반 옵션과 disabled 옵션의 접근성 상태를 반환한다', () => {
       const { result } = renderHook(() => useSelect({ options: FRUITS }));
 
       const normalProps = result.current.getItemProps({
         item: FRUITS[0],
         index: 0,
       });
-      expect(normalProps['data-disabled']).toBe(false);
+      expect(normalProps.role).toBe('option');
       expect(normalProps['aria-disabled']).toBe(false);
 
       const disabledProps = result.current.getItemProps({
         item: FRUITS[2],
         index: 2,
       });
-      expect(disabledProps['data-disabled']).toBe(true);
+      expect(disabledProps.role).toBe('option');
       expect(disabledProps['aria-disabled']).toBe(true);
     });
   });

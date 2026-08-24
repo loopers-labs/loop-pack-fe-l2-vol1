@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { waitForMockApi } from "@/app/api/_data/mock";
-import { getProductById, getProductList } from "@/entities/product/api/productService";
+import { getProductById, getProductList } from "@/app/api/_data/productService";
 import {
   PRODUCT_SORTS,
   CATEGORY_OPTIONS,
 } from "@/entities/product/model/types";
 import type {
+  Product,
   ProductListResponse,
   ProductSort,
 } from "@/entities/product/model/types";
 import type {
   ApiErrorResponse,
   MockApiScenario,
-} from "@/app/api/_data/types";
+} from "@/types/commerce";
+import { parsePositiveInteger } from "@/shared/lib/parsePositiveInteger";
 
 const scenarioValues = ["empty", "error", "slow"] as const satisfies readonly MockApiScenario[];
 
@@ -22,12 +24,9 @@ const isProductSort = (value: string): value is ProductSort =>
 const isMockApiScenario = (value: string): value is MockApiScenario =>
   scenarioValues.some((scenario) => scenario === value);
 
-const isPositiveInteger = (value: string | null) =>
-  value !== null && /^[1-9]\d*$/.test(value);
-
 export async function GET(
   request: NextRequest,
-): Promise<NextResponse<ProductListResponse | ApiErrorResponse>> {
+): Promise<NextResponse<Product | ProductListResponse | ApiErrorResponse>> {
   const params = request.nextUrl.searchParams;
   const scenario = params.get("scenario");
   const q = params.get("q")?.trim().toLocaleLowerCase("ko") ?? "";
@@ -35,8 +34,8 @@ export async function GET(
   const sort = params.get("sort");
   const pageValue = params.get("page") ?? "1";
   const pageSizeValue = params.get("pageSize") ?? "12";
-  const page = Number(pageValue);
-  const pageSize = Number(pageSizeValue);
+  const page = parsePositiveInteger(pageValue);
+  const pageSize = parsePositiveInteger(pageSizeValue);
 
   if (scenario !== null && !isMockApiScenario(scenario)) {
     return NextResponse.json(
@@ -55,11 +54,12 @@ export async function GET(
   const validCategory =
     category === null ||
     (CATEGORY_OPTIONS as readonly string[]).includes(category);
-  const validPage = isPositiveInteger(pageValue) && Number.isSafeInteger(page);
-  const validPageSize =
-    isPositiveInteger(pageSizeValue) && Number.isSafeInteger(pageSize) && pageSize <= 24;
-
-  if (!validCategory || !validPage || !validPageSize) {
+  if (
+    !validCategory ||
+    page === null ||
+    pageSize === null ||
+    pageSize > 24
+  ) {
     return NextResponse.json(
       { message: "요청 조건을 확인해주세요." },
       { status: 400 },
@@ -68,7 +68,11 @@ export async function GET(
 
   const id = params.get("id");
 
-  await waitForMockApi(scenario === "slow" ? 1_500 : 500);
+  if (scenario === "slow") {
+    await waitForMockApi(1_500);
+  } else {
+    await waitForMockApi();
+  }
 
   if (id) {
     const product = getProductById(id);
@@ -78,13 +82,7 @@ export async function GET(
         { status: 404 },
       );
     }
-    return NextResponse.json({
-      products: [product],
-      categories: [],
-      totalCount: 1,
-      page: 1,
-      pageSize: 1,
-    });
+    return NextResponse.json(product);
   }
 
   if (scenario === "error") {

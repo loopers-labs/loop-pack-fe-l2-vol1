@@ -1,3 +1,6 @@
+// @vitest-environment jsdom
+
+import '@/test/setupDom';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -51,8 +54,8 @@ function CustomClassNameDialog() {
       <Dialog.Trigger>
         <span>열기</span>
       </Dialog.Trigger>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/30" />
-      <Dialog.Content className="fixed inset-0 z-[51] flex items-center justify-center p-6">
+      <Dialog.Overlay className="custom-overlay" />
+      <Dialog.Content className="custom-content">
         <div className="rounded-2xl bg-white p-7">
           <Dialog.Title>Custom Dialog</Dialog.Title>
           <Dialog.Close>닫기</Dialog.Close>
@@ -181,16 +184,18 @@ describe('Dialog', () => {
       expect(dialog).toHaveAttribute('aria-modal', 'true');
     });
 
-    it('custom className을 넘겨도 overlay 클릭으로 닫힌다', async () => {
+    it('custom className을 전달하고 overlay를 클릭하면 닫힌다', async () => {
       const user = userEvent.setup();
       render(<CustomClassNameDialog />);
 
       await user.click(screen.getByText('열기'));
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('custom-content');
 
-      // overlay 영역 클릭 (Dialog.Overlay에 해당)
-      const overlay = document.querySelector('.fixed.inset-0.z-50');
+      const overlay = document.querySelector('[aria-hidden="true"]');
       expect(overlay).toBeInTheDocument();
+      expect(overlay).toHaveClass('custom-overlay');
+
       await user.click(overlay as HTMLElement);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });

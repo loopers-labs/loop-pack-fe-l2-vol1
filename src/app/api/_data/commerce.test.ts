@@ -10,18 +10,18 @@ const imageManifestPath = join(
   "docs/assets/week-05-product-images.md",
 );
 
-describe("commerce fixture", () => {
-  it("uses at least three explicit product brands", () => {
+describe("상품 fixture", () => {
+  it("서로 다른 상품 브랜드를 세 개 이상 제공한다", () => {
     expect(new Set(products.map((product) => product.brand)).size).toBeGreaterThanOrEqual(3);
   });
 
-  it("uses a neutral local brand for products without an explicit brand", () => {
+  it("브랜드가 없는 상품에는 중립적인 로컬 브랜드를 사용한다", () => {
     expect(products.find((product) => product.id === "p1")?.brand).toBe(
       "Loopers Select",
     );
   });
 
-  it("provides deterministic mock discounts while retaining full-price products", () => {
+  it("할인 상품의 정가를 고정하고 일반가 상품도 유지한다", () => {
     const discountedProducts = products.filter(
       (product) => product.originalPrice !== null,
     );
@@ -48,7 +48,7 @@ describe("commerce fixture", () => {
     });
   });
 
-  it("matches p1 to the pants source and gives numeric sizes only to p1", () => {
+  it("상품별로 지정한 이름과 사이즈 및 배송 정보를 유지한다", () => {
     const productsWithSizes = products.filter((product) => product.sizes.length > 0);
 
     expect(productsWithSizes.map((product) => product.id)).toEqual(["p1"]);
@@ -72,11 +72,11 @@ describe("commerce fixture", () => {
     );
   });
 
-  it("uses p6 for the home banner image", () => {
+  it("홈 배너는 p6 상품 이미지를 사용한다", () => {
     expect(homeBanner.image).toBe("/images/products/p6.jpg");
   });
 
-  it("keeps all 30 product images non-empty, unique JPEG files", () => {
+  it("상품 이미지 30개는 비어 있지 않은 서로 다른 JPEG 파일이다", () => {
     const hashes = Array.from({ length: 30 }, (_, index) => {
       const imagePath = join(productImagesDirectory, `p${index + 1}.jpg`);
 
@@ -90,7 +90,7 @@ describe("commerce fixture", () => {
     expect(new Set(hashes).size).toBe(30);
   });
 
-  it("records the local image manifest outside public assets", () => {
+  it("로컬 이미지 출처 문서를 public 디렉터리 밖에 기록한다", () => {
     expect(existsSync(join(productImagesDirectory, "SOURCES.md"))).toBe(false);
     expect(existsSync(imageManifestPath)).toBe(true);
 

@@ -1,4 +1,4 @@
-import { PRODUCT_LIST_DEFAULTS } from '@/entities/product/api/productService';
+import { PRODUCT_LIST_DEFAULTS } from '@/entities/product/model/constants';
 import { ProductListIntro } from './ProductListIntro';
 
 function CardSkeleton() {
@@ -22,6 +22,9 @@ export function ProductListSkeleton() {
   return (
     <main className="min-h-screen px-8 py-10">
       <ProductListIntro />
+      <p role="status" className="sr-only">
+        상품을 불러오는 중입니다.
+      </p>
       <div className="mt-6 flex flex-wrap gap-4">
         <div className="h-10 w-48 rounded-lg bg-border/40" />
         <div className="h-10 w-28 rounded-lg bg-border/40" />
