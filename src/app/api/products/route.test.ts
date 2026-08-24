@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { GET } from "./route";
 
 const request = (query = "") =>
@@ -26,7 +26,7 @@ describe("GET /api/products", () => {
     vi.unstubAllEnvs();
   });
 
-  it("preserves Week 04 field shape while using the mapped source identity", async () => {
+  test("preserves Week 04 field shape while using the mapped source identity", async () => {
     const response = await request();
     const body = await response.json();
 
@@ -78,7 +78,7 @@ describe("GET /api/products", () => {
     expect(allCategoryBody.totalCount).toBe(30);
   });
 
-  it("matches representative source products across all five image groups", async () => {
+  test("matches representative source products across all five image groups", async () => {
     const body = await (await request("?pageSize=24")).json();
     const secondPageBody = await (await request("?page=2&pageSize=24")).json();
     const products = [...body.products, ...secondPageBody.products];
@@ -129,7 +129,7 @@ describe("GET /api/products", () => {
     ]);
   });
 
-  it("returns one unique local image for every product", async () => {
+  test("returns one unique local image for every product", async () => {
     const firstPageBody = await (await request("?pageSize=24")).json();
     const secondPageBody = await (await request("?pageSize=24&page=2")).json();
     const products = [...firstPageBody.products, ...secondPageBody.products];
@@ -145,7 +145,7 @@ describe("GET /api/products", () => {
     );
   });
 
-  it("searches explicit brands and source names without case sensitivity", async () => {
+  test("searches explicit brands and source names without case sensitivity", async () => {
     const response = await request(
       "?q=%EC%8A%A4%ED%83%A0%EB%A6%AC&pageSize=24",
     );
@@ -166,7 +166,7 @@ describe("GET /api/products", () => {
     ).toEqual(["p1"]);
   });
 
-  it("filters category and sorts popularity deterministically", async () => {
+  test("filters category and sorts popularity deterministically", async () => {
     const response = await request(
       "?category=digital&sort=popular&pageSize=24",
     );
@@ -197,7 +197,7 @@ describe("GET /api/products", () => {
     ]);
   });
 
-  it.each([
+  test.each([
     [
       "latest",
       [
@@ -342,7 +342,7 @@ describe("GET /api/products", () => {
     expect(await allProductIds(sort)).toEqual(expectedIds);
   });
 
-  it("returns an empty page when page exceeds the filtered result", async () => {
+  test("returns an empty page when page exceeds the filtered result", async () => {
     const response = await request("?category=casual&page=9&pageSize=12");
     const body = await response.json();
     expect(response.status).toBe(200);
@@ -350,7 +350,7 @@ describe("GET /api/products", () => {
     expect(body.totalCount).toBe(6);
   });
 
-  it.each([
+  test.each([
     "?category=unknown",
     "?category=food",
     "?category=beauty",
@@ -372,7 +372,7 @@ describe("GET /api/products", () => {
     });
   });
 
-  it("validates request inputs before applying the error scenario", async () => {
+  test("validates request inputs before applying the error scenario", async () => {
     const response = await request("?scenario=error&page=0");
 
     expect(response.status).toBe(400);
@@ -381,7 +381,7 @@ describe("GET /api/products", () => {
     });
   });
 
-  it("supports deterministic empty and error scenarios", async () => {
+  test("supports deterministic empty and error scenarios", async () => {
     const emptyResponse = await request(
       "?scenario=empty&category=digital&page=2&pageSize=3",
     );
@@ -407,7 +407,7 @@ describe("GET /api/products", () => {
     });
   });
 
-  it("keeps the product response pending for 1.5 seconds in the slow scenario", async () => {
+  test("keeps the product response pending for 1.5 seconds in the slow scenario", async () => {
     vi.useFakeTimers();
     vi.stubEnv("NODE_ENV", "production");
 

@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, test } from "vitest";
 
 describe("HeroSection", () => {
-  it("renders the existing banner contract as a stable hero", async () => {
+  test("renders the existing banner contract as a stable hero", async () => {
     const { HeroSection } = await import("./HeroSection");
 
     const markup = renderToStaticMarkup(

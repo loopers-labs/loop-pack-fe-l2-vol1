@@ -51,10 +51,6 @@ export function buildProductListSearchParams(
     String(query.pageSize ?? PRODUCT_LIST_DEFAULTS.pageSize),
   );
 
-  // week7 테스트용 slow scenario
-  // TODO: 차주 과제 시작 시 제거
-  params.set("scenario", "slow");
-
   return params;
 }
 
