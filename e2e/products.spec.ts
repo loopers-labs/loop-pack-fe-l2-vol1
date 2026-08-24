@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 
 const mockApiPort = process.env.MOCK_API_PORT ?? "4010";
 const mockApiBaseURL = `http://127.0.0.1:${mockApiPort}`;
+const slowProductsDelayMs = 1_500;
 
 async function resetMockApi() {
   await fetch(`${mockApiBaseURL}/__test__/reset`, { method: "POST" });
@@ -49,13 +50,19 @@ test.describe("상품 목록 E2E", () => {
     await expect(page.getByLabel("상품 목록")).not.toBeVisible();
   });
 
-  test("mock API가 지연 응답하면 로딩 상태를 거쳐 상품 목록을 보여준다", async ({ page }) => {
+  test("mock API가 지연 응답해도 document 진입을 막지 않고 상품 목록으로 전환된다", async ({
+    page,
+  }) => {
     await setMockApiScenario({ products: "slow" });
 
-    const navigation = page.goto("/products", { waitUntil: "commit" });
+    const navigationStartedAt = performance.now();
+
+    await page.goto("/products", { waitUntil: "commit" });
+
+    const documentCommitElapsedMs = performance.now() - navigationStartedAt;
+    expect(documentCommitElapsedMs).toBeLessThan(slowProductsDelayMs);
 
     await expect(page.getByLabel("상품을 불러오는 중입니다.")).toBeVisible();
-    await navigation;
     await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).toBeVisible();
     await expect(page.getByLabel("상품을 불러오는 중입니다.")).not.toBeVisible();
   });

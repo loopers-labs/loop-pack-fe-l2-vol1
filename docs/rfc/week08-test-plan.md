@@ -168,23 +168,23 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 
 ### 테스트 대상 요약
 
-| 항목                                | 방법론      | 핵심 검증                                                          |
-| ----------------------------------- | ----------- | ------------------------------------------------------------------ |
-| 장바구니·위시리스트 개수 파생       | 단위 테스트 | id map에서 Header 개수가 올바르게 파생된다.                        |
-| URL 조건 → query key                | 단위 + 통합 | URL 조건이 query key와 실제 GET 요청 조건에 함께 반영된다.         |
-| 순수 로직                           | 단위 테스트 | 깨진 persist 값과 id set 입력이 안전한 상태로 정규화된다.          |
-| 목록 로딩 → 성공                    | 통합 + E2E  | 서버 fallback과 클라이언트 pending UI 이후 성공 목록이 렌더링된다. |
-| 목록 빈 결과                        | 통합 테스트 | 성공 + 0건이 에러와 구분된다.                                      |
-| 목록 에러                           | 통합 + E2E  | 최초 실패가 페이지를 깨지 않고 실패 화면과 retry로 드러난다.       |
-| 에러에서 재시도로 복구              | 통합 테스트 | retry 후 같은 화면에서 목록으로 복구된다.                          |
-| 카테고리 변경 → 목록 변경           | 통합 테스트 | `category` query와 목록이 함께 바뀐다.                             |
-| 정렬 변경 → 순서 변경               | 통합 테스트 | `sort` query와 목록 순서가 함께 바뀐다.                            |
-| 페이지 이동 → 목록 변경             | 통합 테스트 | `page` query, 새 요청 결과, 목록 시작점 스크롤이 함께 맞물린다.    |
-| 조작이 URL에 반영 · URL로 재진입    | 통합 + E2E  | 조작은 URL query와 요청 조건에 반영되고, 직접 진입도 복원된다.     |
-| 담기 → 헤더 개수 · 다시 누르면 빠짐 | 통합 테스트 | store 변경이 Header 개수에 반영되고 toggle 제거도 된다.            |
-| 뒤로·앞으로 가기로 필터 복원        | E2E 테스트  | history 이동 후 URL, 필터, 목록이 복원된다.                        |
-| 새로고침해도 필터 상태 유지         | E2E 테스트  | document 재요청 후에도 URL 조건이 유지된다.                        |
-| 목록 진입 → 담기 → 헤더 확인        | E2E 테스트  | production 페이지에서 담기 후 Header 개수가 바뀐다.                |
+| 항목                                | 방법론      | 핵심 검증                                                                                |
+| ----------------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| 장바구니·위시리스트 개수 파생       | 단위 테스트 | id map에서 Header 개수가 올바르게 파생된다.                                              |
+| URL 조건 → query key                | 단위 + 통합 | URL 조건이 query key와 실제 GET 요청 조건에 함께 반영된다.                               |
+| 순수 로직                           | 단위 테스트 | 깨진 persist 값과 id set 입력이 안전한 상태로 정규화된다.                                |
+| 목록 로딩 → 성공                    | 통합 + E2E  | slow 응답이 document 진입을 막지 않고 클라이언트 pending UI 이후 성공 목록이 렌더링된다. |
+| 목록 빈 결과                        | 통합 테스트 | 성공 + 0건이 에러와 구분된다.                                                            |
+| 목록 에러                           | 통합 + E2E  | 최초 실패가 페이지를 깨지 않고 실패 화면과 retry로 드러난다.                             |
+| 에러에서 재시도로 복구              | 통합 테스트 | retry 후 같은 화면에서 목록으로 복구된다.                                                |
+| 카테고리 변경 → 목록 변경           | 통합 테스트 | `category` query와 목록이 함께 바뀐다.                                                   |
+| 정렬 변경 → 순서 변경               | 통합 테스트 | `sort` query와 목록 순서가 함께 바뀐다.                                                  |
+| 페이지 이동 → 목록 변경             | 통합 테스트 | `page` query, 새 요청 결과, 목록 시작점 스크롤이 함께 맞물린다.                          |
+| 조작이 URL에 반영 · URL로 재진입    | 통합 + E2E  | 조작은 URL query와 요청 조건에 반영되고, 직접 진입도 복원된다.                           |
+| 담기 → 헤더 개수 · 다시 누르면 빠짐 | 통합 테스트 | store 변경이 Header 개수에 반영되고 toggle 제거도 된다.                                  |
+| 뒤로·앞으로 가기로 필터 복원        | E2E 테스트  | history 이동 후 URL, 필터, 목록이 복원된다.                                              |
+| 새로고침해도 필터 상태 유지         | E2E 테스트  | document 재요청 후에도 URL 조건이 유지된다.                                              |
+| 목록 진입 → 담기 → 헤더 확인        | E2E 테스트  | production 페이지에서 담기 후 Header 개수가 바뀐다.                                      |
 
 ### 장바구니·위시리스트 개수 파생
 
@@ -241,13 +241,13 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
   - [`src/widgets/product-card/ui/ProductGrid.tsx`](../../src/widgets/product-card/ui/ProductGrid.tsx)
 - 방법론: 통합 테스트 + E2E 테스트
 
-이 흐름은 서버 진입과 클라이언트 렌더링을 나눠 본다. 서버 진입에서는 `page.tsx`의 `Suspense fallback`이 slow 목록 데이터를 기다리는 동안 먼저 보이는지 확인해야 한다. 클라이언트에서는 React Query 요청, MSW 응답, pending UI, 상품 grid 렌더링이 함께 맞아야 한다.
+이 흐름은 서버 진입과 클라이언트 렌더링을 나눠 본다. 서버 진입에서는 slow 목록 데이터가 document 응답 시작을 막지 않는지 확인해야 한다. 클라이언트에서는 React Query 요청, MSW 응답, pending UI, 상품 grid 렌더링이 함께 맞아야 한다.
 
 통합 테스트로는 클라이언트 React Query가 데이터 없는 최초 상태에서 pending UI를 보여주고, MSW 성공 응답 뒤 실제 상품 목록을 렌더링하는지 확인한다.
 
-서버 Suspense fallback이 document 진입 시 먼저 보이는지는 App Router streaming과 production build 동작이 포함되므로 E2E에서 확인한다. 이때 사용자 URL에는 테스트용 query를 붙이지 않고, mock API 제어 endpoint로 products 응답만 `slow`로 바꾼 뒤 `/products`에 진입한다. 테스트는 `page.goto("/products", { waitUntil: "commit" })`로 document 응답이 시작된 직후를 먼저 보고, fallback이 보인 다음 실제 목록으로 교체되는지 확인한다.
+slow 목록 응답이 document 진입을 막지 않는지는 App Router streaming과 production build 동작이 포함되므로 E2E에서 확인한다. 이때 사용자 URL에는 테스트용 query를 붙이지 않고, mock API 제어 endpoint로 products 응답만 `slow`로 바꾼 뒤 `/products`에 진입한다. 테스트는 `page.goto("/products", { waitUntil: "commit" })`가 mock API의 1.5초 지연보다 먼저 끝나는지 확인하고, 그 직후 fallback shell이 보인 다음 실제 목록으로 교체되는지 보조로 확인한다.
 
-이 테스트가 빨간불이 되면 최초 진입에서 목록 크기를 예상할 수 있는 pending UI가 빠졌거나, 서버 Suspense fallback이 slow 목록 데이터에 막혀 먼저 보이지 않는다는 뜻이다. 또는 성공 응답을 받은 뒤 현재 URL 조건에 맞는 상품 id와 개수가 grid에 반영되지 않는다는 뜻이다.
+이 테스트가 빨간불이 되면 slow 목록 응답이 document commit을 막아 사용자가 첫 화면을 늦게 받는다는 뜻이다. 또는 fallback shell 이후 성공 응답을 받은 뒤 현재 URL 조건에 맞는 상품 id와 개수가 grid에 반영되지 않는다는 뜻이다.
 
 ### 목록 빈 결과
 
@@ -438,7 +438,7 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 
 이 항목은 통합 테스트만으로 볼지, E2E까지 포함할지 고민했다. 클라이언트의 `isPending` 상태와 MSW 성공 응답 후 목록 렌더링은 통합 테스트로 충분히 확인할 수 있다. 하지만 Products 페이지에는 서버 `Suspense fallback`도 있고, slow 데이터가 document 진입을 막지 않는지가 중요하다. 이 부분은 App Router streaming과 production build 동작이 포함되므로 컴포넌트 통합 테스트만으로는 확인하기 어렵다.
 
-통합 테스트만 선택했다면 클라이언트 pending UI는 검증할 수 있지만, 서버 fallback이 실제 페이지 진입에서 먼저 보이는지는 놓칠 수 있다. 그래서 클라이언트 pending에서 성공 목록으로 이어지는 흐름은 통합 테스트로 보고, 서버 fallback 선노출은 E2E로 나눠 확인하기로 했다.
+통합 테스트만 선택했다면 클라이언트 pending UI는 검증할 수 있지만, slow 목록 응답이 실제 document commit을 막지 않는지는 놓칠 수 있다. 그래서 클라이언트 pending에서 성공 목록으로 이어지는 흐름은 통합 테스트로 보고, document commit이 slow 응답보다 먼저 일어나는지는 E2E로 나눠 확인하기로 했다.
 
 ### 이번 목록 밖의 테스트 판단
 
@@ -471,7 +471,7 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 | 장바구니·위시리스트 개수 파생       | [`src/entities/cart/model/selectors.test.ts`](../../src/entities/cart/model/selectors.test.ts), [`src/entities/wishlist/model/selectors.test.ts`](../../src/entities/wishlist/model/selectors.test.ts)                                                                                                                                 | 없음                                                                                |
 | URL 조건 → query key                | [`src/_pages/products/model/searchParams.test.ts`](../../src/_pages/products/model/searchParams.test.ts), [`src/_pages/products/queries/productQueries.test.ts`](../../src/_pages/products/queries/productQueries.test.ts), [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx) | 없음                                                                                |
 | 순수 로직                           | [`src/shared/lib/id-set/idSet.test.ts`](../../src/shared/lib/id-set/idSet.test.ts), [`src/entities/cart/model/cartPersistence.test.ts`](../../src/entities/cart/model/cartPersistence.test.ts), [`src/entities/wishlist/model/wishlistPersistence.test.ts`](../../src/entities/wishlist/model/wishlistPersistence.test.ts)             | 없음                                                                                |
-| 목록 로딩 → 성공                    | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             | [`e2e/products.spec.ts`](../../e2e/products.spec.ts): 서버 fallback 선노출          |
+| 목록 로딩 → 성공                    | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             | [`e2e/products.spec.ts`](../../e2e/products.spec.ts): slow 응답 전 document commit  |
 | 목록 빈 결과                        | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             | 없음                                                                                |
 | 목록 에러                           | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             | [`e2e/products.spec.ts`](../../e2e/products.spec.ts): 실패가 document를 깨지 않는지 |
 | 에러에서 재시도로 복구              | [`src/_pages/products/ui/ProductListPage.test.tsx`](../../src/_pages/products/ui/ProductListPage.test.tsx)                                                                                                                                                                                                                             | 없음                                                                                |
@@ -488,23 +488,23 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 
 각 항목에는 정상 케이스와 경계 케이스를 함께 넣었다. 여기서 경계 케이스는 가능한 모든 예외가 아니라, 이번 과제 범위에서 실제로 깨지기 쉬운 입력·상태 전환·복구 흐름을 가리킨다.
 
-| 1단계 항목                          | 정상 케이스                                                   | 경계 케이스                                                                        |
-| ----------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| 장바구니·위시리스트 개수 파생       | id map에 담긴 상품 수를 Header count로 계산한다.              | 빈 map이면 count가 0이고, 다시 누르면 1에서 0으로 돌아간다.                        |
-| URL 조건 → query key                | `q`, `category`, `sort`, `page`, `pageSize`가 key에 들어간다. | 조건 일부가 바뀌면 다른 key가 만들어지고, 잘못된 URL 값은 정규화된다.              |
-| 순수 로직                           | 유효한 id set과 persist 저장값을 안전한 상태로 바꾼다.        | `null`, 배열, 문자열 `"true"`, 공백 id, 깨진 저장값을 걸러낸다.                    |
-| 목록 로딩 → 성공                    | pending UI 이후 현재 조건의 상품 목록으로 전환된다.           | slow 응답 중에도 서버 fallback이나 목록 skeleton이 먼저 보인다.                    |
-| 목록 빈 결과                        | 성공 응답이 0건이면 빈 결과 문구와 `총 0개`가 보인다.         | 0건 상태에서는 상품 grid 영역이 남아 있는 것처럼 보이지 않는다.                    |
-| 목록 에러                           | 최초 실패 시 목록 대신 실패 이유와 다시 시도 버튼이 보인다.   | 서버 fallback은 깨지지 않고, 실패 화면이 빈 결과처럼 보이지 않는다.                |
-| 에러에서 재시도로 복구              | 첫 요청 실패 후 retry 성공 시 목록으로 복구된다.              | retry 이후 에러 화면에 머물지 않는다.                                              |
-| 카테고리 변경 → 목록 변경           | 카테고리 선택이 URL과 요청 조건, 목록 결과에 반영된다.        | 3페이지에서 바꾸면 `page`가 1로 초기화된다.                                        |
-| 정렬 변경 → 순서 변경               | 정렬 선택이 URL과 요청 조건, 목록 순서에 반영된다.            | 3페이지에서 바꾸면 `page`가 1로 초기화된다.                                        |
-| 페이지 이동 → 목록 변경             | 페이지 버튼이 `page` query와 새 목록 결과로 이어진다.         | 끝 페이지를 넘는 URL은 유효한 마지막 페이지로 보정되고 목록 시작점으로 스크롤된다. |
-| 조작이 URL에 반영 · URL로 재진입    | 검색·필터·정렬 조작이 URL query와 요청 조건에 반영된다.       | URL로 직접 진입해도 필터 UI와 목록 요청 조건이 복원된다.                           |
-| 담기 → 헤더 개수 · 다시 누르면 빠짐 | 상품 담기 후 Header 장바구니 count가 1이 된다.                | 같은 버튼을 다시 누르면 count가 0으로 돌아간다.                                    |
-| 뒤로·앞으로 가기로 필터 복원        | 브라우저 history 이동으로 이전/다음 필터 상태가 복원된다.     | 여러 조건을 연속으로 바꾼 뒤에도 history 순서대로 필터가 복원된다.                 |
-| 새로고침해도 필터 상태 유지         | URL query로 새로고침해도 필터 UI와 목록 결과가 유지된다.      | document reload 이후에도 hydration된 UI가 URL 조건과 어긋나지 않는다.              |
-| 목록 진입 → 담기 → 헤더 확인        | production route 진입 후 상품을 담으면 Header count가 바뀐다. | SSR로 받은 목록이 hydration된 뒤에도 담기 동작과 Header count가 이어진다.          |
+| 1단계 항목                          | 정상 케이스                                                   | 경계 케이스                                                                           |
+| ----------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 장바구니·위시리스트 개수 파생       | id map에 담긴 상품 수를 Header count로 계산한다.              | 빈 map이면 count가 0이고, 다시 누르면 1에서 0으로 돌아간다.                           |
+| URL 조건 → query key                | `q`, `category`, `sort`, `page`, `pageSize`가 key에 들어간다. | 조건 일부가 바뀌면 다른 key가 만들어지고, 잘못된 URL 값은 정규화된다.                 |
+| 순수 로직                           | 유효한 id set과 persist 저장값을 안전한 상태로 바꾼다.        | `null`, 배열, 문자열 `"true"`, 공백 id, 깨진 저장값을 걸러낸다.                       |
+| 목록 로딩 → 성공                    | pending UI 이후 현재 조건의 상품 목록으로 전환된다.           | document commit이 slow 응답보다 먼저 일어나고, fallback shell 이후 목록으로 교체된다. |
+| 목록 빈 결과                        | 성공 응답이 0건이면 빈 결과 문구와 `총 0개`가 보인다.         | 0건 상태에서는 상품 grid 영역이 남아 있는 것처럼 보이지 않는다.                       |
+| 목록 에러                           | 최초 실패 시 목록 대신 실패 이유와 다시 시도 버튼이 보인다.   | 서버 fallback은 깨지지 않고, 실패 화면이 빈 결과처럼 보이지 않는다.                   |
+| 에러에서 재시도로 복구              | 첫 요청 실패 후 retry 성공 시 목록으로 복구된다.              | retry 이후 에러 화면에 머물지 않는다.                                                 |
+| 카테고리 변경 → 목록 변경           | 카테고리 선택이 URL과 요청 조건, 목록 결과에 반영된다.        | 3페이지에서 바꾸면 `page`가 1로 초기화된다.                                           |
+| 정렬 변경 → 순서 변경               | 정렬 선택이 URL과 요청 조건, 목록 순서에 반영된다.            | 3페이지에서 바꾸면 `page`가 1로 초기화된다.                                           |
+| 페이지 이동 → 목록 변경             | 페이지 버튼이 `page` query와 새 목록 결과로 이어진다.         | 끝 페이지를 넘는 URL은 유효한 마지막 페이지로 보정되고 목록 시작점으로 스크롤된다.    |
+| 조작이 URL에 반영 · URL로 재진입    | 검색·필터·정렬 조작이 URL query와 요청 조건에 반영된다.       | URL로 직접 진입해도 필터 UI와 목록 요청 조건이 복원된다.                              |
+| 담기 → 헤더 개수 · 다시 누르면 빠짐 | 상품 담기 후 Header 장바구니 count가 1이 된다.                | 같은 버튼을 다시 누르면 count가 0으로 돌아간다.                                       |
+| 뒤로·앞으로 가기로 필터 복원        | 브라우저 history 이동으로 이전/다음 필터 상태가 복원된다.     | 여러 조건을 연속으로 바꾼 뒤에도 history 순서대로 필터가 복원된다.                    |
+| 새로고침해도 필터 상태 유지         | URL query로 새로고침해도 필터 UI와 목록 결과가 유지된다.      | document reload 이후에도 hydration된 UI가 URL 조건과 어긋나지 않는다.                 |
+| 목록 진입 → 담기 → 헤더 확인        | production route 진입 후 상품을 담으면 Header count가 바뀐다. | SSR로 받은 목록이 hydration된 뒤에도 담기 동작과 Header count가 이어진다.             |
 
 요소는 사용자가 인식하는 이름과 역할을 기준으로 찾았다. 이번 구현에서는 `getByTestId`를 쓰지 않았다. E2E도 `sleep`으로 시간을 맞추지 않고, `expect`, `goto`, `reload`, `goBack`, `goForward` 같은 조건 기반 대기로 확인했다.
 
