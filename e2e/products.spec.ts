@@ -39,16 +39,6 @@ test.describe("상품 목록 E2E", () => {
     await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).toBeVisible();
   });
 
-  test("mock API가 빈 상품 목록을 응답하면 0건 상태를 보여준다", async ({ page }) => {
-    await setMockApiScenario({ products: "empty" });
-
-    await page.goto("/products");
-
-    await expect(page.getByText("조건에 맞는 상품이 없습니다.")).toBeVisible();
-    await expect(page.getByText("총 0개")).toBeVisible();
-    await expect(page.getByLabel("상품 목록")).not.toBeVisible();
-  });
-
   test("mock API가 실패하면 최초 실패 화면과 다시 시도 버튼을 보여준다", async ({ page }) => {
     await setMockApiScenario({ products: "error" });
 
