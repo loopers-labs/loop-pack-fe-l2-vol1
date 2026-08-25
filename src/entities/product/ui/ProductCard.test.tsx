@@ -23,15 +23,15 @@ describe('ProductCard', () => {
   it('브랜드·상품명·가격을 표시한다', () => {
     render(<ProductCard product={PRODUCT} />);
 
-    expect(screen.getByText('Loopers Select')).toBeTruthy();
-    expect(screen.getByText('테스트 상품')).toBeTruthy();
-    expect(screen.getByText('10,000원')).toBeTruthy();
+    expect(screen.getByText('Loopers Select')).toBeInTheDocument();
+    expect(screen.getByText('테스트 상품')).toBeInTheDocument();
+    expect(screen.getByText('10,000원')).toBeInTheDocument();
   });
 
-  it('찜/담기 같은 행위 없이도 렌더링된다 (children은 선택)', () => {
+  it('children을 전달하지 않아도 상품 정보를 표시한다', () => {
     render(<ProductCard product={PRODUCT} />);
 
-    expect(screen.getByText('테스트 상품')).toBeTruthy();
+    expect(screen.getByText('테스트 상품')).toBeInTheDocument();
   });
 
   it('children으로 넘긴 행위 버튼을 그린다', () => {
@@ -41,6 +41,6 @@ describe('ProductCard', () => {
       </ProductCard>,
     );
 
-    expect(screen.getByRole('button', { name: '찜' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '찜' })).toBeInTheDocument();
   });
 });

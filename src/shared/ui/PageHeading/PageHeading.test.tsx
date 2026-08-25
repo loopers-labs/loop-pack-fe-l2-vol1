@@ -9,21 +9,21 @@ describe('PageHeading', () => {
       <PageHeading title="상품 목록" description="카테고리와 조건으로 원하는 상품을 찾아보세요." />,
     );
 
-    expect(screen.getByText('상품 목록')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '상품 목록' })).toBeInTheDocument();
   });
 
   it('description을 함께 표시한다', () => {
     render(<PageHeading title="상품 목록" description="원하는 상품을 찾아보세요" />);
 
-    expect(screen.getByText('원하는 상품을 찾아보세요')).toBeTruthy();
+    expect(screen.getByText('원하는 상품을 찾아보세요')).toBeInTheDocument();
   });
 
-  it('hero 배경 이미지를 항상 렌더링한다', () => {
+  it('title과 description을 전달하면 장식용 hero 배경 이미지를 함께 표시한다', () => {
     const { container } = render(
       <PageHeading title="상품 목록" description="카테고리와 조건으로 원하는 상품을 찾아보세요." />,
     );
 
-    expect(container.querySelector('img')).toBeTruthy();
+    expect(container.querySelector('img')).toBeInTheDocument();
   });
 
   /* AI-generated : Week 7 Part 1 — next/image 전환 후에도 원본 경로(hero-original.jpg)를 그대로 src로 넘기는지 확인 */

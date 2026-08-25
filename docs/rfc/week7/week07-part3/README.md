@@ -236,18 +236,18 @@ curl -A 'facebookexternalhit/1.1' -s -o /dev/null -w 'facebook start=%{time_star
 
 과제 완료조건 문장을 항목별로 쪼개 **저장된 document와 실측으로** 대조했다.
 
-| 완료조건                                            | 결과 | 증거                                                                                                                                                             |
-| --------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| normal의 document 증거                              | ✅   | [`01-normal-products.html`](./captures/01-normal-products.html), [`02-normal-home.html`](./captures/02-normal-home.html)                                         |
-| 정상 empty의 document 증거                          | ✅   | [`03-empty-products.html`](./captures/03-empty-products.html)                                                                                                    |
-| metadata query failure의 document 증거              | ✅   | [`04-metadata-failure-products.html`](./captures/04-metadata-failure-products.html), [`05-metadata-failure-home.html`](./captures/05-metadata-failure-home.html) |
-| 서버 호출 계수                                      | ✅   | 4개 URL 모두 **요청당 1회**                                                                                                                                      |
-| 계측 **제거 여부**                                  | ✅   | 소스·빌드 산출물 양쪽에서 계측 문자열 없음을 확인                                                                                                                |
-| 일반 UA와 `facebookexternalhit` 응답 시점 비교      | ✅   | TTFB **0.007s vs 0.514s**                                                                                                                                        |
-| 정상 empty와 query failure가 **서로 다른 fallback** | ✅   | ②는 0건을 설명하는 페이지 metadata 생성(OG 이미지만 fallback) / ③은 페이지 metadata 미생성 → 루트 상속                                                           |
-| document에서 **metadata** 확인                      | ✅   | `<title>`·`description`·`og:title/description/image/site_name/locale/type`                                                                                       |
-| document에서 **초기 구조** 확인                     | ✅   | `<main>` 1개, `h2` 1개, `href` 링크 4개(JS 실행 전 document Response 기준)                                                                                       |
-| document에서 **최종 URL** 확인                      | ✅   | `canonical`·`og:url`에 정규화 결과가 드러남(`?page=0` → `/products`)                                                                                             |
+| 완료조건                                            | 결과 | 증거                                                                                                                                                         |
+| --------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| normal의 document 증거                              | ✅   | [`01-normal-products.html`](captures/01-normal-products.html), [`02-normal-home.html`](captures/02-normal-home.html)                                         |
+| 정상 empty의 document 증거                          | ✅   | [`03-empty-products.html`](captures/03-empty-products.html)                                                                                                  |
+| metadata query failure의 document 증거              | ✅   | [`04-metadata-failure-products.html`](captures/04-metadata-failure-products.html), [`05-metadata-failure-home.html`](captures/05-metadata-failure-home.html) |
+| 서버 호출 계수                                      | ✅   | 4개 URL 모두 **요청당 1회**                                                                                                                                  |
+| 계측 **제거 여부**                                  | ✅   | 소스·빌드 산출물 양쪽에서 계측 문자열 없음을 확인                                                                                                            |
+| 일반 UA와 `facebookexternalhit` 응답 시점 비교      | ✅   | TTFB **0.007s vs 0.514s**                                                                                                                                    |
+| 정상 empty와 query failure가 **서로 다른 fallback** | ✅   | ②는 0건을 설명하는 페이지 metadata 생성(OG 이미지만 fallback) / ③은 페이지 metadata 미생성 → 루트 상속                                                       |
+| document에서 **metadata** 확인                      | ✅   | `<title>`·`description`·`og:title/description/image/site_name/locale/type`                                                                                   |
+| document에서 **초기 구조** 확인                     | ✅   | `<main>` 1개, `h2` 1개, `href` 링크 4개(JS 실행 전 document Response 기준)                                                                                   |
+| document에서 **최종 URL** 확인                      | ✅   | `canonical`·`og:url`에 정규화 결과가 드러남(`?page=0` → `/products`)                                                                                         |
 
 ### 요구사항 항목별 확인
 

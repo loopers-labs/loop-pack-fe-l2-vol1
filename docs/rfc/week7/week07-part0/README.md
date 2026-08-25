@@ -41,22 +41,22 @@ Part 1 이후의 모든 개선이 기준으로 삼는 **Before 상태**를 기�
 | **중앙값** | **0.82** | **1,405.1** | **1,444.2** | **12,502.3**    | **0.000** |
 | 범위       | **0.21** | 2.7         | **5,920.9** | 364.9           | 0         |
 
-> 7회를 잰 이유: score가 0.82와 0.61로 **이봉분포**를 보여 회차를 늘렸다. 두 그룹의 `lcp-breakdown`은 같은데 헤드라인 LCP만 1,405ms와 7,325ms로 갈린다. **이 페이지의 Before LCP는 신뢰할 수 없는 값**이고, 안정적인 지표는 Speed Index다(범위 365ms). 자세한 분석은 [Part 4](../week07-part4/README.md) 1부에 있다.
+> 7회를 잰 이유: score가 0.82와 0.61로 **이봉분포**를 보여 회차를 늘렸다. 두 그룹의 `lcp-breakdown`은 같은데 헤드라인 LCP만 1,405ms와 7,325ms로 갈린다. **이 페이지의 Before LCP는 신뢰할 수 없는 값**이고, 안정적인 지표는 Speed Index다(범위 365ms). 자세한 분석은 [Part 4](../../../performance/week07-part4/README.md) 1부에 있다.
 
 ---
 
 ## LCP element와 hero 전송 — Before의 숫자가 뜻하는 것
 
-|                        | 홈                                                                      | 상품 목록                                                            |
-| ---------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| LCP element            | `h2#week07-hero-title` (**텍스트**)                                     | `h2#week07-hero-title` (**텍스트**)                                  |
-| hero 요청 완료         | **미완료**(`finished: 0`)                                               | **미완료**                                                           |
-| 측정 창 안에서 받은 양 | **682,096 / 7,545,239 B (9.0%)**                                        | 약 7,274 / 7,545 KB (96%)                                            |
-| 캡처                   | [hero 위쪽 띠만 그려짐](../week07-part4/captures/before/home/run-1.jpg) | [거의 다 그려짐](../week07-part4/captures/before/products/run-1.jpg) |
+|                        | 홈                                                                                        | 상품 목록                                                                              |
+| ---------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| LCP element            | `h2#week07-hero-title` (**텍스트**)                                                       | `h2#week07-hero-title` (**텍스트**)                                                    |
+| hero 요청 완료         | **미완료**(`finished: 0`)                                                                 | **미완료**                                                                             |
+| 측정 창 안에서 받은 양 | **682,096 / 7,545,239 B (9.0%)**                                                          | 약 7,274 / 7,545 KB (96%)                                                              |
+| 캡처                   | [hero 위쪽 띠만 그려짐](../../../performance/week07-part4/captures/before/home/run-1.jpg) | [거의 다 그려짐](../../../performance/week07-part4/captures/before/products/run-1.jpg) |
 
 **Before에서는 hero가 한 번도 LCP가 되지 못했다.** 7.5MB 원본을 그대로 `<img>`에 넣어 측정 창 안에 전송이 끝나지 않았고, 그래서 화면에서 가장 큰 요소가 작은 `h2` 텍스트(42,307px²)였다. 홈과 상품목록의 LCP 값이 크게 갈린 것도 **전송이 어디까지 진행됐는지의 차이**다.
 
-이 점 때문에 Before의 LCP 숫자를 After와 ms 단위로 직접 비교하면 안 된다 — 서로 다른 요소를 재고 있기 때문이다. 이 문제는 [Part 4](../week07-part4/README.md) 2부에서 자세히 다룬다.
+이 점 때문에 Before의 LCP 숫자를 After와 ms 단위로 직접 비교하면 안 된다 — 서로 다른 요소를 재고 있기 때문이다. 이 문제는 [Part 4](../../../performance/week07-part4/README.md) 2부에서 자세히 다룬다.
 
 - **CLS 0.000인 이유**: `<img>`에 `width={3840}`/`height={2160}`가 명시돼 있어 로드 전에도 `aspect-ratio`로 공간이 확보된다(레이아웃 이동 자체가 없음). 이 부분은 이미 잘 돼 있어 이후 Part에서는 회귀만 확인하면 된다.
 
@@ -92,13 +92,13 @@ Part 1 이후의 모든 개선이 기준으로 삼는 **Before 상태**를 기�
 
 #### filmstrip — 홈(`/`, Slow 4G)
 
-| 시점       | 스크린샷                                                           | 내용                                                                                                          |
-| ---------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| t=1,344ms  | [`slow4g-user/home/t1344ms.jpg`](./slow4g-user/home/t1344ms.jpg)   | 셸(Header·hero 텍스트 카드) 완성, hero는 아직 배경색만(FCP 시점과 근접)                                       |
-| t=3,275ms  | [`slow4g-user/home/t3275ms.jpg`](./slow4g-user/home/t3275ms.jpg)   | hero 최상단에 progressive JPEG 스캔라인이 막 나타나기 시작                                                    |
-| t=12,276ms | [`slow4g-user/home/t12276ms.jpg`](./slow4g-user/home/t12276ms.jpg) | hero 위쪽 절반 정도 채워짐                                                                                    |
-| t=24,276ms | [`slow4g-user/home/t24276ms.jpg`](./slow4g-user/home/t24276ms.jpg) | hero 대부분 채워짐(디테일은 아직 흐릿)                                                                        |
-| t=44,929ms | [`slow4g-user/home/t44929ms.jpg`](./slow4g-user/home/t44929ms.jpg) | 육안으로는 거의 완료된 상태 — 그래도 이 시점까지 `LargestContentfulPaint::Candidate`는 hero로 갱신되지 않았음 |
+| 시점       | 스크린샷                                                         | 내용                                                                                                          |
+| ---------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| t=1,344ms  | [`slow4g-user/home/t1344ms.jpg`](slow4g-user/home/t1344ms.jpg)   | 셸(Header·hero 텍스트 카드) 완성, hero는 아직 배경색만(FCP 시점과 근접)                                       |
+| t=3,275ms  | [`slow4g-user/home/t3275ms.jpg`](slow4g-user/home/t3275ms.jpg)   | hero 최상단에 progressive JPEG 스캔라인이 막 나타나기 시작                                                    |
+| t=12,276ms | [`slow4g-user/home/t12276ms.jpg`](slow4g-user/home/t12276ms.jpg) | hero 위쪽 절반 정도 채워짐                                                                                    |
+| t=24,276ms | [`slow4g-user/home/t24276ms.jpg`](slow4g-user/home/t24276ms.jpg) | hero 대부분 채워짐(디테일은 아직 흐릿)                                                                        |
+| t=44,929ms | [`slow4g-user/home/t44929ms.jpg`](slow4g-user/home/t44929ms.jpg) | 육안으로는 거의 완료된 상태 — 그래도 이 시점까지 `LargestContentfulPaint::Candidate`는 hero로 갱신되지 않았음 |
 
 ### 상품 목록(`/products`) — 쿼리 변형 인터랙션(하드 리로드 없음, 클라이언트 사이드 필터 변경)
 
@@ -125,10 +125,10 @@ Part 1 이후의 모든 개선이 기준으로 삼는 **Before 상태**를 기�
 
 스크린샷 캡처는 인터랙션 시작 후 31.5초까지만 남아있었다(요청 로그는 47.5초까지 이어짐 — 녹화 툴 쪽 캡처 간격 문제로 보이며 이후 요청들의 화면은 별도 캡처가 없다). 남아있는 구간에서 5장을 뽑았다:
 
-| 시점       | 스크린샷                                                                   | 내용                                                                                |
-| ---------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| t=8ms      | [`slow4g-user/products/t8ms.jpg`](./slow4g-user/products/t8ms.jpg)         | 홈 화면에서 카테고리 링크를 막 클릭한 직후(아직 홈 화면, 소프트 내비게이션 전환 전) |
-| t=9,232ms  | [`slow4g-user/products/t9232ms.jpg`](./slow4g-user/products/t9232ms.jpg)   | `/products`로 전환 완료, hero·필터·"상품 목록" 타이틀 표시                          |
-| t=18,105ms | [`slow4g-user/products/t18105ms.jpg`](./slow4g-user/products/t18105ms.jpg) | 카테고리 "캐주얼" 반영 이후 상태                                                    |
-| t=25,535ms | [`slow4g-user/products/t25535ms.jpg`](./slow4g-user/products/t25535ms.jpg) | 정렬 조건 반영 구간                                                                 |
-| t=31,516ms | [`slow4g-user/products/t31516ms.jpg`](./slow4g-user/products/t31516ms.jpg) | 캡처가 남아있는 마지막 시점(카테고리 초기화 직후 구간)                              |
+| 시점       | 스크린샷                                                                 | 내용                                                                                |
+| ---------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| t=8ms      | [`slow4g-user/products/t8ms.jpg`](slow4g-user/products/t8ms.jpg)         | 홈 화면에서 카테고리 링크를 막 클릭한 직후(아직 홈 화면, 소프트 내비게이션 전환 전) |
+| t=9,232ms  | [`slow4g-user/products/t9232ms.jpg`](slow4g-user/products/t9232ms.jpg)   | `/products`로 전환 완료, hero·필터·"상품 목록" 타이틀 표시                          |
+| t=18,105ms | [`slow4g-user/products/t18105ms.jpg`](slow4g-user/products/t18105ms.jpg) | 카테고리 "캐주얼" 반영 이후 상태                                                    |
+| t=25,535ms | [`slow4g-user/products/t25535ms.jpg`](slow4g-user/products/t25535ms.jpg) | 정렬 조건 반영 구간                                                                 |
+| t=31,516ms | [`slow4g-user/products/t31516ms.jpg`](slow4g-user/products/t31516ms.jpg) | 캡처가 남아있는 마지막 시점(카테고리 초기화 직후 구간)                              |

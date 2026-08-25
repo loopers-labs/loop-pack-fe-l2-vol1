@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ProductListSection } from './ProductListSection';
 import { Header } from '@/widgets/header/ui/Header';
@@ -43,22 +44,42 @@ describe('Header/ProductListSection의 store 동기화 (홈·목록이 공유하
     useCartStore.setState({ productIds: new Set() });
   });
 
-  it('ProductListSection에서 찜을 누르면 Header 위시리스트 개수도 같이 바뀐다', () => {
+  // Week 08 Step 2 보강 — 담기/빼기 정상/경계: 위시리스트 증감과 장바구니 불변
+  it('찜 버튼을 추가/제거하면 위시리스트만 0→1→0으로 바뀌고 장바구니는 0을 유지한다', async () => {
+    const user = userEvent.setup();
     renderHeaderAndProductListSection();
-    expect(screen.getByText('위시리스트 0')).toBeTruthy();
+    const wishlistButton = screen.getByRole('button', { name: '1번 상품 위시리스트' });
+    expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
+    expect(screen.getByText('장바구니 0')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText('1번 상품 위시리스트'));
+    await user.click(wishlistButton);
+    expect(screen.getByText('위시리스트 1')).toBeInTheDocument();
+    expect(screen.getByText('장바구니 0')).toBeInTheDocument();
+    expect(wishlistButton).toHaveAttribute('aria-pressed', 'true');
 
-    expect(screen.getByText('위시리스트 1')).toBeTruthy();
+    await user.click(wishlistButton);
+    expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
+    expect(screen.getByText('장바구니 0')).toBeInTheDocument();
+    expect(wishlistButton).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('ProductListSection에서 담기를 누르면 Header 장바구니 개수도 같이 바뀐다', () => {
+  // Week 08 Step 2 보강 — 담기/빼기 정상/경계: 장바구니 증감과 위시리스트 불변
+  it('담기 버튼을 추가/제거하면 장바구니만 0→1→0으로 바뀌고 위시리스트는 0을 유지한다', async () => {
+    const user = userEvent.setup();
     renderHeaderAndProductListSection();
-    expect(screen.getByText('장바구니 0')).toBeTruthy();
+    const cartButton = screen.getByRole('button', { name: '1번 상품 담기' });
+    expect(screen.getByText('장바구니 0')).toBeInTheDocument();
+    expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText('1번 상품 담기'));
+    await user.click(cartButton);
+    expect(screen.getByText('장바구니 1')).toBeInTheDocument();
+    expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
+    expect(cartButton).toHaveAttribute('aria-pressed', 'true');
 
-    expect(screen.getByText('장바구니 1')).toBeTruthy();
+    await user.click(cartButton);
+    expect(screen.getByText('장바구니 0')).toBeInTheDocument();
+    expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
+    expect(cartButton).toHaveAttribute('aria-pressed', 'false');
   });
 });
 
@@ -72,6 +93,6 @@ describe('ProductListSection', () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText('검색 결과가 없습니다.')).toBeTruthy();
+    expect(screen.getByText('검색 결과가 없습니다.')).toBeInTheDocument();
   });
 });

@@ -47,7 +47,7 @@ describe('QueryState — 갱신 실패 시 직전 데이터 유지', () => {
       </QueryState>,
     );
 
-    expect(screen.getByText('기존 목록')).toBeTruthy();
+    expect(screen.getByText('기존 목록')).toBeInTheDocument();
 
     const failedQuery = makeQuery<string>({
       data: undefined,
@@ -65,8 +65,8 @@ describe('QueryState — 갱신 실패 시 직전 데이터 유지', () => {
       </QueryState>,
     );
 
-    expect(screen.getByText('기존 목록')).toBeTruthy();
-    expect(screen.getByText('인라인: 갱신 실패')).toBeTruthy();
+    expect(screen.getByText('기존 목록')).toBeInTheDocument();
+    expect(screen.getByText('인라인: 갱신 실패')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).toBeNull();
   });
 

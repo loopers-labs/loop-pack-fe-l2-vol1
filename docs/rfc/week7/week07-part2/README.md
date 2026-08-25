@@ -199,7 +199,7 @@ if (query.isPending) return null;
 - CDP `Tracing`으로 이 전이 구간의 실제 `LayoutShift` 이벤트를 떴더니 **1건, score 0.0353**이 잡혔다 — Pagination이 없어졌다 생기는 것 자체가 측정 가능한 레이아웃 이동이다.
 - 사용자 입장에서는 "필터는 바뀌었는데 목록도 총 개수도 그대로"인 상태가 1.5초(느린 케이스 기준) 동안 지속되고, 그 사이 **아무 시각적 신호도 없다** — Part 0에서 이미 지적된 "필터는 캐주얼인데 목록은 전체" gap이 Part 2 시점에도 그대로 남아있음을 재확인.
 
-캡처: [`captures/02-update-pending-existing-list.png`](./captures/02-update-pending-existing-list.png), [`captures/layoutshift-update-existing-list.json`](./captures/layoutshift-update-existing-list.json)
+캡처: [`captures/02-update-pending-existing-list.png`](captures/02-update-pending-existing-list.png), [`captures/layoutshift-update-existing-list.json`](captures/layoutshift-update-existing-list.json)
 
 > **현재 상태**: **Round 0에서 해결** — `aria-busy` + pending 오버레이로 갱신 중임을 표시하고, Pagination은 항상 렌더한다. CLS 0.035의 실제 원인은 Pagination이 아니라 카드 `key` 재사용이었고, 리키잉으로 `LayoutShift` 0건 확인.
 
@@ -209,7 +209,7 @@ if (query.isPending) return null;
 
 검색어를 결과 없는 문자열로 바꿔 확인했다. "총 0개"와 "검색 결과가 없습니다." 문구가 함께, 명확하게 표시된다. 로딩·에러와 혼동될 여지가 없다.
 
-캡처: [`captures/04-zero-results.png`](./captures/04-zero-results.png)
+캡처: [`captures/04-zero-results.png`](captures/04-zero-results.png)
 
 > **현재 상태**: 이미 충족돼 있어 변경하지 않음.
 
@@ -243,7 +243,7 @@ if (query.isPending) return null;
 - "기존 목록을 유지한 채 갱신 실패와 다시 시도할 방법을 보여줘야 해요"라는 요구사항을 직접적으로 위반하는 지점.
 - 흥미로운 부수 관찰: 이 전이 구간을 CDP `Tracing`으로 재보니 `LayoutShift` 이벤트가 **0건**으로 잡혔다. 스크린샷상으로는 12개 카드 그리드가 통째로 두 줄짜리 에러 문구로 바뀌는 극적인 변화인데도 점수가 0인 이유는, 기본 스크롤 위치(맨 위)에서는 히어로 이미지가 뷰포트(940px) 대부분을 차지해 **그리드 영역 자체가 화면 밖(below the fold)에 있었기 때문**으로 보인다 — Layout Instability API는 뷰포트 안에서 실제로 움직이는 요소만 점수화한다. 즉 **CLS 수치만 보면 이 회귀가 전혀 안 보이지만, 실제로는 심각한 콘텐츠 손실**이다. CLS 점수를 개선 여부 판단 기준으로 쓰면 이 문제를 놓친다는 것 자체가 중요한 발견이다.
 
-캡처: [`captures/05-update-failure-list-wiped.png`](./captures/05-update-failure-list-wiped.png), [`captures/layoutshift-update-failure-wipe.json`](./captures/layoutshift-update-failure-wipe.json)
+캡처: [`captures/05-update-failure-list-wiped.png`](captures/05-update-failure-list-wiped.png), [`captures/layoutshift-update-failure-wipe.json`](captures/layoutshift-update-failure-wipe.json)
 
 > **현재 상태**: **Round 2에서 해결** — 직전 성공 데이터가 있으면 목록을 그대로 두고 인라인 에러 배너+재시도 버튼만 추가한다.
 
@@ -268,7 +268,7 @@ if (query.isPending) return null;
 - **왜 안전한가**: query key(`['products', {category, ...}]`)가 다르면 화면은 "현재 URL의 active query"에 해당하는 key만 구독한다 — Part 0에서 확인된 것과 동일한 메커니즘.
 - **취소는 실제로 안 됨**: `fetchProductList`(`src/entities/product/api/productsService.ts`) → `apiResponseResult`(`src/shared/api/response.ts`) 어디에도 `AbortSignal`이 전달되지 않는다. `queryFn`이 받는 `{ signal }` 컨텍스트를 쓰지 않으므로, `casual`·`fashion` 요청은 화면에서 안 쓰여도 끝까지 실행되고 응답도 다 받는다(네트워크 로그의 3개 응답이 전부 200으로 도착) — 화면 정합성엔 문제없지만 **불필요한 API 호출이 항상 낭비된다.**
 
-캡처: [`captures/06-rapid-changes-final-state.png`](./captures/06-rapid-changes-final-state.png), [`captures/network-log-rapid-changes.json`](./captures/network-log-rapid-changes.json)
+캡처: [`captures/06-rapid-changes-final-state.png`](captures/06-rapid-changes-final-state.png), [`captures/network-log-rapid-changes.json`](captures/network-log-rapid-changes.json)
 
 > **현재 상태**: **Round 2에서 해결** — `queryFn`의 `{ signal }`을 `fetch`까지 전달해, Network 탭에서 이전 요청이 `(canceled)`로 실제 중단되는 것을 확인했다.
 

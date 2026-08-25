@@ -52,7 +52,7 @@ export function PageHeading({
         alt=""
         fill
         sizes={HERO_SIZES}
-        priority
+        preload //priority deprecated로 변경
         fetchPriority="high"
         // Element Timing API 실험용 — React 타입 정의에 elementtiming이 아직 없어 우회
         {...({ elementtiming: 'hero-image' } as Record<string, string>)}

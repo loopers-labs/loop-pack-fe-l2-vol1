@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HomeResponse } from '../_api/homeQueryOptions';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { prefetchRoute } = vi.hoisted(() => ({ prefetchRoute: vi.fn() }));
 
@@ -11,16 +10,6 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { HomeView } = await import('./HomeView');
-
-const HOME_RESPONSE: HomeResponse = {
-  banner: { title: '배너 제목', description: '배너 설명', image: '/images/banner.jpg' },
-  categories: [
-    { id: 'digital', name: '디지털' },
-    { id: 'fashion', name: '패션' },
-  ],
-  popularProducts: [],
-  newProducts: [],
-};
 
 function renderHomeView() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -36,16 +25,6 @@ function renderHomeView() {
 describe('HomeView 카테고리 링크', () => {
   beforeEach(() => {
     prefetchRoute.mockClear();
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify(HOME_RESPONSE), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   it('첫 렌더만으로는 라우트를 프리페치하지 않는다', async () => {

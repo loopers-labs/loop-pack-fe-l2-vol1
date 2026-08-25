@@ -14,6 +14,9 @@
 /coverage
 .vitest-attachments/
 __screenshots__/
+/test-results/
+/playwright-report/
+/blob-report/
 
 # next.js
 /.next/
@@ -48,4 +51,8 @@ next-env.d.ts
 
 # claude local-only files
 .claude/settings.json
+/.claude/skills.zip
 docs/local/*
+
+# pnpm local store
+/.pnpm-store/
