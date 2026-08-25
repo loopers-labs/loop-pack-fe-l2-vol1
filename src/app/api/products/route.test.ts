@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GET } from './route'
 
 const request = (query = '') =>
@@ -21,6 +21,11 @@ const allProductIds = async (sort: string) => {
 const hugePositiveInteger = '9'.repeat(400)
 
 describe('GET /api/products', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
+  })
+
   it('preserves Week 04 field shape while using the mapped source identity', async () => {
     const response = await request()
     const body = await response.json()
@@ -396,7 +401,7 @@ describe('GET /api/products', () => {
     })
   })
 
-  it('accepts the slow scenario and returns the normal payload after a 1.5s delay', async () => {
+  it('keeps the product response pending for 1.5 seconds in the slow scenario', async () => {
     vi.useFakeTimers()
     vi.stubEnv('NODE_ENV', 'production')
 
@@ -417,8 +422,6 @@ describe('GET /api/products', () => {
     expect(body.products).toHaveLength(12)
     expect(body.totalCount).toBe(30)
     expect(body.page).toBe(1)
-
-    vi.useRealTimers()
-    vi.unstubAllEnvs()
+    expect(body.pageSize).toBe(12)
   })
 })

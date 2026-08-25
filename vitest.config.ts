@@ -8,9 +8,33 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node',
-    // e2e/는 Playwright가 실행한다. vitest 기본 include가 `**/*.spec.ts`라
-    // 빼두지 않으면 여기서도 물어가 `pnpm check`가 깨진다.
-    exclude: [...configDefaults.exclude, 'e2e/**'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          include: ['src/**/*.test.{ts,tsx}'],
+          exclude: [
+            ...configDefaults.exclude,
+            'src/**/*.integration.test.{ts,tsx}',
+          ],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration',
+          environment: 'jsdom',
+          environmentOptions: {
+            jsdom: {
+              url: 'http://localhost:3000',
+            },
+          },
+          include: ['src/**/*.integration.test.{ts,tsx}'],
+          setupFiles: ['./src/test/setup/integration.ts'],
+        },
+      },
+    ],
   },
 })

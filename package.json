@@ -14,10 +14,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "pnpm build && playwright test --config playwright.week08.config.ts",
     "observe": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm test:e2e",
     "prepare": "husky"
   },
   "dependencies": {
@@ -30,6 +31,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.5",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -37,7 +41,9 @@
     "eslint-config-next": "16.2.10",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "jsdom": "^30.0.1",
     "lint-staged": "^17.0.8",
+    "msw": "^2.15.0",
     "prettier": "^3.8.4",
     "typescript": "^5",
     "vitest": "^4.1.10"

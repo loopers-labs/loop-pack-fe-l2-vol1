@@ -58,6 +58,7 @@ export function ProductListContent(): JSX.Element {
   const listQuery = isPageBelowMin ? { ...query, page: MIN_PAGE } : query
   const requestedPage = listQuery.page
   const [lastSuccessfulQuery, setLastSuccessfulQuery] = useState(listQuery)
+  const [isRetrying, setIsRetrying] = useState(false)
 
   const {
     data,
@@ -101,6 +102,12 @@ export function ProductListContent(): JSX.Element {
   // 보정은 양쪽 끝 모두 필요하다 — 1보다 작으면 첫 페이지로, 마지막을 넘으면 마지막 페이지로.
   const correctedPage = isPageBelowMin ? MIN_PAGE : outOfRangePage
 
+  const handleRetry = async (): Promise<void> => {
+    setIsRetrying(true)
+    await refetch()
+    setIsRetrying(false)
+  }
+
   useEffect(() => {
     if (correctedPage !== null) {
       replacePage(correctedPage)
@@ -119,10 +126,10 @@ export function ProductListContent(): JSX.Element {
     <button
       type="button"
       className="commerce-retry-button"
-      onClick={() => void refetch()}
-      disabled={isFetching}
+      onClick={() => void handleRetry()}
+      disabled={isFetching || isRetrying}
     >
-      {isFetching ? '재시도 중…' : '다시 시도'}
+      {isFetching || isRetrying ? '재시도 중…' : '다시 시도'}
     </button>
   )
 
@@ -149,7 +156,8 @@ export function ProductListContent(): JSX.Element {
       </section>
 
       <section className="week05-section" aria-label="상품 검색 결과">
-        {isPending || (hasList && (isPageOutOfRange || isCorrectingPage)) ? (
+        {(isPending && !isRetrying) ||
+        (hasList && (isPageOutOfRange || isCorrectingPage)) ? (
           <ProductGridFallback count={PAGE_SIZE} />
         ) : !hasList ? (
           <p className="commerce-status">

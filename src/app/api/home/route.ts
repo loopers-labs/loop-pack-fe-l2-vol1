@@ -4,8 +4,6 @@ import {
   homeBanner,
   products,
   waitForMockApi,
-  SLOW_MOCK_DELAY_MS,
-  DEFAULT_MOCK_DELAY_MS,
 } from '@/app/api/_data/commerce'
 import type { HomeResponse } from '@/entities/product/api/types'
 import type { ApiErrorResponse, MockApiScenario } from '@/shared/api/types'
@@ -31,9 +29,7 @@ export async function GET(
     )
   }
 
-  await waitForMockApi(
-    scenario === 'slow' ? SLOW_MOCK_DELAY_MS : DEFAULT_MOCK_DELAY_MS,
-  )
+  await waitForMockApi(scenario === 'slow' ? 1_500 : 500)
 
   if (scenario === 'error') {
     return NextResponse.json(

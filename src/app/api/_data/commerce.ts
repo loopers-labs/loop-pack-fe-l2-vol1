@@ -24,22 +24,22 @@ const sizeOptions = [
   { value: 26, stock: 12 },
   { value: 27, stock: 5 },
   { value: 28, stock: 0 },
-]
+];
 
 type ProductSeed = {
-  id: string
-  brand?: string
-  name: string
-  category: CategoryId
-  price: number
-  originalPrice?: number
-  image?: string
-  freeShipping?: boolean
-  sizes?: Product['sizes']
-  rating: number
-  reviewCount: number
-  createdAt: string
-}
+  id: string;
+  brand?: string;
+  name: string;
+  category: CategoryId;
+  price: number;
+  originalPrice?: number;
+  image?: string;
+  freeShipping?: boolean;
+  sizes?: Product["sizes"];
+  rating: number;
+  reviewCount: number;
+  createdAt: string;
+};
 
 const productSeeds: ProductSeed[] = [
   {
@@ -355,12 +355,8 @@ const normalizeProduct = (seed: ProductSeed): Product => ({
 
 export const products = productSeeds.map(normalizeProduct)
 
-// mock API 지연: 정상은 500ms, scenario=slow(7주차 성능 실습 재현 조건)는 1500ms.
-export const DEFAULT_MOCK_DELAY_MS = 500
-export const SLOW_MOCK_DELAY_MS = 1500
-
-export const waitForMockApi = (requestedDelayMs = DEFAULT_MOCK_DELAY_MS) =>
+export const waitForMockApi = (requestedDelayMs = 500) =>
   new Promise<void>((resolve) => {
-    const delayMs = process.env.NODE_ENV === 'test' ? 0 : requestedDelayMs
-    setTimeout(resolve, delayMs)
-  })
+    const delayMs = process.env.NODE_ENV === "test" ? 0 : requestedDelayMs;
+    setTimeout(resolve, delayMs);
+  });

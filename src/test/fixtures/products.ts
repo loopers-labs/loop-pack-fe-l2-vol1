@@ -1,0 +1,60 @@
+import type { Product, ProductListResponse } from '@/entities/product'
+
+export const testProducts = [
+  {
+    id: 'test-casual',
+    brand: '테스트 브랜드',
+    name: '테스트 캐주얼 재킷',
+    category: 'casual',
+    price: 59_000,
+    originalPrice: 79_000,
+    image: '/images/products/p1.jpg',
+    freeShipping: true,
+    sizes: [],
+    rating: 4.7,
+    reviewCount: 21,
+    createdAt: '2026-08-01T00:00:00.000Z',
+  },
+  {
+    id: 'test-fashion',
+    brand: '테스트 브랜드',
+    name: '테스트 패션 셔츠',
+    category: 'fashion',
+    price: 39_000,
+    originalPrice: null,
+    image: '/images/products/p2.jpg',
+    freeShipping: false,
+    sizes: [],
+    rating: 4.5,
+    reviewCount: 13,
+    createdAt: '2026-08-02T00:00:00.000Z',
+  },
+  {
+    id: 'test-home',
+    brand: '테스트 브랜드',
+    name: '테스트 홈 조명',
+    category: 'home',
+    price: 129_000,
+    originalPrice: 149_000,
+    image: '/images/products/p3.jpg',
+    freeShipping: true,
+    sizes: [],
+    rating: 4.9,
+    reviewCount: 34,
+    createdAt: '2026-08-03T00:00:00.000Z',
+  },
+] as const satisfies readonly Product[]
+
+export const defaultProductListResponse = {
+  products: [...testProducts],
+  categories: [
+    { id: 'casual', name: '캐주얼' },
+    { id: 'fashion', name: '패션' },
+    { id: 'goods', name: '뷰티·잡화' },
+    { id: 'home', name: '홈' },
+    { id: 'digital', name: '디지털' },
+  ],
+  totalCount: testProducts.length,
+  page: 1,
+  pageSize: 12,
+} satisfies ProductListResponse

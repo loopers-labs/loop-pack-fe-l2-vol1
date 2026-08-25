@@ -1,11 +1,16 @@
 import { NextRequest } from 'next/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GET } from './route'
 
 const request = (query = '') =>
   GET(new NextRequest(`http://localhost/api/home${query}`))
 
 describe('GET /api/home', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
+  })
+
   it('returns banner, categories, popular products, and new products', async () => {
     const response = await request()
     const body = await response.json()
@@ -57,7 +62,7 @@ describe('GET /api/home', () => {
     })
   })
 
-  it('accepts the slow scenario and returns the normal payload after a 1.5s delay', async () => {
+  it('keeps the home response pending for 1.5 seconds in the slow scenario', async () => {
     vi.useFakeTimers()
     vi.stubEnv('NODE_ENV', 'production')
 
@@ -75,11 +80,8 @@ describe('GET /api/home', () => {
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(body.banner).toBeDefined()
+    expect(body.banner.image).toBe('/images/products/p6.jpg')
     expect(body.popularProducts).toHaveLength(6)
     expect(body.newProducts).toHaveLength(6)
-
-    vi.useRealTimers()
-    vi.unstubAllEnvs()
   })
 })
