@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // Vite 시절 빌드 산출물 (남아있는 경우 대비)
     'dist/**',
+    // Stryker 산출물. 샌드박스는 실행 후 지워지지만 중단되면 남는다.
+    '.stryker-tmp/**',
+    'reports/**',
   ]),
   // week-03에서 적용했던 규칙 이관
   {

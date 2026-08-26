@@ -1,3 +1,5 @@
+import { getTotalPages } from './get-total-pages'
+
 type UsePaginationParams = {
   totalCount: number
   pageSize: number
@@ -13,7 +15,7 @@ export const usePagination = ({
   currentPage,
   onPageChange,
 }: UsePaginationParams) => {
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
+  const totalPages = getTotalPages(totalCount, pageSize)
 
   return { currentPage, totalPages, pageSize, goToPage: onPageChange }
 }

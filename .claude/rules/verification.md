@@ -12,11 +12,12 @@
 기본 검증 명령어:
 
 ```bash
-pnpm lint
-pnpm exec tsc --noEmit
+pnpm verify   # pnpm test && pnpm lint && pnpm typecheck (빌드 없음)
 ```
 
-변경 파일 범위만 확인하면 되는 경우 해당 범위에서만 정적 검사를 실행한다. `pnpm test:e2e`, `pnpm build`, `pnpm dev`, 브라우저 기반 검증은 사용자가 요청한 경우에만 실행한다.
+`pnpm check`는 `pnpm verify`에 `pnpm build`를 더한 명령이다. 빌드를 요청받았을 때만 사용한다.
+
+변경 파일 범위만 확인하면 되는 경우 해당 범위에서만 정적 검사를 실행한다. `pnpm test:e2e`, `pnpm check`, `pnpm build`, `pnpm dev`, 브라우저 기반 검증은 사용자가 요청한 경우에만 실행한다. 위 목록의 "Playwright를 포함한 테스트 실행"은 브라우저가 필요한 E2E를 가리키며, Vitest 단위·통합 테스트는 `pnpm verify`로 기본 검증에 포함한다.
 
 인증, 라우팅, SSR·CSR 경계, 브라우저 API처럼 정적 검사만으로 결함 가능성을 충분히 낮추기 어려운 변경은 임의로 런타임 검증하지 않는다. 필요한 확인 항목과 이유를 설명하고 먼저 실행 허가를 요청한다.
 

@@ -4,6 +4,12 @@ import { GET } from './route'
 
 const request = (query = '') => GET(new NextRequest(`http://localhost/api/home${query}`))
 
+const HOME_BANNER = {
+  title: '매일 새롭게 발견하는 취향',
+  description: '지금 가장 사랑받는 상품을 만나보세요.',
+  image: '/images/products/p6.jpg',
+}
+
 describe('GET /api/home', () => {
   afterEach(() => {
     vi.useRealTimers()
@@ -15,11 +21,7 @@ describe('GET /api/home', () => {
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(body.banner).toEqual({
-      title: '매일 새롭게 발견하는 취향',
-      description: '지금 가장 사랑받는 상품을 만나보세요.',
-      image: '/images/products/p6.jpg',
-    })
+    expect(body.banner).toEqual(HOME_BANNER)
     expect(body.categories).toEqual([
       { id: 'casual', name: '캐주얼' },
       { id: 'fashion', name: '패션' },
@@ -48,7 +50,7 @@ describe('GET /api/home', () => {
   it('keeps banner and categories in the empty scenario', async () => {
     const response = await request('?scenario=empty')
     const body = await response.json()
-    expect(body.banner).toBeDefined()
+    expect(body.banner).toEqual(HOME_BANNER)
     expect(body.categories).toHaveLength(5)
     expect(body.popularProducts).toEqual([])
     expect(body.newProducts).toEqual([])

@@ -12,12 +12,14 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "test:e2e": "playwright test",
+    "test:e2e": "pnpm build && playwright test",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build"
+    "verify": "pnpm test && pnpm lint && pnpm typecheck",
+    "check": "pnpm verify && pnpm build",
+    "test:mutation": "stryker run"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -40,6 +42,11 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@stryker-mutator/core": "^10.0.0",
+    "@stryker-mutator/vitest-runner": "^10.0.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.5",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -48,7 +55,9 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-boundaries": "^7.1.0",
     "husky": "^9.1.7",
+    "jsdom": "^30.0.1",
     "lint-staged": "^17.0.7",
+    "msw": "^2.15.0",
     "prettier": "^3.0.0",
     "typescript": "^5",
     "vitest": "^4.1.10"

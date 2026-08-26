@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "pnpm",
+  "testRunner": "vitest",
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "reporters": ["html", "clear-text", "progress"],
+  "mutate": [
+    "src/shared/lib/get-total-pages.ts",
+    "src/shared/lib/create-collection-store.ts",
+    "src/entities/product/api/query-schema.ts",
+    "src/entities/product/api/queries.ts"
+  ],
+  "timeoutMS": 10000,
+  "coverageAnalysis": "perTest",
+  "ignorePatterns": [
+    ".claude",
+    ".agents",
+    "docs",
+    "e2e",
+    "public",
+    ".next",
+    "playwright-report",
+    "test-results"
+  ]
+}
