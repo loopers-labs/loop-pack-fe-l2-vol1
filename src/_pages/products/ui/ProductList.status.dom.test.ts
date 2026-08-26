@@ -19,9 +19,11 @@ if (!casualProduct) {
 
 const casualProductName = casualProduct.name;
 
-const homeProductCount = PRODUCTS.filter(
-  (product) => product.category === 'home',
-).length;
+const homeProducts = PRODUCTS.filter((product) => product.category === 'home');
+
+const homeProductCount = homeProducts.length;
+
+const firstHomeProductName = homeProducts[0].name;
 
 const LIST_ERROR_MESSAGE = '상품 목록을 불러오지 못했습니다.';
 
@@ -149,6 +151,9 @@ describe('목록 조회 실패', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(
+      screen.getByRole('heading', { name: firstHomeProductName }),
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole('heading', { name: casualProductName }),
     ).not.toBeInTheDocument();
   });
@@ -166,6 +171,9 @@ describe('실패에서 다시 시도', () => {
     await user.click(within(alert).getByRole('button', { name: '다시 시도' }));
 
     expect(await screen.findByText(totalCountText)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: firstProductName }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

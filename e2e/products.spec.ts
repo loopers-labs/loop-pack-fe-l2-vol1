@@ -86,17 +86,20 @@ test('뒤로 가면 이전 조건이, 앞으로 가면 바꾼 조건이 돌아�
   await waitForNewList(page, beforeFirst);
 
   const filteredTotal = await totalCount(page).innerText();
+  const filteredFirst = await firstProduct(page).innerText();
 
   await page.goBack();
 
   await expect(categoryFilter(page)).toHaveValue('all');
   await expect(totalCount(page)).toHaveText(beforeTotal);
+  await expect(firstProduct(page)).toHaveText(beforeFirst);
 
   await page.goForward();
 
   await expect(page).toHaveURL(/category=home/);
   await expect(categoryFilter(page)).toHaveValue('home');
   await expect(totalCount(page)).toHaveText(filteredTotal);
+  await expect(firstProduct(page)).toHaveText(filteredFirst);
 });
 
 test('페이지 보정은 히스토리에 남지 않아 뒤로 가면 원래 있던 곳으로 나간다', async ({
