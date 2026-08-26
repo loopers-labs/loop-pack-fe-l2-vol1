@@ -233,13 +233,15 @@ Playwright 첫 실행 때는 두 가지를 확인했다.
 
 순수 로직은 세 개를 후보로 둔다. 셋 다 DOM, React Query, 네트워크 없이 입력과 출력만으로 의미 있는 회귀를 잡을 수 있다.
 
-| 검증 대상                      | 관련 코드                                                                                                        | 방법론      | 빨간불이 되면 알게 되는 것                                                            |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------- |
-| id set 정규화                  | [`src/shared/lib/id-set/idSet.ts`](../../src/shared/lib/id-set/idSet.ts)                                         | 단위 테스트 | 저장소에 남은 이상한 값이나 `false` 값이 안전하게 `{ [id]: true }`로 정리되지 않는다. |
-| 장바구니 persist 상태 정규화   | [`src/entities/cart/model/cartPersistence.ts`](../../src/entities/cart/model/cartPersistence.ts)                 | 단위 테스트 | 깨진 localStorage 값이 장바구니 store로 들어올 수 있다.                               |
-| 위시리스트 persist 상태 정규화 | [`src/entities/wishlist/model/wishlistPersistence.ts`](../../src/entities/wishlist/model/wishlistPersistence.ts) | 단위 테스트 | 깨진 localStorage 값이 위시리스트 store로 들어올 수 있다.                             |
+선택 기준은 사용자가 잃는 것이 큰 순서로 잡았다. 이 함수들은 모두 `localStorage`나 외부 입력처럼 신뢰하기 어려운 값이 앱 상태로 들어오는 입구에 있다. 여기서 잘못된 값을 통과시키면 사용자는 장바구니나 위시리스트에 담지 않은 상품이 담긴 것처럼 보거나, 반대로 이전에 담아 둔 상태가 복구되지 않는 문제를 겪는다. Header 개수, 상품 카드의 pressed 상태, persist 복구 결과가 모두 이 정규화 결과에 기대기 때문에 작은 순수 함수지만 실패 비용이 작지 않다.
 
-`selectPersistedCartState`처럼 persist에 저장할 필드만 고르는 함수도 순수 로직이지만, 이번 단계에서는 복구와 안전성에 더 직접적으로 닿는 정규화 함수를 우선순위로 둔다.
+| 검증 대상                      | 관련 코드                                                                                                        | 방법론      | 빨간불이 되면 알게 되는 것                                                                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| id set 정규화                  | [`src/shared/lib/id-set/idSet.ts`](../../src/shared/lib/id-set/idSet.ts)                                         | 단위 테스트 | 저장소에 남은 이상한 값이나 `false` 값이 안전하게 `{ [id]: true }`로 정리되지 않아, 담기·찜 상태와 Header 개수가 실제 선택과 달라질 수 있다. |
+| 장바구니 persist 상태 정규화   | [`src/entities/cart/model/cartPersistence.ts`](../../src/entities/cart/model/cartPersistence.ts)                 | 단위 테스트 | 깨진 localStorage 값이 장바구니 store로 들어와, 사용자가 이전 장바구니를 잃거나 잘못된 장바구니 개수를 볼 수 있다.                           |
+| 위시리스트 persist 상태 정규화 | [`src/entities/wishlist/model/wishlistPersistence.ts`](../../src/entities/wishlist/model/wishlistPersistence.ts) | 단위 테스트 | 깨진 localStorage 값이 위시리스트 store로 들어와, 사용자가 이전 찜 상태를 잃거나 잘못된 위시리스트 개수를 볼 수 있다.                        |
+
+`selectPersistedCartState`처럼 persist에 저장할 필드만 고르는 함수도 순수 로직이지만, 현재 구현은 이미 store 내부 값을 그대로 저장 대상으로 고르는 단순한 projection이다. 이 함수가 틀리면 저장 필드가 늘거나 줄어드는 문제가 생기지만, 정규화 함수가 틀릴 때처럼 깨진 외부 값이 곧바로 사용자 화면의 담기·찜 상태로 들어오는 위험이 더 직접적이다. 그래서 이번 단계에서는 저장할 값을 고르는 로직보다, 저장소에서 돌아온 값을 안전하게 복구하는 정규화 로직을 우선순위로 둔다.
 
 ### 목록 로딩 → 성공
 
