@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react';
 import { configDefaults, defineConfig } from 'vitest/config';
 
 /**
- * 확장자가 곧 환경이다. `.ts`는 node, `.tsx`는 jsdom.
+ * 환경은 파일 이름이 정한다. `*.dom.test.*`만 jsdom, 나머지는 node.
+ * 확장자는 문법(JSX 유무)만 뜻한다.
  */
 export default defineConfig({
   plugins: [react()],
@@ -24,8 +25,8 @@ export default defineConfig({
           name: 'node',
           environment: 'node',
           setupFiles: ['./vitest.msw.setup.ts'],
-          // JSX를 쓰지만 react-dom/server만 써서 DOM이 필요 없어 예외처리
-          include: ['src/**/*.test.ts', 'src/_pages/home/ui/HomePage.test.tsx'],
+          include: ['{src,tests}/**/*.test.{ts,tsx}'],
+          exclude: [...configDefaults.exclude, '**/*.dom.test.*'],
         },
       },
       {
@@ -34,11 +35,7 @@ export default defineConfig({
           name: 'jsdom',
           environment: 'jsdom',
           setupFiles: ['./vitest.msw.setup.ts', './vitest.setup.ts'],
-          include: ['src/**/*.test.tsx', 'tests/**/*.test.tsx'],
-          exclude: [
-            ...configDefaults.exclude,
-            'src/_pages/home/ui/HomePage.test.tsx',
-          ],
+          include: ['{src,tests}/**/*.dom.test.{ts,tsx}'],
         },
       },
     ],
