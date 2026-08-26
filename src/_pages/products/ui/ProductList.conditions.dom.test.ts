@@ -1,7 +1,10 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { PRODUCT_PAGE_SIZE } from '@/features/product';
+import {
+  PRODUCT_PAGE_SIZE,
+  loadProductListConditions,
+} from '@/features/product';
 import { PRODUCTS } from '@tests/msw/fixtures';
 import { renderProductList } from '@tests/render-product-list';
 
@@ -130,5 +133,46 @@ describe('페이지 이동', () => {
 
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '이전' })).toBeEnabled();
+  });
+});
+
+describe('조작이 URL에 쓰인다', () => {
+  const writtenConditions = async (
+    onUrlUpdate: ReturnType<typeof renderProductList>['onUrlUpdate'],
+  ) => {
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalledOnce());
+
+    return loadProductListConditions(onUrlUpdate.mock.calls[0][0].searchParams);
+  };
+
+  it('카테고리를 바꾸면 category에 그 값이 실리고 page는 1로 돌아간다', async () => {
+    const { user, onUrlUpdate } = renderProductList('?page=2');
+
+    await user.selectOptions(filter('카테고리'), option('홈'));
+
+    expect(await writtenConditions(onUrlUpdate)).toMatchObject({
+      category: 'home',
+      page: 1,
+    });
+  });
+
+  it('정렬을 바꾸면 sort에 그 값이 실리고 page는 1로 돌아간다', async () => {
+    const { user, onUrlUpdate } = renderProductList('?page=2');
+
+    await user.selectOptions(filter('정렬'), option('낮은 가격순'));
+
+    expect(await writtenConditions(onUrlUpdate)).toMatchObject({
+      sort: 'price-asc',
+      page: 1,
+    });
+  });
+
+  it('다음을 누르면 page에 다음 번호가 실린다', async () => {
+    const { user, onUrlUpdate } = renderProductList();
+
+    await screen.findByText(pageText(1, totalPages));
+    await user.click(screen.getByRole('button', { name: '다음' }));
+
+    expect(await writtenConditions(onUrlUpdate)).toMatchObject({ page: 2 });
   });
 });
