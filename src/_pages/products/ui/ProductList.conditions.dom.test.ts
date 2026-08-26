@@ -134,6 +134,28 @@ describe('페이지 이동', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '이전' })).toBeEnabled();
   });
+
+  it('이전 목록을 보여주는 동안에는 페이지 보정이 끼어들지 않는다', async () => {
+    // gcTime 0: 떠난 조건의 캐시가 바로 사라져, 돌아올 때 이전 목록을 보여주며 다시 받아온다
+    const { user, onUrlUpdate, navigate } = renderProductList('?page=2', {
+      gcTime: 0,
+    });
+
+    await screen.findByText(pageText(2, totalPages));
+    await user.click(screen.getByRole('button', { name: '다음' }));
+    await screen.findByText(pageText(3, totalPages));
+
+    await user.selectOptions(filter('카테고리'), option('홈'));
+    await screen.findByText(pageText(1, homeTotalPages));
+
+    navigate('?page=3');
+
+    expect(
+      await screen.findByText(pageText(3, totalPages)),
+    ).toBeInTheDocument();
+    // URL 쓰기는 다음·홈 두 번뿐이어야 한다. 보정이 끼어들었다면 홈의 마지막 페이지로 한 번 더 썼다
+    expect(onUrlUpdate).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('조작이 URL에 쓰인다', () => {
