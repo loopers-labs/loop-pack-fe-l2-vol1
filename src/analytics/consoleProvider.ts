@@ -1,4 +1,7 @@
-import type { AnalyticsProvider, EventProperties } from "./provider";
+import type { AnalyticsProvider, EventProperties } from './provider';
+
+// 콘솔 출력이 이 파일의 목적이다
+/* eslint-disable no-console */
 
 declare global {
   interface Window {
@@ -9,16 +12,16 @@ declare global {
 
 /** 개발 중 확인용 프로바이더. 콘솔에 찍고 `window.__analytics`에 쌓는다. */
 export const consoleProvider: AnalyticsProvider = {
-  name: "console",
+  name: 'console',
 
   initialize() {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.__analytics = [];
     }
   },
 
   track(event, properties) {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.__analytics = [...(window.__analytics ?? []), { event, properties }];
     }
     console.info(`[analytics] ${event}`, properties);
@@ -29,6 +32,6 @@ export const consoleProvider: AnalyticsProvider = {
   },
 
   reset() {
-    console.info("[analytics] reset");
+    console.info('[analytics] reset');
   },
 };

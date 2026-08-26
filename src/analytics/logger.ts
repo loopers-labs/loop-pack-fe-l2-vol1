@@ -1,4 +1,4 @@
-import type { AnalyticsProvider, EventProperties } from "./provider";
+import type { AnalyticsProvider, EventProperties } from './provider';
 
 /**
  * 이벤트 로거.
@@ -10,9 +10,9 @@ import type { AnalyticsProvider, EventProperties } from "./provider";
  */
 
 type QueuedEvent =
-  | { type: "track"; event: string; properties: EventProperties }
-  | { type: "identify"; userId: string; properties?: EventProperties }
-  | { type: "reset" };
+  | { type: 'track'; event: string; properties: EventProperties }
+  | { type: 'identify'; userId: string; properties?: EventProperties }
+  | { type: 'reset' };
 
 // ponytail: 모듈 스코프에 담는다. 브라우저에서는 탭 하나가 곧 하나의 인스턴스다
 let providers: AnalyticsProvider[] = [];
@@ -22,17 +22,17 @@ let queue: QueuedEvent[] = [];
 
 const MAX_QUEUE_SIZE = 100;
 
-export function registerProviders(list: AnalyticsProvider[]): void {
+export const registerProviders = (list: AnalyticsProvider[]): void => {
   providers = list;
-}
+};
 
 /** 모든 이벤트에 붙일 값. 이벤트 발생 시점에 평가된다. */
-export function setCommonProperties(get: () => EventProperties): void {
+export const setCommonProperties = (get: () => EventProperties): void => {
   commonProperties = get;
-}
+};
 
 /** 프로바이더를 초기화하고, 그 전에 쌓인 이벤트를 순서대로 보낸다. */
-export async function initAnalytics(): Promise<void> {
+export const initAnalytics = async (): Promise<void> => {
   if (initialized) {
     return;
   }
@@ -44,7 +44,7 @@ export async function initAnalytics(): Promise<void> {
       } catch (error) {
         console.error(`[analytics] ${provider.name} 초기화 실패`, error);
       }
-    }),
+    })
   );
 
   initialized = true;
@@ -52,25 +52,25 @@ export async function initAnalytics(): Promise<void> {
   const pending = queue;
   queue = [];
   pending.forEach(send);
-}
+};
 
-export function track(event: string, properties: EventProperties = {}): void {
+export const track = (event: string, properties: EventProperties = {}): void => {
   enqueueOrSend({
-    type: "track",
+    type: 'track',
     event,
     properties: { ...commonProperties(), ...properties },
   });
-}
+};
 
-export function identify(userId: string, properties?: EventProperties): void {
-  enqueueOrSend({ type: "identify", userId, properties });
-}
+export const identify = (userId: string, properties?: EventProperties): void => {
+  enqueueOrSend({ type: 'identify', userId, properties });
+};
 
-export function reset(): void {
-  enqueueOrSend({ type: "reset" });
-}
+export const reset = (): void => {
+  enqueueOrSend({ type: 'reset' });
+};
 
-function enqueueOrSend(queued: QueuedEvent): void {
+const enqueueOrSend = (queued: QueuedEvent): void => {
   if (initialized) {
     send(queued);
     return;
@@ -80,14 +80,14 @@ function enqueueOrSend(queued: QueuedEvent): void {
     queue.shift();
   }
   queue.push(queued);
-}
+};
 
-function send(queued: QueuedEvent): void {
+const send = (queued: QueuedEvent): void => {
   providers.forEach((provider) => {
     try {
-      if (queued.type === "track") {
+      if (queued.type === 'track') {
         provider.track(queued.event, queued.properties);
-      } else if (queued.type === "identify") {
+      } else if (queued.type === 'identify') {
         provider.identify(queued.userId, queued.properties);
       } else {
         provider.reset();
@@ -96,12 +96,12 @@ function send(queued: QueuedEvent): void {
       console.error(`[analytics] ${provider.name} 전송 실패`, error);
     }
   });
-}
+};
 
 /** 테스트에서 모듈 상태를 되돌린다 */
-export function resetAnalyticsForTest(): void {
+export const resetAnalyticsForTest = (): void => {
   providers = [];
   commonProperties = () => ({});
   initialized = false;
   queue = [];
-}
+};

@@ -37,7 +37,7 @@ export default tseslint.config(
       'prefer-template': 'error',
       'no-template-curly-in-string': 'error',
       'no-nested-ternary': 'error',
-      'no-console': 'error',
+      'no-console': ['error', { allow: ['error'] }],
       'func-style': ['error', 'expression', { allowArrowFunctions: true }],
     },
   },
