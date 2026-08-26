@@ -1,6 +1,6 @@
 name: Quality
 
-"on":
+'on':
   push:
     branches:
       - main
@@ -35,3 +35,5 @@ jobs:
           fi
       - name: Run quality checks
         run: pnpm check
+      - name: Run E2E tests
+        run: pnpm test:e2e

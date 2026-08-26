@@ -21,14 +21,21 @@ type BuildProductsMetadataParams = {
   data: ProductListResponse;
 };
 
-export function buildProductsMetadataText({ query, data }: BuildProductsMetadataParams) {
+export function buildProductsMetadataText({
+  query,
+  data,
+}: BuildProductsMetadataParams) {
   const page = query.page ?? 1;
 
   // title: 검색어 우선, 2페이지 이상이면 페이지 번호 추가
   let title = '상품 둘러보기';
   if (query.q) {
     title = `'${query.q}' 검색 결과`;
-  } else if (query.category && query.category !== 'all' && categoryNameMap[query.category]) {
+  } else if (
+    query.category &&
+    query.category !== 'all' &&
+    categoryNameMap[query.category]
+  ) {
     title = `${categoryNameMap[query.category]} 상품`;
   }
   if (page > 1) {
@@ -37,7 +44,11 @@ export function buildProductsMetadataText({ query, data }: BuildProductsMetadata
 
   // description: category/sort 반영
   const descParts: string[] = [];
-  if (query.category && query.category !== 'all' && categoryNameMap[query.category]) {
+  if (
+    query.category &&
+    query.category !== 'all' &&
+    categoryNameMap[query.category]
+  ) {
     descParts.push(categoryNameMap[query.category]);
   }
   if (query.sort && sortNameMap[query.sort]) {
