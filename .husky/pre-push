@@ -1,0 +1,5 @@
+# [AI] 푸시 직전 방어선: pnpm check(test+lint+typecheck+build) 후 순서 무작위 실행으로 격리 검증.
+# shuffle에서 실패하면 출력된 seed로 같은 순서를 재현해 원인을 좁힌다:
+#   pnpm vitest run --sequence.shuffle --sequence.seed=<실패했던 시드>
+# (check에 test가 포함되어 있어 테스트는 두 번 돈다 — push 빈도가 낮아 감수. CI가 최종 보증.)
+pnpm check && pnpm vitest run --sequence.shuffle
