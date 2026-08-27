@@ -74,12 +74,20 @@ it('문자열 배열이 아니면 비운다', async () => {
   expect(savedProductIds()).toEqual([]);
 });
 
-it('원소 하나라도 문자열이 아니면 비운다', async () => {
+it('문자열이 아닌 원소만 빼고 되살린다', async () => {
   saveCurrentVersion({ productIds: ['p1', 1] });
 
   await restore();
 
-  expect(savedProductIds()).toEqual([]);
+  expect(savedProductIds()).toEqual(['p1']);
+});
+
+it('빈 문자열 id만 빼고 되살린다', async () => {
+  saveCurrentVersion({ productIds: ['p1', ''] });
+
+  await restore();
+
+  expect(savedProductIds()).toEqual(['p1']);
 });
 
 it('중복으로 담긴 상품은 하나로 줄인다', async () => {
