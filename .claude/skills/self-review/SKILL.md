@@ -13,7 +13,8 @@ description: 구현 후 spec 기준으로 변경된 코드의 기능, 품질, �
 
 1. `git diff`로 변경 파일 목록을 확인하고 변경된 모든 파일을 Read로 읽는다.
 2. spec 파일과 CONVENTIONS.md 를 읽는다.
-3. 아래 관점으로 검증하고 결과를 형식에 맞춰 보고한다.
+3. 변경 파일에 테스트 관련 파일(`{src,tests}/**/*.test.{ts,tsx}` · `tests/**` · `e2e/**` · `vitest*.ts` · `playwright*.ts`)이 있으면 그 목록을 넘겨 `test-review`를 실행하고, 그 지적을 심각도 그대로 승계한다. blocker만 판정에 반영한다.
+4. 아래 관점으로 검증하고 결과를 형식에 맞춰 보고한다.
 
 ---
 
@@ -61,6 +62,7 @@ description: 구현 후 spec 기준으로 변경된 코드의 기능, 품질, �
 
 ### 정적 검사
 - `pnpm build` · `pnpm lint`: PASS / FAIL
+- `test-review`: PASS / FAIL / 해당 없음
 
 ### 지적 사항 (심각도순)
 - `[blocker]` {파일:줄} — {문제} → {고칠 방법}
@@ -74,3 +76,5 @@ description: 구현 후 spec 기준으로 변경된 코드의 기능, 품질, �
 ## FAIL 시
 
 이슈를 수정한 뒤 self-review를 재실행한다. 최대 3회 반복, 그래도 FAIL이면 사용자에게 보고한다.
+
+`test-review`에서 승계된 blocker는 자동 수정 대상이 아니다. 테스트와 구현 중 어느 쪽을 바꿀지 AskUserQuestion으로 판정을 받은 뒤 재개한다. 하네스 blocker(테스트 파일이 발견되지 않음)는 원인을 보고하고 중단한다.
