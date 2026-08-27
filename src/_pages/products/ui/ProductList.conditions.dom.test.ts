@@ -156,6 +156,22 @@ describe('페이지 이동', () => {
     // URL 쓰기는 다음·홈 두 번뿐이어야 한다. 보정이 끼어들었다면 홈의 마지막 페이지로 한 번 더 썼다
     expect(onUrlUpdate).toHaveBeenCalledTimes(2);
   });
+
+  it('마지막 페이지를 넘긴 주소로 들어오면 이동 중임을 알린 뒤 마지막 페이지로 보정한다', async () => {
+    const { onUrlUpdate } = renderProductList('?page=99999');
+
+    // 보정 effect가 즉시 URL을 고쳐 이 화면은 한 렌더만 존재한다.
+    // findBy가 돌아올 땐 이미 사라져 toBeInTheDocument는 쓸 수 없고, 나타난 사실이 단언이다.
+    await screen.findByText('올바른 페이지로 이동 중입니다.');
+
+    expect(
+      await screen.findByText(pageText(totalPages, totalPages)),
+    ).toBeInTheDocument();
+    expect(onUrlUpdate).toHaveBeenCalledOnce();
+    expect(
+      loadProductListConditions(onUrlUpdate.mock.calls[0][0].searchParams),
+    ).toMatchObject({ page: totalPages });
+  });
 });
 
 describe('조작이 URL에 쓰인다', () => {
