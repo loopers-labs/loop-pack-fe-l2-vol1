@@ -13,6 +13,20 @@ function getScrollbarWidth(page: Page) {
   );
 }
 
+// 휠 입력은 다음 프레임에 스크롤로 반영된다. 시간을 정하지 않고 프레임 두 개를 기다린다.
+function waitForNextFrames(page: Page) {
+  return page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve();
+          });
+        });
+      }),
+  );
+}
+
 test('다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫히면 풀린다', async ({
   page,
 }) => {
@@ -30,10 +44,11 @@ test('다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫�
 
   const lockedScrollY = await getScrollY(page);
 
-  // overflow hidden은 프로그램 스크롤(scrollTo)은 막지 않으므로 유저 입력(휠)으로 검증한다
+  // overflow hidden은 프로그램 스크롤(scrollTo)은 막지 않으므로 유저 입력(휠)으로 검증한다.
+  // "일어나지 않았다"는 기다릴 신호가 없어, 휠이 반영됐을 프레임까지 기다린 뒤에 확인한다.
   await page.mouse.move(10, 10);
   await page.mouse.wheel(0, 500);
-  await page.waitForTimeout(200);
+  await waitForNextFrames(page);
   expect(await getScrollY(page)).toBe(lockedScrollY);
 
   await page.getByRole('button', { name: '확인' }).click();

@@ -5,6 +5,14 @@ import { GET } from "./route";
 const request = (query = "") =>
   GET(new NextRequest(`http://localhost/api/home${query}`));
 
+const EXPECTED_CATEGORIES = [
+  { id: "casual", name: "캐주얼" },
+  { id: "fashion", name: "패션" },
+  { id: "goods", name: "뷰티·잡화" },
+  { id: "home", name: "홈" },
+  { id: "digital", name: "디지털" },
+];
+
 describe("GET /api/home", () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -21,13 +29,7 @@ describe("GET /api/home", () => {
       description: "지금 가장 사랑받는 상품을 만나보세요.",
       image: "/images/products/p6.jpg",
     });
-    expect(body.categories).toEqual([
-      { id: "casual", name: "캐주얼" },
-      { id: "fashion", name: "패션" },
-      { id: "goods", name: "뷰티·잡화" },
-      { id: "home", name: "홈" },
-      { id: "digital", name: "디지털" },
-    ]);
+    expect(body.categories).toEqual(EXPECTED_CATEGORIES);
     expect(body.popularProducts.map((product: { id: string }) => product.id)).toEqual([
       "p21",
       "p11",
@@ -49,8 +51,12 @@ describe("GET /api/home", () => {
   it("keeps banner and categories in the empty scenario", async () => {
     const response = await request("?scenario=empty");
     const body = await response.json();
-    expect(body.banner).toBeDefined();
-    expect(body.categories).toHaveLength(5);
+    expect(body.banner).toEqual({
+      title: "매일 새롭게 발견하는 취향",
+      description: "지금 가장 사랑받는 상품을 만나보세요.",
+      image: "/images/products/p6.jpg",
+    });
+    expect(body.categories).toEqual(EXPECTED_CATEGORIES);
     expect(body.popularProducts).toEqual([]);
     expect(body.newProducts).toEqual([]);
   });

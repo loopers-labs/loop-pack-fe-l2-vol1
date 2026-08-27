@@ -37,8 +37,12 @@ const keepPreviousList = (
 };
 
 describe('상품 쿼리 키', () => {
-  it('루트 키는 상품 도메인만 가리킨다', () => {
-    expect(productQueries.all()).toEqual(['products']);
+  it('목록 키에는 조회 조건이 그대로 실린다', () => {
+    expect(productQueries.list(CONDITIONS).queryKey).toEqual([
+      'products',
+      'list',
+      CONDITIONS,
+    ]);
   });
 
   it('모든 키가 루트 키로 시작해 한 번에 무효화할 수 있다', () => {
@@ -54,13 +58,12 @@ describe('상품 쿼리 키', () => {
 });
 
 describe('목록 쿼리의 placeholderData', () => {
-  it.each([
-    ['검색어', { q: '책상' }],
-    ['카테고리', { category: 'digital' as const }],
-    ['정렬', { sort: 'latest' as const }],
-    ['페이지', { page: 2 }],
-  ])('%s가 달라져도 새 목록이 올 때까지 이전 목록을 보여준다', (_, changed) => {
-    expect(keepPreviousList(changed, PREVIOUS_DATA)).toBe(PREVIOUS_DATA);
+  // 어느 조건이 바뀌든 같은 함수를 지나므로 한 케이스면 된다.
+  // 화면에 이전 목록이 실제로 남는지는 ProductList.conditions.dom.test.ts가 본다.
+  it('조건이 달라져도 새 목록이 올 때까지 이전 목록을 보여준다', () => {
+    expect(keepPreviousList({ category: 'digital' }, PREVIOUS_DATA)).toBe(
+      PREVIOUS_DATA,
+    );
   });
 
   it('이전 목록이 없으면 보여줄 것도 없다', () => {

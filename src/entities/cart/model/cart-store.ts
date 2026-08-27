@@ -29,9 +29,14 @@ const EMPTY_PERSISTED_CART: PersistedCart = { productIds: [] };
  * 유효한 상품 ID만 남긴다.
  */
 const toValidProductIds = (value: unknown) =>
-  Array.isArray(value) &&
-  value.every((id) => typeof id === 'string' && id !== '')
-    ? [...new Set<string>(value)]
+  Array.isArray(value)
+    ? [
+        ...new Set(
+          value.filter(
+            (id): id is string => typeof id === 'string' && id !== '',
+          ),
+        ),
+      ]
     : [];
 
 export const useCartStore = create<CartState>()(
