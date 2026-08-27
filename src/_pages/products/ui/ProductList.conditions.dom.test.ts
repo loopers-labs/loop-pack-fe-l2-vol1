@@ -1,4 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -6,6 +7,8 @@ import {
   loadProductListConditions,
 } from '@/features/product';
 import { PRODUCTS } from '@tests/msw/fixtures';
+import { productListResponse } from '@tests/msw/handlers';
+import { server } from '@tests/msw/server';
 import { renderProductList } from '@tests/render-product-list';
 
 const homeProducts = PRODUCTS.filter((product) => product.category === 'home');
@@ -48,6 +51,48 @@ describe('카테고리 변경', () => {
     expect(
       screen.queryByRole('heading', { name: otherProducts[0].name }),
     ).not.toBeInTheDocument();
+  });
+
+  it('새 목록이 올 때까지 이전 목록을 유지하고, 도착하면 새 목록으로 바꾼다', async () => {
+    const { user } = renderProductList();
+
+    expect(
+      await screen.findByText(totalCountText(PRODUCTS.length)),
+    ).toBeInTheDocument();
+
+    // 응답을 붙들어 조회 중인 순간을 붙잡고, 테스트가 허락한 시점에 기본 응답을 그대로 보낸다
+    const { promise: released, resolve: release } =
+      Promise.withResolvers<void>();
+
+    server.use(
+      http.get('*/api/products', async ({ request }) => {
+        await released;
+
+        return HttpResponse.json(
+          productListResponse(new URL(request.url).searchParams),
+        );
+      }),
+    );
+    await user.selectOptions(filter('카테고리'), option('홈'));
+
+    expect(filter('카테고리')).toHaveValue('home');
+    expect(
+      screen.getByText(totalCountText(PRODUCTS.length)),
+    ).toBeInTheDocument();
+    expect(productHeading(otherProducts[0].name)).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
+
+    release();
+
+    expect(
+      await screen.findByText(totalCountText(homeProducts.length)),
+    ).toBeInTheDocument();
+    expect(productHeading(homeProducts[0].name)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: otherProducts[0].name }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다음' })).toBeEnabled();
   });
 
   it('첫 페이지가 아닌 곳에서 카테고리를 바꾸면 1페이지부터 다시 보여준다', async () => {

@@ -8,6 +8,7 @@ import { HomePage } from './HomePage';
 import { HOME_RESPONSE } from '@tests/msw/fixtures';
 import { server } from '@tests/msw/server';
 
+// connection()은 Next 요청 컨텍스트 밖에서 던지므로, 서버 렌더를 검증하려면 이것만은 대체해야 한다.
 vi.mock('next/server', () => ({ connection: () => Promise.resolve() }));
 
 // 성공은 기본 핸들러가 맡는다. 여기서는 예외 경로만 덮는다.
@@ -21,14 +22,26 @@ const failHome = () =>
     ),
   );
 
+/**
+ * 경계 안에서 던진 오류는 Suspense가 삼키고 클라이언트 렌더로 미루므로 HTML만 봐서는 모른다.
+ * 서버 렌더 오류는 어느 테스트에서든 실패여야 해서 여기서 바로 던진다.
+ */
 const renderUntilAllReady = async () => {
+  const errors: unknown[] = [];
   const stream = await renderToReadableStream(
     <QueryClientProvider client={new QueryClient()}>
       <HomePage />
     </QueryClientProvider>,
+    {
+      onError: (error) => {
+        errors.push(error);
+      },
+    },
   );
 
   await stream.allReady;
+
+  if (errors.length > 0) throw errors[0];
 
   return new Response(stream).text();
 };
@@ -74,6 +87,5 @@ describe('HomePage', () => {
     expect(markup).toContain('hero-original.jpg');
     expect(markup).toContain('이번 주의 발견');
     expect(markup).not.toContain(HOME_RESPONSE.banner.title);
-    expect(markup).not.toContain('Switched to client rendering');
   });
 });
