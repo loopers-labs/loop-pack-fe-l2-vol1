@@ -60,11 +60,11 @@ describe('controlled↔uncontrolled 전환 금지', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const controlledHook = renderControlledState({ controlled: 'A' });
-    controlledHook.rerender({ controlled: 'B' });
+    const { rerender } = renderControlledState({ controlled: 'A' });
+    rerender({ controlled: 'B' });
 
-    const uncontrolledHook = renderControlledState();
-    act(() => uncontrolledHook.result.current[1]('다음 값'));
+    const { result } = renderControlledState();
+    act(() => result.current[1]('다음 값'));
 
     expect(consoleError).not.toHaveBeenCalled();
   });

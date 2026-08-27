@@ -214,11 +214,10 @@ describe('controlled 계약', () => {
 });
 
 describe('Portal과 scroll lock', () => {
-  it('Overlay와 Content는 document.body 직속으로 렌더된다', () => {
+  it('Overlay와 Content는 컴포넌트 트리 밖으로 렌더된다', () => {
     const { container } = renderDialog({ defaultOpen: true });
 
-    expect(screen.getByTestId('overlay').parentElement).toBe(document.body);
-    expect(screen.getByTestId('content').parentElement).toBe(document.body);
+    expect(container).not.toContainElement(screen.getByTestId('overlay'));
     expect(container).not.toContainElement(screen.getByTestId('content'));
   });
 

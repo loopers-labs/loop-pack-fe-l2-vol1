@@ -50,3 +50,7 @@ next-env.d.ts
 
 # local artifacts
 /private/
+
+# stryker
+.stryker-tmp/
+/reports/
