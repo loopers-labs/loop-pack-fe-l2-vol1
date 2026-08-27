@@ -4,4 +4,5 @@ export {
   useCartCount,
   useCartHasHydrated,
   useToggleCart,
+  useClearCart,
 } from "./model/store";

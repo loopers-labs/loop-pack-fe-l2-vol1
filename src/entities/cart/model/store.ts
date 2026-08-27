@@ -9,3 +9,4 @@ export const useCartCount = () => useCartStore((state) => state.ids.size);
 export const useCartHasHydrated = () =>
   useCartStore((state) => state.hasHydrated);
 export const useToggleCart = () => useCartStore((state) => state.toggle);
+export const useClearCart = () => useCartStore((state) => state.clear);
