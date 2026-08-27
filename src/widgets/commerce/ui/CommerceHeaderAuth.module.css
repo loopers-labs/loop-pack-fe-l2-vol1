@@ -15,10 +15,3 @@
   font-size: 14px;
   color: var(--color-accent);
 }
-
-/* 세션 확정 전 placeholder — 로그인 링크 폭만큼 공간을 예약해 레이아웃 점프를 막는다. */
-.placeholder {
-  display: inline-block;
-  width: 48px;
-  height: 1em;
-}
