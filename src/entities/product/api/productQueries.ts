@@ -9,9 +9,20 @@ import {
 // (Advanced B 의 "초기 중복 요청 없음"이 성립하려면 이 쿼리가 클라에서 fresh 여야 한다)
 const LIST_STALE_TIME = 60 * 1000;
 
+// 카트·주문서는 담긴 id 를 상품명으로 보여줘야 하는데 단건 조회 API 가 없다.
+// 전체 카탈로그를 한 번 받아 id→상품 매핑으로 쓴다(상품 수가 한 페이지에 다 들어가는 규모).
+const CATALOG_PAGE_SIZE = 100;
+
 export const productQueries = {
   all: () => ["products"] as const,
   lists: () => [...productQueries.all(), "list"] as const,
+  catalog: () =>
+    queryOptions({
+      queryKey: [...productQueries.all(), "catalog"] as const,
+      queryFn: () =>
+        getProducts({ category: "all", pageSize: CATALOG_PAGE_SIZE }),
+      staleTime: LIST_STALE_TIME,
+    }),
   list: (query: ProductListParams) => {
     // 정규화한 조건을 queryKey와 요청 양쪽에 넘긴다 → URL→queryKey→API가 한 경로로 일치하고 캐시 중복이 없다
     const normalized = normalizeProductListQuery(query);

@@ -1,0 +1,20 @@
+/* 색상·간격 토큰은 조상 .page 에서 상속받는다. */
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+}
+
+.price {
+  color: var(--color-muted);
+}

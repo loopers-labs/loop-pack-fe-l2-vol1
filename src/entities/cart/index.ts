@@ -1,6 +1,7 @@
 export {
   useCartStore,
   useIsInCart,
+  useCartIds,
   useCartCount,
   useCartHasHydrated,
   useToggleCart,
