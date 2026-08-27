@@ -2,6 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { delay, http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
+import { PRODUCT_PAGE_SIZE } from '@/features/product';
 import { PRODUCTS } from '@tests/msw/fixtures';
 import { productListResponse } from '@tests/msw/handlers';
 import { server } from '@tests/msw/server';
@@ -9,15 +10,21 @@ import { renderProductList } from '@tests/render-product-list';
 
 const totalCountText = `총 ${PRODUCTS.length}개`;
 
+const totalPages = Math.ceil(PRODUCTS.length / PRODUCT_PAGE_SIZE);
+
 const firstProductName = PRODUCTS[0].name;
 
-const casualProduct = PRODUCTS.find((product) => product.category === 'casual');
+const secondPageCasualProduct = PRODUCTS.slice(PRODUCT_PAGE_SIZE).find(
+  (product) => product.category === 'casual',
+);
 
-if (!casualProduct) {
-  throw new Error('조건 변경 테스트에 사용할 캐주얼 상품이 없습니다.');
+if (!secondPageCasualProduct) {
+  throw new Error(
+    '조건 변경 실패 테스트에 사용할 2페이지 캐주얼 상품이 없습니다.',
+  );
 }
 
-const casualProductName = casualProduct.name;
+const secondPageCasualProductName = secondPageCasualProduct.name;
 
 const homeProducts = PRODUCTS.filter((product) => product.category === 'home');
 
@@ -129,6 +136,10 @@ describe('목록 조회 실패', () => {
 
     expect(await screen.findByText(totalCountText)).toBeInTheDocument();
 
+    // 직전 목록이 첫 목록과 다르도록 2페이지로 옮겨 둔다
+    await user.click(screen.getByRole('button', { name: '다음' }));
+    expect(await screen.findByText(`2 / ${totalPages}`)).toBeInTheDocument();
+
     failProductList();
     await user.selectOptions(
       screen.getByRole('combobox', { name: '카테고리' }),
@@ -139,9 +150,13 @@ describe('목록 조회 실패', () => {
 
     expect(banner).toHaveTextContent('새 목록을 불러오지 못했습니다.');
     expect(screen.getByText(totalCountText)).toBeInTheDocument();
+    expect(screen.getByText(`2 / ${totalPages}`)).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: casualProductName }),
+      screen.getByRole('heading', { name: secondPageCasualProductName }),
     ).toBeInTheDocument();
+    // 직전 목록의 총 페이지 수로 이동하면 안 되므로 페이지 이동을 잠근다
+    expect(screen.getByRole('button', { name: '이전' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
 
     restoreProductList();
     await user.click(within(banner).getByRole('button', { name: '다시 시도' }));
@@ -154,7 +169,7 @@ describe('목록 조회 실패', () => {
       screen.getByRole('heading', { name: firstHomeProductName }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: casualProductName }),
+      screen.queryByRole('heading', { name: secondPageCasualProductName }),
     ).not.toBeInTheDocument();
   });
 });
