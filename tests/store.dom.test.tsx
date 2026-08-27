@@ -5,27 +5,12 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { CartCount } from '@/entities/cart';
 import { useCartStore } from '@/entities/cart/model/cart-store';
-import type { Product } from '@/entities/product';
 import { ProductCard } from '@/entities/product';
 import { WishlistCount } from '@/entities/wishlist';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlist-store';
 import { CartToggleButton } from '@/features/cart';
 import { WishlistToggleButton } from '@/features/wishlist';
-
-const PRODUCT: Product = {
-  id: 'p9',
-  brand: 'Loopers Select',
-  name: '오크 원형 사이드 테이블',
-  category: 'home',
-  price: 89000,
-  originalPrice: null,
-  image: '/images/products/p9.jpg',
-  freeShipping: true,
-  sizes: [],
-  rating: 4.7,
-  reviewCount: 128,
-  createdAt: '2026-01-01T00:00:00.000Z',
-};
+import { PRODUCT } from '@tests/msw/fixtures';
 
 beforeAll(async () => {
   await useCartStore.persist.rehydrate();

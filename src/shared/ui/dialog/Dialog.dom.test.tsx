@@ -147,11 +147,12 @@ describe('열고 닫기 (uncontrolled)', () => {
     expect(bottomSpy).not.toHaveBeenCalled();
   });
 
-  it('인라인 onOpenChange로 부모가 리렌더돼도 Esc 리스너는 한 번만 등록된다', () => {
-    const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+  it('인라인 onOpenChange로 부모가 리렌더돼도 Esc 한 번에 onOpenChange는 한 번만 호출된다', async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
 
     const renderOpenDialog = () => (
-      <Dialog open onOpenChange={(open) => void open}>
+      <Dialog open onOpenChange={(open) => onOpenChange(open)}>
         <Dialog.Content>내용</Dialog.Content>
       </Dialog>
     );
@@ -160,11 +161,9 @@ describe('열고 닫기 (uncontrolled)', () => {
     rerender(renderOpenDialog());
     rerender(renderOpenDialog());
 
-    const keydownRegistrations = addEventListenerSpy.mock.calls.filter(
-      ([type]) => type === 'keydown',
-    );
+    await user.keyboard('{Escape}');
 
-    expect(keydownRegistrations).toHaveLength(1);
+    expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(false);
   });
 });
 
@@ -289,6 +288,8 @@ describe('Portal과 scroll lock', () => {
     rerender(renderPair(false, false));
 
     expect(document.body.style.overflow).toBe('auto');
+
+    document.body.style.overflow = '';
   });
 
   it('열린 채 unmount되어도 스크롤 잠금이 해제된다', () => {
@@ -300,6 +301,8 @@ describe('Portal과 scroll lock', () => {
     unmount();
 
     expect(document.body.style.overflow).toBe('scroll');
+
+    document.body.style.overflow = '';
   });
 
   it('unmount 후 Esc를 눌러도 리스너가 남아 있지 않다', async () => {
