@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import type { HomeResponse } from '@/_pages/home/model';
+import type { OrderListResponse } from '@/entities/order/model';
 import type { ProductListResponse } from '@/entities/product/model';
 
 // [AI] MSW 기본 핸들러용 fixture 데이터. 라우트 핸들러의 정렬·필터링 로직을
@@ -41,6 +42,24 @@ export const sampleProducts = [
   },
 ];
 
+// [AI] 주문 내역 fixture. 실제 API는 세션 쿠키가 없으면 401을 돌려주지만,
+// 기본 핸들러는 성공 경로만 둔다. 401(로그인 필요)·빈 결과는 테스트에서 server.use()로 덮어쓴다.
+export const sampleOrders = [
+  {
+    id: 'o1',
+    createdAt: '2026-08-01T10:00:00.000Z',
+    items: [
+      { productId: 'p1', quantity: 2 },
+      { productId: 'p3', quantity: 1 },
+    ],
+  },
+  {
+    id: 'o2',
+    createdAt: '2026-08-15T18:30:00.000Z',
+    items: [{ productId: 'p2', quantity: 1 }],
+  },
+] satisfies OrderListResponse['orders'];
+
 export const handlers = [
   http.get('*/api/home', () =>
     HttpResponse.json({
@@ -63,5 +82,9 @@ export const handlers = [
       page: 1,
       pageSize: 12,
     } satisfies ProductListResponse)
+  ),
+
+  http.get('*/api/orders', () =>
+    HttpResponse.json({ orders: sampleOrders } satisfies OrderListResponse)
   ),
 ];
