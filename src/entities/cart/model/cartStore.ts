@@ -14,6 +14,7 @@ export type CartStore = {
   addCartItem: (productId: string) => void;
   increaseCartQuantity: (productId: string) => void;
   decreaseCartQuantity: (productId: string) => void;
+  clearCart: () => void;
   hasHydrated: boolean;
   setHasHydrated: (hasHydrated: boolean) => void;
 };
@@ -69,6 +70,9 @@ export const useCartStore = create<CartStore>()(
             },
           };
         });
+      },
+      clearCart: () => {
+        set({ cartProductQuantityMap: {} });
       },
       hasHydrated: false,
       setHasHydrated: (hasHydrated) => {

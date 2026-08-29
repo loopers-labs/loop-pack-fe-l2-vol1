@@ -19,6 +19,7 @@ describe("cart persistence", () => {
       addCartItem: () => undefined,
       increaseCartQuantity: () => undefined,
       decreaseCartQuantity: () => undefined,
+      clearCart: () => undefined,
       hasHydrated: true,
       setHasHydrated: () => undefined,
     } satisfies CartStore);

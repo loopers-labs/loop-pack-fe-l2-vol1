@@ -26,6 +26,7 @@ function createCartStoreState(state: Pick<CartStore, "cartProductQuantityMap">):
     addCartItem: () => undefined,
     increaseCartQuantity: () => undefined,
     decreaseCartQuantity: () => undefined,
+    clearCart: () => undefined,
     hasHydrated: true,
     setHasHydrated: () => undefined,
   };

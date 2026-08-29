@@ -41,6 +41,14 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().cartProductQuantityMap).toEqual({});
   });
 
+  it("장바구니를 비우면 모든 상품 수량을 제거한다", () => {
+    useCartStore.setState({ cartProductQuantityMap: { p1: 1, p2: 2 } });
+
+    useCartStore.getState().clearCart();
+
+    expect(useCartStore.getState().cartProductQuantityMap).toEqual({});
+  });
+
   it("장바구니 상태가 map이 아니어도 add하면 안전한 수량 map으로 복구한다", () => {
     useCartStore.setState(JSON.parse('{ "cartProductQuantityMap": "13" }'));
 
@@ -61,6 +69,7 @@ describe("useCartStore", () => {
       addCartItem: () => undefined,
       increaseCartQuantity: () => undefined,
       decreaseCartQuantity: () => undefined,
+      clearCart: () => undefined,
       hasHydrated: false,
       setHasHydrated: () => undefined,
     } satisfies CartStore;

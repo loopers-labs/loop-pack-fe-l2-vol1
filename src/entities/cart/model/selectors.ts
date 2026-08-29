@@ -14,4 +14,6 @@ export const selectIncreaseCartQuantity = (state: CartStore) => state.increaseCa
 
 export const selectDecreaseCartQuantity = (state: CartStore) => state.decreaseCartQuantity;
 
+export const selectClearCart = (state: CartStore) => state.clearCart;
+
 export const selectCartHasHydrated = (state: CartStore) => state.hasHydrated;

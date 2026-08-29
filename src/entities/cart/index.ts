@@ -2,6 +2,7 @@ export {
   selectCartCount,
   selectCartHasHydrated,
   selectCartProductQuantityMap,
+  selectClearCart,
   selectDecreaseCartQuantity,
   selectIncreaseCartQuantity,
   selectIsProductInCart,
