@@ -1,18 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
+import type { SessionUser } from "@/entities/session";
 
 // 이 파일은 node:crypto 를 쓴다. Node 런타임(API 라우트)에서만 import 해야 한다.
 // Edge 런타임에서 쿠키 이름이 필요하면 auth-cookies.ts 에서 가져온다.
 //
 // 6주차에 구조를 바꾼 뒤에도 그대로 동작해야 하므로 응답 타입, 지연,
 // 상품 id 검증을 모두 여기서 처리한다
-
-// 인증 응답 계약. 본인 구조에 맞는 자리로 옮겨도 된다
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-};
 
 export type AuthScenario = "invalid" | "expired" | "error" | "slow";
 
@@ -26,7 +20,7 @@ export type LoginRequest = {
 };
 
 export type SessionResponse = {
-  user: AuthUser;
+  user: SessionUser;
 };
 
 export type OrderItem = {
@@ -57,7 +51,7 @@ export const TEST_PASSWORD = "looper1234";
 // ponytail: mock 백엔드라 비밀 값을 코드에 둔다. 실제 서비스라면 환경 변수만 허용한다
 const sessionSecret = () => process.env.AUTH_SESSION_SECRET ?? "loopers-week09-secret";
 
-export const accounts: AuthUser[] = Array.from({ length: 8 }, (_, index) => ({
+export const accounts: SessionUser[] = Array.from({ length: 8 }, (_, index) => ({
   id: `u${index + 1}`,
   name: `루퍼${index + 1}`,
   email: `looper${index + 1}@loopers.dev`,
@@ -72,7 +66,7 @@ export const isAuthScenario = (value: string): value is AuthScenario =>
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-export const findAccount = (email: string, password: string): AuthUser | null => {
+export const findAccount = (email: string, password: string): SessionUser | null => {
   if (password !== TEST_PASSWORD) {
     return null;
   }
@@ -96,7 +90,7 @@ export const createSessionToken = (userId: string, nowMs = Date.now()) => {
 export const readSessionToken = (
   token: string | undefined,
   nowMs = Date.now(),
-): AuthUser | null => {
+): SessionUser | null => {
   if (!token) {
     return null;
   }

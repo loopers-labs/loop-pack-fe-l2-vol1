@@ -9,9 +9,9 @@ import {
   waitForAuthApi,
 } from "@/app/api/_data/auth";
 import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
+import type { SessionUser } from "@/entities/session";
 import type {
   AuthErrorResponse,
-  AuthUser,
   OrderCreateResponse,
   OrderItem,
   OrderListResponse,
@@ -19,7 +19,7 @@ import type {
 import { HTTP_STATUS } from "@/shared/http-status";
 
 type Resolved =
-  | { ok: true; user: AuthUser; scenario: string | null }
+  | { ok: true; user: SessionUser; scenario: string | null }
   | { ok: false; response: NextResponse<AuthErrorResponse> };
 
 const resolveSession = async (request: NextRequest): Promise<Resolved> => {
