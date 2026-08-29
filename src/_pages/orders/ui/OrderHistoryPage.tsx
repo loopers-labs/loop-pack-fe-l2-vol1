@@ -1,4 +1,14 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { orderQueries } from "@/entities/order";
+import { OrderHistoryContent } from "./OrderHistoryContent";
+import { OrderHistoryList } from "./OrderHistoryList";
+
 export function OrderHistoryPage() {
+  const ordersQuery = useQuery(orderQueries.list());
+  const orders = ordersQuery.data?.orders ?? [];
+
   return (
     <section className="mt-10 grid gap-6">
       <div className="grid gap-2">
@@ -9,9 +19,15 @@ export function OrderHistoryPage() {
         </p>
       </div>
 
-      <div className="rounded-gds-lg bg-white p-6 text-sm text-gds-gray-700 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
-        아직 주문 내역이 없습니다.
-      </div>
+      <OrderHistoryContent
+        isLoading={ordersQuery.isPending}
+        error={ordersQuery.error}
+        isEmpty={orders.length === 0}
+        totalCount={orders.length}
+        onRetry={() => void ordersQuery.refetch()}
+      >
+        <OrderHistoryList orders={orders} />
+      </OrderHistoryContent>
     </section>
   );
 }

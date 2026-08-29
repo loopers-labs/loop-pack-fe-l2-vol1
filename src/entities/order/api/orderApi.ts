@@ -9,6 +9,10 @@ export type CreateOrderResponse = {
   order: Order;
 };
 
+export type OrderListResponse = {
+  orders: Order[];
+};
+
 export async function createOrder(request: CreateOrderRequest): Promise<CreateOrderResponse> {
   const response = await fetch(createApiUrl("/api/orders"), {
     method: "POST",
@@ -22,4 +26,16 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
   }
 
   return response.json() as Promise<CreateOrderResponse>;
+}
+
+export async function getOrders(): Promise<OrderListResponse> {
+  const response = await fetch(createApiUrl("/api/orders"), {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw await parseApiError(response, "주문 내역을 불러오지 못했습니다.");
+  }
+
+  return response.json() as Promise<OrderListResponse>;
 }
