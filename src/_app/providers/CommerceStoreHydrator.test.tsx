@@ -35,6 +35,7 @@ describe("commerce hydration", () => {
     );
     useCartStore.setState({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -51,6 +52,7 @@ describe("commerce hydration", () => {
   it("store 복원 전에는 헤더 개수를 확정값처럼 렌더링하지 않는다", () => {
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -67,6 +69,7 @@ describe("commerce hydration", () => {
   it("store 복원 전후에 헤더 메뉴 폭이 바뀌지 않도록 개수 영역 폭을 예약한다", () => {
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -83,6 +86,7 @@ describe("commerce hydration", () => {
   it("store 복원 후에는 헤더 개수를 저장값 기준으로 렌더링한다", () => {
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: true,
     });
     useWishlistStore.setState({
@@ -99,6 +103,7 @@ describe("commerce hydration", () => {
   it("store 복원 전에는 위시리스트 버튼 상태를 서버 기준 기본값으로 렌더링한다", () => {
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -126,6 +131,7 @@ describe("commerce hydration", () => {
   it("store 복원 전에는 상품 액션 버튼을 비활성화한다", () => {
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -148,6 +154,7 @@ describe("commerce hydration", () => {
   it("store 복원 후에는 위시리스트 버튼 상태만 저장값 기준으로 렌더링한다", () => {
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: true,
     });
     useWishlistStore.setState({

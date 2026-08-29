@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  selectCartCount,
   selectCartProductQuantityMap,
-  selectClearCart,
+  selectRemoveSelectedCartItems,
+  selectSelectedCartCount,
+  selectSelectedCartProductIdMap,
   useCartStore,
 } from "@/entities/cart";
 import { createOrder } from "@/entities/order";
@@ -15,17 +16,20 @@ import { createOrder } from "@/entities/order";
 export function OrderPage() {
   const router = useRouter();
   const cartProductQuantityMap = useCartStore(selectCartProductQuantityMap);
-  const cartCount = useCartStore(selectCartCount);
-  const clearCart = useCartStore(selectClearCart);
+  const selectedCartProductIdMap = useCartStore(selectSelectedCartProductIdMap);
+  const selectedCartCount = useCartStore(selectSelectedCartCount);
+  const removeSelectedCartItems = useCartStore(selectRemoveSelectedCartItems);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const cartItems = Object.entries(cartProductQuantityMap);
+  const cartItems = Object.entries(cartProductQuantityMap).filter(
+    ([productId]) => selectedCartProductIdMap[productId] === true,
+  );
   const orderMutation = useMutation({
     mutationFn: createOrder,
     onMutate: () => {
       setErrorMessage(null);
     },
     onSuccess: () => {
-      clearCart();
+      removeSelectedCartItems();
       router.push("/orders");
     },
     onError: (error) => {
@@ -61,7 +65,7 @@ export function OrderPage() {
           </div>
         ) : (
           <div className="grid gap-5">
-            <p className="text-sm font-semibold text-gds-gray-900">총 {cartCount}개</p>
+            <p className="text-sm font-semibold text-gds-gray-900">총 {selectedCartCount}개</p>
             <ul className="grid gap-3 border-t border-gds-gray-200 pt-5">
               {cartItems.map(([productId, quantity]) => (
                 <li

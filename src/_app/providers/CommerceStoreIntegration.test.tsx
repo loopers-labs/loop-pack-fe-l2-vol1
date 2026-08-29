@@ -38,6 +38,7 @@ describe("CommerceStoreIntegration", () => {
   beforeEach(() => {
     useCartStore.setState({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       hasHydrated: true,
     });
     useWishlistStore.setState({

@@ -53,6 +53,7 @@ describe("ProductListPageClient", () => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
     useCartStore.setState({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
     });
     useWishlistStore.setState({
       wishlistProductIdMap: {},

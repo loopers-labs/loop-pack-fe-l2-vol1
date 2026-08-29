@@ -22,6 +22,7 @@ describe("CommerceHeader", () => {
   beforeEach(() => {
     useCartStore.setState({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       hasHydrated: true,
     });
     useWishlistStore.setState({
@@ -51,6 +52,7 @@ describe("CommerceHeader", () => {
     let didRequestLogout = false;
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: true,
     });
     useWishlistStore.setState({
@@ -85,6 +87,7 @@ describe("CommerceHeader", () => {
   it("장바구니 개수는 장바구니 페이지로 이동하는 링크에 표시한다", async () => {
     useCartStore.setState({
       cartProductQuantityMap: { p1: 2 },
+      selectedCartProductIdMap: { p1: true },
       hasHydrated: true,
     });
     server.use(

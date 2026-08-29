@@ -6,6 +6,7 @@ describe("useCartStore", () => {
   beforeEach(() => {
     useCartStore.setState({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       hasHydrated: false,
     });
   });
@@ -14,6 +15,7 @@ describe("useCartStore", () => {
     useCartStore.getState().addCartItem("p1");
 
     expect(useCartStore.getState().cartProductQuantityMap).toEqual({ p1: 1 });
+    expect(useCartStore.getState().selectedCartProductIdMap).toEqual({ p1: true });
   });
 
   it("장바구니에 담긴 상품을 다시 add하면 수량을 1 늘린다", () => {
@@ -34,19 +36,51 @@ describe("useCartStore", () => {
   });
 
   it("수량 1인 상품을 줄이면 장바구니에서 제거한다", () => {
-    useCartStore.setState({ cartProductQuantityMap: { p1: 1 } });
+    useCartStore.setState({
+      cartProductQuantityMap: { p1: 1 },
+      selectedCartProductIdMap: { p1: true },
+    });
 
     useCartStore.getState().decreaseCartQuantity("p1");
 
     expect(useCartStore.getState().cartProductQuantityMap).toEqual({});
+    expect(useCartStore.getState().selectedCartProductIdMap).toEqual({});
   });
 
   it("장바구니를 비우면 모든 상품 수량을 제거한다", () => {
-    useCartStore.setState({ cartProductQuantityMap: { p1: 1, p2: 2 } });
+    useCartStore.setState({
+      cartProductQuantityMap: { p1: 1, p2: 2 },
+      selectedCartProductIdMap: { p1: true },
+    });
 
     useCartStore.getState().clearCart();
 
     expect(useCartStore.getState().cartProductQuantityMap).toEqual({});
+    expect(useCartStore.getState().selectedCartProductIdMap).toEqual({});
+  });
+
+  it("장바구니 상품 선택을 toggle하면 선택 상태를 추가하고 제거한다", () => {
+    useCartStore.setState({
+      cartProductQuantityMap: { p1: 1, p2: 1 },
+      selectedCartProductIdMap: { p1: true },
+    });
+
+    useCartStore.getState().toggleCartItemSelection("p1");
+    useCartStore.getState().toggleCartItemSelection("p2");
+
+    expect(useCartStore.getState().selectedCartProductIdMap).toEqual({ p2: true });
+  });
+
+  it("선택된 장바구니 상품만 제거한다", () => {
+    useCartStore.setState({
+      cartProductQuantityMap: { p1: 1, p2: 2 },
+      selectedCartProductIdMap: { p1: true },
+    });
+
+    useCartStore.getState().removeSelectedCartItems();
+
+    expect(useCartStore.getState().cartProductQuantityMap).toEqual({ p2: 2 });
+    expect(useCartStore.getState().selectedCartProductIdMap).toEqual({});
   });
 
   it("장바구니 상태가 map이 아니어도 add하면 안전한 수량 map으로 복구한다", () => {
@@ -66,10 +100,13 @@ describe("useCartStore", () => {
 
     const currentState = {
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       addCartItem: () => undefined,
       increaseCartQuantity: () => undefined,
       decreaseCartQuantity: () => undefined,
       clearCart: () => undefined,
+      toggleCartItemSelection: () => undefined,
+      removeSelectedCartItems: () => undefined,
       hasHydrated: false,
       setHasHydrated: () => undefined,
     } satisfies CartStore;
@@ -82,5 +119,6 @@ describe("useCartStore", () => {
     );
 
     expect(mergedState.cartProductQuantityMap).toEqual({});
+    expect(mergedState.selectedCartProductIdMap).toEqual({});
   });
 });

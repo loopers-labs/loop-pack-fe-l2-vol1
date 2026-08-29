@@ -7,14 +7,19 @@ import {
   normalizePersistedCartState,
   selectPersistedCartState,
 } from "./cartPersistence";
+import { normalizeIdSet } from "@/shared/lib/id-set/idSet";
+import type { IdSet } from "@/shared/lib/id-set/idSet";
 import type { CartProductQuantityMap } from "./cartPersistence";
 
 export type CartStore = {
   cartProductQuantityMap: CartProductQuantityMap;
+  selectedCartProductIdMap: IdSet;
   addCartItem: (productId: string) => void;
   increaseCartQuantity: (productId: string) => void;
   decreaseCartQuantity: (productId: string) => void;
   clearCart: () => void;
+  toggleCartItemSelection: (productId: string) => void;
+  removeSelectedCartItems: () => void;
   hasHydrated: boolean;
   setHasHydrated: (hasHydrated: boolean) => void;
 };
@@ -23,16 +28,22 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set) => ({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       addCartItem: (productId) => {
         set((state) => {
           const cartProductQuantityMap =
             normalizeCartProductQuantityMap(state.cartProductQuantityMap) ?? {};
+          const selectedCartProductIdMap = normalizeIdSet(state.selectedCartProductIdMap);
           const currentQuantity = cartProductQuantityMap[productId] ?? 0;
 
           return {
             cartProductQuantityMap: {
               ...cartProductQuantityMap,
               [productId]: currentQuantity + 1,
+            },
+            selectedCartProductIdMap: {
+              ...selectedCartProductIdMap,
+              [productId]: true,
             },
           };
         });
@@ -59,8 +70,14 @@ export const useCartStore = create<CartStore>()(
 
           if (currentQuantity <= 1) {
             const { [productId]: _removed, ...nextCartProductQuantityMap } = cartProductQuantityMap;
+            const { [productId]: _unselected, ...nextSelectedCartProductIdMap } = normalizeIdSet(
+              state.selectedCartProductIdMap,
+            );
 
-            return { cartProductQuantityMap: nextCartProductQuantityMap };
+            return {
+              cartProductQuantityMap: nextCartProductQuantityMap,
+              selectedCartProductIdMap: nextSelectedCartProductIdMap,
+            };
           }
 
           return {
@@ -72,7 +89,50 @@ export const useCartStore = create<CartStore>()(
         });
       },
       clearCart: () => {
-        set({ cartProductQuantityMap: {} });
+        set({ cartProductQuantityMap: {}, selectedCartProductIdMap: {} });
+      },
+      toggleCartItemSelection: (productId) => {
+        set((state) => {
+          const cartProductQuantityMap =
+            normalizeCartProductQuantityMap(state.cartProductQuantityMap) ?? {};
+
+          if (cartProductQuantityMap[productId] === undefined) {
+            return {};
+          }
+
+          const selectedCartProductIdMap = normalizeIdSet(state.selectedCartProductIdMap);
+          if (selectedCartProductIdMap[productId] === true) {
+            const { [productId]: _removed, ...nextSelectedCartProductIdMap } =
+              selectedCartProductIdMap;
+
+            return { selectedCartProductIdMap: nextSelectedCartProductIdMap };
+          }
+
+          return {
+            selectedCartProductIdMap: {
+              ...selectedCartProductIdMap,
+              [productId]: true,
+            },
+          };
+        });
+      },
+      removeSelectedCartItems: () => {
+        set((state) => {
+          const selectedProductIds = new Set(
+            Object.keys(normalizeIdSet(state.selectedCartProductIdMap)),
+          );
+          const cartProductQuantityMap =
+            normalizeCartProductQuantityMap(state.cartProductQuantityMap) ?? {};
+
+          return {
+            cartProductQuantityMap: Object.fromEntries(
+              Object.entries(cartProductQuantityMap).filter(
+                ([productId]) => !selectedProductIds.has(productId),
+              ),
+            ),
+            selectedCartProductIdMap: {},
+          };
+        });
       },
       hasHydrated: false,
       setHasHydrated: (hasHydrated) => {

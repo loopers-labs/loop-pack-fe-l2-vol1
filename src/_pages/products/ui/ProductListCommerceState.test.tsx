@@ -37,6 +37,7 @@ describe("ProductListCommerceState", () => {
     localStorage.clear();
     useCartStore.setState({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       hasHydrated: true,
     });
     useWishlistStore.setState({

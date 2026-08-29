@@ -16,16 +16,20 @@ describe("cart persistence", () => {
   it("저장 대상은 장바구니 상품 수량만 남긴다", () => {
     const persistedState = selectPersistedCartState({
       cartProductQuantityMap: { p1: 2 },
+      selectedCartProductIdMap: { p1: true },
       addCartItem: () => undefined,
       increaseCartQuantity: () => undefined,
       decreaseCartQuantity: () => undefined,
       clearCart: () => undefined,
+      toggleCartItemSelection: () => undefined,
+      removeSelectedCartItems: () => undefined,
       hasHydrated: true,
       setHasHydrated: () => undefined,
     } satisfies CartStore);
 
     expect(persistedState).toEqual({
       cartProductQuantityMap: { p1: 2 },
+      selectedCartProductIdMap: { p1: true },
     });
   });
 
@@ -36,6 +40,7 @@ describe("cart persistence", () => {
 
     expect(persistedState).toEqual({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
     });
   });
 
@@ -47,6 +52,7 @@ describe("cart persistence", () => {
 
     expect(persistedState).toEqual({
       cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
     });
   });
 
@@ -57,6 +63,7 @@ describe("cart persistence", () => {
 
     expect(persistedState).toEqual({
       cartProductQuantityMap: { p1: 2, p5: 1 },
+      selectedCartProductIdMap: { p1: true, p5: true },
     });
   });
 
@@ -67,6 +74,19 @@ describe("cart persistence", () => {
 
     expect(persistedState).toEqual({
       cartProductQuantityMap: { p1: 1, p3: 1 },
+      selectedCartProductIdMap: { p1: true, p3: true },
+    });
+  });
+
+  it("저장된 선택 상태는 장바구니에 남은 상품 id만 유지한다", () => {
+    const persistedState = normalizePersistedCartState({
+      cartProductQuantityMap: { p1: 2, p2: 1 },
+      selectedCartProductIdMap: { p1: true, p3: true },
+    });
+
+    expect(persistedState).toEqual({
+      cartProductQuantityMap: { p1: 2, p2: 1 },
+      selectedCartProductIdMap: { p1: true },
     });
   });
 });

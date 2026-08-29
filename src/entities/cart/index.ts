@@ -6,6 +6,10 @@ export {
   selectDecreaseCartQuantity,
   selectIncreaseCartQuantity,
   selectIsProductInCart,
+  selectRemoveSelectedCartItems,
+  selectSelectedCartCount,
+  selectSelectedCartProductIdMap,
+  selectToggleCartItemSelection,
   selectAddCartItem,
 } from "./model/selectors";
 export { useCartStore } from "./model/cartStore";

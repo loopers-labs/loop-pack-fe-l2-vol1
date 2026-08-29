@@ -6,14 +6,20 @@ import {
   selectCartProductQuantityMap,
   selectDecreaseCartQuantity,
   selectIncreaseCartQuantity,
+  selectSelectedCartCount,
+  selectSelectedCartProductIdMap,
+  selectToggleCartItemSelection,
   useCartStore,
 } from "@/entities/cart";
 
 export function CartPage() {
   const cartProductQuantityMap = useCartStore(selectCartProductQuantityMap);
+  const selectedCartProductIdMap = useCartStore(selectSelectedCartProductIdMap);
   const cartCount = useCartStore(selectCartCount);
+  const selectedCartCount = useCartStore(selectSelectedCartCount);
   const increaseCartQuantity = useCartStore(selectIncreaseCartQuantity);
   const decreaseCartQuantity = useCartStore(selectDecreaseCartQuantity);
+  const toggleCartItemSelection = useCartStore(selectToggleCartItemSelection);
   const cartItems = Object.entries(cartProductQuantityMap);
 
   return (
@@ -25,7 +31,10 @@ export function CartPage() {
       </div>
 
       <div className="rounded-gds-lg bg-white p-5 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
-        <p className="text-sm font-semibold text-gds-gray-900">총 {cartCount}개</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <p className="text-sm font-semibold text-gds-gray-900">총 {cartCount}개</p>
+          <p className="text-sm font-semibold text-gds-gray-700">선택 {selectedCartCount}개</p>
+        </div>
 
         {cartItems.length === 0 ? (
           <div className="mt-5 grid gap-4 border-t border-gds-gray-200 pt-5">
@@ -46,9 +55,18 @@ export function CartPage() {
                   className="flex flex-wrap items-center justify-between gap-3 rounded-gds-sm bg-gds-gray-50 px-4 py-3"
                   aria-label={`${productId} 수량 ${quantity}`}
                 >
-                  <div className="grid gap-1">
-                    <p className="text-sm font-semibold text-gds-gray-900">{productId}</p>
-                    <p className="text-xs text-gds-gray-600">수량 {quantity}</p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      className="size-4 accent-gds-green-500"
+                      type="checkbox"
+                      aria-label={`${productId} 주문 선택`}
+                      checked={selectedCartProductIdMap[productId] === true}
+                      onChange={() => toggleCartItemSelection(productId)}
+                    />
+                    <div className="grid gap-1">
+                      <p className="text-sm font-semibold text-gds-gray-900">{productId}</p>
+                      <p className="text-xs text-gds-gray-600">수량 {quantity}</p>
+                    </div>
                   </div>
                   <div className="inline-flex items-center gap-2">
                     <button
@@ -74,12 +92,14 @@ export function CartPage() {
                 </li>
               ))}
             </ul>
-            <Link
-              className="w-fit justify-self-end rounded-gds-sm border border-gds-green-500 bg-gds-green-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gds-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
-              href="/order"
-            >
-              주문하기
-            </Link>
+            {selectedCartCount > 0 ? (
+              <Link
+                className="w-fit justify-self-end rounded-gds-sm border border-gds-green-500 bg-gds-green-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gds-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
+                href="/order"
+              >
+                주문하기
+              </Link>
+            ) : null}
           </div>
         )}
       </div>
