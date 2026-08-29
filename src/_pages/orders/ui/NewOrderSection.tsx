@@ -10,6 +10,7 @@ import {
 } from "@/entities/cart";
 import { CartLineList } from "@/widgets/cart";
 import { createOrder, orderQueries } from "../api/orderQueries";
+import { trackOrderStart, trackOrderComplete } from "../model/analytics";
 import styles from "./NewOrderSection.module.css";
 
 const ORDER_ERROR = "주문에 실패했습니다. 잠시 후 다시 시도해주세요.";
@@ -26,7 +27,9 @@ export function NewOrderSection() {
 
   const mutation = useMutation({
     mutationFn: createOrder,
-    onSuccess: () => {
+    onMutate: (items) => trackOrderStart(items.length),
+    onSuccess: (_data, items) => {
+      trackOrderComplete(items.length);
       // 주문된 상품은 카트에서 비운다(카트가 곧 주문). 목록은 이 생성으로만 바뀌므로 무효화 후 이동.
       clearCart();
       queryClient.invalidateQueries({ queryKey: orderQueries.all() });

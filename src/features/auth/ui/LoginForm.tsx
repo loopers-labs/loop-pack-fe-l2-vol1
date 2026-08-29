@@ -11,18 +11,30 @@ import {
 } from "@/entities/session";
 import { HttpError } from "@/shared/api";
 import { safeRedirect, REDIRECT_PARAM } from "@/shared/lib";
+import {
+  trackLoginStart,
+  trackLoginSuccess,
+  trackLoginFail,
+  type LoginFailReason,
+} from "../model/analytics";
 import styles from "./LoginForm.module.css";
 
 const CREDENTIALS_ERROR = "이메일 또는 비밀번호를 확인해주세요.";
 const GENERIC_ERROR = "잠시 후 다시 시도해주세요.";
 
-// 잘못된 자격증명(400/401)만 사용자 입력 문제로 안내하고, 그 외(5xx·네트워크)는 일시 오류로 뭉뚱그린다.
-function getLoginErrorMessage(error: unknown): string {
-  const isCredentialError =
-    error instanceof HttpError &&
-    (error.status === 400 || error.status === 401);
+// 잘못된 자격증명(400/401)이냐 그 외(5xx·네트워크)냐 — 안내 문구와 실패 계측 사유가 함께 갈린다.
+function isCredentialError(error: unknown): boolean {
+  return (
+    error instanceof HttpError && (error.status === 400 || error.status === 401)
+  );
+}
 
-  return isCredentialError ? CREDENTIALS_ERROR : GENERIC_ERROR;
+function getLoginErrorMessage(error: unknown): string {
+  return isCredentialError(error) ? CREDENTIALS_ERROR : GENERIC_ERROR;
+}
+
+function getLoginFailReason(error: unknown): LoginFailReason {
+  return isCredentialError(error) ? "credentials" : "server";
 }
 
 export function LoginForm() {
@@ -33,13 +45,17 @@ export function LoginForm() {
 
   const mutation = useMutation({
     mutationFn: login,
+    onMutate: () => trackLoginStart(),
     onSuccess: (session) => {
       // 로그인 응답의 user 로 세션 캐시를 채운다 → useSession 이 인증됨으로 바뀌고 아래 이동 effect 가 뒤를 잇는다.
       queryClient.setQueryData<SessionResponse>(
         sessionQueries.me().queryKey,
         session,
       );
+      // 세션 캐시를 채운 뒤라 이 이벤트의 공통 userId 가 방금 로그인한 사용자로 붙는다.
+      trackLoginSuccess();
     },
+    onError: (error) => trackLoginFail(getLoginFailReason(error)),
   });
 
   // 이미 로그인했거나(로그인 페이지 직접 진입) 방금 로그인에 성공하면 원래 경로로 보낸다.
