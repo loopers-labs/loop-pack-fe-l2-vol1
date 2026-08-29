@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 import type { SubmitEvent } from "react";
@@ -99,6 +100,13 @@ export function LoginPage() {
           >
             {loginMutation.isPending ? "로그인 중입니다." : "로그인"}
           </button>
+
+          <Link
+            href="/products"
+            className="text-sm font-semibold text-gds-green-700 hover:text-gds-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
+          >
+            상품 둘러보기
+          </Link>
         </form>
       </div>
     </main>

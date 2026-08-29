@@ -75,4 +75,13 @@ describe("LoginPage", () => {
     expect(await screen.findByText("이메일 또는 비밀번호를 확인해주세요.")).toBeInTheDocument();
     expect(routerPush).not.toHaveBeenCalled();
   });
+
+  it("로그인하지 않고 상품 목록으로 이동할 수 있는 링크를 보여준다", () => {
+    renderLoginPage();
+
+    expect(screen.getByRole("link", { name: "상품 둘러보기" })).toHaveAttribute(
+      "href",
+      "/products",
+    );
+  });
 });

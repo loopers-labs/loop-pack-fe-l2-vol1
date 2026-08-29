@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { createElement } from "react";
 import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,6 +9,8 @@ import { useWishlistStore, WISHLIST_STORE_STORAGE_KEY } from "@/entities/wishlis
 import { CommerceHeader } from "@/widgets/header";
 import { CommerceProductCard } from "@/widgets/product-card";
 import { CommerceStoreHydrator } from "@/_app/providers/CommerceStoreHydrator";
+import { server } from "@/shared/config/vitest/mswServer";
+import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
@@ -25,6 +28,11 @@ const product: ProductCardItem = {
 describe("commerce hydration", () => {
   beforeEach(() => {
     localStorage.clear();
+    server.use(
+      http.get("/api/auth/me", () =>
+        HttpResponse.json({ message: "로그인이 필요합니다." }, { status: 401 }),
+      ),
+    );
     useCartStore.setState({
       cartProductIdMap: {},
       hasHydrated: false,
@@ -50,7 +58,7 @@ describe("commerce hydration", () => {
       hasHydrated: false,
     });
 
-    render(<CommerceHeader />);
+    renderWithAppProviders(<CommerceHeader />);
 
     expect(screen.getByLabelText("위시리스트 -")).toBeInTheDocument();
     expect(screen.getByLabelText("장바구니 -")).toBeInTheDocument();
@@ -66,7 +74,7 @@ describe("commerce hydration", () => {
       hasHydrated: false,
     });
 
-    render(<CommerceHeader />);
+    renderWithAppProviders(<CommerceHeader />);
 
     expect(screen.getByLabelText("위시리스트 -")).toHaveClass("min-w-[7.5rem]");
     expect(screen.getByLabelText("장바구니 -")).toHaveClass("min-w-[7rem]");
@@ -82,7 +90,7 @@ describe("commerce hydration", () => {
       hasHydrated: true,
     });
 
-    render(<CommerceHeader />);
+    renderWithAppProviders(<CommerceHeader />);
 
     expect(screen.getByLabelText("위시리스트 1")).toBeInTheDocument();
     expect(screen.getByLabelText("장바구니 1")).toBeInTheDocument();

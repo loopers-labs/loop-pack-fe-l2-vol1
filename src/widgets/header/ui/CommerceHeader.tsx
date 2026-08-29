@@ -1,7 +1,9 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { selectCartCount, selectCartHasHydrated, useCartStore } from "@/entities/cart";
+import { logout, sessionQueries } from "@/entities/session";
 import {
   selectWishlistCount,
   selectWishlistHasHydrated,
@@ -9,12 +11,21 @@ import {
 } from "@/entities/wishlist";
 
 export function CommerceHeader() {
+  const queryClient = useQueryClient();
+  const sessionQuery = useQuery(sessionQueries.me());
   const cartHasHydrated = useCartStore(selectCartHasHydrated);
   const wishlistHasHydrated = useWishlistStore(selectWishlistHasHydrated);
   const wishlistCount = useWishlistStore(selectWishlistCount);
   const cartCount = useCartStore(selectCartCount);
   const visibleWishlistCount = wishlistHasHydrated ? String(wishlistCount) : "-";
   const visibleCartCount = cartHasHydrated ? String(cartCount) : "-";
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      queryClient.setQueryData(sessionQueries.me().queryKey, { user: null });
+    },
+  });
+  const user = sessionQuery.data?.user ?? null;
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-gds-gray-200 bg-gds-gray-100/95 pb-5 max-[480px]:items-start">
@@ -45,6 +56,26 @@ export function CommerceHeader() {
           <span>장바구니</span>
           <span className="inline-block min-w-[2ch] text-center">{visibleCartCount}</span>
         </span>
+        {user === null ? (
+          <Link
+            className="rounded-gds-sm px-2.5 py-1.5 font-semibold text-gds-gray-900 hover:bg-gds-green-50 hover:text-gds-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
+            href="/login"
+          >
+            로그인
+          </Link>
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <span className="font-semibold text-gds-gray-900">{user.name}님</span>
+            <button
+              className="cursor-pointer rounded-gds-sm border border-gds-gray-300 bg-white px-2.5 py-1.5 font-semibold text-gds-gray-900 hover:border-gds-green-500 hover:bg-gds-green-50 hover:text-gds-green-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
+              type="button"
+              disabled={logoutMutation.isPending}
+              onClick={() => logoutMutation.mutate()}
+            >
+              로그아웃
+            </button>
+          </span>
+        )}
       </nav>
     </header>
   );
