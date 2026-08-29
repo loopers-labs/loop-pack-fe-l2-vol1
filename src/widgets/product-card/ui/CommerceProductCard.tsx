@@ -36,7 +36,6 @@ export function CommerceProductCard({
       bottomAction={
         <CartActionButton
           label={cartLabel}
-          pressed={cartAction.isPressed}
           disabled={cartAction.disabled}
           onClick={cartAction.onClick}
         />

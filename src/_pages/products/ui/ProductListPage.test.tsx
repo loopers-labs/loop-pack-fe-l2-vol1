@@ -52,7 +52,7 @@ describe("ProductListPageClient", () => {
   beforeEach(() => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
     useCartStore.setState({
-      cartProductIdMap: {},
+      cartProductQuantityMap: {},
     });
     useWishlistStore.setState({
       wishlistProductIdMap: {},

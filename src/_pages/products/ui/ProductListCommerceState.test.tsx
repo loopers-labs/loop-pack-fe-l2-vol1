@@ -36,7 +36,7 @@ describe("ProductListCommerceState", () => {
   beforeEach(() => {
     localStorage.clear();
     useCartStore.setState({
-      cartProductIdMap: {},
+      cartProductQuantityMap: {},
       hasHydrated: true,
     });
     useWishlistStore.setState({
@@ -68,7 +68,7 @@ describe("ProductListCommerceState", () => {
     localStorage.clear();
   });
 
-  it("상품 카드 action을 토글하면 커머스 헤더 개수가 함께 증가하고 감소한다", async () => {
+  it("상품 카드 action으로 위시리스트는 토글하고 장바구니는 수량을 늘린다", async () => {
     renderProductListWithHeader();
 
     expect(await screen.findByText("첫 번째 상품")).toBeInTheDocument();
@@ -85,6 +85,6 @@ describe("ProductListCommerceState", () => {
     await userEvent.click(screen.getByRole("button", { name: "1번 상품 장바구니" }));
 
     expect(screen.getByLabelText("위시리스트 0")).toBeInTheDocument();
-    expect(screen.getByLabelText("장바구니 0")).toBeInTheDocument();
+    expect(screen.getByLabelText("장바구니 2")).toBeInTheDocument();
   });
 });

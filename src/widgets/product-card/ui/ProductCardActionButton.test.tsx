@@ -25,20 +25,13 @@ describe("product card action buttons", () => {
     expect(button).toHaveTextContent("찜 해제");
   });
 
-  it("cart action은 pressed 상태와 버튼 문구를 렌더링한다", () => {
-    render(
-      <CartActionButton
-        label="테스트 상품 장바구니"
-        pressed={true}
-        disabled={false}
-        onClick={() => {}}
-      />,
-    );
+  it("cart action은 토글 상태를 노출하지 않고 담기 action만 제공한다", () => {
+    render(<CartActionButton label="테스트 상품 장바구니" disabled={false} onClick={() => {}} />);
 
     const button = screen.getByRole("button", { name: "테스트 상품 장바구니" });
 
-    expect(button).toHaveAttribute("aria-pressed", "true");
-    expect(button).toHaveTextContent("빼기");
+    expect(button).not.toHaveAttribute("aria-pressed");
+    expect(button).toHaveTextContent("담기");
   });
 
   it("버튼을 누르면 전달받은 action을 호출한다", async () => {
@@ -53,12 +46,7 @@ describe("product card action buttons", () => {
           disabled={false}
           onClick={onWishlistClick}
         />
-        <CartActionButton
-          label="테스트 상품 장바구니"
-          pressed={false}
-          disabled={false}
-          onClick={onCartClick}
-        />
+        <CartActionButton label="테스트 상품 장바구니" disabled={false} onClick={onCartClick} />
       </>,
     );
 

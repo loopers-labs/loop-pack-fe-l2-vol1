@@ -1,10 +1,17 @@
 import type { CartStore } from "./cartStore";
 
-export const selectCartCount = (state: CartStore) => Object.keys(state.cartProductIdMap).length;
+export const selectCartProductQuantityMap = (state: CartStore) => state.cartProductQuantityMap;
+
+export const selectCartCount = (state: CartStore) =>
+  Object.values(state.cartProductQuantityMap).reduce((total, quantity) => total + quantity, 0);
 
 export const selectIsProductInCart = (productId: string) => (state: CartStore) =>
-  state.cartProductIdMap[productId] === true;
+  state.cartProductQuantityMap[productId] !== undefined;
 
-export const selectToggleCart = (state: CartStore) => state.toggleCart;
+export const selectAddCartItem = (state: CartStore) => state.addCartItem;
+
+export const selectIncreaseCartQuantity = (state: CartStore) => state.increaseCartQuantity;
+
+export const selectDecreaseCartQuantity = (state: CartStore) => state.decreaseCartQuantity;
 
 export const selectCartHasHydrated = (state: CartStore) => state.hasHydrated;

@@ -1,0 +1,65 @@
+import { cleanup, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { useCartStore } from "@/entities/cart";
+import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
+import { CartPage } from "./CartPage";
+
+describe("CartPage", () => {
+  beforeEach(() => {
+    useCartStore.setState({
+      cartProductQuantityMap: {},
+      hasHydrated: true,
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("장바구니가 비어 있으면 빈 상태와 상품 이동 링크를 보여준다", () => {
+    renderWithAppProviders(<CartPage />);
+
+    expect(screen.getByRole("heading", { name: "장바구니", level: 1 })).toBeInTheDocument();
+    expect(screen.getByText("장바구니가 비어 있습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "상품 둘러보기" })).toHaveAttribute(
+      "href",
+      "/products",
+    );
+    expect(screen.queryByRole("link", { name: "주문하기" })).not.toBeInTheDocument();
+  });
+
+  it("장바구니 상품 수량과 총 개수를 보여준다", () => {
+    useCartStore.setState({
+      cartProductQuantityMap: { p1: 2, p2: 1 },
+      hasHydrated: true,
+    });
+
+    renderWithAppProviders(<CartPage />);
+
+    expect(screen.getByText("총 3개")).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: "p1 수량 2" })).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: "p2 수량 1" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "주문하기" })).toHaveAttribute("href", "/order");
+  });
+
+  it("수량 버튼으로 상품 수량을 늘리고 줄인다", async () => {
+    useCartStore.setState({
+      cartProductQuantityMap: { p1: 1 },
+      hasHydrated: true,
+    });
+
+    renderWithAppProviders(<CartPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: "p1 수량 증가" }));
+
+    expect(screen.getByText("총 2개")).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: "p1 수량 2" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "p1 수량 감소" }));
+    await userEvent.click(screen.getByRole("button", { name: "p1 수량 감소" }));
+
+    expect(screen.getByText("장바구니가 비어 있습니다.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "주문하기" })).not.toBeInTheDocument();
+  });
+});

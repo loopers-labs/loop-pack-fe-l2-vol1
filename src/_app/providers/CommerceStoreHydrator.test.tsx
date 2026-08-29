@@ -34,7 +34,7 @@ describe("commerce hydration", () => {
       ),
     );
     useCartStore.setState({
-      cartProductIdMap: {},
+      cartProductQuantityMap: {},
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -50,7 +50,7 @@ describe("commerce hydration", () => {
 
   it("store 복원 전에는 헤더 개수를 확정값처럼 렌더링하지 않는다", () => {
     useCartStore.setState({
-      cartProductIdMap: { p1: true },
+      cartProductQuantityMap: { p1: 1 },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -66,7 +66,7 @@ describe("commerce hydration", () => {
 
   it("store 복원 전후에 헤더 메뉴 폭이 바뀌지 않도록 개수 영역 폭을 예약한다", () => {
     useCartStore.setState({
-      cartProductIdMap: { p1: true },
+      cartProductQuantityMap: { p1: 1 },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -82,7 +82,7 @@ describe("commerce hydration", () => {
 
   it("store 복원 후에는 헤더 개수를 저장값 기준으로 렌더링한다", () => {
     useCartStore.setState({
-      cartProductIdMap: { p1: true },
+      cartProductQuantityMap: { p1: 1 },
       hasHydrated: true,
     });
     useWishlistStore.setState({
@@ -96,9 +96,9 @@ describe("commerce hydration", () => {
     expect(screen.getByLabelText("장바구니 1")).toBeInTheDocument();
   });
 
-  it("store 복원 전에는 상품 버튼 상태를 서버 기준 기본값으로 렌더링한다", () => {
+  it("store 복원 전에는 위시리스트 버튼 상태를 서버 기준 기본값으로 렌더링한다", () => {
     useCartStore.setState({
-      cartProductIdMap: { p1: true },
+      cartProductQuantityMap: { p1: 1 },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -118,15 +118,14 @@ describe("commerce hydration", () => {
       "aria-pressed",
       "false",
     );
-    expect(screen.getByRole("button", { name: "테스트 상품 장바구니" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "테스트 상품 장바구니" })).not.toHaveAttribute(
       "aria-pressed",
-      "false",
     );
   });
 
   it("store 복원 전에는 상품 액션 버튼을 비활성화한다", () => {
     useCartStore.setState({
-      cartProductIdMap: { p1: true },
+      cartProductQuantityMap: { p1: 1 },
       hasHydrated: false,
     });
     useWishlistStore.setState({
@@ -146,9 +145,9 @@ describe("commerce hydration", () => {
     expect(screen.getByRole("button", { name: "테스트 상품 장바구니" })).toBeDisabled();
   });
 
-  it("store 복원 후에는 상품 버튼 상태를 저장값 기준으로 렌더링한다", () => {
+  it("store 복원 후에는 위시리스트 버튼 상태만 저장값 기준으로 렌더링한다", () => {
     useCartStore.setState({
-      cartProductIdMap: { p1: true },
+      cartProductQuantityMap: { p1: 1 },
       hasHydrated: true,
     });
     useWishlistStore.setState({
@@ -168,9 +167,8 @@ describe("commerce hydration", () => {
       "aria-pressed",
       "true",
     );
-    expect(screen.getByRole("button", { name: "테스트 상품 장바구니" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "테스트 상품 장바구니" })).not.toHaveAttribute(
       "aria-pressed",
-      "true",
     );
   });
 

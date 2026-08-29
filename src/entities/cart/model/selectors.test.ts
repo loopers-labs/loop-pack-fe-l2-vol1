@@ -3,27 +3,29 @@ import { selectCartCount } from "./selectors";
 import type { CartStore } from "./cartStore";
 
 describe("cart selectors", () => {
-  it("장바구니 상품 id map에 담긴 상품 개수를 Header count 값으로 반환한다", () => {
+  it("장바구니 상품 수량 합계를 Header count 값으로 반환한다", () => {
     const count = selectCartCount(
       createCartStoreState({
-        cartProductIdMap: { p1: true, p2: true, p3: true },
+        cartProductQuantityMap: { p1: 2, p2: 1, p3: 3 },
       }),
     );
 
-    expect(count).toBe(3);
+    expect(count).toBe(6);
   });
 
-  it("장바구니 상품 id map이 비어 있으면 Header count 값으로 0을 반환한다", () => {
-    const count = selectCartCount(createCartStoreState({ cartProductIdMap: {} }));
+  it("장바구니 상품 수량 map이 비어 있으면 Header count 값으로 0을 반환한다", () => {
+    const count = selectCartCount(createCartStoreState({ cartProductQuantityMap: {} }));
 
     expect(count).toBe(0);
   });
 });
 
-function createCartStoreState(state: Pick<CartStore, "cartProductIdMap">): CartStore {
+function createCartStoreState(state: Pick<CartStore, "cartProductQuantityMap">): CartStore {
   return {
-    cartProductIdMap: state.cartProductIdMap,
-    toggleCart: () => undefined,
+    cartProductQuantityMap: state.cartProductQuantityMap,
+    addCartItem: () => undefined,
+    increaseCartQuantity: () => undefined,
+    decreaseCartQuantity: () => undefined,
     hasHydrated: true,
     setHasHydrated: () => undefined,
   };
