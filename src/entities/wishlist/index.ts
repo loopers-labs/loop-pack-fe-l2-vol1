@@ -1,6 +1,7 @@
 export {
   selectIsProductInWishlist,
   selectToggleWishlist,
+  selectWishlistProductIdMap,
   selectWishlistHasHydrated,
   selectWishlistCount,
 } from "./model/selectors";

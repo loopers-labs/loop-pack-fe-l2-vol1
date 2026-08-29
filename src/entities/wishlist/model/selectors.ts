@@ -1,5 +1,7 @@
 import type { WishlistStore } from "./wishlistStore";
 
+export const selectWishlistProductIdMap = (state: WishlistStore) => state.wishlistProductIdMap;
+
 export const selectWishlistCount = (state: WishlistStore) =>
   Object.keys(state.wishlistProductIdMap).length;
 

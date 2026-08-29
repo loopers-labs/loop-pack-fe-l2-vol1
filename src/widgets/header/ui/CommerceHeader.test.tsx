@@ -100,4 +100,20 @@ describe("CommerceHeader", () => {
 
     expect(await screen.findByLabelText("장바구니 2")).toHaveAttribute("href", "/cart");
   });
+
+  it("위시리스트 개수는 위시리스트 페이지로 이동하는 링크에 표시한다", async () => {
+    useWishlistStore.setState({
+      wishlistProductIdMap: { p1: true, p2: true },
+      hasHydrated: true,
+    });
+    server.use(
+      http.get("/api/auth/me", () =>
+        HttpResponse.json({ message: "로그인이 필요합니다." }, { status: 401 }),
+      ),
+    );
+
+    renderCommerceHeader();
+
+    expect(await screen.findByLabelText("위시리스트 2")).toHaveAttribute("href", "/wishlist");
+  });
 });

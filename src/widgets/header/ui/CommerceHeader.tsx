@@ -42,13 +42,14 @@ export function CommerceHeader() {
         >
           상품
         </Link>
-        <span
+        <Link
           className="inline-flex min-w-[7.5rem] items-center justify-center gap-1 rounded-full bg-white px-3 py-1.5 font-semibold text-gds-green-700 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]"
           aria-label={`위시리스트 ${visibleWishlistCount}`}
+          href="/wishlist"
         >
           <span>위시리스트</span>
           <span className="inline-block min-w-[2ch] text-center">{visibleWishlistCount}</span>
-        </span>
+        </Link>
         <Link
           className="inline-flex min-w-[7rem] items-center justify-center gap-1 rounded-full bg-white px-3 py-1.5 font-semibold text-gds-green-700 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]"
           aria-label={`장바구니 ${visibleCartCount}`}
