@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { getQueryClient } from "@/shared/api";
 import { SessionExpiryListener } from "@/entities/session";
+import { AnalyticsBootstrap } from "@/analytics/AnalyticsBootstrap";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 
@@ -21,6 +22,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionExpiryListener />
+      <AnalyticsBootstrap />
       <NuqsAdapter>{children}</NuqsAdapter>
     </QueryClientProvider>
   );
