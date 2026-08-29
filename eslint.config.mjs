@@ -65,5 +65,12 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // 계측 모듈은 콘솔 출력이 본래 동작이라 no-console 를 끈다:
+    // consoleProvider 는 이벤트를 콘솔에 찍는 개발용 프로바이더이고, logger 는 프로바이더 실패를
+    // console.error 로 남긴다. (noInlineConfig 라 인라인 disable 은 안 먹으므로 여기서 스코프로 끈다.)
+    files: ["src/shared/analytics/**"],
+    rules: { "no-console": "off" },
+  },
   eslintConfigPrettier,
 ]);
