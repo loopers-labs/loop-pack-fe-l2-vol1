@@ -73,6 +73,7 @@ export function reset(): void {
 function enqueueOrSend(queued: QueuedEvent): void {
   if (initialized) {
     send(queued);
+
     return;
   }
 

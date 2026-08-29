@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { getQueryClient } from "@/shared/api";
 import { SessionExpiryListener } from "@/entities/session";
-import { AnalyticsBootstrap } from "@/analytics/AnalyticsBootstrap";
+import { AnalyticsBootstrap } from "./AnalyticsBootstrap";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 
