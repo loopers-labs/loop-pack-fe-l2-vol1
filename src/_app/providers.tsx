@@ -6,6 +6,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { getQueryClient } from "@/shared/api";
 import { SessionExpiryListener } from "@/entities/session";
 import { AnalyticsBootstrap } from "./AnalyticsBootstrap";
+import { AnalyticsIdentity } from "./AnalyticsIdentity";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <SessionExpiryListener />
       <AnalyticsBootstrap />
+      <AnalyticsIdentity />
       <NuqsAdapter>{children}</NuqsAdapter>
     </QueryClientProvider>
   );

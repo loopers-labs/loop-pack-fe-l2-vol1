@@ -19,6 +19,6 @@ describe("detectDevice", () => {
     expect(detectDevice(IPAD)).toBe("tablet");
     // "Mobile" 없는 안드로이드 = 태블릿 (mobile 규칙에 먼저 걸리면 안 됨)
     expect(detectDevice(ANDROID_TABLET)).toBe("tablet");
-    expect(detectDevice(DESKTOP)).toBe("pc");
+    expect(detectDevice(DESKTOP)).toBe("desktop");
   });
 });
