@@ -1,10 +1,14 @@
 "use client";
 
-import { type FormEvent } from "react";
+import { useEffect, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { login } from "../api/authMutations";
-import { sessionQueries, type SessionResponse } from "@/entities/session";
+import {
+  sessionQueries,
+  useSession,
+  type SessionResponse,
+} from "@/entities/session";
 import { HttpError } from "@/shared/api";
 import { safeRedirect, REDIRECT_PARAM } from "@/shared/lib";
 import styles from "./LoginForm.module.css";
@@ -25,18 +29,27 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useSession();
 
   const mutation = useMutation({
     mutationFn: login,
     onSuccess: (session) => {
-      // 로그인 응답의 user 로 세션 캐시를 채워, 헤더 등 useSession 소비처가 me 재요청 없이 즉시 로그인 상태가 된다.
+      // 로그인 응답의 user 로 세션 캐시를 채운다 → useSession 이 인증됨으로 바뀌고 아래 이동 effect 가 뒤를 잇는다.
       queryClient.setQueryData<SessionResponse>(
         sessionQueries.me().queryKey,
         session,
       );
-      router.push(safeRedirect(searchParams.get(REDIRECT_PARAM)));
     },
   });
+
+  // 이미 로그인했거나(로그인 페이지 직접 진입) 방금 로그인에 성공하면 원래 경로로 보낸다.
+  // 차단을 서버 proxy 가 아니라 여기(앱 세션=/api/auth/me)에서 판단해야, 만료(쿠키는 유효한데 API 401)
+  // 때 로그인 화면이 proxy 역가드에 되돌려차이지 않는다. redirectUrl 의 외부·트릭 경로는 safeRedirect 가 접는다.
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(safeRedirect(searchParams.get(REDIRECT_PARAM)));
+    }
+  }, [isAuthenticated, router, searchParams]);
 
   // 에러 문구는 mutation.error 에서 파생한다(별도 state 로 동기화하지 않는다).
   const errorMessage = mutation.isError
