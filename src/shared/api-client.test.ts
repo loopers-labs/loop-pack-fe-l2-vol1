@@ -2,7 +2,7 @@ import { environmentManager } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { apiClient } from './api-client';
+import { ApiError, apiClient } from './api-client';
 
 import { server } from '@tests/msw/server';
 
@@ -32,19 +32,20 @@ describe('apiClient', () => {
     await expect(apiClient('/api/home')).resolves.toEqual({ hello: 'world' });
   });
 
-  it('실패 응답은 API가 준 message로 throw한다', async () => {
+  it('실패 응답은 HTTP 상태와 API message를 가진 ApiError로 throw한다', async () => {
     server.use(
-      http.get(`${APP_ORIGIN}/api/home`, () =>
-        HttpResponse.json(
-          { message: '홈 데이터를 불러오지 못했습니다.' },
-          { status: 500 },
-        ),
+      http.get(`${APP_ORIGIN}/api/orders`, () =>
+        HttpResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 }),
       ),
     );
 
-    await expect(apiClient('/api/home')).rejects.toThrow(
-      '홈 데이터를 불러오지 못했습니다.',
-    );
+    const request = apiClient('/api/orders');
+
+    await expect(request).rejects.toBeInstanceOf(ApiError);
+    await expect(request).rejects.toMatchObject({
+      status: 401,
+      message: '로그인이 필요합니다.',
+    });
   });
 
   it('에러 본문에 message가 없으면 HTTP 상태로 대신한다', async () => {
@@ -77,6 +78,48 @@ describe('apiClient', () => {
     await expect(apiClient('/api/home')).rejects.toThrow(
       '응답을 처리하지 못했습니다.',
     );
+  });
+
+  it('204 응답은 본문을 파싱하지 않고 undefined를 반환한다', async () => {
+    server.use(
+      http.post(
+        `${APP_ORIGIN}/api/auth/logout`,
+        () => new HttpResponse(null, { status: 204 }),
+      ),
+    );
+
+    await expect(
+      apiClient('/api/auth/logout', { method: 'POST' }),
+    ).resolves.toBeUndefined();
+  });
+
+  it('init을 fetch에 그대로 넘겨 method·headers·body로 요청한다', async () => {
+    let received:
+      { method: string; contentType: string | null; body: unknown } | undefined;
+
+    server.use(
+      http.post(`${APP_ORIGIN}/api/auth/login`, async ({ request }) => {
+        received = {
+          method: request.method,
+          contentType: request.headers.get('content-type'),
+          body: await request.json(),
+        };
+
+        return HttpResponse.json({});
+      }),
+    );
+
+    await apiClient('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'looper1@loopers.dev' }),
+    });
+
+    expect(received).toEqual({
+      method: 'POST',
+      contentType: 'application/json',
+      body: { email: 'looper1@loopers.dev' },
+    });
   });
 
   it('서버에서는 APP_ORIGIN을 붙인 절대 URL로 요청한다', async () => {

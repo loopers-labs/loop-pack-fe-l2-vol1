@@ -12,6 +12,7 @@ import {
   SESSION_TTL_SECONDS,
 } from "@/app/api/_data/auth-cookies";
 import type { AuthErrorResponse, SessionResponse } from "@/app/api/_data/auth";
+import { HTTP_STATUS } from "@/shared/http-status";
 
 export async function POST(
   request: NextRequest,
@@ -22,36 +23,51 @@ export async function POST(
     null;
 
   if (scenario !== null && !isAuthScenario(scenario)) {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
   }
 
   if (!isRecord(body)) {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
   }
 
   const { email, password } = body;
   if (typeof email !== "string" || typeof password !== "string") {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
   }
 
   await waitForAuthApi(scenario === "slow" ? 1_500 : 500);
 
   if (scenario === "error") {
-    return NextResponse.json({ message: "로그인에 실패했습니다." }, { status: 500 });
+    return NextResponse.json(
+      { message: "로그인에 실패했습니다." },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+    );
   }
 
   const user = scenario === "invalid" ? null : findAccount(email, password);
   if (user === null) {
     return NextResponse.json(
       { message: "이메일 또는 비밀번호를 확인해주세요." },
-      { status: 401 },
+      { status: HTTP_STATUS.UNAUTHORIZED },
     );
   }
 

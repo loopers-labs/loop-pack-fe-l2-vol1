@@ -16,6 +16,7 @@ import type {
   OrderItem,
   OrderListResponse,
 } from "@/app/api/_data/auth";
+import { HTTP_STATUS } from "@/shared/http-status";
 
 type Resolved =
   | { ok: true; user: AuthUser; scenario: string | null }
@@ -32,7 +33,7 @@ const resolveSession = async (request: NextRequest): Promise<Resolved> => {
       ok: false,
       response: NextResponse.json(
         { message: "요청 조건을 확인해주세요." },
-        { status: 400 },
+        { status: HTTP_STATUS.BAD_REQUEST },
       ),
     };
   }
@@ -44,7 +45,7 @@ const resolveSession = async (request: NextRequest): Promise<Resolved> => {
       ok: false,
       response: NextResponse.json(
         { message: "주문 정보를 처리하지 못했습니다." },
-        { status: 500 },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
       ),
     };
   }
@@ -57,7 +58,10 @@ const resolveSession = async (request: NextRequest): Promise<Resolved> => {
   if (user === null) {
     return {
       ok: false,
-      response: NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 }),
+      response: NextResponse.json(
+        { message: "로그인이 필요합니다." },
+        { status: HTTP_STATUS.UNAUTHORIZED },
+      ),
     };
   }
 
@@ -100,15 +104,24 @@ export async function POST(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
   }
 
   const items = isRecord(body) ? parseItems(body.items) : null;
   if (items === null) {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
   }
 
-  return NextResponse.json({ order: addOrder(resolved.user.id, items) }, { status: 201 });
+  return NextResponse.json(
+    { order: addOrder(resolved.user.id, items) },
+    { status: HTTP_STATUS.CREATED },
+  );
 }
 
 export async function GET(

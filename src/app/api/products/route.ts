@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { categories, products, waitForMockApi } from "@/app/api/_data/commerce";
 import type { ApiErrorResponse, MockApiScenario } from "@/app/api/_data/types";
 import type { ProductListResponse, ProductSort } from "@/entities/product";
+import { HTTP_STATUS } from "@/shared/http-status";
 
 const sortValues = ["latest", "popular", "price-asc", "price-desc"] as const satisfies
   readonly ProductSort[];
@@ -33,14 +34,14 @@ export async function GET(
   if (scenario !== null && !isMockApiScenario(scenario)) {
     return NextResponse.json(
       { message: "요청 조건을 확인해주세요." },
-      { status: 400 },
+      { status: HTTP_STATUS.BAD_REQUEST },
     );
   }
 
   if (sort !== null && !isProductSort(sort)) {
     return NextResponse.json(
       { message: "요청 조건을 확인해주세요." },
-      { status: 400 },
+      { status: HTTP_STATUS.BAD_REQUEST },
     );
   }
 
@@ -55,7 +56,7 @@ export async function GET(
   if (!validCategory || !validPage || !validPageSize) {
     return NextResponse.json(
       { message: "요청 조건을 확인해주세요." },
-      { status: 400 },
+      { status: HTTP_STATUS.BAD_REQUEST },
     );
   }
 
@@ -64,7 +65,7 @@ export async function GET(
   if (scenario === "error") {
     return NextResponse.json(
       { message: "상품 목록을 불러오지 못했습니다." },
-      { status: 500 },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 
