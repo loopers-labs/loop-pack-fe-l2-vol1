@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // 로그인 폼 통합 테스트 — 성공(세션 설정 + 복원 경로로 이동)과 401(자격증명 오류 안내)만 검증한다.
-// LoginForm 은 useSession 으로 /api/auth/me 를 부르므로 각 테스트가 그 응답도 등록한다(기본=미로그인 401).
+// 로그인 화면은 미로그인(SessionProvider 밖 → initialUser 기본값 null)이라 useSession 이 /me 를 부르지 않는다.
+// 그래도 혹시 나가면 잡도록 401 핸들러를 안전망으로 등록해 둔다(onUnhandledRequest:"error").
 // next/navigation 라우터는 jsdom 에 없어 최소 목으로 대체하고, replace 만 스파이로 관찰한다.
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";

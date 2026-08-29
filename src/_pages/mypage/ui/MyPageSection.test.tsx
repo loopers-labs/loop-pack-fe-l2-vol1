@@ -8,6 +8,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { MyPageSection } from "@/_pages/mypage";
+import { SessionProvider } from "@/entities/session";
 import { makeQueryClient } from "@/shared/api";
 import { server } from "@/__tests__/msw/server";
 
@@ -17,7 +18,9 @@ const user = { id: "u1", name: "홍길동", email: "hong@example.com" };
 function renderMyPage() {
   render(
     <QueryClientProvider client={makeQueryClient()}>
-      <MyPageSection />
+      <SessionProvider initialUser={user}>
+        <MyPageSection />
+      </SessionProvider>
     </QueryClientProvider>,
   );
 }
@@ -26,6 +29,7 @@ afterEach(cleanup);
 
 describe("MyPageSection", () => {
   test("인증되면 이름과 이메일을 보여준다", async () => {
+    // 마이페이지는 proxy 가드로 로그인 상태를 전제한다 → initialUser 가 있어 useSession 이 /me 로 확정한다.
     server.use(http.get(ME_ENDPOINT, () => HttpResponse.json({ user })));
 
     renderMyPage();
