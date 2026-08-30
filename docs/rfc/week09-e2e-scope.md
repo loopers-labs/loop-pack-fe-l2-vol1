@@ -96,6 +96,7 @@ proxy는 Edge 런타임에서 실행된다. 세션 서명 검증에 쓰는 `read
 | 목록 진입       | `product_list_view`      | 계측              | `q`, `category`, `sort`, `page`                  |
 | 상세 진입       | `product_detail_view`    | 제외              | 상품 상세 페이지가 없음                          |
 | 담기            | `cart_add`               | 계측              | `productId`, `quantity`                          |
+| 주문하기 클릭   | `checkout_click`         | 계측              | `items`, `itemCount`, `totalQuantity`            |
 | 위시리스트 추가 | `wishlist_add`           | 계측              | `productId`                                      |
 | 카테고리 변경   | `category_filter_change` | 계측              | `category`                                       |
 | 정렬 변경       | `sort_change`            | 계측              | `sort`                                           |
@@ -105,6 +106,8 @@ proxy는 Edge 런타임에서 실행된다. 세션 서명 검증에 쓰는 `read
 | 로그인 실패     | `login_fail`             | 계측              | `reason`                                         |
 | 주문 시작       | `order_start`            | 계측              | `items`, `itemCount`, `totalQuantity`            |
 | 주문 완료       | `order_complete`         | 계측              | `orderId`, `items`, `itemCount`, `totalQuantity` |
+
+`checkout_click`은 시드 로그에는 없지만 현재 앱에서 추가로 남기는 이벤트다. 장바구니를 public-ish 화면으로 유지했기 때문에, 비로그인 사용자가 주문 의도를 보인 시점을 보기 위해 장바구니의 주문하기 클릭을 별도 이벤트로 둔다.
 
 시드 로그의 주문 이벤트는 단일 상품 주문 기준이라 `productId`를 사용한다. 현재 앱은 여러 상품을 선택해 주문할 수 있으므로 `items: [{ productId, quantity }]` 형태로 상품과 수량을 함께 남긴다. `itemCount`와 `totalQuantity`는 주문 규모를 빠르게 집계하기 위한 요약값이다.
 
@@ -125,6 +128,7 @@ proxy는 Edge 런타임에서 실행된다. 세션 서명 검증에 쓰는 `read
 | `sort_change`            | 정렬 변경 handler                |
 | `page_change`            | 페이지 변경 handler              |
 | `cart_add`               | 상품 카드 담기 action 직후       |
+| `checkout_click`         | 장바구니 주문하기 클릭           |
 | `wishlist_add`           | 상품 카드 위시리스트 action 직후 |
 | `login_start`            | 로그인 페이지 진입 effect        |
 | `login_success`          | 로그인 mutation 성공             |
@@ -148,9 +152,10 @@ proxy는 Edge 런타임에서 실행된다. 세션 서명 검증에 쓰는 `read
 2. 로그인 성공: `identify(user.id)` → `login_success`
 3. 상품 목록 진입: `product_list_view`
 4. 상품 담기: `cart_add`
-5. 주문서 진입: `order_start`
-6. 주문 완료: `order_complete`
-7. 로그아웃 성공: `reset()`
+5. 장바구니 주문하기 클릭: `checkout_click`
+6. 주문서 진입: `order_start`
+7. 주문 완료: `order_complete`
+8. 로그아웃 성공: `reset()`
 
 ## 검증 방식
 

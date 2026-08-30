@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetAnalyticsForTest, track } from "./logger";
 import {
   trackCartAdd,
+  trackCheckoutClick,
   trackLoginSuccess,
   trackOrderComplete,
   trackProductListView,
@@ -42,6 +43,26 @@ describe("commerce analytics events", () => {
     trackCartAdd({ productId: "p1", quantity: 2 });
 
     expect(track).toHaveBeenCalledWith("cart_add", { productId: "p1", quantity: 2 });
+  });
+
+  it("주문하기 클릭 이벤트는 선택한 상품별 수량과 합계를 보낸다", () => {
+    trackCheckoutClick({
+      items: [
+        { productId: "p1", quantity: 2 },
+        { productId: "p3", quantity: 1 },
+      ],
+      itemCount: 2,
+      totalQuantity: 3,
+    });
+
+    expect(track).toHaveBeenCalledWith("checkout_click", {
+      items: [
+        { productId: "p1", quantity: 2 },
+        { productId: "p3", quantity: 1 },
+      ],
+      itemCount: 2,
+      totalQuantity: 3,
+    });
   });
 
   it("로그인 성공 이벤트는 사용자 식별과 별도로 복원 경로만 보낸다", () => {

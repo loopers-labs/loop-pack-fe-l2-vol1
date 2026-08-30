@@ -38,6 +38,10 @@ export function trackCartAdd(properties: ProductQuantityItem): void {
   track("cart_add", properties);
 }
 
+export function trackCheckoutClick(properties: OrderProperties): void {
+  track("checkout_click", properties);
+}
+
 export function trackWishlistAdd(properties: { productId: string }): void {
   track("wishlist_add", properties);
 }

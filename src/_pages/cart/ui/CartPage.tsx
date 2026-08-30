@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { trackCheckoutClick } from "@/analytics/commerceEvents";
 import {
   selectCartCount,
   selectCartProductQuantityMap,
@@ -21,6 +22,16 @@ export function CartPage() {
   const decreaseCartQuantity = useCartStore(selectDecreaseCartQuantity);
   const toggleCartItemSelection = useCartStore(selectToggleCartItemSelection);
   const cartItems = Object.entries(cartProductQuantityMap);
+  const selectedCartItems = cartItems
+    .filter(([productId]) => selectedCartProductIdMap[productId] === true)
+    .map(([productId, quantity]) => ({ productId, quantity }));
+  const handleCheckoutClick = () => {
+    trackCheckoutClick({
+      items: selectedCartItems,
+      itemCount: selectedCartItems.length,
+      totalQuantity: selectedCartCount,
+    });
+  };
 
   return (
     <section className="mt-10 grid gap-6">
@@ -96,6 +107,7 @@ export function CartPage() {
               <Link
                 className="w-fit justify-self-end rounded-gds-sm border border-gds-green-500 bg-gds-green-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gds-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gds-green-500"
                 href="/order"
+                onClick={handleCheckoutClick}
               >
                 주문하기
               </Link>
