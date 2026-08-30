@@ -8,3 +8,4 @@ export type { LoginRequest, SessionResponse } from './api/auth';
 export { LoginForm } from './ui/LoginForm';
 export { LogoutButton } from './ui/LogoutButton';
 export { LoginRequiredDialog } from './ui/LoginRequiredDialog';
+export { SessionMenu } from './ui/SessionMenu';
