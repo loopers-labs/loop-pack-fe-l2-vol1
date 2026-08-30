@@ -7,6 +7,12 @@ import type { ImgHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductListPageClient } from "./ProductListPage";
 import type { ProductListQuery, ProductListResponse } from "../api/productApi";
+import {
+  trackCategoryFilterChange,
+  trackPageChange,
+  trackProductListView,
+  trackSortChange,
+} from "@/analytics/commerceEvents";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 import { server } from "@/shared/config/vitest/mswServer";
@@ -18,6 +24,13 @@ import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders"
 
 vi.mock("next/image", () => ({
   default: (props: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", props),
+}));
+
+vi.mock("@/analytics/commerceEvents", () => ({
+  trackProductListView: vi.fn(),
+  trackCategoryFilterChange: vi.fn(),
+  trackSortChange: vi.fn(),
+  trackPageChange: vi.fn(),
 }));
 
 const firstProduct = createMockProduct({
@@ -54,9 +67,11 @@ describe("ProductListPageClient", () => {
     useCartStore.setState({
       cartProductQuantityMap: {},
       selectedCartProductIdMap: {},
+      hasHydrated: true,
     });
     useWishlistStore.setState({
       wishlistProductIdMap: {},
+      hasHydrated: true,
     });
     productRequestUrls = [];
     mockProductsResponse(() =>
@@ -69,6 +84,7 @@ describe("ProductListPageClient", () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    vi.clearAllMocks();
     window.history.replaceState(null, "", "/");
   });
 
@@ -202,6 +218,21 @@ describe("ProductListPageClient", () => {
   });
 
   describe("필터 조건 변경", () => {
+    it("상품 목록 진입 이벤트는 현재 URL 조건을 보낸다", async () => {
+      renderProductListPageClient({
+        searchParams: "?q=bag&category=goods&sort=popular&page=2",
+      });
+
+      await waitFor(() => {
+        expect(trackProductListView).toHaveBeenCalledWith({
+          q: "bag",
+          category: "goods",
+          sort: "popular",
+          page: 2,
+        });
+      });
+    });
+
     it("카테고리를 변경하면 URL 상태와 조회 조건을 page 1 기준으로 갱신한다", async () => {
       const { onUrlUpdate } = renderProductListPageClient({
         searchParams: "?category=all&sort=latest&page=3",
@@ -210,6 +241,7 @@ describe("ProductListPageClient", () => {
       await userEvent.click(screen.getByRole("button", { name: "카테고리" }));
       await userEvent.click(screen.getByRole("option", { name: "뷰티·잡화" }));
 
+      expect(trackCategoryFilterChange).toHaveBeenCalledWith({ category: "goods" });
       expectUrlUpdatedWithParams(onUrlUpdate, {
         category: "goods",
         page: 1,
@@ -230,6 +262,7 @@ describe("ProductListPageClient", () => {
       await userEvent.click(screen.getByRole("button", { name: "정렬" }));
       await userEvent.click(screen.getByRole("option", { name: "인기순" }));
 
+      expect(trackSortChange).toHaveBeenCalledWith({ sort: "popular" });
       expectUrlUpdatedWithParams(onUrlUpdate, {
         sort: "popular",
         page: 1,
@@ -292,6 +325,7 @@ describe("ProductListPageClient", () => {
 
       await userEvent.click(screen.getByRole("button", { name: "다음" }));
 
+      expect(trackPageChange).toHaveBeenCalledWith({ page: 2 });
       expectUrlUpdatedWithParams(onUrlUpdate, {
         page: 2,
       });

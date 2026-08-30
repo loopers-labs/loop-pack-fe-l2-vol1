@@ -1,17 +1,46 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { ProductFilters } from "./ProductFilters";
 import { ProductListResults } from "./ProductListResults";
 import { useProductListSearchParams } from "../model/useProductListSearchParams";
+import {
+  trackCategoryFilterChange,
+  trackPageChange,
+  trackProductListView,
+  trackSortChange,
+} from "@/analytics/commerceEvents";
+import type { ProductCategoryFilter, ProductSort } from "../model/types";
 
 export function ProductListPageClient() {
   const productListTopRef = useRef<HTMLElement>(null);
   const { params, setSearchQuery, setCategory, setSort, setPage, replacePage, resetFilters } =
     useProductListSearchParams();
+  const { q, category, sort, page } = params;
+
+  useEffect(() => {
+    trackProductListView({ q, category, sort, page });
+  }, [category, page, q, sort]);
+
+  const handleCategoryChange = useCallback(
+    (category: ProductCategoryFilter) => {
+      trackCategoryFilterChange({ category });
+      setCategory(category);
+    },
+    [setCategory],
+  );
+
+  const handleSortChange = useCallback(
+    (sort: ProductSort) => {
+      trackSortChange({ sort });
+      setSort(sort);
+    },
+    [setSort],
+  );
 
   const handlePageChange = useCallback(
     (page: number) => {
+      trackPageChange({ page });
       setPage(page);
       productListTopRef.current?.scrollIntoView({ block: "start" });
     },
@@ -27,8 +56,8 @@ export function ProductListPageClient() {
           category={params.category}
           sort={params.sort}
           onSearchChange={setSearchQuery}
-          onCategoryChange={setCategory}
-          onSortChange={setSort}
+          onCategoryChange={handleCategoryChange}
+          onSortChange={handleSortChange}
           onReset={resetFilters}
         />
       </section>
