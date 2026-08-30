@@ -1,25 +1,34 @@
 import { expect, test } from "@playwright/test";
+import type { TestInfo } from "@playwright/test";
 import { authStateCount, authStatePath } from "./authState";
 
-const checkoutProductId = "p6";
+const checkoutProductId = "p1";
 
-const storageStateForWorker = (workerIndex: number) => authStatePath(workerIndex % authStateCount);
+const storageStateForTest = (testInfo: TestInfo) =>
+  authStatePath((testInfo.parallelIndex + testInfo.repeatEachIndex) % authStateCount);
 
 test.describe("주문 E2E", () => {
   test("로그인한 사용자가 장바구니에서 주문을 완료하면 주문 내역에서 확인할 수 있다", async ({
     browser,
   }, testInfo) => {
     const context = await browser.newContext({
-      storageState: storageStateForWorker(testInfo.parallelIndex),
+      storageState: storageStateForTest(testInfo),
     });
+    await context.addInitScript((productId) => {
+      localStorage.setItem(
+        "anonymous-cart-store",
+        JSON.stringify({
+          state: {
+            cartProductQuantityMap: { [productId]: 1 },
+            selectedCartProductIdMap: { [productId]: true },
+          },
+          version: 1,
+        }),
+      );
+    }, checkoutProductId);
     const page = await context.newPage();
 
-    await page.goto("/products");
-    await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).toBeVisible();
-
-    await page.getByRole("button", { name: "1번 상품 장바구니" }).click();
-    await page.getByRole("link", { name: "장바구니 1" }).click();
-
+    await page.goto("/cart");
     await expect(page).toHaveURL(/\/cart$/);
     await expect(page.getByLabel(`${checkoutProductId} 주문 선택`)).toBeChecked();
 

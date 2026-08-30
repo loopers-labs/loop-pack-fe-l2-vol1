@@ -27,6 +27,8 @@ test.beforeEach(async () => {
 });
 
 test.describe("상품 목록 E2E", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("상품 목록 페이지는 production 라우트에서 mock API 상품 목록과 필터를 보여준다", async ({
     page,
   }) => {
@@ -62,9 +64,9 @@ test.describe("상품 목록 E2E", () => {
     const documentCommitElapsedMs = performance.now() - navigationStartedAt;
     expect(documentCommitElapsedMs).toBeLessThan(slowProductsDelayMs);
 
-    await expect(page.getByLabel("상품을 불러오는 중입니다.")).toBeVisible();
+    await expect(page.getByLabel("상품을 불러오는 중입니다.").first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).toBeVisible();
-    await expect(page.getByLabel("상품을 불러오는 중입니다.")).not.toBeVisible();
+    await expect(page.getByLabel("상품을 불러오는 중입니다.")).toHaveCount(0);
   });
 
   test("URL query로 직접 진입하면 필터 상태와 상품 목록을 복원한다", async ({ page }) => {
