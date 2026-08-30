@@ -1,8 +1,8 @@
-import { createApiUrl, parseApiError } from "@/shared/api/apiUtils";
+import { createSameOriginApiUrl, parseApiError } from "@/shared/api/apiUtils";
 import type { LoginRequest, SessionResponse, SessionState } from "../model/types";
 
 export async function getSession(): Promise<SessionState> {
-  const response = await fetch(createApiUrl("/api/auth/me"), {
+  const response = await fetch(createSameOriginApiUrl("/api/auth/me"), {
     credentials: "include",
   });
 
@@ -18,7 +18,7 @@ export async function getSession(): Promise<SessionState> {
 }
 
 export async function login(request: LoginRequest): Promise<SessionResponse> {
-  const response = await fetch(createApiUrl("/api/auth/login"), {
+  const response = await fetch(createSameOriginApiUrl("/api/auth/login"), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(request),
@@ -33,7 +33,7 @@ export async function login(request: LoginRequest): Promise<SessionResponse> {
 }
 
 export async function logout(): Promise<void> {
-  const response = await fetch(createApiUrl("/api/auth/logout"), {
+  const response = await fetch(createSameOriginApiUrl("/api/auth/logout"), {
     method: "POST",
     credentials: "include",
   });

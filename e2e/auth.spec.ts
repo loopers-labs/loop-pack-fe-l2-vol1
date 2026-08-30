@@ -45,6 +45,35 @@ test.describe("인증 초기 HTML", () => {
   });
 });
 
+test.describe("로그인 보호 경로", () => {
+  test("미로그인으로 주문서에 진입하면 로그인 후 원래 주문서 경로로 복원된다", async ({ page }) => {
+    await page.goto("/order");
+
+    await expect(page).toHaveURL(/\/login\?redirectTo=%2Forder$/);
+    await page.getByLabel("이메일").fill("looper1@loopers.dev");
+    await page.getByLabel("비밀번호").fill("looper1234");
+    await page.getByRole("button", { name: "로그인" }).click();
+
+    await expect(page).toHaveURL(/\/order$/);
+    await expect(page.getByRole("heading", { name: "주문서" })).toBeVisible();
+  });
+});
+
+test.describe("로그인 실패", () => {
+  test("잘못된 비밀번호로 로그인하면 로그인 페이지에 머물며 실패 메시지를 보여준다", async ({
+    page,
+  }) => {
+    await page.goto("/login");
+
+    await page.getByLabel("이메일").fill("looper1@loopers.dev");
+    await page.getByLabel("비밀번호").fill("wrong-password");
+    await page.getByRole("button", { name: "로그인" }).click();
+
+    await expect(page.getByText("이메일 또는 비밀번호를 확인해주세요.")).toBeVisible();
+    await expect(page).toHaveURL(/\/login$/);
+  });
+});
+
 test.describe("세션 만료 안내", () => {
   test("위조 세션으로 주문 내역에 진입하면 현재 화면을 유지하고 로그인 안내 모달을 보여준다", async ({
     context,

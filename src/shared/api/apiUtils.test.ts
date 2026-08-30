@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createApiUrl, parseApiError } from "./apiUtils";
+import { createApiUrl, createSameOriginApiUrl, parseApiError } from "./apiUtils";
 import { AuthRequiredError } from "./AuthRequiredError";
 
 describe("parseApiError", () => {
@@ -59,5 +59,28 @@ describe("createApiUrl", () => {
     vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://127.0.0.1:4010");
 
     expect(createApiUrl("/api/products?page=1")).toBe("http://127.0.0.1:4010/api/products?page=1");
+  });
+});
+
+describe("createSameOriginApiUrl", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("브라우저에서는 NEXT_PUBLIC_API_BASE_URL이 있어도 같은 origin 상대 경로를 유지한다", () => {
+    vi.stubGlobal("window", {});
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://127.0.0.1:4010");
+
+    expect(createSameOriginApiUrl("/api/auth/login")).toBe("/api/auth/login");
+  });
+
+  it("서버에서는 APP_ORIGIN을 기준으로 같은 앱 API URL을 만든다", () => {
+    vi.stubGlobal("window", undefined);
+    vi.stubEnv("APP_ORIGIN", "https://commerce.example.com");
+
+    expect(createSameOriginApiUrl("/api/auth/login")).toBe(
+      "https://commerce.example.com/api/auth/login",
+    );
   });
 });

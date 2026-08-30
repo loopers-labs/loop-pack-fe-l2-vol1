@@ -1,4 +1,4 @@
-import { createApiUrl, parseApiError } from "@/shared/api/apiUtils";
+import { createSameOriginApiUrl, parseApiError } from "@/shared/api/apiUtils";
 import type { Order, OrderItem } from "../model/types";
 
 export type CreateOrderRequest = {
@@ -14,7 +14,7 @@ export type OrderListResponse = {
 };
 
 export async function createOrder(request: CreateOrderRequest): Promise<CreateOrderResponse> {
-  const response = await fetch(createApiUrl("/api/orders"), {
+  const response = await fetch(createSameOriginApiUrl("/api/orders"), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(request),
@@ -29,7 +29,7 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
 }
 
 export async function getOrders(): Promise<OrderListResponse> {
-  const response = await fetch(createApiUrl("/api/orders"), {
+  const response = await fetch(createSameOriginApiUrl("/api/orders"), {
     credentials: "include",
   });
 

@@ -46,3 +46,12 @@ export function createApiUrl(path: string) {
 
   return new URL(path, baseUrl).toString();
 }
+
+export function createSameOriginApiUrl(path: string) {
+  if (typeof window !== "undefined") {
+    return path;
+  }
+
+  const baseUrl = process.env.APP_ORIGIN ?? "http://localhost:3000";
+  return new URL(path, baseUrl).toString();
+}
