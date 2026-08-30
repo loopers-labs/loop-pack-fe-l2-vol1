@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OrderPage } from "./OrderPage";
+import { trackOrderComplete, trackOrderStart } from "@/analytics/commerceEvents";
 import { useCartStore } from "@/entities/cart";
 import { server } from "@/shared/config/vitest/mswServer";
 import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
@@ -13,6 +14,11 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: routerPush,
   }),
+}));
+
+vi.mock("@/analytics/commerceEvents", () => ({
+  trackOrderStart: vi.fn(),
+  trackOrderComplete: vi.fn(),
 }));
 
 describe("OrderPage", () => {
@@ -27,6 +33,7 @@ describe("OrderPage", () => {
   afterEach(() => {
     cleanup();
     routerPush.mockReset();
+    vi.clearAllMocks();
   });
 
   it("선택한 장바구니 상품이 있으면 주문 수량과 주문 완료 버튼을 보여준다", () => {
@@ -38,6 +45,11 @@ describe("OrderPage", () => {
 
     renderWithAppProviders(<OrderPage />);
 
+    expect(trackOrderStart).toHaveBeenCalledWith({
+      items: [{ productId: "p1", quantity: 2 }],
+      itemCount: 1,
+      totalQuantity: 2,
+    });
     expect(screen.getByRole("heading", { name: "주문서", level: 1 })).toBeInTheDocument();
     expect(screen.getByText("총 2개")).toBeInTheDocument();
     expect(screen.getByRole("listitem", { name: "p1 수량 2" })).toBeInTheDocument();
@@ -96,6 +108,12 @@ describe("OrderPage", () => {
     expect(requestBody).toEqual({
       items: [{ productId: "p1", quantity: 2 }],
     });
+    expect(trackOrderComplete).toHaveBeenCalledWith({
+      orderId: "o1",
+      items: [{ productId: "p1", quantity: 2 }],
+      itemCount: 1,
+      totalQuantity: 2,
+    });
     expect(useCartStore.getState().cartProductQuantityMap).toEqual({ p2: 1 });
     expect(useCartStore.getState().selectedCartProductIdMap).toEqual({});
   });
@@ -117,6 +135,7 @@ describe("OrderPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "주문 완료" }));
 
     expect(await screen.findByText("요청 조건을 확인해주세요.")).toBeInTheDocument();
+    expect(trackOrderComplete).not.toHaveBeenCalled();
     expect(routerPush).not.toHaveBeenCalled();
     expect(useCartStore.getState().cartProductQuantityMap).toEqual({ p1: 1, p2: 1 });
     expect(useCartStore.getState().selectedCartProductIdMap).toEqual({ p1: true });

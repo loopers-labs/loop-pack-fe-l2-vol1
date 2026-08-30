@@ -1,3 +1,5 @@
+/* eslint-disable no-console -- consoleProvider는 개발 중 이벤트 확인용 콘솔 출력이 목적이다. */
+
 import type { AnalyticsProvider, EventProperties } from "./provider";
 
 declare global {

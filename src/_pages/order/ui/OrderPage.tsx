@@ -3,7 +3,8 @@
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { trackOrderComplete, trackOrderStart } from "@/analytics/commerceEvents";
 import {
   selectCartProductQuantityMap,
   selectRemoveSelectedCartItems,
@@ -12,6 +13,15 @@ import {
   useCartStore,
 } from "@/entities/cart";
 import { createOrder } from "@/entities/order";
+import type { OrderItem } from "@/entities/order";
+
+function getOrderEventProperties(items: OrderItem[]) {
+  return {
+    items,
+    itemCount: items.length,
+    totalQuantity: items.reduce((totalQuantity, item) => totalQuantity + item.quantity, 0),
+  };
+}
 
 export function OrderPage() {
   const router = useRouter();
@@ -20,15 +30,23 @@ export function OrderPage() {
   const selectedCartCount = useCartStore(selectSelectedCartCount);
   const removeSelectedCartItems = useCartStore(selectRemoveSelectedCartItems);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const cartItems = Object.entries(cartProductQuantityMap).filter(
-    ([productId]) => selectedCartProductIdMap[productId] === true,
+  const orderItems = useMemo(
+    () =>
+      Object.entries(cartProductQuantityMap)
+        .filter(([productId]) => selectedCartProductIdMap[productId] === true)
+        .map(([productId, quantity]) => ({ productId, quantity })),
+    [cartProductQuantityMap, selectedCartProductIdMap],
   );
   const orderMutation = useMutation({
     mutationFn: createOrder,
     onMutate: () => {
       setErrorMessage(null);
     },
-    onSuccess: () => {
+    onSuccess: (response, request) => {
+      trackOrderComplete({
+        orderId: response.order.id,
+        ...getOrderEventProperties(request.items),
+      });
       removeSelectedCartItems();
       router.push("/orders");
     },
@@ -36,9 +54,18 @@ export function OrderPage() {
       setErrorMessage(error.message);
     },
   });
+
+  useEffect(() => {
+    if (orderItems.length === 0) {
+      return;
+    }
+
+    trackOrderStart(getOrderEventProperties(orderItems));
+  }, [orderItems]);
+
   const handleCreateOrder = () => {
     orderMutation.mutate({
-      items: cartItems.map(([productId, quantity]) => ({ productId, quantity })),
+      items: orderItems,
     });
   };
 
@@ -53,7 +80,7 @@ export function OrderPage() {
       </div>
 
       <div className="rounded-gds-lg bg-white p-5 shadow-[inset_0_0_0_1px_var(--color-gds-gray-200)]">
-        {cartItems.length === 0 ? (
+        {orderItems.length === 0 ? (
           <div className="grid gap-4">
             <p className="text-sm text-gds-gray-700">주문할 상품이 없습니다.</p>
             <Link
@@ -67,7 +94,7 @@ export function OrderPage() {
           <div className="grid gap-5">
             <p className="text-sm font-semibold text-gds-gray-900">총 {selectedCartCount}개</p>
             <ul className="grid gap-3 border-t border-gds-gray-200 pt-5">
-              {cartItems.map(([productId, quantity]) => (
+              {orderItems.map(({ productId, quantity }) => (
                 <li
                   key={productId}
                   className="rounded-gds-sm bg-gds-gray-50 px-4 py-3"
