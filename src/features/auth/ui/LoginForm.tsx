@@ -43,9 +43,12 @@ export function LoginForm() {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useSession();
 
+  // 로그인 후 돌아갈 경로. safeRedirect 로 정제해 외부·트릭 주소가 계측에 실리지 않게 한다(없으면 "/").
+  const loginFrom = safeRedirect(searchParams.get(REDIRECT_PARAM));
+
   const mutation = useMutation({
     mutationFn: login,
-    onMutate: () => trackLoginStart(),
+    onMutate: () => trackLoginStart(loginFrom),
     onSuccess: (session) => {
       // 로그인 응답의 user 로 세션 캐시를 채운다 → useSession 이 인증됨으로 바뀌고 아래 이동 effect 가 뒤를 잇는다.
       queryClient.setQueryData<SessionResponse>(
@@ -53,7 +56,7 @@ export function LoginForm() {
         session,
       );
       // 세션 캐시를 채운 뒤라 이 이벤트의 공통 userId 가 방금 로그인한 사용자로 붙는다.
-      trackLoginSuccess();
+      trackLoginSuccess(loginFrom);
     },
     onError: (error) => trackLoginFail(getLoginFailReason(error)),
   });
@@ -63,9 +66,9 @@ export function LoginForm() {
   // 때 로그인 화면이 proxy 역가드에 되돌려차이지 않는다. redirectUrl 의 외부·트릭 경로는 safeRedirect 가 접는다.
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(safeRedirect(searchParams.get(REDIRECT_PARAM)));
+      router.replace(loginFrom);
     }
-  }, [isAuthenticated, router, searchParams]);
+  }, [isAuthenticated, router, loginFrom]);
 
   // 에러 문구는 mutation.error 에서 파생한다(별도 state 로 동기화하지 않는다).
   const errorMessage = mutation.isError

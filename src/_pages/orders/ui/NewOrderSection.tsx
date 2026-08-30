@@ -27,9 +27,9 @@ export function NewOrderSection() {
 
   const mutation = useMutation({
     mutationFn: createOrder,
-    onMutate: (items) => trackOrderStart(items.length),
+    onMutate: (items) => trackOrderStart(items.map((item) => item.productId)),
     onSuccess: (_data, items) => {
-      trackOrderComplete(items.length);
+      trackOrderComplete(items.map((item) => item.productId));
       // 주문된 상품은 카트에서 비운다(카트가 곧 주문). 목록은 이 생성으로만 바뀌므로 무효화 후 이동.
       clearCart();
       queryClient.invalidateQueries({ queryKey: orderQueries.all() });
