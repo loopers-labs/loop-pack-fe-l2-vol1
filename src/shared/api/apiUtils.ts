@@ -1,6 +1,19 @@
+import { AuthRequiredError } from "./AuthRequiredError";
 import type { ApiErrorResponse } from "./types";
 
-export async function parseApiError(response: Response, fallbackMessage: string) {
+type ParseApiErrorOptions = {
+  authRequired?: boolean;
+};
+
+export async function parseApiError(
+  response: Response,
+  fallbackMessage: string,
+  options: ParseApiErrorOptions = {},
+) {
+  if (options.authRequired === true && response.status === 401) {
+    return new AuthRequiredError();
+  }
+
   try {
     const error = (await response.json()) as Partial<ApiErrorResponse>;
     return new Error(error.message ?? fallbackMessage);

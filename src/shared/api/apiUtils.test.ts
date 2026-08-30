@@ -1,5 +1,29 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createApiUrl } from "./apiUtils";
+import { createApiUrl, parseApiError } from "./apiUtils";
+import { AuthRequiredError } from "./AuthRequiredError";
+
+describe("parseApiError", () => {
+  it("보호 API의 401 응답은 세션 만료를 나타내는 AuthRequiredError로 변환한다", async () => {
+    const error = await parseApiError(
+      Response.json({ message: "로그인이 필요합니다." }, { status: 401 }),
+      "요청에 실패했습니다.",
+      { authRequired: true },
+    );
+
+    expect(error).toBeInstanceOf(AuthRequiredError);
+    expect(error.message).toBe("세션이 만료되었습니다. 다시 로그인해주세요.");
+  });
+
+  it("보호 API가 아닌 401 응답은 API 메시지를 유지한다", async () => {
+    const error = await parseApiError(
+      Response.json({ message: "이메일 또는 비밀번호를 확인해주세요." }, { status: 401 }),
+      "요청에 실패했습니다.",
+    );
+
+    expect(error).not.toBeInstanceOf(AuthRequiredError);
+    expect(error.message).toBe("이메일 또는 비밀번호를 확인해주세요.");
+  });
+});
 
 describe("createApiUrl", () => {
   afterEach(() => {

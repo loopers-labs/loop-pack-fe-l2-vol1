@@ -44,3 +44,67 @@ test.describe("인증 초기 HTML", () => {
     await context.close();
   });
 });
+
+test.describe("세션 만료 안내", () => {
+  test("위조 세션으로 주문 내역에 진입하면 현재 화면을 유지하고 로그인 안내 모달을 보여준다", async ({
+    context,
+    page,
+  }) => {
+    await context.addCookies([
+      {
+        name: "session",
+        value: "tampered-session",
+        domain: "127.0.0.1",
+        path: "/",
+      },
+    ]);
+
+    await page.goto("/orders");
+
+    await expect(page).toHaveURL(/\/orders$/);
+    await expect(page.getByRole("dialog", { name: "세션 만료" })).toBeVisible();
+    await expect(page.getByText("세션이 만료되었습니다. 다시 로그인해주세요.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "로그인하기" })).toHaveAttribute(
+      "href",
+      "/login?redirectTo=%2Forders",
+    );
+  });
+
+  test("주문 생성 API가 401을 응답하면 주문서 화면을 유지하고 로그인 안내 모달을 보여준다", async ({
+    context,
+    page,
+  }) => {
+    await login(context.request);
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        "anonymous-cart-store",
+        JSON.stringify({
+          state: {
+            cartProductQuantityMap: { p1: 1 },
+            selectedCartProductIdMap: { p1: true },
+          },
+          version: 1,
+        }),
+      );
+    });
+
+    await page.goto("/order");
+    await expect(page.getByRole("button", { name: "주문 완료" })).toBeVisible();
+    await page.route("**/api/orders", (route) =>
+      route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "로그인이 필요합니다." }),
+      }),
+    );
+
+    await page.getByRole("button", { name: "주문 완료" }).click();
+
+    await expect(page).toHaveURL(/\/order$/);
+    await expect(page.getByRole("dialog", { name: "세션 만료" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "로그인하기" })).toHaveAttribute(
+      "href",
+      "/login?redirectTo=%2Forder",
+    );
+  });
+});

@@ -22,7 +22,7 @@ export async function createOrder(request: CreateOrderRequest): Promise<CreateOr
   });
 
   if (!response.ok) {
-    throw await parseApiError(response, "주문을 생성하지 못했습니다.");
+    throw await parseApiError(response, "주문을 생성하지 못했습니다.", { authRequired: true });
   }
 
   return response.json() as Promise<CreateOrderResponse>;
@@ -34,7 +34,9 @@ export async function getOrders(): Promise<OrderListResponse> {
   });
 
   if (!response.ok) {
-    throw await parseApiError(response, "주문 내역을 불러오지 못했습니다.");
+    throw await parseApiError(response, "주문 내역을 불러오지 못했습니다.", {
+      authRequired: true,
+    });
   }
 
   return response.json() as Promise<OrderListResponse>;
