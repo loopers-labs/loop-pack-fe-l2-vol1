@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { reset } from "@/analytics/logger";
 import { selectCartCount, selectCartHasHydrated, useCartStore } from "@/entities/cart";
 import { logout, sessionQueries } from "@/entities/session";
 import {
@@ -22,6 +23,7 @@ export function CommerceHeader() {
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
+      reset();
       queryClient.setQueryData(sessionQueries.me().queryKey, { user: null });
     },
   });

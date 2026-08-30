@@ -1,8 +1,9 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommerceHeader } from "./CommerceHeader";
+import { reset } from "@/analytics/logger";
 import { useCartStore } from "@/entities/cart";
 import { useWishlistStore } from "@/entities/wishlist";
 import { server } from "@/shared/config/vitest/mswServer";
@@ -13,6 +14,10 @@ const user = {
   name: "루퍼1",
   email: "looper1@loopers.dev",
 };
+
+vi.mock("@/analytics/logger", () => ({
+  reset: vi.fn(),
+}));
 
 function renderCommerceHeader() {
   renderWithAppProviders(<CommerceHeader />);
@@ -33,6 +38,7 @@ describe("CommerceHeader", () => {
 
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
 
   it("비로그인 상태이면 로그인 링크를 보여준다", async () => {
@@ -79,6 +85,7 @@ describe("CommerceHeader", () => {
     await waitFor(() => {
       expect(didRequestLogout).toBe(true);
     });
+    expect(reset).toHaveBeenCalledOnce();
     expect(await screen.findByRole("link", { name: "로그인" })).toBeInTheDocument();
     expect(screen.getByLabelText("장바구니 1")).toBeInTheDocument();
     expect(screen.getByLabelText("위시리스트 1")).toBeInTheDocument();

@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LoginPage } from "./LoginPage";
+import { trackLoginFail, trackLoginStart, trackLoginSuccess } from "@/analytics/commerceEvents";
+import { identify } from "@/analytics/logger";
 import { server } from "@/shared/config/vitest/mswServer";
 import { renderWithAppProviders } from "@/shared/testing/renderWithAppProviders";
 
@@ -13,6 +15,16 @@ vi.mock("next/navigation", () => ({
     push: routerPush,
   }),
   useSearchParams: () => new URLSearchParams(window.location.search),
+}));
+
+vi.mock("@/analytics/commerceEvents", () => ({
+  trackLoginStart: vi.fn(),
+  trackLoginSuccess: vi.fn(),
+  trackLoginFail: vi.fn(),
+}));
+
+vi.mock("@/analytics/logger", () => ({
+  identify: vi.fn(),
 }));
 
 const user = {
@@ -32,6 +44,13 @@ describe("LoginPage", () => {
   afterEach(() => {
     cleanup();
     routerPush.mockReset();
+    vi.clearAllMocks();
+  });
+
+  it("로그인 페이지에 진입하면 로그인 시작 이벤트를 보낸다", () => {
+    renderLoginPage("?redirectTo=/orders");
+
+    expect(trackLoginStart).toHaveBeenCalledWith({ redirectTo: "/orders" });
   });
 
   it("이메일과 비밀번호로 로그인하면 복원 경로로 이동한다", async () => {
@@ -53,6 +72,8 @@ describe("LoginPage", () => {
     await waitFor(() => {
       expect(routerPush).toHaveBeenCalledWith("/orders");
     });
+    expect(identify).toHaveBeenCalledWith("u1");
+    expect(trackLoginSuccess).toHaveBeenCalledWith({ redirectTo: "/orders" });
     expect(requestBody).toEqual({
       email: user.email,
       password: "looper1234",
@@ -73,6 +94,9 @@ describe("LoginPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "로그인" }));
 
     expect(await screen.findByText("이메일 또는 비밀번호를 확인해주세요.")).toBeInTheDocument();
+    expect(trackLoginFail).toHaveBeenCalledWith({
+      reason: "이메일 또는 비밀번호를 확인해주세요.",
+    });
     expect(routerPush).not.toHaveBeenCalled();
   });
 

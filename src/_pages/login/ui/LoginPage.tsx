@@ -3,8 +3,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { SubmitEvent } from "react";
+import { trackLoginFail, trackLoginStart, trackLoginSuccess } from "@/analytics/commerceEvents";
+import { identify } from "@/analytics/logger";
 import { login, sessionQueries } from "@/entities/session";
 import { normalizeLoginRedirectPath } from "../model/redirect";
 
@@ -19,16 +21,23 @@ export function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const redirectTo = normalizeLoginRedirectPath(searchParams.get("redirectTo"));
 
+  useEffect(() => {
+    trackLoginStart({ redirectTo });
+  }, [redirectTo]);
+
   const loginMutation = useMutation({
     mutationFn: login,
     onMutate: () => {
       setErrorMessage(null);
     },
     onSuccess: (session) => {
+      identify(session.user.id);
+      trackLoginSuccess({ redirectTo });
       queryClient.setQueryData(sessionQueries.me().queryKey, session);
       router.push(redirectTo);
     },
     onError: (error) => {
+      trackLoginFail({ reason: error.message });
       setErrorMessage(error.message);
     },
   });
