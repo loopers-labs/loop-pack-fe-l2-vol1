@@ -5,10 +5,13 @@ import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing';
 import type { ReactNode } from 'react';
 import { vi } from 'vitest';
 
+import { SessionProvider, type SessionUser } from '@/entities/session';
+
 type RenderWithProvidersOptions = {
   searchParams?: string;
   gcTime?: number;
   queryClient?: QueryClient;
+  initialUser?: SessionUser | null;
 };
 
 /** 페이지급 통합 테스트가 앱과 같은 프로바이더(URL 상태, 서버 상태) 안에서 돌게 한다. */
@@ -18,6 +21,7 @@ export function renderWithProviders(
     searchParams = '',
     gcTime,
     queryClient: providedQueryClient,
+    initialUser = null,
   }: RenderWithProvidersOptions = {},
 ) {
   const queryClient =
@@ -36,7 +40,9 @@ export function renderWithProviders(
       hasMemory
       onUrlUpdate={onUrlUpdate}
     >
-      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider initialUser={initialUser}>{ui}</SessionProvider>
+      </QueryClientProvider>
     </NuqsTestingAdapter>
   );
   const { rerender } = render(tree(searchParams));

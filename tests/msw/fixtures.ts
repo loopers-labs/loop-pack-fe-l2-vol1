@@ -1,4 +1,5 @@
 import type { Category, HomeResponse, Product } from '@/entities/product';
+import type { SessionUser } from '@/entities/session';
 
 /** 응답 형태는 앱 타입에서 가져와, 계약이 바뀌면 픽스처가 먼저 깨지게 한다. */
 export const PRODUCT: Product = {
@@ -84,3 +85,11 @@ export const PRODUCTS: Product[] = interleaved.map((product, index) => {
     createdAt: new Date(NEWEST_CREATED_AT - index * DAY).toISOString(),
   };
 });
+
+export const SESSION_PASSWORD = 'looper1234';
+
+export const SESSION_USER: SessionUser = {
+  id: 'u1',
+  name: '루퍼1',
+  email: 'looper1@loopers.dev',
+};
