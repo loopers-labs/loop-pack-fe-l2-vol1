@@ -15,12 +15,22 @@ export function buildLoginUrl(next: string, reason?: LoginReason) {
   return `${LOGIN_PATH}?${params}`;
 }
 
-// `/`로 시작하되 `//host`·`/\host`처럼 브라우저가 다른 origin으로 해석하는 형태는 제외한다.
-const SAME_ORIGIN_PATH = /^\/(?![/\\])/;
+const VALIDATION_ORIGIN = 'https://app.invalid';
 
 /**
  * next는 URL에 노출돼 누구나 바꿀 수 있다. 같은 origin 경로만 허용하고 나머지는 홈으로 보낸다.
  */
 export function toSafeNextPath(next: string | null | undefined) {
-  return next && SAME_ORIGIN_PATH.test(next) ? next : '/';
+  if (!next?.startsWith('/')) return '/';
+
+  try {
+    const url = new URL(next, VALIDATION_ORIGIN);
+    const path = `${url.pathname}${url.search}${url.hash}`;
+
+    return url.origin === VALIDATION_ORIGIN && !path.startsWith('//')
+      ? path
+      : '/';
+  } catch {
+    return '/';
+  }
 }

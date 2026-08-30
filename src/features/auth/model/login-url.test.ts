@@ -22,22 +22,20 @@ describe('buildLoginUrl', () => {
 });
 
 describe('toSafeNextPath', () => {
-  it.each(['/orders?status=pending', '/my', '/'])(
-    '내부 경로 %s는 그대로 둔다',
-    (next) => {
-      expect(toSafeNextPath(next)).toBe(next);
-    },
-  );
+  it('내부 경로는 query까지 그대로 둔다', () => {
+    const next = '/orders?status=pending';
+
+    expect(toSafeNextPath(next)).toBe(next);
+  });
 
   it.each([
     'https://evil.com',
     '//evil.com',
     '/\\evil.com',
-    'evil.com',
-    '',
+    '/..//evil.com',
+    '//[invalid',
     null,
-    undefined,
-  ])('외부로 이동할 수 있는 값 %s은 홈으로 대체한다', (next) => {
+  ])('안전한 내부 경로가 아닌 값 %s은 홈으로 대체한다', (next) => {
     expect(toSafeNextPath(next)).toBe('/');
   });
 });
