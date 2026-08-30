@@ -122,7 +122,7 @@ test.describe("상품 목록 E2E", () => {
     await expect(page.getByRole("heading", { name: "스탠리 클래식 런치박스" })).toBeVisible();
   });
 
-  test("상품을 장바구니에 담고 다시 빼면 Header 개수가 함께 갱신된다", async ({ page }) => {
+  test("상품을 장바구니에 담으면 Header 개수가 누적 갱신된다", async ({ page }) => {
     await page.goto("/products");
 
     await expect(page.getByRole("heading", { name: "E2E Mock Backpack" })).toBeVisible();
@@ -134,6 +134,6 @@ test.describe("상품 목록 E2E", () => {
     await expect(page.getByLabel("장바구니 1")).toBeVisible();
 
     await firstProductCartButton.click();
-    await expect(page.getByLabel("장바구니 0")).toBeVisible();
+    await expect(page.getByLabel("장바구니 2")).toBeVisible();
   });
 });
