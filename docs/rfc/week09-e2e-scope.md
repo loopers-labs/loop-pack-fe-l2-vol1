@@ -298,3 +298,36 @@ E2E는 인증 플로우와 주문 플로우에 붙인다. 상품 탐색과 담�
 - 세션이 만료되거나 유효하지 않으면 현재 화면을 유지하고 세션 만료 모달을 보여준다.
 
 정적 렌더링 범위는 `pnpm build`의 route 목록으로 확인한다. `/order`, `/orders`는 세션을 읽기 때문에 dynamic이고, `/cart`, `/wishlist`는 공통 commerce layout에서 쿠키를 읽지 않으므로 static 범위를 유지한다.
+
+## 4단계 E2E 구현 결과
+
+4단계에서는 3단계에서 정한 인증 플로우와 주문 플로우만 E2E로 구현했다.
+
+- 인증 플로우: `e2e/auth.spec.ts`
+- 주문 플로우: `e2e/checkout.spec.ts`
+- 로그인 상태 재사용: `e2e/auth.setup.ts`에서 `e2e/.auth/user-0.json`부터 `user-7.json`까지 생성
+
+로그인 자체를 검증하는 테스트는 `storageState`를 쓰지 않는다. 로그인 폼 입력과 인증 실패를 직접 확인해야 하는 테스트이기 때문이다. 반대로 주문 플로우는 `storageState`를 사용해 이미 로그인한 상태에서 시작한다. 매 테스트마다 로그인 폼을 다시 채우면 주문 흐름이 아니라 로그인 흐름에 테스트가 흔들릴 수 있다.
+
+주문 플로우는 상품 목록에서 상품을 담는 단계부터 시작한다. 이후 Header의 장바구니 링크, 장바구니 선택 상태, 주문서 진입, 주문 완료, 주문 내역 확인까지 실제 사용자 경로로 확인한다.
+
+### 병렬 실행과 반복 실행
+
+E2E는 production build 위에서 `pnpm start`로 띄운 앱을 대상으로 실행한다. 로그인 상태는 워커별 계정 8개와 `storageState` 8개로 나눈다. 주문 E2E는 `parallelIndex`와 `repeatEachIndex`를 기준으로 사용할 `storageState`를 고른다.
+
+장바구니는 브라우저 context별 `localStorage`에 저장된다. 그래서 같은 계정을 쓰더라도 테스트 context가 다르면 장바구니 상태는 공유되지 않는다. 주문 데이터는 계정별 서버 상태이므로, 병렬 실행에서는 워커별 계정을 나눠 서로의 주문 내역이 섞이지 않게 했다.
+
+최종 확인할 명령은 아래와 같다.
+
+```bash
+pnpm build
+pnpm test:e2e:prebuilt --project=chromium --workers=1
+pnpm test:e2e:prebuilt --project=chromium --workers=4
+pnpm test:e2e:prebuilt e2e/checkout.spec.ts --project=chromium --repeat-each=3
+```
+
+### trace 확인 기록
+
+checkout E2E에서 주문 내역 수량 단언을 일부러 틀리게 바꿔 trace를 확인했다. 원래 기대값은 `${selectedProductId} 1개`지만, 실험에서는 `${selectedProductId} 999개`를 기대하도록 바꿨다.
+
+trace를 열어보니 상품 목록에서 담기, 장바구니 이동, 주문서 진입, 주문 완료, 주문 내역 이동까지는 모두 정상적으로 진행됐다. 실패는 마지막 주문 내역 article에서 실제 텍스트가 `p26 1개`인데 테스트가 `p26 999개`를 기다리면서 발생했다. 이를 통해 trace에서 사용자 흐름의 어느 단계까지 성공했고 어떤 단언에서 멈췄는지 확인했다.

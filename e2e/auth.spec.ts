@@ -1,15 +1,13 @@
 import { expect, test } from "@playwright/test";
 import type { APIRequestContext } from "@playwright/test";
+import { authAccount } from "./authState";
 
 const appPort = process.env.PORT ?? "3000";
 const appBaseURL = `http://127.0.0.1:${appPort}`;
 
 async function login(contextRequest: APIRequestContext) {
   const response = await contextRequest.post(`${appBaseURL}/api/auth/login`, {
-    data: {
-      email: "looper1@loopers.dev",
-      password: "looper1234",
-    },
+    data: authAccount(0),
   });
 
   expect(response.ok()).toBe(true);
