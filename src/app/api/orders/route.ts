@@ -12,10 +12,12 @@ import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
 import type {
   AuthErrorResponse,
   AuthUser,
+} from "@/app/api/_data/auth";
+import type {
   OrderCreateResponse,
   OrderItem,
   OrderListResponse,
-} from "@/app/api/_data/auth";
+} from "@/entities/order/model/types";
 
 type Resolved =
   | { ok: true; user: AuthUser; scenario: string | null }
