@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import {
   fetchProductById,
   fetchProductList,
@@ -23,6 +23,48 @@ export function productListQueryOptions(params: ProductListQuery) {
         { q, category, sort, page, pageSize, scenario },
         { signal },
       ),
+    staleTime: 0,
+  });
+}
+
+export function getNextProductPageParam(
+  lastPage: Awaited<ReturnType<typeof fetchProductList>>,
+  allPages: Awaited<ReturnType<typeof fetchProductList>>[],
+): number | undefined {
+  const loadedCount = allPages.reduce(
+    (count, page) => count + page.products.length,
+    0,
+  );
+
+  if (loadedCount >= lastPage.totalCount || lastPage.products.length === 0) {
+    return undefined;
+  }
+
+  return lastPage.page + 1;
+}
+
+export function productListInfiniteQueryOptions(params: ProductListQuery) {
+  const {
+    q,
+    category = PRODUCT_LIST_DEFAULTS.category,
+    sort = PRODUCT_LIST_DEFAULTS.sort,
+    pageSize = PRODUCT_LIST_DEFAULTS.pageSize,
+    scenario,
+  } = params;
+
+  return infiniteQueryOptions({
+    queryKey: [
+      'products',
+      'infinite',
+      { q, category, sort, pageSize, scenario },
+    ],
+    queryFn: ({ pageParam, signal }) =>
+      fetchProductList(
+        { q, category, sort, page: pageParam, pageSize, scenario },
+        { signal },
+      ),
+    initialPageParam: PRODUCT_LIST_DEFAULTS.page,
+    getNextPageParam: getNextProductPageParam,
     staleTime: 0,
   });
 }

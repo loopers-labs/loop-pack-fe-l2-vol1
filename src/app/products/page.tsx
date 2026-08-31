@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { redirect } from 'next/navigation';
 import { getQueryClient } from '../getQueryClient';
-import { productListQueryOptions } from '@/entities/product/api/productQueries';
+import { productListInfiniteQueryOptions } from '@/entities/product/api/productQueries';
 import { searchParamsCache } from '@/entities/product/lib/searchParamsParsers';
 import { ProductListErrorBoundary } from './_components/ProductListErrorBoundary';
 import { ProductListContent, ProductListSkeleton } from '@/_pages/product-list';
@@ -31,19 +32,20 @@ export async function generateMetadata({
   searchParams,
 }: ProductListPageProps): Promise<Metadata> {
   try {
-    const { q, category, sort, page, scenario } = await searchParamsCache.parse(searchParams);
+    const { q, category, sort, scenario } = await searchParamsCache.parse(searchParams);
 
     const query = {
       q: q || undefined,
       category,
       sort,
-      page,
       scenario: scenario || undefined,
     };
     const queryClient = getQueryClient();
-    const data = await queryClient.fetchQuery(productListQueryOptions(query));
+    const data = await queryClient.fetchInfiniteQuery(
+      productListInfiniteQueryOptions(query),
+    );
 
-    const { products, categories, totalCount } = data;
+    const { products, categories, totalCount } = data.pages[0];
     const categoryName =
       category && category !== 'all'
         ? categories.find((c) => c.id === category)?.name
@@ -54,9 +56,6 @@ export async function generateMetadata({
       titleParts.push(`'${q}' 검색 결과`);
     } else {
       titleParts.push('지금 가장 사랑받는 아이템');
-    }
-    if (page > 1) {
-      titleParts.push(`(${page}페이지)`);
     }
     const title = titleParts.join(' ');
 
@@ -94,18 +93,19 @@ export async function generateMetadata({
 async function ProductListLoader({
   searchParams,
 }: ProductListPageProps) {
-  const { q, category, sort, page, scenario } = await searchParamsCache.parse(searchParams);
+  const { q, category, sort, scenario } = await searchParamsCache.parse(searchParams);
   const queryClient = getQueryClient();
 
   const query = {
     q: q || undefined,
     category,
     sort,
-    page,
     scenario: scenario || undefined,
   };
 
-  await queryClient.prefetchQuery(productListQueryOptions(query));
+  await queryClient.prefetchInfiniteQuery(
+    productListInfiniteQueryOptions(query),
+  );
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
@@ -114,9 +114,22 @@ async function ProductListLoader({
   );
 }
 
-export default function ProductListPage({
+export default async function ProductListPage({
   searchParams,
 }: ProductListPageProps) {
+  const rawSearchParams = await searchParams;
+
+  if (rawSearchParams.page !== undefined) {
+    const canonicalSearchParams = new URLSearchParams();
+    Object.entries(rawSearchParams).forEach(([key, value]) => {
+      if (key !== 'page' && value !== undefined) {
+        canonicalSearchParams.set(key, value);
+      }
+    });
+    const query = canonicalSearchParams.toString();
+    redirect(query ? `/products?${query}` : '/products');
+  }
+
   return (
     <ProductListErrorBoundary>
       <Suspense fallback={<ProductListSkeleton />}>

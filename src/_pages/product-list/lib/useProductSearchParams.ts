@@ -13,25 +13,19 @@ export function useProductSearchParams() {
 
   const setCategory = (category: CategoryOption) => {
     startTransition(() => {
-      void setParams({ category, page: 1 });
+      void setParams({ category });
     });
   };
 
   const setSort = (sort: ProductSort) => {
     startTransition(() => {
-      void setParams({ sort, page: 1 });
+      void setParams({ sort });
     });
   };
 
   const setSearch = (q: string) => {
     startTransition(() => {
-      void setParams({ q: q || '', page: 1 });
-    });
-  };
-
-  const setPage = (page: number) => {
-    startTransition(() => {
-      void setParams({ page });
+      void setParams({ q: q || '' });
     });
   };
 
@@ -39,7 +33,6 @@ export function useProductSearchParams() {
     q: params.q || undefined,
     category: params.category,
     sort: params.sort,
-    page: params.page,
     scenario: params.scenario || undefined,
   };
 
@@ -50,6 +43,5 @@ export function useProductSearchParams() {
     setCategory,
     setSort,
     setSearch,
-    setPage,
   };
 }
