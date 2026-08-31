@@ -82,17 +82,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const { banner } = getHomeData();
 
   return (
-    <main>
-      <HeroSection
-        title={banner.title}
-        description={banner.description}
-      />
+    <main className="bg-white text-neutral-950">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <HeroSection title={banner.title} description={banner.description} />
+      </div>
       <Suspense
         fallback={
-          <div className="flex min-h-[30vh] items-center justify-center">
+          <div className="flex min-h-[30vh] items-center justify-center px-4 sm:px-6">
             <div className="flex flex-col items-center gap-3">
-              <div className="size-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-              <p className="text-sm text-text-secondary">불러오는 중...</p>
+              <div className="size-7 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-950 motion-reduce:animate-none" />
+              <p className="text-sm text-neutral-600">불러오는 중...</p>
             </div>
           </div>
         }

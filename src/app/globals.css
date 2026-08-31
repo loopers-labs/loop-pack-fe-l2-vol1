@@ -10,26 +10,26 @@
   line-gap-override: 0%;
 }
 
-/* Warm Neutral — Aesthetic Commerce */
+/* Minimal Neutral — shared with the home storefront */
 @theme {
-  --color-brand: #8b6914;
-  --color-brand-light: #f5f0e8;
-  --color-brand-dark: #6b4f0e;
-  --color-bg: #faf7f2;
+  --color-brand: #171717;
+  --color-brand-light: #f5f5f5;
+  --color-brand-dark: #0a0a0a;
+  --color-bg: #fafafa;
   --color-bg-card: #ffffff;
-  --color-border: #e8e0d4;
-  --color-text: #2c2420;
-  --color-text-secondary: #6b5e54;
-  --color-text-caption: #a89b8c;
-  --color-accent: #c4754b;
-  --color-discount: #b8503b;
-  --font-family-display: 'Georgia', 'Times New Roman', serif;
+  --color-border: #e5e5e5;
+  --color-text: #0a0a0a;
+  --color-text-secondary: #525252;
+  --color-text-caption: #737373;
+  --color-accent: #404040;
+  --color-discount: #dc2626;
+  --font-family-display: 'Pretendard Variable', 'Pretendard', 'Pretendard Fallback', system-ui, sans-serif;
   --font-family-body: 'Pretendard Variable', 'Pretendard', 'Pretendard Fallback', system-ui, sans-serif;
 }
 
 body {
-  color: #2c2420;
-  background: #faf7f2;
+  color: #0a0a0a;
+  background: #fafafa;
   font-family: var(--font-family-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

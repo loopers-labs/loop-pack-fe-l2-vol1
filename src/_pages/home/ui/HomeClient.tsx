@@ -1,189 +1,122 @@
 'use client';
 
-// import { useCallback } from 'react';
 import Link from 'next/link';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
-// import { productListQueryOptions } from '@/entities/product/api/productQueries';
-import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
-import { useCartStore } from '@/entities/cart/model/cartStore';
-import { formatWon, calcDiscount } from '@/shared/lib/format';
 import type { Product } from '@/entities/product/model/types';
+import { NewProductCarousel } from './NewProductCarousel';
+import { ProductCard } from './ProductCard';
 
 interface HomeClientProps {
   scenario?: string;
 }
 
-function ProductCard({ product }: { product: Product }) {
-  const isWished = useWishlistStore((s) => s.ids.has(product.id));
-  const toggle = useWishlistStore((s) => s.toggle);
-  const addItem = useCartStore((s) => s.addItem);
+interface ProductSectionProps {
+  id: string;
+  eyebrow: string;
+  title: string;
+  products: Product[];
+}
 
+function ProductSection({
+  id,
+  eyebrow,
+  title,
+  products,
+}: ProductSectionProps) {
   return (
-    <article className="group">
-      <Link href={`/products/${product.id}`}>
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-bg">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          {product.originalPrice && (
-            <div className="absolute left-3 top-3">
-              <span className="rounded-full bg-discount px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
-                -{calcDiscount(product.originalPrice, product.price)}%
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="mt-3.5 px-0.5">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-text-caption">
-            {product.brand}
-          </span>
-          <h3 className="mt-1 truncate text-[14px] font-medium text-text">
-            {product.name}
-          </h3>
-          <p className="mt-1.5 text-[15px] font-semibold text-text">
-            {formatWon(product.price)}
+    <section aria-labelledby={id} className="py-12 sm:py-16">
+      <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+        <div>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            {eyebrow}
           </p>
-          {product.originalPrice && (
-            <p className="text-[12px] text-text-caption line-through">
-              {formatWon(product.originalPrice)}
-            </p>
-          )}
+          <h2
+            id={id}
+            className="text-2xl font-bold tracking-[-0.03em] text-neutral-950"
+          >
+            {title}
+          </h2>
         </div>
-      </Link>
-      <div className="mt-2 flex gap-2 px-0.5">
-        <button
-          type="button"
-          onClick={() => toggle(product.id)}
-          className={`rounded-lg border px-3 py-1 text-xs transition-colors ${
-            isWished
-              ? 'border-accent text-accent'
-              : 'border-border text-text-secondary hover:bg-bg'
-          }`}
+        <Link
+          href="/products"
+          className="flex min-h-11 items-center px-1 text-sm font-semibold text-neutral-600 underline-offset-4 hover:text-neutral-950 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
         >
-          {isWished ? '찜 해제' : '찜'}
-        </button>
-        <button
-          type="button"
-          onClick={() => addItem(product.id)}
-          className="rounded-lg border border-border px-3 py-1 text-xs text-text-secondary transition-colors hover:bg-bg"
-        >
-          담기
-        </button>
+          더보기
+        </Link>
       </div>
-    </article>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    </section>
   );
 }
 
 export function HomeClient({ scenario }: HomeClientProps) {
-  // const queryClient = useQueryClient();
   const { data } = useSuspenseQuery(homeQueryOptions(scenario));
+  const {
+    categories,
+    categoryThumbnails,
+    popularProducts,
+    newProducts,
+  } = data;
 
-  /* const prefetchProducts = useCallback(() => {
-    void queryClient.prefetchQuery(
-      productListQueryOptions({ category: 'all', sort: 'latest', page: 1 }),
-    );
-  }, [queryClient]); */
-
-  const { categories, categoryThumbnails, popularProducts, newProducts } = data;
-
-  const isProductsEmpty = popularProducts.length === 0 && newProducts.length === 0;
+  const isProductsEmpty =
+    popularProducts.length === 0 && newProducts.length === 0;
 
   return (
-    <>
-      {/* 기존 배너
-      <section className="relative overflow-hidden bg-bg-card">
-        <div className="relative h-[420px] md:h-[520px]">
-          <img
-            src={banner.image}
-            alt=""
-            className="absolute inset-0 size-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-text/60 via-text/30 to-transparent" />
-          <div className="relative flex h-full items-center px-8">
-            <div className="max-w-lg">
-              <h2 className="font-family-display text-3xl font-light text-white md:text-[42px] md:leading-[1.2]">
-                {banner.title}
-              </h2>
-              <p className="mt-4 text-[14px] leading-relaxed text-white/80">
-                {banner.description}
-              </p>
+    <div className="mx-auto w-full max-w-[1256px] px-4 sm:px-6 lg:px-8">
+      <nav aria-label="상품 카테고리" className="py-8 sm:py-10">
+        <ul className="grid grid-cols-5 gap-2 sm:gap-4">
+          {categories.map((category) => (
+            <li key={category.id} className="min-w-0">
               <Link
-                href="/products"
-                className="mt-7 inline-flex h-11 items-center rounded-lg bg-white px-6 text-[13px] font-semibold text-text transition-colors hover:bg-white/90"
-                onMouseEnter={prefetchProducts}
+                href={`/products?category=${category.id}`}
+                className="group/category flex min-h-11 flex-col items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-950"
               >
-                Shop Now
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section> */}
-
-      {/* 카테고리 */}
-      <section className="px-8 py-14">
-        <h2 className="mb-8 font-family-display text-xl font-normal text-text">
-          Shop by Categories
-        </h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/products?category=${cat.id}`}
-                className="group flex flex-col items-center gap-3"
-              >
-                <div className="aspect-square w-full overflow-hidden rounded-xl bg-bg">
-                  {categoryThumbnails[cat.id] && (
+                <div className="aspect-square w-full max-w-28 overflow-hidden rounded-lg bg-neutral-100">
+                  {categoryThumbnails[category.id] && (
                     <img
-                      src={categoryThumbnails[cat.id]}
-                      alt={cat.name}
-                      className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      src={categoryThumbnails[category.id]}
+                      alt=""
+                      loading="lazy"
+                      className="size-full object-cover transition-transform duration-300 group-hover/category:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover/category:scale-100"
                     />
                   )}
                 </div>
-                <span className="text-[13px] font-medium text-text-secondary transition-colors group-hover:text-text">
-                  {cat.name}
+                <span className="truncate text-xs font-semibold text-neutral-700 group-hover/category:text-neutral-950 sm:text-sm">
+                  {category.name}
                 </span>
               </Link>
+            </li>
           ))}
-        </div>
-      </section>
+        </ul>
+      </nav>
 
-      {/* 인기 상품 */}
-      {isProductsEmpty ? (
-        <div className="flex min-h-[30vh] items-center justify-center">
-          <p className="text-sm text-text-secondary">표시할 상품이 없습니다.</p>
-        </div>
-      ) : popularProducts.length > 0 && (
-        <section className="bg-bg-card py-14">
-          <div className="px-8">
-            <h2 className="mb-8 font-family-display text-xl font-normal text-text">
-              인기 상품
-            </h2>
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:gap-8">
-              {popularProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+      <div className="border-t border-neutral-200">
+        {isProductsEmpty ? (
+          <div className="flex min-h-[30vh] items-center justify-center text-center">
+            <p className="text-sm text-neutral-600">표시할 상품이 없습니다.</p>
           </div>
-        </section>
-      )}
+        ) : (
+          popularProducts.length > 0 && (
+            <ProductSection
+              id="popular-products-title"
+              eyebrow="Popular"
+              title="인기 상품"
+              products={popularProducts}
+            />
+          )
+        )}
 
-      {/* 신상품 */}
-      {!isProductsEmpty && newProducts.length > 0 && (
-        <section className="px-8 py-14">
-          <h2 className="mb-8 font-family-display text-xl font-normal text-text">
-            신상품
-          </h2>
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:gap-8">
-            {newProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+        {!isProductsEmpty && newProducts.length > 0 && (
+          <div className="border-t border-neutral-200">
+            <NewProductCarousel products={newProducts} />
           </div>
-        </section>
-      )}
-    </>
+        )}
+      </div>
+    </div>
   );
 }

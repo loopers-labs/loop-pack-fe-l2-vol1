@@ -25,7 +25,7 @@ export function SizeSelect({ options }: SizeSelectProps) {
       <button
         type="button"
         {...getToggleButtonProps()}
-        className="flex w-full items-center justify-between rounded-xl border border-border bg-bg-card py-3 pl-4 pr-3 transition-colors hover:border-text-caption aria-expanded:border-text-secondary"
+        className="flex min-h-[52px] w-full items-center justify-between rounded-lg border border-border bg-bg-card py-3 pl-4 pr-3 transition-colors hover:border-neutral-400 aria-expanded:border-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
       >
         <span
           className={`text-[14px] ${selectedOption ? 'font-medium text-text' : 'text-text-caption'}`}
@@ -42,7 +42,7 @@ export function SizeSelect({ options }: SizeSelectProps) {
       {isOpen && (
         <ul
           {...getMenuProps()}
-          className="absolute z-10 mt-2 max-h-72 w-full overflow-auto rounded-xl border border-border bg-bg-card shadow-[0_8px_30px_rgba(44,36,32,0.08)]"
+          className="absolute z-10 mt-2 max-h-72 w-full overflow-auto rounded-lg border border-border bg-bg-card shadow-lg"
         >
           {options.map((opt, i) => {
             const itemProps = getItemProps({ item: opt, index: i });
