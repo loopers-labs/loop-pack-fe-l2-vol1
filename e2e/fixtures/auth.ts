@@ -19,13 +19,10 @@ export const test = base.extend<object, { workerStorageState: string }>({
       const email = `looper${workerIndex + 1}@loopers.dev`;
       const stateFile = path.join(AUTH_STATE_DIR, `worker-${workerIndex}.json`);
 
-      // 같은 워커에서 이미 로그인해 둔 상태가 있으면 그대로 재사용한다.
-      if (fs.existsSync(stateFile)) {
-        await use(stateFile);
-
-        return;
-      }
-
+      // 남아 있는 파일을 재사용하지 않고 실행마다 새로 로그인한다.
+      // 세션 TTL(1시간)이 지난 파일로 시작하면 만료된 쿠키를 물고 들어가
+      // authed 스펙이 "어제는 초록, 오늘은 빨강"이 된다.
+      // 워커당 로그인 1회는 이 fixture 가 워커 스코프인 것으로 이미 보장된다.
       fs.mkdirSync(AUTH_STATE_DIR, { recursive: true });
       // browser.newPage 는 프로젝트 use 를 상속하지 않아 baseURL 을 직접 넘긴다(상대경로 goto 용).
       const page = await browser.newPage({
