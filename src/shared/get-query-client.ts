@@ -1,10 +1,6 @@
 import { environmentManager, QueryClient } from '@tanstack/react-query';
 
-import { ApiError } from './api-client';
-import { HTTP_STATUS } from './http-status';
-
-const isUnauthorizedError = (error: unknown) =>
-  error instanceof ApiError && error.status === HTTP_STATUS.UNAUTHORIZED;
+import { isUnauthorizedError } from './api-client';
 
 function makeQueryClient() {
   const maxRetryCount = environmentManager.isServer() ? 0 : 2;

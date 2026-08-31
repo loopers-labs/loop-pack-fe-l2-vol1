@@ -17,6 +17,9 @@ export class ApiError extends Error {
   }
 }
 
+export const isUnauthorizedError = (error: unknown) =>
+  error instanceof ApiError && error.status === HTTP_STATUS.UNAUTHORIZED;
+
 /**
  * 공용 API Client
  * fetch는 4xx/5xx에서 에러를 던지지 않으므로 response.ok를 검사해 throw한다.

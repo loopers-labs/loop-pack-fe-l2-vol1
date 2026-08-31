@@ -1,5 +1,7 @@
 export {
   LOGIN_PATH,
+  LOGIN_REASON_MESSAGE,
+  LOGIN_REASONS,
   buildLoginUrl,
   toSafeNextPath,
   type LoginReason,

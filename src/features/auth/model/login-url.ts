@@ -1,6 +1,12 @@
 export const LOGIN_PATH = '/login';
 
-export type LoginReason = 'expired';
+export const LOGIN_REASONS = ['expired'] as const;
+
+export type LoginReason = (typeof LOGIN_REASONS)[number];
+
+export const LOGIN_REASON_MESSAGE: Record<LoginReason, string> = {
+  expired: '세션이 만료되었습니다. 다시 로그인해주세요.',
+};
 
 /**
  * 로그인이 필요한 모든 진입점이 같은 규칙으로 돌아갈 경로를 next에 싣는다.
