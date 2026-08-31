@@ -8,29 +8,20 @@ import type {
   OrderCreateResponse,
   OrderListResponse,
 } from '@/entities/order/model/types';
-import { redirectToLogin } from '@/shared/lib/safeReturnTo';
+import { HttpError } from '@/shared/api/HttpError';
+import {
+  getHttpErrorMessage,
+  readHttpBody,
+} from '@/shared/api/httpResponse';
 
-export class OrderApiError extends Error {
+export class OrderApiError extends HttpError {
   constructor(
     message: string,
     public readonly status: number,
   ) {
-    super(message);
+    super(message, status);
     this.name = 'OrderApiError';
   }
-}
-
-function getErrorMessage(body: unknown, fallback: string): string {
-  if (
-    typeof body === 'object' &&
-    body !== null &&
-    'message' in body &&
-    typeof body.message === 'string'
-  ) {
-    return body.message;
-  }
-
-  return fallback;
 }
 
 function parseResponse<T>(
@@ -47,20 +38,15 @@ function parseResponse<T>(
   return result.data;
 }
 
-async function readBody(response: Response): Promise<unknown> {
-  return response.json().catch(() => null);
-}
-
 function throwOrderError(
   response: Response,
   body: unknown,
   fallback: string,
 ): never {
-  if (response.status === 401) {
-    redirectToLogin();
-  }
-
-  throw new OrderApiError(getErrorMessage(body, fallback), response.status);
+  throw new OrderApiError(
+    getHttpErrorMessage(body, fallback),
+    response.status,
+  );
 }
 
 export async function createOrder(
@@ -71,7 +57,7 @@ export async function createOrder(
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(request),
   });
-  const body = await readBody(response);
+  const body = await readHttpBody(response);
 
   if (!response.ok) {
     throwOrderError(response, body, '주문을 완료하지 못했습니다.');
@@ -88,7 +74,7 @@ export async function fetchOrders(options?: {
   signal?: AbortSignal;
 }): Promise<OrderListResponse> {
   const response = await fetch('/api/orders', { signal: options?.signal });
-  const body = await readBody(response);
+  const body = await readHttpBody(response);
 
   if (!response.ok) {
     throwOrderError(response, body, '주문 내역을 불러오지 못했습니다.');

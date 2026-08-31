@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
+import { protectedRequestMeta } from '@/shared/api/requestMeta';
 import { fetchOrders } from './orderService';
 
 export const orderKeys = {
@@ -10,6 +11,7 @@ export function orderListQueryOptions() {
   return queryOptions({
     queryKey: orderKeys.list(),
     queryFn: ({ signal }) => fetchOrders({ signal }),
+    meta: protectedRequestMeta,
     retry: false,
     staleTime: 0,
   });

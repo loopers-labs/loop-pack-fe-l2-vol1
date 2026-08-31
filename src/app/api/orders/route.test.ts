@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it } from "vitest";
-import { accounts, createSessionToken, resetOrders } from "@/app/api/_data/auth";
+import { accounts, createSessionToken } from "@/app/api/_data/auth";
 import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
+import { orderRepository } from '@/app/api/_data/orderRepository';
 import { GET, POST } from "./route";
 
 const withCookies = (request: NextRequest, cookies: Record<string, string>) => {
@@ -28,7 +29,7 @@ const session = (index = 0) => createSessionToken(accounts[index].id);
 
 describe("POST /api/orders", () => {
   afterEach(() => {
-    resetOrders();
+    orderRepository.reset();
   });
 
   it("creates an order for the signed-in user", async () => {
@@ -82,7 +83,7 @@ describe("POST /api/orders", () => {
 
 describe("GET /api/orders", () => {
   afterEach(() => {
-    resetOrders();
+    orderRepository.reset();
   });
 
   it("returns only the signed-in user's orders", async () => {

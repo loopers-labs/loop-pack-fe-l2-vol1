@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
-import type { Order, OrderItem } from "@/entities/order/model/types";
 
 // 이 파일은 node:crypto 를 쓴다. Node 런타임(API 라우트)에서만 import 해야 한다.
 // Edge 런타임에서 쿠키 이름이 필요하면 auth-cookies.ts 에서 가져온다.
@@ -108,35 +107,6 @@ export const readSessionToken = (
   const userId = parsed.userId;
   return accounts.find((account) => account.id === userId) ?? null;
 };
-
-// ponytail: 프로세스 메모리에만 담는다. 서버를 재시작하면 초기화된다.
-// 영속이 필요해지면 파일이나 DB로 올린다
-const ordersByUser = new Map<string, Order[]>();
-let orderSequence = 0;
-
-export const addOrder = (userId: string, items: OrderItem[]): Order => {
-  orderSequence += 1;
-
-  const order: Order = {
-    id: `o${orderSequence}`,
-    createdAt: new Date().toISOString(),
-    items,
-  };
-
-  ordersByUser.set(userId, [...(ordersByUser.get(userId) ?? []), order]);
-  return order;
-};
-
-export const listOrders = (userId: string): Order[] => ordersByUser.get(userId) ?? [];
-
-export const resetOrders = () => {
-  ordersByUser.clear();
-  orderSequence = 0;
-};
-
-// 상품 데이터를 참조하지 않고 id 형식만 확인한다. mock 상품은 p1 ~ p30이다
-export const isKnownProductId = (productId: string) =>
-  /^p(?:[1-9]|1\d|2\d|30)$/.test(productId);
 
 // 지연은 이 파일에서 처리한다. test 환경에서는 기다리지 않는다
 export const waitForAuthApi = (requestedDelayMs = 500) =>

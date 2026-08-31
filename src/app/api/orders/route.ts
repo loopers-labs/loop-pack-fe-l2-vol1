@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  addOrder,
   isAuthScenario,
-  isKnownProductId,
-  isRecord,
-  listOrders,
   readSessionToken,
   waitForAuthApi,
 } from "@/app/api/_data/auth";
 import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
+import { orderRepository } from '@/app/api/_data/orderRepository';
+import { getProductById } from '@/app/api/_data/productService';
 import type {
   AuthErrorResponse,
   AuthUser,
 } from "@/app/api/_data/auth";
 import type {
   OrderCreateResponse,
-  OrderItem,
   OrderListResponse,
 } from "@/entities/order/model/types";
+import { orderCreateRequestSchema } from '@/entities/order/model/types';
 
 type Resolved =
   | { ok: true; user: AuthUser; scenario: string | null }
@@ -66,30 +64,6 @@ const resolveSession = async (request: NextRequest): Promise<Resolved> => {
   return { ok: true, user, scenario };
 };
 
-const parseItems = (value: unknown): OrderItem[] | null => {
-  if (!Array.isArray(value) || value.length === 0) {
-    return null;
-  }
-
-  const items: OrderItem[] = [];
-  for (const entry of value) {
-    if (!isRecord(entry)) {
-      return null;
-    }
-
-    const { productId, quantity } = entry;
-    if (typeof productId !== "string" || !isKnownProductId(productId)) {
-      return null;
-    }
-    if (typeof quantity !== "number" || !Number.isSafeInteger(quantity) || quantity < 1) {
-      return null;
-    }
-    items.push({ productId, quantity });
-  }
-
-  return items;
-};
-
 export async function POST(
   request: NextRequest,
 ): Promise<NextResponse<OrderCreateResponse | AuthErrorResponse>> {
@@ -105,12 +79,18 @@ export async function POST(
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  const items = isRecord(body) ? parseItems(body.items) : null;
-  if (items === null) {
+  const requestBody = orderCreateRequestSchema.safeParse(body);
+  if (
+    !requestBody.success ||
+    requestBody.data.items.some(({ productId }) => !getProductById(productId))
+  ) {
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  return NextResponse.json({ order: addOrder(resolved.user.id, items) }, { status: 201 });
+  return NextResponse.json(
+    { order: orderRepository.add(resolved.user.id, requestBody.data.items) },
+    { status: 201 },
+  );
 }
 
 export async function GET(
@@ -121,5 +101,5 @@ export async function GET(
     return resolved.response;
   }
 
-  return NextResponse.json({ orders: listOrders(resolved.user.id) });
+  return NextResponse.json({ orders: orderRepository.list(resolved.user.id) });
 }

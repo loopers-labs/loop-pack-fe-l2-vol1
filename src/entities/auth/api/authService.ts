@@ -3,32 +3,20 @@ import type {
   LoginRequest,
   SessionResponse,
 } from '@/entities/auth/model/types';
+import { HttpError } from '@/shared/api/HttpError';
+import {
+  getHttpErrorMessage,
+  readHttpBody,
+} from '@/shared/api/httpResponse';
 
-export class AuthApiError extends Error {
+export class AuthApiError extends HttpError {
   constructor(
     message: string,
     public readonly status: number,
   ) {
-    super(message);
+    super(message, status);
     this.name = 'AuthApiError';
   }
-}
-
-function getErrorMessage(body: unknown, fallback: string): string {
-  if (
-    typeof body === 'object' &&
-    body !== null &&
-    'message' in body &&
-    typeof body.message === 'string'
-  ) {
-    return body.message;
-  }
-
-  return fallback;
-}
-
-async function readBody(response: Response): Promise<unknown> {
-  return response.json().catch(() => null);
 }
 
 export async function login(
@@ -39,11 +27,11 @@ export async function login(
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(request),
   });
-  const body = await readBody(response);
+  const body = await readHttpBody(response);
 
   if (!response.ok) {
     throw new AuthApiError(
-      getErrorMessage(body, '로그인에 실패했습니다.'),
+      getHttpErrorMessage(body, '로그인에 실패했습니다.'),
       response.status,
     );
   }
@@ -60,9 +48,9 @@ export async function logout(): Promise<void> {
   const response = await fetch('/api/auth/logout', { method: 'POST' });
 
   if (!response.ok) {
-    const body = await readBody(response);
+    const body = await readHttpBody(response);
     throw new AuthApiError(
-      getErrorMessage(body, '로그아웃에 실패했습니다.'),
+      getHttpErrorMessage(body, '로그아웃에 실패했습니다.'),
       response.status,
     );
   }

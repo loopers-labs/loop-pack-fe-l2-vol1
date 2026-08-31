@@ -5,7 +5,7 @@ import {
   SCENARIO_COOKIE,
   SESSION_COOKIE,
 } from '@/app/api/_data/auth-cookies';
-import { createLoginHref } from '@/shared/lib/safeReturnTo';
+import { createLoginHref } from '@/features/auth/lib/authNavigation';
 import type { AuthUser } from '@/entities/auth/model/types';
 
 export async function getCurrentUser(): Promise<AuthUser | null> {

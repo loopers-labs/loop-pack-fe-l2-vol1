@@ -1,14 +1,10 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   accounts,
-  addOrder,
   createSessionToken,
   findAccount,
   isAuthScenario,
-  isKnownProductId,
-  listOrders,
   readSessionToken,
-  resetOrders,
   TEST_PASSWORD,
 } from "./auth";
 import { SESSION_TTL_SECONDS } from "./auth-cookies";
@@ -86,42 +82,5 @@ describe("scenario values", () => {
     expect(["invalid", "expired", "error", "slow"].every(isAuthScenario)).toBe(true);
     expect(isAuthScenario("empty")).toBe(false);
     expect(isAuthScenario("")).toBe(false);
-  });
-});
-
-describe("product id format", () => {
-  it("accepts p1 through p30 and rejects anything outside that range", () => {
-    expect(["p1", "p9", "p10", "p29", "p30"].every(isKnownProductId)).toBe(true);
-    expect(["p0", "p31", "p999", "p", "p01", "x1", ""].some(isKnownProductId)).toBe(false);
-  });
-});
-
-describe("orders", () => {
-  afterEach(() => {
-    resetOrders();
-  });
-
-  it("keeps orders separated per user", () => {
-    const first = addOrder(accounts[0].id, [{ productId: "p1", quantity: 2 }]);
-    addOrder(accounts[1].id, [{ productId: "p2", quantity: 1 }]);
-
-    expect(listOrders(accounts[0].id)).toEqual([first]);
-    expect(listOrders(accounts[1].id)).toHaveLength(1);
-    expect(listOrders("u999")).toEqual([]);
-  });
-
-  it("keeps the requested items and numbers each order", () => {
-    const first = addOrder(accounts[0].id, [
-      { productId: "p1", quantity: 2 },
-      { productId: "p2", quantity: 1 },
-    ]);
-    const second = addOrder(accounts[0].id, [{ productId: "p3", quantity: 1 }]);
-
-    expect(first.items).toEqual([
-      { productId: "p1", quantity: 2 },
-      { productId: "p2", quantity: 1 },
-    ]);
-    expect(first.id).toBe("o1");
-    expect(second.id).toBe("o2");
   });
 });
