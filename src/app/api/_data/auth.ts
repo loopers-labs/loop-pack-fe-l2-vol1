@@ -55,7 +55,8 @@ export type OrderListResponse = {
 export const TEST_PASSWORD = "looper1234";
 
 // ponytail: mock 백엔드라 비밀 값을 코드에 둔다. 실제 서비스라면 환경 변수만 허용한다
-const sessionSecret = () => process.env.AUTH_SESSION_SECRET ?? "loopers-week09-secret";
+const sessionSecret = () =>
+  process.env.AUTH_SESSION_SECRET ?? "loopers-week09-secret";
 
 export const accounts: AuthUser[] = Array.from({ length: 8 }, (_, index) => ({
   id: `u${index + 1}`,
@@ -63,8 +64,12 @@ export const accounts: AuthUser[] = Array.from({ length: 8 }, (_, index) => ({
   email: `looper${index + 1}@loopers.dev`,
 }));
 
-const authScenarios = ["invalid", "expired", "error", "slow"] as const satisfies
-  readonly AuthScenario[];
+const authScenarios = [
+  "invalid",
+  "expired",
+  "error",
+  "slow",
+] as const satisfies readonly AuthScenario[];
 
 export const isAuthScenario = (value: string): value is AuthScenario =>
   authScenarios.some((scenario) => scenario === value);
@@ -72,12 +77,16 @@ export const isAuthScenario = (value: string): value is AuthScenario =>
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-export const findAccount = (email: string, password: string): AuthUser | null => {
+export const findAccount = (
+  email: string,
+  password: string,
+): AuthUser | null => {
   if (password !== TEST_PASSWORD) {
     return null;
   }
 
   const normalized = email.trim().toLowerCase();
+
   return accounts.find((account) => account.email === normalized) ?? null;
 };
 
@@ -87,7 +96,11 @@ const sign = (payload: string) =>
 export const createSessionToken = (userId: string, nowMs = Date.now()) => {
   const issuedAt = Math.floor(nowMs / 1_000);
   const payload = Buffer.from(
-    JSON.stringify({ userId, iat: issuedAt, exp: issuedAt + SESSION_TTL_SECONDS }),
+    JSON.stringify({
+      userId,
+      iat: issuedAt,
+      exp: issuedAt + SESSION_TTL_SECONDS,
+    }),
   ).toString("base64url");
 
   return `${payload}.${sign(payload)}`;
@@ -102,17 +115,20 @@ export const readSessionToken = (
   }
 
   const [payload, signature, ...rest] = token.split(".");
+
   if (!payload || !signature || rest.length > 0) {
     return null;
   }
 
   const expected = Buffer.from(sign(payload));
   const actual = Buffer.from(signature);
+
   if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
     return null;
   }
 
   let parsed: { userId?: unknown; exp?: unknown };
+
   try {
     parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
   } catch {
@@ -128,6 +144,7 @@ export const readSessionToken = (
   }
 
   const userId = parsed.userId;
+
   return accounts.find((account) => account.id === userId) ?? null;
 };
 
@@ -146,10 +163,12 @@ export const addOrder = (userId: string, items: OrderItem[]): Order => {
   };
 
   ordersByUser.set(userId, [...(ordersByUser.get(userId) ?? []), order]);
+
   return order;
 };
 
-export const listOrders = (userId: string): Order[] => ordersByUser.get(userId) ?? [];
+export const listOrders = (userId: string): Order[] =>
+  ordersByUser.get(userId) ?? [];
 
 export const resetOrders = () => {
   ordersByUser.clear();
