@@ -1,6 +1,6 @@
 'use client';
 
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { CartEmptyState } from './CartEmptyState';
 import { CartFilledState } from './CartFilledState';
 import { CartProductFeed } from './CartProductFeed';

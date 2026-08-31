@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/entities/auth/api/authService';
 import type { AuthUser } from '@/entities/auth/model/types';
 import { productListInfiniteQueryOptions } from '@/entities/product/api/productQueries';
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 
 interface HeaderNavProps {

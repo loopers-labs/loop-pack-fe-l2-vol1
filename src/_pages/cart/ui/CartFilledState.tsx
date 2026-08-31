@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { formatWon } from '@/shared/lib/format';
-import { useCartProducts } from '../lib/useCartProducts';
-import type { CartItem } from '@/entities/cart/model/cartStore';
+import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
+import type { CartItem } from '@/entities/cart/model/cartTypes';
 
 interface CartFilledStateProps {
   items: CartItem[];
@@ -12,7 +12,7 @@ interface CartFilledStateProps {
 
 export function CartFilledState({ items }: CartFilledStateProps) {
   const removeItem = useCartStore((state) => state.removeItem);
-  const { products, isPending, isError, refetch } = useCartProducts(
+  const { products, isPending, isError, refetch } = useProductsByIds(
     items.map((item) => item.id),
   );
 

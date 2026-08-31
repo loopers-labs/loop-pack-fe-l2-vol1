@@ -1,20 +1,14 @@
 'use client';
 
-import { useCallback } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { productListInfiniteQueryOptions } from '@/entities/product/api/productQueries';
-import type { Product } from '@/entities/product/model/types';
+import { useInfiniteProducts } from '@/entities/product/model/useInfiniteProducts';
+import { InfiniteScrollTrigger } from '@/shared/ui/infinite-scroll-trigger/InfiniteScrollTrigger';
 import { CartProductCard } from './CartProductCard';
 
-function mergeProducts(pages: { products: Product[] }[]): Product[] {
-  const productsById = new Map<string, Product>();
-
-  pages.forEach((page) => {
-    page.products.forEach((product) => productsById.set(product.id, product));
-  });
-
-  return Array.from(productsById.values());
-}
+const CART_FEED_LABELS = {
+  loading: '다음 상품을 불러오는 중이에요.',
+  error: '다음 상품을 불러오지 못했어요.',
+  end: '모든 상품을 확인했어요.',
+};
 
 function FeedSkeleton() {
   return (
@@ -41,16 +35,10 @@ export function CartProductFeed() {
     isFetchingNextPage,
     isFetchNextPageError,
     hasNextPage,
-    fetchNextPage,
     refetch,
-  } = useInfiniteQuery(
-    productListInfiniteQueryOptions({ category: 'all', sort: 'latest' }),
-  );
-
-  const handleLoadMore = useCallback(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
-    void fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+    products,
+    loadMore,
+  } = useInfiniteProducts({ category: 'all', sort: 'latest' });
 
   if (isError && !data) {
     return (
@@ -100,74 +88,20 @@ export function CartProductFeed() {
       ) : (
         <>
           <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-10 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
-            {mergeProducts(data.pages).map((product) => (
+            {products.map((product) => (
               <CartProductCard key={product.id} product={product} />
             ))}
           </div>
 
-          <div className="mt-10 flex min-h-20 items-center justify-center text-center">
-            {isFetchingNextPage ? (
-              <p role="status" className="text-sm text-text-secondary">
-                다음 상품을 불러오는 중이에요.
-              </p>
-            ) : isFetchNextPageError ? (
-              <div>
-                <p role="alert" className="text-sm text-text-secondary">
-                  다음 상품을 불러오지 못했어요.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleLoadMore}
-                  className="mt-3 min-h-11 cursor-pointer rounded-lg border border-border px-5 text-sm font-semibold text-text transition-colors hover:border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
-                >
-                  다시 시도
-                </button>
-              </div>
-            ) : hasNextPage ? (
-              <LoadMoreTrigger onLoadMore={handleLoadMore} />
-            ) : (
-              <p role="status" className="text-sm text-text-caption">
-                모든 상품을 확인했어요.
-              </p>
-            )}
-          </div>
+          <InfiniteScrollTrigger
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            isNextPageError={isFetchNextPageError}
+            onLoadMore={loadMore}
+            labels={CART_FEED_LABELS}
+          />
         </>
       )}
     </section>
-  );
-}
-
-interface LoadMoreTriggerProps {
-  onLoadMore: () => void;
-}
-
-function LoadMoreTrigger({ onLoadMore }: LoadMoreTriggerProps) {
-  const triggerRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (!node || typeof IntersectionObserver === 'undefined') return;
-
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry?.isIntersecting) onLoadMore();
-        },
-        { rootMargin: '240px 0px' },
-      );
-
-      observer.observe(node);
-      return () => observer.disconnect();
-    },
-    [onLoadMore],
-  );
-
-  return (
-    <div ref={triggerRef}>
-      <button
-        type="button"
-        onClick={onLoadMore}
-        className="min-h-11 cursor-pointer rounded-lg border border-border px-5 text-sm font-semibold text-text transition-colors hover:border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
-      >
-        더 보기
-      </button>
-    </div>
   );
 }

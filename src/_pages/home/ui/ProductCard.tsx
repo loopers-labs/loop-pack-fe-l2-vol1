@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { formatWon, calcDiscount } from '@/shared/lib/format';
 import type { Product } from '@/entities/product/model/types';
 

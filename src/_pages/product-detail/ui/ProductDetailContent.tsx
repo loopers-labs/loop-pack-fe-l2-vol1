@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { BackIcon } from '@/shared/ui/icons/BackIcon';
 import { StarIcon } from '@/shared/ui/icons/StarIcon';
 import { formatWon, calcDiscount } from '@/shared/lib/format';

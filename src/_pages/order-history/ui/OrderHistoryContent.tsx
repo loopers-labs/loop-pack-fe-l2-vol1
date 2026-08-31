@@ -3,8 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { orderListQueryOptions } from '@/entities/order/api/orderQueries';
-import { OrderApiError } from '@/entities/order/api/orderService';
-import { useOrderProducts } from '@/features/order/model/useOrderProducts';
+import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
 import { OrderHistoryCard } from './OrderHistoryCard';
 
 export function OrderHistoryContent() {
@@ -18,7 +17,7 @@ export function OrderHistoryContent() {
     isPending: areProductsPending,
     isError: isProductError,
     refetch: refetchProducts,
-  } = useOrderProducts(productIds);
+  } = useProductsByIds(productIds);
   const orderedByNewest = [...orders].reverse();
 
   if (orderQuery.isPending) {
@@ -34,13 +33,6 @@ export function OrderHistoryContent() {
         </div>
       </main>
     );
-  }
-
-  if (
-    orderQuery.error instanceof OrderApiError &&
-    orderQuery.error.status === 401
-  ) {
-    return null;
   }
 
   if (orderQuery.isError) {

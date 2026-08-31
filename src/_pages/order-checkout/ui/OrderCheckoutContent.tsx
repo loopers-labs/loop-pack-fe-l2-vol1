@@ -3,16 +3,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createOrder, OrderApiError } from '@/entities/order/api/orderService';
+import { createOrder } from '@/entities/order/api/orderService';
 import { orderKeys } from '@/entities/order/api/orderQueries';
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import {
   getOrderItemCount,
   getOrderTotal,
 } from '@/features/order/lib/orderSummary';
-import { useOrderProducts } from '@/features/order/model/useOrderProducts';
+import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
 import { OrderProductList } from '@/features/order/ui/OrderProductList';
 import { BackIcon } from '@/shared/ui/icons/BackIcon';
+import { protectedRequestMeta } from '@/shared/api/requestMeta';
 import { OrderPaymentSummary } from './OrderPaymentSummary';
 
 export function OrderCheckoutContent() {
@@ -26,7 +27,7 @@ export function OrderCheckoutContent() {
     productId: id,
     quantity,
   }));
-  const { products, isPending, isError, refetch } = useOrderProducts(
+  const { products, isPending, isError, refetch } = useProductsByIds(
     items.map((item) => item.productId),
   );
   const itemCount = getOrderItemCount(items);
@@ -38,17 +39,14 @@ export function OrderCheckoutContent() {
     products.size === items.length;
   const orderMutation = useMutation({
     mutationFn: () => createOrder({ items }),
+    meta: protectedRequestMeta,
     onSuccess: async () => {
       clearItems();
       await queryClient.invalidateQueries({ queryKey: orderKeys.all });
       router.replace('/orders');
     },
   });
-  const orderErrorMessage =
-    orderMutation.error instanceof OrderApiError &&
-    orderMutation.error.status === 401
-      ? undefined
-      : orderMutation.error?.message;
+  const orderErrorMessage = orderMutation.error?.message;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

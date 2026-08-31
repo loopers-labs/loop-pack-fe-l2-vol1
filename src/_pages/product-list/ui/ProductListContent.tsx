@@ -2,15 +2,14 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
-import { productListInfiniteQueryOptions } from '@/entities/product/api/productQueries';
+import { useInfiniteProducts } from '@/entities/product/model/useInfiniteProducts';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { useProductSearchParams } from '../lib/useProductSearchParams';
 import { formatWon } from '@/shared/lib/format';
 import { ProductListIntro } from './ProductListIntro';
 import { ProductListSkeleton } from './ProductListSkeleton';
-import { InfiniteScrollTrigger } from './InfiniteScrollTrigger';
+import { InfiniteScrollTrigger } from '@/shared/ui/infinite-scroll-trigger/InfiniteScrollTrigger';
 import type {
   CategoryOption,
   Product,
@@ -51,10 +50,6 @@ interface ProductGridProps {
   totalCount: number;
   isRefreshing: boolean;
   isStale: boolean;
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
-  isNextPageError: boolean;
-  onLoadMore: () => void;
 }
 
 function ProductGrid({
@@ -62,10 +57,6 @@ function ProductGrid({
   totalCount,
   isRefreshing,
   isStale,
-  hasNextPage,
-  isFetchingNextPage,
-  isNextPageError,
-  onLoadMore,
 }: ProductGridProps) {
   return (
     <>
@@ -120,25 +111,8 @@ function ProductGrid({
           ))}
         </div>
       )}
-
-      {products.length > 0 && (
-        <InfiniteScrollTrigger
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          isNextPageError={isNextPageError}
-          onLoadMore={onLoadMore}
-        />
-      )}
     </>
   );
-}
-
-function mergeProducts(pages: { products: Product[] }[]): Product[] {
-  const productsById = new Map<string, Product>();
-  pages.forEach((page) => {
-    page.products.forEach((product) => productsById.set(product.id, product));
-  });
-  return Array.from(productsById.values());
 }
 
 export function ProductListContent() {
@@ -154,12 +128,10 @@ export function ProductListContent() {
     isFetchNextPageError,
     isPlaceholderData,
     hasNextPage,
-    fetchNextPage,
     refetch,
-  } = useInfiniteQuery({
-    ...productListInfiniteQueryOptions(query),
-    placeholderData: keepPreviousData,
-  });
+    products,
+    loadMore,
+  } = useInfiniteProducts(query, { shouldKeepPreviousData: true });
 
   useEffect(() => {
     if (inputRef.current && inputRef.current !== document.activeElement) {
@@ -170,11 +142,6 @@ export function ProductListContent() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-
-  const handleLoadMore = useCallback(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
-    void fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,7 +179,6 @@ export function ProductListContent() {
   if (!data) return <ProductListSkeleton />;
 
   const firstPage = data.pages[0];
-  const products = mergeProducts(data.pages);
   const isShowingFallback = isError && isPlaceholderData;
 
   return (
@@ -283,11 +249,15 @@ export function ProductListContent() {
         totalCount={firstPage.totalCount}
         isRefreshing={isFetching && !isFetchingNextPage}
         isStale={isPlaceholderData}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        isNextPageError={isFetchNextPageError}
-        onLoadMore={handleLoadMore}
       />
+      {products.length > 0 && (
+        <InfiniteScrollTrigger
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          isNextPageError={isFetchNextPageError}
+          onLoadMore={loadMore}
+        />
+      )}
     </main>
   );
 }
