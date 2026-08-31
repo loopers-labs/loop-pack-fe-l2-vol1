@@ -27,7 +27,7 @@
 | 테스트 작성                                                    | `docs/rules/11-테스트-패턴.md`                                                                                 |
 | 새 폴더, 파일 구조, FSD slice                                  | `docs/rules/02-디렉토리-구조.md`, `docs/rules/13-피처-구조-패턴.md`                                            |
 | 주석, 문서화, AI 생성 표기                                     | `docs/rules/14-주석-정책.md`                                                                                   |
-| UI, form, interaction, CSS, loading/error/empty state          | `docs/rules/17-접근성.md`, `docs/rules/03-컴포넌트-라이프사이클.md`, `docs/rules/08-모달-토스트.md`            |
+| 일반 UI 스타일, 비특화 interaction, CSS                        | `docs/rules/17-접근성.md`, `docs/rules/03-컴포넌트-라이프사이클.md`                                            |
 | 커밋                                                           | `docs/rules/15-Husky-품질-게이트.md`                                                                           |
 | PR 작성                                                        | `docs/rules/16-PR-컨벤션.md`, `docs/rules/15-Husky-품질-게이트.md`                                             |
 | 검증/품질 게이트                                               | `docs/rules/15-Husky-품질-게이트.md`, `docs/rules/11-테스트-패턴.md`                                           |
