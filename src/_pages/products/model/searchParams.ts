@@ -1,7 +1,8 @@
 import { createLoader, createParser, parseAsString, parseAsStringEnum } from "nuqs/server";
-import { PRODUCT_CATEGORY_FILTERS, PRODUCT_SORTS } from "./constants";
+import { PRODUCT_CATEGORY_FILTERS, PRODUCT_LIST_SCENARIOS, PRODUCT_SORTS } from "./constants";
 import type { ProductSort } from "@/entities/product";
-import type { ProductCategoryFilter } from "./types";
+import type { ProductCategoryFilter, ProductListScenario } from "./types";
+import type { SearchParams } from "nuqs/server";
 
 const parseAsPageNumber = createParser({
   parse(value) {
@@ -27,4 +28,16 @@ export const productListSearchParams = {
   page: parseAsPageNumber.withDefault(1),
 };
 
+export const productListScenarioSearchParams = {
+  scenario: parseAsStringEnum<Exclude<ProductListScenario, null>>([...PRODUCT_LIST_SCENARIOS]),
+};
+
 export const loadProductListSearchParams = createLoader(productListSearchParams);
+
+const loadProductListQuerySearchParams = createLoader({
+  ...productListSearchParams,
+  ...productListScenarioSearchParams,
+});
+
+export const loadProductListQueryParams = (searchParams: Promise<SearchParams>) =>
+  loadProductListQuerySearchParams(searchParams);
