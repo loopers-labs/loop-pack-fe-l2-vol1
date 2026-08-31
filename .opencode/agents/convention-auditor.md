@@ -18,18 +18,17 @@ You audit whether code and documentation follow this repository's conventions.
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/conventions/README.md`
-- `docs/rules/conventions/typescript.md`
-- `docs/rules/conventions/react.md`
-- `docs/rules/conventions/runtime-boundaries.md`
-- `docs/rules/conventions/exports-and-files.md`
-- `docs/rules/lint-and-format.md`
-- `docs/rules/testing/verification.md`
+- `docs/rules/README.md`
+- `docs/rules/01-네이밍-규칙.md`
+- `docs/rules/02-디렉토리-구조.md`
+- `docs/rules/03-컴포넌트-라이프사이클.md`
+- `docs/rules/05-API-패턴.md`
+- `docs/rules/11-테스트-패턴.md`
+- `docs/rules/13-피처-구조-패턴.md`
+- `docs/rules/15-Husky-품질-게이트.md`
 - `eslint.config.mjs`
 - `.prettierrc`
 - `tsconfig.json`
-- `tsconfig.app.json`
-- `tsconfig.node.json`
 
 ## Responsibilities
 

@@ -1,26 +1,29 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { withNuqsTestingAdapter } from 'nuqs/adapters/testing'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ProductService } from '@/entities/product/api/ProductService'
-import { ProductListRouteParams } from '@/entities/product/model/ProductListRouteParams'
 import type {
   Product,
   ProductListResponse,
 } from '@/entities/product/model/types'
-import { useProductFilters } from '@/features/product-filter/model/useProductFilters'
-import { FilterBar } from '@/features/product-filter/ui/FilterBar'
-import { useProductListState } from '@/views/product-list/model/useProductListState'
-import { ProductListSection } from '@/widgets/product-list/ui/ProductListSection'
+import { ProductListView } from '@/views/product-list/ui/ProductListView'
 
+import {
+  renderProductListHarness,
+  resetProductListHarnessState,
+} from '../../../../tests/helpers/renderProductListHarness'
 import { server } from '../../../../tests/setup/mswServer'
+
+const nextNavigation = vi.hoisted(() => ({
+  searchParams: new URLSearchParams(),
+}))
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => nextNavigation.searchParams,
+}))
 
 const product = {
   id: 'p-stanley',
@@ -49,71 +52,53 @@ const productList = (
   pageSize: 12,
 })
 
-const productService = new ProductService()
-let activeQueryClient: QueryClient | undefined
-
-function ProductListHarness() {
-  const { filters, updateFilter, updatePage } = useProductFilters()
-  const request = ProductListRouteParams.toRequest({
-    q: filters.q,
-    category: filters.category,
-    sort: filters.sort,
-    page: String(filters.page),
-  })
-  const options = productService.getProductList(request)
-  const query = useQuery(options)
-  const state = useProductListState(
-    query,
-    options.queryKey,
-    JSON.stringify(request),
-  )
-
-  return (
-    <main>
-      <FilterBar
-        filters={filters}
-        totalCount={state.displayedData?.totalCount ?? 0}
-        pageSize={12}
-        updateFilter={updateFilter}
-        updatePage={updatePage}
-      />
-      <ProductListSection
-        query={query}
-        displayedData={state.displayedData}
-        displayedDataKey={state.displayedDataKey}
-        scope={JSON.stringify(request)}
-      />
-    </main>
-  )
-}
-
-const renderProductList = (searchParams = '') => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
-  activeQueryClient = queryClient
-  const NuqsTestingAdapter = withNuqsTestingAdapter({
-    hasMemory: true,
-    searchParams,
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <NuqsTestingAdapter>
-        <ProductListHarness />
-      </NuqsTestingAdapter>
-    </QueryClientProvider>,
-  )
-}
-
-const resetQueryClient = () => {
-  activeQueryClient?.clear()
-  activeQueryClient = undefined
-}
-
 describe('ProductList query states', () => {
-  beforeEach(resetQueryClient)
-  afterEach(resetQueryClient)
+  beforeEach(resetProductListHarnessState)
+  afterEach(resetProductListHarnessState)
+
+  it('ProductListView request assembly - when URL fields include a diagnostic scenario - forwards the canonical request and renders the result', async () => {
+    // Arrange
+    const searchParams = new URLSearchParams({
+      q: 'stanley',
+      category: 'home',
+      sort: 'price-desc',
+      page: '2',
+      scenario: 'slow',
+    })
+    nextNavigation.searchParams = searchParams
+    let requestedSearch = ''
+    server.use(
+      http.get('http://localhost:3000/api/products', ({ request }) => {
+        requestedSearch = new URL(request.url).searchParams.toString()
+        return HttpResponse.json(productList([product], 13, 2))
+      }),
+    )
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const NuqsTestingAdapter = withNuqsTestingAdapter({
+      hasMemory: true,
+      searchParams,
+    })
+
+    // Act
+    render(
+      <QueryClientProvider client={queryClient}>
+        <NuqsTestingAdapter>
+          <ProductListView diagnosticScenario={{ scenario: 'slow' }} />
+        </NuqsTestingAdapter>
+      </QueryClientProvider>,
+    )
+
+    // Assert
+    await screen.findByRole('heading', { name: product.name })
+    expect(requestedSearch).toBe(
+      'q=stanley&category=home&sort=price-desc&page=2&pageSize=12&scenario=slow',
+    )
+    expect(
+      screen.getByRole('region', { name: '상품 검색 결과' }),
+    ).toHaveTextContent('총 13개')
+  })
 
   it('Product list query - when the API responds successfully - removes loading status and shows products', async () => {
     // Arrange
@@ -124,7 +109,7 @@ describe('ProductList query states', () => {
     )
 
     // Act
-    renderProductList()
+    renderProductListHarness()
 
     // Assert
     screen.getByText('상품을 불러오는 중…')
@@ -147,7 +132,7 @@ describe('ProductList query states', () => {
     )
 
     // Act
-    renderProductList('?page=2')
+    renderProductListHarness({ searchParams: '?page=2' })
 
     // Assert
     await screen.findByText('현재 페이지에 표시할 상품이 없습니다.')
@@ -165,7 +150,7 @@ describe('ProductList query states', () => {
     )
 
     // Act
-    renderProductList()
+    renderProductListHarness()
 
     // Assert
     await screen.findByText('검색 결과가 없습니다.')
@@ -186,7 +171,7 @@ describe('ProductList query states', () => {
     )
 
     // Act
-    renderProductList()
+    renderProductListHarness()
 
     // Assert
     const alert = await screen.findByRole('alert')
@@ -203,7 +188,7 @@ describe('ProductList query states', () => {
     )
 
     // Act
-    renderProductList()
+    renderProductListHarness()
 
     // Assert
     const alert = await screen.findByRole('alert')
@@ -224,7 +209,7 @@ describe('ProductList query states', () => {
       }),
     )
 
-    renderProductList()
+    renderProductListHarness()
     await screen.findByRole('alert')
 
     // Act
@@ -251,7 +236,7 @@ describe('ProductList query states', () => {
             )
       }),
     )
-    renderProductList()
+    renderProductListHarness()
     await screen.findByRole('alert')
 
     // Act

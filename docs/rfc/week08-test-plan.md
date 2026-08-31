@@ -182,6 +182,11 @@ control 조작, `history: 'push'` URL 갱신, MSW 요청과 표시 결과를 한
 각 항목의 Stage 2 테스트에는 위 표에 대응하는 정상과 경계를 모두 둔다. 통합의 기본
 MSW handler에는 성공만 두고 빈 결과·오류는 해당 테스트에서 덮어쓴다.
 
+통합 항목의 공통 상호작용은 `ProductListHarness`가 실제 훅과 위젯을 같은 배선으로
+조립해 검증한다. 이 harness는 Next의 `useSearchParams`를 사용하는
+`ProductListView` 자체를 렌더하지 않으므로, scenario 병합과 request·prop 조립은
+실제 `ProductListView`를 렌더하는 별도 DOM 통합 테스트가 보호한다.
+
 ## Stage 3 — 자가 검증 기록
 
 세 방법론마다 한 곳씩 구현을 망가뜨렸다. 테스트 코드는 건드리지 않았고, 최종 커밋에
