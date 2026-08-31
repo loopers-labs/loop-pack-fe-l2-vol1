@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import CommerceError from '@/app/(commerce)/error';
 import { orderQueries } from '@/entities/order';
+import { useCheckoutStore } from '@/entities/order/model/checkout-store';
 import { productQueries } from '@/entities/product';
 import { SessionMenu } from '@/features/auth';
 import { ApiError } from '@/shared/api-client';
@@ -30,7 +31,7 @@ afterEach(() => {
 });
 
 describe('세션 만료 처리', () => {
-  it('401이면 사용자와 주문 캐시를 비우고 직전 경로를 실어 로그인으로 보낸다', async () => {
+  it('401이면 계정 상태를 정리하고 checkout draft는 유지한 채 로그인으로 보낸다', async () => {
     const queryClient = getQueryClient();
     const userOrderQueryKey = [...orderQueries.all(), SESSION_USER.id];
 
@@ -38,6 +39,9 @@ describe('세션 만료 처리', () => {
       { id: 'previous-user-order' },
     ]);
     queryClient.setQueryData(productQueries.all(), 'public-products');
+    useCheckoutStore.setState({
+      draftItems: [{ productId: 'p1', quantity: 2 }],
+    });
 
     renderWithProviders(
       <>
@@ -66,6 +70,10 @@ describe('세션 만료 처리', () => {
     expect(queryClient.getQueryData(productQueries.all())).toBe(
       'public-products',
     );
+    // 재로그인 후 직전 작업을 복원해야 하므로 checkout draft는 만료 정리에서 제외한다
+    expect(useCheckoutStore.getState().draftItems).toEqual([
+      { productId: 'p1', quantity: 2 },
+    ]);
     expect(screen.getByRole('link', { name: '로그인' })).toBeInTheDocument();
   });
 });

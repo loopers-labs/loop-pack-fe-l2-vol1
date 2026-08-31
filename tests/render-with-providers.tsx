@@ -45,12 +45,13 @@ export function renderWithProviders(
       </QueryClientProvider>
     </NuqsTestingAdapter>
   );
-  const { rerender } = render(tree(searchParams));
+  const { rerender, unmount } = render(tree(searchParams));
 
   return {
     user: userEvent.setup(),
     queryClient,
     onUrlUpdate,
+    unmount,
     // 뒤로 가기처럼 바깥에서 URL이 바뀐 상황. hasMemory면 어댑터가 새 searchParams를 URL로 동기화한다.
     // 단, 처음 넘긴 문자열과 같으면 어댑터가 변화를 못 보고 조용히 넘어가므로 막는다.
     navigate: (next: string) => {

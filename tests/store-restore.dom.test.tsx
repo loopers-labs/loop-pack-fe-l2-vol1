@@ -1,6 +1,7 @@
-import { act, render, screen } from '@testing-library/react';
-import { expect, it } from 'vitest';
+import { act, screen, within } from '@testing-library/react';
+import { expect, it, vi } from 'vitest';
 
+import { CartPage } from '@/_pages/cart';
 import { CartCount } from '@/entities/cart';
 import {
   CART_STORAGE_KEY,
@@ -13,29 +14,38 @@ import {
 } from '@/entities/wishlist/model/wishlist-store';
 import { CartToggleButton } from '@/features/cart';
 import { WishlistToggleButton } from '@/features/wishlist';
+import { renderWithProviders } from '@tests/render-with-providers';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
 
 const PRODUCT_NAME = '사이드 테이블';
 
 // 숫자는 폭을 예약하려고 별도 span에 있어 getByText로는 한 번에 잡히지 않는다
 const headerCountText = (label: string) =>
-  screen.getByText(new RegExp(`^${label}`)).textContent;
+  within(screen.getByRole('banner')).getByText(new RegExp(`^${label}`))
+    .textContent;
 
 /**
  * persist의 `hasHydrated`는 한 번 참이 되면 되돌릴 방법이 없다.
  * 복원 전 화면은 아직 아무도 복원을 부르지 않은 모듈에서만 만들 수 있어 파일을 따로 둔다.
  */
-it('복원 전에는 개수를 감추고 버튼을 잠그며, 복원되면 함께 풀린다', async () => {
+it('복원 전에는 개수를 감추고 버튼을 잠그고 장바구니 화면은 대기하며, 복원되면 함께 풀린다', async () => {
   const saved = JSON.stringify({ state: { productIds: ['p9'] }, version: 1 });
 
   localStorage.setItem(CART_STORAGE_KEY, saved);
   localStorage.setItem(WISHLIST_STORAGE_KEY, saved);
 
-  render(
+  renderWithProviders(
     <>
-      <CartCount />
-      <WishlistCount />
-      <CartToggleButton productId="p9" productName={PRODUCT_NAME} />
-      <WishlistToggleButton productId="p9" productName={PRODUCT_NAME} />
+      <header>
+        <CartCount />
+        <WishlistCount />
+        <CartToggleButton productId="p9" productName={PRODUCT_NAME} />
+        <WishlistToggleButton productId="p9" productName={PRODUCT_NAME} />
+      </header>
+      <CartPage />
     </>,
   );
 
@@ -52,6 +62,7 @@ it('복원 전에는 개수를 감추고 버튼을 잠그며, 복원되면 함�
   expect(wishlistToggle).toBeDisabled();
   expect(cartToggle).not.toHaveAttribute('aria-pressed');
   expect(wishlistToggle).not.toHaveAttribute('aria-pressed');
+  expect(screen.getByText('장바구니를 불러오는 중')).toBeInTheDocument();
 
   await act(async () => {
     await useCartStore.persist.rehydrate();
@@ -64,4 +75,6 @@ it('복원 전에는 개수를 감추고 버튼을 잠그며, 복원되면 함�
   expect(wishlistToggle).toBeEnabled();
   expect(cartToggle).toHaveAttribute('aria-pressed', 'true');
   expect(wishlistToggle).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByText('장바구니를 불러오는 중')).not.toBeInTheDocument();
+  expect(screen.getByRole('checkbox', { name: 'p9' })).toBeInTheDocument();
 });

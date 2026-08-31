@@ -38,6 +38,32 @@ it('이미 담은 상품을 다시 누르면 그 상품만 빠진다', () => {
   expect(cartProductIds()).toEqual(['p2']);
 });
 
+describe('선택(체크)', () => {
+  it('담으면 수량 1에 선택된 상태로 시작한다', () => {
+    toggleCart('p1');
+
+    expect(cartItems()).toEqual([
+      { productId: 'p1', quantity: 1, checked: true },
+    ]);
+  });
+
+  it('체크를 토글하면 해제되고 다시 토글하면 선택된다', () => {
+    toggleCart('p1');
+
+    useCartStore.getState().actions.toggleChecked('p1');
+
+    expect(cartItems()).toEqual([
+      { productId: 'p1', quantity: 1, checked: false },
+    ]);
+
+    useCartStore.getState().actions.toggleChecked('p1');
+
+    expect(cartItems()).toEqual([
+      { productId: 'p1', quantity: 1, checked: true },
+    ]);
+  });
+});
+
 describe('수량 변경', () => {
   it.each([
     ['0', 0],
@@ -49,7 +75,9 @@ describe('수량 변경', () => {
 
     setQuantity('p1', quantity);
 
-    expect(cartItems()).toEqual([{ productId: 'p1', quantity: 1 }]);
+    expect(cartItems()).toEqual([
+      { productId: 'p1', quantity: 1, checked: true },
+    ]);
   });
 });
 

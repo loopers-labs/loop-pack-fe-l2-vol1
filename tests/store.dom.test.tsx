@@ -124,8 +124,8 @@ describe('헤더 개수', () => {
   it('수량과 무관하게 서로 다른 상품 수를 보여준다', () => {
     useCartStore.setState({
       items: [
-        { productId: PRODUCT.id, quantity: 2 },
-        { productId: 'p-other', quantity: 3 },
+        { productId: PRODUCT.id, quantity: 2, checked: true },
+        { productId: 'p-other', quantity: 3, checked: false },
       ],
     });
     renderBothScreens();
