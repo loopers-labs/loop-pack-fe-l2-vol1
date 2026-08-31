@@ -23,8 +23,13 @@ const toStoredObject = (value: unknown) =>
 /**
  * JSON 파싱 실패, 저장소 접근 실패, 알 수 없는 version을 흡수하는 storage.
  * 저장값이 어떤 형태여야 하는지는 모른다. 형태 검증은 소유자가 validate로 넘긴다.
+ *
+ * currentVersion은 persist options의 version과 같은 값이어야 한다.
+ * 현재 버전 저장값만 validate를 거치고, 과거 버전은 원본 그대로 migrate에 넘겨
+ * 각 버전의 형태 지식을 validate(현재)와 migrate(과거) 한 곳씩에만 둔다.
  */
 export const createValidatedStorage = <T>(
+  currentVersion: number,
   validate: (stored: Record<string, unknown> | undefined) => T,
 ): PersistStorage<T> => ({
   getItem: (name) => {
@@ -34,10 +39,16 @@ export const createValidatedStorage = <T>(
       if (raw === null) return null;
 
       const { state, version } = JSON.parse(raw);
+      const storedVersion =
+        typeof version === 'number' ? version : UNKNOWN_VERSION;
 
       return {
-        state: validate(toStoredObject(state)),
-        version: typeof version === 'number' ? version : UNKNOWN_VERSION,
+        // 버전이 다르면 persist가 반드시 migrate를 거치므로 미검증 원본이 그대로 복원되지는 않는다.
+        state:
+          storedVersion === currentVersion
+            ? validate(toStoredObject(state))
+            : state,
+        version: storedVersion,
       };
     } catch {
       if (process.env.NODE_ENV !== 'production') {

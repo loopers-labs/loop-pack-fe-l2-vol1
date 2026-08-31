@@ -4,27 +4,44 @@ import { createValidatedStorage } from './persisted-store';
 
 const STORAGE_KEY = 'persisted-store-test';
 
+const CURRENT_VERSION = 3;
+
 /** 형태 검증은 소유자 몫이므로, 여기서는 배관에 무엇이 전달되는지만 본다 */
 const passthroughStorage = () => {
   const validate = vi.fn((stored: Record<string, unknown> | undefined) => ({
     value: stored?.value,
   }));
 
-  return { storage: createValidatedStorage(validate), validate };
+  return {
+    storage: createValidatedStorage(CURRENT_VERSION, validate),
+    validate,
+  };
 };
 
 const save = (stored: unknown) =>
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
 
-it('저장값을 validate에 넘기고 그 결과를 복원 상태로 쓴다', () => {
+it('현재 버전 저장값은 validate에 넘기고 그 결과를 복원 상태로 쓴다', () => {
   const { storage, validate } = passthroughStorage();
-  save({ state: { value: 'saved' }, version: 3 });
+  save({ state: { value: 'saved' }, version: CURRENT_VERSION });
 
   expect(storage.getItem(STORAGE_KEY)).toEqual({
     state: { value: 'saved' },
-    version: 3,
+    version: CURRENT_VERSION,
   });
   expect(validate).toHaveBeenCalledWith({ value: 'saved' });
+});
+
+it('과거 버전 저장값은 validate를 거치지 않고 원본 그대로 반환한다', () => {
+  const { storage, validate } = passthroughStorage();
+  save({ state: { legacyValue: 'v2' }, version: CURRENT_VERSION - 1 });
+
+  // persist는 version이 다르므로 이 원본을 소유자의 migrate로 보낸다
+  expect(storage.getItem(STORAGE_KEY)).toEqual({
+    state: { legacyValue: 'v2' },
+    version: CURRENT_VERSION - 1,
+  });
+  expect(validate).not.toHaveBeenCalled();
 });
 
 it('저장된 게 없으면 null을 준다', () => {
@@ -46,7 +63,7 @@ it.each([
 
 it('state가 객체가 아니면 validate에 undefined를 넘긴다', async () => {
   const { storage, validate } = passthroughStorage();
-  save({ state: 'broken', version: 1 });
+  save({ state: 'broken', version: CURRENT_VERSION });
 
   await storage.getItem(STORAGE_KEY);
 
