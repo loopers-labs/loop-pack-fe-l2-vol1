@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getCartOwnerKey } from '@/entities/cart/model/cartOwner';
 import { getCurrentUser } from './_lib/session';
 import { Providers } from './providers';
 import { HeaderNav } from './_components/HeaderNav';
@@ -36,6 +37,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+  const cartOwnerKey = getCartOwnerKey(user?.id);
 
   return (
     <html lang="ko">
@@ -56,7 +58,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col bg-bg font-family-body antialiased">
-        <Providers>
+        <Providers cartOwnerKey={cartOwnerKey}>
           {/* 공통 헤더 */}
           <header className="border-b border-border bg-bg-card">
             <div className="mx-auto flex min-h-20 w-full max-w-[1256px] items-center justify-between px-4 sm:px-6 lg:px-8">

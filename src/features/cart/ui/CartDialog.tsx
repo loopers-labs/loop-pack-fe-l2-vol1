@@ -52,11 +52,11 @@ export function CartDialog() {
               계속 쇼핑하기
             </Dialog.Close>
             <Link
-              href="/orders/new"
+              href="/cart"
               onClick={clearLastAdded}
               className="flex h-11 flex-1 items-center justify-center rounded-xl bg-text text-[13px] font-semibold text-bg-card transition-colors hover:bg-text/90"
             >
-              주문서 보기
+              장바구니 보기
             </Link>
           </div>
         </div>

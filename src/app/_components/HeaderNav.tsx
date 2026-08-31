@@ -57,7 +57,7 @@ export function HeaderNav({ user }: HeaderNavProps) {
         위시리스트 {isWishlistHydrated ? wishlistCount : '…'}
       </span>
       <Link
-        href="/orders/new"
+        href="/cart"
         className="flex min-h-11 items-center rounded-sm transition-colors hover:text-text focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-text"
       >
         장바구니 {isCartHydrated ? cartCount : '…'}
