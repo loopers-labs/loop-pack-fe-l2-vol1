@@ -35,3 +35,5 @@ jobs:
           fi
       - name: Run quality checks
         run: pnpm check
+      - name: Run production end-to-end tests
+        run: pnpm test:e2e

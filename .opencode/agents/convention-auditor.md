@@ -18,9 +18,13 @@ You audit whether code and documentation follow this repository's conventions.
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/conventions.md`
+- `docs/rules/conventions/README.md`
+- `docs/rules/conventions/typescript.md`
+- `docs/rules/conventions/react.md`
+- `docs/rules/conventions/runtime-boundaries.md`
+- `docs/rules/conventions/exports-and-files.md`
 - `docs/rules/lint-and-format.md`
-- `docs/rules/testing.md`
+- `docs/rules/testing/verification.md`
 - `eslint.config.mjs`
 - `.prettierrc`
 - `tsconfig.json`
@@ -36,7 +40,7 @@ You audit whether code and documentation follow this repository's conventions.
 - Check rendering conventions: `Show`/`For` for conditional/list rendering, Suspensive `Suspense`/`ErrorBoundary`, and Suspensive React Query components instead of hidden suspense hooks.
 - Check error handling: no swallowed errors or vague catch blocks.
 - Check styling conventions: CSS custom properties, focus styles, responsive locality.
-- Check public exports and file placement: named exports, minimal default exports, explicit `index.ts` exports, no `export *`, co-location before folder promotion, and namespace class static methods for exported utilities.
+- Check public exports and file placement: named exports, minimal default exports, direct file imports, no slice/entity root `index.ts`, no `export *`, co-location before folder promotion, and namespace class static methods for exported utilities. Only a promoted component folder may optionally expose necessary named exports through its own `index.ts`.
 - Check documentation consistency when rules are changed.
 
 ## Must Do

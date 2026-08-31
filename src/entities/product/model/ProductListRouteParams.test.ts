@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { ProductListRouteParams } from './ProductListRouteParams'
+import { ProductQueryKeyFactory } from './ProductQueryKeyFactory'
 
 describe('ProductListRouteParams', () => {
   it('uses first repeated record values and forces page size twelve', () => {
@@ -39,6 +40,55 @@ describe('ProductListRouteParams', () => {
     )
   })
 
+  it('ProductListRouteParams toRequest when valid URL search conditions returns a matching product-list query key', () => {
+    // Arrange
+    const searchParams = new URLSearchParams(
+      'q=stanley&category=home&sort=popular&page=2&scenario=slow',
+    )
+
+    // Act
+    const request = ProductListRouteParams.toRequest(searchParams)
+    const queryKey = ProductQueryKeyFactory.productList(request)
+
+    // Assert
+    expect(queryKey).toEqual([
+      'products',
+      'list',
+      {
+        q: 'stanley',
+        category: 'home',
+        sort: 'popular',
+        page: 2,
+        pageSize: 12,
+        scenario: 'slow',
+      },
+    ])
+  })
+
+  it('ProductListRouteParams toRequest when invalid URL search conditions returns the default product-list query key', () => {
+    // Arrange
+    const searchParams = new URLSearchParams(
+      'q=stanley&category=unknown&sort=invalid&page=0&scenario=invalid',
+    )
+
+    // Act
+    const request = ProductListRouteParams.toRequest(searchParams)
+    const queryKey = ProductQueryKeyFactory.productList(request)
+
+    // Assert
+    expect(queryKey).toEqual([
+      'products',
+      'list',
+      {
+        q: 'stanley',
+        category: 'all',
+        sort: 'latest',
+        page: 1,
+        pageSize: 12,
+      },
+    ])
+  })
+
   it('omits diagnostic and transport fields from canonical search', () => {
     const request = ProductListRouteParams.toRequest({
       q: 'stanley',
@@ -52,6 +102,21 @@ describe('ProductListRouteParams', () => {
     expect(
       ProductListRouteParams.canonicalSearchParams(request).toString(),
     ).toBe('q=stanley&category=home&sort=price-desc&page=2')
+  })
+
+  it('omits default q and category from canonical search', () => {
+    const request = ProductListRouteParams.toRequest({
+      q: '',
+      category: 'all',
+      sort: 'latest',
+      page: '1',
+      pageSize: '12',
+      scenario: 'slow',
+    })
+
+    expect(
+      ProductListRouteParams.canonicalSearchParams(request).toString(),
+    ).toBe('sort=latest&page=1')
   })
 
   it('treats an empty repeated record value as missing', () => {

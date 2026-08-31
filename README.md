@@ -28,7 +28,7 @@ Loopers 프론트엔드 과정(TypeScript · React · Next.js)의 과제 제출 
 
 ## 시작하기
 
-필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`는 현재 권장 LTS를 고정하고, `package.json`의 Node.js 범위(`>=22.12.0`)는 지원 가능한 Node.js 22 이상을 허용합니다.
+필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`는 현재 권장 LTS를 고정하고, `package.json`은 jsdom 30과 호환되는 Node.js 22.22.2+, 24.15.0+, 26.x 짝수 릴리스만 허용합니다.
 
 ```bash
 nvm use
@@ -232,4 +232,4 @@ pnpm build
 ### AI 활용
 
 - 상태 분류와 캐시 정책 설계, FSD 레이어 배치, persist·hydration 전략에 AI 도움을 받았습니다.
-- 최종 설계는 과제 명세의 checklist와 `docs/rules/fsd-architecture.md`를 기준으로 직접 검토했습니다.
+- 최종 설계는 과제 명세의 checklist와 `docs/rules/architecture/README.md`를 기준으로 직접 검토했습니다.

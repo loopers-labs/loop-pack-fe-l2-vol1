@@ -129,23 +129,41 @@ describe('cartSelectors', () => {
     resetCart()
   })
 
-  it('count returns 0 when empty', () => {
-    expect(cartSelectors.count(useCartStore.getState())).toBe(0)
+  it('cartSelectors.count with an empty cart returns zero', () => {
+    // Arrange
+    const state = useCartStore.getState()
+
+    // Act
+    const count = cartSelectors.count(state)
+
+    // Assert
+    expect(count).toBe(0)
   })
 
-  it('count derives from items length', () => {
+  it('cartSelectors.count when products are added returns the number of distinct items', () => {
+    // Arrange
     const { addToCart } = useCartStore.getState()
     addToCart('p1')
     addToCart('p2')
     addToCart('p3')
-    expect(cartSelectors.count(useCartStore.getState())).toBe(3)
+
+    // Act
+    const count = cartSelectors.count(useCartStore.getState())
+
+    // Assert
+    expect(count).toBe(3)
   })
 
-  it('count decreases when an item is removed', () => {
+  it('cartSelectors.count when a cart item is removed returns the retained item count', () => {
+    // Arrange
     const { addToCart, removeFromCart } = useCartStore.getState()
     addToCart('p1')
     addToCart('p2')
+
+    // Act
     removeFromCart('p1')
+
+    // Assert
     expect(cartSelectors.count(useCartStore.getState())).toBe(1)
   })
 

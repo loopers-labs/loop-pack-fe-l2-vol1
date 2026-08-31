@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/test-results/
 
 # next.js
 /.next/
@@ -28,6 +29,8 @@ next-env.d.ts
 .sisyphus
 .omo
 .playwright-mcp/
+.stryker-tmp/
+reports/mutation/
 
 # debug
 npm-debug.log*
