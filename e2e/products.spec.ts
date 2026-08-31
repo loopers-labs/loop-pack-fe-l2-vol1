@@ -1,16 +1,22 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('상품 목록', () => {
-  test('필터와 페이지 조작을 URL에 반영하고 같은 URL로 다시 진입한다', async ({
+  test('필터를 URL로 복원하고 목록 끝에서 다음 상품을 자동으로 누적한다', async ({
     page,
   }) => {
     await page.goto('/products');
 
-    await page.getByRole('combobox', { name: '카테고리' }).selectOption('digital');
+    await page
+      .getByRole('combobox', { name: '카테고리' })
+      .selectOption('digital');
     await expect(page).toHaveURL(/category=digital/);
-    await expect(page.getByRole('heading', { name: '메이커스 투명케이스' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: '메이커스 투명케이스' }),
+    ).toBeVisible();
 
-    await page.getByRole('combobox', { name: '정렬' }).selectOption('price-asc');
+    await page
+      .getByRole('combobox', { name: '정렬' })
+      .selectOption('price-asc');
     await expect(page).toHaveURL(/sort=price-asc/);
     await expect(
       page.getByRole('heading', {
@@ -18,27 +24,33 @@ test.describe('상품 목록', () => {
       }),
     ).toBeVisible();
 
-    await page.getByRole('combobox', { name: '카테고리' }).selectOption('all');
-    await page.getByRole('button', { name: '다음' }).click();
-    await expect(page).toHaveURL(/page=2/);
     const savedUrl = page.url();
-
     await page.goto('/');
     await page.goto(savedUrl);
 
-    await expect(page.getByRole('combobox', { name: '카테고리' })).toHaveValue('all');
-    await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue('price-asc');
-    await expect(page.getByText('2 / 3')).toBeVisible();
+    await expect(page.getByRole('combobox', { name: '카테고리' })).toHaveValue(
+      'digital',
+    );
+    await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue(
+      'price-asc',
+    );
 
-    await page.goto('/products?category=invalid&sort=invalid&page=0');
-    await expect(page.getByRole('combobox', { name: '카테고리' })).toHaveValue('all');
-    await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue('latest');
-    await expect(page.getByText('1 / 3')).toBeVisible();
+    await page
+      .getByRole('combobox', { name: '카테고리' })
+      .selectOption('all');
+    await expect(page.getByRole('article')).toHaveCount(12);
+    await page.getByRole('button', { name: '더 보기' }).scrollIntoViewIfNeeded();
+    await expect.poll(() => page.getByRole('article').count()).toBeGreaterThan(12);
+    await expect(page).not.toHaveURL(/(?:\?|&)page=/);
 
-    await page.goto('/products?page=-1');
-    await expect(page.getByRole('combobox', { name: '카테고리' })).toHaveValue('all');
-    await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue('latest');
-    await expect(page.getByText('1 / 3')).toBeVisible();
+    await page.goto('/products?category=invalid&sort=invalid&page=2');
+    await expect(page).not.toHaveURL(/(?:\?|&)page=/);
+    await expect(page.getByRole('combobox', { name: '카테고리' })).toHaveValue(
+      'all',
+    );
+    await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue(
+      'latest',
+    );
   });
 
   test('뒤로가기와 앞으로가기로 이전 카테고리와 상품 목록을 복원한다', async ({
@@ -76,36 +88,51 @@ test.describe('상품 목록', () => {
     ).toBeVisible();
   });
 
-  test('새로고침해도 URL의 카테고리와 정렬 상태를 유지한다', async ({ page }) => {
+  test('새로고침해도 필터와 장바구니·위시리스트 상태를 유지한다', async ({
+    page,
+  }) => {
     await page.goto('/products');
 
-    await page.getByRole('combobox', { name: '카테고리' }).selectOption('digital');
-    await page.getByRole('combobox', { name: '정렬' }).selectOption('popular');
-    await expect(page).toHaveURL(/category=digital/);
-    await expect(page).toHaveURL(/sort=popular/);
-    await expect(page.getByRole('heading', { name: '메이커스 투명케이스' })).toBeVisible();
+    await page
+      .getByRole('combobox', { name: '카테고리' })
+      .selectOption('digital');
+    await page
+      .getByRole('combobox', { name: '정렬' })
+      .selectOption('popular');
+    await expect(page.getByText('장바구니 0')).toBeVisible();
+    await expect(page.getByText('위시리스트 0')).toBeVisible();
+
+    await page.getByRole('button', { name: '찜' }).first().click();
+    await page.getByRole('button', { name: '담기' }).first().click();
+    await expect(page.getByText('장바구니 1')).toBeVisible();
+    await expect(page.getByText('위시리스트 1')).toBeVisible();
+    await page.getByRole('button', { name: '계속 쇼핑하기' }).click();
 
     await page.reload();
 
-    await expect(page.getByRole('combobox', { name: '카테고리' })).toHaveValue('digital');
-    await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue('popular');
-    await expect(page.getByRole('heading', { name: '메이커스 투명케이스' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: '카테고리' })).toHaveValue(
+      'digital',
+    );
+    await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue(
+      'popular',
+    );
+    await expect(page.getByText('장바구니 1')).toBeVisible();
+    await expect(page.getByText('위시리스트 1')).toBeVisible();
+    await expect(page.getByRole('button', { name: '찜 해제' }).first()).toBeVisible();
   });
 
-  test('홈에서 상품 목록으로 이동해 같은 상품을 두 번 담아도 헤더 상품 수는 1이다', async ({
+  test('같은 상품을 두 번 담아도 새로고침 후 헤더 상품 수는 1이다', async ({
     page,
   }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: '상품', exact: true }).click();
-    await expect(page.getByRole('heading', { name: '상품 목록' })).toBeVisible();
-    await expect(page.getByText('장바구니 0')).toBeVisible();
-
+    await page.goto('/products');
     const firstAddButton = page.getByRole('button', { name: '담기' }).first();
+
+    await firstAddButton.click();
+    await page.getByRole('button', { name: '계속 쇼핑하기' }).click();
     await firstAddButton.click();
     await expect(page.getByText('장바구니 1')).toBeVisible();
-    await page.getByRole('button', { name: '계속 쇼핑하기' }).click();
 
-    await firstAddButton.click();
+    await page.reload();
     await expect(page.getByText('장바구니 1')).toBeVisible();
   });
 });
