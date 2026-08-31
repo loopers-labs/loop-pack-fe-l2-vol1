@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "engines": {
-    "node": ">=22.12.0"
+    "node": "^22.22.2 || ^24.15.0 || ^26.0.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -17,6 +17,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "pnpm build && playwright test",
+    "test:mutate": "stryker run",
     "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build",
     "commitlint": "commitlint",
     "prepare": "husky"
@@ -51,7 +53,14 @@
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.62.1",
+    "@stryker-mutator/core": "^10.0.0",
+    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@tailwindcss/postcss": "^4.3.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
     "@types/eslint-plugin-jsx-a11y": "^6.10.1",
     "@types/node": "^24",
     "@types/react": "^19",
@@ -67,7 +76,9 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
+    "jsdom": "^30.0.1",
     "lint-staged": "^17.0.7",
+    "msw": "^2.15.0",
     "prettier": "^3.8.4",
     "tailwindcss": "^4.3.1",
     "typescript": "^5",

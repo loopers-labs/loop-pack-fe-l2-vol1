@@ -18,7 +18,8 @@ You audit whether the requested change has an adequate verification plan and res
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/testing.md`
+- `docs/rules/testing/README.md`
+- `docs/rules/testing/verification.md`
 - `docs/rules/lint-and-format.md`
 - `package.json`
 - `eslint.config.mjs`
@@ -32,7 +33,7 @@ You audit whether the requested change has an adequate verification plan and res
 - Detect weakened rules, removed checks, disabled hooks, or suppressed diagnostics.
 - Check that new runtime dependencies used in production code paths, such as Zod or Suspensive packages, are in `dependencies` rather than `devDependencies`.
 - Check package alias intent when relevant, especially `@suspensive/react-query` resolving to the TanStack Query v5 package alias.
-- Check that ESLint-enforced conventions match `docs/rules/lint-and-format.md`: array type notation, default export restrictions, explicit `index.ts` exports, Suspensive imports, `Show`/`For` rendering, and exported `lib` utility grouping.
+- Check that ESLint-enforced conventions match `docs/rules/lint-and-format.md`: array type notation, default export restrictions, direct-file imports with no slice/entity root barrel, the promoted-component-folder `index.ts` exception, Suspensive imports, `Show`/`For` rendering, and exported `lib` utility grouping.
 - Check whether documentation updates are needed when settings or conventions change.
 - Report missing tests or manual checks as explicit gaps.
 
