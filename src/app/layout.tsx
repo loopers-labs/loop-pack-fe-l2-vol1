@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getCurrentUser } from './_lib/session';
 import { Providers } from './providers';
 import { HeaderNav } from './_components/HeaderNav';
 import './globals.css';
@@ -29,11 +30,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="ko">
       <head>
@@ -52,29 +55,29 @@ export default function RootLayout({
           type="image/avif"
         />
       </head>
-      <body className="font-family-body antialiased min-h-screen bg-bg flex flex-col">
+      <body className="flex min-h-screen flex-col bg-bg font-family-body antialiased">
         <Providers>
           {/* 공통 헤더 */}
-          <header className="border-b border-border/60 bg-bg-card">
-            <div className="mx-auto flex max-w-screen-xl items-center justify-between px-8 py-6">
+          <header className="border-b border-border bg-bg-card">
+            <div className="mx-auto flex min-h-20 w-full max-w-[1256px] items-center justify-between px-4 sm:px-6 lg:px-8">
               <Link
                 href="/"
-                className="font-family-display text-2xl font-bold tracking-tight text-text"
+                className="rounded-sm font-family-display text-2xl font-extrabold tracking-[-0.04em] text-text focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-text"
               >
                 Aesthetic
               </Link>
-              <HeaderNav />
+              <HeaderNav user={user} />
             </div>
           </header>
 
           {/* 페이지 콘텐츠 */}
-          <div className="mx-auto max-w-screen-xl flex-1">{children}</div>
+          <div className="mx-auto w-full max-w-[1256px] flex-1">{children}</div>
 
           {/* 공통 푸터 */}
-          <footer className="border-t border-border/60 bg-bg-card">
-            <div className="mx-auto max-w-screen-xl px-8 py-10">
+          <footer className="border-t border-border bg-bg-card">
+            <div className="mx-auto w-full max-w-[1256px] px-4 py-10 sm:px-6 lg:px-8">
               <div className="flex flex-col items-center gap-2">
-                <span className="font-family-display text-lg font-bold text-text">
+                <span className="font-family-display text-lg font-extrabold tracking-[-0.03em] text-text">
                   Aesthetic
                 </span>
                 <p className="text-[12px] text-text-caption">

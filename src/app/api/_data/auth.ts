@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
+import type { Order, OrderItem } from "@/entities/order/model/types";
 
 // 이 파일은 node:crypto 를 쓴다. Node 런타임(API 라우트)에서만 import 해야 한다.
 // Edge 런타임에서 쿠키 이름이 필요하면 auth-cookies.ts 에서 가져온다.
@@ -27,29 +28,6 @@ export type LoginRequest = {
 
 export type SessionResponse = {
   user: AuthUser;
-};
-
-export type OrderItem = {
-  productId: string;
-  quantity: number;
-};
-
-export type Order = {
-  id: string;
-  createdAt: string;
-  items: OrderItem[];
-};
-
-export type OrderCreateRequest = {
-  items: OrderItem[];
-};
-
-export type OrderCreateResponse = {
-  order: Order;
-};
-
-export type OrderListResponse = {
-  orders: Order[];
 };
 
 export const TEST_PASSWORD = "looper1234";
