@@ -157,18 +157,34 @@ a {
   outline-offset: 3px;
 }
 
+.week09-auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .week09-auth-form {
   display: grid;
   gap: 16px;
+  width: 100%;
   max-width: 360px;
+  text-align: left;
 }
 
 .week09-auth-form label {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.week09-auth-form label > span {
+  min-width: 64px;
+  flex-shrink: 0;
 }
 
 .week09-auth-form input {
+  flex: 1;
   min-height: 40px;
   padding: 8px 10px;
   border: 1px solid #c8c8c8;
@@ -196,6 +212,12 @@ a {
 @media (max-width: 480px) {
   .week09-auth-form {
     max-width: none;
+  }
+
+  .week09-auth-form label {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
   }
 }
 

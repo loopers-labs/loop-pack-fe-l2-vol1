@@ -23,7 +23,7 @@ export function LoginForm() {
       )}
 
       <label>
-        이메일
+        <span>이메일</span>
         <input
           type="email"
           value={email}
@@ -34,7 +34,7 @@ export function LoginForm() {
       </label>
 
       <label>
-        비밀번호
+        <span>비밀번호</span>
         <input
           type="password"
           value={password}
