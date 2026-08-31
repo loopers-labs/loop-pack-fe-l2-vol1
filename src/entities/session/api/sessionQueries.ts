@@ -16,3 +16,8 @@ export const sessionQueries = {
       staleTime: Infinity,
     }),
 };
+
+// 로그인 mutation을 식별하는 키. 로그인 자체의 401(자격 증명 틀림)은
+// "세션 만료"가 아니라 폼 안에서 바로 보여줄 에러라, 전역 401 핸들러가
+// 이 키로 로그인 mutation을 구분해 리다이렉트 대상에서 제외한다.
+export const LOGIN_MUTATION_KEY = [...sessionQueries.all(), 'login'] as const;

@@ -157,6 +157,48 @@ a {
   outline-offset: 3px;
 }
 
+.week09-auth-form {
+  display: grid;
+  gap: 16px;
+  max-width: 360px;
+}
+
+.week09-auth-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.week09-auth-form input {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+.week09-auth-form button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.week09-auth-form button:hover {
+  background: #f0f0f0;
+}
+
+.week09-auth-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 480px) {
+  .week09-auth-form {
+    max-width: none;
+  }
+}
+
 @media (max-width: 960px) {
   .week05-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
