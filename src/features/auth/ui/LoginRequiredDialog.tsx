@@ -34,7 +34,9 @@ export function LoginRequiredDialog({
         </Dialog.Description>
         <div className="week05-error-actions mt-5 justify-end">
           <Dialog.Close>닫기</Dialog.Close>
-          <Link href={buildLoginUrl(redirectPathAfterLogin)}>이동</Link>
+          <Link href={buildLoginUrl(redirectPathAfterLogin)}>
+            로그인 페이지로 이동
+          </Link>
         </div>
       </Dialog.Content>
     </Dialog>

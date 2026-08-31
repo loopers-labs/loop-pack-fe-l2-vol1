@@ -16,6 +16,7 @@ const CART_STORAGE_VERSION = 2;
 export type CartItem = {
   productId: string;
   quantity: number;
+  checked: boolean;
 };
 
 type CartState = {
@@ -23,6 +24,7 @@ type CartState = {
   /** 액션은 바뀌지 않아 상태가 아니다. 한 객체로 묶어 훅 하나로 내준다 */
   actions: {
     toggle: (productId: string) => void;
+    toggleChecked: (productId: string) => void;
     setQuantity: (productId: string, quantity: number) => void;
     removeItems: (productIds: string[]) => void;
   };
@@ -50,7 +52,7 @@ const toValidProductIds = (value: unknown) =>
       ]
     : [];
 
-/** productId와 수량이 유효한 항목만 남기고, 같은 상품이 중복되면 앞의 것만 남긴다. */
+/** productId·수량·checked가 유효한 항목만 남기고, 같은 상품이 중복되면 앞의 것만 남긴다. */
 const toValidItems = (value: unknown): CartItem[] => {
   if (!Array.isArray(value)) return [];
 
@@ -63,14 +65,16 @@ const toValidItems = (value: unknown): CartItem[] => {
         : undefined;
     const productId = stored?.productId;
     const quantity = stored?.quantity;
+    const checked = stored?.checked;
 
     if (
       typeof productId === 'string' &&
       productId !== '' &&
       isValidQuantity(quantity) &&
+      typeof checked === 'boolean' &&
       !itemByProductId.has(productId)
     ) {
-      itemByProductId.set(productId, { productId, quantity });
+      itemByProductId.set(productId, { productId, quantity, checked });
     }
   }
 
@@ -86,8 +90,19 @@ export const useCartStore = create<CartState>()(
           set((state) => ({
             items: state.items.some((item) => item.productId === productId)
               ? state.items.filter((item) => item.productId !== productId)
-              : [...state.items, { productId, quantity: 1 }],
+              : [...state.items, { productId, quantity: 1, checked: true }],
           })),
+        toggleChecked: (productId) => {
+          if (!get().items.some((item) => item.productId === productId)) return;
+
+          set((state) => ({
+            items: state.items.map((item) =>
+              item.productId === productId
+                ? { ...item, checked: !item.checked }
+                : item,
+            ),
+          }));
+        },
         setQuantity: (productId, quantity) => {
           if (!isValidQuantity(quantity)) return;
 
@@ -123,7 +138,7 @@ export const useCartStore = create<CartState>()(
       partialize: ({ items }) => ({ items }),
       /**
        * 저장값은 코드보다 오래 살아남는다. version 1은 수량 없는 ID 배열이므로
-       * 버리지 않고 각 상품을 수량 1로 옮긴다. 그 밖의 알 수 없는 버전은 버린다.
+       * 버리지 않고 수량 1에 선택된 항목으로 옮긴다. 그 밖의 알 수 없는 버전은 버린다.
        */
       migrate: (persisted, version) => {
         if (version === 1) {
@@ -133,6 +148,7 @@ export const useCartStore = create<CartState>()(
             items: toValidProductIds(storedV1?.productIds).map((productId) => ({
               productId,
               quantity: 1,
+              checked: true,
             })),
           };
         }

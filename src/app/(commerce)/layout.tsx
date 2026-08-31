@@ -31,7 +31,9 @@ export default async function CommerceLayout({
               <Link href="/products">상품</Link>
             </nav>
             <WishlistCount />
-            <CartCount />
+            <Link href="/cart">
+              <CartCount />
+            </Link>
             <SessionMenu />
           </div>
         </header>

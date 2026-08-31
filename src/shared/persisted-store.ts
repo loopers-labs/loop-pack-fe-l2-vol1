@@ -7,9 +7,15 @@ import type { PersistStorage } from 'zustand/middleware';
  */
 const UNKNOWN_VERSION = -1;
 
-const removeStored = (name: string) => {
+/** 계정·기기 수명이면 localStorage, checkout draft처럼 같은 탭 수명이면 sessionStorage를 쓴다 */
+type PersistedStorageArea = 'local' | 'session';
+
+const resolveStorageArea = (storageArea: PersistedStorageArea) =>
+  storageArea === 'session' ? sessionStorage : localStorage;
+
+const removeStored = (storageArea: PersistedStorageArea, name: string) => {
   try {
-    localStorage.removeItem(name);
+    resolveStorageArea(storageArea).removeItem(name);
   } catch {
     // 저장소 접근이 막힌 브라우저에서는 지울 수도 없어 스킵.
   }
@@ -31,10 +37,11 @@ const toStoredObject = (value: unknown) =>
 export const createValidatedStorage = <T>(
   currentVersion: number,
   validate: (stored: Record<string, unknown> | undefined) => T,
+  storageArea: PersistedStorageArea = 'local',
 ): PersistStorage<T> => ({
   getItem: (name) => {
     try {
-      const raw = localStorage.getItem(name);
+      const raw = resolveStorageArea(storageArea).getItem(name);
 
       if (raw === null) return null;
 
@@ -56,19 +63,19 @@ export const createValidatedStorage = <T>(
           `저장된 상태를 읽지 못해 초기 상태로 시작합니다. (${name})`,
         );
       }
-      removeStored(name);
+      removeStored(storageArea, name);
 
       return null;
     }
   },
   setItem: (name, value) => {
     try {
-      localStorage.setItem(name, JSON.stringify(value));
+      resolveStorageArea(storageArea).setItem(name, JSON.stringify(value));
     } catch {
       // 실패해도 화면 동작을 막지 않음.
     }
   },
-  removeItem: removeStored,
+  removeItem: (name) => removeStored(storageArea, name),
 });
 
 /** 무엇을 담고 있는지는 몰라도 되고, 복원 시점만 알면 된다 */
