@@ -14,9 +14,11 @@
 
 ## `proxy.ts` 보호 경로 가드
 
-Next.js 소스(`PROXY_FILENAME` 상수)로 확인한 결과 `src/app` 구조에서는 `src/proxy.ts`가 올바른 위치다. Edge 런타임에서 실행되므로 `node:crypto`를 쓰는 `auth.ts`는 import할 수 없고, 쿠키 이름만 담긴 `auth-cookies.ts`의 `SESSION_COOKIE`만 사용한다.
+Next.js 소스(`PROXY_FILENAME` 상수)로 확인한 결과 `src/app` 구조에서는 `src/proxy.ts`가 올바른 위치다.
 
-검증 수준은 **쿠키 존재 여부만 확인**한다(서명·만료 검증은 하지 않음). 실제 유효성 검증은 각 페이지·API(Node 런타임)가 이미 `readSessionToken()`으로 하고 있으므로, `proxy.ts`는 "쿠키 자체가 없는 명백한 미로그인"만 1차로 걸러내는 가벼운 문지기 역할로 충분하다. Edge용으로 서명 검증 로직을 Web Crypto로 별도 구현하는 대안은 같은 로직이 두 군데(Node/Edge) 존재하게 되는 유지보수 부담이 있어 채택하지 않는다.
+**정정**: 초안에는 "`proxy.ts`가 Edge 런타임에서 돌아서 `node:crypto`를 쓰는 `auth.ts`를 import할 수 없다"고 적었는데, 이는 틀린 전제였다. Next.js 16부터 `proxy.ts`는 **Node.js 런타임이 기본**이다(공식 문서: "Proxy defaults to using the Node.js runtime", v16.0.0 변경 이력에 명시). `auth-cookies.ts`의 "Edge 런타임에서 도는 코드" 주석은 옛 `middleware.ts`(Edge 전용) 시절 지식으로 보인다. 실제로 `proxy.ts`에서 `auth.ts`의 `readSessionToken()`을 import해 `pnpm build`한 결과 문제없이 빌드되고 `ƒ Proxy (Middleware)`로 정상 인식되는 것을 직접 확인했다.
+
+즉 **기술적으로는 `proxy.ts`에서 서명·만료까지 완전히 검증할 수 있다.** 그럼에도 검증 수준은 **쿠키 존재 여부만 확인**하는 쪽으로 정한다. 이유는 Edge 제약이 아니라 **검증 로직을 한 곳에만 두기 위해서**다 — 어차피 각 페이지·API가 요청마다 `readSessionToken()`으로 완전한 검증을 다시 하므로(세션이 요청마다 유효성을 새로 판정받는 서버 상태라는 것은 이미 "세션 상태 관리 패턴"에서 정한 전제다), `proxy.ts`에서도 같은 검증을 반복하면 로직이 두 군데(proxy + API)에 중복된다. `proxy.ts`는 "쿠키 자체가 없는 명백한 미로그인"만 1차로 걸러내는 가벼운 문지기로 두고, 실제 유효성 판단은 API 쪽 한 곳에 집중시킨다.
 
 리다이렉트 시 원래 경로는 쿼리 파라미터 **`redirect`**로 실어 보낸다(예: `/login?redirect=/orders`). 로그인 성공 후 이 값으로 이동하기 전 다음을 모두 검증해 오픈 리다이렉트를 차단한다:
 - `/`로 시작하는가 (상대 경로만 허용)
