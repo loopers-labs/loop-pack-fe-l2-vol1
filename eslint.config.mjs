@@ -49,12 +49,20 @@ const eslintConfig = defineConfig([
     files: [
       "**/*.test.{ts,tsx}",
       "src/app/api/_data/**",
-      "src/app/api/*/route.ts",
+      "src/app/api/**/route.ts",
       "src/entities/product/api/products.ts",
       "src/_pages/home/api/home.ts",
     ],
     rules: {
       "no-magic-numbers": "off",
+    },
+  },
+
+  // 콘솔에 찍는 게 존재 목적인 analytics 프로바이더는 no-console 허용
+  {
+    files: ["src/analytics/**"],
+    rules: {
+      "no-console": "off",
     },
   },
 
