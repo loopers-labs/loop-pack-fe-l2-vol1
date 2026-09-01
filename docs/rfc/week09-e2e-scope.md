@@ -342,3 +342,60 @@ pnpm test:e2e:prebuilt e2e/checkout.spec.ts --project=chromium --repeat-each=3
 checkout E2E에서 주문 내역 수량 단언을 일부러 틀리게 바꿔 trace를 열어봤다. 원래 기대값은 `${selectedProductId} 1개`지만, 실험에서는 `${selectedProductId} 999개`를 기대하도록 바꿨다.
 
 trace에서는 상품 목록에서 담기, 장바구니 이동, 주문서 진입, 주문 완료, 주문 내역 이동까지 모두 정상적으로 진행된 것을 확인했다. 실패는 마지막 주문 내역 article에서 발생했다. 실제 텍스트는 `p26 1개`였지만, 테스트가 `p26 999개`를 기다리고 있었다. 이 trace로 사용자 흐름이 어디까지 성공했고, 어떤 단언에서 멈췄는지 확인할 수 있었다.
+
+## 5단계 E2E 자가 검증
+
+E2E가 실제 회귀를 잡는지 확인하려고 구현 코드만 한 곳씩 망가뜨렸다. 테스트 코드는 수정하지 않았고, 각 실험 뒤에는 변경을 되돌렸다. `test:e2e:prebuilt`는 이미 만들어진 production build를 실행하므로, 실험마다 `pnpm build`를 먼저 실행해 변경을 빌드에 반영했다.
+
+### 실험 1. 보호 경로 redirect 제거
+
+```diff
+// src/_app/proxy/authProxy.ts
+- if (!hasSession && isProtectedPathname(pathname)) {
++ if (false && !hasSession && isProtectedPathname(pathname)) {
+```
+
+미로그인 보호 경로 redirect 조건을 꺼서 `/order` 접근을 통과시켰다. `미로그인으로 주문서에 진입하면 로그인 후 원래 주문서 경로로 복원된다` 테스트가 실패했다. 기대 URL은 `/login?redirectTo=%2Forder`였지만 실제 URL은 `/order`라서, proxy redirect가 빠졌다는 원인을 실패 메시지로 확인할 수 있었다.
+
+```txt
+Expected pattern: /\/login\?redirectTo=%2Forder$/
+Received string: "http://127.0.0.1:3000/order"
+```
+
+### 실험 2. 서버 세션 hydrate 제거
+
+```diff
+// src/app/(commerce-auth)/layout.tsx
+- queryClient.setQueryData(sessionQueries.me().queryKey, { user });
+```
+
+서버에서 세션 query cache를 hydrate하는 `setQueryData` 호출을 제거했다. `세션 쿠키가 있으면 JavaScript 실행 전에도 주문서 Header에 사용자 이름을 보여준다`, `세션 쿠키가 있으면 JavaScript 실행 전에도 주문 내역 Header에 사용자 이름을 보여준다` 테스트가 실패했다. JavaScript를 끈 상태에서 `루퍼1님`을 찾지 못해, 초기 HTML에 세션 상태가 반영되지 않았다는 점이 드러났다.
+
+```txt
+Locator: getByText('루퍼1님')
+Expected: visible
+Error: element(s) not found
+```
+
+이 실험은 통합 테스트로 잡기 어려운 항목이다. JavaScript 실행 전 초기 HTML에 로그인 상태가 들어가는지는 Next production 서버, 쿠키, 서버 컴포넌트 layout, hydration cache가 함께 맞아야 확인할 수 있다. jsdom에서 컴포넌트만 렌더링하면 이 경계를 그대로 재현하기 어렵다.
+
+### 실험 3. `expired` 분기 제거
+
+```diff
+// src/app/api/orders/route.ts
+- const user =
+-   scenario === "expired"
+-     ? null
+-     : readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
++ const user = readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+```
+
+`expired` 시나리오에서도 유효한 세션 쿠키를 그대로 읽게 했다. `expired 시나리오로 주문 내역에 진입하면 현재 화면을 유지하고 로그인 안내 모달을 보여준다` 테스트가 실패했다. `세션 만료` dialog를 찾지 못해, expired 시나리오가 보호 API의 401로 이어지지 않았음을 확인할 수 있었다.
+
+```txt
+Locator: getByRole('dialog', { name: '세션 만료' })
+Expected: visible
+Error: element(s) not found
+```
+
+살아남은 변경은 없었다. 세 실험 모두 E2E가 회귀를 잡았고, 망가뜨린 구현 코드는 최종 상태에 남기지 않았다.
