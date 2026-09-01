@@ -1,8 +1,9 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { ProductCard } from '@/widgets/product-card';
 import { useProductFilters } from '@/features/product-filters/model/useProductFilters';
 import { ProductFiltersForm } from '@/features/product-filters/ui/ProductFiltersForm';
+import { track } from '@/analytics/logger';
 
 export function ProductListPage() {
   return (
@@ -25,6 +26,18 @@ function ProductListContent() {
     refetch,
     totalPages,
   } = useProductFilters();
+
+  // 목록 화면에 진입한 시점 1회만 기록한다. 필터를 바꿀 때마다 다시 보내지
+  // 않는다 — 그건 category_filter_change 등 별개의 이벤트 영역이라
+  // 이번 계측 대상(8개 지점)에는 포함하지 않았다.
+  useEffect(() => {
+    track('product_list_view', {
+      category: filters.category,
+      sort: filters.sort,
+      page: filters.page,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 화면 진입 시점 1회만 기록
+  }, []);
 
   return (
     <>
