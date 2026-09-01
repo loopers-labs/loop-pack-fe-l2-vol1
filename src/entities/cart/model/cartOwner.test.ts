@@ -3,6 +3,7 @@ import {
   GUEST_CART_OWNER,
   getCartOwnerKey,
   getCartStorageKey,
+  isCartOwnerKey,
 } from './cartOwner';
 
 describe('cartOwner', () => {
@@ -18,5 +19,13 @@ describe('cartOwner', () => {
     expect(getCartStorageKey(ownerKey)).toBe(
       'aesthetic-cart:user:member%2F1',
     );
+  });
+
+  it('브라우저에서 전달된 owner 신호를 런타임에 검증한다', () => {
+    expect(isCartOwnerKey('guest')).toBe(true);
+    expect(isCartOwnerKey('user:member-1')).toBe(true);
+    expect(isCartOwnerKey('user:')).toBe(false);
+    expect(isCartOwnerKey('admin:member-1')).toBe(false);
+    expect(isCartOwnerKey(null)).toBe(false);
   });
 });

@@ -11,6 +11,7 @@ export interface CartState {
   lastAddedId: string | null;
   isHydrated: boolean;
   addItem: (id: string) => void;
+  mergeItems: (items: Iterable<CartItem>) => void;
   removeItem: (id: string) => void;
   clearItems: () => void;
   clearLastAdded: () => void;

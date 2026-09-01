@@ -1,5 +1,6 @@
 import { createStore } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { mergeCartItems } from './cartItems';
 import { cartPersistence } from './cartPersistence';
 import type { CartState } from './cartTypes';
 import type { CartOwnerKey } from './cartOwner';
@@ -22,15 +23,13 @@ export function createCartStore(ownerKey: CartOwnerKey) {
           }
 
           set((state) => {
-            const next = new Map(state.items);
-            const existing = next.get(id);
-            next.set(id, {
-              id,
-              quantity: existing ? existing.quantity + 1 : 1,
-            });
-            return { items: next, lastAddedId: id };
+            const items = mergeCartItems(state.items, [{ id, quantity: 1 }]);
+            return { items, lastAddedId: id };
           });
         },
+
+        mergeItems: (items) =>
+          set((state) => ({ items: mergeCartItems(state.items, items) })),
 
         removeItem: (id) =>
           set((state) => {
@@ -43,19 +42,16 @@ export function createCartStore(ownerKey: CartOwnerKey) {
         clearLastAdded: () => set({ lastAddedId: null }),
         setHydrated: () =>
           set((state) => {
-            const next = new Map(state.items);
-            pendingItemIds.forEach((id) => {
-              const existing = next.get(id);
-              next.set(id, {
-                id,
-                quantity: existing ? existing.quantity + 1 : 1,
-              });
-            });
+            const pendingItems = pendingItemIds.map((id) => ({
+              id,
+              quantity: 1,
+            }));
+            const items = mergeCartItems(state.items, pendingItems);
 
             const lastAddedId = pendingItemIds.at(-1) ?? state.lastAddedId;
             pendingItemIds.length = 0;
 
-            return { items: next, lastAddedId, isHydrated: true };
+            return { items, lastAddedId, isHydrated: true };
           }),
       }),
       cartPersistence.createOptions(ownerKey),

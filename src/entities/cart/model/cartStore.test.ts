@@ -22,6 +22,22 @@ describe('createCartStore', () => {
     expect(store.getState().lastAddedId).toBe('p2');
   });
 
+  it('기존 상품과 병합할 때 같은 상품은 수량을 합치고 새 상품은 추가한다', () => {
+    const store = createCartStore('user:member-1');
+    store.getState().setHydrated();
+    store.getState().addItem('p1');
+    store.getState().addItem('p1');
+
+    store.getState().mergeItems([
+      { id: 'p1', quantity: 3 },
+      { id: 'p2', quantity: 1 },
+    ]);
+
+    expect(store.getState().items.get('p1')).toEqual({ id: 'p1', quantity: 5 });
+    expect(store.getState().items.get('p2')).toEqual({ id: 'p2', quantity: 1 });
+    expect(store.getState().lastAddedId).toBe('p1');
+  });
+
   it('상품 제거와 전체 비우기는 나머지 항목과 마지막 담기 상태를 일관되게 갱신한다', () => {
     const store = createCartStore('guest');
     store.getState().setHydrated();
