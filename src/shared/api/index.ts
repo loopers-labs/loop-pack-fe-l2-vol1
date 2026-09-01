@@ -5,3 +5,4 @@ export type ApiErrorResponse = {
 };
 
 export { ApiError } from './api-error';
+export { readErrorMessage } from './read-error-message';

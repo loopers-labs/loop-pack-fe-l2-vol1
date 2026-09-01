@@ -1,22 +1,10 @@
-import { ApiError } from '@/shared/api';
+import { ApiError, readErrorMessage } from '@/shared/api';
 import type { AuthUser } from '@/entities/session/model';
 
 type LoginInput = {
   email: string;
   password: string;
 };
-
-async function readErrorMessage(
-  response: Response,
-  fallback: string,
-): Promise<string> {
-  try {
-    const body = (await response.json()) as { message?: string };
-    return body.message ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 const HTTP_UNAUTHORIZED = 401;
 
