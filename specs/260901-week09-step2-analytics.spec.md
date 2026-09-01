@@ -40,7 +40,7 @@
 - **D2 공통 프로퍼티는 `sessionId` · `ts` · `device`다.** `ts`는 `new Date().toISOString()`으로 만들고 `device`는 `'mobile' | 'tablet' | 'desktop'` 유니온으로 제한한다. `userId`는 `identify`가 담당하므로 공통 프로퍼티에서 뺀다. `consoleProvider`는 신원을 이벤트에 합치지 않으므로 RFC에 userId가 보이지 않는 이유도 적는다. 로거는 공통 프로퍼티를 이벤트별 props와 병합해 전달하므로, `window.__analytics`에서는 공통값도 `properties` 안에 들어간다 — 시드 JSONL의 최상위 필드 구조와 다른 개발용 출력 형식이며 RFC에 함께 적는다.
 - **D3 sessionId는 탭 단위로 유지한다.** 첫 `track`에서 `sessionStorage`의 `analytics_session_id`를 읽고 없으면 `crypto.randomUUID()`로 만든다. 탭 복제나 `window.open`에서는 저장값이 복사될 수 있다. 이번 범위에서는 이 제약을 받아들인다.
 - **D4 device는 viewport 폭으로 나눈다.** mobile은 768px 미만, tablet은 1024px 미만, 나머지는 desktop이다. 시드의 세 분류를 재현하기 위한 기준이며 이벤트가 발생할 때 계산한다. 경계값은 단위 테스트로 고정한다.
-- **D5 부트스트랩은 `events.ts` 모듈 스코프와 `CommerceAnalytics` 하나로 구성한다.** `registerProviders`와 `setCommonProperties`는 `events.ts` 모듈 평가 시점에 실행한다. `trackEvent()`를 쓰려면 이 모듈을 import해야 하므로 "setCommonProperties < 첫 track"이 import 순서로 보장된다. `initAnalytics()`는 커머스 레이아웃에 두는 `CommerceAnalytics`(클라이언트)의 effect에서 호출하되, logger를 직접 import하지 않고 `events.ts`가 노출하는 초기화 API를 쓴다 — events.ts 모듈 평가(registerProviders)가 initAnalytics보다 먼저임을 import 관계로 보장하기 위해서다. 계측 지점이 전부 (commerce) 안이므로 루트 `Providers`는 수정하지 않는다. (commerce) 밖에서 계측하게 되면 그때 위로 올린다.
+- **D5 부트스트랩은 `events.ts`의 lazy 셋업과 `CommerceAnalytics` 하나로 구성한다.** `registerProviders`와 `setCommonProperties`는 `events.ts` 안에서 첫 계측 호출(`trackEvent` · `startAnalytics`) 직전에 lazy로 한 번 실행한다. 모든 track이 `trackEvent`를 거치므로 "setCommonProperties < 첫 track"이 호출 경로로 보장되고, 서버 컴포넌트가 순수 헬퍼만 import할 때는 부수효과가 없다. `initAnalytics()`는 커머스 레이아웃에 두는 `CommerceAnalytics`(클라이언트)의 effect에서 호출하되, logger를 직접 import하지 않고 `events.ts`의 `startAnalytics()`를 쓴다 — 이 함수가 `ensureAnalyticsSetup()`을 먼저 호출해 register → init 순서를 함수 안에서 보장한다. 계측 지점이 전부 (commerce) 안이므로 루트 `Providers`는 수정하지 않는다. (commerce) 밖에서 계측하게 되면 그때 위로 올린다.
 - **D6 현재 인증 흐름에서 클라이언트가 관찰하는 신원 전환 지점을 모두 처리한다.** (proxy가 만료 쿠키를 먼저 차단하는 경로는 클라이언트에 신원이 세워진 적이 없어 대상이 아니다.)
   - 로그인 상태 방문: 커머스 레이아웃이 `initialUser?.id`를 props로 `CommerceAnalytics`에 전달하고, `CommerceAnalytics`가 커머스 콘텐츠를 감싼다. `initialUserId`가 있으면 `useLayoutEffect`에서 `identify()`한다. 동일한 커밋에서는 `identify()`가 페이지뷰의 `useEffect`보다 먼저 호출되고, 페이지가 이후 커밋에서 마운트되면 `identify()`가 이미 호출된 상태다. 초기화 전 호출도 로거 큐에 순서대로 쌓이므로, 두 경우 모두 provider에는 `identify`가 최초 페이지뷰보다 먼저 전달된다.
   - 로그인 성공: `LoginForm`의 `onSuccess`에서 `identify(user.id)`를 호출한 뒤 `login_success`를 보낸다.
@@ -60,14 +60,14 @@
 
 ### 이벤트 props 표 (RFC A절에 수록)
 
-| 이벤트              | props                                                                | 시드 대비                 |
-| ------------------- | -------------------------------------------------------------------- | ------------------------- |
-| `product_list_view` | `{ category: CategoryId \| 'all'; sort: ProductSort; page: number }` | 동일                      |
-| `cart_add`          | `{ productId: string; quantity: number }`                            | 동일                      |
-| `login_start`       | `{ from: LoginFrom }`                                                | 키 동일 · 값 확장(D13)    |
-| `login_success`     | `{ from: LoginFrom }`                                                | 키 동일 · 값 확장(D13)    |
-| `login_fail`        | `{ reason: LoginFailReason }`                                        | 키 동일 · 값 확장(D11)    |
-| `order_start`       | `{ productIds: string[] }`                                           | **변경** (다중 상품, D12) |
+| 이벤트              | props                                                                | 시드 대비                         |
+| ------------------- | -------------------------------------------------------------------- | --------------------------------- |
+| `product_list_view` | `{ category: CategoryId \| 'all'; sort: ProductSort; page: number }` | 동일                              |
+| `cart_add`          | `{ productId: string; quantity: number }`                            | 동일                              |
+| `login_start`       | `{ from: LoginFrom }`                                                | 키 동일 · 값 확장(D13)            |
+| `login_success`     | `{ from: LoginFrom }`                                                | 키 동일 · 값 확장(D13)            |
+| `login_fail`        | `{ reason: LoginFailReason }`                                        | 키 동일 · 값 확장(D11)            |
+| `order_start`       | `{ productIds: string[] }`                                           | **변경** (다중 상품, D12)         |
 | `order_complete`    | `{ orderId: string; productIds: string[]; totalPrice: number }`      | **변경** (다중 상품·orderId, D12) |
 
 ### 대표 시퀀스
@@ -80,20 +80,20 @@
 ## 완료 조건
 
 - [ ] `docs/rfc/week09-e2e-scope.md` A절에 이름 규칙 · 공통 프로퍼티(형식 포함) · 매핑 표(주문 props 변경 이유 포함) · 위 대표 시퀀스가 있다
-- [ ] `pnpm start`로 띄운 상태에서 7지점 이벤트가 `window.__analytics`에서 대표 시퀀스 순서대로 확인된다
+- [ ] `pnpm start`에서 대표 시퀀스 3종을 재현했을 때 7개 이벤트 유형이 각각 정해진 순서로 `window.__analytics`에서 확인된다
 - [ ] 첫 화면 진입 이벤트를 포함한 **모든** track 이벤트에 sessionId · ts · device가 붙어 있다
 - [ ] 로그인 성공 시 identify→login_success 순서, 로그아웃·세션 만료 시 reset, 로그인 상태 방문 시 첫 track 전 identify가 콘솔에서 확인된다
 - [ ] 담기 해제 시 cart_add가 찍히지 않는다
 - [ ] 정의에 없는 이벤트 이름·틀린 props는 컴파일 에러가 난다
 - [ ] reason 매핑 · device 경계값(767/768, 1023/1024) · from 검증과 기본값 · sessionId 재사용이 단위 테스트로 고정된다
 - [ ] `src/analytics/` 기존 파일(logger·provider·consoleProvider) 무수정
-- [ ] `pnpm test` · `pnpm check` 통과
+- [ ] `pnpm check` 통과
 
 ## 태스크
 
 - T1: RFC 파일 생성, A절 작성 (props 표 · 매핑 · 대표 시퀀스 포함) — fulfills: 조건 1
 - T2: `src/analytics/events.ts` — props 표의 유니온 타입 + `trackEvent()` + 계측 헬퍼(device · reason 매핑 · from 검증 · sessionId) — fulfills: 조건 6
-- T3: 부트스트랩 배선 — `events.ts` 모듈 스코프 동기 설정 + 커머스 레이아웃에 `CommerceAnalytics`(initAnalytics + 초기 identify) 배치 — fulfills: 조건 3, 4
+- T3: 부트스트랩 배선 — `events.ts`의 lazy 셋업(첫 계측 호출 직전 1회) + 커머스 레이아웃에 `CommerceAnalytics`(startAnalytics + 초기 identify) 배치 — fulfills: 조건 3, 4
 - T4: 7지점 계측(ProductList · CartToggleButton · LoginForm · OrderNew ready · OrderForm) + 로그인 출처 전달 + LoginForm identify · LogoutButton reset · error.tsx 만료 reset — fulfills: 조건 2, 4, 5
 - T5: 헬퍼 단위 테스트(기존 Vitest 환경) — fulfills: 조건 7
-- T6: `pnpm build` + `pnpm start`로 대표 시퀀스 3종 재현, `window.__analytics`·콘솔을 RFC와 대조, 기존 logger.ts·provider.ts·consoleProvider.ts 무수정 확인, `pnpm test` · `pnpm check` — fulfills: 조건 1, 2, 4, 8, 9
+- T6: `pnpm check` 통과 후 `pnpm start`로 대표 시퀀스 3종 재현, `window.__analytics`·콘솔을 RFC와 대조, 기존 logger.ts·provider.ts·consoleProvider.ts 무수정 확인 — fulfills: 조건 1, 2, 4, 8, 9
