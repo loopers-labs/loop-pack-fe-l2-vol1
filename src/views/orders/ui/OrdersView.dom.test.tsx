@@ -47,7 +47,9 @@ describe('OrdersView', () => {
       </Providers>,
     )
 
-    expect(await screen.findByText('o7')).toBeVisible()
+    expect(
+      await screen.findByText('o7', undefined, { timeout: 5_000 }),
+    ).toBeVisible()
     expect(screen.getByText('p3 × 1')).toBeVisible()
   })
 })

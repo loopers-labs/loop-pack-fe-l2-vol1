@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -23,6 +23,9 @@ vi.hoisted(() => {
   })
 })
 
+import '@/analytics/client'
+
+import { registerProviders } from '@/analytics/logger'
 import { Providers } from '@/app/providers'
 import { useCartStore } from '@/entities/cart/model/CartStore'
 
@@ -37,6 +40,28 @@ const router = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
 }))
+
+type CapturedTrack = {
+  readonly type: 'track'
+  readonly event: string
+  readonly properties: Record<string, unknown>
+}
+
+const calls: Array<CapturedTrack> = []
+
+registerProviders([
+  {
+    name: 'capture',
+    initialize() {},
+    track: (event, properties) => {
+      calls.push({ type: 'track', event, properties })
+    },
+    identify() {},
+    reset() {},
+  },
+])
+
+const tracked = (event: string) => calls.filter((call) => call.event === event)
 
 function renderCheckout() {
   render(
@@ -56,6 +81,7 @@ function renderCheckout() {
 }
 
 afterEach(() => {
+  calls.length = 0
   router.replace.mockReset()
   router.refresh.mockReset()
   useCartStore.setState({ items: {} })
@@ -86,6 +112,14 @@ describe('CheckoutView', () => {
     const user = userEvent.setup()
     renderCheckout()
 
+    await waitFor(() => {
+      expect(tracked('order_start')).toHaveLength(1)
+    })
+    expect(tracked('order_start')[0].properties).toMatchObject({
+      itemCount: 2,
+      productIds: ['p1', 'p2'],
+    })
+
     await user.click(screen.getByRole('button', { name: '주문하기' }))
 
     expect(requestBody).toEqual({
@@ -96,6 +130,34 @@ describe('CheckoutView', () => {
     })
     expect(useCartStore.getState().items).toEqual({})
     expect(router.replace).toHaveBeenCalledWith('/orders')
+
+    await waitFor(() => {
+      expect(tracked('order_complete')).toHaveLength(1)
+    })
+    expect(tracked('order_complete')[0].properties).toMatchObject({
+      orderId: 'o1',
+      itemCount: 2,
+      productIds: ['p1', 'p2'],
+    })
+  })
+
+  it('does not emit order_complete when the order fails', async () => {
+    server.use(
+      http.post('http://localhost:3000/api/orders', () =>
+        HttpResponse.json({ message: '주문에 실패했습니다.' }, { status: 500 }),
+      ),
+    )
+    useCartStore.setState({ items: { p1: true } })
+    const user = userEvent.setup()
+    renderCheckout()
+
+    await waitFor(() => {
+      expect(tracked('order_start')).toHaveLength(1)
+    })
+    await user.click(screen.getByRole('button', { name: '주문하기' }))
+
+    expect(await screen.findByRole('alert')).toBeVisible()
+    expect(tracked('order_complete')).toHaveLength(0)
   })
 
   it('does not call the order API for an empty cart', () => {

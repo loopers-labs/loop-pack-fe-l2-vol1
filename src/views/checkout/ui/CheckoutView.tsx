@@ -3,7 +3,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 
+import { analyticsEvents } from '@/analytics/events'
 import { useCartStore } from '@/entities/cart/model/CartStore'
 import { orderEntity } from '@/entities/order/api/OrderService'
 import { ApiClientError } from '@/shared/api/ApiClientError'
@@ -22,9 +24,26 @@ export function CheckoutView({ userId }: CheckoutViewProps) {
   const orderItems = Object.keys(items)
     .sort()
     .map((productId) => ({ productId, quantity: 1 }))
+  const orderStartedRef = useRef(false)
+
+  useEffect(() => {
+    if (orderStartedRef.current || orderItems.length === 0) {
+      return
+    }
+    orderStartedRef.current = true
+    analyticsEvents.orderStart({
+      itemCount: orderItems.length,
+      productIds: orderItems.map((item) => item.productId),
+    })
+  }, [orderItems])
   const createOrder = useMutation({
     ...orderEntity.createOrder(),
-    onSuccess: async () => {
+    onSuccess: async ({ order }) => {
+      analyticsEvents.orderComplete({
+        orderId: order.id,
+        itemCount: orderItems.length,
+        productIds: orderItems.map((item) => item.productId),
+      })
       clearCart()
       await queryClient.invalidateQueries(orderEntity.getOrders(userId))
       router.replace('/orders')
