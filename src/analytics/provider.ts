@@ -1,4 +1,4 @@
-export type EventProperties = Record<string, unknown>;
+export type EventProperties = Record<string, unknown>
 
 /**
  * 분석 도구 하나를 감싸는 인터페이스.
@@ -7,16 +7,16 @@ export type EventProperties = Record<string, unknown>;
  * 어디로 보낼지는 프로바이더를 등록해 결정한다.
  */
 export interface AnalyticsProvider {
-  readonly name: string;
+  readonly name: string
 
   /** SDK 로드와 초기화 */
-  initialize(): Promise<void> | void;
+  initialize(): Promise<void> | void
 
-  track(event: string, properties: EventProperties): void;
+  track(event: string, properties: EventProperties): void
 
-  identify(userId: string, properties?: EventProperties): void;
+  identify(userId: string, properties?: EventProperties): void
 
-  reset(): void;
+  reset(): void
 }
 
 /*
