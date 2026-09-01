@@ -53,17 +53,20 @@
 
 | 이벤트              | 발생 조건                                                      | 프로퍼티                             | 구현 여부 |
 | ------------------- | -------------------------------------------------------------- | ------------------------------------ | --------- |
-| `product_list_view` | 목록 조회 조건 확정마다 1회 (진입·필터·정렬·페이지, 중복 없음) | `category`, `sort`, `page`           | 구현 예정 |
-| `cart_add`          | 장바구니에 없던 상품이 담길 때만                               | `productId`                          | 구현 예정 |
-| `login_start`       | 로그인 화면 표시 시 1회                                        | `from`                               | 구현 예정 |
-| `login_success`     | 로그인 200 후 `identify()` 다음                                | `from`                               | 구현 예정 |
-| `login_fail`        | 로그인 제출 실패마다 1회                                       | `reason`                             | 구현 예정 |
-| `order_start`       | 주문서에서 주문 가능 장바구니 준비 시 1회 (빈 장바구니 없음)   | `itemCount`, `productIds`            | 구현 예정 |
-| `order_complete`    | 주문 201 후 장바구니 정리 전 1회                               | `orderId`, `itemCount`, `productIds` | 구현 예정 |
+| `product_list_view` | 목록 조회 조건 확정마다 1회 (진입·필터·정렬·페이지, 중복 없음) | `category`, `sort`, `page`           | 구현 완료 |
+| `cart_add`          | 장바구니에 없던 상품이 담길 때만                               | `productId`                          | 구현 완료 |
+| `login_start`       | 로그인 화면 표시 시 1회                                        | `from`                               | 구현 완료 |
+| `login_success`     | 로그인 200 후 `identify()` 다음                                | `from`                               | 구현 완료 |
+| `login_fail`        | 로그인 제출 실패마다 1회                                       | `reason`                             | 구현 완료 |
+| `order_start`       | 주문서에서 주문 가능 장바구니 준비 시 1회 (빈 장바구니 없음)   | `itemCount`, `productIds`            | 구현 완료 |
+| `order_complete`    | 주문 201 후 장바구니 정리 전 1회                               | `orderId`, `itemCount`, `productIds` | 구현 완료 |
 
 제외: `product_detail_view`(상세 화면 없음), `category_filter_change`·`sort_change`·`page_change`
 (`product_list_view` 재발생으로 대체), `wishlist_add`(과제 필수 지점 아님),
 `client_error`(이번 주 범위 밖).
+
+관측된 실제 순서: `product_list_view` → `cart_add` → `login_start` →
+`login_fail` → `login_success` → `order_start` → `order_complete`.
 
 ### 시드 로그 매핑
 

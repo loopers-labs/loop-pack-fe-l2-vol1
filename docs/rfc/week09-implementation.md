@@ -192,7 +192,7 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 
 ## Stage 2 — 이벤트 계측
 
-상태: **결정**
+상태: **검증 완료**
 
 ### 목표
 
@@ -223,6 +223,18 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 - 로그인 실패가 성공 이벤트를 남기지 않는다.
 - 주문 실패가 완료 이벤트를 남기지 않는다.
 - 화면 로직과 계측 경계가 분리돼 있다.
+
+### 검증 기록
+
+- 구현 커밋: `10fe350d`(초기화), `92ea11b0`(인증 이벤트), `f4c56f27`(상품·주문)
+- `pnpm check`: 59 files, 401 tests와 lint·typecheck·build 통과
+- `pnpm format:check`: 전체 파일 통과
+- production 브라우저 흐름: `product_list_view` → `cart_add` → `login_start`
+  → `login_fail` → `login_success` → `order_start` → `order_complete`
+- 한 세션에서 `sessionId`가 유지되고 `ts`·`device`가 발생 시점 값으로 남음
+- 로그인 실패 이벤트에 이메일·비밀번호·쿠키가 포함되지 않음
+- 로그인 시 `identify`, 로그아웃 시 `reset`을 console provider 로그로 확인
+- 부하가 큰 전체 실행에서 드러난 주문 조회 대기 기한을 결정적으로 조정
 
 ### 다음 단계
 
