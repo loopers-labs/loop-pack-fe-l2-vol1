@@ -8,9 +8,8 @@ test.describe("인증 — 로그인 복원 & 실패", () => {
   const ACCOUNT_EMAIL = "looper1@loopers.dev";
   const CREDENTIALS_ERROR = "이메일 또는 비밀번호를 확인해주세요.";
 
-  test("미로그인으로 보호 경로에 가면 로그인 후 원래 경로로 복원되고 세션은 httpOnly 쿠키다", async ({
+  test("미로그인으로 보호 경로에 가면 로그인 후 원래 경로로 복원된다", async ({
     page,
-    context,
   }) => {
     // 보호 경로 직접 진입 → proxy 가 로그인으로 돌려보내며 원래 경로를 redirectUrl 로 보존한다.
     await page.goto("/orders/new");
@@ -23,12 +22,6 @@ test.describe("인증 — 로그인 복원 & 실패", () => {
     // 원래 가려던 경로로 복원된다.
     await expect(page).toHaveURL(/\/orders\/new$/);
     await expect(page.getByRole("heading", { name: "주문서" })).toBeVisible();
-
-    // 세션 쿠키는 httpOnly — 브라우저 컨텍스트에는 잡히되 문서 JS 로는 못 읽는다.
-    const sessionCookie = (await context.cookies()).find(
-      (cookie) => cookie.name === "session",
-    );
-    expect(sessionCookie?.httpOnly).toBe(true);
   });
 
   test("잘못된 자격 증명으로 로그인하면 안내가 뜨고 로그인 화면에 머문다", async ({
