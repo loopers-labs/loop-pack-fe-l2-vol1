@@ -30,6 +30,9 @@ test.describe("week8 검증대상 13 — 히스토리 내비게이션으로 카�
 
     // 앞으로 가기를 검증하려면 "바꾸고 → 뒤로 간" 상태가 먼저 있어야 한다(전제).
     await category.selectOption({ label: "패션" });
+    // nuqs 는 history 쓰기를 throttle 한다. URL 반영을 안 기다리고 goBack 하면
+    // pushState 보다 먼저 도달해 히스토리 스택이 이 전제와 어긋난다(실측 flake).
+    await expect(page).toHaveURL(/category=fashion/);
     await page.goBack();
     await expect(selected).toHaveText("전체");
 
