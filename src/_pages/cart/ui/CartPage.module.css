@@ -107,7 +107,7 @@
   right: 16px;
   border: none;
   background: none;
-  color: #8794a3;
+  color: #5a6675;
   font-size: 12px;
   text-decoration: underline;
   cursor: pointer;
@@ -167,7 +167,7 @@
 }
 
 .statusText {
-  color: #8794a3;
+  color: #5a6675;
   font-size: 14px;
 }
 
@@ -216,5 +216,12 @@
 @keyframes cart-skeleton-pulse {
   50% {
     opacity: 0.5;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .removeButton,
+  .statusText {
+    color: #a8b3bf;
   }
 }

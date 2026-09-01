@@ -55,7 +55,7 @@
 
 .meta {
   font-size: 13px;
-  color: #8794a3;
+  color: #5a6675;
 }
 
 .linePrice {
@@ -120,5 +120,11 @@
   .summary {
     width: 100%;
     position: static;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .meta {
+    color: #a8b3bf;
   }
 }
