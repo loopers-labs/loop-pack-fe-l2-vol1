@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -74,6 +75,50 @@ describe('주문 내역', () => {
       ),
     ).not.toBeInTheDocument();
     expect(within(order).queryByText(/원/)).not.toBeInTheDocument();
+  });
+
+  it('방금 주문한 직후처럼 재조회 중이면 빈 캐시로 없다고 단정하지 않는다', async () => {
+    const knownProduct = productAt(0);
+    const { promise: responseAllowed, resolve: allowResponse } =
+      Promise.withResolvers<void>();
+
+    server.use(
+      http.get('*/api/orders', async () => {
+        await responseAllowed;
+
+        return HttpResponse.json<OrderListResponse>({
+          orders: [
+            {
+              id: 'order-just-made',
+              createdAt: '2026-09-01T09:00:00.000Z',
+              items: [{ productId: knownProduct.id, quantity: 1 }],
+            },
+          ],
+        });
+      }),
+    );
+
+    // 주문 전에 방문해 남은 빈 캐시가 주문 성공으로 무효화된 상황
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    queryClient.setQueryData(orderQueries.list(SESSION_USER.id).queryKey, {
+      orders: [],
+    });
+    await queryClient.invalidateQueries({ queryKey: orderQueries.all() });
+
+    renderWithProviders(<OrdersPage />, {
+      queryClient,
+      initialUser: SESSION_USER,
+    });
+
+    expect(screen.getByText('주문 내역을 불러오는 중')).toBeInTheDocument();
+    expect(screen.queryByText('주문 내역이 없습니다.')).not.toBeInTheDocument();
+
+    allowResponse();
+
+    expect(await screen.findByText('주문 order-just-made')).toBeInTheDocument();
   });
 
   it('주문이 없으면 빈 상태와 상품 목록 CTA를 보여준다', async () => {

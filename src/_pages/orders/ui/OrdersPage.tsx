@@ -24,6 +24,7 @@ function OrdersContent() {
   const {
     data: orderList,
     isPending,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -47,6 +48,7 @@ function OrdersContent() {
   if (
     !user ||
     isPending ||
+    (isFetching && !hasOrders) ||
     (hasOrders && isCatalogPending && !isCatalogError)
   ) {
     return <p className={styles.statusText}>주문 내역을 불러오는 중</p>;
