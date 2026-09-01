@@ -1,22 +1,17 @@
 // @vitest-environment jsdom
 
 import '@/test/setupDom';
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import { Dialog } from '.';
 
-// ── 테스트 헬퍼 ──
-
-function UncontrolledDialog() {
+function TestDialog() {
   return (
     <Dialog>
-      <Dialog.Trigger>
-        <span>열기</span>
-      </Dialog.Trigger>
-      <Dialog.Overlay />
-      <Dialog.Content>
+      <Dialog.Trigger>열기</Dialog.Trigger>
+      <Dialog.Overlay className="custom-overlay" />
+      <Dialog.Content className="custom-content">
         <Dialog.Title>테스트 제목</Dialog.Title>
         <Dialog.Description>테스트 설명</Dialog.Description>
         <Dialog.Close>닫기</Dialog.Close>
@@ -25,190 +20,88 @@ function UncontrolledDialog() {
   );
 }
 
-function ControlledDialog() {
-  const [isOpen, setIsOpen] = useState(false);
-
+function ControlledDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <>
-      <button data-testid="external-open" onClick={() => setIsOpen(true)}>
-        외부 열기
-      </button>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <Dialog.Trigger>
-          <span>열기</span>
-        </Dialog.Trigger>
-        <Dialog.Overlay />
-        <Dialog.Content>
-          <Dialog.Title>Controlled</Dialog.Title>
-          <Dialog.Description>설명</Dialog.Description>
-          <Dialog.Close>닫기</Dialog.Close>
-        </Dialog.Content>
-      </Dialog>
-    </>
-  );
-}
-
-function CustomClassNameDialog() {
-  return (
-    <Dialog>
-      <Dialog.Trigger>
-        <span>열기</span>
-      </Dialog.Trigger>
-      <Dialog.Overlay className="custom-overlay" />
-      <Dialog.Content className="custom-content">
-        <div className="rounded-2xl bg-white p-7">
-          <Dialog.Title>Custom Dialog</Dialog.Title>
-          <Dialog.Close>닫기</Dialog.Close>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog.Trigger>열기</Dialog.Trigger>
+      <Dialog.Content>
+        <Dialog.Title>Controlled</Dialog.Title>
+        <Dialog.Close>닫기</Dialog.Close>
       </Dialog.Content>
     </Dialog>
   );
 }
 
-// ── 테스트 ──
-
 describe('Dialog', () => {
-  describe('Uncontrolled', () => {
-    it('초기에는 Content가 렌더되지 않는다', () => {
-      render(<UncontrolledDialog />);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+  it('열리면 접근성 정보와 className을 전달하고 overlay로 닫으며 스크롤을 복구한다', async () => {
+    const user = userEvent.setup();
+    render(<TestDialog />);
 
-    it('Trigger 클릭으로 열린다', async () => {
-      const user = userEvent.setup();
-      render(<UncontrolledDialog />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '열기' }));
 
-      await user.click(screen.getByText('열기'));
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-      expect(screen.getByText('테스트 제목')).toBeInTheDocument();
-      expect(screen.getByText('테스트 설명')).toBeInTheDocument();
-    });
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveClass('custom-content');
+    expect(screen.getByRole('heading', { name: '테스트 제목' }).tagName).toBe(
+      'H2',
+    );
+    expect(screen.getByText('테스트 설명')).toBeInTheDocument();
+    expect(document.body.style.overflow).toBe('hidden');
 
-    it('Close 버튼으로 닫힌다', async () => {
-      const user = userEvent.setup();
-      render(<UncontrolledDialog />);
+    const overlay = document.querySelector('[aria-hidden="true"]');
+    expect(overlay).toHaveClass('custom-overlay');
+    await user.click(overlay as HTMLElement);
 
-      await user.click(screen.getByText('열기'));
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-      await user.click(screen.getByText('닫기'));
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
-
-    it('Escape 키로 닫힌다', async () => {
-      const user = userEvent.setup();
-      render(<UncontrolledDialog />);
-
-      await user.click(screen.getByText('열기'));
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-      await user.keyboard('{Escape}');
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
-
-    it('열려 있는 동안 배경 스크롤이 잠긴다', async () => {
-      const user = userEvent.setup();
-      render(<UncontrolledDialog />);
-
-      expect(document.body.style.overflow).not.toBe('hidden');
-
-      await user.click(screen.getByText('열기'));
-      expect(document.body.style.overflow).toBe('hidden');
-
-      await user.click(screen.getByText('닫기'));
-      expect(document.body.style.overflow).not.toBe('hidden');
-    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.body.style.overflow).not.toBe('hidden');
   });
 
-  describe('Controlled', () => {
-    it('open=false이면 Content가 렌더되지 않는다', () => {
-      render(<ControlledDialog />);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+  it('Close 버튼과 Escape 키로 닫는다', async () => {
+    const user = userEvent.setup();
+    render(<TestDialog />);
+    const openButton = screen.getByRole('button', { name: '열기' });
 
-    it('외부 버튼으로 열 수 있다', async () => {
-      const user = userEvent.setup();
-      render(<ControlledDialog />);
+    await user.click(openButton);
+    await user.click(screen.getByRole('button', { name: '닫기' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-      await user.click(screen.getByTestId('external-open'));
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-    });
-
-    it('Close 버튼으로 닫힌다', async () => {
-      const user = userEvent.setup();
-      render(<ControlledDialog />);
-
-      await user.click(screen.getByTestId('external-open'));
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-      await user.click(screen.getByText('닫기'));
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
-
-    it('onOpenChange가 호출된다', async () => {
-      const user = userEvent.setup();
-      const handleOpenChange = vi.fn();
-
-      render(
-        <Dialog open={false} onOpenChange={handleOpenChange}>
-          <Dialog.Trigger>
-            <span>열기</span>
-          </Dialog.Trigger>
-          <Dialog.Content>
-            <Dialog.Title>Test</Dialog.Title>
-          </Dialog.Content>
-        </Dialog>,
-      );
-
-      await user.click(screen.getByText('열기'));
-      expect(handleOpenChange).toHaveBeenCalledWith(true);
-    });
+    await user.click(openButton);
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  describe('Compound 조립', () => {
-    it('Title이 h2로 렌더된다', async () => {
-      const user = userEvent.setup();
-      render(<UncontrolledDialog />);
+  it('controlled 모드에서는 열기와 닫기 요청을 외부에 알린다', async () => {
+    const user = userEvent.setup();
+    const handleOpenChange = vi.fn();
+    const view = render(
+      <ControlledDialog open={false} onOpenChange={handleOpenChange} />,
+    );
 
-      await user.click(screen.getByText('열기'));
-      const title = screen.getByText('테스트 제목');
-      expect(title.tagName).toBe('H2');
-    });
+    await user.click(screen.getByRole('button', { name: '열기' }));
+    expect(handleOpenChange).toHaveBeenLastCalledWith(true);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    it('Content에 role=dialog, aria-modal=true가 있다', async () => {
-      const user = userEvent.setup();
-      render(<UncontrolledDialog />);
+    view.rerender(
+      <ControlledDialog open onOpenChange={handleOpenChange} />,
+    );
+    await user.click(screen.getByRole('button', { name: '닫기' }));
+    expect(handleOpenChange).toHaveBeenLastCalledWith(false);
+  });
 
-      await user.click(screen.getByText('열기'));
-      const dialog = screen.getByRole('dialog');
-      expect(dialog).toHaveAttribute('aria-modal', 'true');
-    });
+  it('하위 컴포넌트를 Dialog 밖에서 사용하면 조립 오류를 알린다', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    it('custom className을 전달하고 overlay를 클릭하면 닫힌다', async () => {
-      const user = userEvent.setup();
-      render(<CustomClassNameDialog />);
+    expect(() => render(<Dialog.Close>닫기</Dialog.Close>)).toThrow(
+      'Dialog 하위 컴포넌트는 <Dialog> 안에서 사용해야 합니다.',
+    );
 
-      await user.click(screen.getByText('열기'));
-      const dialog = screen.getByRole('dialog');
-      expect(dialog).toHaveClass('custom-content');
-
-      const overlay = document.querySelector('[aria-hidden="true"]');
-      expect(overlay).toBeInTheDocument();
-      expect(overlay).toHaveClass('custom-overlay');
-
-      await user.click(overlay as HTMLElement);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
-
-    it('Context 밖에서 사용하면 에러를 던진다', () => {
-      // console.error 억제
-      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      expect(() => {
-        render(<Dialog.Close>닫기</Dialog.Close>);
-      }).toThrow('Dialog 하위 컴포넌트는 <Dialog> 안에서 사용해야 합니다.');
-
-      spy.mockRestore();
-    });
+    consoleError.mockRestore();
   });
 });
