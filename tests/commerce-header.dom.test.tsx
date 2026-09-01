@@ -110,10 +110,10 @@ describe('커머스 헤더 로그아웃', () => {
     useCheckoutStore.setState({
       draftItems: [{ productId: 'p1', quantity: 1 }],
     });
-    const userOrderQueryKey = [...orderQueries.all(), SESSION_USER.id];
+    const userOrderQueryKey = orderQueries.list(SESSION_USER.id).queryKey;
     const { user, queryClient } = await renderCommerceLayout();
 
-    queryClient.setQueryData(userOrderQueryKey, [{ id: 'previous-order' }]);
+    queryClient.setQueryData(userOrderQueryKey, { orders: [] });
 
     expect(headerCountText('장바구니')).toBe('장바구니 1');
     expect(headerCountText('위시리스트')).toBe('위시리스트 1');
@@ -135,7 +135,7 @@ describe('커머스 헤더 로그아웃', () => {
     useCheckoutStore
       .getState()
       .actions.createCheckoutDraft([{ productId: 'p1', quantity: 2 }]);
-    const userOrderQueryKey = [...orderQueries.all(), SESSION_USER.id];
+    const userOrderQueryKey = orderQueries.list(SESSION_USER.id).queryKey;
     server.use(
       http.post('*/api/auth/logout', () =>
         HttpResponse.json(
@@ -146,7 +146,7 @@ describe('커머스 헤더 로그아웃', () => {
     );
     const { user, queryClient } = await renderCommerceLayout();
 
-    queryClient.setQueryData(userOrderQueryKey, [{ id: 'previous-order' }]);
+    queryClient.setQueryData(userOrderQueryKey, { orders: [] });
 
     await user.click(screen.getByRole('button', { name: '로그아웃' }));
 
@@ -164,8 +164,6 @@ describe('커머스 헤더 로그아웃', () => {
       state: { draftItems: [{ productId: 'p1', quantity: 2 }] },
     });
     // 실패하면 쿠키가 살아 있으므로 주문 캐시도 그대로 둔다
-    expect(queryClient.getQueryData(userOrderQueryKey)).toEqual([
-      { id: 'previous-order' },
-    ]);
+    expect(queryClient.getQueryData(userOrderQueryKey)).toEqual({ orders: [] });
   });
 });

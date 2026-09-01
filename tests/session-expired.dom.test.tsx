@@ -33,11 +33,9 @@ afterEach(() => {
 describe('세션 만료 처리', () => {
   it('401이면 계정 상태를 정리하고 checkout draft는 유지한 채 로그인으로 보낸다', async () => {
     const queryClient = getQueryClient();
-    const userOrderQueryKey = [...orderQueries.all(), SESSION_USER.id];
+    const userOrderQueryKey = orderQueries.list(SESSION_USER.id).queryKey;
 
-    queryClient.setQueryData(userOrderQueryKey, [
-      { id: 'previous-user-order' },
-    ]);
+    queryClient.setQueryData(userOrderQueryKey, { orders: [] });
     queryClient.setQueryData(productQueries.all(), 'public-products');
     useCheckoutStore.setState({
       draftItems: [{ productId: 'p1', quantity: 2 }],

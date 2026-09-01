@@ -151,7 +151,9 @@ describe('주문 생성', () => {
 
     const { user, queryClient } = renderOrderNewPage();
 
-    queryClient.setQueryData(orderQueries.all(), []);
+    queryClient.setQueryData(orderQueries.list(SESSION_USER.id).queryKey, {
+      orders: [],
+    });
 
     await user.click(await screen.findByRole('button', { name: '주문하기' }));
 
@@ -165,10 +167,11 @@ describe('주문 생성', () => {
       { productId: remainingProduct.id, quantity: 1, checked: false },
     ]);
     expect(useCheckoutStore.getState().draftItems).toEqual([]);
-    // 주문 내역이 새 주문을 다시 조회하도록 캐시를 무효화한다
-    expect(queryClient.getQueryState(orderQueries.all())?.isInvalidated).toBe(
-      true,
-    );
+    // 주문 내역 화면이 실제로 쓰는 사용자 캐시가 무효화돼 새 주문을 다시 조회한다
+    expect(
+      queryClient.getQueryState(orderQueries.list(SESSION_USER.id).queryKey)
+        ?.isInvalidated,
+    ).toBe(true);
   });
 
   it('실패하면 오류를 보여주고 장바구니와 draft를 유지해 다시 시도할 수 있다', async () => {
