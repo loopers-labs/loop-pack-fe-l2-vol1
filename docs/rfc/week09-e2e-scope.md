@@ -126,3 +126,13 @@
 ## AI 사용
 
 계측 wrapper, 집계 스크립트, 테스트 fixture와 반복 코드는 AI가 작성했다. 이벤트 스키마, 노이즈 기준, E2E 선택·제외와 단언은 이 RFC의 근거를 기준으로 검토했다. 자동 생성된 단언이 실제 구현 변이 5건을 모두 실패시키는지 확인했다.
+
+## D. E2E 구현 증거
+
+- 인증 자체를 검증하는 두 테스트는 빈 `storageState`에서 시작한다. 이미 로그인된 상태를 쓰면 폼·쿠키 발급·경로 복원이 깨져도 통과하기 때문이다.
+- 인증이 준비 조건인 만료·주문 테스트는 worker fixture가 실제 로그인 UI를 한 번 통과해 만든 `test-results/.auth/worker-{parallelIndex}.json`을 재사용한다.
+- 워커별로 `looper1`부터 `looper8`까지 다른 계정을 배정한다. 주문 데이터가 계정별로 분리되어 병렬 워커가 서로의 단언을 오염시키지 않는다. 각 테스트는 Playwright의 새 context를 사용하므로 scenario 쿠키와 장바구니 메모리도 다음 테스트로 넘어가지 않는다.
+- `--workers=4`와 `--workers=1`에서 전체 10개 E2E가 동일하게 통과했다. 새 인증·주문 4개는 `--repeat-each=3 --workers=4`로 12회 실행해 모두 통과했다.
+- 주문 번호 단언을 일부러 `intentionally-wrong`으로 바꾸고 `--trace=on`으로 실행했다. trace에는 주문서 heading과 주문 완료 heading까지 성공한 뒤 마지막 `getByTestId('order-id')`의 `toHaveText`에서 5초 동안 멈춘 것이 기록됐다. 실제 DOM 값은 `o7`이었다. 단언은 즉시 `/^o\d+$/`로 원복했다.
+- 기본 설정도 `trace: 'retain-on-failure'`로 두었다. `retries: 0`에서 `on-first-retry`는 trace를 만들 기회가 없기 때문이다. CLI의 `--trace` 없이 기대값을 `trace-config-check`로 틀려 실행해 screenshot·video와 함께 `trace.zip`이 남는 것을 확인하고 원복했다.
+- 역할·이름 기반으로 찾을 수 없는 주문 번호에만 `data-testid="order-id"`를 썼다. 주문 번호 값은 동적이라 접근 가능한 고정 이름이 없고, 기능 단언의 핵심 관찰값이라 숨기지 않았다.

@@ -22,10 +22,16 @@ export default defineConfig({
   // 재시도를 켜지 않는다. 흔들리는 테스트를 재시도로 덮으면 무엇이 깨졌는지 알 수 없다.
   // 대기는 전부 조건 기반이라 재시도로 살릴 실패는 진짜 실패여야 한다.
   retries: 0,
+  // 과제의 병렬 격리 기준이다. CLI의 --workers=1로 직렬 결과와 비교할 수 있다.
+  workers: 4,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
+    // 재시도를 쓰지 않으므로 on-first-retry는 trace를 한 번도 만들지 않는다.
+    // 실패한 최초 실행을 그대로 남겨 screenshot·video와 같은 조건으로 진단한다.
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
