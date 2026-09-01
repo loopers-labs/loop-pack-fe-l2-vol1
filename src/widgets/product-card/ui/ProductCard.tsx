@@ -1,14 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import type { Product } from '@/entities/product/model/types';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
-import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { formatWon } from '@/shared/lib/format';
 
 interface ProductCardProps {
   product: Product;
+  headingLevel?: 2 | 3;
 }
 
 function HeartIcon({ isFilled }: { isFilled: boolean }) {
@@ -49,11 +50,15 @@ function CartIcon() {
   );
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({
+  product,
+  headingLevel = 3,
+}: ProductCardProps) {
   const isWished = useWishlistStore((state) => state.ids.has(product.id));
-  const toggle = useWishlistStore((state) => state.toggle);
+  const toggleWishlist = useWishlistStore((state) => state.toggle);
   const addItem = useCartStore((state) => state.addItem);
   const discount = getProductDiscount(product);
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
 
   return (
     <article className="group flex min-w-0 flex-col">
@@ -73,13 +78,13 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </Link>
 
-        <div className="absolute bottom-1 right-1 z-10 flex w-10 flex-col items-center">
+        <div className="absolute bottom-1 right-1 z-10 flex w-11 flex-col items-center">
           <button
             type="button"
-            onClick={() => toggle(product.id)}
+            onClick={() => toggleWishlist(product.id)}
             aria-label={`${product.name} ${isWished ? '찜 해제' : '찜하기'}`}
             aria-pressed={isWished}
-            className={`flex size-10 items-center justify-center transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-white ${
+            className={`flex size-11 cursor-pointer items-center justify-center transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-white ${
               isWished ? 'text-red-500' : 'text-white'
             }`}
           >
@@ -89,7 +94,7 @@ export function ProductCard({ product }: ProductCardProps) {
             type="button"
             onClick={() => addItem(product.id)}
             aria-label={`${product.name} 장바구니에 담기`}
-            className="flex size-10 items-center justify-center text-white transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-white"
+            className="flex size-11 cursor-pointer items-center justify-center text-white transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-white"
           >
             <CartIcon />
           </button>
@@ -104,9 +109,9 @@ export function ProductCard({ product }: ProductCardProps) {
           <p className="truncate text-xs font-medium text-neutral-500">
             {product.brand}
           </p>
-          <h3 className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-neutral-800 transition-colors group-hover:text-neutral-500 sm:text-[15px]">
+          <Heading className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-neutral-800 transition-colors group-hover:text-neutral-500 sm:text-[15px]">
             {product.name}
-          </h3>
+          </Heading>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5">
             {discount && (
               <span className="text-base font-bold text-neutral-500">

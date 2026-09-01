@@ -29,7 +29,7 @@ export function CartContent() {
   return (
     <main className="min-h-screen">
       <CartEmptyState />
-      <div className="mx-auto w-full px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
+      <div className="mx-auto w-full max-w-[1256px] px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
         <CartProductFeed />
       </div>
     </main>

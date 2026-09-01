@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
 import type { Product } from '@/entities/product/model/types';
+import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
 import { NewProductCarousel } from './NewProductCarousel';
-import { ProductCard } from './ProductCard';
 
 interface HomeClientProps {
   scenario?: string;

@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import type { Product } from '@/entities/product/model/types';
-import { ProductCard } from './ProductCard';
+import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
 
 interface NewProductCarouselProps {
   products: Product[];

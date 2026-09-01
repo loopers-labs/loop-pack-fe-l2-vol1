@@ -2,7 +2,8 @@
 
 import { useInfiniteProducts } from '@/entities/product/model/useInfiniteProducts';
 import { InfiniteScrollTrigger } from '@/shared/ui/infinite-scroll-trigger/InfiniteScrollTrigger';
-import { CartProductCard } from './CartProductCard';
+import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
+import { ProductCardSkeleton } from '@/widgets/product-card/ui/ProductCardSkeleton';
 
 const CART_FEED_LABELS = {
   loading: '다음 상품을 불러오는 중이에요.',
@@ -13,16 +14,12 @@ const CART_FEED_LABELS = {
 function FeedSkeleton() {
   return (
     <div
+      role="status"
       aria-label="전체상품을 불러오는 중"
       className="mt-6 grid grid-cols-2 gap-x-3 gap-y-9 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6"
     >
       {Array.from({ length: 8 }, (_, index) => (
-        <div key={index} className="animate-pulse motion-reduce:animate-none">
-          <div className="aspect-square rounded-lg bg-border/50" />
-          <div className="mt-3 h-3 w-1/3 rounded bg-border/50" />
-          <div className="mt-2 h-10 rounded bg-border/50" />
-          <div className="mt-2 h-4 w-1/2 rounded bg-border/50" />
-        </div>
+        <ProductCardSkeleton key={index} />
       ))}
     </div>
   );
@@ -89,7 +86,7 @@ export function CartProductFeed() {
         <>
           <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-10 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
             {products.map((product) => (
-              <CartProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
 

@@ -380,10 +380,14 @@ describe('ProductListContent', () => {
     await screen.findByRole('heading', { name: '테스트 상품' });
     expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '찜' }));
+    await user.click(
+      screen.getByRole('button', { name: '테스트 상품 찜하기' }),
+    );
     expect(screen.getByText('위시리스트 1')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '찜 해제' }));
+    await user.click(
+      screen.getByRole('button', { name: '테스트 상품 찜 해제' }),
+    );
     expect(screen.getByText('위시리스트 0')).toBeInTheDocument();
   });
 
