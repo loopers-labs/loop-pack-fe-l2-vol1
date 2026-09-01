@@ -21,6 +21,11 @@ interface HeaderProps {
  *
  * 위시리스트는 링크가 아니다. 그 목록을 보여주는 화면이 아직 없다.
  *
+ * 미로그인일 때 /order 링크의 프리페치를 끈다. 켜 두면 proxy 가 그 프리페치에 307(→/login)을
+ * 돌려주고 그 결과가 라우터 캐시에 남아, 로그인 직후 router.replace('/order') 가 서버에 묻지 않고
+ * 로그인 화면에 그대로 머문다. 헤더는 로그인 상태로 바뀌는데 화면만 안 바뀌는 형태라 사용자는
+ * 로그인이 실패한 줄 안다. 로그인 상태에서는 307 이 날 일이 없으므로 프리페치를 그대로 둔다.
+ *
  * isLoggedIn 은 서버 레이아웃이 세션 쿠키 존재 여부로 판독해 내려준다.
  * SSR HTML 에 이미 반영되므로 JavaScript 실행 전에도 로그인 상태가 보인다.
  * 단, 이 단계에서 쿠키 서명을 검증하지 않으므로 만료된 세션도 로그인으로 표시된다.
@@ -36,7 +41,9 @@ export function Header({ isLoggedIn = false }: HeaderProps) {
       <nav aria-label="주요 메뉴">
         <Link href="/products">상품</Link>
         <span>위시리스트 {wishList.length}</span>
-        <Link href="/order">장바구니 {cart.length}</Link>
+        <Link href="/order" prefetch={isLoggedIn ? undefined : false}>
+          장바구니 {cart.length}
+        </Link>
         {isLoggedIn ? (
           <>
             <Link href="/mypage">마이페이지</Link>
