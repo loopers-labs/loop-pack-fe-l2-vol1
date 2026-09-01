@@ -30,6 +30,14 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'line' : 'list',
+  // 9주차 4단계: 기본값에 기대지 않는다. 테스트 한 개, 단언 한 번의 최대 대기를 명시적으로 고정한다.
+  timeout: 30_000,
+  expect: {
+    timeout: 5_000,
+  },
+  // worker 당 계정으로 로그인해 두는 storageState 파일이 쌓인다(e2e/fixtures/worker-auth.ts).
+  // 실행 시작 시 1회만 비운다 — 워커 fixture 안에서 비우면 워커끼리 서로의 파일을 지운다.
+  globalSetup: require.resolve('./e2e/global-setup'),
   use: {
     baseURL: APP_ORIGIN,
     trace: 'on-first-retry',
