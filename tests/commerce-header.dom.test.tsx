@@ -95,7 +95,10 @@ describe('커머스 헤더 초기 HTML', () => {
 
     await serverRenderCommerceLayout();
 
-    expect(screen.getByText(SESSION_USER.name)).toBeInTheDocument();
+    // 사용자 이름이 마이페이지 진입점이다
+    expect(
+      screen.getByRole('link', { name: SESSION_USER.name }),
+    ).toHaveAttribute('href', '/my');
     expect(
       screen.getByRole('button', { name: '로그아웃' }),
     ).toBeInTheDocument();

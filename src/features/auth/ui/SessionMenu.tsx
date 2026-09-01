@@ -15,7 +15,7 @@ export function SessionMenu() {
 
   return (
     <>
-      <span>{user.name}</span>
+      <Link href="/my">{user.name}</Link>
       <LogoutButton />
     </>
   );

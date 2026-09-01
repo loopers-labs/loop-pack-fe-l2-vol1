@@ -1,0 +1,72 @@
+.accountCard {
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  background: var(--background);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.name {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.email {
+  margin: 0;
+  font-size: 14px;
+  color: #5a6675;
+}
+
+.loginNotice {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.loginButton {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: #2e6ff2;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.menu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  background: var(--background);
+}
+
+.menuItem {
+  border-bottom: 1px solid #eef1f4;
+}
+
+.menuItem:last-child {
+  border-bottom: none;
+}
+
+.menuLink {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+  font-size: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.menuHint {
+  color: #5a6675;
+  font-size: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .email,
+  .menuHint {
+    color: #a8b3bf;
+  }
+}
