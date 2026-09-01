@@ -122,16 +122,21 @@ describe("analytics logger", () => {
 
   it("초기화가 실패한 프로바이더가 있어도 나머지를 초기화한다", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { provider, recorded } = createRecorder({
+    const failedProvider = createRecorder({
       initialize: () => {
         throw new Error("초기화 실패");
       },
+    }).provider;
+    const healthyInitialize = vi.fn();
+    const { provider: healthyProvider, recorded } = createRecorder({
+      initialize: healthyInitialize,
     });
-    registerProviders([provider]);
+    registerProviders([failedProvider, healthyProvider]);
 
     await initAnalytics();
     track("cart_add");
 
+    expect(healthyInitialize).toHaveBeenCalledOnce();
     expect(recorded).toEqual([{ type: "track", event: "cart_add", properties: {} }]);
     expect(consoleError).toHaveBeenCalledOnce();
   });
