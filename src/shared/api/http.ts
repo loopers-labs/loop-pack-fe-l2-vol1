@@ -85,8 +85,9 @@ const readServerMessage = async (response: Response) => {
 // 취소와 타임아웃을 함께 걸어 둘 중 먼저 오는 쪽이 요청을 끊게 한다.
 // AbortSignal.timeout 대신 타이머를 직접 드는 이유는, 중단 이유를 명시하고
 // 응답이 끝나는 즉시 타이머를 해제해 요청마다 대기 타이머가 남지 않게 하기 위해서다.
-export const fetchJson = async <T>(
+const request = async <T>(
   url: string,
+  init: RequestInit,
   signal?: AbortSignal,
 ): Promise<T> => {
   const timeout = new AbortController()
@@ -100,6 +101,7 @@ export const fetchJson = async <T>(
     let response: Response
     try {
       response = await fetch(url, {
+        ...init,
         signal: signal
           ? AbortSignal.any([signal, timeout.signal])
           : timeout.signal,
@@ -114,11 +116,41 @@ export const fetchJson = async <T>(
     if (!response.ok) {
       throw new ApiError(response.status, await readServerMessage(response))
     }
+    // 204는 본문이 없다. 없는 본문을 파싱하려 들면 성공한 요청이 파싱 오류로 실패한다.
+    if (response.status === 204) return undefined as T
     return (await response.json()) as T
   } finally {
     clearTimeout(timer)
   }
 }
+
+export const fetchJson = async <T>(
+  url: string,
+  signal?: AbortSignal,
+): Promise<T> => request<T>(url, {}, signal)
+
+// 상태를 바꾸는 요청이다. 조회와 같은 실패 승격 규칙을 쓰되, 본문과 메서드만 다르다.
+// 쿠키는 같은 origin 요청이라 브라우저가 알아서 싣는다. 여기서 credentials를 지정하지
+// 않는 이유는, 절대 URL로 부르는 자리가 생겼을 때 조용히 세션이 실려 나가지 않게
+// 기본값을 그대로 두기 위해서다.
+export const postJson = async <T>(
+  url: string,
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<T> =>
+  request<T>(
+    url,
+    {
+      method: 'POST',
+      ...(body === undefined
+        ? {}
+        : {
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+          }),
+    },
+    signal,
+  )
 
 const isAbort = (error: unknown) =>
   error instanceof DOMException && error.name === 'AbortError'
