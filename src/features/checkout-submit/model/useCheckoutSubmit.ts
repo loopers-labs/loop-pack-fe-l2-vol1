@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createOrder } from '@/entities/order/api/orders';
 import { ordersQueries } from '@/entities/order/api/ordersQueries';
 import { useCartStore } from '@/entities/cart/model/cartStore';
+import { sessionQueries } from '@/entities/session/api/sessionQueries';
+import type { AuthUser } from '@/entities/session/model';
 import { ApiError } from '@/shared/api';
 import { track } from '@/analytics/logger';
 
@@ -19,7 +21,11 @@ export function useCheckoutSubmit() {
     mutationFn: () =>
       createOrder(items.map((productId) => ({ productId, quantity: 1 }))),
     onSuccess: () => {
-      track('order_complete', { productIds: items });
+      // /orders/new는 보호 경로라 이 시점엔 항상 로그인 상태이므로 user는 사실상 항상 존재한다.
+      const user = queryClient.getQueryData<AuthUser | null>(
+        sessionQueries.me().queryKey,
+      );
+      track('order_complete', { productIds: items, userId: user?.id });
       items.forEach((productId) => removeItem(productId));
       void queryClient.invalidateQueries({ queryKey: ordersQueries.all() });
       router.push('/orders');

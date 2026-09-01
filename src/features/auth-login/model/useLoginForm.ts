@@ -39,7 +39,7 @@ export function useLoginForm({ redirect }: Params) {
     onSuccess: (user) => {
       queryClient.setQueryData(sessionQueries.me().queryKey, user);
       identify(user.id);
-      track('login_success', { from: redirect ?? 'direct' });
+      track('login_success', { from: redirect ?? 'direct', userId: user.id });
       router.push(getSafeRedirectPath(redirect));
     },
     onError: (error) => {
