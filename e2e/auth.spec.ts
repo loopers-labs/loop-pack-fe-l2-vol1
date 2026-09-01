@@ -4,6 +4,7 @@ import { authAccount } from "./authState";
 
 const appPort = process.env.PORT ?? "3000";
 const appBaseURL = `http://127.0.0.1:${appPort}`;
+const scenarioCookieName = "scenario";
 
 async function login(contextRequest: APIRequestContext) {
   const response = await contextRequest.post(`${appBaseURL}/api/auth/login`, {
@@ -73,14 +74,15 @@ test.describe("로그인 실패", () => {
 });
 
 test.describe("세션 만료 안내", () => {
-  test("위조 세션으로 주문 내역에 진입하면 현재 화면을 유지하고 로그인 안내 모달을 보여준다", async ({
+  test("expired 시나리오로 주문 내역에 진입하면 현재 화면을 유지하고 로그인 안내 모달을 보여준다", async ({
     context,
     page,
   }) => {
+    await login(context.request);
     await context.addCookies([
       {
-        name: "session",
-        value: "tampered-session",
+        name: scenarioCookieName,
+        value: "expired",
         domain: "127.0.0.1",
         path: "/",
       },
@@ -89,9 +91,12 @@ test.describe("세션 만료 안내", () => {
     await page.goto("/orders");
 
     await expect(page).toHaveURL(/\/orders$/);
-    await expect(page.getByRole("dialog", { name: "세션 만료" })).toBeVisible();
-    await expect(page.getByText("세션이 만료되었습니다. 다시 로그인해주세요.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "로그인하기" })).toHaveAttribute(
+    const authRequiredDialog = page.getByRole("dialog", { name: "세션 만료" });
+    await expect(authRequiredDialog).toBeVisible();
+    await expect(
+      authRequiredDialog.getByText("세션이 만료되었습니다. 다시 로그인해주세요."),
+    ).toBeVisible();
+    await expect(authRequiredDialog.getByRole("link", { name: "로그인하기" })).toHaveAttribute(
       "href",
       "/login?redirectTo=%2Forders",
     );
