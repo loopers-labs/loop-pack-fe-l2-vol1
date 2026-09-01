@@ -6,6 +6,7 @@ import { logout } from '@/entities/session/api/session';
 import { sessionQueries } from '@/entities/session/api/sessionQueries';
 import { ordersQueries } from '@/entities/order/api/ordersQueries';
 import { isProtectedPath } from '@/shared/config/protected-routes';
+import { reset } from '@/analytics/logger';
 
 export function useLogout() {
   const router = useRouter();
@@ -14,6 +15,9 @@ export function useLogout() {
   const mutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
+      // 계측 도구에 쌓인 사용자 식별 정보를 지운다(identify()의 반대).
+      reset();
+
       // 세션 쿼리가 아직 캐시에 살아있는 상태에서 값을 null로 명시적으로
       // 채운다 — clear()로 먼저 지워버리면 헤더가 관찰하던 쿼리 자체가
       // 없어져서 갱신이 확실히 전파되지 않을 수 있다. setQueryData는
