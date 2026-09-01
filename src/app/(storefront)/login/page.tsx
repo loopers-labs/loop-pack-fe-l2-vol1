@@ -32,11 +32,14 @@ export default async function LoginPage({
 
   const session = await readServerSession()
 
-  // 로그인 상태면 목적지로 보낸다. 로그인 성공 직후의 갱신도 이 경로를 지나
-  // nextPath로 이동한다.
-  if (session.status === 'signed-in') {
+  // 로그인 상태면 목적지로 보낸다. 로그인 성공 직후의 갱신도 이 경로로 이동한다.
+  //
+  // 만료로 온 경우(reason=expired)는 예외다. 서버는 세션을 유효하다고 보는데 조회는
+  // 401을 받는 상태가 있고, 그때 여기서 되돌려 보내면 401과 이동이 무한히 반복된다.
+  // 이 경우에는 재인증 화면을 보여준다.
+  if (session.status === 'signed-in' && !expired) {
     redirect(nextPath)
   }
 
-  return <LoginForm expired={expired} />
+  return <LoginForm nextPath={nextPath} expired={expired} />
 }
