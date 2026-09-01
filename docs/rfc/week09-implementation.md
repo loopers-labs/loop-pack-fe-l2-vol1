@@ -8,8 +8,8 @@ E2E 범위와 실행 증거는
 
 | 항목           | 값                            |
 | -------------- | ----------------------------- |
-| 상태           | 초안                          |
-| 현재 단계      | Stage 1 인증 결정             |
+| 상태           | 진행 중                       |
+| 현재 단계      | Stage 1 검증 완료             |
 | 본문 목표 분량 | 330 LOC 전후                  |
 | 본문 최대 분량 | 400 LOC                       |
 | 과제 명세      | `docs/assignments/week-09.md` |
@@ -126,7 +126,7 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 
 ## Stage 1 — 인증
 
-상태: **결정**
+상태: **검증 완료**
 
 ### 목표
 
@@ -164,6 +164,25 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 - 초기 HTML에 로그인 상태가 반영된다.
 - 만료와 로그아웃 후 다음 행동이 명확하다.
 - 인증·주문 API가 production Route 목록에 존재한다.
+
+### 검증 결과
+
+- 구현 커밋:
+  - `5a368bdb` — browser storage와 DOM test harness
+  - `77fcbf03` — auth domain, server session, proxy
+  - `59cc95bc` — AuthProvider, login·logout UI, 초기 session 연결
+  - `5eed380b` — checkout·orders, Header, responsive empty state
+- `pnpm check`: 54 files, 377 tests와 lint·typecheck·build 통과
+- `pnpm format:check`: 전체 파일 통과
+- build Route: 인증 API 3개, 주문 API, `/login`, `/checkout`, `/orders`,
+  Proxy 확인
+- production 익명 `/orders?status=open`: 원래 query를 담아 로그인으로 307
+- 잘못된 자격 증명: 401과 form alert, 보호 경로 복원 없음
+- 로그인 성공: httpOnly 쿠키와 초기 HTML의 `루퍼1` 확인 후 원래 경로 복원
+- `expired` cookie: 대기 없이 만료 안내가 있는 로그인으로 307
+- 주문 생성·목록·로그아웃: 각각 201·200·204와 쿠키 제거 확인
+- axe WCAG A·AA: login·checkout·orders 모두 위반 0, 미확인 0
+- desktop·mobile 시각·기능 독립 검수: 6/6 PASS
 
 ### 다음 단계
 
