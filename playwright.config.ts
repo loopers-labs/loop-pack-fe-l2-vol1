@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = process.env.PLAYWRIGHT_PORT ?? '3000';
+const PORT = process.env.PLAYWRIGHT_PORT ?? '3100';
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
@@ -23,7 +23,7 @@ export default defineConfig({
   webServer: {
     command: `node node_modules/next/dist/bin/next start -p ${PORT}`,
     url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     env: {
       APP_ORIGIN: BASE_URL,
     },

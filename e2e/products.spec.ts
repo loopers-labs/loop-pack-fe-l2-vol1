@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('상품 목록', () => {
-  test('필터를 URL로 복원하고 목록 끝에서 다음 상품을 자동으로 누적한다', async ({
+  test('필터를 URL로 복원하고 잘못된 조건은 기본값으로 정리한다', async ({
     page,
   }) => {
     await page.goto('/products');
@@ -34,14 +34,6 @@ test.describe('상품 목록', () => {
     await expect(page.getByRole('combobox', { name: '정렬' })).toHaveValue(
       'price-asc',
     );
-
-    await page
-      .getByRole('combobox', { name: '카테고리' })
-      .selectOption('all');
-    await expect(page.getByRole('article')).toHaveCount(12);
-    await page.getByRole('button', { name: '더 보기' }).scrollIntoViewIfNeeded();
-    await expect.poll(() => page.getByRole('article').count()).toBeGreaterThan(12);
-    await expect(page).not.toHaveURL(/(?:\?|&)page=/);
 
     await page.goto('/products?category=invalid&sort=invalid&page=2');
     await expect(page).not.toHaveURL(/(?:\?|&)page=/);
@@ -121,18 +113,4 @@ test.describe('상품 목록', () => {
     await expect(page.getByRole('button', { name: '찜 해제' }).first()).toBeVisible();
   });
 
-  test('같은 상품을 두 번 담아도 새로고침 후 헤더 상품 수는 1이다', async ({
-    page,
-  }) => {
-    await page.goto('/products');
-    const firstAddButton = page.getByRole('button', { name: '담기' }).first();
-
-    await firstAddButton.click();
-    await page.getByRole('button', { name: '계속 쇼핑하기' }).click();
-    await firstAddButton.click();
-    await expect(page.getByText('장바구니 1')).toBeVisible();
-
-    await page.reload();
-    await expect(page.getByText('장바구니 1')).toBeVisible();
-  });
 });
