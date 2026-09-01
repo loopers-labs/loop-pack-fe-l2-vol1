@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useLoginForm } from '@/features/auth-login/model/useLoginForm';
+import { track } from '@/analytics/logger';
 
 type Props = {
   redirect: string | null;
@@ -17,6 +19,12 @@ export function LoginForm({ redirect, expired }: Props) {
     isPending,
     errorMessage,
   } = useLoginForm({ redirect });
+
+  // 로그인 화면 진입 시점 1회만 기록한다.
+  useEffect(() => {
+    track('login_start', { from: redirect ?? 'direct' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <form className="week09-auth-form" onSubmit={handleSubmit}>
