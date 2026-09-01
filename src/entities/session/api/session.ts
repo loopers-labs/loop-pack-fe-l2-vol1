@@ -18,8 +18,16 @@ async function readErrorMessage(
   }
 }
 
-export async function getMe(): Promise<AuthUser> {
+const HTTP_UNAUTHORIZED = 401;
+
+// 헤더가 모든 페이지(보호 안 된 페이지 포함)에서 로그인 상태를 표시하는 데
+// 쓰기 때문에, "로그인 안 함"은 실패가 아니라 정상 값(null)으로 다룬다.
+// 그 외 실패(500 등)는 그대로 에러로 던진다.
+export async function getMe(): Promise<AuthUser | null> {
   const response = await fetch('/api/auth/me');
+  if (response.status === HTTP_UNAUTHORIZED) {
+    return null;
+  }
   if (!response.ok) {
     throw new ApiError(
       response.status,

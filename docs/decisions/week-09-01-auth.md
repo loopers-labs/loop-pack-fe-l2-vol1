@@ -10,7 +10,7 @@
 
 `CommerceLayout`(`src/app/(commerce)/layout.tsx`)을 async 서버 컴포넌트로 바꿔 `cookies()`로 세션 쿠키를 읽고, `src/app/api/_data/auth.ts`의 `readSessionToken()`을 **직접 함수로 재사용**한다. 서버 컴포넌트는 Node 런타임이라 `node:crypto`를 쓰는 이 함수를 그대로 import할 수 있고, 자기 자신의 `/api/auth/me`를 다시 fetch하는 왕복을 피할 수 있다. 얻은 유저 정보는 `queryClient.setQueryData(sessionQueries.me().queryKey, ...)`로 채워 `HydrationBoundary`를 통해 Header에 전달한다. 이렇게 하면 JS 실행 전에도 초기 HTML에 로그인 상태가 반영된다(깜빡임 없음).
 
-**성능 트레이드오프**: `cookies()` 호출은 그 세그먼트를 동적 렌더링으로 전환시킨다. `CommerceLayout` 하위의 홈·상품 목록 페이지가 정적 생성 대상에서 빠질 수 있어 7주차 INP 기준과 충돌할 가능성이 있다. 이 대가를 감수하고도 `CommerceLayout`에서 읽기로 한 이유는, 초기 HTML에 로그인 상태를 반영하는 게 이번 주 필수 요구사항이라 트레이드오프를 피할 방법이 없기 때문이다. 문제가 확인되면 `Header`를 별도 컴포넌트로 분리해 동적 렌더링 범위를 그 컴포넌트로만 좁힌다.
+**성능 트레이드오프 — 확인 결과 추가 비용 없음**: `cookies()` 호출은 원칙적으로 그 세그먼트를 동적 렌더링으로 전환시킨다. 다만 `pnpm build` 결과를 `cookies()` 추가 전후로 비교해보니, `/`와 `/products`는 **이 변경 이전부터 이미 `ƒ Dynamic`**이었다(`searchParams`를 쓰는 기존 코드 때문으로 보인다). 즉 `CommerceLayout`에 `cookies()`를 추가해도 정적 생성 대상에서 새로 빠지는 라우트가 없어, 우려했던 7주차 INP 기준과의 충돌은 실제로는 발생하지 않았다. `pnpm start`로 띄운 실제 서버에 로그인 계정(`looper1@loopers.dev`)으로 로그인해 발급받은 세션 쿠키로 `/`를 요청한 결과, 초기 HTML에 `루퍼1님`이 깜빡임 없이 바로 찍히는 것도 확인했다.
 
 ## `proxy.ts` 보호 경로 가드
 
