@@ -24,9 +24,14 @@ export default async function Page({ searchParams }: Props) {
 
   // 이미 로그인한 사람이 /login에 직접 들어오면 폼을 보여줄 필요가 없다.
   // 서버에서 바로 리다이렉트시켜 폼이 잠깐이라도 보이는 깜빡임을 없앤다.
+  //
+  // 단, reason=expired로 왔을 땐 이 리다이렉트를 하지 않는다. readSessionToken은
+  // scenario=expired 시뮬레이션을 모르고 원시 토큰만 보므로, API가 이미 401로
+  // "무효"라고 판정한 세션을 여기서 "유효하다"고 뒤집어 /orders로 다시 돌려보내면
+  // /orders → 401 → /login?reason=expired → /orders 무한 루프가 된다.
   const cookieStore = await cookies();
   const user = readSessionToken(cookieStore.get(SESSION_COOKIE)?.value);
-  if (user) {
+  if (user && params.reason !== 'expired') {
     redirect(getSafeRedirectPath(params.redirect ?? null));
   }
 
