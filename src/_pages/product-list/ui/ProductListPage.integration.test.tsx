@@ -2,6 +2,7 @@ import '@/test/setup/msw'
 import { HttpResponse, delay, http } from 'msw'
 import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { UrlUpdateEvent } from 'nuqs/adapters/testing'
 import {
   defaultProductListResponse,
   testProducts,
@@ -151,8 +152,45 @@ describe('상품 목록 상태', () => {
 })
 
 describe('상품 목록 조작', () => {
+  it('초기 URL 조건을 필터와 요청 및 현재 페이지로 복원한다', async () => {
+    let requestedUrl: URL | undefined
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        requestedUrl = new URL(request.url)
+        return HttpResponse.json({
+          ...defaultProductListResponse,
+          products: [testProducts[1]],
+          totalCount: 24,
+          page: 2,
+          pageSize: 12,
+        })
+      }),
+    )
+
+    renderProductList({
+      searchParams: '?q=니트&category=fashion&sort=price-desc&page=2',
+    })
+
+    await screen.findByRole('heading', { name: testProducts[1].name })
+    expect(screen.getByRole('textbox', { name: '검색' })).toHaveValue('니트')
+    expect(screen.getByRole('combobox', { name: '카테고리' })).toHaveValue(
+      'fashion',
+    )
+    expect(screen.getByRole('combobox', { name: '정렬' })).toHaveValue(
+      'price-desc',
+    )
+    expect(
+      screen.getByRole('button', { name: '2', current: 'page' }),
+    ).toBeDisabled()
+    expect(requestedUrl?.searchParams.get('q')).toBe('니트')
+    expect(requestedUrl?.searchParams.get('category')).toBe('fashion')
+    expect(requestedUrl?.searchParams.get('sort')).toBe('price-desc')
+    expect(requestedUrl?.searchParams.get('page')).toBe('2')
+  })
+
   it('카테고리를 바꾸면 1페이지 조건으로 요청하고 새 목록을 표시한다', async () => {
     const requestedUrls: string[] = []
+    const urlUpdates: UrlUpdateEvent[] = []
     server.use(
       http.get(PRODUCTS_ENDPOINT, ({ request }) => {
         requestedUrls.push(request.url)
@@ -166,7 +204,10 @@ describe('상품 목록 조작', () => {
         })
       }),
     )
-    const { user } = renderProductList({ searchParams: '?page=2' })
+    const { user } = renderProductList({
+      searchParams: '?page=2',
+      onUrlUpdate: (event) => urlUpdates.push(event),
+    })
     await screen.findByRole('heading', { name: testProducts[0].name })
 
     await user.selectOptions(
@@ -181,6 +222,11 @@ describe('상품 목록 조작', () => {
     expect(lastRequest.searchParams.get('category')).toBe('fashion')
     expect(lastRequest.searchParams.get('sort')).toBe('latest')
     expect(lastRequest.searchParams.get('page')).toBe('1')
+    const lastUrlUpdate = urlUpdates.at(-1)
+    expect(lastUrlUpdate?.searchParams.get('category')).toBe('fashion')
+    expect(lastUrlUpdate?.searchParams.get('page')).toBeNull()
+    expect(lastUrlUpdate?.searchParams.get('sort')).toBeNull()
+    expect(lastUrlUpdate?.options.history).toBe('push')
     expect(
       screen.queryByRole('heading', { name: testProducts[0].name }),
     ).not.toBeInTheDocument()

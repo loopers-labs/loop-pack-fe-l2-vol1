@@ -7,9 +7,7 @@ const sortSelect = (page: Page) => page.getByRole('combobox', { name: '정렬' }
 
 const productHeadings = (page: Page) => page.getByRole('heading', { level: 3 })
 
-test('필터 조작이 실제 URL에 반영되고 그 URL로 재진입하면 목록 상태가 복원된다', async ({
-  page,
-}) => {
+test('대표 필터 URL로 재진입하면 목록 상태가 복원된다', async ({ page }) => {
   await page.goto('/products')
   await expect(page.getByRole('heading', { name: '상품 목록' })).toBeVisible()
 
@@ -27,12 +25,6 @@ test('필터 조작이 실제 URL에 반영되고 그 URL로 재진입하면 목
   await expect(categorySelect(page)).toHaveValue('fashion')
   await expect(sortSelect(page)).toHaveValue('price-asc')
   await expect(page.getByText('총 6개')).toBeVisible()
-  await expect(productHeadings(page)).not.toHaveCount(0)
-
-  await page.goto('/products?page=2')
-  await categorySelect(page).selectOption('fashion')
-  await expect(page).toHaveURL(/category=fashion/)
-  await expect(page).not.toHaveURL(/page=2/)
   await expect(productHeadings(page)).not.toHaveCount(0)
 })
 
