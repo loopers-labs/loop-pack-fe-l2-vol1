@@ -121,6 +121,17 @@ describe('헤더 개수와 목록 담기', () => {
  * router.refresh() 로 서버가 트리를 다시 그려야 하는데 jsdom 에는 서버가 없다 —
  * 그 사슬은 4단계 E2E 가 지난다.
  */
+describe('장바구니 진입', () => {
+  // 담아둔 것을 보고 주문하는 유일한 진입점이다. 링크가 아니면 주소를 직접 쳐야만 갈 수 있다.
+  it('장바구니 개수를 누르면 주문서로 간다', () => {
+    useCartStore.setState({ cart: ['p1', 'p2'] });
+
+    renderWithProviders(<Header />);
+
+    expect(menu().getByRole('link', { name: '장바구니 2' })).toHaveAttribute('href', '/order');
+  });
+});
+
 describe('로그인 상태에 따른 메뉴', () => {
   it('로그인해 있으면 마이페이지와 로그아웃을 보고 로그인 링크는 사라진다', () => {
     renderWithProviders(<Header isLoggedIn />);
