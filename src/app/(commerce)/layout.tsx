@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { CommerceAnalytics } from '@/analytics/CommerceAnalytics';
 import { readSessionToken } from '@/app/api/_data/auth';
 import { SESSION_COOKIE } from '@/app/api/_data/auth-cookies';
 import { CartCount } from '@/entities/cart';
@@ -23,22 +24,24 @@ export default async function CommerceLayout({
 
   return (
     <SessionProvider initialUser={initialUser}>
-      <main className="week05-page">
-        <header className="week05-header">
-          <Link href="/">Commerce</Link>
-          <div className="week05-header-actions">
-            <nav aria-label="주요 메뉴">
-              <Link href="/products">상품</Link>
-            </nav>
-            <WishlistCount />
-            <Link href="/cart">
-              <CartCount />
-            </Link>
-            <SessionMenu />
-          </div>
-        </header>
-        {children}
-      </main>
+      <CommerceAnalytics initialUserId={initialUser?.id ?? null}>
+        <main className="week05-page">
+          <header className="week05-header">
+            <Link href="/">Commerce</Link>
+            <div className="week05-header-actions">
+              <nav aria-label="주요 메뉴">
+                <Link href="/products">상품</Link>
+              </nav>
+              <WishlistCount />
+              <Link href="/cart">
+                <CartCount />
+              </Link>
+              <SessionMenu />
+            </div>
+          </header>
+          {children}
+        </main>
+      </CommerceAnalytics>
     </SessionProvider>
   );
 }
