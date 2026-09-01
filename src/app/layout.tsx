@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import type { ReactNode } from 'react'
 
+import { getAuthSession } from '@/app/_auth/AuthSession'
 import { getAppOrigin } from '@/shared/config/getAppOrigin'
 import { createSiteMetadata } from '@/shared/config/SiteMetadata'
 import { Header } from '@/widgets/header/ui/Header'
@@ -22,15 +23,17 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = createSiteMetadata(getAppOrigin())
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode
 }>) {
+  const initialSession = await getAuthSession()
+
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <Providers>
+        <Providers initialSession={initialSession}>
           <Header />
           {children}
         </Providers>
