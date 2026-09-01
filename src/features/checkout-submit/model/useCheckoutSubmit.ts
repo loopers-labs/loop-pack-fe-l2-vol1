@@ -6,6 +6,7 @@ import { createOrder } from '@/entities/order/api/orders';
 import { ordersQueries } from '@/entities/order/api/ordersQueries';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { ApiError } from '@/shared/api';
+import { track } from '@/analytics/logger';
 
 export function useCheckoutSubmit() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export function useCheckoutSubmit() {
     mutationFn: () =>
       createOrder(items.map((productId) => ({ productId, quantity: 1 }))),
     onSuccess: () => {
+      track('order_complete', { productIds: items });
       items.forEach((productId) => removeItem(productId));
       void queryClient.invalidateQueries({ queryKey: ordersQueries.all() });
       router.push('/orders');
