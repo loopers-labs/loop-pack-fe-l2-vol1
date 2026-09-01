@@ -14,6 +14,9 @@ export default function SessionArea({ user }: { user: SessionUser | null }) {
 
   return (
     <>
+      <Link href="/orders" prefetch={false}>
+        주문 내역
+      </Link>
       <span data-testid="session-user">{user.name}님</span>
       <LogoutButton />
     </>
