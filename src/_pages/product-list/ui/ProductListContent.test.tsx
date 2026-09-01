@@ -223,6 +223,53 @@ describe('ProductListContent', () => {
     expect(productNames).toEqual(['저가 상품', '동일 가격 상품', '고가 상품']);
   });
 
+  it('필터 갱신이 실패하면 기존 목록을 유지하고 다시 시도해 새 목록으로 복구한다', async () => {
+    const initialProduct = makeProduct('initial', '기존 상품');
+    const recoveredProduct = makeProduct('fashion', '복구된 패션 상품');
+    let fashionRequestCount = 0;
+
+    server.use(
+      http.get('*/api/products', ({ request }) => {
+        const category = new URL(request.url).searchParams.get('category');
+
+        if (category === 'fashion') {
+          fashionRequestCount += 1;
+          if (fashionRequestCount === 1) {
+            return HttpResponse.json({ message: '서버 오류' }, { status: 500 });
+          }
+          return HttpResponse.json(makeResponse([recoveredProduct]));
+        }
+
+        return HttpResponse.json(makeResponse([initialProduct]));
+      }),
+    );
+    const user = userEvent.setup();
+
+    renderProductList();
+    await screen.findByRole('heading', { name: '기존 상품' });
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: '카테고리' }),
+      'fashion',
+    );
+
+    expect(
+      await screen.findByText('목록을 갱신하지 못했습니다.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '기존 상품' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '다시 시도' }));
+
+    expect(
+      await screen.findByRole('heading', { name: '복구된 패션 상품' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: '기존 상품' }),
+    ).not.toBeInTheDocument();
+    expect(fashionRequestCount).toBe(2);
+  });
+
   it('검색하면 검색어와 1페이지를 요청하고 검색 결과만 보여준다', async () => {
     const initialProduct = makeProduct('initial', '기존 상품');
     const searchResult = makeProduct('search-result', '검색된 셔츠');

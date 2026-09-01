@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import { useInfiniteProducts } from '@/entities/product/model/useInfiniteProducts';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
@@ -52,6 +53,23 @@ interface ProductGridProps {
   isStale: boolean;
 }
 
+function ProductListPrice({ product }: { product: Product }) {
+  const discount = getProductDiscount(product);
+
+  return (
+    <>
+      <strong className="mt-2 block text-base font-bold tracking-[-0.02em] text-text">
+        {formatWon(product.price)}
+      </strong>
+      {discount && (
+        <span className="mt-0.5 block text-xs text-text-caption line-through">
+          {formatWon(discount.originalPrice)}
+        </span>
+      )}
+    </>
+  );
+}
+
 function ProductGrid({
   products,
   totalCount,
@@ -96,14 +114,7 @@ function ProductGrid({
                   <h2 className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-text transition-colors group-hover:text-text-secondary sm:text-[15px]">
                     {product.name}
                   </h2>
-                  <strong className="mt-2 block text-base font-bold tracking-[-0.02em] text-text">
-                    {formatWon(product.price)}
-                  </strong>
-                  {product.originalPrice && (
-                    <span className="mt-0.5 block text-xs text-text-caption line-through">
-                      {formatWon(product.originalPrice)}
-                    </span>
-                  )}
+                  <ProductListPrice product={product} />
                 </div>
               </Link>
               <ProductActions product={product} />
@@ -127,6 +138,7 @@ export function ProductListContent() {
     isFetchingNextPage,
     isFetchNextPageError,
     isPlaceholderData,
+    isShowingFallback,
     hasNextPage,
     refetch,
     products,
@@ -179,8 +191,6 @@ export function ProductListContent() {
   if (!data) return <ProductListSkeleton />;
 
   const firstPage = data.pages[0];
-  const isShowingFallback = isError && isPlaceholderData;
-
   return (
     <main className="min-h-screen px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
       <ProductListIntro />
@@ -248,7 +258,7 @@ export function ProductListContent() {
         products={products}
         totalCount={firstPage.totalCount}
         isRefreshing={isFetching && !isFetchingNextPage}
-        isStale={isPlaceholderData}
+        isStale={isPlaceholderData || isShowingFallback}
       />
       {products.length > 0 && (
         <InfiniteScrollTrigger
