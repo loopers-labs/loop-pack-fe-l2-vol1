@@ -5,6 +5,10 @@ import { authAccount } from "./authState";
 const appPort = process.env.PORT ?? "3000";
 const appBaseURL = `http://127.0.0.1:${appPort}`;
 const scenarioCookieName = "scenario";
+const initialHtmlSessionRoutes = [
+  { pathname: "/order", label: "주문서" },
+  { pathname: "/orders", label: "주문 내역" },
+] as const;
 
 async function login(contextRequest: APIRequestContext) {
   const response = await contextRequest.post(`${appBaseURL}/api/auth/login`, {
@@ -15,33 +19,21 @@ async function login(contextRequest: APIRequestContext) {
 }
 
 test.describe("인증 초기 HTML", () => {
-  test("세션 쿠키가 있으면 JavaScript 실행 전에도 주문서 Header에 사용자 이름을 보여준다", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const page = await context.newPage();
+  for (const { pathname, label } of initialHtmlSessionRoutes) {
+    test(`세션 쿠키가 있으면 JavaScript 실행 전에도 ${label} Header에 사용자 이름을 보여준다`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({ javaScriptEnabled: false });
+      const page = await context.newPage();
 
-    await login(context.request);
-    await page.goto(`${appBaseURL}/order`);
+      await login(context.request);
+      await page.goto(`${appBaseURL}${pathname}`);
 
-    await expect(page.getByText("루퍼1님")).toBeVisible();
+      await expect(page.getByText("루퍼1님")).toBeVisible();
 
-    await context.close();
-  });
-
-  test("세션 쿠키가 있으면 JavaScript 실행 전에도 주문 내역 Header에 사용자 이름을 보여준다", async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const page = await context.newPage();
-
-    await login(context.request);
-    await page.goto(`${appBaseURL}/orders`);
-
-    await expect(page.getByText("루퍼1님")).toBeVisible();
-
-    await context.close();
-  });
+      await context.close();
+    });
+  }
 });
 
 test.describe("로그인 보호 경로", () => {
