@@ -21,6 +21,7 @@
     "build:storybook": "storybook build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "analytics:funnel": "node scripts/analytics/funnel.mjs",
     "architecture:check": "node scripts/architecture/review.mjs",
     "architecture:check:staged": "node scripts/architecture/review.mjs --staged",
     "architecture:evidence": "node scripts/architecture/review.mjs --json",
