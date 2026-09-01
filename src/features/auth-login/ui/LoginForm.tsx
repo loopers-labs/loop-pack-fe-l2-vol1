@@ -2,7 +2,12 @@
 
 import { useLoginForm } from '@/features/auth-login/model/useLoginForm';
 
-export function LoginForm() {
+type Props = {
+  redirect: string | null;
+  expired: boolean;
+};
+
+export function LoginForm({ redirect, expired }: Props) {
   const {
     email,
     setEmail,
@@ -11,12 +16,11 @@ export function LoginForm() {
     handleSubmit,
     isPending,
     errorMessage,
-    expiredNotice,
-  } = useLoginForm();
+  } = useLoginForm({ redirect });
 
   return (
     <form className="week09-auth-form" onSubmit={handleSubmit}>
-      {expiredNotice && (
+      {expired && (
         <p className="week05-error" role="status">
           세션이 만료되었습니다. 다시 로그인해주세요.
         </p>

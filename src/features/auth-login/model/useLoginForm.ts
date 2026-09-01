@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useQueryState } from 'nuqs';
 import { login } from '@/entities/session/api/session';
 import {
   sessionQueries,
@@ -12,11 +11,13 @@ import {
 import { getSafeRedirectPath } from '@/features/auth-login/model/redirect';
 import { ApiError } from '@/shared/api';
 
-export function useLoginForm() {
+type Params = {
+  redirect: string | null;
+};
+
+export function useLoginForm({ redirect }: Params) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [redirect] = useQueryState('redirect');
-  const [reason] = useQueryState('reason');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,6 +47,5 @@ export function useLoginForm() {
     handleSubmit,
     isPending: mutation.isPending,
     errorMessage,
-    expiredNotice: reason === 'expired',
   };
 }
