@@ -99,7 +99,7 @@ export function renderProductListHarness({
 export function resetProductListHarnessState() {
   activeQueryClient?.clear()
   activeQueryClient = undefined
-  localStorage.clear()
+  window.localStorage.clear()
   useCartStore.setState({ items: {} })
   useWishlistStore.setState({ items: {} })
 }
