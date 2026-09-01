@@ -16,6 +16,12 @@ const eslintConfig = defineConfig([
     // Generated/build artifacts & cache
     "coverage/**",
     ".eslintcache",
+    // 9주차 스타터가 제공한 이벤트 로거. 과제가 "직접 만들지 마세요"라고 못박은 파일이라
+    // 이 레포의 규칙을 적용할 대상이 아니다. consoleProvider 는 콘솔에 찍는 것이 그 파일의
+    // 목적이라 no-console 과 애초에 맞지 않고, 세 파일 모두 FSD 레이어 밖에 있다.
+    // 계측을 붙이는 우리 코드는 features·_pages 에 들어가므로 그대로 검사된다.
+    // 이 폴더에 우리 파일을 새로 만들면 조용히 검사에서 빠진다 — 그러지 않는다.
+    "src/analytics/**",
   ]),
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
@@ -62,6 +68,19 @@ const eslintConfig = defineConfig([
     settings: {
       "boundaries/elements": [
         { type: "app", pattern: "src/app" },
+        // src/proxy.ts 는 Next 16 의 요청 경계 가드다. Next 가 이 경로를 강제해서 옮길 수 없는데
+        // src/ 최상위 파일이라 어떤 폴더 패턴에도 걸리지 않아 no-unknown-files 로 드러났다.
+        // 의존 순서상 라우팅과 같은 최상위여서 app 으로 잡는다 — 실제 import 도
+        // app(auth-cookies)과 shared(routes) 뿐이고, 이제 이 파일이 하위 레이어를 건너뛰어
+        // 무언가를 끌어오면 app 폴더의 파일과 똑같이 걸린다. 같은 의존 방향을 갖는
+        // proxy.test.ts 도 이 패턴에 함께 걸린다.
+        //
+        // mode: "file" 은 v7 에서 deprecated 다(린트마다 경고 한 줄이 찍힌다). 그런데도 쓰는 이유는
+        // 대체재가 이 자리를 못 채우기 때문이다. element 패턴은 폴더만 잡고, 후속 API 인
+        // boundaries/files 는 파일에 category 만 붙일 뿐 element type 을 주지 않아
+        // from.type 이 비어 dependencies 의 모든 정책이 어긋난다(실제로 넣어 보고 확인했다).
+        // 즉 지금 이 파일에 의존 방향을 강제할 수 있는 방법은 이것뿐이다.
+        { type: "app", pattern: "src/proxy*.ts", mode: "file" },
         { type: "pages", pattern: "src/_pages/*", capture: ["slice"] },
         { type: "widgets", pattern: "src/widgets/*", capture: ["slice"] },
         { type: "features", pattern: "src/features/*", capture: ["slice"] },
