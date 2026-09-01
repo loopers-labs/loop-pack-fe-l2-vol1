@@ -1,5 +1,7 @@
 'use client'
 
+import '@/analytics/client'
+
 import {
   QueryClientProvider,
   QueryErrorResetBoundary,
