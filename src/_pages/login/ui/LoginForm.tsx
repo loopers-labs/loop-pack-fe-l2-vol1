@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { login, type LoginCredentials } from '../api/login'
 import { errorMessageOf } from '@/shared/api/http'
+import { replaceDocument } from '@/shared/lib/documentNavigation'
 
 interface LoginFormProps {
   // 서버 페이지에서 safeNextPath()를 거친 값이다. 검증 책임은 서버 한 곳에 둔다.
@@ -31,7 +32,7 @@ export default function LoginForm({ nextPath, expired }: LoginFormProps) {
       // 여기서 한다. 만료 화면에 올 때 이미 문서 이동을 거쳐 메모리 상태를 잃은 뒤라
       // 문서 이동을 한 번 더 해도 추가로 잃는 상태가 없다.
       if (expired) {
-        window.location.replace(nextPath)
+        replaceDocument(nextPath)
         return
       }
 

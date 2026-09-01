@@ -54,18 +54,18 @@ export const authStates = {
 }
 
 // 실패 응답이다. server.use()에 넘겨 쓴다.
+// 메시지를 인자로 받는 이유는, 화면이 서버 메시지를 그대로 보여주는지 확인할 때
+// 테스트가 준 문구와 화면의 문구를 비교하기 위해서다. 문구를 테스트에 하드코딩하면
+// 서버 문구가 바뀔 때 앱이 아니라 테스트가 깨진다.
 export const authFailures = {
   // 자격 증명 불일치. 로그인 폼이 인라인으로 받는 401이다.
-  loginRejected: () =>
+  loginRejected: (message = '이메일 또는 비밀번호를 확인해주세요.') =>
     http.post('*/api/auth/login', () =>
-      HttpResponse.json(
-        { message: '이메일 또는 비밀번호를 확인해주세요.' },
-        { status: 401 },
-      ),
+      HttpResponse.json({ message }, { status: 401 }),
     ),
 
-  loginServerError: () =>
+  loginServerError: (message = '로그인에 실패했습니다.') =>
     http.post('*/api/auth/login', () =>
-      HttpResponse.json({ message: '로그인에 실패했습니다.' }, { status: 500 }),
+      HttpResponse.json({ message }, { status: 500 }),
     ),
 }
