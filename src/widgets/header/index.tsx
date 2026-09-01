@@ -17,9 +17,10 @@ export function Header() {
       <nav aria-label="주요 메뉴">
         <Link href="/products">상품</Link>
         <span>위시리스트 {wishlistCount}</span>
-        <span>장바구니 {cartCount}</span>
+        <Link href="/orders/new">장바구니 {cartCount}</Link>
         {user ? (
           <>
+            <Link href="/orders">주문내역</Link>
             <span>{user.name}님</span>
             <LogoutButton />
           </>
