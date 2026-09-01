@@ -43,28 +43,27 @@ class ApiClient implements ApiClientOptions {
   }
 
   /**
-   * 본문이 오는 POST. 응답 본문이 계약인 요청에 쓴다.
+   * POST 요청.
    *
    * 반환 타입에 null 을 섞지 않는다. 섞으면 본문이 반드시 오는 API 의 호출부까지 전부
    * null 가드를 쓰게 되고, 그 가드는 api 함수를 "요청 + 계약 검사" 두 가지 일로 만든다.
-   * 본문이 없는 응답은 여기서 계약 위반으로 보고 실패시킨다.
+   *
+   * 본문이 오는지는 엔드포인트마다 정해져 있고 호출부가 타입 인자로 말한다. 기본은 void 라
+   * 로그아웃처럼 204 를 주는 API 는 그냥 post(endpoint) 로 부르면 Promise<void> 가 된다.
+   * 204 에서는 res.json() 이 빈 본문에 파싱 에러를 내므로 여기서 갈라 두고, 돌려줄 것이
+   * 없으니 undefined 가 곧 void 다.
+   *
+   * 기본값이 void 인 덕에 본문이 오는 API 에서 타입 인자를 빠뜨리면 호출부가 void 를 받아
+   * 그 값을 쓰는 순간 타입 에러가 난다 — 조용히 통과하지 않는다.
    */
-  async post<T>(endpoint: string, body?: unknown): Promise<T> {
+  async post<T = void>(endpoint: string, body?: unknown): Promise<T> {
     const res = await this.request('POST', endpoint, body);
 
     if (res.status === 204) {
-      throw new HttpError(res.status, `POST ${endpoint} 응답에 본문이 없습니다.`);
+      return undefined as T;
     }
 
     return res.json() as Promise<T>;
-  }
-
-  /**
-   * 본문이 오지 않는 POST(204). 로그아웃처럼 결과만 필요한 요청에 쓴다.
-   * 실패는 request 가 HttpError 로 던지므로, 반환값 없이 끝나면 성공한 것이다.
-   */
-  async postNoContent(endpoint: string, body?: unknown): Promise<void> {
-    await this.request('POST', endpoint, body);
   }
 
   /**

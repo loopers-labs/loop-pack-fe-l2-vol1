@@ -1,9 +1,10 @@
 'use client';
 
-import { apiClient } from '@/shared/api/apiClient';
 import { forgetUser } from '@/shared/lib/analytics/identity';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+
+import { requestLogout } from '../api/logoutRequest';
 
 /**
  * 로그아웃과 그 계측.
@@ -21,7 +22,7 @@ export function useLogout() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: () => apiClient.postNoContent('/auth/logout'),
+    mutationFn: requestLogout,
     onSuccess: () => {
       forgetUser();
       // 서버 컴포넌트가 세션 없는 상태로 헤더를 다시 그리게 한다.
