@@ -1,4 +1,5 @@
 import { readServerSession, sessionUserOf } from '@/app/_session/currentUser'
+import AnalyticsBoundary from './_analytics/AnalyticsBoundary'
 import { Header } from '@/widgets/header'
 
 // 세션을 읽는 범위다. 로그인 상태를 보여주는 화면만 이 그룹에 둔다.
@@ -13,6 +14,7 @@ export default async function StorefrontLayout({
 
   return (
     <>
+      <AnalyticsBoundary user={user} />
       <Header session={user} />
       {children}
     </>

@@ -11,10 +11,17 @@ import { server } from '@/test/msw/server'
 import { renderWithProviders } from '@/test/renderWithProviders'
 import { resetRouterMock, router } from '@/test/nextRouterMock'
 import { replaceDocument } from '@/shared/lib/documentNavigation'
+import { identifyUser, trackLoginSuccess } from '@/analytics/events'
 
 vi.mock('next/navigation', () => import('@/test/nextRouterMock'))
 vi.mock('@/shared/lib/documentNavigation', () => ({
   replaceDocument: vi.fn(),
+}))
+vi.mock('@/analytics/events', () => ({
+  identifyUser: vi.fn(),
+  trackLoginStart: vi.fn(),
+  trackLoginSuccess: vi.fn(),
+  trackLoginFail: vi.fn(),
 }))
 
 const fillAndSubmit = async () => {
@@ -28,12 +35,16 @@ describe('LoginForm', () => {
   beforeEach(() => {
     resetRouterMock()
     vi.mocked(replaceDocument).mockReset()
+    vi.mocked(identifyUser).mockReset()
+    vi.mocked(trackLoginSuccess).mockReset()
   })
 
   it('서버가 준 로그인 실패 메시지를 alert로 보여주고 이동하지 않는다', async () => {
     const serverMessage = '테스트가 정한 자격 증명 오류'
     server.use(authFailures.loginRejected(serverMessage))
-    renderWithProviders(<LoginForm nextPath="/orders" expired={false} />)
+    renderWithProviders(
+      <LoginForm nextPath="/orders" expired={false} from="/orders" />,
+    )
 
     await fillAndSubmit()
 
@@ -44,17 +55,24 @@ describe('LoginForm', () => {
   })
 
   it('일반 로그인 성공은 서버 재렌더만 요청해 메모리 상태를 보존한다', async () => {
-    renderWithProviders(<LoginForm nextPath="/orders" expired={false} />)
+    renderWithProviders(
+      <LoginForm nextPath="/orders" expired={false} from="/orders" />,
+    )
 
     await fillAndSubmit()
 
+    expect(identifyUser).toHaveBeenCalledWith(testAccount.id)
+    expect(trackLoginSuccess).toHaveBeenCalledWith({ from: '/orders' })
+    expect(vi.mocked(identifyUser).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(trackLoginSuccess).mock.invocationCallOrder[0],
+    )
     expect(router.refresh).toHaveBeenCalledOnce()
     expect(router.replace).not.toHaveBeenCalled()
     expect(replaceDocument).not.toHaveBeenCalled()
   })
 
   it('만료 후 재로그인은 검증된 원래 경로로 문서 이동한다', async () => {
-    renderWithProviders(<LoginForm nextPath="/orders" expired />)
+    renderWithProviders(<LoginForm nextPath="/orders" expired from="expired" />)
 
     await fillAndSubmit()
 

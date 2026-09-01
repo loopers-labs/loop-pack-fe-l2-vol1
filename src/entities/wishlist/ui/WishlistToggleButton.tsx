@@ -1,5 +1,6 @@
 'use client'
 
+import { trackWishlistAdd } from '@/analytics/events'
 import {
   useIsInWishlist,
   useToggleWishlist,
@@ -23,7 +24,10 @@ export default function WishlistToggleButton({
       type="button"
       aria-label={`${productName} wishlist`}
       aria-pressed={isInWishlist}
-      onClick={() => toggleWishlist(productId)}
+      onClick={() => {
+        toggleWishlist(productId)
+        if (!isInWishlist) trackWishlistAdd({ productId })
+      }}
     >
       {isInWishlist ? 'Remove' : 'Wishlist'}
     </button>

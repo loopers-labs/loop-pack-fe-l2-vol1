@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createOrder, ORDERS_QUERY_KEY, type Order } from '../api/orders'
+import { trackOrderComplete, trackOrderStart } from '@/analytics/events'
 import { resetCart, useCartIds } from '@/entities/cart/model/cart'
 import { errorMessageOf } from '@/shared/api/http'
 
@@ -17,13 +18,21 @@ export default function OrderForm() {
   const queryClient = useQueryClient()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [placed, setPlaced] = useState<Order | null>(null)
+  const started = useRef(false)
 
   const quantityOf = (productId: string) => quantities[productId] ?? 1
+
+  useEffect(() => {
+    if (started.current) return
+    started.current = true
+    trackOrderStart({ productIds: cartIds, itemCount: cartIds.length })
+  }, [cartIds])
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: (items: { productId: string; quantity: number }[]) =>
       createOrder(items),
     onSuccess: ({ order }) => {
+      trackOrderComplete({ orderId: order.id, itemCount: order.items.length })
       setPlaced(order)
       // 완료된 항목을 장바구니에서 지운다. 남겨두면 같은 주문을 다시 제출할 수 있다.
       resetCart()

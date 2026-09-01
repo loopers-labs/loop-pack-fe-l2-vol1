@@ -41,5 +41,8 @@ export default async function LoginPage({
     redirect(nextPath)
   }
 
-  return <LoginForm nextPath={nextPath} expired={expired} />
+  let from = nextPath === '/' ? 'direct' : nextPath
+  if (expired) from = 'expired'
+
+  return <LoginForm nextPath={nextPath} expired={expired} from={from} />
 }
