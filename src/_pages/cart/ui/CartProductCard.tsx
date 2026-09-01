@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
+import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import type { Product } from '@/entities/product/model/types';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { formatWon } from '@/shared/lib/format';
@@ -14,6 +15,7 @@ export function CartProductCard({ product }: CartProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
   const isWished = useWishlistStore((state) => state.ids.has(product.id));
   const toggleWishlist = useWishlistStore((state) => state.toggle);
+  const discount = getProductDiscount(product);
 
   return (
     <article className="group min-w-0">
@@ -39,9 +41,9 @@ export function CartProductCard({ product }: CartProductCardProps) {
           <strong className="mt-2 block text-base font-bold tabular-nums tracking-[-0.02em] text-text">
             {formatWon(product.price)}
           </strong>
-          {product.originalPrice && (
+          {discount && (
             <span className="mt-0.5 block text-xs tabular-nums text-text-caption line-through">
-              {formatWon(product.originalPrice)}
+              {formatWon(discount.originalPrice)}
             </span>
           )}
         </div>

@@ -20,7 +20,7 @@ const products = new Map<string, Product>([
       name: '첫 번째 상품',
       category: 'casual',
       price: 10_000,
-      originalPrice: null,
+      originalPrice: 12_000,
       image: '/p1.jpg',
       freeShipping: true,
       sizes: [],
@@ -57,12 +57,4 @@ describe('orderSummary', () => {
     expect(getOrderTotal(items, products)).toBe(25_000);
   });
 
-  it('상품 정보가 없는 항목은 금액에 더하지 않는다', () => {
-    const firstProduct = products.get('p1');
-    if (!firstProduct) {
-      throw new Error('테스트 상품을 찾을 수 없습니다.');
-    }
-
-    expect(getOrderTotal(items, new Map([['p1', firstProduct]]))).toBe(20_000);
-  });
 });

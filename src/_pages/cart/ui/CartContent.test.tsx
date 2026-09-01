@@ -3,7 +3,7 @@
 import '@/test/setupDom';
 import '@/test/setupMsw';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -86,88 +86,52 @@ describe('CartContent', () => {
     );
   });
 
-  it('다음 페이지를 불러와 기존 상품 아래에 누적한다', async () => {
-    const firstProduct = productListFixture.products[0];
-    const secondProduct = {
-      ...firstProduct,
-      id: 'test-product-2',
-      name: '두 번째 테스트 상품',
+  it('할인 상품의 가격 정보와 전체 할인액을 장바구니에 표시한다', async () => {
+    const discountedProduct = {
+      ...productListFixture.products[0],
+      id: 'discounted-product',
+      name: '할인 테스트 상품',
+      price: 138_000,
+      originalPrice: 158_000,
+    };
+    const discountedResponse: ProductListResponse = {
+      ...productListFixture,
+      products: [discountedProduct],
     };
 
     server.use(
       http.get('*/api/products', ({ request }) => {
-        const page = Number(new URL(request.url).searchParams.get('page'));
-        const response: ProductListResponse = {
-          ...productListFixture,
-          products: page === 2 ? [secondProduct] : [firstProduct],
-          page,
-          pageSize: 1,
-          totalCount: 2,
-        };
-        return HttpResponse.json(response);
+        const id = new URL(request.url).searchParams.get('id');
+        if (id) return HttpResponse.json(discountedProduct);
+        return HttpResponse.json(discountedResponse);
       }),
     );
     const user = userEvent.setup();
     renderCart();
 
-    await screen.findByRole('heading', { name: firstProduct.name });
-    await user.click(screen.getByRole('button', { name: '더 보기' }));
-
-    expect(
-      await screen.findByRole('heading', { name: secondProduct.name }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: firstProduct.name }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('모든 상품을 확인했어요.')).toBeInTheDocument();
-  });
-
-  it('다음 페이지가 실패해도 기존 상품을 유지하고 재시도한다', async () => {
-    const firstProduct = productListFixture.products[0];
-    const recoveredProduct = {
-      ...firstProduct,
-      id: 'recovered-product',
-      name: '재시도로 불러온 상품',
-    };
-    let secondPageRequests = 0;
-
-    server.use(
-      http.get('*/api/products', ({ request }) => {
-        const page = Number(new URL(request.url).searchParams.get('page'));
-        if (page === 2) {
-          secondPageRequests += 1;
-          if (secondPageRequests === 1) {
-            return HttpResponse.json({ message: '서버 오류' }, { status: 500 });
-          }
-        }
-
-        const response: ProductListResponse = {
-          ...productListFixture,
-          products: page === 2 ? [recoveredProduct] : [firstProduct],
-          page,
-          pageSize: 1,
-          totalCount: 2,
-        };
-        return HttpResponse.json(response);
+    await user.click(
+      await screen.findByRole('button', {
+        name: `${discountedProduct.name} 장바구니에 담기`,
       }),
     );
-    const user = userEvent.setup();
-    renderCart();
 
-    await screen.findByRole('heading', { name: firstProduct.name });
-    await user.click(screen.getByRole('button', { name: '더 보기' }));
+    const itemRow = await screen.findByRole('listitem');
+    const paymentSummary = screen.getByRole('complementary');
 
+    expect(within(itemRow).getByText('13%')).toBeInTheDocument();
+    expect(within(itemRow).getAllByText('138,000원')).toHaveLength(2);
+    expect(within(itemRow).getByText('158,000원')).toBeInTheDocument();
     expect(
-      await screen.findByText('다음 상품을 불러오지 못했어요.'),
+      within(itemRow).getByText('할인 금액 -20,000원'),
     ).toBeInTheDocument();
+    expect(within(paymentSummary).getByText('총 상품 금액')).toBeInTheDocument();
+    expect(within(paymentSummary).getByText('158,000원')).toBeInTheDocument();
+    expect(within(paymentSummary).getByText('할인 금액')).toBeInTheDocument();
+    expect(within(paymentSummary).getByText('-20,000원')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: firstProduct.name }),
+      within(paymentSummary).getByText('최종 결제 금액'),
     ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: '다시 시도' }));
-    expect(
-      await screen.findByRole('heading', { name: recoveredProduct.name }),
-    ).toBeInTheDocument();
-    expect(secondPageRequests).toBe(2);
+    expect(within(paymentSummary).getByText('138,000원')).toBeInTheDocument();
   });
+
 });

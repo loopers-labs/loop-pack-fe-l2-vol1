@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { getProductDiscount } from '@/entities/product/lib/productPricing';
+import type { Product } from '@/entities/product/model/types';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
-import { formatWon, calcDiscount } from '@/shared/lib/format';
-import type { Product } from '@/entities/product/model/types';
+import { formatWon } from '@/shared/lib/format';
 
 interface ProductCardProps {
   product: Product;
@@ -52,6 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const isWished = useWishlistStore((state) => state.ids.has(product.id));
   const toggle = useWishlistStore((state) => state.toggle);
   const addItem = useCartStore((state) => state.addItem);
+  const discount = getProductDiscount(product);
 
   return (
     <article className="group flex min-w-0 flex-col">
@@ -106,9 +108,9 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </h3>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5">
-            {product.originalPrice && (
+            {discount && (
               <span className="text-base font-bold text-neutral-500">
-                {calcDiscount(product.originalPrice, product.price)}%
+                {discount.rate}%
               </span>
             )}
             <span className="text-base font-bold tracking-[-0.02em] text-neutral-950">

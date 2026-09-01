@@ -8,9 +8,10 @@ import { orderKeys } from '@/entities/order/api/orderQueries';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
 import {
   getOrderItemCount,
-  getOrderTotal,
+  getOrderPriceSummary,
 } from '@/features/order/lib/orderSummary';
 import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
+import { ProductPriceDetails } from '@/entities/product/ui/ProductPriceDetails';
 import { OrderProductList } from '@/features/order/ui/OrderProductList';
 import { BackIcon } from '@/shared/ui/icons/BackIcon';
 import { protectedRequestMeta } from '@/shared/api/requestMeta';
@@ -31,7 +32,7 @@ export function OrderCheckoutContent() {
     items.map((item) => item.productId),
   );
   const itemCount = getOrderItemCount(items);
-  const total = getOrderTotal(items, products);
+  const priceSummary = getOrderPriceSummary(items, products);
   const isOrderReady =
     items.length > 0 &&
     !isPending &&
@@ -137,6 +138,18 @@ export function OrderCheckoutContent() {
             isLoading={isPending}
           />
 
+          {!isPending && !isError && (
+            <div className="mt-6 border-t border-border pt-6">
+              <h3 className="text-base font-bold text-text">상품 합계 내역</h3>
+              <div className="mt-3">
+                <ProductPriceDetails
+                  summary={priceSummary}
+                  finalLabel="상품 합계"
+                />
+              </div>
+            </div>
+          )}
+
           {isError && (
             <div
               role="alert"
@@ -156,7 +169,7 @@ export function OrderCheckoutContent() {
 
         <OrderPaymentSummary
           itemCount={itemCount}
-          total={total}
+          priceSummary={priceSummary}
           isPending={orderMutation.isPending}
           isReady={isOrderReady}
           errorMessage={orderErrorMessage}

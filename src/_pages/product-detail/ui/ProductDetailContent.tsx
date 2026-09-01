@@ -4,11 +4,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
+import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { BackIcon } from '@/shared/ui/icons/BackIcon';
 import { StarIcon } from '@/shared/ui/icons/StarIcon';
-import { formatWon, calcDiscount } from '@/shared/lib/format';
+import { formatWon } from '@/shared/lib/format';
 import { SizeSelect } from './SizeSelect';
 import type { SelectOption } from '@/shared/ui/select';
 import type { SizeValue } from '@/entities/product/model/types';
@@ -29,9 +30,7 @@ export function ProductDetailContent() {
   const toggle = useWishlistStore((s) => s.toggle);
   const addItem = useCartStore((s) => s.addItem);
 
-  const discount = product.originalPrice
-    ? calcDiscount(product.originalPrice, product.price)
-    : 0;
+  const discount = getProductDiscount(product);
 
   const sizeItems: SelectOption<SizeValue>[] = product.sizes.map((s) => ({
     value: s,
@@ -95,18 +94,18 @@ export function ProductDetailContent() {
 
             <div className="mt-8">
               <div className="flex items-baseline gap-2.5">
-                {discount > 0 && (
+                {discount && (
                   <span className="text-2xl font-bold text-discount">
-                    {discount}%
+                    {discount.rate}%
                   </span>
                 )}
                 <span className="text-2xl font-bold tracking-[-0.02em] text-text">
                   {formatWon(product.price)}
                 </span>
               </div>
-              {product.originalPrice && (
+              {discount && (
                 <p className="mt-1 text-sm text-text-caption line-through">
-                  {formatWon(product.originalPrice)}
+                  {formatWon(discount.originalPrice)}
                 </p>
               )}
             </div>

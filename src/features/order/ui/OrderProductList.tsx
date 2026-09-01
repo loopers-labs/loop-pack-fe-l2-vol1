@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { OrderItem } from '@/entities/order/model/types';
+import { ProductLinePrice } from '@/entities/product/ui/ProductLinePrice';
 import type { OrderProductMap } from '@/features/order/lib/orderSummary';
-import { formatWon } from '@/shared/lib/format';
 
 interface OrderProductListProps {
   items: readonly OrderItem[];
@@ -73,14 +73,7 @@ export function OrderProductList({
               >
                 {product.name}
               </Link>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <span className="text-[13px] text-text-secondary">
-                  {formatWon(product.price)} × {item.quantity}
-                </span>
-                <strong className="text-[14px] font-semibold text-text">
-                  {formatWon(product.price * item.quantity)}
-                </strong>
-              </div>
+              <ProductLinePrice product={product} quantity={item.quantity} />
             </div>
           </li>
         );

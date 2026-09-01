@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useCartStore } from '@/entities/cart/model/useCartStore';
-import { formatWon } from '@/shared/lib/format';
-import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
 import type { CartItem } from '@/entities/cart/model/cartTypes';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
+import { getProductPriceSummary } from '@/entities/product/lib/productPricing';
+import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
+import { ProductLinePrice } from '@/entities/product/ui/ProductLinePrice';
+import { ProductPriceDetails } from '@/entities/product/ui/ProductPriceDetails';
 
 interface CartFilledStateProps {
   items: CartItem[];
@@ -17,10 +19,13 @@ export function CartFilledState({ items }: CartFilledStateProps) {
   );
 
   const itemCount = items.reduce((count, item) => count + item.quantity, 0);
-  const total = items.reduce((sum, item) => {
-    const product = products.get(item.id);
-    return sum + (product?.price ?? 0) * item.quantity;
-  }, 0);
+  const priceSummary = getProductPriceSummary(
+    items.map((item) => ({
+      productId: item.id,
+      quantity: item.quantity,
+    })),
+    products,
+  );
 
   return (
     <main className="mx-auto min-h-[70vh] w-full max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
@@ -74,9 +79,10 @@ export function CartFilledState({ items }: CartFilledStateProps) {
                         >
                           {product.name}
                         </Link>
-                        <p className="mt-2 text-sm font-semibold text-text">
-                          {formatWon(product.price)} × {item.quantity}
-                        </p>
+                        <ProductLinePrice
+                          product={product}
+                          quantity={item.quantity}
+                        />
                       </>
                     ) : (
                       <p className="text-sm text-text-secondary">
@@ -113,11 +119,23 @@ export function CartFilledState({ items }: CartFilledStateProps) {
 
         <aside className="rounded-2xl border border-border bg-bg-card p-6 md:sticky md:top-6">
           <h2 className="text-lg font-bold text-text">결제 예정 금액</h2>
-          <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-5">
-            <span className="text-sm text-text-secondary">총 {itemCount}개</span>
-            <strong className="text-xl font-bold text-text">
-              {isPending ? '계산 중…' : formatWon(total)}
-            </strong>
+          <p className="mt-2 text-[13px] text-text-secondary">
+            상품 {itemCount}개
+          </p>
+          <div className="mt-4">
+            {isPending ? (
+              <p
+                aria-live="polite"
+                className="border-t border-border py-6 text-sm text-text-secondary"
+              >
+                계산 중…
+              </p>
+            ) : (
+              <ProductPriceDetails
+                summary={priceSummary}
+                finalLabel="최종 결제 금액"
+              />
+            )}
           </div>
           <Link
             href="/orders/new"
