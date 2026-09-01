@@ -86,6 +86,10 @@ a {
   margin-bottom: 16px;
 }
 
+.week05-error {
+  color: #c0392b;
+}
+
 .week05-categories a,
 .week05-product button,
 .week05-pagination button,
@@ -95,6 +99,10 @@ a {
   background: transparent;
   cursor: pointer;
   transition: background 0.15s;
+}
+
+.week05-error button {
+  color: var(--foreground);
 }
 
 .week05-product button:hover {
