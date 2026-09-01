@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 
 import { productDetailQueryOptions } from '../api/productDetailQueries';
 import type { ProductDetailResponse } from '../model/types';
+import { ProductDetailViewTracker } from './ProductDetailViewTracker';
 
 /**
  * 상품 상세.
@@ -34,6 +35,8 @@ export async function ProductDetailPage({ id }: ProductDetailPageProps) {
 
   return (
     <section className="week05-section">
+      <ProductDetailViewTracker productId={product.id} />
+
       <article className="week05-product">
         <Image
           className="week05-image"

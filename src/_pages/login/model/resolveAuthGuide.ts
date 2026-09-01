@@ -1,7 +1,11 @@
-import type { AuthReason } from '@/shared/config/routes';
+import { AUTH_REASONS, type AuthReason } from '@/shared/config/routes';
 
 /**
  * 로그인 화면 상단 안내 문구.
+ *
+ * config 가 아니라 model 에 둔다. config 는 설정·플래그의 자리이고, 이건 URL 에서 온 값을
+ * 경계 있는 값으로 옮기는 순수 함수다 — 같은 슬라이스의 toLoginEntryPoint 와 같은 성질이다.
+ * REASON_MESSAGES 도 앱 설정이 아니라 이 함수의 데이터라 함께 둔다.
  *
  * reason 값의 정의는 shared/config/routes 에 있다. proxy 와 401 인터셉터가 그 값을 붙이고
  * 이 화면이 읽으므로, 문구만 여기서 갖고 값 자체는 한 곳에서 정의한다.
@@ -12,7 +16,7 @@ const REASON_MESSAGES: Record<AuthReason, string> = {
 };
 
 function isAuthReason(value: string | undefined): value is AuthReason {
-  return value === 'required' || value === 'expired';
+  return AUTH_REASONS.some((reason) => reason === value);
 }
 
 /**

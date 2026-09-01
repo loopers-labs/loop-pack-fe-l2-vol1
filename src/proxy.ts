@@ -1,5 +1,6 @@
 import { SESSION_COOKIE } from '@/app/api/_data/auth-cookies';
-import { AUTH_REASON_PARAM, LOGIN_PATH, RETURN_TO_PARAM, isProtectedPath } from '@/shared/config/routes';
+import { AUTH_REASON_PARAM, LOGIN_PATH, RETURN_TO_PARAM } from '@/shared/config/routes';
+import { isProtectedPath } from '@/shared/lib/isProtectedPath';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 

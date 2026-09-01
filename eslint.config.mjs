@@ -86,6 +86,11 @@ const eslintConfig = defineConfig([
         { type: "features", pattern: "src/features/*", capture: ["slice"] },
         { type: "entities", pattern: "src/entities/*", capture: ["slice"] },
         { type: "shared", pattern: "src/shared" },
+        // 스타터가 제공한 이벤트 로거. 파일 자체는 globalIgnores 로 검사 대상이 아니지만,
+        // 이걸 import 하는 우리 코드는 검사 대상이라 element 로 분류해 두어야 한다.
+        // 분류가 없으면 boundaries/no-unknown 이 import 하는 쪽을 막는다.
+        // 프레임워크와 도메인을 모르는 하부 인프라라 shared 로 본다.
+        { type: "shared", pattern: "src/analytics" },
       ],
     },
     rules: {
