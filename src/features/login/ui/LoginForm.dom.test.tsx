@@ -29,7 +29,7 @@ function renderLoginForm() {
   render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider initialSession={{ status: 'anonymous' }}>
-        <LoginForm nextPath="/orders" />
+        <LoginForm nextPath="/orders" from="header" />
         <AuthenticatedUser />
       </AuthProvider>
     </QueryClientProvider>,

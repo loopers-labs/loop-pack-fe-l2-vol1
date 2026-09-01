@@ -4,6 +4,11 @@ import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { type SyntheticEvent, useMemo } from 'react'
 
+import {
+  analyticsEvents,
+  type LoginEventSource,
+  type LoginFailReason,
+} from '@/analytics/events'
 import { identify } from '@/analytics/logger'
 import { AuthRepository } from '@/entities/auth/api/AuthRepository'
 import { useAuth } from '@/entities/auth/model/AuthProvider'
@@ -12,16 +17,34 @@ import { ApiClientError } from '@/shared/api/ApiClientError'
 
 type LoginFormProps = {
   readonly nextPath: string
+  readonly from: LoginEventSource
 }
 
-export function LoginForm({ nextPath }: LoginFormProps) {
+function toLoginFailReason(error: unknown): LoginFailReason {
+  if (error instanceof ApiClientError) {
+    if (error.status === 401) {
+      return 'invalid_credentials'
+    }
+    if (error.status >= 400 && error.status < 500) {
+      return 'invalid_request'
+    }
+    return 'server_error'
+  }
+  return 'network_error'
+}
+
+export function LoginForm({ nextPath, from }: LoginFormProps) {
   const repository = useMemo(() => new AuthRepository(), [])
   const { authenticate } = useAuth()
   const router = useRouter()
   const login = useMutation({
     mutationFn: (request: LoginRequest) => repository.login(request),
+    onError: (error) => {
+      analyticsEvents.loginFail({ reason: toLoginFailReason(error) })
+    },
     onSuccess: ({ user }) => {
       identify(user.id)
+      analyticsEvents.loginSuccess({ from })
       authenticate(user)
       router.replace(nextPath)
       router.refresh()

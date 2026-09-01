@@ -6,12 +6,13 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
 
-import { reset } from '@/analytics/logger'
+import { identify, reset } from '@/analytics/logger'
 import type { AuthUser } from '@/entities/auth/model/AuthSchema'
 import type { AuthSession } from '@/entities/auth/model/AuthSession'
 
@@ -33,6 +34,17 @@ export function AuthProvider({ initialSession, children }: AuthProviderProps) {
   const queryClient = useQueryClient()
   const [session, setSession] = useState(initialSession)
   const expiringRef = useRef(false)
+  const identifiedRef = useRef(false)
+
+  useLayoutEffect(() => {
+    if (identifiedRef.current) {
+      return
+    }
+    identifiedRef.current = true
+    if (initialSession.status === 'authenticated') {
+      identify(initialSession.user.id)
+    }
+  }, [initialSession])
 
   const removeProtectedState = useCallback(() => {
     queryClient.removeQueries({
