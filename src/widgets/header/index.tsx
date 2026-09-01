@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { sessionQueries } from '@/entities/session/api/sessionQueries';
+import { LogoutButton } from '@/features/auth-logout/ui/LogoutButton';
 
 export function Header() {
   const cartCount = useCartStore((state) => state.items.length);
@@ -17,7 +18,14 @@ export function Header() {
         <Link href="/products">상품</Link>
         <span>위시리스트 {wishlistCount}</span>
         <span>장바구니 {cartCount}</span>
-        {user ? <span>{user.name}님</span> : <Link href="/login">로그인</Link>}
+        {user ? (
+          <>
+            <span>{user.name}님</span>
+            <LogoutButton />
+          </>
+        ) : (
+          <Link href="/login">로그인</Link>
+        )}
       </nav>
     </header>
   );
