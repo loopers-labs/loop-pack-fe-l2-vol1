@@ -136,3 +136,19 @@
 - 주문 번호 단언을 일부러 `intentionally-wrong`으로 바꾸고 `--trace=on`으로 실행했다. trace에는 주문서 heading과 주문 완료 heading까지 성공한 뒤 마지막 `getByTestId('order-id')`의 `toHaveText`에서 5초 동안 멈춘 것이 기록됐다. 실제 DOM 값은 `o7`이었다. 단언은 즉시 `/^o\d+$/`로 원복했다.
 - 기본 설정도 `trace: 'retain-on-failure'`로 두었다. `retries: 0`에서 `on-first-retry`는 trace를 만들 기회가 없기 때문이다. CLI의 `--trace` 없이 기대값을 `trace-config-check`로 틀려 실행해 screenshot·video와 함께 `trace.zip`이 남는 것을 확인하고 원복했다.
 - 역할·이름 기반으로 찾을 수 없는 주문 번호에만 `data-testid="order-id"`를 썼다. 주문 번호 값은 동적이라 접근 가능한 고정 이름이 없고, 기능 단언의 핵심 관찰값이라 숨기지 않았다.
+
+## E. E2E 파괴 실험
+
+테스트 코드는 유지한 채 구현을 한 곳씩만 바꾸고 production build에서 실행했다. 각 실험 뒤에는 구현을 즉시 원복했다.
+
+| # | 망가뜨린 곳 | 어떻게 바꿨나 | 최초 결과 | 실패한 테스트 | 실패 메시지로 원인을 알 수 있었나 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `src/proxy.ts` | 보호 경로의 `next`를 실제 경로 대신 `/`로 고정 | 잡힘 | 미로그인 주문서 진입 → 로그인 → 원래 경로 복원 | 예. 기대한 `next=%2Forders%2Fnew` 대신 실제 URL이 `/login`임을 표시했다. |
+| 2 | `src/app/_session/currentUser.ts` | `scenario=expired`를 `expired`가 아닌 `signed-out`으로 판정 | 잡힘 | 세션 만료 안내 | 예. 기대 URL에는 `reason=expired`가 있지만 실제 URL에는 없음을 표시했다. |
+| 3 | `src/app/api/auth/login/route.ts` | 세션 쿠키의 `httpOnly`를 `true`에서 `false`로 변경 | 살아남음 | 없음 | 아니오. 로그인과 경로 복원은 정상이라 기존 단언이 쿠키 속성을 관찰하지 않았다. |
+
+1번은 Proxy의 실제 307과 브라우저 경로 복원이 있어야 성립하므로 통합 테스트로 같은 범위를 검증할 수 없다. 2번도 서버가 쿠키와 시나리오를 읽어 초기 HTML을 선택하는 경계다.
+
+3번은 살아남은 뒤 로그인 E2E에 브라우저가 저장한 `session` 쿠키의 `httpOnly: true`, `sameSite: 'Lax'`, `path: '/'` 단언을 추가했다. 같은 변이를 다시 적용하자 기대한 `httpOnly: true`와 실제 `false`를 보여주며 실패했다. 라우트 통합 테스트도 `Set-Cookie` 문자열을 검사하지만, E2E는 브라우저가 그 속성을 실제 쿠키 저장소에 반영했는지를 확인하므로 남긴다. 로컬 production 서버가 HTTP라 `secure: false`인 것은 운영 HTTPS의 `Secure` 보증이 아니어서 단언하지 않았다.
+
+세 실험 중 테스트 코드를 보완한 것은 살아남은 3번뿐이며, 망가뜨린 구현은 모두 원복했다.

@@ -20,6 +20,15 @@ test.describe('인증 흐름', () => {
     await login(page, account)
 
     await expect(page).toHaveURL('/orders/new')
+    const sessionCookie = (await page.context().cookies()).find(
+      (cookie) => cookie.name === 'session',
+    )
+    expect(sessionCookie).toBeDefined()
+    expect(sessionCookie).toMatchObject({
+      httpOnly: true,
+      sameSite: 'Lax',
+      path: '/',
+    })
     await expect(page.getByRole('heading', { name: '주문서' })).toBeVisible()
     await expect(page.getByText(`${account.name}님`)).toBeVisible()
   })
