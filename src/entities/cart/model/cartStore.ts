@@ -32,15 +32,14 @@ export const useCartStore = create<CartStore>()(
             ? { ...state.itemDetails, [id]: details }
             : state.itemDetails,
         })),
+      // itemDetails는 지우지 않는다 — 주문내역이 이 캐시로 과거에 주문한
+      // 상품의 이름·이미지를 보여준다(주문 API 응답엔 productId만 있음).
+      // 상품이 30개뿐이라 계속 남겨둬도 용량 부담이 없다. 다만 "그때 가격"이
+      // 아니라 "가장 최근에 담겼을 때의 정보"만 남는다는 트레이드오프가 있다.
       removeItem: (id) =>
-        set((state) => {
-          const nextDetails = { ...state.itemDetails };
-          delete nextDetails[id];
-          return {
-            items: state.items.filter((item) => item !== id),
-            itemDetails: nextDetails,
-          };
-        }),
+        set((state) => ({
+          items: state.items.filter((item) => item !== id),
+        })),
     }),
     {
       name: 'cart',

@@ -93,7 +93,9 @@ a {
 .week05-categories a,
 .week05-product button,
 .week05-pagination button,
-.week05-error button {
+.week05-error button,
+.week09-auth-form button,
+.week09-checkout-summary button {
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   background: transparent;
@@ -105,8 +107,59 @@ a {
   color: var(--foreground);
 }
 
-.week05-product button:hover {
+.week05-product button:hover,
+.week09-auth-form button:hover,
+.week09-checkout-summary button:hover {
   background: #f0f0f0;
+}
+
+.week09-auth-form button:disabled,
+.week09-checkout-summary button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.week09-order-page {
+  /* .week05-page(min(100% - 32px, 1200px))와 같은 공식, 최대값만 2/3(800px)로 */
+  width: min(100% - 32px, 800px);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.week09-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.week09-order-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #c8c8c8;
+  padding: 12px;
+}
+
+.week09-order-item img {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.week09-order-item-info {
+  display: grid;
+  gap: 4px;
+}
+
+.week09-checkout-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 8px;
+  margin-top: 24px;
 }
 
 .week05-product button:active {
@@ -198,23 +251,6 @@ a {
   border: 1px solid #c8c8c8;
   background: transparent;
   color: inherit;
-}
-
-.week09-auth-form button {
-  padding: 8px 12px;
-  border: 1px solid #c8c8c8;
-  background: transparent;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.week09-auth-form button:hover {
-  background: #f0f0f0;
-}
-
-.week09-auth-form button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
 }
 
 @media (max-width: 480px) {

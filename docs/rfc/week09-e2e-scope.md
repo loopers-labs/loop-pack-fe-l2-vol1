@@ -45,7 +45,7 @@
 | `login_success` | 로그인 성공 | `useLoginForm` mutation `onSuccess` | 이름 동일. `userId` 직접 첨부(위 "공통 프로퍼티" 참고) |
 | `login_fail` | 로그인 실패 | `useLoginForm` mutation `onError` | 이름 동일. `reason`은 API가 실패 사유를 세분화해서 주지 않아 상태 코드 기준으로 분류(`401`→`INVALID_CREDENTIALS`, `400`→`INVALID_REQUEST`, 그 외→`UNKNOWN_ERROR`) — 시드 로그의 `INVALID_CREDENTIALS`와 형식(SCREAMING_SNAKE_CASE)을 맞춤 |
 | `order_start` | 주문서 화면 진입 | `CheckoutPage` 마운트 시 (`src/_pages/checkout/ui/CheckoutPage.tsx`) | 이름 동일. `productId`(단수) → **`productIds`(배열)**로 조정 — 우리 주문서는 장바구니 전체(여러 상품)를 한 번에 주문함. `userId` 직접 첨부 |
-| `order_complete` | 주문 완료 | `useCheckoutSubmit` mutation `onSuccess` | 이름 동일. `productIds` 배열로 조정(위와 같은 이유). **`totalPrice`는 생략** — 주문 API 응답에 금액이 없고, 상품을 id로 조회하는 API도 없어 계산할 방법이 없음. 화면에도 금액을 표시하지 않아(주문서가 상품 id만 최소 표시) 안 쓰는 값을 계산해두는 것도 의미가 없다고 판단. `userId` 직접 첨부 |
+| `order_complete` | 주문 완료 | `useCheckoutSubmit` mutation `onSuccess` | 이름 동일. `productIds` 배열로 조정(위와 같은 이유). **`totalPrice`는 생략** — 이후 `cartStore`에 상품 상세정보를 저장하도록 개선하면서 화면(주문서)에는 총 주문 금액을 계산해 보여주게 됐지만, 계측 이벤트에까지 넣는 건 과제가 요구한 8개 지점에 포함되지 않는 프로퍼티라 스코프를 늘리지 않기로 함. `userId` 직접 첨부 |
 
 ### 예시 흐름 — 로그인부터 주문까지 한 번 통과했을 때
 
