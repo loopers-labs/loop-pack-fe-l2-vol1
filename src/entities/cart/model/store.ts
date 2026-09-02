@@ -4,6 +4,7 @@ import { create } from 'zustand'
 interface CartState {
   cartIds: string[]
   toggleCart: (id: string) => void
+  clearCart: () => void
 }
 
 const toggle = (ids: string[], id: string): string[] =>
@@ -13,6 +14,7 @@ const toggle = (ids: string[], id: string): string[] =>
 const useCartStore = create<CartState>((set) => ({
   cartIds: [],
   toggleCart: (id) => set((state) => ({ cartIds: toggle(state.cartIds, id) })),
+  clearCart: () => set({ cartIds: [] }),
 }))
 
 export const useIsInCart = (id: string): boolean =>
@@ -21,5 +23,10 @@ export const useIsInCart = (id: string): boolean =>
 export const useCartCount = (): number =>
   useCartStore((state) => state.cartIds.length)
 
+export const useCartIds = (): string[] => useCartStore((state) => state.cartIds)
+
 export const useToggleCart = (): ((id: string) => void) =>
   useCartStore((state) => state.toggleCart)
+
+export const useClearCart = (): (() => void) =>
+  useCartStore((state) => state.clearCart)
