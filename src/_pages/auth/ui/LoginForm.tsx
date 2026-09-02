@@ -1,12 +1,12 @@
 'use client';
 
-// [AI] 로그인 폼 (week-09 1-1): UI 뼈대 + POST /api/auth/login 연동.
-// 400/401 분기 메시지와 제출 중 상태·중복 제출 방지는 체크리스트 다음 항목에서 추가한다.
+// [AI] 로그인 폼 (week-09 1-1~1-3): UI + 연동 + 실패 분기 + 제출 중 상태 + 복원 이동.
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/widgets/header/Header';
 import { loginRequest } from '@/entities/auth/api';
 import { getLoginErrorMessage } from '../model/getLoginErrorMessage';
+import { getSafeRedirectPath } from '@/shared/lib/getSafeRedirectPath';
 import styles from './LoginForm.module.css';
 
 export const LoginForm = () => {
@@ -15,6 +15,8 @@ export const LoginForm = () => {
   // [AI] 제출 처리 중 플래그. 버튼 disabled + 핸들러 가드의 이중 안전장치로 쓴다.
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  // [AI] proxy가 실어 보낸 원래 경로 (예: /login?redirectTo=%2Forders).
+  const redirectParam = useSearchParams().get('redirectTo');
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     // [AI] 기본 제출(GET + 페이지 리로드, 비밀번호가 URL에 노출)을 막고 JS로 처리한다.
@@ -34,8 +36,9 @@ export const LoginForm = () => {
       setError(null);
       // 성공(200): 브라우저가 Set-Cookie로 세션 쿠키를 저장한다 (클라이언트가 직접 다루지 않는다).
       await loginRequest({ email, password });
-      // [AI] 복원 이동(redirectTo 읽기)은 1-3에서 getSafeRedirectPath로 교체한다. 지금은 홈으로.
-      router.push('/');
+      // [AI] 복원: redirectTo 검증은 이동 직전(사용하는 곳)에서 수행한다 (RFC 검증 위치 규칙).
+      // 외부 주소(https://, //evil.com)는 기본 경로('/')로 조용히 되돌려진다.
+      router.push(getSafeRedirectPath(redirectParam));
     } catch (err) {
       // 실패: 상태 코드에 맞는 안내 문구로 분기한다 (401 자격 증명 / 400 형식 / 그 외 재시도).
       // auth 엔드포인트의 401은 세션 만료가 아니라 자격 증명 실패다 (RFC 401 구분 규칙).
