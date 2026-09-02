@@ -1,21 +1,25 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { AddToCartButton } from '@/features/add-to-cart'
 import { ToggleWishlistButton } from '@/features/toggle-wishlist'
-import { Header } from './Header'
+import { HeaderActions } from './HeaderActions'
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}))
 
 const PRODUCT = {
   id: 'header-count-product',
   name: '헤더 개수 상품',
 }
 
-function renderHeaderActions() {
+function renderHeaderActions(userName: string | null = null) {
   return {
     user: userEvent.setup(),
     ...render(
       <>
-        <Header />
+        <HeaderActions userName={userName} />
         <ToggleWishlistButton
           productId={PRODUCT.id}
           productName={PRODUCT.name}
@@ -27,6 +31,22 @@ function renderHeaderActions() {
 }
 
 describe('헤더의 장바구니·위시리스트 개수', () => {
+  it('비로그인 사용자에게 로그인 링크를 보여준다', () => {
+    renderHeaderActions()
+
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute(
+      'href',
+      '/login',
+    )
+  })
+
+  it('로그인 사용자에게 이름과 로그아웃 버튼을 보여준다', () => {
+    renderHeaderActions('루퍼스')
+
+    expect(screen.getByText('루퍼스')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument()
+  })
+
   it('장바구니를 토글하면 장바구니 개수만 증가한다', async () => {
     const { user } = renderHeaderActions()
 
