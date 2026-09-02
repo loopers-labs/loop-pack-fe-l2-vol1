@@ -49,6 +49,7 @@ export const POST = async (
   }
 
   const response = NextResponse.json({ user });
+  // 브라우저의 쿠키를 업데이트한다.
   response.cookies.set({
     name: SESSION_COOKIE,
     value: createSessionToken(user.id),
