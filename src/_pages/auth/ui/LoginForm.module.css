@@ -44,3 +44,13 @@
   color: #d32f2f;
   font-size: 14px;
 }
+
+.notice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #f0c36d;
+  border-radius: 6px;
+  background: #fdf6e3;
+  color: #8a6d3b;
+  font-size: 14px;
+}

@@ -46,6 +46,17 @@ export class ApiError extends Error {
   }
 }
 
+// [AI] 세션 만료 전용 에러 (week-09 1-4). 전역 처리기(QueryProvider)가 이 타입만 골라
+// 만료 절차(정리 → 안내 → 로그인 이동)를 수행한다 — 화면마다 401을 해석하지 않도록.
+export class SessionExpiredError extends ApiError {
+  constructor() {
+    // 서버 401 본문("로그인이 필요합니다.")은 두 얼굴(미로그인/만료)이 섞인 애매한 문구라
+    // 만료로 분류된 시점엔 만료 안내 문구로 교체한다 (RFC 401 두 얼굴 구분 기준).
+    super('세션이 만료되었어요. 다시 로그인해 주세요.', 401);
+    this.name = 'SessionExpiredError';
+  }
+}
+
 // [AI] 공통 요청 관문: 요청 실행 + HTTP 에러를 ApiError로 변환까지를 한 곳에서 처리한다.
 // 모든 서버 요청(apiFetch, apiFetchEmpty)이 이 관문을 지난다.
 const request = async (path: string, options?: FetcherOptions): Promise<Response> => {
@@ -58,6 +69,14 @@ const request = async (path: string, options?: FetcherOptions): Promise<Response
   });
 
   if (!response.ok) {
+    // [AI] 만료 감지는 이 관문(한 곳)에서 한다 (RFC 만료 처리 위치 결정 — "감지는 fetcher").
+    // 보호 API의 401만 만료로 분류하고, auth 엔드포인트의 401은 제외한다:
+    //   /api/auth/login의 401 = 자격 증명 실패, /api/auth/me의 401 = 로그인 안 함 (정상 답변).
+    // 모든 요청이 이 관문을 지나므로 query/mutation/일반 fetch 어디서 터져도 커버된다.
+    if (response.status === 401 && !path.startsWith('/api/auth')) {
+      throw new SessionExpiredError();
+    }
+
     let message = `요청에 실패했습니다. (status: ${response.status})`;
     try {
       const errorBody: ApiErrorResponse = await response.json();

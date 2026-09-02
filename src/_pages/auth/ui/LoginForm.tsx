@@ -16,7 +16,10 @@ export const LoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   // [AI] proxy가 실어 보낸 원래 경로 (예: /login?redirectTo=%2Forders).
-  const redirectParam = useSearchParams().get('redirectTo');
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirectTo');
+  // [AI] 만료 처리기가 실어 보낸 신호 — 이번 로그인은 "만료 후 재로그인"임을 화면에 안내한다.
+  const isExpiredSession = searchParams.get('expired') === '1';
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     // [AI] 기본 제출(GET + 페이지 리로드, 비밀번호가 URL에 노출)을 막고 JS로 처리한다.
@@ -53,6 +56,12 @@ export const LoginForm = () => {
       <Header />
       <section className="section">
         <h1>로그인</h1>
+        {/* [AI] 만료 안내 (1-4): 세션 만료로 이곳에 온 사용자에게 다음 행동을 알려준다. */}
+        {isExpiredSession && (
+          <p className={styles.notice} role="status">
+            세션이 만료되었어요. 다시 로그인해 주세요.
+          </p>
+        )}
         <form className={styles.loginForm} onSubmit={handleLogin}>
           <div className={styles.field}>
             <label htmlFor="email">이메일</label>

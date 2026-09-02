@@ -37,7 +37,10 @@ describe('OrderList — 주문 내역 상태', () => {
     expect(screen.getByText(/상품 p2 × 1개/)).toBeInTheDocument();
   });
 
-  it('401(로그인 필요)이면 role=alert로 로그인 안내를 보여준다', async () => {
+  it('401(만료)이면 만료 안내 문구를 보여준다 — 전역 처리기가 로그인으로 보내기 전의 표시', async () => {
+    // [AI] 만료 감지·이동은 fetcher 관문과 queryClient 전역 onError의 몫이라 (RFC "한 곳"),
+    // 화면은 401을 특별 취급하지 않는다. 이 테스트는 전역 처리 전 화면 표시가
+    // 엉뚱한 문구가 아닌지(만료 안내가 떨어지는지)만 확인한다.
     server.use(
       http.get('*/api/orders', () =>
         HttpResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 })
@@ -47,9 +50,7 @@ describe('OrderList — 주문 내역 상태', () => {
 
     const alert = await screen.findByRole('alert'); // 첫 대기(비동기 경계)
 
-    expect(alert).toHaveTextContent('로그인이 필요한 화면입니다');
-    // 401은 재시도로 해결되지 않으므로 "다시 시도" 버튼을 두지 않는다.
-    expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument();
+    expect(alert).toHaveTextContent('세션이 만료되었어요');
   });
 
   it('빈 주문 내역이면 "아직 주문 내역이 없습니다" 안내를 보여준다', async () => {

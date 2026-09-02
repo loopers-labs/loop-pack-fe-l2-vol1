@@ -33,12 +33,9 @@ export const OrderList = ({ serverUser }: OrderListProps) => {
     }
 
     if (isError) {
-      // 401은 "로그인 안 함"과 "세션 만료"가 섞여 온다. 만료 안내 흐름은 1-4에서
-      // 정한 한 곳의 처리 위치로 옮겨갈 예정이라 여기서는 최소 안내만 한다.
-      if (error instanceof ApiError && error.status === 401) {
-        return <p role="alert">로그인이 필요한 화면입니다. 로그인 후 다시 확인해 주세요.</p>;
-      }
-      // 5xx는 queryClient throwOnError로 error boundary가 담당하므로 여기는 4xx/네트워크.
+      // [AI] 401(만료)은 전역 처리기(queryClient의 onError)가 정리 후 로그인으로 보내므로
+      // 화면별 401 분기를 두지 않는다 (RFC "한 곳" 원칙). 이 분기는 그 처리 전 잠깐의 표시와
+      // 4xx·네트워크 오류를 담당한다. 5xx는 throwOnError로 error boundary가 처리.
       const message =
         error instanceof ApiError ? error.message : '주문 내역을 불러오지 못했습니다.';
       return (
