@@ -7,6 +7,10 @@ type FetcherOptions = {
   // TanStack Query가 queryFn에 넘겨주는 AbortSignal을 fetch까지 연결하기 위한 통로.
   // 연결해야 query key가 바뀔 때 이전 요청이 실제로 취소된다.
   signal?: AbortSignal;
+  // [AI] 1-1 로그인 연동 추가. body가 있으면 Content-Type: application/json 헤더와
+  // JSON 직렬화 본문을 실어 보낸다. 모든 POST가 이 관문을 타야 공통 에러 처리가 유지된다.
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  body?: unknown;
 };
 
 export const buildQueryString = (query?: FetcherOptions['query']): string => {
@@ -45,8 +49,12 @@ export class ApiError extends Error {
 // response.json()은 Promise<any>를 반환하므로, 별도의 타입 단언 없이
 // 반환 타입 Promise<T>로 직접 할당 가능하다. (eslint consistent-type-assertions: never 대응)
 export const apiFetch = async <T>(path: string, options?: FetcherOptions): Promise<T> => {
+  const hasBody = options?.body !== undefined;
   const response = await fetch(`${getBaseUrl()}${path}${buildQueryString(options?.query)}`, {
+    method: options?.method,
     signal: options?.signal,
+    headers: hasBody ? { 'Content-Type': 'application/json' } : undefined,
+    body: hasBody ? JSON.stringify(options.body) : undefined,
   });
 
   if (!response.ok) {
