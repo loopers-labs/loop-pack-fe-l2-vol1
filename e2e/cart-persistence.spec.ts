@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { signIn, workerAccount } from './support/auth'
+import { parallelAccount, signIn } from './support/auth'
 
 const productName = 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'
 
@@ -8,7 +8,7 @@ test('Cart persistence - when a shopper reloads and passes through the login red
   page,
 }, testInfo) => {
   // Arrange
-  const account = workerAccount(testInfo.workerIndex)
+  const account = parallelAccount(testInfo.parallelIndex)
   const cartButton = page.getByRole('button', {
     name: `${productName} 장바구니`,
   })

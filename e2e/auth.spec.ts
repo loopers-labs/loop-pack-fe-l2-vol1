@@ -5,10 +5,10 @@ import { SESSION_COOKIE } from '@/app/api/_data/auth-cookies'
 
 import {
   expiredSessionCookie,
+  parallelAccount,
   signIn,
   trackedEvent,
   trackedEventNames,
-  workerAccount,
 } from './support/auth'
 
 const productName = 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'
@@ -17,7 +17,7 @@ test('Protected checkout - when an anonymous shopper with a cart opens checkout 
   page,
 }, testInfo) => {
   // Arrange
-  const account = workerAccount(testInfo.workerIndex)
+  const account = parallelAccount(testInfo.parallelIndex)
   await page.goto('/products')
   await page.getByRole('button', { name: `${productName} 장바구니` }).click()
   await expect(page.getByLabel('장바구니 1개')).toBeVisible()
@@ -39,7 +39,7 @@ test('Expired session - when a shopper with an expired token opens checkout - ex
   context,
 }, testInfo) => {
   // Arrange
-  const account = workerAccount(testInfo.workerIndex)
+  const account = parallelAccount(testInfo.parallelIndex)
   await context.addCookies([expiredSessionCookie(account.id)])
 
   // Act
@@ -67,7 +67,7 @@ test('Invalid credentials - when a shopper submits a wrong password - keeps the 
   context,
 }, testInfo) => {
   // Arrange
-  const account = workerAccount(testInfo.workerIndex)
+  const account = parallelAccount(testInfo.parallelIndex)
   await page.goto('/login')
 
   // Act

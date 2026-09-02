@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 
 import type { ProductListResponse } from '@/entities/product/model/types'
 
-import { signIn, trackedEventNames, workerAccount } from './support/auth'
+import { parallelAccount, signIn, trackedEventNames } from './support/auth'
 
 const productName = 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'
 
@@ -26,7 +26,7 @@ test('Purchase completion - when a shopper adds a product and signs in - records
   request,
 }, testInfo) => {
   // Arrange
-  const account = workerAccount(testInfo.workerIndex)
+  const account = parallelAccount(testInfo.parallelIndex)
   const productId = await resolveProductId(request, productName)
   await page.goto('/products')
   await page.getByRole('button', { name: `${productName} 장바구니` }).click()

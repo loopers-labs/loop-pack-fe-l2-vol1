@@ -12,13 +12,17 @@ import {
 
 // 주문은 서버 프로세스 메모리에 userId로 쌓인다. worker가 계정을 공유하면
 // worker 수에 따라 주문 내역이 달라지므로 worker마다 다른 계정을 쓴다.
-export function workerAccount(workerIndex: number) {
-  if (workerIndex >= accounts.length) {
+//
+// workerIndex가 아니라 parallelIndex를 받는다. workerIndex는 worker가 재시작될
+// 때마다 증가해 계정 수를 넘어서지만, parallelIndex는 0 이상 workers 미만으로
+// 유지되고 동시에 도는 worker끼리 겹치지 않는다.
+export function parallelAccount(parallelIndex: number) {
+  if (parallelIndex >= accounts.length) {
     throw new Error(
-      `E2E 계정이 부족하다. worker ${String(workerIndex)}에 배정할 계정이 없다. 사용 가능한 계정은 ${String(accounts.length)}개다.`,
+      `E2E 계정이 부족하다. parallelIndex ${String(parallelIndex)}에 배정할 계정이 없다. 사용 가능한 계정은 ${String(accounts.length)}개이므로 workers를 ${String(accounts.length)} 이하로 둔다.`,
     )
   }
-  return accounts[workerIndex]
+  return accounts[parallelIndex]
 }
 
 // 서명은 유효하지만 exp가 지난 토큰이다. proxy는 쿠키 존재만 확인해 보호 경로까지
