@@ -1,7 +1,7 @@
 import '@/test/setup/msw'
 import { HttpResponse, http } from 'msw'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, type RenderResult } from '@testing-library/react'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import type { JSX } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCartCount, useToggleCart } from '@/entities/cart'
@@ -41,7 +41,11 @@ function LocalStateControls(): JSX.Element {
   )
 }
 
-function renderLogoutButton() {
+interface RenderLogoutButtonResult extends RenderResult {
+  user: UserEvent
+}
+
+function renderLogoutButton(): RenderLogoutButtonResult {
   return {
     user: userEvent.setup(),
     ...render(
@@ -92,6 +96,7 @@ describe('LogoutButton', () => {
       expect(router.refresh).toHaveBeenCalledOnce()
     })
     expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
+    expect(screen.getByRole('button', { name: '로그아웃 중' })).toBeDisabled()
   })
 
   it('preserves local state, skips refresh, and shows the server error on logout failure', async () => {
@@ -111,6 +116,31 @@ describe('LogoutButton', () => {
 
     expect(
       await screen.findByText('로그아웃을 완료할 수 없습니다.'),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
+    expect(screen.getByTestId('wishlist-count')).toHaveTextContent('1')
+    expect(router.refresh).not.toHaveBeenCalled()
+  })
+
+  it('preserves local state, skips refresh, and shows the fallback error for malformed logout failures', async () => {
+    server.use(
+      http.post(
+        LOGOUT_ENDPOINT,
+        () =>
+          new HttpResponse('{not json', {
+            status: 500,
+            headers: { 'content-type': 'application/json' },
+          }),
+      ),
+    )
+    const { user } = renderLogoutButton()
+
+    await user.click(screen.getByRole('button', { name: '장바구니 담기' }))
+    await user.click(screen.getByRole('button', { name: '위시리스트 담기' }))
+    await user.click(screen.getByRole('button', { name: '로그아웃' }))
+
+    expect(
+      await screen.findByText('로그아웃에 실패했습니다.'),
     ).toBeInTheDocument()
     expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
     expect(screen.getByTestId('wishlist-count')).toHaveTextContent('1')

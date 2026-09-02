@@ -26,7 +26,6 @@ export function LogoutButton(): JSX.Element {
       setErrorMessage(
         error instanceof ApiError ? error.message : DEFAULT_ERROR_MESSAGE,
       )
-    } finally {
       setIsPending(false)
     }
   }

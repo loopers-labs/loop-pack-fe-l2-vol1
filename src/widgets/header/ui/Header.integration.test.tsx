@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, type RenderResult } from '@testing-library/react'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { AddToCartButton } from '@/features/add-to-cart'
 import { ToggleWishlistButton } from '@/features/toggle-wishlist'
@@ -14,7 +14,13 @@ const PRODUCT = {
   name: '헤더 개수 상품',
 }
 
-function renderHeaderActions(userName: string | null = null) {
+interface RenderHeaderActionsResult extends RenderResult {
+  user: UserEvent
+}
+
+function renderHeaderActions(
+  userName: string | null = null,
+): RenderHeaderActionsResult {
   return {
     user: userEvent.setup(),
     ...render(
