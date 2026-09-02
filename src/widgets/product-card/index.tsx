@@ -25,7 +25,12 @@ export function ProductCard({ product }: Props) {
       isInCart={isInCart}
       onToggleWishlist={() => toggleWishlist(product.id)}
       onAddToCart={() => {
-        addToCart(product.id);
+        addToCart(product.id, {
+          name: product.name,
+          brand: product.brand,
+          price: product.price,
+          image: product.image,
+        });
         track('cart_add', { productId: product.id, quantity: 1 });
       }}
       onRemoveFromCart={() => removeFromCart(product.id)}
