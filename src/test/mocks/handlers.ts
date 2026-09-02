@@ -87,4 +87,10 @@ export const handlers = [
   http.get('*/api/orders', () =>
     HttpResponse.json({ orders: sampleOrders } satisfies OrderListResponse)
   ),
+
+  // [AI] me 기본 핸들러는 "로그인 안 함"(401)이다 — 테스트의 기본 상태가 미로그인이므로.
+  // 로그인 상태가 필요한 테스트에서 server.use()로 200으로 덮어쓴다.
+  http.get('*/api/auth/me', () =>
+    HttpResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 })
+  ),
 ];

@@ -11,6 +11,15 @@
   padding-bottom: 24px;
 }
 
+.logoutButton {
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
 @media (max-width: 480px) {
   .header {
     align-items: flex-start;

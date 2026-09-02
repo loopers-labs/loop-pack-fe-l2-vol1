@@ -46,9 +46,9 @@ export class ApiError extends Error {
   }
 }
 
-// response.json()은 Promise<any>를 반환하므로, 별도의 타입 단언 없이
-// 반환 타입 Promise<T>로 직접 할당 가능하다. (eslint consistent-type-assertions: never 대응)
-export const apiFetch = async <T>(path: string, options?: FetcherOptions): Promise<T> => {
+// [AI] 공통 요청 관문: 요청 실행 + HTTP 에러를 ApiError로 변환까지를 한 곳에서 처리한다.
+// 모든 서버 요청(apiFetch, apiFetchEmpty)이 이 관문을 지난다.
+const request = async (path: string, options?: FetcherOptions): Promise<Response> => {
   const hasBody = options?.body !== undefined;
   const response = await fetch(`${getBaseUrl()}${path}${buildQueryString(options?.query)}`, {
     method: options?.method,
@@ -70,5 +70,17 @@ export const apiFetch = async <T>(path: string, options?: FetcherOptions): Promi
     throw new ApiError(message, response.status);
   }
 
+  return response;
+};
+
+// response.json()은 Promise<any>를 반환하므로, 별도의 타입 단언 없이
+// 반환 타입 Promise<T>로 직접 할당 가능하다. (eslint consistent-type-assertions: never 대응)
+export const apiFetch = async <T>(path: string, options?: FetcherOptions): Promise<T> => {
+  const response = await request(path, options);
   return response.json();
+};
+
+// [AI] 본문이 없는 응답(204 No Content — 로그아웃)용. json() 파싱이 없어 204를 안전하게 처리한다.
+export const apiFetchEmpty = async (path: string, options?: FetcherOptions): Promise<void> => {
+  await request(path, options);
 };
