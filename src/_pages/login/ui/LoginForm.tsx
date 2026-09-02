@@ -53,13 +53,13 @@ export default function LoginForm({ nextPath, expired, from }: LoginFormProps) {
     // 취소 신호 자리에 다른 값이 들어가므로 자격 증명만 전달한다.
     mutationFn: (credentials: LoginCredentials) => login(credentials),
     onSuccess: ({ user }) => {
-      // 성공 이벤트부터 사용자 퍼널에 이어지도록 응답의 사용자를 먼저 식별한다.
-      // AnalyticsBoundary의 identify는 새로고침·직접 진입 세션을 복원하는 역할로 남는다.
+      // 로그인 성공 이벤트부터 사용자 ID로 퍼널을 분석할 수 있도록 응답의 사용자를 먼저 식별한다.
+      // AnalyticsBoundary의 identify는 새로고침하거나 직접 진입한 세션의 식별 정보를 복원한다.
       identifyUser(user.id)
       trackLoginSuccess({ from })
       // 만료로 온 경우에는 서버 페이지가 redirect하지 않는다(무한 반복 방지). 이동을
-      // 여기서 한다. 만료 화면에 올 때 이미 문서 이동을 거쳐 메모리 상태를 잃은 뒤라
-      // 문서 이동을 한 번 더 해도 추가로 잃는 상태가 없다.
+      // 여기서 처리한다. 만료 화면에 도착하기 전에 이미 문서 이동으로 메모리 상태가 초기화되므로
+      // 문서 이동을 한 번 더 해도 추가로 초기화되는 상태는 없다.
       if (expired) {
         replaceDocument(nextPath)
         return
@@ -67,7 +67,7 @@ export default function LoginForm({ nextPath, expired, from }: LoginFormProps) {
 
       // 일반 경로에서는 갱신만 한다. 로그인 화면을 다시 렌더하면 서버가 세션을 읽고
       // nextPath로 redirect한다. 문서를 다시 받지 않으므로 장바구니 같은 메모리 상태가
-      // 남는다. 이동과 갱신을 함께 부르면 두 요청이 경쟁한다.
+      // 유지된다. 이동과 갱신을 함께 호출하면 두 요청이 경합한다.
       router.refresh()
     },
     onError: (error) => {

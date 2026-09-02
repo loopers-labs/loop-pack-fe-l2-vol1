@@ -93,16 +93,16 @@ export default defineConfig(
 
   {
     // no-console allow-list의 첫 항목이다. 위 규칙 주석에 적힌 "의도적 로깅은
-    // allow-list 합의 후 연다"에 해당한다. 규칙을 끄지 않고 파일과 메서드만 좁혀 연다.
+    // allow-list 합의 후 허용한다"에 해당한다. 규칙을 끄지 않고 파일과 메서드만 지정해 허용한다.
     //
     // consoleProvider는 개발 중 이벤트를 눈으로 확인하는 용도라 콘솔 출력이 기능 자체다.
-    // info만 연다.
+    // info만 허용한다.
     //
     // logger는 프로바이더의 초기화·전송 실패를 알린다. 계측 실패로 화면을 멈출 수는 없어
-    // throw하지 않는 대신, 실패를 삼키면 이벤트가 오지 않는 원인을 찾을 수 없다. error만 연다.
+    // throw하지 않는 대신, 실패를 기록하지 않으면 이벤트가 수집되지 않는 원인을 찾을 수 없다. error만 허용한다.
     //
-    // warn과 log는 두 파일 모두 닫아 둔다. 디렉터리 단위로 넓히지 않는 이유는, 나중에
-    // src/analytics에 파일이 늘어도 예외가 자동으로 따라 붙지 않게 하기 위해서다.
+    // warn과 log는 두 파일 모두 허용하지 않는다. 디렉터리 전체에 적용하지 않는 이유는, 나중에
+    // src/analytics에 파일이 늘어도 예외가 자동으로 적용되지 않게 하기 위해서다.
     files: ['src/analytics/consoleProvider.ts'],
     rules: { 'no-console': ['error', { allow: ['info'] }] },
   },

@@ -8,7 +8,7 @@ import { setAnalyticsUser } from './context'
 // 편이 낫고, 이름이 같아야 3단계에서 시드 로그로 세운 순위를 우리 로그로 이어 볼 수 있다.
 //
 // 화면은 track() 을 직접 부르지 않고 아래 함수만 부른다. 컴포넌트가 문자열 이름을 들면
-// 오타가 조용히 새 이벤트를 만들고, 프로퍼티가 화면마다 달라진다.
+// 문자열 오타로 의도하지 않은 이벤트가 생성되거나 화면마다 프로퍼티가 달라지는 것을 방지한다.
 //
 // ── 시드 스키마와 어긋나는 자리 (RFC 매핑 표에 그대로 옮긴다) ──────────────
 // product_detail_view  이 코드베이스에 상세 화면이 없다. 계측하지 않는다.
@@ -64,8 +64,8 @@ export const trackOrderComplete = (props: {
   itemCount: number
 }) => track('order_complete', props)
 
-// 로그인·로그아웃에서 사용자 식별을 붙이고 뗀다. 두 동작을 한 자리에 두는 이유는,
-// identify 만 부르고 reset 을 빼먹으면 로그아웃한 뒤의 이벤트가 앞사람 id 로 남기 때문이다.
+// 로그인·로그아웃 시 사용자 식별 정보를 설정하고 초기화한다. 두 동작을 한 자리에 두는 이유는,
+// identify만 호출하고 reset을 누락하면 로그아웃 후 이벤트에도 이전 사용자 ID가 기록되기 때문이다.
 export const identifyUser = (userId: string) => {
   setAnalyticsUser(userId)
   identify(userId)
