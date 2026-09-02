@@ -7,6 +7,13 @@ import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@/shared/api/fetcher';
 import { Header } from '@/widgets/header/Header';
 import { orderQueries } from '@/entities/order/api/queries';
+import type { AuthUser } from '@/entities/auth/model';
+
+// [AI] 서버 컴포넌트(app/orders/page.tsx)가 쿠키를 판독해 내려주는 초기 로그인 상태.
+// 이 값이 헤더의 초기 HTML 렌더에 사용된다 (week-09 1-2).
+type OrderListProps = {
+  serverUser?: AuthUser | null;
+};
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString('ko-KR', {
@@ -17,7 +24,7 @@ const formatDate = (iso: string) =>
     minute: '2-digit',
   });
 
-export const OrderList = () => {
+export const OrderList = ({ serverUser }: OrderListProps) => {
   const { data, isPending, isError, error, refetch } = useQuery(orderQueries.list());
 
   const renderBody = () => {
@@ -70,7 +77,7 @@ export const OrderList = () => {
 
   return (
     <main className="page">
-      <Header />
+      <Header serverUser={serverUser} />
       <section className="section">
         <h1>주문 내역</h1>
         {renderBody()}

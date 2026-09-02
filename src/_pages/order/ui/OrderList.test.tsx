@@ -74,4 +74,19 @@ describe('OrderList — 주문 내역 상태', () => {
     expect(alert).toHaveTextContent('요청을 처리하지 못했습니다.');
     expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
   });
+
+  it('serverUser가 주어지면 me 조회를 기다리지 않고 서버 판정 로그인 상태를 즉시 그린다 (1-2 초기 HTML 반영)', () => {
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <OrderList serverUser={{ id: 'u1', name: '루퍼1', email: 'looper1@loopers.dev' }} />
+      </QueryClientProvider>
+    );
+
+    // [AI] 비동기 대기 없이 동기 단언 — 서버가 준 값이라 첫 페인트부터 있어야 한다.
+    expect(screen.getByText('루퍼1님')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '로그인' })).not.toBeInTheDocument();
+  });
 });
