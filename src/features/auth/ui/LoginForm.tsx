@@ -1,7 +1,12 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent, type JSX } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  resetOrderSubmission,
+  resetPrivateOrderQueries,
+} from '@/entities/order'
 import { getSafeReturnPath } from '@/features/auth/lib/getSafeReturnPath'
 import { ApiError } from '@/shared/api/apiError'
 import { login } from '../api/authClient'
@@ -16,6 +21,7 @@ interface LoginFormProps {
 
 export function LoginForm({ returnTo, reason }: LoginFormProps): JSX.Element {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isPending, setIsPending] = useState(false)
@@ -30,6 +36,8 @@ export function LoginForm({ returnTo, reason }: LoginFormProps): JSX.Element {
 
     try {
       await login({ email, password })
+      resetOrderSubmission()
+      await resetPrivateOrderQueries(queryClient)
       router.replace(getSafeReturnPath(returnTo))
     } catch (error) {
       setErrorMessage(

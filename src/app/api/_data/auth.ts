@@ -14,29 +14,14 @@ export type {
   LoginRequest,
   SessionResponse,
 } from '@/entities/session'
-
-export type OrderItem = {
-  productId: string
-  quantity: number
-}
-
-export type Order = {
-  id: string
-  createdAt: string
-  items: OrderItem[]
-}
-
-export type OrderCreateRequest = {
-  items: OrderItem[]
-}
-
-export type OrderCreateResponse = {
-  order: Order
-}
-
-export type OrderListResponse = {
-  orders: Order[]
-}
+export type {
+  Order,
+  OrderCreateRequest,
+  OrderCreateResponse,
+  OrderItem,
+  OrderListResponse,
+} from '@/entities/order'
+import type { Order, OrderItem } from '@/entities/order'
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null

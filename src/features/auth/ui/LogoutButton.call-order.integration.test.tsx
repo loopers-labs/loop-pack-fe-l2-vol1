@@ -1,4 +1,5 @@
 import '@/test/setup/msw'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HttpResponse, http } from 'msw'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -31,8 +32,15 @@ describe('LogoutButton side-effect order', () => {
     server.use(
       http.post(LOGOUT_ENDPOINT, () => new HttpResponse(null, { status: 204 })),
     )
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
     const user = userEvent.setup()
-    render(<LogoutButton />)
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LogoutButton />
+      </QueryClientProvider>,
+    )
 
     await user.click(screen.getByRole('button', { name: '로그아웃' }))
 

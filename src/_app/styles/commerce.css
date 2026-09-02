@@ -295,3 +295,54 @@
   background: #f4f8fd;
   color: #3d5b72;
 }
+
+.commerce-order-page .week05-section {
+  max-width: 720px;
+}
+
+.commerce-order-action {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.commerce-primary-button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #2557a7;
+  background: #2557a7;
+  color: #fff;
+}
+
+.commerce-primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.commerce-order-list,
+.commerce-order-items {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commerce-order-card {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #c8c8c8;
+}
+
+.commerce-order-card h2 {
+  font-size: 18px;
+}
+
+.commerce-order-items > li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid #ececec;
+}

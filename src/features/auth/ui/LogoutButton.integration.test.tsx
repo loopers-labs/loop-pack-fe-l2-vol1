@@ -1,4 +1,5 @@
 import '@/test/setup/msw'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HttpResponse, http } from 'msw'
 import { render, screen, type RenderResult } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
@@ -46,13 +47,17 @@ interface RenderLogoutButtonResult extends RenderResult {
 }
 
 function renderLogoutButton(): RenderLogoutButtonResult {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+
   return {
     user: userEvent.setup(),
     ...render(
-      <>
+      <QueryClientProvider client={queryClient}>
         <LocalStateControls />
         <LogoutButton />
-      </>,
+      </QueryClientProvider>,
     ),
   }
 }

@@ -1,8 +1,10 @@
 import '@/test/setup/msw'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HttpResponse, delay, http } from 'msw'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, type RenderResult } from '@testing-library/react'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { PRIVATE_ORDER_QUERY_KEY } from '@/entities/order'
 import { server } from '@/test/mocks/server'
 import { LoginForm } from './LoginForm'
 
@@ -19,10 +21,26 @@ vi.mock('next/navigation', () => ({
   useRouter: () => router,
 }))
 
-function renderLoginForm(props: { returnTo?: string; reason?: string } = {}) {
+interface RenderLoginFormResult extends RenderResult {
+  queryClient: QueryClient
+  user: UserEvent
+}
+
+function renderLoginForm(
+  props: { returnTo?: string; reason?: string } = {},
+): RenderLoginFormResult {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+
   return {
+    queryClient,
     user: userEvent.setup(),
-    ...render(<LoginForm {...props} />),
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <LoginForm {...props} />
+      </QueryClientProvider>,
+    ),
   }
 }
 
@@ -71,6 +89,31 @@ describe('로그인 폼', () => {
     expect(requestBody).toEqual({ email: EMAIL, password: PASSWORD })
     expect(localStorage).toHaveLength(0)
     expect(router.refresh).not.toHaveBeenCalled()
+  })
+
+  it('로그인 성공 후 이동하기 전에 이전 사용자의 주문 캐시를 제거한다', async () => {
+    server.use(
+      http.post(LOGIN_ENDPOINT, () =>
+        HttpResponse.json({
+          user: { id: 'u2', name: '새 사용자', email: EMAIL },
+        }),
+      ),
+    )
+    const { queryClient, user } = renderLoginForm({ returnTo: '/orders' })
+    queryClient.setQueryData(PRIVATE_ORDER_QUERY_KEY, [
+      {
+        id: 'order-from-previous-user',
+        createdAt: '2026-09-02T12:00:00.000Z',
+        items: [{ productId: 'p1', quantity: 1 }],
+      },
+    ])
+
+    await fillAndSubmit(user)
+
+    await vi.waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/orders')
+    })
+    expect(queryClient.getQueryData(PRIVATE_ORDER_QUERY_KEY)).toBeUndefined()
   })
 
   it('외부 복귀 경로는 홈으로 대체 이동한다', async () => {

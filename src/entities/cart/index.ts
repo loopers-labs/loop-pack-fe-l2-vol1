@@ -5,4 +5,7 @@ export {
   useCartIds,
   useToggleCart,
   useClearCart,
+  useCaptureCartSnapshot,
+  useRemoveCartSnapshot,
 } from './model/store'
+export type { CartItemSnapshot } from './model/store'

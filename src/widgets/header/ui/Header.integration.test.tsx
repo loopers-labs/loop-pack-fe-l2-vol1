@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, type RenderResult } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -21,17 +22,21 @@ interface RenderHeaderActionsResult extends RenderResult {
 function renderHeaderActions(
   userName: string | null = null,
 ): RenderHeaderActionsResult {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+
   return {
     user: userEvent.setup(),
     ...render(
-      <>
+      <QueryClientProvider client={queryClient}>
         <HeaderActions userName={userName} />
         <ToggleWishlistButton
           productId={PRODUCT.id}
           productName={PRODUCT.name}
         />
         <AddToCartButton productId={PRODUCT.id} productName={PRODUCT.name} />
-      </>,
+      </QueryClientProvider>,
     ),
   }
 }

@@ -16,7 +16,7 @@ import type {
   OrderCreateResponse,
   OrderItem,
   OrderListResponse,
-} from '@/app/api/_data/auth'
+} from '@/entities/order'
 
 type Resolved =
   | { ok: true; user: AuthUser; scenario: string | null }
