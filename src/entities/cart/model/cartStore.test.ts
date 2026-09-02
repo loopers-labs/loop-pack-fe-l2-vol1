@@ -88,6 +88,19 @@ describe('createCartStore', () => {
     expect(restoredStore.getState().lastAddedId).toBeNull();
   });
 
+  it('전체 비우기를 저장해 같은 owner의 새 store에서도 빈 상태를 복원한다', async () => {
+    const firstStore = createCartStore('user:member-1');
+    firstStore.getState().setHydrated();
+    firstStore.getState().addItem('p1');
+    firstStore.getState().clearItems();
+
+    const restoredStore = createCartStore('user:member-1');
+    await restoredStore.persist.rehydrate();
+    restoredStore.getState().setHydrated();
+
+    expect(restoredStore.getState().items.size).toBe(0);
+  });
+
   it('hydration 전에 담은 상품을 저장된 상품과 합쳐 유실하지 않는다', async () => {
     const persistedStore = createCartStore('guest');
     persistedStore.getState().setHydrated();
