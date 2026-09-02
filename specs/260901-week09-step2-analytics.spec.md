@@ -56,7 +56,7 @@
   - `order_complete`: `createOrder`가 성공하면 `{ orderId, productIds, totalPrice }`를 한 번 보낸다. `orderId`와 `productIds`는 응답의 `order`에서, `totalPrice`는 주문 응답에 금액이 없으므로 제출한 주문서의 계산값에서 가져온다. `orderId`로 완료 이벤트의 중복을 구분할 수 있다.
   - `productIds`는 주문에 포함된 상품 종류를 나타낸다. 총수량 분석은 이번 범위에 없으므로 `quantity`와 `itemCount`는 수집하지 않는다.
   - RFC 매핑 표에는 이벤트의 집계 단위는 유지하고 props만 다중 상품 모델에 맞춘 이유를 적는다.
-- **D13 `from`은 로그인 화면에 들어온 출처다.** `next`는 로그인 뒤 목적지이므로 `from` 계산에 쓰지 않는다. `LoginFrom`은 `'cart' | 'my' | 'orders' | 'direct'`로 제한한다. 장바구니 로그인 CTA는 `cart`, 마이페이지 CTA는 `my`, 주문 보호 경로와 주문 화면의 세션 만료는 `orders`를 로그인 URL에 함께 싣는다. `/login` 직접 진입이나 알 수 없는 값은 `direct`로 처리한다. `LoginForm`은 검증한 같은 값을 `login_start`와 `login_success`에 쓴다.
+- **D13 `from`은 로그인 화면에 들어온 출처다.** `next`는 로그인 뒤 목적지이므로 `from` 계산에 쓰지 않는다. 각 로그인 진입점이 URL을 만들 때 실제 출처를 `from`에 넣는다. 장바구니 다이얼로그는 `cart`, 마이페이지 CTA는 `my`, proxy와 공유 세션 만료 처리는 현재 pathname의 첫 경로를 전달한다. `LoginPage`는 URL의 값을 `'cart' | 'my' | 'orders' | 'direct'`로 검증하고, 허용하지 않는 값과 `/login` 직접 진입은 `direct`로 처리한다. `LoginForm`은 검증된 같은 값을 `login_start`와 `login_success`에 쓴다.
 
 ### 이벤트 props 표 (RFC A절에 수록)
 

@@ -10,12 +10,17 @@ export const LOGIN_REASON_MESSAGE: Record<LoginReason, string> = {
 
 /**
  * 로그인이 필요한 모든 진입점이 같은 규칙으로 돌아갈 경로를 next에 싣는다.
- * 만료는 reason으로 구분해 로그인 화면이 안내를 띄운다.
+ * 만료는 reason으로 구분해 로그인 화면이 안내를 띄우고,
+ * from은 로그인 화면에 들어온 출처로 login_start·login_success 계측에 쓴다.
  */
-export function buildLoginUrl(next: string, reason?: LoginReason) {
+export function buildLoginUrl(
+  next: string,
+  options: { from: string; reason?: LoginReason },
+) {
   const params = new URLSearchParams({
     next,
-    ...(reason ? { reason } : {}),
+    ...(options.reason ? { reason: options.reason } : {}),
+    from: options.from,
   });
 
   return `${LOGIN_PATH}?${params}`;

@@ -2,25 +2,43 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import type { SubmitEvent } from 'react';
+import { useEffect, type SubmitEvent } from 'react';
 
 import { loginMutationOptions } from '../api/mutations';
 import { toSafeNextPath } from '../model/login-url';
 
+import {
+  identify,
+  toLoginFailReason,
+  trackEvent,
+  type LoginFrom,
+} from '@/analytics/events';
 import { useSessionActions } from '@/entities/session';
 
 export function LoginForm({
   redirectPathAfterLogin,
+  from,
 }: {
   redirectPathAfterLogin: string | null;
+  from: LoginFrom;
 }) {
   const router = useRouter();
   const { setUser } = useSessionActions();
+
+  useEffect(() => {
+    trackEvent('login_start', { from });
+  }, [from]);
+
   const { mutate, isPending, error } = useMutation({
     ...loginMutationOptions,
     onSuccess: ({ user }) => {
+      identify(user.id);
+      trackEvent('login_success', { from });
       setUser(user);
       router.replace(toSafeNextPath(redirectPathAfterLogin));
+    },
+    onError: (loginError) => {
+      trackEvent('login_fail', { reason: toLoginFailReason(loginError) });
     },
   });
 

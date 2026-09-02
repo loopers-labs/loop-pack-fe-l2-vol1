@@ -31,7 +31,10 @@ function MyContent() {
           <p className={styles.loginNotice}>
             로그인하면 주문 내역과 계정 정보를 확인할 수 있습니다.
           </p>
-          <Link className={styles.loginButton} href={buildLoginUrl('/my')}>
+          <Link
+            className={styles.loginButton}
+            href={buildLoginUrl('/my', { from: 'my' })}
+          >
             로그인
           </Link>
         </div>

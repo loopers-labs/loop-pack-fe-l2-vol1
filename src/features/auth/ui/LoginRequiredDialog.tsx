@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { buildLoginUrl } from '../model/login-url';
 
+import type { LoginFrom } from '@/analytics/events';
 import { Dialog } from '@/shared/ui/dialog/Dialog';
 
 const TITLE_ID = 'login-required-title';
@@ -12,10 +13,12 @@ export function LoginRequiredDialog({
   open,
   onOpenChange,
   redirectPathAfterLogin,
+  loginFrom,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   redirectPathAfterLogin: string;
+  loginFrom: LoginFrom;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -34,7 +37,9 @@ export function LoginRequiredDialog({
         </Dialog.Description>
         <div className="week05-error-actions mt-5 justify-end">
           <Dialog.Close>닫기</Dialog.Close>
-          <Link href={buildLoginUrl(redirectPathAfterLogin)}>
+          <Link
+            href={buildLoginUrl(redirectPathAfterLogin, { from: loginFrom })}
+          >
             로그인 페이지로 이동
           </Link>
         </div>

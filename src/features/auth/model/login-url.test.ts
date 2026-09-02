@@ -6,17 +6,21 @@ const parse = (url: string) => new URL(url, 'http://localhost');
 
 describe('buildLoginUrl', () => {
   it('돌아갈 경로를 next query에 담아 로그인 경로를 만든다', () => {
-    const url = parse(buildLoginUrl('/orders?status=pending'));
+    const url = parse(
+      buildLoginUrl('/orders?status=pending', { from: 'orders' }),
+    );
 
     expect(url.pathname).toBe('/login');
     expect(url.searchParams.get('next')).toBe('/orders?status=pending');
+    expect(url.searchParams.get('from')).toBe('orders');
     expect(url.searchParams.get('reason')).toBeNull();
   });
 
   it('세션 만료는 reason=expired를 함께 전달한다', () => {
-    const url = parse(buildLoginUrl('/my', 'expired'));
+    const url = parse(buildLoginUrl('/my', { from: 'my', reason: 'expired' }));
 
     expect(url.searchParams.get('next')).toBe('/my');
+    expect(url.searchParams.get('from')).toBe('my');
     expect(url.searchParams.get('reason')).toBe('expired');
   });
 });

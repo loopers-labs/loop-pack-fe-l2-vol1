@@ -23,7 +23,7 @@ function LoginScreen() {
   return (
     <>
       <p>비로그인</p>
-      <LoginForm redirectPathAfterLogin="/my" />
+      <LoginForm redirectPathAfterLogin="/my" from="direct" />
     </>
   );
 }

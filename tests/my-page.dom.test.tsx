@@ -17,7 +17,7 @@ describe('마이페이지', () => {
     // 공통 로그인 URL 규칙: 로그인 후 /my로 돌아온다
     expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute(
       'href',
-      '/login?next=%2Fmy',
+      '/login?next=%2Fmy&from=my',
     );
 
     const menu = screen.getByRole('navigation', { name: '마이 메뉴' });

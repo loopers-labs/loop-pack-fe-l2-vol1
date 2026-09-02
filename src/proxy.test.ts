@@ -52,6 +52,7 @@ describe('proxy', () => {
       expect(response.status).toBe(307);
       expect(target.pathname).toBe('/login');
       expect(target.searchParams.get('next')).toBe(path);
+      expect(target.searchParams.get('from')).toBe('orders');
     },
   );
 

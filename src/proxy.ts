@@ -16,7 +16,12 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   return NextResponse.redirect(
-    new URL(buildLoginUrl(pathname + search), request.url),
+    new URL(
+      buildLoginUrl(pathname + search, {
+        from: pathname.split('/')[1] || 'direct',
+      }),
+      request.url,
+    ),
   );
 }
 

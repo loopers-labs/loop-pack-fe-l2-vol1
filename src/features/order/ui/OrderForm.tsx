@@ -3,11 +3,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 import type { OrderDraftProduct } from '../model/use-order-draft';
 
 import styles from './OrderForm.module.css';
 
+import { trackEvent } from '@/analytics/events';
 import { useCartActions } from '@/entities/cart';
 import {
   createOrder,
@@ -28,9 +30,23 @@ export function OrderForm({
   const { removeItems } = useCartActions();
   const { clearCheckoutDraft } = useCheckoutActions();
 
+  // 주문서가 그려진(draft ready) 시점이 곧 주문 시작이다. 마운트 시점 상품으로 한 번만 기록한다.
+  useEffect(() => {
+    trackEvent('order_start', {
+      productIds: orderProducts.map(({ productId }) => productId),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 1회, 진입 시점 값 사용이 의도
+  }, []);
+
   const { mutate, isPending, error } = useMutation({
     mutationFn: createOrder,
-    onSuccess: (_, request) => {
+    onSuccess: ({ order }, request) => {
+      trackEvent('order_complete', {
+        orderId: order.id,
+        productIds: order.items.map((item) => item.productId),
+        // 주문 응답에는 금액이 없어 주문서의 계산값을 쓴다
+        totalPrice,
+      });
       // 주문된 상품만 장바구니에서 빼고, draft와 주문 캐시를 정리한 뒤 내역으로 이동한다
       removeItems(request.items.map((item) => item.productId));
       clearCheckoutDraft();

@@ -161,6 +161,7 @@ function CartContent() {
         open={isLoginDialogOpen}
         onOpenChange={setIsLoginDialogOpen}
         redirectPathAfterLogin="/orders/new"
+        loginFrom="cart"
       />
     </>
   );

@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
+import { reset } from '@/analytics/events';
 import { orderQueries } from '@/entities/order';
 import { useSessionActions } from '@/entities/session';
 import { buildLoginUrl } from '@/features/auth';
@@ -26,6 +27,7 @@ export default function CommerceError({
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const returnPath = search ? `${pathname}?${search}` : pathname;
+  const loginFrom = pathname.split('/')[1] || 'direct';
 
   const { clearUser } = useSessionActions();
 
@@ -36,9 +38,12 @@ export default function CommerceError({
     if (!sessionExpired) return;
 
     clearUser();
+    reset();
     queryClient.removeQueries({ queryKey: orderQueries.all() });
-    router.replace(buildLoginUrl(returnPath, 'expired'));
-  }, [sessionExpired, clearUser, queryClient, router, returnPath]);
+    router.replace(
+      buildLoginUrl(returnPath, { reason: 'expired', from: loginFrom }),
+    );
+  }, [sessionExpired, clearUser, queryClient, router, returnPath, loginFrom]);
 
   if (sessionExpired) {
     return <p role="status">세션이 만료되어 로그인 화면으로 이동합니다.</p>;

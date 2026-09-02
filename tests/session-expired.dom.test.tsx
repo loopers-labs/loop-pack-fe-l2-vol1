@@ -61,6 +61,7 @@ describe('세션 만료 처리', () => {
     });
     expect(replacedUrl().pathname).toBe('/login');
     expect(replacedUrl().searchParams.get('reason')).toBe('expired');
+    expect(replacedUrl().searchParams.get('from')).toBe('orders');
     expect(replacedUrl().searchParams.get('next')).toBe(
       '/orders?status=pending',
     );

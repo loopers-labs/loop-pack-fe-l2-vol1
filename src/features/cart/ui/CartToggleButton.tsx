@@ -1,5 +1,6 @@
 'use client';
 
+import { trackEvent } from '@/analytics/events';
 import { useCart, useCartActions } from '@/entities/cart';
 
 export function CartToggleButton({
@@ -22,6 +23,9 @@ export function CartToggleButton({
       aria-pressed={isInCart}
       disabled={isInCart === undefined}
       onClick={() => {
+        if (isInCart === false) {
+          trackEvent('cart_add', { productId, quantity: 1 });
+        }
         toggle(productId);
       }}
     >

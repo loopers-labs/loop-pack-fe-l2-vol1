@@ -81,7 +81,7 @@ describe('비로그인 구매', () => {
 
     expect(
       within(dialog).getByRole('link', { name: '로그인 페이지로 이동' }),
-    ).toHaveAttribute('href', '/login?next=%2Forders%2Fnew');
+    ).toHaveAttribute('href', '/login?next=%2Forders%2Fnew&from=cart');
 
     await user.click(within(dialog).getByRole('button', { name: '닫기' }));
 
