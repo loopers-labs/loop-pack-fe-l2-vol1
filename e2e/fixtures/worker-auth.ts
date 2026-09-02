@@ -37,11 +37,6 @@ export const test = base.extend<object, WorkerFixtures>({
       const email = `looper${workerInfo.parallelIndex + 1}@loopers.dev`;
       const authFile = path.join(AUTH_DIR, `worker-${workerInfo.parallelIndex}.json`);
 
-      if (fs.existsSync(authFile)) {
-        await provide(authFile);
-        return;
-      }
-
       fs.mkdirSync(AUTH_DIR, { recursive: true });
 
       // baseURL 은 test 스코프 옵션이라 worker fixture 에서 인자로 못 받는다.
