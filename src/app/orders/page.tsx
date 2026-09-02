@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function OrderHistoryPage() {
-  await requireCurrentUser('/orders');
+  await requireCurrentUser('/orders', 'orders');
 
   return <OrderHistoryContent />;
 }

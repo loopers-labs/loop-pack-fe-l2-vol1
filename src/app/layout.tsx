@@ -58,7 +58,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col bg-bg font-family-body antialiased">
-        <Providers cartOwnerKey={cartOwnerKey}>
+        <Providers cartOwnerKey={cartOwnerKey} userId={user?.id ?? null}>
           {/* 공통 헤더 */}
           <header className="border-b border-border bg-bg-card">
             <div className="mx-auto flex min-h-20 w-full max-w-[1256px] items-center justify-between px-4 sm:px-6 lg:px-8">

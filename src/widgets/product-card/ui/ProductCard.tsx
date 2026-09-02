@@ -6,6 +6,7 @@ import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import type { Product } from '@/entities/product/model/types';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { formatWon } from '@/shared/lib/format';
+import { trackCartAdd } from '@/analytics/events';
 
 interface ProductCardProps {
   product: Product;
@@ -60,6 +61,11 @@ export function ProductCard({
   const discount = getProductDiscount(product);
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
 
+  const handleAddToCart = () => {
+    addItem(product.id);
+    trackCartAdd(product.id);
+  };
+
   return (
     <article className="group flex min-w-0 flex-col">
       <div className="relative">
@@ -92,7 +98,7 @@ export function ProductCard({
           </button>
           <button
             type="button"
-            onClick={() => addItem(product.id)}
+            onClick={handleAddToCart}
             aria-label={`${product.name} 장바구니에 담기`}
             className="flex size-11 cursor-pointer items-center justify-center text-white transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-white"
           >

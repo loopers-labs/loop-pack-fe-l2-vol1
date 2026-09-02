@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/entities/auth/api/authService';
 import type { AuthUser } from '@/entities/auth/model/types';
+import { orderKeys } from '@/entities/order/api/orderQueries';
 import { productListInfiniteQueryOptions } from '@/entities/product/api/productQueries';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
+import { resetAnalyticsUser } from '@/analytics/events';
 
 interface HeaderNavProps {
   user: AuthUser | null;
@@ -36,6 +38,8 @@ export function HeaderNav({ user }: HeaderNavProps) {
 
     try {
       await logout();
+      resetAnalyticsUser();
+      queryClient.removeQueries({ queryKey: orderKeys.all });
       router.replace('/');
       router.refresh();
     } catch {

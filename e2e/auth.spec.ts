@@ -11,7 +11,9 @@ test.describe('인증', () => {
     await expect(page.getByRole('link', { name: '로그인' })).toBeVisible();
 
     await page.goto('/orders/new');
-    await expect(page).toHaveURL(/\/login\?returnTo=%2Forders%2Fnew/);
+    await expect(page).toHaveURL(
+      '/login?returnTo=%2Forders%2Fnew',
+    );
     await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
 
     await page.getByRole('button', { name: '로그인' }).click();

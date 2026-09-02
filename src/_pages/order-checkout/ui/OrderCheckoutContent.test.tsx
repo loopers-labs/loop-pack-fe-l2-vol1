@@ -30,9 +30,17 @@ const product: Product = {
 };
 
 const router = vi.hoisted(() => ({ replace: vi.fn() }));
+const analytics = vi.hoisted(() => ({
+  trackOrderComplete: vi.fn(),
+  trackOrderStart: vi.fn(),
+}));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
+}));
+vi.mock('@/analytics/events', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/analytics/events')>()),
+  ...analytics,
 }));
 
 function CartQuantityProbe() {
@@ -68,6 +76,7 @@ describe('OrderCheckoutContent', () => {
   beforeEach(() => {
     localStorage.clear();
     router.replace.mockReset();
+    Object.values(analytics).forEach((mock) => mock.mockReset());
   });
 
   it('주문에 성공하면 요청한 수량을 전송하고 장바구니를 비운 뒤 주문 내역으로 이동한다', async () => {
@@ -106,6 +115,11 @@ describe('OrderCheckoutContent', () => {
       name: '276,000원 주문하기',
     });
     expect(submitButton).toBeEnabled();
+    expect(analytics.trackOrderStart).toHaveBeenCalledWith({
+      productIds: [product.id],
+      itemCount: 2,
+      totalPrice: 276_000,
+    });
 
     await user.click(submitButton);
 
@@ -115,6 +129,12 @@ describe('OrderCheckoutContent', () => {
       });
       expect(screen.getByLabelText('장바구니 총 수량')).toHaveTextContent('0');
       expect(router.replace).toHaveBeenCalledWith('/orders');
+    });
+    expect(analytics.trackOrderComplete).toHaveBeenCalledWith({
+      orderId: 'o1',
+      productIds: [product.id],
+      itemCount: 2,
+      totalPrice: 276_000,
     });
   });
 });

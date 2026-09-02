@@ -19,7 +19,9 @@ test.describe('장바구니', () => {
     await page.getByRole('link', { name: /장바구니 1/ }).click();
     await expect(page).toHaveURL('/cart');
     await page.getByRole('link', { name: '주문하기' }).click();
-    await expect(page).toHaveURL(/\/login\?returnTo=%2Forders%2Fnew/);
+    await expect(page).toHaveURL(
+      '/login?returnTo=%2Forders%2Fnew&from=cart',
+    );
     await page.getByRole('button', { name: '로그인' }).click();
     await expect(page).toHaveURL('/orders/new');
     await expect(page.getByRole('heading', { name: '주문서' })).toBeVisible();

@@ -16,6 +16,8 @@ import { OrderProductList } from '@/features/order/ui/OrderProductList';
 import { BackIcon } from '@/shared/ui/icons/BackIcon';
 import { protectedRequestMeta } from '@/shared/api/requestMeta';
 import { OrderPaymentSummary } from './OrderPaymentSummary';
+import { trackOrderComplete, trackOrderStart } from '@/analytics/events';
+import { useAnalyticsPageView } from '@/analytics/useAnalyticsPageView';
 
 export function OrderCheckoutContent() {
   const router = useRouter();
@@ -38,10 +40,20 @@ export function OrderCheckoutContent() {
     !isPending &&
     !isError &&
     products.size === items.length;
+  const analyticsOrder = {
+    productIds: items.map((item) => item.productId),
+    itemCount,
+    totalPrice: priceSummary.paymentTotal,
+  };
+  useAnalyticsPageView(
+    () => trackOrderStart(analyticsOrder),
+    isOrderReady,
+  );
   const orderMutation = useMutation({
     mutationFn: () => createOrder({ items }),
     meta: protectedRequestMeta,
-    onSuccess: async () => {
+    onSuccess: async ({ order }) => {
+      trackOrderComplete({ ...analyticsOrder, orderId: order.id });
       clearItems();
       await queryClient.invalidateQueries({ queryKey: orderKeys.all });
       router.replace('/orders');

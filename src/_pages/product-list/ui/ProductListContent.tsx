@@ -8,6 +8,8 @@ import { ProductListSkeleton } from './ProductListSkeleton';
 import { InfiniteScrollTrigger } from '@/shared/ui/infinite-scroll-trigger/InfiniteScrollTrigger';
 import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
 import type { Product } from '@/entities/product/model/types';
+import { trackProductListView } from '@/analytics/events';
+import { useAnalyticsPageView } from '@/analytics/useAnalyticsPageView';
 
 interface ProductGridProps {
   products: Product[];
@@ -55,6 +57,13 @@ function ProductGrid({
 export function ProductListContent() {
   const { params, query, setCategory, setSort, setSearch } =
     useProductSearchParams();
+  useAnalyticsPageView(() =>
+    trackProductListView({
+      category: params.category,
+      sort: params.sort,
+      page: 1,
+    }),
+  );
   const {
     data,
     isError,

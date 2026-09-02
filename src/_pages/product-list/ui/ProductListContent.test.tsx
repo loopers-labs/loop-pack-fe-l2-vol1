@@ -23,9 +23,16 @@ const router = vi.hoisted(() => ({
   replace: vi.fn(),
   refresh: vi.fn(),
 }));
+const analytics = vi.hoisted(() => ({
+  trackProductListView: vi.fn(),
+}));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
+}));
+vi.mock('@/analytics/events', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/analytics/events')>()),
+  ...analytics,
 }));
 
 const categories = productListFixture.categories;
@@ -81,6 +88,7 @@ describe('ProductListContent', () => {
     localStorage.clear();
     vi.stubGlobal('IntersectionObserver', undefined);
     useWishlistStore.setState({ ids: new Set(), isHydrated: true });
+    analytics.trackProductListView.mockReset();
   });
 
   afterEach(() => {
@@ -109,6 +117,11 @@ describe('ProductListContent', () => {
       screen.queryByText('상품을 불러오는 중입니다.'),
     ).not.toBeInTheDocument();
     expect(screen.getByText('총 1개')).toBeInTheDocument();
+    expect(analytics.trackProductListView).toHaveBeenCalledWith({
+      category: 'all',
+      sort: 'latest',
+      page: 1,
+    });
   });
 
   it('성공 응답에 상품이 없으면 전체 개수 0과 빈 결과 안내를 보여준다', async () => {

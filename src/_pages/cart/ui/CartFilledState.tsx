@@ -138,7 +138,7 @@ export function CartFilledState({ items }: CartFilledStateProps) {
             )}
           </div>
           <Link
-            href="/orders/new"
+            href="/orders/new?from=cart"
             className="mt-6 flex min-h-[52px] w-full items-center justify-center rounded-lg bg-text px-5 text-sm font-semibold text-white transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
           >
             주문하기

@@ -14,6 +14,15 @@ import { productListFixture } from '@/test/msw/fixtures';
 import { server } from '@/test/msw/server';
 import { CartContent } from './CartContent';
 
+const analytics = vi.hoisted(() => ({
+  trackCartAdd: vi.fn(),
+}));
+
+vi.mock('@/analytics/events', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/analytics/events')>()),
+  ...analytics,
+}));
+
 function renderCart() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: 0 } },
@@ -33,6 +42,7 @@ describe('CartContent', () => {
     localStorage.clear();
     vi.stubGlobal('IntersectionObserver', undefined);
     useWishlistStore.setState({ ids: new Set(), isHydrated: true });
+    analytics.trackCartAdd.mockReset();
     server.use(
       http.get('*/api/products', ({ request }) => {
         const id = new URL(request.url).searchParams.get('id');
@@ -82,8 +92,9 @@ describe('CartContent', () => {
     expect(screen.queryByText('원하는 상품을 담아보세요.')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '주문하기' })).toHaveAttribute(
       'href',
-      '/orders/new',
+      '/orders/new?from=cart',
     );
+    expect(analytics.trackCartAdd).toHaveBeenCalledWith(product.id);
   });
 
   it('할인 상품의 가격 정보와 전체 할인액을 장바구니에 표시한다', async () => {

@@ -13,8 +13,18 @@ import { LoginContent } from './LoginContent';
 const navigation = vi.hoisted(() => ({
   replaceDocumentLocation: vi.fn(),
 }));
+const analytics = vi.hoisted(() => ({
+  identifyAnalyticsUser: vi.fn(),
+  trackLoginFail: vi.fn(),
+  trackLoginStart: vi.fn(),
+  trackLoginSuccess: vi.fn(),
+}));
 
 vi.mock('@/shared/lib/browserNavigation', () => navigation);
+vi.mock('@/analytics/events', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/analytics/events')>()),
+  ...analytics,
+}));
 
 function renderLogin() {
   const queryClient = new QueryClient({
@@ -23,7 +33,7 @@ function renderLogin() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <LoginContent returnTo="/orders/new" />
+      <LoginContent returnTo="/orders/new" loginFrom="cart" />
     </QueryClientProvider>,
   );
 }
@@ -31,6 +41,7 @@ function renderLogin() {
 describe('LoginContent', () => {
   beforeEach(() => {
     navigation.replaceDocumentLocation.mockReset();
+    Object.values(analytics).forEach((mock) => mock.mockReset());
   });
 
   it('잘못된 자격 증명 메시지를 폼 안에 표시하고 오류로 포커스를 옮긴다', async () => {
@@ -53,6 +64,11 @@ describe('LoginContent', () => {
     expect(alert).toHaveTextContent('이메일 또는 비밀번호를 확인해주세요.');
     expect(alert).toHaveFocus();
     expect(navigation.replaceDocumentLocation).not.toHaveBeenCalled();
+    expect(analytics.trackLoginStart).toHaveBeenCalledWith('cart');
+    expect(analytics.trackLoginFail).toHaveBeenCalledWith(
+      'cart',
+      'INVALID_CREDENTIALS',
+    );
   });
 
   it('로그인 성공 후 요청했던 보호 경로로 이동하고 서버 UI를 갱신한다', async () => {
@@ -75,5 +91,10 @@ describe('LoginContent', () => {
     expect(navigation.replaceDocumentLocation).toHaveBeenCalledWith(
       '/orders/new',
     );
+    expect(analytics.identifyAnalyticsUser).toHaveBeenCalledWith('u1');
+    expect(analytics.trackLoginSuccess).toHaveBeenCalledWith('cart');
+    expect(
+      analytics.identifyAnalyticsUser.mock.invocationCallOrder[0],
+    ).toBeLessThan(analytics.trackLoginSuccess.mock.invocationCallOrder[0]);
   });
 });

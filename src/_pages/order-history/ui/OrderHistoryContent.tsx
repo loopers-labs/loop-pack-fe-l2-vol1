@@ -93,7 +93,7 @@ export function OrderHistoryContent() {
           </p>
         </div>
         <Link
-          href="/orders/new"
+          href="/orders/new?from=orders"
           className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-bg-card px-5 text-sm font-semibold text-text transition-colors hover:border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
         >
           현재 장바구니 주문하기

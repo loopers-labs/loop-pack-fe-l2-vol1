@@ -5,17 +5,35 @@ import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { AuthApiError, login } from '@/entities/auth/api/authService';
 import { replaceDocumentLocation } from '@/shared/lib/browserNavigation';
+import {
+  getLoginFailureReason,
+  identifyAnalyticsUser,
+  trackLoginFail,
+  trackLoginStart,
+  trackLoginSuccess,
+} from '@/analytics/events';
+import { useAnalyticsPageView } from '@/analytics/useAnalyticsPageView';
+import type { LoginFrom } from '@/shared/lib/loginFrom';
 
 interface LoginContentProps {
   returnTo: string;
+  loginFrom: LoginFrom;
 }
 
-export function LoginContent({ returnTo }: LoginContentProps) {
+export function LoginContent({ returnTo, loginFrom }: LoginContentProps) {
   const errorRef = useRef<HTMLParagraphElement>(null);
+  useAnalyticsPageView(() => trackLoginStart(loginFrom));
+
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: () => {
+    onSuccess: ({ user }) => {
+      identifyAnalyticsUser(user.id);
+      trackLoginSuccess(loginFrom);
       replaceDocumentLocation(returnTo);
+    },
+    onError: (error) => {
+      const status = error instanceof AuthApiError ? error.status : undefined;
+      trackLoginFail(loginFrom, getLoginFailureReason(status));
     },
   });
 

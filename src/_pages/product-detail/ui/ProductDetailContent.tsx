@@ -13,6 +13,8 @@ import { formatWon } from '@/shared/lib/format';
 import { SizeSelect } from './SizeSelect';
 import type { SelectOption } from '@/shared/ui/select';
 import type { SizeValue } from '@/entities/product/model/types';
+import { trackCartAdd, trackProductDetailView } from '@/analytics/events';
+import { useAnalyticsPageView } from '@/analytics/useAnalyticsPageView';
 
 const CATEGORY_NAME: Record<string, string> = {
   casual: '캐주얼',
@@ -31,11 +33,21 @@ export function ProductDetailContent() {
   const addItem = useCartStore((s) => s.addItem);
 
   const discount = getProductDiscount(product);
+  useAnalyticsPageView(
+    () => trackProductDetailView(product.id),
+    true,
+    product.id,
+  );
 
   const sizeItems: SelectOption<SizeValue>[] = product.sizes.map((s) => ({
     value: s,
     isDisabled: s.stock === 0,
   }));
+
+  const handleAddToCart = () => {
+    addItem(product.id);
+    trackCartAdd(product.id);
+  };
 
   return (
     <>
@@ -143,7 +155,7 @@ export function ProductDetailContent() {
               </button>
               <button
                 type="button"
-                onClick={() => addItem(product.id)}
+                onClick={handleAddToCart}
                 className="flex min-h-[52px] flex-1 items-center justify-center rounded-lg bg-text px-6 text-[15px] font-semibold text-white transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
               >
                 장바구니 담기
