@@ -32,17 +32,17 @@ interface HeaderProps {
  * 실제 만료는 클라이언트 401 인터셉터가 감지해 /login?reason=expired 로 보낸다.
  */
 export function Header({ isLoggedIn = false }: HeaderProps) {
-  const wishList = useWishlistStore((state) => state.wishlist);
-  const cart = useCartStore((state) => state.cart);
+  const wishListCount = useWishlistStore((state) => state.wishlist.length);
+  const cartCount = useCartStore((state) => state.cart.length);
 
   return (
     <header className="week05-header">
       <Link href="/">Commerce</Link>
       <nav aria-label="주요 메뉴">
         <Link href="/products">상품</Link>
-        <span>위시리스트 {wishList.length}</span>
+        <span>위시리스트 {wishListCount}</span>
         <Link href="/order" prefetch={isLoggedIn ? undefined : false}>
-          장바구니 {cart.length}
+          장바구니 {cartCount}
         </Link>
         {isLoggedIn ? (
           <>
