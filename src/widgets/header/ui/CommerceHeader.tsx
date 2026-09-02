@@ -6,6 +6,7 @@ import { reset } from "@/analytics/logger";
 import { selectCartCount, selectCartHasHydrated, useCartStore } from "@/entities/cart";
 import { logout, sessionQueries } from "@/entities/session";
 import {
+  selectClearWishlist,
   selectWishlistCount,
   selectWishlistHasHydrated,
   useWishlistStore,
@@ -20,10 +21,12 @@ export function CommerceHeader() {
   const cartCount = useCartStore(selectCartCount);
   const visibleWishlistCount = wishlistHasHydrated ? String(wishlistCount) : "-";
   const visibleCartCount = cartHasHydrated ? String(cartCount) : "-";
+  const clearWishlist = useWishlistStore(selectClearWishlist);
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
       reset();
+      clearWishlist();
       queryClient.setQueryData(sessionQueries.me().queryKey, { user: null });
     },
   });

@@ -30,6 +30,13 @@ describe("auth proxy", () => {
     );
   });
 
+  it("비로그인 상태로 위시리스트에 접근하면 로그인 페이지로 이동한다", () => {
+    const response = proxy(request("/wishlist"));
+
+    expect(response.status).toBe(307);
+    expect(redirectLocation(response)).toBe("http://localhost/login?redirectTo=%2Fwishlist");
+  });
+
   it("세션 쿠키가 있으면 보호 경로에 접근해도 통과한다", () => {
     const response = proxy(request("/orders", "signed-session"));
 

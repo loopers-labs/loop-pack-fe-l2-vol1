@@ -10,4 +10,6 @@ export const selectIsProductInWishlist = (productId: string) => (state: Wishlist
 
 export const selectToggleWishlist = (state: WishlistStore) => state.toggleWishlist;
 
+export const selectClearWishlist = (state: WishlistStore) => state.clearWishlist;
+
 export const selectWishlistHasHydrated = (state: WishlistStore) => state.hasHydrated;

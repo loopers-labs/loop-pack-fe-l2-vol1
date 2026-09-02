@@ -17,6 +17,7 @@ describe("wishlist persistence", () => {
     const persistedState = selectPersistedWishlistState({
       wishlistProductIdMap: { p1: true },
       toggleWishlist: () => undefined,
+      clearWishlist: () => undefined,
       hasHydrated: true,
       setHasHydrated: () => undefined,
     } satisfies WishlistStore);

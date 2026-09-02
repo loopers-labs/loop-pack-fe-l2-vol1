@@ -26,6 +26,7 @@ function createWishlistStoreState(
   return {
     wishlistProductIdMap: state.wishlistProductIdMap,
     toggleWishlist: () => undefined,
+    clearWishlist: () => undefined,
     hasHydrated: true,
     setHasHydrated: () => undefined,
   };

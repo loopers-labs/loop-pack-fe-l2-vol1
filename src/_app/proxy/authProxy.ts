@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
 import { normalizeLoginRedirectPath } from "@/_pages/login/model/redirect";
 
-const protectedPathnames = ["/order", "/orders"];
+const protectedPathnames = ["/order", "/orders", "/wishlist"];
 
 const isProtectedPathname = (pathname: string) =>
   protectedPathnames.some((protectedPathname) => pathname === protectedPathname);

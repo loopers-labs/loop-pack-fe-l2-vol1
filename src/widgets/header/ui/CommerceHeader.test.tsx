@@ -54,7 +54,7 @@ describe("CommerceHeader", () => {
     expect(screen.queryByRole("button", { name: "로그아웃" })).not.toBeInTheDocument();
   });
 
-  it("로그인 상태에서 로그아웃하면 세션만 비우고 장바구니와 위시리스트는 유지한다", async () => {
+  it("로그인 상태에서 로그아웃하면 세션과 위시리스트를 비우고 장바구니는 유지한다", async () => {
     let didRequestLogout = false;
     useCartStore.setState({
       cartProductQuantityMap: { p1: 1 },
@@ -88,7 +88,7 @@ describe("CommerceHeader", () => {
     expect(reset).toHaveBeenCalledOnce();
     expect(await screen.findByRole("link", { name: "로그인" })).toBeInTheDocument();
     expect(screen.getByLabelText("장바구니 1")).toBeInTheDocument();
-    expect(screen.getByLabelText("위시리스트 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("위시리스트 0")).toBeInTheDocument();
   });
 
   it("장바구니 개수는 장바구니 페이지로 이동하는 링크에 표시한다", async () => {
