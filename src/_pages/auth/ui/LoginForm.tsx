@@ -1,12 +1,12 @@
 'use client';
 
-// [AI] 로그인 폼 (week-09 1-1): UI 뼈대 + POST /api/auth/login 연동.
-// 400/401 분기 메시지와 제출 중 상태·중복 제출 방지는 체크리스트 다음 항목에서 추가한다.
+// [AI] 로그인 폼 (week-09 1-1): UI 뼈대 + POST /api/auth/login 연동 + 실패 분기 메시지.
+// 제출 중 상태·중복 제출 방지는 체크리스트 다음 항목에서 추가한다.
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/widgets/header/Header';
 import { loginRequest } from '@/entities/auth/api';
-import { ApiError } from '@/shared/api/fetcher';
+import { getLoginErrorMessage } from '../model/getLoginErrorMessage';
 import styles from './LoginForm.module.css';
 
 export const LoginForm = () => {
@@ -24,16 +24,16 @@ export const LoginForm = () => {
     const password = String(formData.get('password') ?? '');
 
     try {
+      // [AI] 재제출 시 이전 실패 문구가 남아있지 않게 먼저 지운다.
+      setError(null);
       // 성공(200): 브라우저가 Set-Cookie로 세션 쿠키를 저장한다 (클라이언트가 직접 다루지 않는다).
       await loginRequest({ email, password });
       // [AI] 복원 이동(redirectTo 읽기)은 1-3에서 getSafeRedirectPath로 교체한다. 지금은 홈으로.
       router.push('/');
     } catch (err) {
-      // 실패: 서버가 내린 메시지(400/401)를 폼에 표시한다.
-      // auth 엔드포인트의 401은 자격 증명 실패이지 세션 만료가 아니다 (RFC 401 구분 규칙).
-      setError(
-        err instanceof ApiError ? err.message : '로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.'
-      );
+      // 실패: 상태 코드에 맞는 안내 문구로 분기한다 (401 자격 증명 / 400 형식 / 그 외 재시도).
+      // auth 엔드포인트의 401은 세션 만료가 아니라 자격 증명 실패다 (RFC 401 구분 규칙).
+      setError(getLoginErrorMessage(err));
     }
   };
 
