@@ -20,14 +20,16 @@ const serverOrigin = () =>
 type RequestOptions = {
   method?: "GET" | "POST";
   body?: unknown;
+  signal?: AbortSignal;
 };
 
 export async function fetchCommerceApi<TData>(
   url: string,
-  { method = "GET", body }: RequestOptions = {},
+  { method = "GET", body, signal }: RequestOptions = {},
 ): Promise<TData> {
   const response = await fetch(`${serverOrigin()}${url}`, {
     method,
+    signal,
     ...(body === undefined
       ? {}
       : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
