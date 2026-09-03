@@ -79,6 +79,36 @@ describe("POST /api/orders", () => {
     ).toBe(400);
     expect((await POST(postRequest("{not json", cookies))).status).toBe(400);
   });
+
+  it("returns 500 for the error scenario", async () => {
+    const response = await POST(
+      postRequest(
+        { items: [{ productId: "p1", quantity: 1 }] },
+        { [SESSION_COOKIE]: session() },
+        "?scenario=error",
+      ),
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      message: "주문 정보를 처리하지 못했습니다.",
+    });
+  });
+
+  it("returns 400 for an unknown scenario", async () => {
+    const response = await POST(
+      postRequest(
+        { items: [{ productId: "p1", quantity: 1 }] },
+        { [SESSION_COOKIE]: session() },
+        "?scenario=unknown",
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      message: "요청 조건을 확인해주세요.",
+    });
+  });
 });
 
 describe("GET /api/orders", () => {

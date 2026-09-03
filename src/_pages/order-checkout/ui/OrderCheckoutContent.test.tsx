@@ -137,4 +137,42 @@ describe('OrderCheckoutContent', () => {
       totalPrice: 276_000,
     });
   });
+
+  it('주문에 실패하면 오류를 알리고 장바구니와 현재 화면을 유지한다', async () => {
+    const persistedStore = createCartStore('guest');
+    persistedStore.getState().setHydrated();
+    persistedStore.getState().addItem(product.id);
+    persistedStore.getState().addItem(product.id);
+
+    server.use(
+      http.get('*/api/products', ({ request }) => {
+        const id = new URL(request.url).searchParams.get('id');
+        return id === product.id
+          ? HttpResponse.json(product)
+          : HttpResponse.json(
+              { message: '상품을 찾을 수 없습니다.' },
+              { status: 404 },
+            );
+      }),
+      http.post('*/api/orders', () =>
+        HttpResponse.json(
+          { message: '주문 정보를 처리하지 못했습니다.' },
+          { status: 500 },
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+
+    renderCheckout();
+    await user.click(
+      await screen.findByRole('button', { name: '276,000원 주문하기' }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '주문 정보를 처리하지 못했습니다.',
+    );
+    expect(screen.getByLabelText('장바구니 총 수량')).toHaveTextContent('2');
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(analytics.trackOrderComplete).not.toHaveBeenCalled();
+  });
 });
