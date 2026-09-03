@@ -1,4 +1,5 @@
 import { Product } from '@/entities/product/model';
+import { track } from '@/analytics/logger';
 import { useCartStore, useIsInCart } from '../model/store';
 
 export const CartButton = ({ product }: { product: Product }) => {
@@ -6,6 +7,9 @@ export const CartButton = ({ product }: { product: Product }) => {
   const isInCart = useIsInCart(product.id);
 
   const handleClick = () => {
+    if (!isInCart) {
+      track('cart_add', { productId: product.id });
+    }
     toggle({
       id: product.id,
     });

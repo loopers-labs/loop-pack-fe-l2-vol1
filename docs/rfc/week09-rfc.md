@@ -19,6 +19,7 @@
 10. [이벤트 이름 규칙 결정](#이벤트-이름-규칙-결정-2-0)
 11. [공통 프로퍼티 결정](#공통-프로퍼티-결정-2-0)
 12. [initAnalytics 호출 위치 결정](#initanalytics-호출-위치-결정-2-1)
+13. [계측 지점 배치와 제외 결정](#계측-지점-배치와-제외-결정-2-2)
 
 ## 결정 한 줄 요약 — 보호 경로 경계
 
@@ -435,6 +436,39 @@ logger는 초기화 전에 도착한 이벤트를 큐에 보관했다가 개점 
 - React StrictMode의 개발 모드 이중 실행은 `initialized` 플래그의 멱등성(logger.ts)으로 안전하다.
 - 검증: `pnpm start` 후 콘솔의 `[analytics]` 로그와 `window.__analytics` 확인 (2-3, 2-4로 이어짐).
 
+## 계측 지점 배치와 제외 결정 (2-2)
+
+**결정: 체크리스트 지정 이벤트 중 `product_list_view`·`cart_add`·`login_start`·`login_success`·`login_fail` 5종을 배치한다. `product_detail_view`와 `order_start`·`order_complete`는 화면이 없어 제외하며, 그 근거를 이 절에 기록한다.**
+
+> 체크리스트 2-2 "계측 지점 배치"와 "내 앱에 없어서 뺀 화면은 따로 기록"에 대응한다.
+
+### 배치 표
+
+| 이벤트              | 배치 지점        | 파일                                     | 트리거                                             |
+| ------------------- | ---------------- | ---------------------------------------- | -------------------------------------------------- |
+| `product_list_view` | 상품 목록 진입   | `_pages/product/ui/ProductList.tsx`      | 컴포넌트 mount (useEffect 1회)                     |
+| `cart_add`          | 장바구니 담기    | `features/add-to-cart/ui/CartButton.tsx` | 담기 버튼 클릭 (아래 toggle 규칙)                  |
+| `login_start`       | 로그인 화면 진입 | `_pages/auth/ui/LoginForm.tsx`           | 컴포넌트 mount (useEffect 1회)                     |
+| `login_success`     | 로그인 성공      | `_pages/auth/ui/LoginForm.tsx`           | `loginRequest` 200 직후                            |
+| `login_fail`        | 로그인 실패      | `_pages/auth/ui/LoginForm.tsx`           | catch 분기, `reason` prop 포함                     |
+| `identify`          | 로그인 성공 직후 | `_pages/auth/ui/LoginForm.tsx`           | `identify(user.id)` — success 이벤트보다 먼저 연결 |
+| `reset`             | 로그아웃         | `widgets/header/Header.tsx`              | `logoutRequest` 204 직후                           |
+
+필터·정렬·페이지 변경(`category_filter_change` 등)은 시드 로그에는 있지만 2-2 지정 지점이 아니므로 이번 단계에서 배치하지 않는다. 확장 여부는 3단계 로그 분석 결과로 판단한다.
+
+### 제외한 화면 — 근거 기록
+
+| 시드 로그 이벤트                                  | 제외 근거                                                                                                                                                                                                                  |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `product_detail_view` (상세 진입)                 | 상품 상세 화면이 없다. `ProductCard`는 표현(entity)만 하고 상세 경로로의 링크가 없어, 진입 자체가 존재하지 않는다. 화면을 새로 만들지 않는다 (체크리스트 3-2 "로그에는 있는데 내 코드에 화면이 없는 이벤트"의 근거가 된다) |
+| `order_start` / `order_complete` (주문 시작·완료) | 주문서(체크아웃) 화면과 주문 생성(`POST /api/orders`) 플로우가 없다. `/orders`는 주문 내역 **조회** 화면일 뿐 주문 행위의 시작·완료가 아니다. 주문 완료 이벤트를 조회 화면 진입에 붙이면 집계가 오염되므로 붙이지 않는다   |
+
+### 세부 규칙
+
+- **`cart_add`는 "담기" 시점만 기록한다.** `CartButton`은 토글 버튼이라(담기 ⇄ 해제) 해제에도 불리면 시드 로그 스키마에 없는 이벤트가 만들어진다. `isInCart === false`일 때만 track하고, 해제는 스키마 확장 전까지 기록하지 않는다.
+- **`login_fail`의 `reason`은 시드 로그와 같은 코드 체계를 쓴다** — `INVALID_CREDENTIALS`(401) / `INVALID_FORMAT`(400) / `UNKNOWN`(그 외). 나중에 시드 로그의 실패 집계와 직접 비교할 수 있게 하기 위함이다 (`getLoginFailReason`, `getLoginErrorMessage`와 같은 순수 함수 패턴).
+- **`identify`는 `login_success`보다 먼저 연결한다** — "이 시점부터 이 사용자"라는 의미 순서다. `reset`은 로그아웃 요청 성공 직후에 둬서 로그아웃 이후 행동이 이전 사용자 것으로 기록되지 않게 한다.
+
 ## 구현에 미치는 영향
 
 1. **`proxy.ts` 가드 대상**: `/checkout`, `/orders`, `/mypage` 세 경로. 미로그인 진입 시 `/login?redirectTo=<원래 경로>`로 리다이렉트한다. 파라미터 이름은 위 "복원 경로 파라미터 결정" 절 참고. 검증 수위는 "존재만 확인"("쿠키 검증 수위 결정" 절).
@@ -449,3 +483,4 @@ logger는 초기화 전에 도착한 이벤트를 큐에 보관했다가 개점 
 10. **이벤트 이름 규칙**: `객체_행동` snake_case로 통일한다. 2-2 계측 배치와 3단계 RFC A절 매핑 표의 기준이 된다. 근거는 "이벤트 이름 규칙 결정" 절 참고.
 11. **공통 프로퍼티**: `sessionId`·`ts`·`device`를 `setCommonProperties`로 등록해 전 이벤트에 자동 부착한다. `userId`는 공통 프로퍼티에서 제외하고 로그인 성공 시 `identify()`, 로그아웃 시 `reset()`으로 관리한다. 근거는 "공통 프로퍼티 결정" 절 참고.
 12. **initAnalytics 위치**: 루트 레이아웃의 `AnalyticsInit`(클라이언트 컴포넌트) effect에서 등록 → 공통 프로퍼티 등록 → 개점 순으로 1회 호출한다. 근거는 "initAnalytics 호출 위치 결정" 절 참고.
+13. **계측 지점 배치**: 목록 진입·장바구니 담기·로그인 3종을 지정 지점에 배치하고, `identify`(로그인 성공 직후)·`reset`(로그아웃)을 연결한다. 상세 진입·주문 시작/완료는 화면 부재로 제외한다. 근거는 "계측 지점 배치와 제외 결정" 절 참고.

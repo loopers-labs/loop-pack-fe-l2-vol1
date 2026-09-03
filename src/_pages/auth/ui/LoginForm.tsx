@@ -1,11 +1,13 @@
 'use client';
 
 // [AI] 로그인 폼 (week-09 1-1~1-3): UI + 연동 + 실패 분기 + 제출 중 상태 + 복원 이동.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/widgets/header/Header';
+import { identify, track } from '@/analytics/logger';
 import { loginRequest } from '@/entities/auth/api';
 import { getLoginErrorMessage } from '../model/getLoginErrorMessage';
+import { getLoginFailReason } from '../model/getLoginFailReason';
 import { getSafeRedirectPath } from '@/shared/lib/getSafeRedirectPath';
 import styles from './LoginForm.module.css';
 
@@ -20,6 +22,10 @@ export const LoginForm = () => {
   const redirectParam = searchParams.get('redirectTo');
   // [AI] 만료 처리기가 실어 보낸 신호 — 이번 로그인은 "만료 후 재로그인"임을 화면에 안내한다.
   const isExpiredSession = searchParams.get('expired') === '1';
+
+  useEffect(() => {
+    track('login_start');
+  }, []);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     // [AI] 기본 제출(GET + 페이지 리로드, 비밀번호가 URL에 노출)을 막고 JS로 처리한다.
@@ -38,7 +44,10 @@ export const LoginForm = () => {
       // [AI] 재제출 시 이전 실패 문구가 남아있지 않게 먼저 지운다.
       setError(null);
       // 성공(200): 브라우저가 Set-Cookie로 세션 쿠키를 저장한다 (클라이언트가 직접 다루지 않는다).
-      await loginRequest({ email, password });
+      const session = await loginRequest({ email, password });
+      // [AI] identify를 먼저 연결한 뒤 성공 이벤트를 보낸다 — "이 시점부터 이 사용자"의 순서.
+      identify(session.user.id);
+      track('login_success');
       // [AI] 복원: redirectTo 검증은 이동 직전(사용하는 곳)에서 수행한다 (RFC 검증 위치 규칙).
       // 외부 주소(https://, //evil.com)는 기본 경로('/')로 조용히 되돌려진다.
       router.push(getSafeRedirectPath(redirectParam));
@@ -46,6 +55,8 @@ export const LoginForm = () => {
       // 실패: 상태 코드에 맞는 안내 문구로 분기한다 (401 자격 증명 / 400 형식 / 그 외 재시도).
       // auth 엔드포인트의 401은 세션 만료가 아니라 자격 증명 실패다 (RFC 401 구분 규칙).
       setError(getLoginErrorMessage(err));
+      // [AI] 실패 원인은 시드 로그 스키마(reason)와 같은 코드로 남긴다 — 나중에 집계해 비교 가능.
+      track('login_fail', { reason: getLoginFailReason(err) });
     } finally {
       setIsSubmitting(false);
     }
