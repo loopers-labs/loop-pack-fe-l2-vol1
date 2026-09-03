@@ -10,10 +10,12 @@ export const sessionResponseSchema = z.object({
   user: authUserSchema,
 });
 
+export const loginRequestSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+});
+
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type SessionResponse = z.infer<typeof sessionResponseSchema>;
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type AuthErrorResponse = { message: string };

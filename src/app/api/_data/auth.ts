@@ -1,33 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
+import type { AuthUser } from "@/entities/auth/model/types";
 
 // 이 파일은 node:crypto 를 쓴다. Node 런타임(API 라우트)에서만 import 해야 한다.
 // Edge 런타임에서 쿠키 이름이 필요하면 auth-cookies.ts 에서 가져온다.
 //
-// 6주차에 구조를 바꾼 뒤에도 그대로 동작해야 하므로 응답 타입, 지연,
-// 상품 id 검증을 모두 여기서 처리한다
-
-// 인증 응답 계약. 본인 구조에 맞는 자리로 옮겨도 된다
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-};
+// 6주차에 구조를 바꾼 뒤에도 그대로 동작해야 하므로 계정 조회, 세션 서명,
+// 시나리오 지연은 여기서 처리한다. 브라우저와 공유하는 응답 계약은
+// entities/auth/model/types.ts에 둔다.
 
 export type AuthScenario = "invalid" | "expired" | "error" | "slow";
-
-export type AuthErrorResponse = {
-  message: string;
-};
-
-export type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-export type SessionResponse = {
-  user: AuthUser;
-};
 
 export const TEST_PASSWORD = "looper1234";
 
@@ -45,9 +27,6 @@ const authScenarios = ["invalid", "expired", "error", "slow"] as const satisfies
 
 export const isAuthScenario = (value: string): value is AuthScenario =>
   authScenarios.some((scenario) => scenario === value);
-
-export const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
 
 export const findAccount = (email: string, password: string): AuthUser | null => {
   if (password !== TEST_PASSWORD) {

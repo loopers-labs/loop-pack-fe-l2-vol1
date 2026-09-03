@@ -10,7 +10,7 @@ import { getProductById } from '@/app/api/_data/productService';
 import type {
   AuthErrorResponse,
   AuthUser,
-} from "@/app/api/_data/auth";
+} from "@/entities/auth/model/types";
 import type {
   OrderCreateResponse,
   OrderListResponse,

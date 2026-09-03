@@ -5,7 +5,10 @@ import {
   waitForAuthApi,
 } from "@/app/api/_data/auth";
 import { SCENARIO_COOKIE, SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
-import type { AuthErrorResponse, SessionResponse } from "@/app/api/_data/auth";
+import type {
+  AuthErrorResponse,
+  SessionResponse,
+} from "@/entities/auth/model/types";
 
 export async function GET(
   request: NextRequest,

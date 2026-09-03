@@ -3,7 +3,6 @@ import {
   createSessionToken,
   findAccount,
   isAuthScenario,
-  isRecord,
   waitForAuthApi,
 } from "@/app/api/_data/auth";
 import {
@@ -11,7 +10,11 @@ import {
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
 } from "@/app/api/_data/auth-cookies";
-import type { AuthErrorResponse, SessionResponse } from "@/app/api/_data/auth";
+import { loginRequestSchema } from "@/entities/auth/model/types";
+import type {
+  AuthErrorResponse,
+  SessionResponse,
+} from "@/entities/auth/model/types";
 
 export async function POST(
   request: NextRequest,
@@ -32,14 +35,12 @@ export async function POST(
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  if (!isRecord(body)) {
+  const requestBody = loginRequestSchema.safeParse(body);
+  if (!requestBody.success) {
     return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
   }
 
-  const { email, password } = body;
-  if (typeof email !== "string" || typeof password !== "string") {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
-  }
+  const { email, password } = requestBody.data;
 
   await waitForAuthApi(scenario === "slow" ? 1_500 : 500);
 
