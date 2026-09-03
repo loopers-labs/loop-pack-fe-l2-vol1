@@ -1,11 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { accounts, createSessionToken } from "@/app/api/_data/auth";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
-import { resolveServerSession } from "./session";
+import { requireServerSession, resolveServerSession } from "./session";
 
 const storeOf = (cookies: Record<string, string>) => ({
   get: (name: string) => (name in cookies ? { value: cookies[name] } : undefined),
 });
+
+const mocks = vi.hoisted(() => {
+  const cookieJar: Record<string, string> = {};
+  return {
+    cookieJar,
+    redirect: vi.fn((url: string) => {
+      throw new Error(`REDIRECT:${url}`);
+    }),
+  };
+});
+
+vi.mock("next/headers", () => ({
+  cookies: async () => storeOf(mocks.cookieJar),
+}));
+vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 
 describe("resolveServerSession", () => {
   it("쿠키가 없으면 로그인한 적 없는 상태다", () => {
@@ -46,5 +61,31 @@ describe("resolveServerSession", () => {
       hasCookie: false,
       user: null,
     });
+  });
+});
+
+describe("requireServerSession", () => {
+  beforeEach(() => {
+    mocks.cookieJar = {};
+    mocks.redirect.mockClear();
+  });
+
+  it("유효한 세션이면 사용자를 돌려준다", async () => {
+    mocks.cookieJar = { [SESSION_COOKIE]: createSessionToken(accounts[1].id) };
+
+    await expect(requireServerSession("/orders")).resolves.toEqual(accounts[1]);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it("쿠키가 없으면 사유 없이 로그인으로 보낸다", async () => {
+    await expect(requireServerSession("/orders")).rejects.toThrow("REDIRECT:/login?next=%2Forders");
+  });
+
+  it("쿠키가 있는데 검증에 실패하면 만료 사유를 붙인다", async () => {
+    mocks.cookieJar = { [SESSION_COOKIE]: "tampered.token" };
+
+    await expect(requireServerSession("/mypage")).rejects.toThrow(
+      "REDIRECT:/login?next=%2Fmypage&reason=expired",
+    );
   });
 });
