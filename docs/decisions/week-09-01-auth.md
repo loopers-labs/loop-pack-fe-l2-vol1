@@ -28,6 +28,8 @@ Next.js 소스(`PROXY_FILENAME` 상수)로 확인한 결과 `src/app` 구조에�
 
 **matcher 범위**: `/orders`, `/orders/:path*`만 넣는다. **`/login` 자체는 절대 matcher에 넣지 않는다** — 넣으면 "미로그인 → `/login`으로 보냄 → `/login`도 보호 경로라 다시 미로그인 판정 → 또 `/login`으로 보냄"의 무한 리다이렉트 루프가 생긴다. 보호 대상을 늘릴 때(장바구니 등)도 이 matcher 배열에 경로만 추가하면 되는 구조로 둔다.
 
+**정정(9주차 5단계 자가 검증 중 발견)**: 로그인 성공 후 이 `redirect` 값으로 이동시키는 코드는 처음에 `router.push()`(소프트 네비게이션)를 썼다. 그런데 이동할 경로가 로그인 전에 이미 한 번 `proxy.ts` 리다이렉트를 거친 적이 있으면(보호 경로 최초 진입 시 항상 그렇다) `router.push`가 실제로는 URL을 안 바꾸는 문제가 있었다 — 로그인 API는 200으로 성공하고 관련 이벤트도 정상 발생해서 겉보기엔 멀쩡해 보이지만, E2E(`auth-redirect-restore.spec.ts`)를 반복 실행하다 간헐적으로 걸려서 발견했다. 세션 만료 리다이렉트(`redirectToExpiredLogin`, 아래 참고)는 애초에 `window.location.href`(하드 네비게이션)를 써서 이 문제가 없었다 — 로그인 성공 쪽도 같은 방식으로 통일해서 고쳤다(`src/features/auth-login/model/useLoginForm.ts`).
+
 ## 세션 만료(401) 처리
 
 refresh 토큰이 없고 세션 TTL은 고정(활동해도 연장 안 됨) — 만료되면 재로그인이 유일한 경로다. 처리 지점은 **TanStack Query의 전역 에러 핸들러 한 곳**으로 통일한다. 구체적으로는 `providers.tsx`에서 `QueryClient`를 만들 때 `queryCache`와 `mutationCache`에 각각 `onError`를 등록한다 — 서버 요청이 `useQuery`(세션 조회, 주문내역 조회)와 `useMutation`(로그인, 주문 제출) 두 갈래로 나뉘어 있어서, 한쪽만 걸면 다른 쪽 401은 못 잡는다. 감지되면 세션 쿼리 캐시를 정리하고 로그인 화면으로 이동시킨다.
