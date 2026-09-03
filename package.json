@@ -8,25 +8,22 @@
   },
   "scripts": {
     "dev": "next dev",
-    "dev:e2e": "pnpm e2e:build && concurrently -k -n mock,next \"pnpm e2e:mock-api\" \"pnpm e2e:start\"",
+    "dev:e2e": "APP_ORIGIN=http://127.0.0.1:3000 pnpm build && APP_ORIGIN=http://127.0.0.1:3000 pnpm start --hostname 127.0.0.1 --port 3000",
     "build": "next build",
-    "e2e:build": "INTERNAL_API_BASE_URL=http://127.0.0.1:4010 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:4010 pnpm build",
-    "e2e:mock-api": "MOCK_API_PORT=4010 node e2e/mock-api/server.mjs",
-    "e2e:start": "INTERNAL_API_BASE_URL=http://127.0.0.1:4010 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:4010 pnpm start --hostname 127.0.0.1 --port 3000",
     "start": "next start",
     "prepare": "husky",
     "lint": "eslint .",
     "architecture:check": "vitest run fsdImportBoundaries",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:mock-api": "node --test e2e/mock-api/server.test.mjs",
-    "test:e2e": "playwright test",
+    "test:e2e": "APP_ORIGIN=http://127.0.0.1:3000 pnpm build && pnpm test:e2e:prebuilt",
+    "test:e2e:prebuilt": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "test:mutation": "stryker run",
     "test:watch": "vitest",
     "format:check": "prettier --check .",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e"
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm test:e2e"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -58,7 +55,6 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "concurrently": "^10.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "eslint-config-prettier": "^10.1.8",

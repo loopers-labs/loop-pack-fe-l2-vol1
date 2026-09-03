@@ -1,7 +1,8 @@
-import { createApiUrl, parseApiError, setSearchParam } from "@/shared/api/apiUtils";
+import { apiFetch, parseApiError, setSearchParam } from "@/shared/api/apiUtils";
 import type { Category } from "@/entities/category";
 import type { CategoryId } from "@/entities/category";
 import type { Product, ProductSort } from "@/entities/product";
+import type { ProductListScenario } from "../model/types";
 
 export type ProductListQuery = {
   q?: string;
@@ -9,6 +10,7 @@ export type ProductListQuery = {
   sort?: ProductSort;
   page?: number;
   pageSize?: number;
+  scenario?: ProductListScenario;
 };
 
 export type ProductListResponse = {
@@ -34,18 +36,11 @@ export async function getProducts(
   setSearchParam(searchParams, "sort", params.sort);
   setSearchParam(searchParams, "page", params.page);
   setSearchParam(searchParams, "pageSize", params.pageSize);
-
-  if (process.env.NEXT_PUBLIC_PRODUCT_API_SCENARIO === "slow") {
-    searchParams.set("scenario", "slow");
-  }
+  setSearchParam(searchParams, "scenario", params.scenario ?? undefined);
 
   const queryString = searchParams.toString();
   const apiPath = `/api/products${queryString ? `?${queryString}` : ""}`;
-  const apiUrl = createApiUrl(apiPath);
-  const response =
-    options.signal === undefined
-      ? await fetch(apiUrl)
-      : await fetch(apiUrl, { signal: options.signal });
+  const response = await apiFetch(apiPath, { signal: options.signal });
 
   if (!response.ok) {
     throw await parseApiError(response, "상품 목록을 불러오지 못했습니다.");

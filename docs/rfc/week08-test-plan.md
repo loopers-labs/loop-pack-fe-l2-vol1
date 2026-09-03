@@ -110,48 +110,36 @@ Playwright는 production build 위에서만 돌게 했다. `pnpm check`는 다�
 pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e
 ```
 
-`pnpm test:e2e`는 Playwright가 mock API 서버와 Next production 서버를 함께 띄운 뒤 Chromium에서 테스트를 실행한다. 브라우저 요청과 서버 컴포넌트의 prefetch 요청이 같은 mock API를 보도록, E2E 실행에서는 두 API base URL을 모두 mock API origin으로 맞춘다.
+`pnpm test:e2e`는 production build를 만든 뒤 Playwright가 Next production 서버를 띄워 Chromium에서 테스트를 실행한다. 별도 mock API 서버는 두지 않는다. 상품 API의 지연·빈 결과·에러 응답은 Next Route Handler(`/api/products`)가 제공하는 `scenario` query로 재현한다.
 
 ```ts
-webServer: [
-  {
-    command: `MOCK_API_PORT=${mockApiPort} node e2e/mock-api/server.mjs`,
-    url: `${mockApiBaseURL}/__test__/health`,
-  },
-  {
-    command: `INTERNAL_API_BASE_URL=${mockApiBaseURL} NEXT_PUBLIC_API_BASE_URL=${mockApiBaseURL} pnpm build && INTERNAL_API_BASE_URL=${mockApiBaseURL} NEXT_PUBLIC_API_BASE_URL=${mockApiBaseURL} pnpm start --hostname 127.0.0.1 --port ${port}`,
-    url: baseURL,
-  },
-];
+webServer: {
+  command: `pnpm start --hostname 127.0.0.1 --port ${port}`,
+  url: baseURL,
+  env: { APP_ORIGIN: baseURL },
+}
 ```
 
-`INTERNAL_API_BASE_URL`은 서버 런타임 fetch를 mock API로 보내고, `NEXT_PUBLIC_API_BASE_URL`은 브라우저 번들 안의 클라이언트 fetch를 mock API로 보낸다. `NEXT_PUBLIC_*` 값은 build 시점에 번들에 들어가므로, E2E에서는 start 전에 같은 값으로 production build를 다시 만든다.
+`APP_ORIGIN`은 서버 런타임에서 자기 앱의 API를 절대 URL로 호출할 때 사용한다. 브라우저 fetch는 상대 경로를 사용하므로 같은 Next 서버의 `/api/products`를 호출한다.
 
-별도 mock API 서버를 둔 이유는 E2E에서 확인하려는 범위가 브라우저 fetch만이 아니기 때문이다. Playwright의 `page.route()`는 브라우저에서 나가는 요청은 가로챌 수 있지만, Next 서버 프로세스 안에서 실행되는 서버 컴포넌트 prefetch 요청은 잡지 못한다. 그래서 fetch를 바꿔치기하지 않고, 앱이 평소처럼 HTTP 요청을 보내되 목적지만 mock API로 바꿨다. 이 방식이면 서버 prefetch와 클라이언트 fetch가 같은 응답 계약을 보고, 테스트 전용 분기는 앱 코드가 아니라 E2E 인프라에 머문다.
+상품 목록의 `scenario`는 사용자 필터와 분리한 재현용 조건이다. `q`, `category`, `sort`, `page`는 화면 필터 상태로 관리하고, `scenario`는 서버 prefetch와 클라이언트 fetch가 같은 API 응답을 보게 만드는 데만 쓴다. 필터 초기화도 `scenario`를 지우지 않는다.
 
-slow, empty, error 같은 테스트 상태는 `/products?scenario=...`처럼 사용자 URL에 섞지 않았다. 대신 Playwright 테스트가 mock API의 제어 endpoint를 호출해 다음 응답 상태를 바꾼다.
+slow, empty, error 같은 테스트 상태는 아래처럼 URL에서 읽어 `/api/products` 요청 조건으로만 전달한다.
 
 ```ts
-await fetch(`${mockApiBaseURL}/__test__/scenario`, {
-  method: "POST",
-  body: JSON.stringify({ products: "slow" }),
-});
-
-await page.goto("/products");
+await page.goto("/products?scenario=slow", { waitUntil: "commit" });
 ```
 
-이렇게 하면 앱의 URL schema와 `nuqs` 파싱에는 테스트 전용 query가 들어가지 않는다. mock API 서버는 실제 HTTP 서버라서 Playwright의 `page.route()`가 잡지 못하는 서버 컴포넌트 prefetch와 브라우저 fetch를 같은 방식으로 다룰 수 있다.
-
-mock API는 전역 scenario state를 쓰므로 Playwright worker는 1개로 제한했다. 테스트마다 `POST /__test__/reset`으로 상태를 되돌려 테스트 간 응답 조건이 새지 않게 했다.
+이 방식은 사용자 URL에 재현 조건이 보인다는 단점이 있다. 대신 전역 mock 서버 상태가 사라져 테스트 간 간섭이 줄고, Playwright worker를 여러 개로 늘려도 같은 결과가 나온다.
 
 E2E는 `pnpm test`에는 넣지 않았다. 브라우저 실행과 production 서버 기동 비용이 있어 빠른 피드백용 명령과 분리하는 편이 낫다고 봤다. 대신 제출과 CI 기준인 `pnpm check`에는 포함했다.
 
 - `pnpm test`: Vitest 단위/통합 테스트
-- `pnpm test:mock-api`: E2E mock API 서버 단위 테스트
 - `pnpm test:e2e`: Playwright E2E
+- `pnpm test:e2e:prebuilt`: 이미 만들어진 production build 위에서 Playwright E2E 실행
 - `pnpm test:e2e:headed`: 브라우저 창을 띄워 E2E 확인
 - `pnpm test:e2e:ui`: Playwright UI 모드
-- `pnpm dev:e2e`: mock API와 Next production 서버를 함께 띄워 수동 확인
+- `pnpm dev:e2e`: production build 후 Next 서버를 띄워 수동 확인
 - `pnpm check`: Vitest, lint, typecheck, production build, E2E 전체 검증
 
 ### 최종 검증
@@ -500,7 +488,7 @@ slow 목록 응답이 document 진입을 막지 않는지는 App Router streamin
 | 새로고침해도 필터 상태 유지         | [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                                                                                                                                   | document reload 경계                                                                |
 | 목록 진입 → 담기 → 헤더 확인        | [`e2e/products.spec.ts`](../../e2e/products.spec.ts)                                                                                                                                                                                                                                                                                   | production hydration 이후 store/Header 연결                                         |
 
-통합 테스트의 네트워크는 MSW로 가로챘고, 실패·지연·빈 결과는 각 테스트 안에서 handler를 덮어써 기본 성공 handler가 다른 테스트에 영향을 주지 않게 했다. E2E는 별도 mock API 서버의 `POST /__test__/scenario`와 `POST /__test__/reset`으로 응답 상태를 제어한다. 테스트용 상태를 사용자 URL에 넣지 않아, 실제 앱의 URL query 계약과 테스트 제어 채널을 분리했다.
+통합 테스트의 네트워크는 MSW로 가로챘고, 실패·지연·빈 결과는 각 테스트 안에서 handler를 덮어써 기본 성공 handler가 다른 테스트에 영향을 주지 않게 했다. E2E는 Next Route Handler의 `scenario` query로 응답 상태를 제어한다. `scenario`는 사용자 필터와 분리해 읽고 API 요청 조건으로만 전달한다.
 
 각 항목에는 정상 케이스와 경계 케이스를 함께 넣었다. 여기서 경계 케이스는 가능한 모든 예외가 아니라, 이번 과제 범위에서 실제로 깨지기 쉬운 입력·상태 전환·복구 흐름을 가리킨다.
 
@@ -656,7 +644,7 @@ mutate: [
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 0단계    | `node`/`jsdom` 환경을 분리했고, 환경 셋업 시간을 비교했다. MSW는 unhandled request를 에러로 막고, HTTP 클라이언트를 직접 mock하지 않는다. Playwright는 production build 위에서 돌며, E2E는 `pnpm test`와 분리하고 `pnpm check`에 포함했다. |
 | 1단계    | 15개 항목마다 방법론, 관련 코드, 선택 이유, 빨간불이 되면 알 수 있는 내용을 적었다. 애매했던 판단 2개와 목록 밖 테스트 판단도 별도로 남겼다.                                                                                               |
-| 2단계    | 15개 항목을 테스트 파일에 매핑했고, 정상 케이스와 경계 케이스를 함께 정리했다. 통합 테스트는 MSW, E2E는 mock API 서버로 네트워크 경계를 세웠다.                                                                                            |
+| 2단계    | 15개 항목을 테스트 파일에 매핑했고, 정상 케이스와 경계 케이스를 함께 정리했다. 통합 테스트는 MSW, E2E는 Next Route Handler의 재현용 `scenario`로 네트워크 경계를 세웠다.                                                                   |
 | 3단계    | 단위·통합·E2E 방법론별로 실제 구현을 망가뜨려 테스트 실패를 확인했다. 실패 메시지와 원인을 기록했고, 실험 코드는 최종 상태에 남기지 않았다.                                                                                                |
 | Advanced | `@stryker-mutator`로 순수 로직과 query 계약에 mutation testing을 돌렸다. 보강 후 mutation score는 `99.07%`이고, 남은 1개는 `withDefault(1)` 때문에 최종 결과가 같은 equivalent mutant로 판단했다.                                          |
 | 공통     | `it.skip`, 의미 없는 `toBeTruthy()`, 스냅샷 대체 검증은 쓰지 않았다. 최종 기준 `pnpm check`는 Vitest 29 files, 140 tests와 Playwright 7 tests까지 통과했다.                                                                                |

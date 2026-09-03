@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadProductListSearchParams } from "./searchParams";
+import { loadProductListQueryParams, loadProductListSearchParams } from "./searchParams";
 
 describe("product list search params", () => {
   it("URL 조건이 없으면 상품 목록 조회 기본 조건으로 정규화한다", async () => {
@@ -45,5 +45,29 @@ describe("product list search params", () => {
       category: "all",
       sort: "latest",
     });
+  });
+
+  it("재현용 scenario는 상품 필터 조건과 분리해 읽는다", async () => {
+    const params = await loadProductListQueryParams(
+      Promise.resolve({
+        q: "스탠리",
+        scenario: "slow",
+      }),
+    );
+
+    expect(params).toMatchObject({
+      q: "스탠리",
+      scenario: "slow",
+    });
+  });
+
+  it("지원하지 않는 scenario는 요청 조건에서 제외한다", async () => {
+    const params = await loadProductListQueryParams(
+      Promise.resolve({
+        scenario: "wrong",
+      }),
+    );
+
+    expect(params.scenario).toBeNull();
   });
 });

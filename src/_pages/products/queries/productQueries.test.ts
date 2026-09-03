@@ -21,6 +21,7 @@ describe("productQueries", () => {
       sort: "popular",
       page: 2,
       pageSize: 12,
+      scenario: "slow",
     } satisfies ProductListQuery;
 
     expect(productQueries.list(params).queryKey).toEqual(["products", "list", params]);
