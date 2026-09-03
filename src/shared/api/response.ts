@@ -23,6 +23,31 @@ export function getAppOrigin(): string {
   return process.env.APP_ORIGIN ?? `http://localhost:${DEFAULT_DEV_PORT}`;
 }
 
+/** 인증이 필요하거나 세션이 더는 유효하지 않을 때의 상태 코드 */
+export const UNAUTHORIZED_STATUS = 401;
+
+/**
+ * 상태 코드를 잃지 않는 에러.
+ *
+ * 이 함수는 원래 `message`만 담아 Error를 던졌다. 그러면 호출부에서 401을 다른 실패와
+ * 구분할 방법이 없어 "세션이 만료됐다"를 판단할 수 없다. Error를 상속하므로 기존에
+ * `error.message`만 읽던 화면(ErrorRetry 등)은 그대로 동작한다.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+/** 응답이 401이었는지 — 만료 판정의 재료 중 하나다. 나머지 한쪽은 세션 쿠키의 유무다 */
+export function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === UNAUTHORIZED_STATUS;
+}
+
 /** 네트워크 자체가 실패했을 때 사용자에게 보여줄 문구 */
 const NETWORK_ERROR_MESSAGE =
   '네트워크에 연결하지 못했습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.';
@@ -50,7 +75,7 @@ export async function apiResponseResult(url: string, signal?: AbortSignal) {
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as ApiErrorResponse | null;
-    throw new Error(body?.message ?? UNKNOWN_ERROR_MESSAGE);
+    throw new ApiError(res.status, body?.message ?? UNKNOWN_ERROR_MESSAGE);
   }
 
   return res.json();

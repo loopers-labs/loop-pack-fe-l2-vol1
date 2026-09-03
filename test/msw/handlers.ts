@@ -24,4 +24,7 @@ export const defaultProductListResponse: ProductListResponse = {
 export const handlers = [
   http.get('*/api/home', () => HttpResponse.json(defaultHomeResponse)),
   http.get('*/api/products', () => HttpResponse.json(defaultProductListResponse)),
+  http.get('*/api/auth/me', () =>
+    HttpResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 }),
+  ),
 ];

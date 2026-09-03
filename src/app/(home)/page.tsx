@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '@/shared/api/getQueryClient';
+import { readServerSession } from '@/app/_lib/readServerSession';
+import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
 import { COMMON_OPEN_GRAPH, OG_FALLBACK_IMAGE } from '@/app/layout';
 import { homeQueryOptions } from './_api/homeQueryOptions';
 import { HomeView } from './_ui/HomeView';
@@ -37,9 +39,18 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+/* Week 9 1단계 — Header가 초기 HTML에 로그인 상태를 담으려면 서버가 읽은 세션이 필요하다.
+   루트 layout이 아니라 이 페이지에서 읽는다. layout에서 cookies()를 부르면 하위 전체가 요청 시
+   렌더링으로 바뀌어, 지금 정적으로 남아 있는 /examples·/performance-lab/inp까지 동적이 된다
+   (변경 전 빌드 출력으로 확인함). 홈은 Week 7 Part 3에서 이미 force-dynamic이라 여기서 읽어도
+   렌더링 범위가 달라지지 않는다 */
 export default async function HomePage() {
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(homeQueryOptions());
+  const [session] = await Promise.all([
+    readServerSession(),
+    queryClient.prefetchQuery(homeQueryOptions()),
+  ]);
+  queryClient.setQueryData(SESSION_QUERY_KEY, session.user);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

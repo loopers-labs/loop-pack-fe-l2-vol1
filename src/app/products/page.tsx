@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import ProductView from '@/app/products/_ui/ProductView';
 import { getQueryClient } from '@/shared/api/getQueryClient';
+import { readServerSession } from '@/app/_lib/readServerSession';
+import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
 import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions';
 import type { ProductListQuery, ProductListResponse } from '@/entities/product/model/product';
 import type { SearchParams } from 'nuqs';
@@ -100,10 +102,16 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   }
 }
 
+/* Week 9 1단계 — 세션을 이 페이지에서 읽는 이유는 홈과 같다(루트 layout에서 읽으면 정적 라우트까지
+   동적으로 바뀐다). /products는 searchParams를 받아 이미 동적이라 렌더링 범위가 달라지지 않는다 */
 export default async function ProductListPage({ searchParams }: PageProps) {
   const query = await loadProductSearchParams(searchParams);
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(productsQueryOptions(toProductsQueryInput(query)));
+  const [session] = await Promise.all([
+    readServerSession(),
+    queryClient.prefetchQuery(productsQueryOptions(toProductsQueryInput(query))),
+  ]);
+  queryClient.setQueryData(SESSION_QUERY_KEY, session.user);
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <ProductView />

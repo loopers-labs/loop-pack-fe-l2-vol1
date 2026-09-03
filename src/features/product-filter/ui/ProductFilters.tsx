@@ -110,7 +110,7 @@ export function ProductFilters({
           ))}
         </select>
       </label>
-      <button type="button" onClick={onReset}>
+      <button className="week05-button" type="button" onClick={onReset}>
         초기화
       </button>
     </form>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
+import { useToggleWishlist } from '../model/useToggleWishlist';
 
 type ToggleWishlistButtonProps = {
   /** 토글 대상 상품 id */
@@ -11,8 +11,7 @@ type ToggleWishlistButtonProps = {
 
 /* AI-generated : week06-fsd.md 기준으로 설계 및 검토 완료 */
 export function ToggleWishlistButton({ productId, label }: ToggleWishlistButtonProps) {
-  const isWished = useWishlistStore((state) => state.productIds.has(productId));
-  const toggleWish = useWishlistStore((state) => state.setSingleIdInWishlist);
+  const { isWished, toggle } = useToggleWishlist(productId);
 
   return (
     <button
@@ -20,7 +19,7 @@ export function ToggleWishlistButton({ productId, label }: ToggleWishlistButtonP
       className={isWished ? 'toggled' : ''}
       aria-label={`${label} 위시리스트`}
       aria-pressed={isWished}
-      onClick={() => toggleWish(productId)}
+      onClick={toggle}
     >
       찜
     </button>

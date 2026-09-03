@@ -1,6 +1,6 @@
 'use client';
 
-import { useCartStore } from '@/entities/cart/model/useCartStore';
+import { useToggleCart } from '../model/useToggleCart';
 
 type AddToCartButtonProps = {
   /** 토글 대상 상품 id */
@@ -11,8 +11,7 @@ type AddToCartButtonProps = {
 
 /* AI-generated : week06-fsd.md 기준으로 설계 및 검토 완료 */
 export function AddToCartButton({ productId, label }: AddToCartButtonProps) {
-  const isInCart = useCartStore((state) => state.productIds.has(productId));
-  const toggleCart = useCartStore((state) => state.setSingleIdInCart);
+  const { isInCart, toggle } = useToggleCart(productId);
 
   return (
     <button
@@ -20,7 +19,7 @@ export function AddToCartButton({ productId, label }: AddToCartButtonProps) {
       className={isInCart ? 'toggled' : ''}
       aria-label={`${label} 담기`}
       aria-pressed={isInCart}
-      onClick={() => toggleCart(productId)}
+      onClick={toggle}
     >
       담기
     </button>

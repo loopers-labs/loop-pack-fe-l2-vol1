@@ -7,6 +7,8 @@ type WishlistState = { productIds: Set<string> };
 
 type WishlistActions = {
   setSingleIdInWishlist: (productId: string) => void;
+  /** 찜한 목록을 초기 상태로 되돌린다. 로그아웃이 부른다 */
+  clearWishlist: () => void;
 };
 
 type WishlistStore = WishlistState & WishlistActions;
@@ -19,6 +21,9 @@ export const useWishlistStore = create<WishlistStore>()(
         set((state) => ({
           productIds: toggleSetItem<string>(state.productIds, productId),
         }));
+      },
+      clearWishlist: () => {
+        set({ productIds: new Set<string>() });
       },
     }),
     {

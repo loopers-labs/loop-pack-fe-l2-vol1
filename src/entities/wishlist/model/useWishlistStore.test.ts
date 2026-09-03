@@ -32,4 +32,20 @@ describe('useWishlistStore', () => {
     expect(productIds.has('p2')).toBe(true);
     expect(productIds.size).toBe(2);
   });
+
+  // 로그아웃만 부른다. 주문 완료는 위시리스트를 건드리지 않는다
+  it('clearWishlist는 찜한 목록을 모두 비운다', () => {
+    useWishlistStore.getState().setSingleIdInWishlist('p1');
+    useWishlistStore.getState().setSingleIdInWishlist('p2');
+
+    useWishlistStore.getState().clearWishlist();
+
+    expect(useWishlistStore.getState().productIds.size).toBe(0);
+  });
+
+  it('clearWishlist는 이미 비어 있어도 안전하다', () => {
+    useWishlistStore.getState().clearWishlist();
+
+    expect(useWishlistStore.getState().productIds.size).toBe(0);
+  });
 });

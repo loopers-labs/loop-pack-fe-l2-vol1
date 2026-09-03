@@ -50,60 +50,62 @@ export function HomeView() {
   };
 
   return (
-    <main className="week05-page">
+    <div className="week05-page">
       <Header />
-      <PageHeading
-        title={homeQuery.data?.banner.title ?? '다양한 상품을 만나보세요'}
-        description={homeQuery.data?.banner.description ?? '지금 준비된 상품을 확인해보세요.'}
-      />
-      <QueryState
-        query={homeQuery}
-        renderError={(error) => (
-          <ErrorRetry message={error.message} onRetry={() => homeQuery.refetch()} />
-        )}
-      >
-        {(data) => {
-          // 배너는 PageHeading이 QueryState 밖에서 이미 소유하므로 여기서는 카테고리/인기·신상품만 각 entity의 mapper로 projection한다.
-          const categories = categoriesMapper(data);
-          const popularProducts = popularProductsMapper(data);
-          const newProducts = newProductsMapper(data);
+      <main>
+        <PageHeading
+          title={homeQuery.data?.banner.title ?? '다양한 상품을 만나보세요'}
+          description={homeQuery.data?.banner.description ?? '지금 준비된 상품을 확인해보세요.'}
+        />
+        <QueryState
+          query={homeQuery}
+          renderError={(error) => (
+            <ErrorRetry message={error.message} onRetry={() => homeQuery.refetch()} />
+          )}
+        >
+          {(data) => {
+            // 배너는 PageHeading이 QueryState 밖에서 이미 소유하므로 여기서는 카테고리/인기·신상품만 각 entity의 mapper로 projection한다.
+            const categories = categoriesMapper(data);
+            const popularProducts = popularProductsMapper(data);
+            const newProducts = newProductsMapper(data);
 
-          return (
-            <>
-              <section className="week05-section">
-                <h3>카테고리</h3>
-                <div className="week05-categories">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.id}
-                      href={buildCategoryHref(category.id)}
-                      prefetch={false}
-                      onMouseEnter={() => prefetchProductList(category.id)}
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </section>
-              {(
-                [
-                  { title: '인기 상품', products: popularProducts },
-                  { title: '신상품', products: newProducts },
-                ] satisfies { title: string; products: Product[] }[]
-              ).map(({ title, products }) => (
-                <ProductListSection
-                  key={title}
-                  products={products}
-                  emptyMessage="상품이 없습니다."
-                  labelPrefix={title}
-                >
-                  <h3>{title}</h3>
-                </ProductListSection>
-              ))}
-            </>
-          );
-        }}
-      </QueryState>
-    </main>
+            return (
+              <>
+                <section className="week05-section">
+                  <h3>카테고리</h3>
+                  <div className="week05-categories">
+                    {categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        href={buildCategoryHref(category.id)}
+                        prefetch={false}
+                        onMouseEnter={() => prefetchProductList(category.id)}
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+                {(
+                  [
+                    { title: '인기 상품', products: popularProducts },
+                    { title: '신상품', products: newProducts },
+                  ] satisfies { title: string; products: Product[] }[]
+                ).map(({ title, products }) => (
+                  <ProductListSection
+                    key={title}
+                    products={products}
+                    emptyMessage="상품이 없습니다."
+                    labelPrefix={title}
+                  >
+                    <h3>{title}</h3>
+                  </ProductListSection>
+                ))}
+              </>
+            );
+          }}
+        </QueryState>
+      </main>
+    </div>
   );
 }
