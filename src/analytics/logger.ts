@@ -18,6 +18,8 @@ type QueuedEvent =
 let providers: AnalyticsProvider[] = [];
 let commonProperties: () => EventProperties = () => ({});
 let initialized = false;
+let initializationPromise: Promise<void> | null = null;
+let initializationGeneration = 0;
 let queue: QueuedEvent[] = [];
 
 const MAX_QUEUE_SIZE = 100;
@@ -32,26 +34,39 @@ export function setCommonProperties(get: () => EventProperties): void {
 }
 
 /** 프로바이더를 초기화하고, 그 전에 쌓인 이벤트를 순서대로 보낸다. */
-export async function initAnalytics(): Promise<void> {
+export function initAnalytics(): Promise<void> {
   if (initialized) {
-    return;
+    return Promise.resolve();
   }
 
-  await Promise.all(
-    providers.map(async (provider) => {
-      try {
-        await provider.initialize();
-      } catch (error) {
-        console.error(`[analytics] ${provider.name} 초기화 실패`, error);
-      }
-    }),
-  );
+  if (initializationPromise) {
+    return initializationPromise;
+  }
 
-  initialized = true;
+  const generation = initializationGeneration;
+  initializationPromise = (async () => {
+    await Promise.all(
+      providers.map(async (provider) => {
+        try {
+          await provider.initialize();
+        } catch (error) {
+          console.error(`[analytics] ${provider.name} 초기화 실패`, error);
+        }
+      }),
+    );
 
-  const pending = queue;
-  queue = [];
-  pending.forEach(send);
+    if (generation !== initializationGeneration) {
+      return;
+    }
+
+    initialized = true;
+
+    const pending = queue;
+    queue = [];
+    pending.forEach(send);
+  })();
+
+  return initializationPromise;
 }
 
 export function track(event: string, properties: EventProperties = {}): void {
@@ -103,5 +118,7 @@ export function resetAnalyticsForTest(): void {
   providers = [];
   commonProperties = () => ({});
   initialized = false;
+  initializationPromise = null;
+  initializationGeneration += 1;
   queue = [];
 }

@@ -152,6 +152,63 @@ describe("analytics logger", () => {
     expect(recorded).toHaveLength(1);
   });
 
+  it("동시에 초기화해도 공급자를 한 번만 초기화하고 큐를 순서대로 보낸다", async () => {
+    let finishInitialization: (() => void) | undefined;
+    const initialize = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishInitialization = resolve;
+        }),
+    );
+    const { provider, recorded } = createRecorder({ initialize });
+    registerProviders([provider]);
+
+    track("first");
+    const firstInitialization = initAnalytics();
+    track("second");
+    const secondInitialization = initAnalytics();
+
+    expect(initialize).toHaveBeenCalledOnce();
+    expect(recorded).toEqual([]);
+
+    finishInitialization?.();
+    await Promise.all([firstInitialization, secondInitialization]);
+
+    expect(recorded).toEqual([
+      { type: "track", event: "first", properties: {} },
+      { type: "track", event: "second", properties: {} },
+    ]);
+  });
+
+  it("테스트 reset 뒤에는 이전 초기화의 늦은 완료를 무시한다", async () => {
+    let finishOldInitialization: (() => void) | undefined;
+    const oldProvider = createRecorder({
+      initialize: () =>
+        new Promise<void>((resolve) => {
+          finishOldInitialization = resolve;
+        }),
+    }).provider;
+    registerProviders([oldProvider]);
+    const oldInitialization = initAnalytics();
+
+    resetAnalyticsForTest();
+    finishOldInitialization?.();
+    await oldInitialization;
+
+    const initialize = vi.fn();
+    const { provider, recorded } = createRecorder({ initialize });
+    registerProviders([provider]);
+    track("after_reset");
+
+    expect(recorded).toEqual([]);
+    await initAnalytics();
+
+    expect(initialize).toHaveBeenCalledOnce();
+    expect(recorded).toEqual([
+      { type: "track", event: "after_reset", properties: {} },
+    ]);
+  });
+
   it("reset도 큐를 거친다", async () => {
     const { provider, recorded } = createRecorder();
     registerProviders([provider]);
