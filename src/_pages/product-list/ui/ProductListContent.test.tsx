@@ -14,6 +14,7 @@ import type {
   Product,
   ProductListResponse,
 } from '@/entities/product/model/types';
+import { productListInfiniteQueryOptions } from '@/entities/product/api/productQueries';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { productListFixture } from '@/test/msw/fixtures';
 import { server } from '@/test/msw/server';
@@ -61,7 +62,15 @@ function makeResponse(
   };
 }
 
-function renderProductList({ withHeader = false } = {}) {
+interface RenderProductListOptions {
+  withHeader?: boolean;
+  prepareQueryClient?: (queryClient: QueryClient) => void;
+}
+
+function renderProductList({
+  withHeader = false,
+  prepareQueryClient,
+}: RenderProductListOptions = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -70,6 +79,7 @@ function renderProductList({ withHeader = false } = {}) {
       },
     },
   });
+  prepareQueryClient?.(queryClient);
 
   return render(
     <QueryClientProvider client={queryClient}>
@@ -159,6 +169,40 @@ describe('ProductListContent', () => {
       await screen.findByRole('heading', { name: '테스트 상품' }),
     ).toBeInTheDocument();
     expect(requestCount).toBe(2);
+  });
+
+  it('첫 요청 실패 시 관계없는 상품 목록 캐시를 대신 보여주지 않는다', async () => {
+    const unrelatedProduct = makeProduct('unrelated', '관계없는 패션 상품');
+    server.use(
+      http.get('*/api/products', () =>
+        HttpResponse.json({ message: '서버 오류' }, { status: 500 }),
+      ),
+    );
+
+    renderProductList({
+      prepareQueryClient: (queryClient) => {
+        queryClient.setQueryData(
+          productListInfiniteQueryOptions({
+            category: 'fashion',
+            sort: 'latest',
+          }).queryKey,
+          {
+            pages: [makeResponse([unrelatedProduct])],
+            pageParams: [1],
+          },
+        );
+      },
+    });
+
+    expect(
+      await screen.findByRole('button', { name: '다시 시도' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: '관계없는 패션 상품' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('목록을 갱신하지 못했습니다.'),
+    ).not.toBeInTheDocument();
   });
 
   it('필터를 바꾸면 누적 상품을 지우고 새 조건의 1페이지부터 보여준다', async () => {

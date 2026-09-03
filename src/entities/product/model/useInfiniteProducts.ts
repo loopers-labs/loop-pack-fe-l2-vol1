@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
+  hashKey,
   keepPreviousData,
   useInfiniteQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import type { InfiniteData, QueryClient } from '@tanstack/react-query';
+import type { InfiniteData, QueryKey } from '@tanstack/react-query';
 import { productListInfiniteQueryOptions } from '@/entities/product/api/productQueries';
 import { mergeProducts } from '@/entities/product/lib/mergeProducts';
 import type {
@@ -19,34 +20,45 @@ interface UseInfiniteProductsOptions {
 }
 
 type ProductListInfiniteData = InfiniteData<ProductListResponse, number>;
-
-function getLatestSuccessfulData(
-  queryClient: QueryClient,
-): ProductListInfiniteData | undefined {
-  const queries = queryClient.getQueryCache().findAll({
-    queryKey: ['products', 'infinite'],
-  });
-  const latest = queries
-    .filter((query) => query.state.data !== undefined)
-    .sort((left, right) => right.state.dataUpdatedAt - left.state.dataUpdatedAt)
-    .at(0);
-
-  return latest?.state.data as ProductListInfiniteData | undefined;
-}
+type LastSuccessfulQuery = {
+  dataUpdatedAt: number;
+  queryHash: string;
+  queryKey: QueryKey;
+};
 
 export function useInfiniteProducts(
   params: ProductListQuery,
   options: UseInfiniteProductsOptions = {},
 ) {
   const queryClient = useQueryClient();
+  const [lastSuccessfulQuery, setLastSuccessfulQuery] =
+    useState<LastSuccessfulQuery>();
+  const queryOptions = productListInfiniteQueryOptions(params);
+  const queryHash = hashKey(queryOptions.queryKey);
   const query = useInfiniteQuery({
-    ...productListInfiniteQueryOptions(params),
+    ...queryOptions,
     ...(options.shouldKeepPreviousData
       ? { placeholderData: keepPreviousData }
       : {}),
   });
-  const fallbackData = query.isError
-    ? getLatestSuccessfulData(queryClient)
+  if (
+    query.isSuccess &&
+    !query.isPlaceholderData &&
+    query.data &&
+    (query.dataUpdatedAt !== lastSuccessfulQuery?.dataUpdatedAt ||
+      queryHash !== lastSuccessfulQuery.queryHash)
+  ) {
+    setLastSuccessfulQuery({
+      dataUpdatedAt: query.dataUpdatedAt,
+      queryHash,
+      queryKey: queryOptions.queryKey,
+    });
+  }
+
+  const fallbackData = query.isError && lastSuccessfulQuery
+    ? queryClient.getQueryData<ProductListInfiniteData>(
+        lastSuccessfulQuery.queryKey,
+      )
     : undefined;
   const data = query.data ?? fallbackData;
   const isShowingFallback =
