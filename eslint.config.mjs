@@ -41,6 +41,11 @@ const fsdHarness = [
                     group: ["../../*"],
                     message: "FSD: 상대경로로 슬라이스 경계를 넘을 수 없습니다",
                   },
+                  // 계측은 shared/analytics 한 겹을 통해서만 — 스키마 밖 이벤트 이름이 화면 코드에서 새지 않게 한다
+                  {
+                    group: ["@/analytics", "@/analytics/*"],
+                    message: "계측은 @/shared/analytics 의 trackEvent 를 사용하세요",
+                  },
                 ]),
           ],
         },
