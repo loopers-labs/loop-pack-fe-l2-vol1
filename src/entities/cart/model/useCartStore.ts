@@ -15,6 +15,8 @@ interface UseCartStoreState {
 
 interface UseCartStoreActions {
   toggleCart: (productId: string) => void;
+  /** 주문이 끝나 담아둘 이유가 사라졌을 때 비운다. 로그아웃은 이걸 부르지 않는다. */
+  clearCart: () => void;
 }
 
 export const useCartStore = create<UseCartStoreState & UseCartStoreActions>()(
@@ -22,6 +24,7 @@ export const useCartStore = create<UseCartStoreState & UseCartStoreActions>()(
     (set) => ({
       cart: [],
       toggleCart: (productId) => set((state) => ({ cart: toggleCartItem(state.cart, productId) })),
+      clearCart: () => set({ cart: [] }),
     }),
     {
       name: 'commerce-cart',

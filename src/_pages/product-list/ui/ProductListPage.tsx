@@ -7,6 +7,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { toProductListQuery } from '../model/toProductListQuery';
 import { PRODUCT_LIST_SCENARIOS } from '../model/types';
+import { useProductListView } from '../model/useProductListView';
 import { ProductListResult } from './ProductListResult';
 
 /**
@@ -30,6 +31,8 @@ export function ProductListPage() {
   const [scenario] = useQueryState('scenario', parseAsStringLiteral(PRODUCT_LIST_SCENARIOS));
 
   const query = toProductListQuery(state, scenario ?? undefined);
+
+  useProductListView({ category: state.category, sort: state.sort, page: state.page });
 
   return (
     <>

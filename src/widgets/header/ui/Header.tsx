@@ -2,24 +2,56 @@
 
 import { useCartStore } from '@/entities/cart';
 import { useWishlistStore } from '@/entities/wishlist';
+import { LogoutButton } from '@/features/auth';
 import Link from 'next/link';
+
+interface HeaderProps {
+  isLoggedIn?: boolean;
+}
 
 /**
  * 공통 헤더. 장바구니·위시리스트 "개수"만 selector로 구독한다.
  * 개수는 store에 저장하지 않고 배열 길이에서 파생한다.
  * 상품 담김 여부는 여기서 구독하지 않으므로, 개별 상품 토글은 헤더를 리렌더하지 않는다.
+ *
+ * 장바구니 개수는 주문서로 가는 링크다. 주문서가 곧 담긴 목록을 보여주는 화면이라 따로 둘
+ * 장바구니 화면이 없다. 대가가 하나 있다 — /order 는 보호 경로라 **담아둔 것을 보기만 하려 해도
+ * 로그인해야 한다.** 담기 자체는 비로그인에서도 되지만 확인은 안 되는 셈이다. 로그인 화면으로
+ * 튕겨도 returnTo 로 돌아오므로 담은 것이 사라지지는 않는다.
+ *
+ * 위시리스트는 링크가 아니다. 그 목록을 보여주는 화면이 아직 없다.
+ *
+ * 미로그인일 때 /order 링크의 프리페치를 끈다. 켜 두면 proxy 가 그 프리페치에 307(→/login)을
+ * 돌려주고 그 결과가 라우터 캐시에 남아, 로그인 직후 router.replace('/order') 가 서버에 묻지 않고
+ * 로그인 화면에 그대로 머문다. 헤더는 로그인 상태로 바뀌는데 화면만 안 바뀌는 형태라 사용자는
+ * 로그인이 실패한 줄 안다. 로그인 상태에서는 307 이 날 일이 없으므로 프리페치를 그대로 둔다.
+ *
+ * isLoggedIn 은 서버 레이아웃이 세션 쿠키 존재 여부로 판독해 내려준다.
+ * SSR HTML 에 이미 반영되므로 JavaScript 실행 전에도 로그인 상태가 보인다.
+ * 단, 이 단계에서 쿠키 서명을 검증하지 않으므로 만료된 세션도 로그인으로 표시된다.
+ * 실제 만료는 클라이언트 401 인터셉터가 감지해 /login?reason=expired 로 보낸다.
  */
-export function Header() {
-  const wishList = useWishlistStore((state) => state.wishlist);
-  const cart = useCartStore((state) => state.cart);
+export function Header({ isLoggedIn = false }: HeaderProps) {
+  const wishListCount = useWishlistStore((state) => state.wishlist.length);
+  const cartCount = useCartStore((state) => state.cart.length);
 
   return (
     <header className="week05-header">
       <Link href="/">Commerce</Link>
       <nav aria-label="주요 메뉴">
         <Link href="/products">상품</Link>
-        <span>위시리스트 {wishList.length}</span>
-        <span>장바구니 {cart.length}</span>
+        <span>위시리스트 {wishListCount}</span>
+        <Link href="/order" prefetch={isLoggedIn ? undefined : false}>
+          장바구니 {cartCount}
+        </Link>
+        {isLoggedIn ? (
+          <>
+            <Link href="/mypage">마이페이지</Link>
+            <LogoutButton />
+          </>
+        ) : (
+          <Link href="/login">로그인</Link>
+        )}
       </nav>
     </header>
   );

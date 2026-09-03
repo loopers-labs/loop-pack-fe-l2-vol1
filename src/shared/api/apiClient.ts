@@ -1,4 +1,7 @@
 import { getAppOrigin } from '../config/appOrigin';
+import { AUTH_REASON_PARAM, LOGIN_PATH, RETURN_TO_PARAM } from '../config/routes';
+import { isProtectedPath } from '../lib/isProtectedPath';
+import { isSafeRedirect } from '../lib/isSafeRedirect';
 import { HttpError, NetworkError } from './httpError';
 import type { ApiErrorResponse } from './types';
 
@@ -34,27 +37,88 @@ class ApiClient implements ApiClientOptions {
   }
 
   async get<T>(endpoint: string): Promise<T> {
+    const res = await this.request('GET', endpoint);
+
+    return res.json() as Promise<T>;
+  }
+
+  /**
+   * POST 요청.
+   *
+   * 반환 타입에 null 을 섞지 않는다. 섞으면 본문이 반드시 오는 API 의 호출부까지 전부
+   * null 가드를 쓰게 되고, 그 가드는 api 함수를 "요청 + 계약 검사" 두 가지 일로 만든다.
+   *
+   * 본문이 오는지는 엔드포인트마다 정해져 있고 호출부가 타입 인자로 말한다. 기본은 void 라
+   * 로그아웃처럼 204 를 주는 API 는 그냥 post(endpoint) 로 부르면 Promise<void> 가 된다.
+   * 204 에서는 res.json() 이 빈 본문에 파싱 에러를 내므로 여기서 갈라 두고, 돌려줄 것이
+   * 없으니 undefined 가 곧 void 다.
+   *
+   * 기본값이 void 인 덕에 본문이 오는 API 에서 타입 인자를 빠뜨리면 호출부가 void 를 받아
+   * 그 값을 쓰는 순간 타입 에러가 난다 — 조용히 통과하지 않는다.
+   */
+  async post<T = void>(endpoint: string, body?: unknown): Promise<T> {
+    const res = await this.request('POST', endpoint, body);
+
+    if (res.status === 204) {
+      return undefined as T;
+    }
+
+    return res.json() as Promise<T>;
+  }
+
+  /**
+   * 요청 한 번의 공통 경로. URL 해석, 네트워크 실패 구분, 401 인터셉터, 에러 변환을 여기 모은다.
+   * 메서드별로 복사하면 인터셉터가 GET 에만 걸리는 식으로 조용히 어긋난다.
+   */
+  private async request(method: 'GET' | 'POST', endpoint: string, body?: unknown): Promise<Response> {
     const url = this.resolveUrl(endpoint);
 
     let res: Response;
 
     try {
-      res = await fetch(url);
+      res = await fetch(url, {
+        method,
+        ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      });
     } catch (cause) {
       // 서버에 닿지도 못한 경우. HTTP 실패와 구분해야 호출부가 재시도 여부를 판단할 수 있다.
-      throw new NetworkError(`GET ${url} 요청이 네트워크 단계에서 실패했습니다.`, { cause });
+      throw new NetworkError(`${method} ${url} 요청이 네트워크 단계에서 실패했습니다.`, { cause });
     }
 
     if (!res.ok) {
+      // [클라이언트 401 인터셉터] 세션 만료 처리는 이 한 곳에서만 한다. 화면별로 분산하지 않는다.
+      //
+      // 만료 판정 신호는 "지금 보고 있는 화면이 보호 경로인가"다. 세션 쿠키를 읽어 판정하지
+      // 않는다 — session 은 httpOnly 라 document.cookie 에 절대 나타나지 않고, 읽으려 들면
+      // 항상 미로그인으로 보여 이 분기가 통째로 죽는다. jsdom 은 httpOnly 를 강제하지 않아
+      // 테스트만 초록으로 통과하는, 가장 잡기 어려운 형태로 죽는다.
+      //
+      // 보호 경로에 있다는 것은 proxy 의 쿠키 검사를 이미 통과했다는 뜻이므로 이 401 은 만료다.
+      // 공개 경로의 401 은 그냥 "로그인 안 함"이라 리다이렉트하지 않고 에러로 흘려보낸다.
+      if (res.status === 401 && typeof window !== 'undefined' && isProtectedPath(window.location.pathname)) {
+        const rawPath = `${window.location.pathname}${window.location.search}`;
+        const returnTo = isSafeRedirect(rawPath) ? rawPath : '/';
+        const params = new URLSearchParams({
+          [RETURN_TO_PARAM]: returnTo,
+          [AUTH_REASON_PARAM]: 'expired',
+        });
+
+        window.location.href = `${LOGIN_PATH}?${params.toString()}`;
+
+        // 이동이 확정된 뒤에는 호출부가 실패를 또 처리할 이유가 없다.
+        // 영원히 pending 인 promise 로 후속 처리를 멈춘다.
+        return new Promise<Response>(() => {});
+      }
+
       // API 계약상 실패 응답은 { message } 형태다. 있으면 그 메시지로, 없으면 상태코드로 실패시킨다.
-      const body = (await res.json().catch(() => null)) as Partial<ApiErrorResponse> | null;
-      const message = body?.message ?? `GET ${url} 요청 실패: ${res.status}`;
+      const errorBody = (await res.json().catch(() => null)) as Partial<ApiErrorResponse> | null;
+      const message = errorBody?.message ?? `${method} ${url} 요청 실패: ${res.status}`;
 
       // status 를 살려 던진다. 4xx/5xx 구분은 호출부의 판단 재료다.
       throw new HttpError(res.status, message);
     }
 
-    return res.json();
+    return res;
   }
 }
 

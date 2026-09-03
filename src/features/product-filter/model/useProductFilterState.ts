@@ -1,6 +1,7 @@
 'use client';
 
 import type { ProductSort } from '@/entities/product';
+import { trackCategoryFilterChange, trackPageChange, trackSortChange } from '@/shared/lib/analytics/events';
 import { createParser, parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs';
 
 import { CATEGORY_FILTER_VALUES, type CategoryFilter, PRODUCT_SORT_VALUES } from '../config/filters';
@@ -50,10 +51,28 @@ const defaultParsers = {
 export const useProductFilterState = () => {
   const [state, setState] = useQueryStates(defaultParsers, { history: 'push' });
 
+  // 조건을 바꾸는 조작만 계측한다. 검색어는 시드 로그에 대응하는 이름이 없어 붙이지 않는다.
+  // 조건 변경은 페이지를 1 로 되돌리지만 그 되돌림을 page_change 로 세지 않는다 —
+  // 사용자가 페이지를 옮긴 것이 아니라 조건 변경의 부수 효과다.
   const setSearch = (q: string) => setState({ q, page: 1 });
-  const setCategory = (category: CategoryFilter) => setState({ category, page: 1 });
-  const setSort = (sort: ProductSort) => setState({ sort, page: 1 });
-  const setPage = (page: number) => setState({ page });
+
+  const setCategory = (category: CategoryFilter) => {
+    trackCategoryFilterChange(category);
+
+    return setState({ category, page: 1 });
+  };
+
+  const setSort = (sort: ProductSort) => {
+    trackSortChange(sort);
+
+    return setState({ sort, page: 1 });
+  };
+
+  const setPage = (page: number) => {
+    trackPageChange(page);
+
+    return setState({ page });
+  };
 
   /**
    * 모든 조건을 기본값으로 되돌린다.

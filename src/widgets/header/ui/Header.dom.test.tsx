@@ -1,7 +1,11 @@
 import { ProductListPage } from '@/_pages/product-list/ui/ProductListPage';
+import { useCartStore } from '@/entities/cart';
+import { useWishlistStore } from '@/entities/wishlist';
 import { renderWithProviders } from '@/test/renderWithProviders';
+import { server } from '@/test/server';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { Header } from './Header';
@@ -23,6 +27,23 @@ const cardOf = async (productName: string) => {
 };
 
 const header = () => within(screen.getByRole('banner'));
+
+const menu = () => within(screen.getByRole('navigation', { name: '주요 메뉴' }));
+
+/** 나간 로그아웃 요청을 담아 돌려준다. 요청이 실제로 나갔다는 것을 여기서만 알 수 있다. */
+const logoutSucceeds = () => {
+  const requests: string[] = [];
+
+  server.use(
+    http.post('/api/auth/logout', ({ request }) => {
+      requests.push(`${request.method} ${new URL(request.url).pathname}`);
+
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+
+  return requests;
+};
 
 const renderListWithHeader = () =>
   renderWithProviders(
@@ -87,5 +108,59 @@ describe('헤더 개수와 목록 담기', () => {
 
     expect(header().getByText('위시리스트 1')).toBeInTheDocument();
     expect(header().getByText('장바구니 0')).toBeInTheDocument();
+  });
+});
+
+/**
+ * 로그인 상태에 따른 메뉴 (통합)
+ *
+ * isLoggedIn 은 서버 레이아웃이 세션 쿠키를 읽어 내려주는 prop 이다. 여기서 보는 것은
+ * **그 값이 화면으로 어떻게 드러나는가** 하나뿐이다.
+ *
+ * 로그인·로그아웃이 그 값을 실제로 바꾸는지는 여기서 알 수 없다. prop 이 바뀌려면
+ * router.refresh() 로 서버가 트리를 다시 그려야 하는데 jsdom 에는 서버가 없다 —
+ * 그 사슬은 4단계 E2E 가 지난다.
+ */
+describe('장바구니 진입', () => {
+  // 담아둔 것을 보고 주문하는 유일한 진입점이다. 링크가 아니면 주소를 직접 쳐야만 갈 수 있다.
+  it('장바구니 개수를 누르면 주문서로 간다', () => {
+    useCartStore.setState({ cart: ['p1', 'p2'] });
+
+    renderWithProviders(<Header />);
+
+    expect(menu().getByRole('link', { name: '장바구니 2' })).toHaveAttribute('href', '/order');
+  });
+});
+
+describe('로그인 상태에 따른 메뉴', () => {
+  it('로그인해 있으면 마이페이지와 로그아웃을 보고 로그인 링크는 사라진다', () => {
+    renderWithProviders(<Header isLoggedIn />);
+
+    expect(menu().getByRole('link', { name: '마이페이지' })).toBeInTheDocument();
+    expect(menu().getByRole('button', { name: '로그아웃' })).toBeInTheDocument();
+    expect(menu().queryByRole('link', { name: '로그인' })).not.toBeInTheDocument();
+  });
+
+  it('로그인하지 않았으면 로그인 링크만 보인다', () => {
+    renderWithProviders(<Header />);
+
+    expect(menu().getByRole('link', { name: '로그인' })).toBeInTheDocument();
+    expect(menu().queryByRole('link', { name: '마이페이지' })).not.toBeInTheDocument();
+    expect(menu().queryByRole('button', { name: '로그아웃' })).not.toBeInTheDocument();
+  });
+
+  // 로그아웃은 서버 세션만 끝낸다. 담아둔 것은 이 기기에 남는 값이라 건드리지 않기로 했다.
+  // 헤더가 로그아웃 상태로 다시 그려지는 것은 서버 몫이라 여기서는 개수만 본다.
+  it('로그아웃해도 담아둔 장바구니와 위시리스트 개수는 그대로다', async () => {
+    useCartStore.setState({ cart: ['p1', 'p2'] });
+    useWishlistStore.setState({ wishlist: ['p3'] });
+    const requests = logoutSucceeds();
+
+    renderWithProviders(<Header isLoggedIn />);
+    await userEvent.setup().click(menu().getByRole('button', { name: '로그아웃' }));
+
+    expect(requests).toEqual(['POST /api/auth/logout']);
+    expect(header().getByText('장바구니 2')).toBeInTheDocument();
+    expect(header().getByText('위시리스트 1')).toBeInTheDocument();
   });
 });
