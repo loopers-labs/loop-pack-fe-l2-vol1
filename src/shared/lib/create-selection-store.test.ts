@@ -30,3 +30,13 @@ it("toggle은 이전 상태의 ids와 참조가 다른 새 Set을 만든다", ()
   store.getState().toggle("product-2");
   expect(store.getState().ids).not.toBe(before);
 });
+
+it("clear는 담긴 id를 모두 비우고 새 Set을 만든다", () => {
+  const store = createSelectionStore();
+  store.getState().toggle("product-1");
+  store.getState().toggle("product-2");
+  const before = store.getState().ids;
+  store.getState().clear();
+  expect(store.getState().ids.size).toBe(0);
+  expect(store.getState().ids).not.toBe(before);
+});
