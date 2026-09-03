@@ -1,0 +1,248 @@
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { HttpResponse, delay, http } from "msw";
+import { describe, expect, it } from "vitest";
+import { products } from "@/app/api/_data/commerce";
+import { PAGE_SIZE, PRODUCTS_ENDPOINT, productListResponse } from "@/mocks/handlers";
+import { server } from "@/mocks/server";
+import { createRequestLog } from "@/test/requests";
+import { BOUNDARY_FALLBACK, TestErrorBoundary, renderWithProviders } from "@/test/render";
+import { ProductListPage } from "./ProductListPage";
+
+// 4·5·6·7번 항목 — 목록의 네 가지 상태.
+// 기본 핸들러는 성공 경로만 두고, 실패·지연·빈 결과는 각 테스트가 여기서 덮는다.
+
+const listRegion = () => screen.getByRole("region", { name: "상품 검색 결과" });
+const FASHION = products.filter((product) => product.category === "fashion");
+
+describe("4번 — 목록 로딩 → 성공", () => {
+  it("응답을 기다리는 동안 불러오는 중임을 알리고, 도착하면 목록으로 바꾼다", async () => {
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, async () => {
+        await delay(50);
+        return HttpResponse.json(productListResponse());
+      }),
+    );
+
+    renderWithProviders(<ProductListPage />);
+
+    // 최초 로딩 문구에는 role이 없다. 상태는 감싼 region의 aria-busy가 갖는다.
+    expect(screen.getByText(/불러오는 중/)).toBeInTheDocument();
+    expect(listRegion()).toHaveAttribute("aria-busy", "true");
+
+    expect(await screen.findByText(/총 \d+개/)).toBeInTheDocument();
+
+    // 도착한 뒤에는 대기 표시가 남아 있으면 안 된다.
+    expect(screen.queryByText(/불러오는 중/)).not.toBeInTheDocument();
+    expect(listRegion()).toHaveAttribute("aria-busy", "false");
+  });
+
+  it("1.5초 창에서도 대기 표시가 유지되고 그 뒤 목록이 나온다", async () => {
+    // 7주차에 "1.5초 pending을 라이브로 재현하지 않았다"고 지적받은 창이다.
+    // mock API의 scenario=slow와 같은 1,500ms를 MSW가 만든다.
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, async () => {
+        await delay(1_500);
+        return HttpResponse.json(productListResponse());
+      }),
+    );
+
+    renderWithProviders(<ProductListPage />);
+
+    // 창 중간(1초 시점)에도 여전히 대기 중이어야 한다 — 조기에 빈 화면이 되면 안 된다.
+    // 여기서만 실제로 시간을 흘린다. 조건 기반 대기는 상태가 "바뀌는" 것을 기다리는
+    // 도구여서, "1초 동안 바뀌지 않는다"는 단언에는 쓸 수 없다.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    expect(screen.getByText(/불러오는 중/)).toBeInTheDocument();
+    expect(listRegion()).toHaveAttribute("aria-busy", "true");
+
+    expect(await screen.findByText(/총 \d+개/, undefined, { timeout: 3_000 })).toBeInTheDocument();
+  }, 10_000);
+
+  // 8주차 피드백 반영. M7(placeholderData 제거)이 살아남은 자리인데, 원인은
+  // 테스트 부재가 아니라 `isFirstLoad`가 `hasList`를 안 보던 것이었다. 구현을
+  // 배타적으로 고친 뒤(ProductListPage.tsx) 그 계약을 여기서 고정한다.
+  it("갱신 중에는 최초 로딩 UI를 그리지 않고 이전 목록을 유지한다", async () => {
+    const user = userEvent.setup();
+
+    // 지연도 응답 내용도 요청 조건으로 고른다 — 호출 순서로 고르면 조건이 요청에
+    // 실렸는지를 아무 단언도 검증하지 않는다(8주차에 확인한 false green).
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, async ({ request }) => {
+        const category = new URL(request.url).searchParams.get("category");
+        const matched = category === "fashion" ? FASHION : products;
+        if (category === "fashion") {
+          // 갱신이 진행 중인 창을 만든다.
+          await delay(300);
+        }
+        return HttpResponse.json(
+          productListResponse({
+            products: matched.slice(0, PAGE_SIZE),
+            totalCount: matched.length,
+          }),
+        );
+      }),
+    );
+
+    renderWithProviders(<ProductListPage />);
+    expect(await screen.findByText(`총 ${products.length}개`)).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText("카테고리"), "fashion");
+
+    // 갱신 중임을 알리는 신호는 role="status" 쪽이다.
+    expect(await screen.findByRole("status")).toHaveTextContent("목록을 갱신하는 중입니다…");
+
+    // 최초 로딩 UI는 이 창에 없어야 한다. 스켈레톤은 aria-hidden이라 역할로 못 잡으니,
+    // 항상 함께 그려지는 문구로 본다(ProductListPage.tsx ① 블록).
+    expect(screen.queryByText(/불러오는 중/)).not.toBeInTheDocument();
+    // aria-busy가 갱신에도 켜지면 보조기술은 최초 로딩과 구분할 수 없다.
+    expect(listRegion()).toHaveAttribute("aria-busy", "false");
+    // 갱신 중에 목록을 비우면 사용자가 보고 있던 것이 사라진다.
+    expect(screen.getByText(`총 ${products.length}개`)).toBeInTheDocument();
+
+    expect(await screen.findByText(`총 ${FASHION.length}개`)).toBeInTheDocument();
+  });
+});
+
+describe("5번 — 목록 빈 결과", () => {
+  it("0건이면 어떤 조건으로 걸러 0건인지 URL 조건을 그대로 적는다", async () => {
+    const log = createRequestLog();
+
+    // 핸들러가 검색어를 **읽어서** 0건을 고른다.
+    // 무조건 0건을 돌려주면 params.set("q", query.q)를 지워도 통과한다 —
+    // 화면 문구는 nuqs의 q를 보고 만들어지므로 요청이 비어도 똑같이 보인다.
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        const matched = log.record(request).get("q") === "없는상품" ? [] : products;
+        return HttpResponse.json(
+          productListResponse({ products: matched, totalCount: matched.length }),
+        );
+      }),
+    );
+
+    renderWithProviders(<ProductListPage />, { searchParams: "?q=없는상품&category=fashion" });
+
+    expect(
+      await screen.findByText('검색어 "없는상품" · 카테고리 패션에 맞는 상품이 없습니다. (0개)'),
+    ).toBeInTheDocument();
+
+    // 검색어가 실제로 요청에 실렸는가 — 화면 문구만으로는 알 수 없다.
+    expect(log.last().get("q")).toBe("없는상품");
+
+    // 0건에 그리드·페이지네이션이 남으면 빈 자리가 목록처럼 보인다.
+    expect(screen.queryByText(/총 \d+개/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "페이지 이동" })).not.toBeInTheDocument();
+  });
+
+  it("검색어를 지우면 요청에서도 빠진다", async () => {
+    const log = createRequestLog();
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        log.record(request);
+        return HttpResponse.json(productListResponse());
+      }),
+    );
+
+    renderWithProviders(<ProductListPage />);
+    await screen.findByText(/총 \d+개/);
+
+    // 빈 검색어는 기본값이라 URL에도, 요청에도 실리지 않는다.
+    // 빈 문자열로 q=를 보내면 서버가 "빈 문자열 검색"으로 받는다.
+    expect(log.last().has("q")).toBe(false);
+  });
+
+  it("조건이 하나도 없을 때 0건이면 전체 조건이라고 적는다", async () => {
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, () =>
+        HttpResponse.json(productListResponse({ products: [], totalCount: 0 })),
+      ),
+    );
+
+    renderWithProviders(<ProductListPage />);
+
+    expect(await screen.findByText("전체 조건에 맞는 상품이 없습니다. (0개)")).toBeInTheDocument();
+  });
+});
+
+describe("6번 — 목록 에러", () => {
+  it("400이면 목록 자리에 실패 이유와 재시도를 두고, 필터는 살려 둔다", async () => {
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, () =>
+        HttpResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 }),
+      ),
+    );
+
+    renderWithProviders(<ProductListPage />, { searchParams: "?page=0" });
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/검색 조건을 확인해 주세요/);
+    expect(within(alert).getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
+
+    // 조건을 바꿔 빠져나갈 수 있어야 한다 — 필터가 사라지면 사용자가 갇힌다.
+    expect(screen.getByLabelText("카테고리")).toBeInTheDocument();
+    expect(screen.getByLabelText("정렬")).toBeInTheDocument();
+  });
+
+  it("500이면 화면 안에 두지 않고 경계로 전파한다", async () => {
+    // 400만 검증하면 throwOnError를 () => false로 바꿔도 초록불이다.
+    // 재시도해도 해결되지 않는 실패에 "다시 시도"를 주는 것이 여기서 걸린다.
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, () =>
+        HttpResponse.json({ message: "상품 목록을 불러오지 못했습니다." }, { status: 500 }),
+      ),
+    );
+
+    renderWithProviders(
+      <TestErrorBoundary>
+        <ProductListPage />
+      </TestErrorBoundary>,
+    );
+
+    // 인라인 에러와 경계 fallback 둘 다 role="alert"다. 어느 쪽이 그려졌는지를 문구로
+    // 가른다. 경계 문구를 findByText로 기다리면 실패 메시지가 "없다"까지만 말하고,
+    // 500이 인라인으로 샜다는 사실은 DOM 덤프를 읽어야 나온다.
+    expect(await screen.findByRole("alert")).toHaveTextContent(BOUNDARY_FALLBACK);
+    expect(screen.queryByRole("button", { name: "다시 시도" })).not.toBeInTheDocument();
+  });
+
+  it("네트워크가 실패해도 경계로 전파한다", async () => {
+    // HttpError가 아닌 실패(TypeError)다. isServerFault가 true를 주는 경로.
+    server.use(http.get(PRODUCTS_ENDPOINT, () => HttpResponse.error()));
+
+    renderWithProviders(
+      <TestErrorBoundary>
+        <ProductListPage />
+      </TestErrorBoundary>,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(BOUNDARY_FALLBACK);
+  });
+});
+
+describe("7번 — 에러에서 재시도로 복구", () => {
+  it("실패한 뒤 다시 시도를 누르면 목록이 나오고 에러 표시가 사라진다", async () => {
+    const user = userEvent.setup();
+
+    // 첫 요청만 실패시킨다(once). 그 뒤엔 기본 성공 핸들러가 받는다 —
+    // 재시도가 "같은 조건으로 다시 나갔는가"를 보려면 응답 두 개의 순서가 필요하다.
+    server.use(
+      http.get(
+        PRODUCTS_ENDPOINT,
+        () => HttpResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 }),
+        { once: true },
+      ),
+    );
+
+    renderWithProviders(<ProductListPage />);
+
+    const alert = await screen.findByRole("alert");
+    await user.click(within(alert).getByRole("button", { name: "다시 시도" }));
+
+    expect(await screen.findByText(/총 \d+개/)).toBeInTheDocument();
+
+    // 성공과 실패가 동시에 보이면 안 된다.
+    await waitFor(() => {
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+  });
+});

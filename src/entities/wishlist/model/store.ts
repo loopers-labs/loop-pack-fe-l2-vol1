@@ -14,6 +14,9 @@ const useWishlistStore = create<WishlistState>()((set) => ({
   toggle: (id) => set((state) => ({ items: toggleId(state.items, id) })),
 }));
 
+// cart와 같은 이유로 둔다 — 자세한 근거는 entities/cart/model/store.ts.
+export const resetWishlist = () => useWishlistStore.setState({ items: {} });
+
 export const useWishlistCount = () => useWishlistStore((state) => countIds(state.items));
 export const useIsInWishlist = (id: string) =>
   useWishlistStore((state) => state.items[id] === true);

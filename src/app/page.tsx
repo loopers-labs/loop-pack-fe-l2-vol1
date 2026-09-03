@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getQueryClient } from "@/_app/getQueryClient";
 import { homeQueryOptions } from "@/_pages/home/api/homeQuery";
 import { HomePage } from "@/_pages/home/ui/HomePage";
+import { ConfigError, requireAppOrigin } from "@/shared/config";
 import { commonOpenGraph } from "./layout";
 
 // 홈 데이터를 서버에서 미리 받아 초기 HTML에 담는다.
@@ -26,13 +27,20 @@ export async function generateMetadata(): Promise<Metadata> {
         images: [{ url: home.banner.image }],
       },
     };
-  } catch {
+  } catch (error) {
+    // 설정 누락은 삼키지 않는다 — 재시도해도 같고, 삼키면 잘못된 배포가 조용히 산다.
+    if (error instanceof ConfigError) {
+      throw error;
+    }
     // 조회 실패 시 페이지별 빈 metadata를 만들지 않는다 — root 공통값을 그대로 상속한다.
     return {};
   }
 }
 
 export default async function Page() {
+  // 설정 누락은 렌더 전에 멈춘다 — 이유는 products/page.tsx에 적었다.
+  requireAppOrigin();
+
   const queryClient = getQueryClient();
   // prefetchQuery는 실패를 삼킨다 — 서버가 못 받으면 브라우저 useQuery가 이어서 시도한다.
   await queryClient.prefetchQuery(homeQueryOptions());

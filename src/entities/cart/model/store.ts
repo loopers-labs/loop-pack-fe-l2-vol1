@@ -16,6 +16,11 @@ const useCartStore = create<CartState>()((set) => ({
 }));
 
 // 개수는 저장하지 않고 파생(계산)한다 — 담긴 id 수에서 뽑는다.
+// 테스트 격리용. store가 모듈 싱글턴이라 초기값으로 되돌릴 수단이 없으면
+// 테스트 순서가 결과를 바꾼다. 배럴(index.ts)은 이걸 공개하지 않으므로
+// 앱 코드가 쓰는 경로에는 나타나지 않는다.
+export const resetCart = () => useCartStore.setState({ items: {} });
+
 export const useCartCount = () => useCartStore((state) => countIds(state.items));
 export const useIsInCart = (id: string) => useCartStore((state) => state.items[id] === true);
 export const useToggleCart = () => useCartStore((state) => state.toggle);

@@ -11,15 +11,18 @@ const HERO_SIZES = "(min-width: 1232px) 1200px, calc(100vw - 32px)";
 export function Hero({ title, description }: HeroProps) {
   return (
     <section className={styles.hero} aria-labelledby="home-hero-title">
-      {/* LCP element다. priority는 새 개입이 아니라 Before의 <img> 기본 동작(eager)을
-          유지하기 위한 것 — next/image 기본값 loading="lazy"로 두면 발견이 더 늦어진다. */}
+      {/* LCP element다. preload는 새 개입이 아니라 Before의 <img> 기본 동작(eager)을
+          유지하기 위한 것 — next/image 기본값 loading="lazy"로 두면 발견이 더 늦어진다.
+          head에 <link rel="preload">를 넣어 문서 파싱 중에 발견되게 한다.
+          7주차엔 priority를 썼는데 Next 16에서 deprecated다 — 같은 동작의 새 이름이 preload이고,
+          둘을 함께 주거나 loading="lazy"와 섞으면 런타임이 막는다. */}
       <Image
         className={styles.image}
         src="/images/week-07/hero-original.jpg"
         alt=""
         fill
         sizes={HERO_SIZES}
-        priority
+        preload
       />
       {/* 페이지의 하나뿐인 h1이다. 같은 배너 문구를 위쪽 텍스트 블록과 중복해서
           그리지 않고, 제목 소유권을 Hero로 모았다. */}

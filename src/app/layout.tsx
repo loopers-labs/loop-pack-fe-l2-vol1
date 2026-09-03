@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/_app/styles/globals.css";
 import "@/_app/styles/commerce.css";
 import { Providers } from "@/_app/providers";
+import { metadataOrigin } from "@/shared/config";
 import { Header } from "@/widgets/header";
 
 const geistSans = Geist({
@@ -28,7 +29,9 @@ export const commonOpenGraph = {
 } satisfies Metadata["openGraph"];
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_ORIGIN ?? `http://localhost:${process.env.PORT ?? "3000"}`),
+  // prerender 시점에도 평가되므로 기본값이 필요하다. self-HTTP와 위험도가 다른 이유는
+  // shared/config/appOrigin.ts에 적었다.
+  metadataBase: new URL(metadataOrigin()),
   // 페이지가 title만 주면 "<페이지> · Commerce"로 합성된다.
   title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
