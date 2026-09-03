@@ -3,6 +3,7 @@
 import { useState, type JSX, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { AnalyticsInitializer } from '@/analytics/AnalyticsInitializer'
 import { ApiError } from '@/shared/api/apiError'
 
 const MAX_RETRY_COUNT = 3
@@ -32,6 +33,7 @@ export function Providers({ children }: ProvidersProps): JSX.Element {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AnalyticsInitializer />
       <NuqsAdapter>{children}</NuqsAdapter>
     </QueryClientProvider>
   )
