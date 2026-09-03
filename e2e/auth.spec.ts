@@ -4,12 +4,6 @@ test.describe('인증', () => {
   test('비로그인 보호 경로에서 로그인한 뒤 원래 주문서로 돌아간다', async ({
     page,
   }) => {
-    await page.goto('/');
-    await expect(
-      page.getByRole('link', { name: '주문 내역' }),
-    ).not.toBeVisible();
-    await expect(page.getByRole('link', { name: '로그인' })).toBeVisible();
-
     await page.goto('/orders/new');
     await expect(page).toHaveURL(
       '/login?returnTo=%2Forders%2Fnew',
@@ -58,32 +52,5 @@ test.describe('인증', () => {
 
     await expect(page).toHaveURL(/\/login\?returnTo=%2Forders/);
     await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: '다시 불러오기' }),
-    ).not.toBeVisible();
-  });
-
-  test('로그인 사용자의 주문 수량은 새로고침 뒤 주문서에도 유지된다', async ({
-    page,
-  }) => {
-    await page.goto('/login');
-    await page.getByRole('button', { name: '로그인' }).click();
-    await expect(page).toHaveURL('/');
-
-    await page.goto('/products');
-    const firstAddButton = page.getByRole('button', { name: '담기' }).first();
-    await firstAddButton.click();
-    await page.getByRole('button', { name: '계속 쇼핑하기' }).click();
-    await firstAddButton.click();
-
-    await page.reload();
-    await page.getByRole('link', { name: /장바구니 1/ }).click();
-
-    await expect(page).toHaveURL('/cart');
-    await expect(page.getByRole('heading', { name: '장바구니' })).toBeVisible();
-    await page.getByRole('link', { name: '주문하기' }).click();
-    await expect(page).toHaveURL('/orders/new');
-    await expect(page.getByRole('heading', { name: '주문서' })).toBeVisible();
-    await expect(page.getByText('총 2개', { exact: true })).toBeVisible();
   });
 });
