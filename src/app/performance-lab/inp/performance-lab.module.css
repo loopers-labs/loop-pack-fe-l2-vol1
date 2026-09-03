@@ -63,7 +63,7 @@
   font: inherit;
 }
 
-.card button[aria-pressed="true"] {
+.card button[aria-pressed='true'] {
   background: #1f1f1f;
   color: #fff;
 }
