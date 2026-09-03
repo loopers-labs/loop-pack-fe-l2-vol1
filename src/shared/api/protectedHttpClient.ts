@@ -1,4 +1,4 @@
-import { getSafeReturnPath } from '@/features/auth/lib/getSafeReturnPath'
+import { getSafeReturnPath } from '@/shared/lib/getSafeReturnPath'
 import { ApiError } from './apiError'
 
 const DEFAULT_ERROR_MESSAGE = '요청에 실패했습니다.'

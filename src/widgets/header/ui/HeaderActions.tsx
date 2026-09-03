@@ -17,7 +17,7 @@ export function HeaderActions({ userName }: HeaderActionsProps): JSX.Element {
   return (
     <>
       <span>위시리스트 {wishCount}</span>
-      <span>장바구니 {cartCount}</span>
+      <Link href="/checkout">장바구니 {cartCount}</Link>
       {userName === null ? (
         <Link href="/login">로그인</Link>
       ) : (

@@ -61,7 +61,19 @@ describe('/orders route boundary', () => {
 
     expect(mockedGetCurrentUser).toHaveBeenCalledOnce()
     expect(mockedRedirect).toHaveBeenCalledExactlyOnceWith(
-      '/login?returnTo=%2Forders',
+      '/login?returnTo=%2Forders%3FuserId%3Du1',
+    )
+  })
+
+  it('세션이 없으면 현재 내부 query까지 복귀 경로에 보존한다', async () => {
+    mockedGetCurrentUser.mockResolvedValue(null)
+
+    await expect(
+      Page({ searchParams: Promise.resolve({ page: '2' }) }),
+    ).rejects.toBe(redirectSignal)
+
+    expect(mockedRedirect).toHaveBeenCalledExactlyOnceWith(
+      '/login?returnTo=%2Forders%3Fpage%3D2',
     )
   })
 })

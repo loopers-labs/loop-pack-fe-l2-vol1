@@ -11,7 +11,10 @@ const LOGOUT_ENDPOINT = '/api/auth/logout'
 const DEFAULT_ERROR_MESSAGE = '로그인에 실패했습니다.'
 const DEFAULT_LOGOUT_ERROR_MESSAGE = '로그아웃에 실패했습니다.'
 
-export async function login(credentials: LoginRequest): Promise<AuthUser> {
+export async function login(
+  credentials: LoginRequest,
+  signal?: AbortSignal,
+): Promise<AuthUser> {
   const response = await fetch(LOGIN_ENDPOINT, {
     method: 'POST',
     headers: {
@@ -21,6 +24,7 @@ export async function login(credentials: LoginRequest): Promise<AuthUser> {
       email: credentials.email,
       password: credentials.password,
     }),
+    signal,
   })
 
   if (!response.ok) {

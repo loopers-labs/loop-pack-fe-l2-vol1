@@ -42,6 +42,15 @@ function renderHeaderActions(
 }
 
 describe('헤더의 장바구니·위시리스트 개수', () => {
+  it('장바구니 개수에서 주문서로 이동할 수 있다', () => {
+    renderHeaderActions()
+
+    expect(screen.getByRole('link', { name: '장바구니 0' })).toHaveAttribute(
+      'href',
+      '/checkout',
+    )
+  })
+
   it('비로그인 사용자에게 로그인 링크를 보여준다', () => {
     renderHeaderActions()
 

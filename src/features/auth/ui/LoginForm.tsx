@@ -1,14 +1,14 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { useState, type FormEvent, type JSX } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type JSX } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   resetOrderSubmission,
   resetPrivateOrderQueries,
 } from '@/entities/order'
-import { getSafeReturnPath } from '@/features/auth/lib/getSafeReturnPath'
 import { ApiError } from '@/shared/api/apiError'
+import { getSafeReturnPath } from '@/shared/lib/getSafeReturnPath'
 import { login } from '../api/authClient'
 
 const DEFAULT_ERROR_MESSAGE = '로그인에 실패했습니다.'
@@ -26,25 +26,53 @@ export function LoginForm({ returnTo, reason }: LoginFormProps): JSX.Element {
   const [password, setPassword] = useState('')
   const [isPending, setIsPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const activeRequestRef = useRef<AbortController | null>(null)
+
+  useEffect(
+    () => () => {
+      activeRequestRef.current?.abort()
+      activeRequestRef.current = null
+    },
+    [],
+  )
 
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault()
+    if (activeRequestRef.current !== null) {
+      return
+    }
+
+    const controller = new AbortController()
+    activeRequestRef.current = controller
     setErrorMessage(null)
     setIsPending(true)
 
     try {
-      await login({ email, password })
+      await login({ email, password }, controller.signal)
+      if (controller.signal.aborted) {
+        return
+      }
       resetOrderSubmission()
       await resetPrivateOrderQueries(queryClient)
+      if (controller.signal.aborted) {
+        return
+      }
       router.replace(getSafeReturnPath(returnTo))
+      router.refresh()
     } catch (error) {
+      if (controller.signal.aborted) {
+        return
+      }
       setErrorMessage(
         error instanceof ApiError ? error.message : DEFAULT_ERROR_MESSAGE,
       )
     } finally {
-      setIsPending(false)
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null
+        setIsPending(false)
+      }
     }
   }
 

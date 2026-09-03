@@ -1,7 +1,12 @@
 import '@/test/setup/msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HttpResponse, delay, http } from 'msw'
-import { render, screen, type RenderResult } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  type RenderResult,
+} from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PRIVATE_ORDER_QUERY_KEY } from '@/entities/order'
@@ -88,7 +93,10 @@ describe('로그인 폼', () => {
     })
     expect(requestBody).toEqual({ email: EMAIL, password: PASSWORD })
     expect(localStorage).toHaveLength(0)
-    expect(router.refresh).not.toHaveBeenCalled()
+    expect(router.refresh).toHaveBeenCalledOnce()
+    expect(router.replace.mock.invocationCallOrder[0]).toBeLessThan(
+      router.refresh.mock.invocationCallOrder[0],
+    )
   })
 
   it('로그인 성공 후 이동하기 전에 이전 사용자의 주문 캐시를 제거한다', async () => {
@@ -133,6 +141,82 @@ describe('로그인 폼', () => {
     })
   })
 
+  it('같은 틱에 폼이 두 번 제출되어도 로그인 요청은 한 번만 보낸다', async () => {
+    let requestCount = 0
+    server.use(
+      http.post(LOGIN_ENDPOINT, async () => {
+        requestCount += 1
+        await delay(100)
+        return HttpResponse.json({
+          user: { id: 'u1', name: '루퍼스', email: EMAIL },
+        })
+      }),
+    )
+    const { user } = renderLoginForm({ returnTo: '/checkout' })
+    await user.type(screen.getByLabelText('이메일'), EMAIL)
+    await user.type(screen.getByLabelText('비밀번호'), PASSWORD)
+    const form = screen.getByLabelText('이메일').closest('form')
+    if (form === null) {
+      throw new Error('로그인 폼을 찾을 수 없습니다.')
+    }
+
+    fireEvent.submit(form)
+    fireEvent.submit(form)
+
+    await vi.waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/checkout')
+    })
+    expect(requestCount).toBe(1)
+  })
+
+  it('로그인 요청 중 화면을 떠나면 완료 후 이전 경로로 이동시키지 않는다', async () => {
+    let requestSignal: AbortSignal | undefined
+    let releaseResponse: (() => void) | undefined
+    const responseGate = new Promise<void>((resolve) => {
+      releaseResponse = resolve
+    })
+    server.use(
+      http.post(LOGIN_ENDPOINT, async ({ request }) => {
+        requestSignal = request.signal
+        await responseGate
+        return HttpResponse.json({
+          user: { id: 'u1', name: '루퍼스', email: EMAIL },
+        })
+      }),
+    )
+    const { unmount, user } = renderLoginForm({ returnTo: '/orders' })
+
+    await fillAndSubmit(user)
+    await vi.waitFor(() => expect(requestSignal).toBeDefined())
+    unmount()
+    expect(requestSignal?.aborted).toBe(true)
+    releaseResponse?.()
+    await Promise.resolve()
+
+    expect(router.replace).not.toHaveBeenCalled()
+    expect(router.refresh).not.toHaveBeenCalled()
+  })
+
+  it('400이면 요청 오류를 표시하고 폼에 머문다', async () => {
+    server.use(
+      http.post(LOGIN_ENDPOINT, () =>
+        HttpResponse.json(
+          { message: '요청 형식을 확인해주세요.' },
+          { status: 400 },
+        ),
+      ),
+    )
+    const { user } = renderLoginForm()
+
+    await fillAndSubmit(user)
+
+    expect(
+      await screen.findByText('요청 형식을 확인해주세요.'),
+    ).toBeInTheDocument()
+    expect(router.replace).not.toHaveBeenCalled()
+    expect(router.refresh).not.toHaveBeenCalled()
+  })
+
   it('401이면 자격 증명 오류를 표시하고 폼에 머문다', async () => {
     server.use(
       http.post(LOGIN_ENDPOINT, () =>
@@ -150,6 +234,7 @@ describe('로그인 폼', () => {
       await screen.findByText('이메일 또는 비밀번호를 확인해주세요.'),
     ).toBeInTheDocument()
     expect(router.replace).not.toHaveBeenCalled()
+    expect(router.refresh).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: '로그인' })).toBeEnabled()
   })
 
@@ -170,6 +255,7 @@ describe('로그인 폼', () => {
       await screen.findByText('인증 서버를 사용할 수 없습니다.'),
     ).toBeInTheDocument()
     expect(router.replace).not.toHaveBeenCalled()
+    expect(router.refresh).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: '로그인' })).toBeEnabled()
   })
 
