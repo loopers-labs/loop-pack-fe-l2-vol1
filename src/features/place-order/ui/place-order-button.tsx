@@ -11,7 +11,9 @@ type PlaceOrderButtonProps = {
 
 export function PlaceOrderButton({ items }: PlaceOrderButtonProps) {
   const router = useRouter();
-  const { mutate, isPending, error } = usePlaceOrder();
+  const { mutate, isPending, error } = usePlaceOrder({
+    onPlaced: () => router.push("/orders"),
+  });
 
   const errorMessage =
     error === null
@@ -26,7 +28,7 @@ export function PlaceOrderButton({ items }: PlaceOrderButtonProps) {
       <button
         type="button"
         disabled={isPending || items.length === 0}
-        onClick={() => mutate({ items }, { onSuccess: () => router.push("/orders") })}
+        onClick={() => mutate({ items })}
       >
         {isPending ? "주문 중…" : "주문하기"}
       </button>
