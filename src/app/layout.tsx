@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { AnalyticsInit } from '@/analytics/AnalyticsInit';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { QueryProvider } from '@/shared/api/QueryProvider';
 import './globals.css';
@@ -56,7 +57,10 @@ const RootLayout = ({
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <NuqsAdapter>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <AnalyticsInit />
+            {children}
+          </QueryProvider>
         </NuqsAdapter>
       </body>
     </html>
