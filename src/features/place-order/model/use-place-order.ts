@@ -12,8 +12,9 @@ type PlaceOrderOptions = {
 };
 
 // 주문이 서버에 만들어진 뒤에만 장바구니를 비운다. 실패하면 담은 것이 그대로 남아 다시 시도할 수 있다.
-// onPlaced(이동)를 비우기보다 먼저 부른다 — 장바구니가 비면 주문서가 빈 화면으로 바뀌며 버튼이 언마운트되고,
-// 그 뒤에 예약된 호출 단위 콜백은 버려지기 때문이다
+// onPlaced(이동)는 반드시 이 뮤테이션 레벨 콜백에서 부른다 — 장바구니가 비면 주문서가 빈 화면으로 바뀌며 버튼이
+// 언마운트되는데, mutate() 호출 단위 콜백은 언마운트되면 버려지기 때문이다(1단계에서 실제로 이동이 유실됐다).
+// 여기서는 순서와 무관하게 실행되지만, 읽는 사람이 의도를 알 수 있게 이동을 먼저 둔다
 export function usePlaceOrder({ totalPrice, onPlaced }: PlaceOrderOptions) {
   const queryClient = useQueryClient();
   const clearCart = useCartStore((state) => state.clear);
