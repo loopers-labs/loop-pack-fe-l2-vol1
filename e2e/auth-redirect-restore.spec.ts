@@ -8,6 +8,7 @@ test.describe('미로그인 → 로그인 → 원래 경로 복원', () => {
 
   test('보호 경로 접근 → 로그인 → 원래 경로로 복원된다', async ({
     page,
+    context,
     account,
   }) => {
     await page.goto('/orders/new');
@@ -23,6 +24,13 @@ test.describe('미로그인 → 로그인 → 원래 경로 복원', () => {
     await expect(
       page.getByRole('heading', { name: '주문서', level: 1 }),
     ).toBeVisible();
+
+    // 과제가 "통합 테스트로 못 잡는 것"의 예시로 든 것 중 하나(쿠키 속성).
+    // MSW로 Set-Cookie 헤더 문자열을 흉내내도 httpOnly를 해석하는 주체가
+    // jsdom엔 없어서, 진짜 브라우저·진짜 응답이 있어야만 확인된다.
+    const cookies = await context.cookies();
+    const sessionCookie = cookies.find((cookie) => cookie.name === 'session');
+    expect(sessionCookie?.httpOnly).toBe(true);
   });
 
   // 5단계 자가 검증에서 getSafeRedirectPath의 검증을 없애봤더니 기존
