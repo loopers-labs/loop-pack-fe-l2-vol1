@@ -1,6 +1,13 @@
 'use client'
 
-import { Suspense, useEffect, useState, type JSX, type ReactNode } from 'react'
+import {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type JSX,
+  type ReactNode,
+} from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ProductGridFallback,
@@ -8,6 +15,7 @@ import {
   type ProductListResponse,
 } from '@/entities/product'
 import { getPageNumbers } from '@/shared/lib/getPageNumbers'
+import { trackProductListView } from '@/analytics/events'
 import { ProductFilters } from './ProductFilters'
 import { ProductResults } from './ProductResults'
 import { describeQuery } from '../model/describeQuery'
@@ -50,6 +58,7 @@ function ProductsContentFallback(): JSX.Element {
 
 export function ProductListContent(): JSX.Element {
   const queryClient = useQueryClient()
+  const lastTrackedQuerySignature = useRef<string | null>(null)
   const { query, setSearch, setCategory, setSort, setPage, replacePage } =
     useProductListQuery()
   // page < 1(0·음수)은 응답을 볼 것도 없이 잘못된 값이고, 서버도 400으로 거절한다.
@@ -101,6 +110,14 @@ export function ProductListContent(): JSX.Element {
 
   // 보정은 양쪽 끝 모두 필요하다 — 1보다 작으면 첫 페이지로, 마지막을 넘으면 마지막 페이지로.
   const correctedPage = isPageBelowMin ? MIN_PAGE : outOfRangePage
+  const displayedQuerySignature = JSON.stringify([
+    listQuery.q,
+    listQuery.category,
+    listQuery.sort,
+    listQuery.page,
+    listQuery.pageSize,
+    listQuery.scenario,
+  ])
 
   const handleRetry = async (): Promise<void> => {
     setIsRetrying(true)
@@ -113,6 +130,32 @@ export function ProductListContent(): JSX.Element {
       replacePage(correctedPage)
     }
   }, [correctedPage, replacePage])
+
+  useEffect(() => {
+    if (
+      data === undefined ||
+      isPlaceholderData ||
+      correctedPage !== null ||
+      lastTrackedQuerySignature.current === displayedQuerySignature
+    ) {
+      return
+    }
+
+    lastTrackedQuerySignature.current = displayedQuerySignature
+    trackProductListView({
+      category: listQuery.category,
+      sort: listQuery.sort,
+      page: listQuery.page,
+    })
+  }, [
+    correctedPage,
+    data,
+    displayedQuerySignature,
+    isPlaceholderData,
+    listQuery.category,
+    listQuery.page,
+    listQuery.sort,
+  ])
 
   // 여섯 화면을 가르는 축은 둘뿐이다 — 보여줄 목록이 있는가, 지금 실패했는가.
   //   목록 없음 + 로딩  → 실제 크기의 pending UI

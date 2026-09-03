@@ -1,8 +1,13 @@
 import '@/test/setup/msw'
 import { HttpResponse, delay, http } from 'msw'
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen, waitFor } from '@testing-library/react'
+import { StrictMode, useState, type JSX } from 'react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
 import type { UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { ProductListPage } from '@/_pages/product-list'
+import { trackCartAdd, trackProductListView } from '@/analytics/events'
 import {
   defaultProductListResponse,
   testProducts,
@@ -10,7 +15,210 @@ import {
 import { server } from '@/test/mocks/server'
 import { renderProductList } from '@/test/renderProductList'
 
+vi.mock('@/analytics/events', () => ({
+  trackCartAdd: vi.fn(),
+  trackProductListView: vi.fn(),
+}))
+
 const PRODUCTS_ENDPOINT = 'http://localhost:3000/api/products'
+const mockedTrackCartAdd = vi.mocked(trackCartAdd)
+const mockedTrackProductListView = vi.mocked(trackProductListView)
+
+interface AnalyticsRenderOptions {
+  strictMode?: boolean
+}
+
+function RerenderableProductListPage(): JSX.Element {
+  const [, setRevision] = useState(0)
+
+  return (
+    <>
+      <button type="button" onClick={() => setRevision((value) => value + 1)}>
+        Rerender product list
+      </button>
+      <ProductListPage />
+    </>
+  )
+}
+
+function renderAnalyticsProductList({
+  strictMode = false,
+}: AnalyticsRenderOptions = {}): void {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const page = <RerenderableProductListPage />
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <NuqsTestingAdapter hasMemory>
+        {strictMode ? <StrictMode>{page}</StrictMode> : page}
+      </NuqsTestingAdapter>
+    </QueryClientProvider>,
+  )
+}
+
+afterEach(() => {
+  vi.clearAllMocks()
+})
+
+describe('product list analytics', () => {
+  it('does not duplicate a list event after an ordinary rerender', async () => {
+    renderAnalyticsProductList()
+    await screen.findByRole('heading', {
+      name: defaultProductListResponse.products[0].name,
+    })
+
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledExactlyOnceWith({
+        category: 'all',
+        sort: 'latest',
+        page: 1,
+      })
+    })
+
+    screen.getByRole('button', { name: 'Rerender product list' }).click()
+
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledOnce()
+    })
+  })
+
+  it('does not duplicate a list event during StrictMode effect replay', async () => {
+    renderAnalyticsProductList({ strictMode: true })
+    await screen.findByRole('heading', {
+      name: defaultProductListResponse.products[0].name,
+    })
+
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledExactlyOnceWith({
+        category: 'all',
+        sort: 'latest',
+        page: 1,
+      })
+    })
+  })
+
+  it('records valid displayed conditions once despite a background refetch', async () => {
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, () =>
+        HttpResponse.json({
+          ...defaultProductListResponse,
+          totalCount: 24,
+          page: 2,
+          pageSize: 12,
+        }),
+      ),
+    )
+    const { queryClient } = renderProductList({
+      searchParams: '?q=shirt&category=fashion&sort=price-desc&page=2',
+    })
+
+    await screen.findByRole('heading', {
+      name: defaultProductListResponse.products[0].name,
+    })
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledWith({
+        category: 'fashion',
+        sort: 'price-desc',
+        page: 2,
+      })
+    })
+
+    await queryClient.invalidateQueries()
+
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledOnce()
+    })
+  })
+
+  it('records the default displayed condition once', async () => {
+    renderProductList()
+    await screen.findByRole('heading', {
+      name: defaultProductListResponse.products[0].name,
+    })
+
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledExactlyOnceWith({
+        category: 'all',
+        sort: 'latest',
+        page: 1,
+      })
+    })
+  })
+
+  it('records one new view for each changed category, sort, page, or search condition', async () => {
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        const page = Number(new URL(request.url).searchParams.get('page'))
+        return HttpResponse.json({
+          ...defaultProductListResponse,
+          products: [testProducts[0]],
+          totalCount: 24,
+          page,
+          pageSize: 12,
+        })
+      }),
+    )
+    const { user } = renderProductList()
+    await screen.findByRole('heading', { name: testProducts[0].name })
+
+    await user.selectOptions(screen.getAllByRole('combobox')[0], 'fashion')
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledTimes(2)
+    })
+
+    await user.selectOptions(screen.getAllByRole('combobox')[1], 'price-asc')
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledTimes(3)
+    })
+
+    const paginationButtons = screen
+      .getByRole('navigation')
+      .querySelectorAll('button')
+    await user.click(paginationButtons[paginationButtons.length - 1])
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledTimes(4)
+    })
+
+    await user.type(screen.getByRole('textbox'), 'shirt')
+    await user.keyboard('{Enter}')
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledTimes(5)
+    })
+    expect(mockedTrackProductListView).toHaveBeenLastCalledWith({
+      category: 'fashion',
+      sort: 'price-asc',
+      page: 1,
+    })
+  })
+
+  it('records an out-of-range page only after the displayed page is corrected', async () => {
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        const page = Number(new URL(request.url).searchParams.get('page'))
+        return HttpResponse.json({
+          ...defaultProductListResponse,
+          products: page > 2 ? [] : [testProducts[1]],
+          totalCount: 24,
+          page,
+          pageSize: 12,
+        })
+      }),
+    )
+
+    renderProductList({ searchParams: '?page=99' })
+
+    await screen.findByRole('heading', { name: testProducts[1].name })
+    await waitFor(() => {
+      expect(mockedTrackProductListView).toHaveBeenCalledExactlyOnceWith({
+        category: 'all',
+        sort: 'latest',
+        page: 2,
+      })
+    })
+  })
+})
 
 describe('상품 목록 상태', () => {
   it('지연된 성공 응답 전에는 로딩 상태를 유지하고 이후 상품을 표시한다', async () => {
@@ -310,6 +518,10 @@ describe('상품 목록 조작', () => {
     })
 
     await user.click(firstCartButton)
+    expect(mockedTrackCartAdd).toHaveBeenCalledExactlyOnceWith({
+      productId: testProducts[0].id,
+      quantity: 1,
+    })
     expect(screen.getByText('장바구니 1')).toBeInTheDocument()
     expect(firstCartButton).toHaveAttribute('aria-pressed', 'true')
 
