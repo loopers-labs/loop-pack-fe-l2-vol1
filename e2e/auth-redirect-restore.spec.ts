@@ -24,4 +24,21 @@ test.describe('미로그인 → 로그인 → 원래 경로 복원', () => {
       page.getByRole('heading', { name: '주문서', level: 1 }),
     ).toBeVisible();
   });
+
+  // 5단계 자가 검증에서 getSafeRedirectPath의 검증을 없애봤더니 기존
+  // 케이스로는 못 잡는 걸 확인해 추가한 경계 케이스. redirect 파라미터로
+  // 외부 주소를 넣어도 그쪽으로 나가면 안 된다(오픈 리다이렉트 방지).
+  test('redirect 파라미터로 외부 주소를 넣어도 그쪽으로 나가지 못한다', async ({
+    page,
+    account,
+  }) => {
+    await page.route('https://evil.com/**', (route) => route.abort());
+
+    await page.goto('/login?redirect=https%3A%2F%2Fevil.com');
+    await page.getByLabel('이메일').fill(account.email);
+    await page.getByLabel('비밀번호').fill(account.password);
+    await page.getByRole('button', { name: '로그인' }).click();
+
+    await expect(page).toHaveURL('/');
+  });
 });
