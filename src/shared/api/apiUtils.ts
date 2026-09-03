@@ -1,25 +1,32 @@
 import { AuthRequiredError } from "./AuthRequiredError";
 import type { ApiErrorResponse } from "./types";
 
-type ParseApiErrorOptions = {
-  authRequired?: boolean;
+type ApiFetchAuthPolicy = "none" | "optional" | "required";
+
+type ApiFetchOptions = RequestInit & {
+  auth?: ApiFetchAuthPolicy;
 };
 
-export async function parseApiError(
-  response: Response,
-  fallbackMessage: string,
-  options: ParseApiErrorOptions = {},
-) {
-  if (options.authRequired === true && response.status === 401) {
-    return new AuthRequiredError();
-  }
-
+export async function parseApiError(response: Response, fallbackMessage: string) {
   try {
     const error = (await response.json()) as Partial<ApiErrorResponse>;
     return new Error(error.message ?? fallbackMessage);
   } catch {
     return new Error(fallbackMessage);
   }
+}
+
+export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
+  const { auth = "none", ...init } = options;
+  const apiUrl = auth === "none" ? createApiUrl(path) : createSameOriginApiUrl(path);
+  const requestInit = auth === "none" ? init : { ...init, credentials: "include" as const };
+  const response = await fetch(apiUrl, requestInit);
+
+  if (auth === "required" && response.status === 401) {
+    throw new AuthRequiredError();
+  }
+
+  return response;
 }
 
 export function setSearchParam(

@@ -1,4 +1,4 @@
-import { createApiUrl, parseApiError, setSearchParam } from "@/shared/api/apiUtils";
+import { apiFetch, parseApiError, setSearchParam } from "@/shared/api/apiUtils";
 import type { Category } from "@/entities/category";
 import type { CategoryId } from "@/entities/category";
 import type { Product, ProductSort } from "@/entities/product";
@@ -40,11 +40,7 @@ export async function getProducts(
 
   const queryString = searchParams.toString();
   const apiPath = `/api/products${queryString ? `?${queryString}` : ""}`;
-  const apiUrl = createApiUrl(apiPath);
-  const response =
-    options.signal === undefined
-      ? await fetch(apiUrl)
-      : await fetch(apiUrl, { signal: options.signal });
+  const response = await apiFetch(apiPath, { signal: options.signal });
 
   if (!response.ok) {
     throw await parseApiError(response, "상품 목록을 불러오지 못했습니다.");

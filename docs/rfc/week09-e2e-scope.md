@@ -57,10 +57,14 @@ proxy는 Edge 런타임에서 실행된다. 세션 서명 검증에 쓰는 `read
 
 401 해석 기준은 요청의 목적에 둔다.
 
+- 공개 API: `apiFetch`의 기본값인 `auth: "none"`으로 호출한다. 세션 쿠키를 보내지 않고 401도 별도로 해석하지 않는다.
+- 선택적 세션 API: `/api/auth/me`처럼 로그인 상태 확인에 쓰는 요청은 `auth: "optional"`로 호출한다. 세션 쿠키는 보내지만 401은 비로그인 상태로 해석할 수 있게 응답을 그대로 둔다.
+- 보호 기능 API: 주문 생성과 주문 조회처럼 인증이 반드시 필요한 요청은 `auth: "required"`로 호출한다. 이 요청의 401은 `AuthRequiredError`로 변환한다.
+
 - `/api/auth/me` 401: Header의 선택적 세션 확인 실패로 보고 `{ user: null }`로 처리한다.
 - 보호 기능 API 401: 보호 화면에 들어온 뒤 발생한 인증 실패이므로 세션 만료 또는 유효하지 않은 세션으로 본다.
 
-보호 기능 API의 401은 `parseApiError`에서 `AuthRequiredError`로 변환한다. 화면마다 401 분기를 만들지 않고, `(commerce-auth)` route group의 `AuthRequiredModalBoundary`에서 한 번만 처리한다.
+화면마다 401 분기를 만들지 않고, `(commerce-auth)` route group의 `AuthRequiredModalBoundary`에서 한 번만 처리한다.
 
 세션이 만료되면 현재 화면은 유지하고 모달로 다음 행동을 알려준다. 모달의 로그인하기 링크는 현재 경로를 `redirectTo`에 담아 로그인 후 원래 경로로 돌아올 수 있게 한다.
 

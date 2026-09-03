@@ -1,10 +1,8 @@
-import { createSameOriginApiUrl, parseApiError } from "@/shared/api/apiUtils";
+import { apiFetch, parseApiError } from "@/shared/api/apiUtils";
 import type { LoginRequest, SessionResponse, SessionState } from "../model/types";
 
 export async function getSession(): Promise<SessionState> {
-  const response = await fetch(createSameOriginApiUrl("/api/auth/me"), {
-    credentials: "include",
-  });
+  const response = await apiFetch("/api/auth/me", { auth: "optional" });
 
   if (response.status === 401) {
     return { user: null };
@@ -18,11 +16,11 @@ export async function getSession(): Promise<SessionState> {
 }
 
 export async function login(request: LoginRequest): Promise<SessionResponse> {
-  const response = await fetch(createSameOriginApiUrl("/api/auth/login"), {
+  const response = await apiFetch("/api/auth/login", {
+    auth: "optional",
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(request),
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -33,9 +31,9 @@ export async function login(request: LoginRequest): Promise<SessionResponse> {
 }
 
 export async function logout(): Promise<void> {
-  const response = await fetch(createSameOriginApiUrl("/api/auth/logout"), {
+  const response = await apiFetch("/api/auth/logout", {
+    auth: "optional",
     method: "POST",
-    credentials: "include",
   });
 
   if (!response.ok) {

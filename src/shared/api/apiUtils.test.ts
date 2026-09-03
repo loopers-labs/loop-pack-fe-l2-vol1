@@ -1,27 +1,56 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createApiUrl, createSameOriginApiUrl, parseApiError } from "./apiUtils";
+import { apiFetch, createApiUrl, createSameOriginApiUrl, parseApiError } from "./apiUtils";
 import { AuthRequiredError } from "./AuthRequiredError";
 
 describe("parseApiError", () => {
-  it("보호 API의 401 응답은 세션 만료를 나타내는 AuthRequiredError로 변환한다", async () => {
-    const error = await parseApiError(
-      Response.json({ message: "로그인이 필요합니다." }, { status: 401 }),
-      "요청에 실패했습니다.",
-      { authRequired: true },
-    );
-
-    expect(error).toBeInstanceOf(AuthRequiredError);
-    expect(error.message).toBe("세션이 만료되었습니다. 다시 로그인해주세요.");
-  });
-
-  it("보호 API가 아닌 401 응답은 API 메시지를 유지한다", async () => {
+  it("API 응답 메시지를 Error로 변환한다", async () => {
     const error = await parseApiError(
       Response.json({ message: "이메일 또는 비밀번호를 확인해주세요." }, { status: 401 }),
       "요청에 실패했습니다.",
     );
 
-    expect(error).not.toBeInstanceOf(AuthRequiredError);
     expect(error.message).toBe("이메일 또는 비밀번호를 확인해주세요.");
+  });
+});
+
+describe("apiFetch", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("auth가 none이면 설정 가능한 API origin으로 credentials 없이 요청한다", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ ok: true }));
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://127.0.0.1:4010");
+
+    await apiFetch("/api/products?page=1");
+
+    expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:4010/api/products?page=1", {});
+  });
+
+  it("auth가 optional이면 같은 origin에 세션 쿠키를 포함해 요청하고 401을 그대로 반환한다", async () => {
+    const response = Response.json({ message: "로그인이 필요합니다." }, { status: 401 });
+    const fetchMock = vi.fn().mockResolvedValue(response);
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(apiFetch("/api/auth/me", { auth: "optional" })).resolves.toBe(response);
+    expect(fetchMock).toHaveBeenCalledWith("/api/auth/me", { credentials: "include" });
+  });
+
+  it("auth가 required이면 401 응답을 AuthRequiredError로 변환한다", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(Response.json({ message: "로그인이 필요합니다." }, { status: 401 }));
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(apiFetch("/api/orders", { auth: "required" })).rejects.toBeInstanceOf(
+      AuthRequiredError,
+    );
+    expect(fetchMock).toHaveBeenCalledWith("/api/orders", { credentials: "include" });
   });
 });
 

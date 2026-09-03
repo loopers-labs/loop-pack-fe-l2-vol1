@@ -1,4 +1,4 @@
-import { createSameOriginApiUrl, parseApiError } from "@/shared/api/apiUtils";
+import { apiFetch, parseApiError } from "@/shared/api/apiUtils";
 import type { Order, OrderItem } from "../model/types";
 
 export type CreateOrderRequest = {
@@ -14,29 +14,25 @@ export type OrderListResponse = {
 };
 
 export async function createOrder(request: CreateOrderRequest): Promise<CreateOrderResponse> {
-  const response = await fetch(createSameOriginApiUrl("/api/orders"), {
+  const response = await apiFetch("/api/orders", {
+    auth: "required",
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(request),
-    credentials: "include",
   });
 
   if (!response.ok) {
-    throw await parseApiError(response, "주문을 생성하지 못했습니다.", { authRequired: true });
+    throw await parseApiError(response, "주문을 생성하지 못했습니다.");
   }
 
   return response.json() as Promise<CreateOrderResponse>;
 }
 
 export async function getOrders(): Promise<OrderListResponse> {
-  const response = await fetch(createSameOriginApiUrl("/api/orders"), {
-    credentials: "include",
-  });
+  const response = await apiFetch("/api/orders", { auth: "required" });
 
   if (!response.ok) {
-    throw await parseApiError(response, "주문 내역을 불러오지 못했습니다.", {
-      authRequired: true,
-    });
+    throw await parseApiError(response, "주문 내역을 불러오지 못했습니다.");
   }
 
   return response.json() as Promise<OrderListResponse>;
