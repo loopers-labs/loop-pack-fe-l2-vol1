@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
+import { loginFromReturnTo, useTrackOnMount } from "@/shared/analytics";
 import { CommerceApiError } from "@/shared/api/commerce-client";
 import { useLogin } from "../model/use-login";
 
@@ -16,7 +17,10 @@ export function LoginForm({ returnTo }: LoginFormProps) {
   const passwordId = useId();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { mutate, isPending, error } = useLogin();
+  const from = loginFromReturnTo(returnTo);
+  const { mutate, isPending, error } = useLogin({ from });
+
+  useTrackOnMount("login_start", { from });
 
   const errorMessage =
     error === null

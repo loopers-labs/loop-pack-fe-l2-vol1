@@ -7,11 +7,13 @@ import { usePlaceOrder } from "../model/use-place-order";
 
 type PlaceOrderButtonProps = {
   items: OrderItem[];
+  totalPrice: number;
 };
 
-export function PlaceOrderButton({ items }: PlaceOrderButtonProps) {
+export function PlaceOrderButton({ items, totalPrice }: PlaceOrderButtonProps) {
   const router = useRouter();
   const { mutate, isPending, error } = usePlaceOrder({
+    totalPrice,
     onPlaced: () => router.push("/orders"),
   });
 

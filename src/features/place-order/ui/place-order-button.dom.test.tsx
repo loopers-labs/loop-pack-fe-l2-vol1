@@ -20,7 +20,7 @@ describe("PlaceOrderButton", () => {
 
   it("주문이 만들어지면 주문 내역으로 이동한 뒤 장바구니를 비운다", async () => {
     const user = userEvent.setup();
-    renderWithProviders(<PlaceOrderButton items={items} />);
+    renderWithProviders(<PlaceOrderButton items={items} totalPrice={10000} />);
 
     await user.click(screen.getByRole("button", { name: "주문하기" }));
 
@@ -35,7 +35,7 @@ describe("PlaceOrderButton", () => {
       ),
     );
     const user = userEvent.setup();
-    renderWithProviders(<PlaceOrderButton items={items} />);
+    renderWithProviders(<PlaceOrderButton items={items} totalPrice={10000} />);
 
     await user.click(screen.getByRole("button", { name: "주문하기" }));
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCartStore } from "@/entities/cart";
 import { indexProductsById, productCatalogQueries } from "@/entities/product";
 import { PlaceOrderButton } from "@/features/place-order";
+import { useTrackOnMount } from "@/shared/analytics";
 import { CommerceApiError } from "@/shared/api/commerce-client";
 import { Placeholder } from "@/shared/ui/placeholder";
 
@@ -12,6 +13,9 @@ import { Placeholder } from "@/shared/ui/placeholder";
 export function CheckoutPage() {
   const ids = useCartStore((state) => state.ids);
   const { data, isPending, isError, error, refetch } = useQuery(productCatalogQueries.all());
+
+  // 주문서 진입. 빈 장바구니로 들어온 것은 주문 시작이 아니다
+  useTrackOnMount("order_start", { productIds: [...ids], itemCount: ids.size }, ids.size > 0);
 
   if (ids.size === 0) {
     return (
@@ -74,7 +78,10 @@ export function CheckoutPage() {
       <p className="week09-total">
         총 결제 금액 <strong>{total.toLocaleString()}원</strong>
       </p>
-      <PlaceOrderButton items={lines.map(({ id }) => ({ productId: id, quantity: 1 }))} />
+      <PlaceOrderButton
+        items={lines.map(({ id }) => ({ productId: id, quantity: 1 }))}
+        totalPrice={total}
+      />
     </section>
   );
 }

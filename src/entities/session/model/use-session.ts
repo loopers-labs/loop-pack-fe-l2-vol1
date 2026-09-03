@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { identifyUser, resetUser } from "@/shared/analytics";
 import type { AuthUser } from "@/types/auth";
 import { SESSION_QUERY_KEY, sessionQueries } from "./queries";
 
@@ -11,8 +13,20 @@ export function useSession(initialUser?: AuthUser | null) {
     ...sessionQueries.me(),
     ...(initialUser === undefined ? {} : { initialData: initialUser }),
   });
+  const user = query.data ?? null;
+  const userId = user?.id ?? null;
 
-  return { user: query.data ?? null, isPending: query.isPending };
+  // 분석 도구의 identify · reset 은 세션 상태 전이가 유일한 출처다. 로그인 폼·로그아웃 버튼·만료 처리가
+  // 각자 부르지 않아도 여기서 한 번 따라간다 (identifyUser · resetUser 는 같은 상태면 무시한다)
+  useEffect(() => {
+    if (userId === null) {
+      resetUser();
+    } else {
+      identifyUser(userId);
+    }
+  }, [userId]);
+
+  return { user, isPending: query.isPending };
 }
 
 export function useSessionActions() {
