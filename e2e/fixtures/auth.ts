@@ -1,27 +1,21 @@
 import path from "node:path";
 import { test as base, expect } from "@playwright/test";
+import { accounts, TEST_PASSWORD } from "../../src/app/api/_data/auth";
+import type { AuthUser } from "../../src/types/auth";
 import { LoginPage } from "../pages/login-page";
 
-export type Account = {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-};
-
-const ACCOUNT_COUNT = 8;
-const PASSWORD = "looper1234";
+export type Account = AuthUser & { password: string };
 
 // 워커 하나가 계정 하나를 독점한다. 주문 저장소가 계정별로 나뉘어 있어 워커가 4개든 1개든 서로의 데이터를
-// 보지 못하고, 저장 파일도 워커별로 갈라 storageState 가 섞이지 않는다. 계정이 8개라 워커도 8개까지다
+// 보지 못하고, 저장 파일도 워커별로 갈라 storageState 가 섞이지 않는다. 계정 목록은 mock 백엔드의 것을 그대로 쓴다
 export const accountForWorker = (parallelIndex: number): Account => {
-  if (parallelIndex >= ACCOUNT_COUNT) {
+  const account = accounts[parallelIndex];
+  if (account === undefined) {
     throw new Error(
-      `테스트 계정은 ${ACCOUNT_COUNT}개다. --workers 를 ${ACCOUNT_COUNT} 이하로 줄여라`,
+      `테스트 계정은 ${accounts.length}개다. --workers 를 ${accounts.length} 이하로 줄여라`,
     );
   }
-  const n = parallelIndex + 1;
-  return { id: `u${n}`, name: `루퍼${n}`, email: `looper${n}@loopers.dev`, password: PASSWORD };
+  return { ...account, password: TEST_PASSWORD };
 };
 
 type WorkerFixtures = {

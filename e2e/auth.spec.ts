@@ -40,18 +40,39 @@ test("자격 증명이 틀리면 안내 문구가 보이고 로그인 화면에 
   await expect(new Header(page).loginLink).toBeVisible();
 });
 
-test("로그인 상태는 JavaScript 없이 초기 HTML 에 들어 있다", async ({ page, account }) => {
-  const anonymous = await page.request.get("/mypage", { maxRedirects: 0 });
-  expect(anonymous.status()).toBe(307);
-  expect(anonymous.headers()["location"]).toContain(loginUrl("/mypage"));
-
-  await new LoginPage(page).goto();
-  await new LoginPage(page).login(account.email, account.password);
+test("로그인 상태는 JavaScript 없이 초기 HTML 에 들어 있다", async ({
+  page,
+  browser,
+  baseURL,
+  account,
+}) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.login(account.email, account.password);
   await expect(page).toHaveURL("/");
 
-  // page.request 는 이 컨텍스트의 쿠키를 그대로 쓰고, 응답은 렌더 전 HTML 문자열이다
-  const html = await (await page.request.get("/mypage")).text();
-  expect(html).toContain(account.email);
-  expect(html).toContain("로그아웃");
-  expect(html).not.toContain('href="/login"');
+  // 같은 쿠키로 JavaScript 를 끈 컨텍스트를 연다 — 보이는 것은 서버가 보낸 HTML 그대로다
+  const noScript = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    storageState: await page.context().storageState(),
+  });
+  const staticPage = await noScript.newPage();
+  await staticPage.goto("/mypage");
+  const header = new Header(staticPage);
+  await expect(header.greeting(account.name)).toBeVisible();
+  await expect(header.logoutButton).toBeVisible();
+  await expect(header.loginLink).toHaveCount(0);
+  await expect(staticPage.getByText(account.email)).toBeVisible();
+  await noScript.close();
+
+  // 반대로 익명 HTML 에는 로그인 링크가 있다 — 헤더가 서버에서 아예 렌더되지 않아도 위 단언이 통과하는 일을 막는다
+  const anonymous = await browser.newContext({ baseURL, javaScriptEnabled: false });
+  const anonymousPage = await anonymous.newPage();
+  await anonymousPage.goto("/");
+  await expect(new Header(anonymousPage).loginLink).toBeVisible();
+  const guarded = await anonymousPage.request.get("/mypage", { maxRedirects: 0 });
+  expect(guarded.status()).toBe(307);
+  expect(guarded.headers()["location"]).toContain(loginUrl("/mypage"));
+  await anonymous.close();
 });

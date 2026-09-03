@@ -3,15 +3,20 @@ import { Header } from "./pages/header";
 import { loginUrl } from "./pages/urls";
 
 // 주문 저장소는 서버 프로세스 메모리에 남고 실행마다 누적된다. 절대 개수 대신 "내 계정의 주문이 1건 늘었다" 로 단언한다
+const ORDER_COUNT = /^총 (\d+)건$/;
+
 const readOrderCount = async (page: import("@playwright/test").Page) => {
   await page.goto("/orders");
-  const summary = page.getByText(/^총 \d+건$/);
+  const summary = page.getByText(ORDER_COUNT);
   const empty = page.getByText("아직 주문한 상품이 없어요");
   await expect(summary.or(empty)).toBeVisible();
   if (await empty.isVisible()) {
     return 0;
   }
-  return Number((await summary.textContent())?.match(/\d+/)?.[0]);
+  await expect(summary).toHaveText(ORDER_COUNT);
+  const count = Number(ORDER_COUNT.exec(await summary.innerText())?.[1]);
+  expect(Number.isInteger(count)).toBe(true);
+  return count;
 };
 
 test("담은 상품을 주문하면 주문 내역에 한 건 늘고, 로그아웃하면 주문 내역은 다시 잠긴다", async ({
