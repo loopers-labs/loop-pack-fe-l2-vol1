@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { delay, http, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SESSION_QUERY_KEY, useSession } from "@/entities/session";
 import { buildAuthUser } from "@/test/msw/fixtures";
@@ -57,11 +57,18 @@ describe("LoginForm", () => {
   });
 
   it("로그인 전에 시작된 세션 재확인의 401 이 성공 뒤에 도착해도 만료로 읽지 않는다", async () => {
-    // 로그인 화면은 마운트 시 세션을 재확인한다(미인증 → 401). mock 서버는 그 응답을 500ms 늦게 주므로
-    // 로그인 성공(즉시 응답)보다 뒤에 도착하는 순서를 그대로 재현한다
+    // 로그인 화면은 마운트 시 세션을 재확인한다(미인증 → 401). 실제 mock 서버는 이 응답에 500ms 지연을 걸어
+    // 로그인 성공보다 뒤에 도착할 수 있다. 여기서는 시간 대신 게이트로 그 순서를 강제한다 —
+    // 로그인 성공을 확인한 뒤에 게이트를 열어 401 을 내보낸다
+    let releaseSession: () => void = () => undefined;
+    const sessionGate = new Promise<void>((resolve) => {
+      releaseSession = resolve;
+    });
+    let lateSessionResponded = false;
     server.use(
       http.get("/api/auth/me", async () => {
-        await delay(300);
+        await sessionGate;
+        lateSessionResponded = true;
         return HttpResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
       }),
     );
@@ -76,8 +83,9 @@ describe("LoginForm", () => {
     await fillAndSubmit();
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/orders"));
-    // 늦은 401 이 도착했을 시각까지 기다린 뒤에도 로그인 상태가 유지되어야 한다
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    releaseSession();
+    await waitFor(() => expect(lateSessionResponded).toBe(true));
+    // 늦은 401 이 나간 뒤에도 로그인 상태가 유지되어야 한다
     expect(screen.getByText("루퍼1님")).toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalledWith(expect.stringContaining("reason=expired"));
     expect(queryClient.getQueryData(SESSION_QUERY_KEY)).toEqual(buildAuthUser());
