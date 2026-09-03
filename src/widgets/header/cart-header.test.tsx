@@ -1,11 +1,22 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Header } from '@/widgets/header';
 import { ProductCard } from '@/widgets/product-card';
 import { useCartStore } from '@/entities/cart/model/cartStore';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import type { Product } from '@/entities/product/model';
+
+// Header가 useQuery(sessionQueries.me())를 쓰므로 QueryClientProvider가 필요하다.
+function renderWithQueryClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
 
 const fixtureProduct: Product = {
   id: 'fx-12',
@@ -39,7 +50,7 @@ describe('담기 → 헤더 개수 · 다시 누르면 빠짐 (항목 12)', () =
   });
 
   it('담기 버튼을 누르면 헤더의 장바구니 개수가 올라간다', async () => {
-    render(
+    renderWithQueryClient(
       <>
         <Header />
         <ProductCard product={fixtureProduct} />
@@ -56,7 +67,7 @@ describe('담기 → 헤더 개수 · 다시 누르면 빠짐 (항목 12)', () =
   });
 
   it('담긴 상태에서 다시 누르면 헤더 개수가 다시 줄어든다', async () => {
-    render(
+    renderWithQueryClient(
       <>
         <Header />
         <ProductCard product={fixtureProduct} />
@@ -75,7 +86,7 @@ describe('담기 → 헤더 개수 · 다시 누르면 빠짐 (항목 12)', () =
   });
 
   it('찜 버튼을 눌러도 장바구니 개수에는 영향이 없다', async () => {
-    render(
+    renderWithQueryClient(
       <>
         <Header />
         <ProductCard product={fixtureProduct} />
@@ -91,7 +102,7 @@ describe('담기 → 헤더 개수 · 다시 누르면 빠짐 (항목 12)', () =
   });
 
   it('서로 다른 상품 2개를 담으면 헤더 개수가 정확히 2로 반영된다', async () => {
-    render(
+    renderWithQueryClient(
       <>
         <Header />
         <ProductCard product={fixtureProduct} />
