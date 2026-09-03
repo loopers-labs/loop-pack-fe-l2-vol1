@@ -31,7 +31,10 @@ type WorkerFixtures = {
 
 export const test = base.extend<Record<never, never>, WorkerFixtures>({
   account: [
-    async (_fixtures, provide, workerInfo) => {
+    // Playwright 는 픽스처 함수의 첫 인자가 객체 구조 분해여야 의존성을 읽는다 — 의존성이 없어도 `{}` 가 필요하다
+    // https://playwright.dev/docs/test-fixtures#creating-a-fixture
+    // eslint-disable-next-line no-empty-pattern
+    async ({}, provide, workerInfo) => {
       await provide(accountForWorker(workerInfo.parallelIndex));
     },
     { scope: "worker" },
