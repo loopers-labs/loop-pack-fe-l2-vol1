@@ -3,6 +3,8 @@ import type { AnalyticsProvider, EventProperties } from './provider';
 // 콘솔 출력이 이 파일의 목적이다
 /* eslint-disable no-console */
 
+// 타입스크립트 기본 Window 인터페이스에 __analytics라는 새로운 속성을 추가하여
+// 코드 내에서 window.__analytics라는 구문을 적을 수 있다.
 declare global {
   interface Window {
     /** 브라우저에서 확인하기 위한 이벤트 버퍼 */
