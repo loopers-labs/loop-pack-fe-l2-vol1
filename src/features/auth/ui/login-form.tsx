@@ -31,7 +31,16 @@ export function LoginForm({ returnTo }: LoginFormProps) {
       aria-label="로그인"
       onSubmit={(event) => {
         event.preventDefault();
-        mutate({ email, password }, { onSuccess: () => router.replace(returnTo) });
+        mutate(
+          { email, password },
+          {
+            onSuccess: () => {
+              // 로그아웃 상태에서 캐시된 서버 렌더(보호 경로의 로그인 리다이렉트 포함)를 버리고 이동한다
+              router.refresh();
+              router.replace(returnTo);
+            },
+          },
+        );
       }}
     >
       <label htmlFor={emailId}>이메일</label>

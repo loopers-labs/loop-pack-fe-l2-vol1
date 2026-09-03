@@ -8,7 +8,7 @@ import { server } from "@/test/msw/server";
 import { renderWithProviders } from "@/test/render-with-providers";
 import { LoginForm } from "./login-form";
 
-const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }));
+const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 const fillAndSubmit = async (email = "looper1@loopers.dev", password = "looper1234") => {

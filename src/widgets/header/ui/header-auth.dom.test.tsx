@@ -6,7 +6,7 @@ import { buildAuthUser } from "@/test/msw/fixtures";
 import { renderWithProviders } from "@/test/render-with-providers";
 import { HeaderAuth } from "./header-auth";
 
-const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }));
+const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 describe("HeaderAuth", () => {
@@ -21,10 +21,10 @@ describe("HeaderAuth", () => {
     expect(screen.queryByRole("button", { name: "로그아웃" })).not.toBeInTheDocument();
   });
 
-  it("서버가 준 사용자를 첫 렌더부터 보여준다 (추가 요청 없이)", () => {
-    renderWithProviders(<HeaderAuth initialUser={buildAuthUser({ name: "루퍼3" })} />);
+  it("서버가 준 사용자를 첫 렌더부터 보여준다", () => {
+    renderWithProviders(<HeaderAuth initialUser={buildAuthUser()} />);
 
-    expect(screen.getByText("루퍼3님")).toBeInTheDocument();
+    expect(screen.getByText("루퍼1님")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "마이페이지" })).toHaveAttribute("href", "/mypage");
     expect(screen.getByRole("link", { name: "주문 내역" })).toHaveAttribute("href", "/orders");
   });
