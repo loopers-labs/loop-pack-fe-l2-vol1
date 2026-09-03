@@ -23,7 +23,9 @@ export function setSearchParam(
 
 export function createApiUrl(path: string) {
   if (typeof window !== "undefined") {
-    return path;
+    const browserBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+    return browserBaseUrl === undefined ? path : new URL(path, browserBaseUrl).toString();
   }
 
   const baseUrl =
