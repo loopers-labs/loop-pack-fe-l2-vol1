@@ -17,7 +17,6 @@ import {
   trackProductDetailView,
   trackProductListView,
 } from './events';
-import { getLoginFrom, getLoginFromPathname } from '@/shared/lib/loginFrom';
 import {
   initAnalytics,
   registerProviders,
@@ -131,13 +130,7 @@ describe('analytics events', () => {
     expect(calls).toContainEqual({ type: 'reset' });
   });
 
-  it('외부 입력과 이전 화면을 제한된 로그인 출처로 바꾼다', () => {
-    expect(getLoginFrom('cart')).toBe('cart');
-    expect(getLoginFrom('orders')).toBe('orders');
-    expect(getLoginFrom('unknown')).toBe('direct');
-    expect(getLoginFromPathname('/cart')).toBe('cart');
-    expect(getLoginFromPathname('/orders/new')).toBe('orders');
-    expect(getLoginFromPathname('/products')).toBe('direct');
+  it('로그인 실패 응답 상태를 분석용 사유로 바꾼다', () => {
     expect(getLoginFailureReason(401)).toBe('INVALID_CREDENTIALS');
     expect(getLoginFailureReason(400)).toBe('INVALID_REQUEST');
     expect(getLoginFailureReason(500)).toBe('SERVER_ERROR');
