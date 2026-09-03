@@ -52,6 +52,24 @@ const fsdHarness = [
       ],
     },
   })),
+  // 라우팅 존(src/app, api 제외)도 계측은 shared/analytics 를 통해서만
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: ["src/app/api/**"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/analytics", "@/analytics/*"],
+              message: "계측은 @/shared/analytics 의 trackEvent 를 사용하세요",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // 주의: 같은 rule의 options는 병합이 아니라 교체 — src/app/** 규칙을 추가하게 되면 이 객체가 반드시 뒤에 와야 함
   {
     files: ["src/app/api/**/*.ts"],
