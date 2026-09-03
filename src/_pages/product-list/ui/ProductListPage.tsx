@@ -49,7 +49,12 @@ export function ProductListPage() {
   // 화면을 가르는 건 status 하나가 아니라 "지금 보여줄 목록이 있는가"다.
   const list = productsQuery.data ?? cachedList;
   const hasList = list !== undefined;
-  const isFirstLoad = productsQuery.isPending;
+  // `!hasList`가 붙어야 최초 로딩과 목록이 배타적이다. `isPending`만 보면 배타성이
+  // placeholderData 옵션에 딸린 우연이 된다 — 8주차 3단계에서 그 옵션을 지웠을 때
+  // 스켈레톤 12칸과 카드 12장이 함께 그려졌다(M7). 옵션이 아니라 화면 상태로 가른다.
+  // 이 줄이 `aria-busy`도 함께 고친다. 아래 section의 aria-busy는 최초 로딩 전용
+  // 신호이고, 갱신은 role="status" 문구가 따로 알린다.
+  const isFirstLoad = !hasList && productsQuery.isPending;
   const isUpdating = productsQuery.isFetching && hasList;
   const updateFailed = productsQuery.isError && hasList;
   const firstLoadFailed = productsQuery.isError && !hasList;
@@ -105,6 +110,9 @@ export function ProductListPage() {
         </div>
       </section>
 
+      {/* aria-busy는 "읽을 콘텐츠가 아직 없다"는 뜻이라 최초 로딩에만 켠다.
+          갱신 중에는 이전 목록이 그대로 읽히므로 busy가 아니고, 진행 중이라는 사실은
+          아래 role="status"가 알린다. 둘을 한 신호에 담으면 보조기술이 가를 수 없다. */}
       <section className="shop-section" aria-label="상품 검색 결과" aria-busy={isFirstLoad}>
         {/* ① 데이터 없는 최초 진입 — 실제 목록 크기를 예상할 수 있게 같은 수·모양으로 자리를 잡는다. */}
         {isFirstLoad && (

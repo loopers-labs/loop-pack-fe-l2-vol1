@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, delay, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { products } from "@/app/api/_data/commerce";
-import { PRODUCTS_ENDPOINT, productListResponse } from "@/mocks/handlers";
+import { PAGE_SIZE, PRODUCTS_ENDPOINT, productListResponse } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 import { createRequestLog } from "@/test/requests";
 import { BOUNDARY_FALLBACK, TestErrorBoundary, renderWithProviders } from "@/test/render";
@@ -13,6 +13,7 @@ import { ProductListPage } from "./ProductListPage";
 // 기본 핸들러는 성공 경로만 두고, 실패·지연·빈 결과는 각 테스트가 여기서 덮는다.
 
 const listRegion = () => screen.getByRole("region", { name: "상품 검색 결과" });
+const FASHION = products.filter((product) => product.category === "fashion");
 
 describe("4번 — 목록 로딩 → 성공", () => {
   it("응답을 기다리는 동안 불러오는 중임을 알리고, 도착하면 목록으로 바꾼다", async () => {
@@ -57,6 +58,50 @@ describe("4번 — 목록 로딩 → 성공", () => {
 
     expect(await screen.findByText(/총 \d+개/, undefined, { timeout: 3_000 })).toBeInTheDocument();
   }, 10_000);
+
+  // 8주차 피드백 반영. M7(placeholderData 제거)이 살아남은 자리인데, 원인은
+  // 테스트 부재가 아니라 `isFirstLoad`가 `hasList`를 안 보던 것이었다. 구현을
+  // 배타적으로 고친 뒤(ProductListPage.tsx) 그 계약을 여기서 고정한다.
+  it("갱신 중에는 최초 로딩 UI를 그리지 않고 이전 목록을 유지한다", async () => {
+    const user = userEvent.setup();
+
+    // 지연도 응답 내용도 요청 조건으로 고른다 — 호출 순서로 고르면 조건이 요청에
+    // 실렸는지를 아무 단언도 검증하지 않는다(8주차에 확인한 false green).
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, async ({ request }) => {
+        const category = new URL(request.url).searchParams.get("category");
+        const matched = category === "fashion" ? FASHION : products;
+        if (category === "fashion") {
+          // 갱신이 진행 중인 창을 만든다.
+          await delay(300);
+        }
+        return HttpResponse.json(
+          productListResponse({
+            products: matched.slice(0, PAGE_SIZE),
+            totalCount: matched.length,
+          }),
+        );
+      }),
+    );
+
+    renderWithProviders(<ProductListPage />);
+    expect(await screen.findByText(`총 ${products.length}개`)).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText("카테고리"), "fashion");
+
+    // 갱신 중임을 알리는 신호는 role="status" 쪽이다.
+    expect(await screen.findByRole("status")).toHaveTextContent("목록을 갱신하는 중입니다…");
+
+    // 최초 로딩 UI는 이 창에 없어야 한다. 스켈레톤은 aria-hidden이라 역할로 못 잡으니,
+    // 항상 함께 그려지는 문구로 본다(ProductListPage.tsx ① 블록).
+    expect(screen.queryByText(/불러오는 중/)).not.toBeInTheDocument();
+    // aria-busy가 갱신에도 켜지면 보조기술은 최초 로딩과 구분할 수 없다.
+    expect(listRegion()).toHaveAttribute("aria-busy", "false");
+    // 갱신 중에 목록을 비우면 사용자가 보고 있던 것이 사라진다.
+    expect(screen.getByText(`총 ${products.length}개`)).toBeInTheDocument();
+
+    expect(await screen.findByText(`총 ${FASHION.length}개`)).toBeInTheDocument();
+  });
 });
 
 describe("5번 — 목록 빈 결과", () => {
