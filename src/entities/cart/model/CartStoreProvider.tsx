@@ -9,8 +9,11 @@ import {
   CART_ACTIVE_OWNER_STORAGE_KEY,
   GUEST_CART_OWNER,
   getCartStorageKey,
-  isCartOwnerKey,
 } from './cartOwner';
+import {
+  reloadCurrentPage,
+  shouldReloadForCartOwnerChange,
+} from './cartOwnerSync';
 import type { CartOwnerKey } from './cartOwner';
 import type { CartStore } from './cartStore';
 
@@ -76,8 +79,8 @@ export function CartStoreProvider({
       if (!isLocalStorage) return;
 
       if (event.key === CART_ACTIVE_OWNER_STORAGE_KEY) {
-        if (isCartOwnerKey(event.newValue) && event.newValue !== ownerKey) {
-          window.location.reload();
+        if (shouldReloadForCartOwnerChange(ownerKey, event.newValue)) {
+          reloadCurrentPage();
         }
         return;
       }

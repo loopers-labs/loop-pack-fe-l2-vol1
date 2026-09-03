@@ -3,12 +3,23 @@
 import '@/test/setupDom';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { LEGACY_CART_STORAGE_KEY, getCartStorageKey } from './cartOwner';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  CART_ACTIVE_OWNER_STORAGE_KEY,
+  LEGACY_CART_STORAGE_KEY,
+  getCartStorageKey,
+} from './cartOwner';
 import { createCartStore } from './cartStore';
 import { CartStoreProvider } from './CartStoreProvider';
 import { useCartStore } from './useCartStore';
 import type { CartOwnerKey } from './cartOwner';
+
+const reloadCurrentPage = vi.hoisted(() => vi.fn());
+
+vi.mock('./cartOwnerSync', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./cartOwnerSync')>()),
+  reloadCurrentPage,
+}));
 
 function CartProbe() {
   const ownerKey = useCartStore((state) => state.ownerKey);
@@ -43,6 +54,7 @@ function ProviderHarness({ ownerKey }: { ownerKey: CartOwnerKey }) {
 describe('CartStoreProvider', () => {
   beforeEach(() => {
     localStorage.clear();
+    reloadCurrentPage.mockReset();
   });
 
   it('로그인하면 기존 회원 장바구니에 guest 장바구니를 합치고 guest 저장소를 비운다', async () => {
@@ -126,5 +138,32 @@ describe('CartStoreProvider', () => {
     );
 
     await screen.findByText('guest:empty');
+  });
+
+  it('다른 탭의 유효한 소유자 변경만 현재 페이지 새로고침으로 반영한다', async () => {
+    render(<ProviderHarness ownerKey="guest" />);
+    await screen.findByText('guest:empty');
+
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: CART_ACTIVE_OWNER_STORAGE_KEY,
+        newValue: 'user:member-1',
+        storageArea: localStorage,
+      }),
+    );
+    expect(reloadCurrentPage).toHaveBeenCalledOnce();
+
+    reloadCurrentPage.mockClear();
+    for (const newValue of ['guest', 'user:', 'invalid-owner', null]) {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: CART_ACTIVE_OWNER_STORAGE_KEY,
+          newValue,
+          storageArea: localStorage,
+        }),
+      );
+    }
+
+    expect(reloadCurrentPage).not.toHaveBeenCalled();
   });
 });
