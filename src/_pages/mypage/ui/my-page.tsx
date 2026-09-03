@@ -17,8 +17,8 @@ export function MyPage({ user }: MyPageProps) {
         <dd>{user.email}</dd>
       </dl>
       <nav aria-label="마이페이지 메뉴" className="week09-actions">
-        <Link href="/orders">주문 내역</Link>
-        <Link href="/checkout">주문서</Link>
+        <Link href="/orders">주문 내역 보기</Link>
+        <Link href="/checkout">주문서로 이동</Link>
         <LogoutButton />
       </nav>
     </section>
