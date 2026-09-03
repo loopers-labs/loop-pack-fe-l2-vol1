@@ -4,4 +4,5 @@ export {
   useWishlistCount,
   useWishlistHasHydrated,
   useToggleWishlist,
+  useClearWishlist,
 } from "./model/store";
