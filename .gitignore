@@ -25,6 +25,9 @@ next-env.d.ts
 coverage/
 /playwright-report/
 /test-results/
+# e2e/auth.setup.ts가 생성하는 워커별 로그인 세션(storageState) — 실행할 때마다
+# 새로 만들어지고 서명된 세션 토큰이 들어있어 커밋 대상이 아니다.
+/.auth/
 
 # logs
 *.log
