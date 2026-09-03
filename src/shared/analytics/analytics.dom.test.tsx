@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { resetAnalyticsForTest } from "@/analytics/logger";
 import type { AnalyticsProvider, EventProperties } from "@/analytics/provider";
-import { identifyUser, resetUser, setupAnalytics, trackEvent } from "./analytics";
-import { setCurrentUserId } from "./common-properties";
+import {
+  identifyUser,
+  resetSharedAnalyticsForTest,
+  resetUser,
+  setupAnalytics,
+  trackEvent,
+} from "./analytics";
 import { loginFromReturnTo } from "./login-from";
 
 type Recorded =
@@ -25,7 +30,7 @@ const createRecorder = () => {
 describe("shared/analytics", () => {
   afterEach(() => {
     resetAnalyticsForTest();
-    setCurrentUserId(null);
+    resetSharedAnalyticsForTest();
     window.sessionStorage.clear();
   });
 
