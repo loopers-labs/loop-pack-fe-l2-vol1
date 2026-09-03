@@ -29,6 +29,12 @@ describe("sanitizeReturnTo", () => {
     expect(sanitizeReturnTo("/login?next=%2Forders")).toBe("/");
     expect(sanitizeReturnTo("/login/anything")).toBe("/");
   });
+
+  it("API 라우트는 화면이 아니므로 복원 대상이 아니다", () => {
+    expect(sanitizeReturnTo("/api/auth/logout")).toBe("/");
+    expect(sanitizeReturnTo("/api")).toBe("/");
+    expect(sanitizeReturnTo("/apiary")).toBe("/apiary");
+  });
 });
 
 describe("buildLoginUrl", () => {

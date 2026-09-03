@@ -2,6 +2,7 @@ export const LOGIN_PATH = "/login";
 export const RETURN_TO_PARAM = "next";
 export const LOGIN_REASON_PARAM = "reason";
 export const DEFAULT_RETURN_TO = "/";
+const API_PREFIX = "/api";
 
 export type LoginReason = "expired";
 
@@ -31,6 +32,11 @@ export function sanitizeReturnTo(value: string | null | undefined): string {
 
   const pathname = value.split(/[?#]/, 1)[0];
   if (pathname === LOGIN_PATH || pathname.startsWith(`${LOGIN_PATH}/`)) {
+    return DEFAULT_RETURN_TO;
+  }
+
+  // API 라우트는 화면이 아니다. 로그인 뒤 JSON 응답으로 떨어지는 대신 홈으로 보낸다
+  if (pathname === API_PREFIX || pathname.startsWith(`${API_PREFIX}/`)) {
     return DEFAULT_RETURN_TO;
   }
 
