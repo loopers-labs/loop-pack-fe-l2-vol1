@@ -13,6 +13,9 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
   },
+  // 워커 수를 고정한다. 계정이 8개라 parallelIndex가 8을 넘으면 계정이 겹치고,
+  // 겹치면 서로의 주문이 상대 목록에 보인다(e2e/support/accounts.ts).
+  workers: 4,
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // production build 위에서만 돈다. 개발 서버에서만 통과하는 건 인정되지 않고,
   // mock API의 500ms 고정 지연도 production에서만 나타난다(그걸 그대로 만나야 한다).
