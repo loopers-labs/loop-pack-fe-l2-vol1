@@ -3,7 +3,7 @@
 // [AI] 상품 목록 페이지 조합(widget). URL 필터 + 상품 데이터 + 카드 조합 + prefetch + 상태 분기를 담당.
 // app/products/page.tsx는 이 위젯을 얇게 호출하기만 한다.
 import { useEffect } from 'react';
-import { track } from '@/analytics/logger';
+import { logProductListView } from '@/analytics/events';
 import {
   isCategoryValue,
   isSortValue,
@@ -33,7 +33,7 @@ export const ProductList = () => {
     useProductList(page, query);
 
   useEffect(() => {
-    track('product_list_view');
+    logProductListView();
   }, []);
 
   // [AI] 상태를 "전체 교체형"과 "오버레이형"으로 분류한다.

@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/widgets/header/Header';
-import { identify, track } from '@/analytics/logger';
+import { logLoginFail, logLoginStart, logLoginSuccess } from '@/analytics/events';
 import { loginRequest } from '@/entities/auth/api';
 import { getLoginErrorMessage } from '../model/getLoginErrorMessage';
 import { getLoginFailReason } from '../model/getLoginFailReason';
@@ -24,7 +24,7 @@ export const LoginForm = () => {
   const isExpiredSession = searchParams.get('expired') === '1';
 
   useEffect(() => {
-    track('login_start');
+    logLoginStart();
   }, []);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -45,9 +45,8 @@ export const LoginForm = () => {
       setError(null);
       // 성공(200): 브라우저가 Set-Cookie로 세션 쿠키를 저장한다 (클라이언트가 직접 다루지 않는다).
       const session = await loginRequest({ email, password });
-      // [AI] identify를 먼저 연결한 뒤 성공 이벤트를 보낸다 — "이 시점부터 이 사용자"의 순서.
-      identify(session.user.id);
-      track('login_success');
+      // [AI] identify 연결 → login_success 기록의 순서는 events.ts의 logLoginSuccess가 보장한다 (RFC 2-3).
+      logLoginSuccess(session.user.id);
       // [AI] 복원: redirectTo 검증은 이동 직전(사용하는 곳)에서 수행한다 (RFC 검증 위치 규칙).
       // 외부 주소(https://, //evil.com)는 기본 경로('/')로 조용히 되돌려진다.
       router.push(getSafeRedirectPath(redirectParam));
@@ -56,7 +55,7 @@ export const LoginForm = () => {
       // auth 엔드포인트의 401은 세션 만료가 아니라 자격 증명 실패다 (RFC 401 구분 규칙).
       setError(getLoginErrorMessage(err));
       // [AI] 실패 원인은 시드 로그 스키마(reason)와 같은 코드로 남긴다 — 나중에 집계해 비교 가능.
-      track('login_fail', { reason: getLoginFailReason(err) });
+      logLoginFail(getLoginFailReason(err));
     } finally {
       setIsSubmitting(false);
     }

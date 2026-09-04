@@ -1,6 +1,5 @@
 import { ApiError } from '@/shared/api/fetcher';
-
-export type LoginFailReason = 'INVALID_CREDENTIALS' | 'INVALID_FORMAT' | 'UNKNOWN';
+import type { LoginFailReason } from '@/analytics/events';
 
 export const getLoginFailReason = (error: unknown): LoginFailReason => {
   if (error instanceof ApiError) {

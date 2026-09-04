@@ -7,7 +7,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { reset } from '@/analytics/logger';
+import { resetUserIdentity } from '@/analytics/events';
 import { useWishlistCount } from '@/features/toggle-wishlist/model/store';
 import { useCartCount } from '@/features/add-to-cart/model/store';
 import { logoutRequest } from '@/entities/auth/api';
@@ -37,7 +37,7 @@ export const Header = ({ serverUser }: HeaderProps) => {
     // 로그아웃(204): 서버가 쿠키 삭제 지시를 내리고 브라우저가 쿠키를 제거한다.
     await logoutRequest();
     // [AI] 분석 사용자 연결 해제 (week-09 2-2): 로그아웃 이후 행동이 이전 사용자 것으로 기록되지 않게 한다.
-    reset();
+    resetUserIdentity();
     // [AI] 상태 정리(RFC 방침): 세션 파생 캐시는 반드시 비우고, 카트·위시리스트는 유지한다.
     // 만료 처리기(1-4)와 같은 정리 절차를 쓰게 된다 — 1-4에서 공용 함수로 뽑아낸다.
     queryClient.clear();
