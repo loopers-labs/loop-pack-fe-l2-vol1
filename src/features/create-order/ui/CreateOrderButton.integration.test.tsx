@@ -5,6 +5,7 @@ import { act, render, screen, type RenderResult } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import type { JSX } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { trackOrderComplete, trackOrderStart } from '@/analytics/events'
 import { useCartCount, useCartIds, useToggleCart } from '@/entities/cart'
 import { LogoutButton } from '@/features/auth'
 import { setProtectedRequestNavigationForTest } from '@/shared/api/protectedHttpClient'
@@ -23,6 +24,19 @@ const router = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
 }))
+
+vi.mock('@/analytics/events', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/analytics/events')>()
+
+  return {
+    ...actual,
+    trackOrderComplete: vi.fn(),
+    trackOrderStart: vi.fn(),
+  }
+})
+
+const mockedTrackOrderComplete = vi.mocked(trackOrderComplete)
+const mockedTrackOrderStart = vi.mocked(trackOrderStart)
 
 function CartControls(): JSX.Element {
   const cartCount = useCartCount()
@@ -70,6 +84,8 @@ describe('CreateOrderButton', () => {
   beforeEach(() => {
     router.push.mockReset()
     router.refresh.mockReset()
+    mockedTrackOrderComplete.mockReset()
+    mockedTrackOrderStart.mockReset()
     window.history.replaceState(null, '', '/checkout')
   })
 
@@ -81,6 +97,9 @@ describe('CreateOrderButton', () => {
 
   it('빈 장바구니에서는 주문을 막고 빈 상태를 안내한다', () => {
     renderCreateOrder()
+
+    expect(mockedTrackOrderStart).not.toHaveBeenCalled()
+    expect(mockedTrackOrderComplete).not.toHaveBeenCalled()
 
     expect(screen.getByRole('button', { name: '주문하기' })).toBeDisabled()
     expect(screen.getByText('장바구니가 비어 있습니다.')).toBeInTheDocument()
@@ -112,9 +131,26 @@ describe('CreateOrderButton', () => {
     await user.click(screen.getByRole('button', { name: '두 번째 상품 담기' }))
     await user.click(screen.getByRole('button', { name: '주문하기' }))
 
+    expect(mockedTrackOrderStart).toHaveBeenCalledExactlyOnceWith({
+      productIds: [FIRST_PRODUCT_ID, SECOND_PRODUCT_ID],
+      itemCount: 2,
+    })
+
     await vi.waitFor(() => {
       expect(router.push).toHaveBeenCalledWith('/orders')
     })
+    expect(mockedTrackOrderComplete).toHaveBeenCalledExactlyOnceWith({
+      orderId: 'o1',
+      productIds: [FIRST_PRODUCT_ID, SECOND_PRODUCT_ID],
+      itemCount: 2,
+    })
+    const completeCallOrder =
+      mockedTrackOrderComplete.mock.invocationCallOrder[0]
+    const navigationCallOrder = router.push.mock.invocationCallOrder[0]
+    if (completeCallOrder === undefined || navigationCallOrder === undefined) {
+      throw new Error('Order analytics or navigation was not recorded.')
+    }
+    expect(completeCallOrder).toBeLessThan(navigationCallOrder)
     expect(requestBody).toEqual({
       items: [
         { productId: FIRST_PRODUCT_ID, quantity: 1 },
@@ -147,6 +183,7 @@ describe('CreateOrderButton', () => {
       ).toBeInTheDocument()
       expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
       expect(router.push).not.toHaveBeenCalled()
+      expect(mockedTrackOrderComplete).not.toHaveBeenCalled()
     },
   )
 
@@ -172,6 +209,7 @@ describe('CreateOrderButton', () => {
     })
     expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
     expect(router.push).not.toHaveBeenCalled()
+    expect(mockedTrackOrderComplete).not.toHaveBeenCalled()
   })
 
   it('주문 요청 중에는 중복 제출을 막는다', async () => {
@@ -194,6 +232,10 @@ describe('CreateOrderButton', () => {
     expect(pendingButton).toBeDisabled()
     await user.click(pendingButton)
     expect(requestCount).toBe(1)
+    expect(mockedTrackOrderStart).toHaveBeenCalledExactlyOnceWith({
+      productIds: [FIRST_PRODUCT_ID],
+      itemCount: 1,
+    })
 
     if (resolveOrder === undefined) {
       throw new Error('Order response resolver was not initialized.')
@@ -213,6 +255,11 @@ describe('CreateOrderButton', () => {
 
     await vi.waitFor(() => {
       expect(router.push).toHaveBeenCalledWith('/orders')
+    })
+    expect(mockedTrackOrderComplete).toHaveBeenCalledExactlyOnceWith({
+      orderId: 'o1',
+      productIds: [FIRST_PRODUCT_ID],
+      itemCount: 1,
     })
   })
 
@@ -257,12 +304,21 @@ describe('CreateOrderButton', () => {
       expect(pendingButton).toBeDisabled()
       await secondRender.user.click(pendingButton)
       expect(requestCount).toBe(1)
+      expect(mockedTrackOrderStart).toHaveBeenCalledExactlyOnceWith({
+        productIds: [FIRST_PRODUCT_ID],
+        itemCount: 1,
+      })
     } finally {
       releaseOrder?.()
     }
 
     await vi.waitFor(() => {
       expect(router.push).toHaveBeenCalledOnce()
+    })
+    expect(mockedTrackOrderComplete).toHaveBeenCalledExactlyOnceWith({
+      orderId: 'o1',
+      productIds: [FIRST_PRODUCT_ID],
+      itemCount: 1,
     })
   })
 
@@ -304,6 +360,15 @@ describe('CreateOrderButton', () => {
     })
     expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
     expect(screen.getByTestId('cart-ids')).toHaveTextContent('p2')
+    expect(mockedTrackOrderStart).toHaveBeenCalledExactlyOnceWith({
+      productIds: [FIRST_PRODUCT_ID],
+      itemCount: 1,
+    })
+    expect(mockedTrackOrderComplete).toHaveBeenCalledExactlyOnceWith({
+      orderId: 'o1',
+      productIds: [FIRST_PRODUCT_ID],
+      itemCount: 1,
+    })
   })
 
   it('제출한 상품을 제거한 뒤 같은 ID를 다시 담아도 이전 주문 성공이 새 항목을 지우지 않는다', async () => {
@@ -348,6 +413,11 @@ describe('CreateOrderButton', () => {
     })
     expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
     expect(screen.getByTestId('cart-ids')).toHaveTextContent('p1')
+    expect(mockedTrackOrderComplete).toHaveBeenCalledExactlyOnceWith({
+      orderId: 'o1',
+      productIds: [FIRST_PRODUCT_ID],
+      itemCount: 1,
+    })
   })
 
   it('요청 중 다시 마운트된 버튼이 실패 메시지를 받고 재시도할 때 이전 오류를 지운다', async () => {
@@ -486,6 +556,7 @@ describe('CreateOrderButton', () => {
       expect(screen.getByTestId('cart-count')).toHaveTextContent('1')
       expect(screen.getByTestId('cart-ids')).toHaveTextContent('p1')
       expect(router.push).not.toHaveBeenCalled()
+      expect(mockedTrackOrderComplete).not.toHaveBeenCalled()
     } finally {
       releaseOrder?.()
     }

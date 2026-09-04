@@ -2,12 +2,13 @@
 
 import { useSyncExternalStore, type JSX } from 'react'
 import { useRouter } from 'next/navigation'
+import { trackOrderComplete, trackOrderStart } from '@/analytics/events'
 import {
   useCaptureCartSnapshot,
   useCartIds,
   useRemoveCartSnapshot,
 } from '@/entities/cart'
-import type { OrderItem } from '@/entities/order'
+import type { Order, OrderItem } from '@/entities/order'
 import {
   getOrderSubmissionSnapshot,
   startOrderSubmission,
@@ -45,12 +46,30 @@ export function CreateOrderButton(): JSX.Element {
       productId: item.productId,
       quantity: 1,
     }))
+    const submittedProductIds = submittedCartSnapshot.map(
+      ({ productId }) => productId,
+    )
+    const submittedItemCount = submittedProductIds.length
+    let submittedOrder: Order | undefined
 
     startOrderSubmission({
       submit: async (signal) => {
-        await createOrder(items, signal)
+        trackOrderStart({
+          productIds: submittedProductIds,
+          itemCount: submittedItemCount,
+        })
+        submittedOrder = await createOrder(items, signal)
       },
       onSuccess: () => {
+        if (submittedOrder === undefined) {
+          return
+        }
+
+        trackOrderComplete({
+          orderId: submittedOrder.id,
+          productIds: submittedProductIds,
+          itemCount: submittedItemCount,
+        })
         removeCartSnapshot(submittedCartSnapshot)
         router.push('/orders')
       },
