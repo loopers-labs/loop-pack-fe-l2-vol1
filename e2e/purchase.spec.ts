@@ -1,6 +1,7 @@
 import type { APIRequestContext } from '@playwright/test'
 import { expect } from '@playwright/test'
 
+import { orderCreateResponseSchema } from '@/entities/order/model/OrderSchema'
 import type { ProductListResponse } from '@/entities/product/model/types'
 
 import { trackedEventNames } from './support/auth'
@@ -33,15 +34,27 @@ test('Purchase completion - when an authenticated shopper adds a product - recor
   await expect(page.getByLabel('장바구니 1개')).toBeVisible()
   await page.goto('/checkout')
   await expect(page.getByText('수량 1')).toBeVisible()
+  const orderCreated = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === '/api/orders' &&
+      response.request().method() === 'POST' &&
+      response.status() === 201,
+  )
 
   // Act
   await page.getByRole('button', { name: '주문하기' }).click()
 
   // Assert
+  const { order } = orderCreateResponseSchema.parse(
+    await (await orderCreated).json(),
+  )
   await page.waitForURL('/orders')
   await expect(
-    page.getByRole('listitem').filter({ hasText: `${productId} × 1` }),
-  ).not.toHaveCount(0)
+    page
+      .getByRole('listitem')
+      .filter({ hasText: order.id })
+      .filter({ hasText: `${productId} × 1` }),
+  ).toHaveCount(1)
   await expect(page.getByLabel('장바구니 0개')).toBeVisible()
   expect(await trackedEventNames(page)).toContain('order_complete')
 

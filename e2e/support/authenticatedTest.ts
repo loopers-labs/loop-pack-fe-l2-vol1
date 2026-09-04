@@ -16,13 +16,23 @@ export const test = base.extend<
   authenticatedStorageState: [
     async ({ browser }, runFixture, workerInfo) => {
       const account = parallelAccount(workerInfo.parallelIndex)
+      const baseURL = workerInfo.project.use.baseURL
+      if (typeof baseURL !== 'string') {
+        throw new Error('Playwright baseURL이 필요하다.')
+      }
+
       const context = await browser.newContext()
-      const page = await context.newPage()
-      await page.goto('http://localhost:3000/login')
-      await signIn(page, account.email)
-      await page.waitForURL('http://localhost:3000/')
-      const storageState = await context.storageState()
-      await context.close()
+      const storageState = await (async () => {
+        try {
+          const page = await context.newPage()
+          await page.goto(new URL('/login', baseURL).toString())
+          await signIn(page, account.email)
+          await page.waitForURL(new URL('/', baseURL).toString())
+          return await context.storageState()
+        } finally {
+          await context.close()
+        }
+      })()
 
       await runFixture(storageState)
     },
