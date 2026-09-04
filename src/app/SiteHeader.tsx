@@ -21,7 +21,8 @@ export function SiteHeader() {
         <span>위시리스트 {wishCount}</span>
         <span>장바구니 {cartCount}</span>
         {/* 주문서는 client navigation으로 가야 메모리 카트가 살아 있다. 보호 경로는 prefetch하지 않는다 —
-            로그인 상태에 따라 답이 달라지는 경로를 미리 받아두면 리다이렉트가 캐시에 남는다 */}
+            로그인 상태에 따라 답이 달라지는 경로를 미리 받아두면 proxy의 리다이렉트가 라우터 캐시에
+            남아 로그인 후에도 로그인 화면으로 되돌아온다(5단계 실험 7로 확인) */}
         <Link href="/checkout" prefetch={false}>
           주문서
         </Link>
