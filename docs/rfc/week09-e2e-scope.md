@@ -63,9 +63,44 @@
 
 ---
 
-## A. 이벤트 스키마
+## A. 이벤트 스키마 (2단계 — 계측 코드보다 먼저)
 
-`[2단계 착수 시 작성 — 계측 코드보다 먼저 커밋]`
+### 이름 규칙 — 시드 로그 스키마를 그대로 쓴다
+
+`snake_case`, `<대상>_<행위>` 순서(`product_list_view`, `cart_add`, `login_success`). 새 이름을 만들지 않는 이유: 이 스키마는 팀이 이미 합의해 30일치 로그가 쌓여 있는 것이고, 3단계에서 그 로그로 경로를 세운다. 이름이 같아야 "내 앱의 이 화면 = 로그의 이 이벤트"가 매핑 표 없이 성립한다.
+
+| 계측 지점 (과제 지정) | 이벤트 | props | 내 앱에서 부르는 자리 |
+| --- | --- | --- | --- |
+| 목록 진입 | `product_list_view` | `category`·`sort`·`page` | `ProductsPage` 마운트·필터 변경 시(현재 URL 조건) |
+| 상세 진입 | `product_detail_view` | — | **없음 — 상세 화면이 없다.** 계측하지 않고 이 사실을 기록한다 |
+| 담기 | `cart_add` | `productId`·`quantity`(항상 1) | `AddToCartButton` 담기(빼기는 보내지 않음 — 시드에 `cart_remove`가 없다) |
+| 로그인 시작 | `login_start` | `from`(= `next` 경로 또는 `direct`) | `/login` 진입 |
+| 로그인 성공 | `login_success` | `from` | 로그인 mutation `onSuccess` (+ `identify(user.id)`) |
+| 로그인 실패 | `login_fail` | `reason`(`INVALID_CREDENTIALS` \| `SERVER_ERROR`) | 로그인 mutation `onError` |
+| 주문 시작 | `order_start` | `itemCount` | `/checkout` 진입(담은 상품이 있을 때) |
+| 주문 완료 | `order_complete` | `orderId`·`itemCount` | 주문 mutation `onSuccess` |
+
+시드에 있지만 이 앱에서 보내지 않는 것: `product_detail_view`(화면 없음), `wishlist_add`·`category_filter_change`·`sort_change`·`page_change`(과제 지정 지점 아님 — 목록 진입 이벤트의 props로 조건이 실린다), `client_error`(오류 계측은 이번 범위 밖).
+
+**매핑 표**: 이름 차이 없음. props 차이 — 시드의 `order_start.productId`·`order_complete.totalPrice`는 보내지 않는다(카트에 수량·금액이 없고 주문 API 응답에 금액이 없다). 대신 `itemCount`·`orderId`를 보낸다. 집계 시 `order_*` 이벤트 **수**는 호환되고 금액 집계는 불가 — 이 차이를 표로 남기는 것이 매핑의 목적이다.
+
+### 공통 프로퍼티 — `setCommonProperties()`
+
+시드 로그의 최상위 필드와 같은 이름을 쓴다(집계 스크립트가 그대로 읽을 수 있게).
+
+| 필드 | 값 | 이유 |
+| --- | --- | --- |
+| `sessionId` | 탭 단위 랜덤 id, `sessionStorage`에 보관 | 시드의 세션 정의("같은 세션의 이벤트는 같은 값")와 맞춘다. 탭을 닫으면 끝나는 것이 이 앱의 카트 수명과 같다 |
+| `device` | 뷰포트 폭으로 `mobile`(<768) / `tablet`(<1024) / `desktop` | 시드의 세 값. UA 파싱보다 단순하고 결정적이다 |
+| `ts` | `new Date().toISOString()` | 이벤트 발생 시점에 평가된다(`setCommonProperties`가 함수를 받는 이유) |
+
+`userId`는 공통 프로퍼티가 아니라 `identify()`로 보낸다 — 로그인 전 이벤트에 붙지 않아야 시드와 같은 모양이 된다.
+
+### 어디서 부르나
+
+- `initAnalytics()` — 루트 레이아웃의 클라이언트 컴포넌트 `AnalyticsProvider` 1곳. 그 전에 발생한 `track()`은 로거의 큐가 잡는다. 이 위치면 첫 화면의 `product_list_view`가 큐 → 초기화 후 전송 순서로 나가는 것을 볼 수 있다.
+- `identify(user.id)` — 로그인 mutation `onSuccess`. `reset()` — 로그아웃 mutation `onSuccess` (D6의 "세션에서 파생된 것만 정리"와 같은 자리).
+- **컴포넌트가 `track()`을 직접 부르지 않는다.** `shared/analytics/events.ts`에 이벤트 이름·props를 타입으로 고정한 함수 한 겹(`trackCartAdd(productId)` 식)을 두고 features·pages의 model(훅·mutation 콜백)이 부른다. 이유: (1) 이름 오타·props 누락을 타입이 막는다 (2) 화면 코드에 문자열 리터럴이 흩어지지 않아 스키마를 바꿀 때 한 파일만 고친다 (3) `src/analytics/`(스타터)는 그대로 두고 shared가 그 위에 얹힌다 — FSD에서 shared는 도메인을 모르는데, 이벤트 이름은 도메인이다. 그래서 이벤트 함수는 `shared`가 아니라 **`entities/analytics`**… 가 아니라 각 슬라이스에 두는 게 맞지 않나 검토했다 → 이벤트 목록이 8개뿐이고 팀 스키마(외부 계약)라 한 파일이 낫다. `shared/analytics/events.ts`로 두고 "스키마 = 외부 계약"임을 주석으로 남긴다.
 
 ## B. 시드 로그 분석
 
