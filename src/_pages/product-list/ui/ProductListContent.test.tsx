@@ -1,19 +1,26 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, HttpResponse, http } from 'msw'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   productListFixtureResponse,
   productListSuccessHandler,
 } from '@/_pages/product-list/testing/product-list-handlers'
+import { APP_EVENT } from '@/analytics/app-events'
+import { track } from '@/analytics/logger'
 import { PRODUCT_PAGE_SIZE } from '@/entities/product'
 import { ProductListContent } from '@/_pages/product-list/ui/ProductListContent'
 import { renderWithProviders } from '@/shared/test/render-with-providers'
 import { server } from '@/shared/test/msw-server'
 
+vi.mock('@/analytics/logger', () => ({
+  track: vi.fn(),
+}))
+
 // 계획서 4·5·6·7·8·9·10번 — docs/rfc/week08-test-plan.md
 describe('ProductListContent', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     server.use(productListSuccessHandler)
   })
 
@@ -23,6 +30,24 @@ describe('ProductListContent', () => {
     expect(
       await screen.findByRole('heading', { level: 2, name: '캐주얼 신상품' }),
     ).toBeInTheDocument()
+  })
+
+  it('URL 조건으로 직접 진입하면 조건 변경 이벤트를 기록하지 않는다', async () => {
+    renderWithProviders(<ProductListContent />, {
+      searchParams: '?category=casual&sort=price-asc&page=2',
+    })
+
+    await screen.findByText('2 / 2')
+
+    expect(track).toHaveBeenCalledWith(APP_EVENT.productListView, {
+      page: 2,
+      category: 'casual',
+      sort: 'price-asc',
+    })
+    expect(track).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^(category_filter_change|sort_change|page_change)$/),
+      expect.anything(),
+    )
   })
 
   it('요청이 끝나기 전에는 상품이 없고 응답 후에는 상품을 표시한다', async () => {
@@ -189,6 +214,10 @@ describe('ProductListContent', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: '카테고리' }), 'digital')
 
+    expect(track).toHaveBeenCalledWith(APP_EVENT.categoryFilterChange, {
+      category: 'digital',
+    })
+
     expect(
       await screen.findByRole('heading', { level: 2, name: '디지털 실속상품' }),
     ).toBeInTheDocument()
@@ -205,6 +234,10 @@ describe('ProductListContent', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: '정렬' }), 'price-asc')
 
+    expect(track).toHaveBeenCalledWith(APP_EVENT.sortChange, {
+      sort: 'price-asc',
+    })
+
     await waitFor(() => {
       expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('디지털 실속상품')
     })
@@ -220,6 +253,8 @@ describe('ProductListContent', () => {
     await screen.findByRole('heading', { level: 2, name: '캐주얼 신상품' })
 
     await user.click(screen.getByRole('button', { name: '다음' }))
+
+    expect(track).toHaveBeenCalledWith(APP_EVENT.pageChange, { page: 2 })
 
     expect(
       await screen.findByRole('heading', {

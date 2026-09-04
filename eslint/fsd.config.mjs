@@ -44,6 +44,21 @@ const policies = [
       to: ['next-app', ...FSD_LAYERS].map((type) => ({ element: { type } })),
     },
   },
+  {
+    // @x 파일은 자기 entity의 내부 타입을 특정 소비 entity에만 다시 내보내는 자리다.
+    // owner와 같은 슬라이스만 허용해, 남의 entity 타입을 대신 공개하지 못하게 막는다.
+    from: { element: { type: 'entity-cross' } },
+    allow: {
+      to: [
+        {
+          element: {
+            type: 'entities',
+            captured: { slice: '{{from.element.captured.owner}}' },
+          },
+        },
+      ],
+    },
+  },
   ...FSD_LAYERS.map((layer) => ({
     from: { element: { type: layer } },
     allow: {

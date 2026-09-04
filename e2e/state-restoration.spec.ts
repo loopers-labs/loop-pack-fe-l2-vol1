@@ -23,32 +23,12 @@ test.describe('URL·스토리지에 담긴 상태 복원', () => {
     expect(browserHomeRequestCount).toBe(0)
   })
 
-  test('목록에서 찜·담기한 상태가 헤더와 새로고침 후에도 유지된다', async ({ page }) => {
-    await page.goto('/products?category=digital')
-
-    const wishlistButton = page.getByRole('button', {
-      name: '메이커스 투명케이스 위시리스트',
-    })
-    const cartButton = page.getByRole('button', {
-      name: '메이커스 투명케이스 장바구니',
-    })
-
-    await wishlistButton.click()
-    await cartButton.click()
-
-    await expect(wishlistButton).toHaveAttribute('aria-pressed', 'true')
-    await expect(cartButton).toHaveAttribute('aria-pressed', 'true')
-    await expect(page.getByText('위시리스트 1', { exact: true })).toBeVisible()
-    await expect(page.getByText('장바구니 1', { exact: true })).toBeVisible()
-
-    await page.reload()
-
-    await expect(page.getByText('위시리스트 1', { exact: true })).toBeVisible()
-    await expect(page.getByText('장바구니 1', { exact: true })).toBeVisible()
-
-    await expect(wishlistButton).toHaveAttribute('aria-pressed', 'true')
-    await expect(cartButton).toHaveAttribute('aria-pressed', 'true')
-  })
+  // 8주차에 있던 "목록에서 찜·담기한 상태가 헤더와 새로고침 후에도 유지된다"를 지웠다.
+  // 9주차에 담기·찜이 소유자를 요구하게 되면서 미로그인으로는 누를 수 없고(로그인 화면으로 보낸다),
+  // 담기 버튼의 aria-pressed도 add-only가 되며 사라졌다. 전제가 셋 다 깨진 테스트다.
+  //
+  // 검증하던 것은 두 갈래로 옮겼다. 헤더 숫자가 버튼을 따라 움직이는지는 Header.test.tsx가
+  // 이미 보고 있고, 담은 것이 새로고침 후에도 남아 있는지는 add-to-cart.spec.ts가 본다.
 
   test('검색·카테고리·정렬 URL을 새 컨텍스트와 새로고침에서 복원한다', async ({
     browser,

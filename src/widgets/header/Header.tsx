@@ -1,36 +1,26 @@
-'use client'
+import { cookies } from 'next/headers'
+import { getSession } from '@/entities/session'
+import { HeaderNav } from '@/widgets/header/HeaderNav'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useCartStore } from '@/entities/cart'
-import { useWishlistStore } from '@/entities/wishlist'
-import styles from './Header.module.css'
+// 세션을 서버에서 읽어 초기 HTML에 로그인 상태를 담는다(docs/week-09/decisions.md 6번).
+// Suspense로 흘려보내지 않는다 — 명세가 "JS 실행 전에도 로그인 여부가 보인다"를 요구해서,
+// 스트리밍하면 헤더가 나중에 붙어 그 요구와 부딪힌다.
+// 대신 이 헤더를 쓰는 모든 화면의 서버 렌더가 /api/auth/me의 500ms만큼 밀린다.
+// 감수하기로 한 비용이다. 측정 결과 h1 도착이 약 42ms에서 약 558ms로 밀렸다
+// (docs/week-09/decisions.md "7주차 지표 재측정" 절).
+//
+// async 경계를 이 컴포넌트로 좁혀 쓰는 쪽 페이지는 async가 되지 않지만,
+// 이것이 h1을 세션 대기에서 지켜주지는 않는다. Suspense 경계가 없으면
+// 스트리밍은 문서 순서대로 나가므로, Header가 h1보다 앞에 있는 한
+// 첫 flush 자체가 세션을 기다린다. 좁힌 것은 페이지 컴포넌트의
+// 시그니처였을 뿐 flush 시점이 아니다.
+//
+// cookies()를 여기서 읽는 것은 entities/session이 클라이언트 번들에도 들어가는 모듈이라
+// next/headers를 품을 수 없기 때문이다. 쿠키를 읽는 일은 서버 호출자가 한다.
+// cookies()를 부르면 이 헤더를 쓰는 라우트가 동적이 된다.
+export const Header = async () => {
+  const cookieHeader = (await cookies()).toString()
+  const user = await getSession(cookieHeader)
 
-export const Header = () => {
-  const pathname = usePathname()
-  // 개수는 별도 상태로 저장하지 않고 ids 길이에서 파생한다.
-  // persist store를 훅으로 읽으면 zustand가 getServerSnapshot을 초기값으로 돌려줘
-  // hydration 렌더에서 서버와 같은 값을 그린다 → 별도 hydration 가드가 필요 없다.
-  const wishlistCount = useWishlistStore((state) => state.ids.length)
-  const cartCount = useCartStore((state) => state.ids.length)
-
-  return (
-    <header className={styles.header}>
-      <Link href="/" aria-current={pathname === '/' ? 'page' : undefined}>
-        Commerce
-      </Link>
-      <nav className={styles.navigation} aria-label="주요 메뉴">
-        {/*
-          상품 목록에 있을 때도 숨기지 않고 노출한다. 현재 위치는 aria-current="page"로 표시한다.
-          재이동 용도: 필터가 걸린 /products?category=...&sort=... 상태에서 이 링크를 누르면
-          쿼리 없는 /products로 이동해 nuqs 기본값(전체·최신순·1페이지)으로 리셋된다.
-        */}
-        <Link href="/products" aria-current={pathname === '/products' ? 'page' : undefined}>
-          상품
-        </Link>
-        <span>위시리스트 {wishlistCount}</span>
-        <span>장바구니 {cartCount}</span>
-      </nav>
-    </header>
-  )
+  return <HeaderNav user={user} />
 }

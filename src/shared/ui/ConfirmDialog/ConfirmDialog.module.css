@@ -1,0 +1,44 @@
+.dialog {
+  /* globals.css의 `* { margin: 0 }`이 <dialog>의 브라우저 기본 `margin: auto`를 지워
+     모달이 좌상단에 붙는다. 여기서 되돌린다. */
+  margin: auto;
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  background: var(--surface);
+  box-shadow: 0 24px 70px rgb(23 23 23 / 20%);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+
+.title {
+  margin: 0 0 28px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.actions button {
+  min-height: 42px;
+  padding: 8px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.actions button:last-child {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
+  font-weight: 700;
+}

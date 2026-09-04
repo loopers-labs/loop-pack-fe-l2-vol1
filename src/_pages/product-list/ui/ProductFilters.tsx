@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { APP_EVENT } from '@/analytics/app-events'
+import { track } from '@/analytics/logger'
 import { useProductFilters } from '@/_pages/product-list/model/useProductFilters'
 import { SORT_OPTIONS } from '@/_pages/product-list/model/search-params'
 import { PRODUCT_CATEGORY_FILTERS, type Category } from '@/entities/product'
@@ -30,12 +32,14 @@ export const ProductFilters = ({ categories }: ProductFiltersProps) => {
   const handleCategoryChange = (value: string) => {
     const nextCategory = PRODUCT_CATEGORY_FILTERS.find((category) => category === value)
     if (!nextCategory) return
+    track(APP_EVENT.categoryFilterChange, { category: nextCategory })
     setCategory(nextCategory)
   }
 
   const handleSortChange = (value: string) => {
     const nextSort = SORT_OPTIONS.find((option) => option.value === value)?.value
     if (!nextSort) return
+    track(APP_EVENT.sortChange, { sort: nextSort })
     setSort(nextSort)
   }
 

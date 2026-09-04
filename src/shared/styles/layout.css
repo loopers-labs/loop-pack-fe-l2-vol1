@@ -1,10 +1,64 @@
 .layout-section {
-  margin-top: 40px;
+  margin-top: 56px;
 }
 
 .layout-section > h1,
 .layout-section > h2 {
-  margin-bottom: 16px;
+  margin-bottom: 28px;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.layout-empty {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: 48px 0;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.layout-empty a {
+  color: var(--foreground);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.login-layout {
+  display: grid;
+  justify-items: center;
+  padding-top: clamp(24px, 8vh, 88px);
+}
+
+.login-layout > h1 {
+  width: min(100%, 420px);
+}
+
+.route-loading-header {
+  display: flex;
+  justify-content: space-between;
+  min-height: 77px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.route-loading-header span {
+  display: block;
+  height: 24px;
+  margin-top: 12px;
+  border-radius: 5px;
+  background: var(--surface-subtle);
+}
+
+.route-loading-header span:first-child {
+  width: 132px;
+}
+
+.route-loading-header span:last-child {
+  width: 260px;
 }
 
 /* 화면에는 안 보이지만 스크린 리더와 초기 HTML에는 남는 텍스트. */

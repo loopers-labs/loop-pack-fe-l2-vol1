@@ -1,6 +1,6 @@
 .card {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .image {
@@ -10,11 +10,26 @@
   aspect-ratio: 1;
   background: #ececec;
   object-fit: cover;
+  border-radius: 8px;
+}
+
+.card > p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.card h2,
+.card h3 {
+  font-size: 17px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
+  margin-top: 5px;
 }

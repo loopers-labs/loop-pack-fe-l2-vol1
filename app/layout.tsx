@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { Providers } from '@/_app/providers/Providers'
+import { SessionHydration } from '@/_app/providers/SessionHydration'
 import { getApiBaseUrl } from '@/shared/api/get-api-base-url'
 import {
   OG_FALLBACK_IMAGE,
@@ -45,7 +46,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.variable}>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <SessionHydration>{children}</SessionHydration>
+        </Providers>
       </body>
     </html>
   )

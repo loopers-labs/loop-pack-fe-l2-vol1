@@ -9,6 +9,13 @@ import { describe, expect, it, vi } from 'vitest'
 import type { GetProductListResponse } from '@/entities/product'
 import { ProductListResults, type ProductListQueryView } from './ProductListResults'
 
+// 이 파일은 node 환경에서 renderToStaticMarkup으로 돌아 renderWithProviders를 쓰지 않는다.
+// 카드 안의 담기 버튼이 useRouter를 부르는데 서버 렌더에는 라우터 context가 없어 invariant로 죽는다.
+// 여기서 보는 것은 조회 상태별 분기라 이동은 빈 함수로 둔다.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: () => {} }),
+}))
+
 // useProductPagination은 nuqs의 useQueryState를 쓰므로 NuqsAdapter 없이는 렌더할 수 없다.
 // 이 테스트가 보는 것은 페이지네이션 계산이 아니라 조회 상태별 분기라 고정값으로 대체한다.
 vi.mock('@/_pages/product-list/model/useProductPagination', () => ({
