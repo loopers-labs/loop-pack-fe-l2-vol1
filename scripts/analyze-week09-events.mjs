@@ -174,13 +174,20 @@ const exactDuplicateRows = exactDuplicateGroups.reduce(
   0,
 );
 const seenEventKeys = new Set();
-const cleanEvents = humanCandidateEvents.filter((event) => {
+const deduplicatedEvents = humanCandidateEvents.filter((event) => {
   const key = exactEventKey(event);
   if (seenEventKeys.has(key)) return false;
   seenEventKeys.add(key);
   return true;
 });
+const clientErrorEvents = deduplicatedEvents.filter(
+  (event) => event.name === 'client_error',
+);
+const cleanEvents = deduplicatedEvents.filter(
+  (event) => event.name !== 'client_error',
+);
 const cleanSessions = groupSessions(cleanEvents);
+const diagnosticSessions = groupSessions(deduplicatedEvents);
 
 const rawStats = getEventStats(events, rawSessions);
 const cleanStats = getEventStats(cleanEvents, cleanSessions);
@@ -200,7 +207,7 @@ const rankComparison = cleanStats.map((cleanStat) => {
   };
 });
 
-const detailSessions = cleanSessions.filter(
+const detailSessions = diagnosticSessions.filter(
   (session) => firstEventIndex(session, 'product_detail_view') >= 0,
 );
 const clientErrorSessions = detailSessions.filter((session) =>
@@ -312,6 +319,9 @@ const result = {
           : [],
       ),
     ),
+    errorCriterion:
+      'client_error는 행동 퍼널에서 제외하고 장애 분석용 stream에만 유지',
+    errorEventsRemoved: clientErrorEvents.length,
     cleanEvents: cleanEvents.length,
     cleanSessions: cleanSessions.length,
     eventRemovalRate: roundRate(events.length - cleanEvents.length, events.length),
@@ -332,8 +342,7 @@ const result = {
         detailSessions.length,
       ),
       errorCodes: countValues(
-        cleanEvents
-          .filter((event) => event.name === 'client_error')
+        clientErrorEvents
           .map((event) => event.props.code),
       ),
       cartConversionWithClientError: roundRate(
