@@ -10,7 +10,7 @@ export default tseslint.config(
   { ignores: ['.next', 'out', 'build', 'next-env.d.ts'] },
 
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{ts,mts,tsx}'],
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
@@ -68,6 +68,15 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
+    },
+  },
+
+  // 개발 확인용 프로바이더 한정: 콘솔 출력이 이 파일의 역할이다(스타터 제공).
+  // 규칙을 전역으로 풀지 않고 파일 하나로 범위를 좁힌다.
+  {
+    files: ['src/analytics/consoleProvider.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 

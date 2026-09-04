@@ -1,4 +1,4 @@
-import type { AnalyticsProvider, EventProperties } from "./provider";
+import type { AnalyticsProvider, EventProperties } from './provider';
 
 /**
  * 이벤트 로거.
@@ -10,9 +10,9 @@ import type { AnalyticsProvider, EventProperties } from "./provider";
  */
 
 type QueuedEvent =
-  | { type: "track"; event: string; properties: EventProperties }
-  | { type: "identify"; userId: string; properties?: EventProperties }
-  | { type: "reset" };
+  | { type: 'track'; event: string; properties: EventProperties }
+  | { type: 'identify'; userId: string; properties?: EventProperties }
+  | { type: 'reset' };
 
 // ponytail: 모듈 스코프에 담는다. 브라우저에서는 탭 하나가 곧 하나의 인스턴스다
 let providers: AnalyticsProvider[] = [];
@@ -56,18 +56,18 @@ export async function initAnalytics(): Promise<void> {
 
 export function track(event: string, properties: EventProperties = {}): void {
   enqueueOrSend({
-    type: "track",
+    type: 'track',
     event,
     properties: { ...commonProperties(), ...properties },
   });
 }
 
 export function identify(userId: string, properties?: EventProperties): void {
-  enqueueOrSend({ type: "identify", userId, properties });
+  enqueueOrSend({ type: 'identify', userId, properties });
 }
 
 export function reset(): void {
-  enqueueOrSend({ type: "reset" });
+  enqueueOrSend({ type: 'reset' });
 }
 
 function enqueueOrSend(queued: QueuedEvent): void {
@@ -85,9 +85,9 @@ function enqueueOrSend(queued: QueuedEvent): void {
 function send(queued: QueuedEvent): void {
   providers.forEach((provider) => {
     try {
-      if (queued.type === "track") {
+      if (queued.type === 'track') {
         provider.track(queued.event, queued.properties);
-      } else if (queued.type === "identify") {
+      } else if (queued.type === 'identify') {
         provider.identify(queued.userId, queued.properties);
       } else {
         provider.reset();

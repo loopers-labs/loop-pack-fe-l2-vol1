@@ -1,5 +1,5 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { SESSION_TTL_SECONDS } from '@/app/api/_data/auth-cookies';
 
 // 이 파일은 node:crypto 를 쓴다. Node 런타임(API 라우트)에서만 import 해야 한다.
 // Edge 런타임에서 쿠키 이름이 필요하면 auth-cookies.ts 에서 가져온다.
@@ -14,7 +14,7 @@ export type AuthUser = {
   email: string;
 };
 
-export type AuthScenario = "invalid" | "expired" | "error" | "slow";
+export type AuthScenario = 'invalid' | 'expired' | 'error' | 'slow';
 
 export type AuthErrorResponse = {
   message: string;
@@ -52,10 +52,11 @@ export type OrderListResponse = {
   orders: Order[];
 };
 
-export const TEST_PASSWORD = "looper1234";
+export const TEST_PASSWORD = 'looper1234';
 
 // ponytail: mock 백엔드라 비밀 값을 코드에 둔다. 실제 서비스라면 환경 변수만 허용한다
-const sessionSecret = () => process.env.AUTH_SESSION_SECRET ?? "loopers-week09-secret";
+const sessionSecret = () =>
+  process.env.AUTH_SESSION_SECRET ?? 'loopers-week09-secret';
 
 export const accounts: AuthUser[] = Array.from({ length: 8 }, (_, index) => ({
   id: `u${index + 1}`,
@@ -63,16 +64,23 @@ export const accounts: AuthUser[] = Array.from({ length: 8 }, (_, index) => ({
   email: `looper${index + 1}@loopers.dev`,
 }));
 
-const authScenarios = ["invalid", "expired", "error", "slow"] as const satisfies
-  readonly AuthScenario[];
+const authScenarios = [
+  'invalid',
+  'expired',
+  'error',
+  'slow',
+] as const satisfies readonly AuthScenario[];
 
 export const isAuthScenario = (value: string): value is AuthScenario =>
   authScenarios.some((scenario) => scenario === value);
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+  typeof value === 'object' && value !== null;
 
-export const findAccount = (email: string, password: string): AuthUser | null => {
+export const findAccount = (
+  email: string,
+  password: string,
+): AuthUser | null => {
   if (password !== TEST_PASSWORD) {
     return null;
   }
@@ -82,13 +90,17 @@ export const findAccount = (email: string, password: string): AuthUser | null =>
 };
 
 const sign = (payload: string) =>
-  createHmac("sha256", sessionSecret()).update(payload).digest("base64url");
+  createHmac('sha256', sessionSecret()).update(payload).digest('base64url');
 
 export const createSessionToken = (userId: string, nowMs = Date.now()) => {
   const issuedAt = Math.floor(nowMs / 1_000);
   const payload = Buffer.from(
-    JSON.stringify({ userId, iat: issuedAt, exp: issuedAt + SESSION_TTL_SECONDS }),
-  ).toString("base64url");
+    JSON.stringify({
+      userId,
+      iat: issuedAt,
+      exp: issuedAt + SESSION_TTL_SECONDS,
+    }),
+  ).toString('base64url');
 
   return `${payload}.${sign(payload)}`;
 };
@@ -101,7 +113,7 @@ export const readSessionToken = (
     return null;
   }
 
-  const [payload, signature, ...rest] = token.split(".");
+  const [payload, signature, ...rest] = token.split('.');
   if (!payload || !signature || rest.length > 0) {
     return null;
   }
@@ -112,14 +124,18 @@ export const readSessionToken = (
     return null;
   }
 
-  let parsed: { userId?: unknown; exp?: unknown };
+  let parsed: unknown;
   try {
-    parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
   } catch {
     return null;
   }
 
-  if (typeof parsed.userId !== "string" || typeof parsed.exp !== "number") {
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  if (typeof parsed.userId !== 'string' || typeof parsed.exp !== 'number') {
     return null;
   }
 
@@ -149,7 +165,8 @@ export const addOrder = (userId: string, items: OrderItem[]): Order => {
   return order;
 };
 
-export const listOrders = (userId: string): Order[] => ordersByUser.get(userId) ?? [];
+export const listOrders = (userId: string): Order[] =>
+  ordersByUser.get(userId) ?? [];
 
 export const resetOrders = () => {
   ordersByUser.clear();
@@ -163,5 +180,5 @@ export const isKnownProductId = (productId: string) =>
 // 지연은 이 파일에서 처리한다. test 환경에서는 기다리지 않는다
 export const waitForAuthApi = (requestedDelayMs = 500) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, process.env.NODE_ENV === "test" ? 0 : requestedDelayMs);
+    setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : requestedDelayMs);
   });
