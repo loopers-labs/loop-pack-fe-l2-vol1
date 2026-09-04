@@ -8,8 +8,8 @@ E2E 범위와 실행 증거는
 
 | 항목           | 값                            |
 | -------------- | ----------------------------- |
-| 상태           | 진행 중                       |
-| 현재 단계      | Stage 5 검증 완료             |
+| 상태           | 검증 완료                     |
+| 현재 단계      | 최종 품질 게이트 통과         |
 | 본문 목표 분량 | 330 LOC 전후                  |
 | 본문 최대 분량 | 400 LOC                       |
 | 과제 명세      | `docs/assignments/week-09.md` |
@@ -118,10 +118,6 @@ Stage 5에서 의도적으로 망가뜨린 중간 상태는 커밋하지 않는�
 - 본문과 부록의 단일 기준 영역이 겹치지 않는다.
 - 다음 작업이 Stage 1 인증 결정이라는 점이 명확하다.
 
-### 다음 단계
-
-Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정을 받는다.
-
 ---
 
 ## Stage 1 — 인증
@@ -181,12 +177,10 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 - 로그인 성공: httpOnly 쿠키와 초기 HTML의 `루퍼1` 확인 후 원래 경로 복원
 - `expired` cookie: 대기 없이 만료 안내가 있는 로그인으로 307
 - 주문 생성·목록·로그아웃: 각각 201·200·204와 쿠키 제거 확인
+- production session 서명은 `AUTH_SESSION_SECRET`이 없으면 실패하고 테스트와
+  Playwright에만 별도 전용 키를 명시
 - axe WCAG A·AA: login·checkout·orders 모두 위반 0, 미확인 0
 - desktop·mobile 시각·기능 독립 검수: 6/6 PASS
-
-### 다음 단계
-
-인증 identity 경계를 기준으로 Stage 2 이벤트 스키마와 초기화 위치를 결정한다.
 
 ---
 
@@ -236,10 +230,6 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 - 로그인 시 `identify`, 로그아웃 시 `reset`을 console provider 로그로 확인
 - 부하가 큰 전체 실행에서 드러난 주문 조회 대기 기한을 결정적으로 조정
 
-### 다음 단계
-
-확정된 스키마로 시드 로그를 분석하고 부록 B·C에서 E2E 범위를 결정한다.
-
 ---
 
 ## Stage 3 — E2E 범위 결정
@@ -276,10 +266,6 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 - E2E 구현자가 추가 범위 판단을 할 필요가 없다.
 - E2E 코드보다 부록을 먼저 확정할 수 있다.
 
-### 다음 단계
-
-승인된 부록 C의 5개 시나리오만 Stage 4에서 구현한다.
-
 ---
 
 ## Stage 4 — E2E 구현
@@ -308,16 +294,14 @@ Stage 1 구현 전에 인증 정책 선택지를 설명하고 사용자 결정�
 
 ### 검증 기록
 
-- 구현 커밋: `27a9bf36`(인증 3개), `9c9f0591`(추가 2개), `71095649`(계정 배정 교정)
-- 부록 C가 정한 5개만 추가했고 기존 `home`·`product-list` 스펙은 이전 주차 자산이다
+- 구현 커밋: `27a9bf36`(인증 3개), `9c9f0591`(추가 2개),
+  `71095649`(계정 배정 교정), `c054433f`(worker별 storageState 재사용)
+- 부록 C가 정한 3개 범위만 추가했고 기존 `home`·`product-list` 스펙은 이전 주차
+  자산이다
 - `--workers=1·4·8` 각각 14 passed, `--repeat-each=3`은 1·4 모두 42 passed
 - 교정 전 `--workers=4 --repeat-each=3`에서 1건 실패. `workerIndex`가 worker 재시작마다
   증가해 계정 8개를 넘었고, `parallelIndex`로 바꿔 해결했다
 - 만료 단언을 일부러 무력화해 trace로 실패 지점을 확인하고 원복했다
-
-### 다음 단계
-
-안정화된 E2E를 고정한 채 Stage 5 제품 코드 자가 검증을 시작한다.
 
 ---
 
@@ -353,22 +337,43 @@ E2E가 통합 테스트만으로 잡을 수 없는 회귀를 실제로 탐지하
 - 인증 플로우 3개는 빈 컨텍스트를 유지하고, 추가 E2E 2개만 worker별 storageState를
   재사용하도록 경계를 조정했다.
 
-### 다음 단계
-
-전체 품질 게이트와 PR 기록을 완료한다.
-
 ---
 
 ## 최종 품질 게이트
 
-- 관련 단위·통합 테스트
-- `pnpm check`
-- production E2E
-- `pnpm start` 실제 인증 흐름
-- production Route 목록
-- 본문 400 LOC 이하
-- 부록 A~E 완성
-- 비활성화된 테스트와 시간 기반 대기 없음
+상태: **검증 완료**
+
+- `pnpm check`: 59 files, 402 tests와 lint·typecheck·production build 통과
+- `pnpm format:check`: 전체 파일 통과
+- production E2E: workers 1·4에서 14 passed
+- 3회 반복: workers 1·4에서 42 passed
+- headed Chrome 인증 3개·구매 완료: 4 passed
+- production Route 목록: 인증 API 3개, 주문 API, `/login`, `/checkout`, `/orders`,
+  Proxy 확인
+- 본문 400 LOC 이하, 부록 A~E 완성
+- 비활성화된 테스트, 시간 기반 대기, 기능 snapshot 없음
+
+### 7주차 성능 경계 재확인
+
+root layout에서 쿠키를 읽어 초기 HTML에 인증 상태를 넣으므로 build의 `/`·`/products`
+등 기존 route도 정적 생성 대신 dynamic rendering이 된다. 초기 인증 HTML을 모든
+화면의 Header에 일관되게 제공하기 위해 이 범위 변화를 수용하되, 7주차의 실제
+사용자 기준인 semantic shell·Hero LCP·CLS가 깨지는지는 production Chrome에서
+다시 측정했다.
+
+`/?scenario=slow`를 Chrome stable의 PerformanceObserver로 desktop·mobile 각각 5회
+측정했다. 이 값은 7주차 Lighthouse 13.3 simulated 값과 도구가 달라 직접 통계 비교는
+하지 않고, 7주차 supporting observed LCP median `1725ms`와 같은 브라우저 관측
+계열의 회귀 신호로만 사용한다.
+
+| viewport | TTFB median | FCP median | LCP raw (ms)                 | LCP median | CLS |
+| -------- | ----------: | ---------: | ---------------------------- | ---------: | --: |
+| desktop  |       7.2ms |       44ms | 1748, 1564, 1560, 1560, 1564 |     1564ms |   0 |
+| mobile   |       4.4ms |       48ms | 1648, 1548, 1564, 1564, 1568 |     1564ms |   0 |
+
+slow API가 끝나기 전에 FCP가 발생하고 CLS는 0이며, LCP median도 기존 supporting
+관측치보다 높아지지 않았다. 따라서 정적 생성 범위는 줄었지만 이번 로컬 production
+측정에서는 7주차 semantic shell·LCP·CLS의 observable regression을 확인하지 못했다.
 
 ## PR 본문 발췌 기준
 
