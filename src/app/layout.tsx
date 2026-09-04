@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import '@/examples/week-05-layout/week-05-layout.css';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { AnalyticsProvider } from './AnalyticsProvider';
 import { QueryProvider } from './providers';
 import {
   APP_ORIGIN,
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body>
         <NuqsAdapter>
           <QueryProvider>{children}</QueryProvider>
+          <AnalyticsProvider />
         </NuqsAdapter>
       </body>
     </html>

@@ -7,10 +7,20 @@ import next from '@next/eslint-plugin-next';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['.next', 'out', 'build', 'next-env.d.ts'] },
+  {
+    ignores: [
+      '.next',
+      'out',
+      'build',
+      'next-env.d.ts',
+      // Stryker 샌드박스(계측 사본)와 리포트 — 소스가 아니다
+      '.stryker-tmp',
+      'reports',
+    ],
+  },
 
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{ts,mts,tsx}'],
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
@@ -56,6 +66,9 @@ export default tseslint.config(
       ],
 
       eqeqeq: 'error',
+      // Playwright fixture는 첫 인자를 반드시 객체 구조분해로 써야 한다(의존 fixture를 이름으로 읽음).
+      // 의존이 없으면 `{}`가 되므로, 매개변수 자리의 빈 패턴만 허용한다.
+      'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },
@@ -68,6 +81,15 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
+    },
+  },
+
+  // 개발 확인용 프로바이더 한정: 콘솔 출력이 이 파일의 역할이다(스타터 제공).
+  // 규칙을 전역으로 풀지 않고 파일 하나로 범위를 좁힌다.
+  {
+    files: ['src/analytics/consoleProvider.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 

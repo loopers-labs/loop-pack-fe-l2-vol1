@@ -47,3 +47,43 @@ a {
     color-scheme: dark;
   }
 }
+
+/* 로그인 폼 — 세로 한 줄씩. week-05-layout.css(강사 파일)는 건드리지 않는다. */
+.login-form {
+  display: grid;
+  gap: 12px;
+  max-width: 360px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.login-form input {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.login-form button {
+  padding: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: #111827;
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.login-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.login-form [role='alert'] {
+  color: #b91c1c;
+  font-size: 14px;
+}

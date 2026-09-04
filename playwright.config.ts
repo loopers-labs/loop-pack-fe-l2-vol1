@@ -1,6 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-
-const baseURL = 'http://127.0.0.1:3000';
+import { BASE_URL as baseURL } from './e2e/base-url';
 
 // E2E는 production build 위에서만 의미가 있다 — 개발 서버로 통과하는 건 인정하지 않는다.
 // webServer가 `pnpm start`를 쓰므로 앞서 `pnpm build`가 끝나 있어야 한다.
