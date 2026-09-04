@@ -19,3 +19,12 @@ export class InvalidResponseError extends Error {
     this.name = 'InvalidResponseError';
   }
 }
+
+// 401 — 세션이 없거나 만료됨. 재시도해도 같으므로 재시도하지 않고, 화면이 아니라 경계가 처리한다 (9주차 RFC D5).
+// "로그인 안 함"과 "만료"는 같은 401이라 여기서 구분하지 않는다 — 구분은 요청이 나간 자리(보호 경로)가 한다.
+export class UnauthorizedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}

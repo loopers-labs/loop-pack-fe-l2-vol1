@@ -24,6 +24,9 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
           // replace: 뒤로 가기로 로그인 화면에 되돌아오지 않게 한다.
           // redirectTo는 서버(page.tsx)에서 이미 검증된 값이다 (RFC D4).
           router.replace(redirectTo);
+          // 로그인 전에 보호 경로를 prefetch했다면 라우터 캐시에 "→ /login" 리다이렉트가 남아 있다.
+          // 그대로 두면 replace가 캐시를 타고 로그인 화면으로 되돌아온다(실브라우저에서 재현). 캐시를 비운다.
+          router.refresh();
         },
       },
     );

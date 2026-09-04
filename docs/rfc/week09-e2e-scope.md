@@ -18,7 +18,9 @@
 
 - `/api/auth/me`를 `authQueries.me()`로 조회한다.
 - **초기 HTML 조건**: 서버(RSC)에서 `readSessionToken(cookie)`로 사용자를 읽어 `HydrationBoundary`로 내려준다. JS 실행 전 헤더에 로그인 상태가 있어야 하므로 클라이언트 fetch로만 채우면 조건을 못 지킨다.
-- 쿠키를 읽는 위치는 `(commerce)` 레이아웃. 이 트리는 이미 동적이다(홈 `force-dynamic`, `/products`는 searchParams) — build 출력의 ○/ƒ 표가 바뀌지 않는지 구현 후 확인해 여기에 적는다. `[구현 후 기록]`
+- 쿠키를 읽는 위치는 `(commerce)` 레이아웃. 이 트리는 이미 동적이다(홈 `force-dynamic`, `/products`는 searchParams) — build 출력의 ○/ƒ 표가 바뀌지 않는지 구현 후 확인해 여기에 적는다.
+  - **구현 후 기록(2026-09-04)**: `pnpm build` Route 표에서 ○(정적)는 구현 전과 같이 `/_not-found`·`/dialog-demo`·`/performance-lab/inp`·`/select-demo` 4개, 나머지는 전부 ƒ. `(commerce)` 아래에 정적이던 라우트가 없었으므로 `cookies()` 읽기로 정적 생성 범위가 줄지 않았다. 7주차 기준(LCP 측정 조건) 변동 없음.
+  - **구현에서 배운 것**: 헤더의 보호 경로 링크(`/checkout`·`/orders`)는 `prefetch={false}`. 로그인 전에 prefetch하면 proxy의 리다이렉트 응답이 라우터 캐시에 남아, 로그인 후 `router.replace('/checkout')`가 캐시를 타고 다시 로그인 화면으로 간다(실브라우저 재현). 로그인 성공 시 `router.refresh()`도 같은 이유로 붙였다.
 
 ### D2. proxy는 쿠키 존재만 확인한다
 
