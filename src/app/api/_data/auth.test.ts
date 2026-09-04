@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   accounts,
@@ -15,6 +15,10 @@ import {
 import { SESSION_TTL_SECONDS } from './auth-cookies'
 
 const NOW = Date.parse('2026-08-21T00:00:00.000Z')
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
 
 describe('auth accounts', () => {
   it('provides eight accounts so parallel workers can take one each', () => {
@@ -48,6 +52,18 @@ describe('auth accounts', () => {
 })
 
 describe('session token', () => {
+  it('createSessionToken: production secret missing -> refuses to sign', () => {
+    // Arrange
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('AUTH_SESSION_SECRET', '')
+
+    // Act
+    const createWithoutSecret = () => createSessionToken(accounts[0].id, NOW)
+
+    // Assert
+    expect(createWithoutSecret).toThrow()
+  })
+
   it('round-trips a signed token before it expires', () => {
     const token = createSessionToken(accounts[0].id, NOW)
     expect(readSessionToken(token, NOW + 1_000)).toMatchObject({

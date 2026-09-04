@@ -55,9 +55,22 @@ export type OrderListResponse = {
 
 export const TEST_PASSWORD = 'looper1234'
 
-// ponytail: mock 백엔드라 비밀 값을 코드에 둔다. 실제 서비스라면 환경 변수만 허용한다
-const sessionSecret = () =>
-  process.env.AUTH_SESSION_SECRET ?? 'loopers-week09-secret'
+const TEST_SESSION_SECRET = 'loopers-week09-test-secret'
+
+class SessionSecretConfigurationError extends Error {}
+
+const sessionSecret = () => {
+  const configuredSecret = process.env.AUTH_SESSION_SECRET
+  if (configuredSecret !== undefined && configuredSecret.length > 0) {
+    return configuredSecret
+  }
+  if (process.env.NODE_ENV === 'test') {
+    return TEST_SESSION_SECRET
+  }
+  throw new SessionSecretConfigurationError(
+    'AUTH_SESSION_SECRET 환경 변수가 필요하다.',
+  )
+}
 
 export const accounts: Array<AuthUser> = Array.from(
   { length: 8 },
