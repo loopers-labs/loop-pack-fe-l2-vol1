@@ -5,6 +5,10 @@ const isCI = process.env.CI !== undefined;
 
 export default defineConfig({
   testDir: "./e2e",
+  // seed.spec.ts는 init-agents가 만든 generator 입력용 빈 테스트다. 스위트에서
+  // 돌리면 아무것도 검증하지 않는 초록불 한 개가 늘어난다 — 비활성화한 테스트를
+  // 두지 않는 규칙과 같은 이유로 제외한다. 파일은 남긴다(generator가 참조한다).
+  testIgnore: ["seed.spec.ts"],
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
