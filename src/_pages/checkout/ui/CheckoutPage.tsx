@@ -1,8 +1,10 @@
 "use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ORDERS_QUERY_KEY, type OrderCreateResponse } from "@/entities/order";
 import type { Product } from "@/entities/product";
+import { EVENT, trackEvent } from "@/shared/analytics";
 import { HttpError, postJson } from "@/shared/api";
 
 type CheckoutPageProps = {
@@ -20,13 +22,27 @@ function describeFailure(error: unknown): string {
 export function CheckoutPage({ product, quantity }: CheckoutPageProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const productId = product?.id ?? null;
+  const total = product === null ? 0 : product.price * quantity;
+
+  // 주문서 진입. 상품을 못 찾은 진입은 세지 않는다 — 주문 퍼널의 분모가
+  // 잘못된 링크로 부풀면 3단계의 이탈률이 실제보다 나빠 보인다.
+  useEffect(() => {
+    if (productId === null) {
+      return;
+    }
+    trackEvent(EVENT.orderStart, { productId });
+  }, [productId]);
 
   const order = useMutation({
     mutationFn: (productId: string) =>
       postJson<OrderCreateResponse>("/api/orders", {
         items: [{ productId, quantity }],
       }),
-    onSuccess: async () => {
+    onSuccess: async (_data, orderedProductId) => {
+      // 서버 응답에 금액이 없다. totalPrice는 화면이 계산한 값을 그대로 보낸다 —
+      // 시드 로그의 order_complete도 productId·totalPrice 두 개다.
+      trackEvent(EVENT.orderComplete, { productId: orderedProductId, totalPrice: total });
       await queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
       router.push("/orders");
     },
@@ -43,8 +59,6 @@ export function CheckoutPage({ product, quantity }: CheckoutPageProps) {
       </main>
     );
   }
-
-  const total = product.price * quantity;
 
   return (
     <main className="shop-page">

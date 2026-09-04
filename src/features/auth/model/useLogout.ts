@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { resetCart } from "@/entities/cart";
 import { ANONYMOUS, SESSION_QUERY_KEY } from "@/entities/session";
 import { resetWishlist } from "@/entities/wishlist";
+import { resetUser } from "@/shared/analytics";
 import { postJson } from "@/shared/api";
 
 export function useLogout() {
@@ -23,6 +24,9 @@ export function useLogout() {
       // 영속시켜야 말이 되는데, 그러면 공용 PC 문제가 더 커진다. 그래서 지운다.
       resetCart();
       resetWishlist();
+      // 계측의 사용자 식별도 끊는다. 안 끊으면 다음 사람의 이벤트에 앞사람
+      // userId가 붙는다 — 위 장바구니 초기화와 같은 이유다.
+      resetUser();
 
       // 서버 상태는 캐시를 통째로 비운다. 주문 내역처럼 그 사람 것만 담긴 응답이
       // 남아 있으면 다음 사람이 그것을 본다.
