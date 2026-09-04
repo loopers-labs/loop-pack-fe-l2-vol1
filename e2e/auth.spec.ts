@@ -32,6 +32,15 @@ test.describe("인증 — 원래 경로 복원", () => {
     await expect(checkoutPage(page).total()).toContainText("수량 2개");
     // 초기 HTML의 로그인 상태 — 문서 이동 뒤라 서버가 그린 헤더다.
     await expect(header(page).account(account.name)).toBeVisible();
+
+    // 5단계 E5에서 드러난 자리. 스타터의 route.test.ts가 Set-Cookie 헤더에
+    // httpOnly가 붙는지는 보지만, **브라우저가 그것을 지키는지**는 아무도 안 봤다.
+    // 서버가 헤더를 제대로 보내도 클라이언트 코드가 쿠키를 다시 쓰면 노출된다.
+    // 여기서만 확인할 수 있다 — jsdom에는 httpOnly 강제가 없다.
+    const readable = await page.evaluate(() => document.cookie);
+    expect(readable).not.toContain("session=");
+    const stored = await page.context().cookies();
+    expect(stored.find((cookie) => cookie.name === "session")?.httpOnly).toBe(true);
   });
 
   test("외부 주소를 복원 경로로 실어도 앱 안에 머문다", async ({ page }) => {
