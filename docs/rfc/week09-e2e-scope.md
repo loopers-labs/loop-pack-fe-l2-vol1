@@ -40,7 +40,7 @@
 
 앱과 시드 로그의 이벤트 이름은 같다. 상품 목록·상세·담기 프로퍼티도 같다. 로그인은 시드의 `from: cart`에 `orders`와 `direct`를 추가한다. 주문은 여러 상품을 지원하기 위해 시드의 `productId`를 `productIds`로 확장하고 `itemCount`, `totalPrice`, `orderId`를 추가한다.
 
-화면은 오타와 프로퍼티 누락을 컴파일 시점에 잡을 수 있도록 문자열 기반 `track()` 대신 `src/analytics/events.ts`의 타입 있는 함수만 호출한다. `AnalyticsInitializer`는 render 중 provider와 공통 프로퍼티 함수를 먼저 연결하고, 외부 작업인 `initAnalytics()`만 effect에서 호출한다. 따라서 page-view effect의 트리 순서가 달라져도 초기화 전에 큐에 들어간 최초 이벤트부터 공통 프로퍼티를 가진다. 초기화 전 이벤트는 로거 큐가 순서를 보존한다. 로그인 성공 시 이동 전에 `identify()`를 호출하고, 새 문서에서는 서버가 복원한 사용자 ID를 다시 식별한다. 로그아웃 성공 후에는 `reset()`을 호출한다.
+화면은 오타와 프로퍼티 누락을 컴파일 시점에 잡을 수 있도록 문자열 기반 `track()` 대신 `src/analytics/events.ts`의 타입 있는 함수만 호출한다. `AnalyticsInitializer`는 `useLayoutEffect`에서 provider와 공통 프로퍼티 함수를 연결하고, `useEffect`에서 외부 작업인 `initAnalytics()`를 호출한다. layout effect가 page-view passive effect보다 먼저 끝나므로 최초 이벤트부터 공통 프로퍼티를 가진다. 초기화 전 이벤트는 로거 큐가 순서를 보존한다. 로그인 성공 시 이동 전에 `identify()`를 호출하고, 새 문서에서는 서버가 복원한 사용자 ID를 다시 식별한다. 로그아웃 성공 후에는 `reset()`을 호출한다.
 
 장바구니에서 로그인해 주문을 완료하면 다음 순서가 남는다.
 
