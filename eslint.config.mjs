@@ -7,7 +7,17 @@ import next from '@next/eslint-plugin-next';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['.next', 'out', 'build', 'next-env.d.ts'] },
+  {
+    ignores: [
+      '.next',
+      'out',
+      'build',
+      'next-env.d.ts',
+      // Stryker 샌드박스(계측 사본)와 리포트 — 소스가 아니다
+      '.stryker-tmp',
+      'reports',
+    ],
+  },
 
   {
     files: ['**/*.{ts,mts,tsx}'],

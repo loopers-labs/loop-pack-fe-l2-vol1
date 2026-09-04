@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:mutation": "stryker run",
     "analyze:events": "node --no-warnings=ExperimentalWarning scripts/analyze-events.mts",
     "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
     "prepare": "husky"
@@ -33,6 +34,8 @@
     "@eslint/js": "^9.39.4",
     "@next/eslint-plugin-next": "16.2.10",
     "@playwright/test": "^1.62.1",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.5",

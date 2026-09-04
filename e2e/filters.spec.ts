@@ -7,6 +7,7 @@ test.describe('필터와 브라우저 내비게이션', () => {
     page,
   }) => {
     await page.goto('/products');
+    await expect(page).toHaveURL('/products');
     await expect(page.getByLabel('카테고리')).toHaveValue('all');
 
     await page.getByLabel('카테고리').selectOption('fashion');
@@ -33,6 +34,7 @@ test.describe('필터와 브라우저 내비게이션', () => {
     page,
   }) => {
     await page.goto('/products');
+    await expect(page).toHaveURL('/products');
     const pagination = page.getByRole('navigation', { name: '페이지 이동' });
     await expect(pagination).toContainText('1 / 3');
 
@@ -49,6 +51,7 @@ test.describe('필터와 브라우저 내비게이션', () => {
     page,
   }) => {
     await page.goto('/products');
+    await expect(page).toHaveURL('/products');
 
     await page.getByLabel('카테고리').selectOption('digital');
     await page.getByLabel('정렬').selectOption('price-desc');
@@ -79,6 +82,7 @@ test.describe('필터와 브라우저 내비게이션', () => {
     page,
   }) => {
     await page.goto('/products?page=2');
+    await expect(page).toHaveURL('/products?page=2');
     await expect(
       page.getByRole('navigation', { name: '페이지 이동' }),
     ).toContainText('2 / 3');
