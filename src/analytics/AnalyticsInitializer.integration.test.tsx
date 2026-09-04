@@ -17,6 +17,7 @@ describe('AnalyticsInitializer', () => {
 
   afterEach(() => {
     resetClientAnalyticsForTest()
+    vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 

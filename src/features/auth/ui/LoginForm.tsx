@@ -51,7 +51,8 @@ export function LoginForm({ returnTo, reason }: LoginFormProps): JSX.Element {
   const router = useRouter()
   const queryClient = useQueryClient()
   const safeReturnPath = getSafeReturnPath(returnTo)
-  const from = getLoginSource(safeReturnPath)
+  // login_start와 결과 이벤트는 같은 화면 진입의 출처를 공유해야 한다.
+  const [from] = useState(() => getLoginSource(safeReturnPath))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isPending, setIsPending] = useState(false)

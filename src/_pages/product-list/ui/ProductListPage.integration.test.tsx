@@ -147,6 +147,60 @@ describe('product list analytics', () => {
     })
   })
 
+  it('records the scenario error condition once after the final error UI appears', async () => {
+    let requestedScenario: string | null = null
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        requestedScenario = new URL(request.url).searchParams.get('scenario')
+        return HttpResponse.json(
+          { message: '상품 목록을 불러오지 못했습니다.' },
+          { status: 500 },
+        )
+      }),
+    )
+
+    renderProductList({ searchParams: '?scenario=error' })
+
+    expect(
+      await screen.findByText('상품 목록을 불러오지 못했습니다.'),
+    ).toBeInTheDocument()
+    expect(requestedScenario).toBe('error')
+    expect(mockedTrackProductListView).toHaveBeenCalledExactlyOnceWith({
+      category: 'all',
+      sort: 'latest',
+      page: 1,
+    })
+  })
+
+  it('does not duplicate the scenario error event when the request is retried', async () => {
+    let requestCount = 0
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, () => {
+        requestCount += 1
+        return HttpResponse.json(
+          { message: '상품 목록을 불러오지 못했습니다.' },
+          { status: 500 },
+        )
+      }),
+    )
+
+    const { user } = renderProductList({ searchParams: '?scenario=error' })
+    const retryButton = await screen.findByRole('button', {
+      name: '다시 시도',
+    })
+
+    await user.click(retryButton)
+
+    await waitFor(() => {
+      expect(requestCount).toBe(2)
+    })
+    expect(mockedTrackProductListView).toHaveBeenCalledExactlyOnceWith({
+      category: 'all',
+      sort: 'latest',
+      page: 1,
+    })
+  })
+
   it('records one new view for each changed category, sort, page, or search condition', async () => {
     server.use(
       http.get(PRODUCTS_ENDPOINT, ({ request }) => {

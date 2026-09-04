@@ -133,7 +133,7 @@ export function ProductListContent(): JSX.Element {
 
   useEffect(() => {
     if (
-      data === undefined ||
+      (data === undefined && !isError) ||
       isPlaceholderData ||
       correctedPage !== null ||
       lastTrackedQuerySignature.current === displayedQuerySignature
@@ -151,6 +151,7 @@ export function ProductListContent(): JSX.Element {
     correctedPage,
     data,
     displayedQuerySignature,
+    isError,
     isPlaceholderData,
     listQuery.category,
     listQuery.page,

@@ -116,6 +116,47 @@ describe('getCommonAnalyticsProperties', () => {
     expect(first.sessionId).toEqual(expect.any(String))
   })
 
+  it('uses a stable UUID-v4 session ID when storage and crypto are unavailable', async () => {
+    vi.stubGlobal('window', { innerWidth: 1024 })
+    vi.stubGlobal('sessionStorage', undefined)
+    vi.stubGlobal('crypto', undefined)
+    const getCommonAnalyticsProperties =
+      await loadGetCommonAnalyticsProperties()
+
+    expect(() => getCommonAnalyticsProperties()).not.toThrow()
+    const first = getCommonAnalyticsProperties()
+    const second = getCommonAnalyticsProperties()
+
+    expect(first.sessionId).toEqual(expect.stringMatching(UUID_PATTERN))
+    expect(second.sessionId).toBe(first.sessionId)
+  })
+
+  it('uses a stable UUID-v4 session ID when storage and randomUUID throw', async () => {
+    vi.stubGlobal('window', { innerWidth: 1024 })
+    vi.stubGlobal('sessionStorage', {
+      getItem: (): never => {
+        throw new Error('Storage access denied')
+      },
+      setItem: (): never => {
+        throw new Error('Storage access denied')
+      },
+    })
+    vi.stubGlobal('crypto', {
+      randomUUID: (): never => {
+        throw new Error('Secure random unavailable')
+      },
+    })
+    const getCommonAnalyticsProperties =
+      await loadGetCommonAnalyticsProperties()
+
+    expect(() => getCommonAnalyticsProperties()).not.toThrow()
+    const first = getCommonAnalyticsProperties()
+    const second = getCommonAnalyticsProperties()
+
+    expect(first.sessionId).toEqual(expect.stringMatching(UUID_PATTERN))
+    expect(second.sessionId).toBe(first.sessionId)
+  })
+
   it('uses an in-memory session ID without browser storage during SSR evaluation', async () => {
     vi.stubGlobal('window', undefined)
     vi.stubGlobal('sessionStorage', undefined)

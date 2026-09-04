@@ -180,6 +180,39 @@ describe('로그인 폼', () => {
     expect(window.__analytics).toBeUndefined()
   })
 
+  it('keeps login analytics source stable when returnTo changes before submission', async () => {
+    server.use(
+      http.post(LOGIN_ENDPOINT, () =>
+        HttpResponse.json({
+          user: { id: 'u1', name: 'Analytics member', email: EMAIL },
+        }),
+      ),
+    )
+    const { queryClient, rerender, user } = renderLoginForm({
+      returnTo: '/checkout',
+    })
+
+    await vi.waitFor(() => {
+      expect(mockedTrackLoginStart).toHaveBeenCalledExactlyOnceWith({
+        from: 'cart',
+      })
+    })
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <LoginForm returnTo="/orders" />
+      </QueryClientProvider>,
+    )
+
+    await fillAndSubmit(user)
+
+    await vi.waitFor(() => {
+      expect(mockedTrackLoginSuccess).toHaveBeenCalledExactlyOnceWith({
+        from: 'cart',
+      })
+    })
+    expect(router.replace).toHaveBeenCalledWith('/orders')
+  })
+
   it.each([
     [400, 'Invalid request', 'INVALID_REQUEST', 400],
     [401, 'Invalid credentials', 'INVALID_CREDENTIALS', 401],
