@@ -7,50 +7,21 @@ import { SESSION_TTL_SECONDS } from '@/app/api/_data/auth-cookies';
 // 6주차에 구조를 바꾼 뒤에도 그대로 동작해야 하므로 응답 타입, 지연,
 // 상품 id 검증을 모두 여기서 처리한다
 
-// 인증 응답 계약. 본인 구조에 맞는 자리로 옮겨도 된다
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-};
-
-export type AuthScenario = 'invalid' | 'expired' | 'error' | 'slow';
-
-export type AuthErrorResponse = {
-  message: string;
-};
-
-export type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-export type SessionResponse = {
-  user: AuthUser;
-};
-
-export type OrderItem = {
-  productId: string;
-  quantity: number;
-};
-
-export type Order = {
-  id: string;
-  createdAt: string;
-  items: OrderItem[];
-};
-
-export type OrderCreateRequest = {
-  items: OrderItem[];
-};
-
-export type OrderCreateResponse = {
-  order: Order;
-};
-
-export type OrderListResponse = {
-  orders: Order[];
-};
+// 인증 응답 계약은 `@/types/auth`로 옮겼다(화면 코드가 이 모듈을 import하지 않도록).
+// 스타터 라우트·테스트의 import 경로는 그대로 두기 위해 여기서 재수출한다.
+export type {
+  AuthErrorResponse,
+  AuthScenario,
+  AuthUser,
+  LoginRequest,
+  Order,
+  OrderCreateRequest,
+  OrderCreateResponse,
+  OrderItem,
+  OrderListResponse,
+  SessionResponse,
+} from '@/types/auth';
+import type { AuthScenario, AuthUser, Order, OrderItem } from '@/types/auth';
 
 export const TEST_PASSWORD = 'looper1234';
 
