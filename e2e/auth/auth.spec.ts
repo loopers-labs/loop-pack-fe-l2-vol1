@@ -19,6 +19,13 @@ test.describe('인증 필수 3갈래', () => {
     // 원래 경로 복원 + 서버 판독 로그인 상태(초기 HTML) 확인
     await expect(page).toHaveURL(/\/orders$/);
     await expect(page.getByRole('button', { name: '로그아웃' })).toBeVisible();
+
+    // [week-09 5단계 실험 4 교훈] hydration 뒤의 버튼만 보면 "JS 실행 전 초기 HTML에
+    // 로그인 상태"라는 계약을 검증하지 못한다(실험에서 살아남음). page.request는
+    // JS를 실행하지 않으므로, 서버가 그린 순수 HTML을 정확히 검사할 수 있다.
+    const res = await page.request.get('/orders');
+    const html = await res.text();
+    expect(html).toContain('루퍼1'); // 헤더의 {user.name} — 서버가 세션을 판독해 그린 값
   });
 
   test('② 세션 만료 → 만료 안내와 함께 로그인으로 이동, 복원 경로 유지', async ({
