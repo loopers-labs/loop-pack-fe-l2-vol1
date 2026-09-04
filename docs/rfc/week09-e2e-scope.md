@@ -194,3 +194,26 @@
 **통합 테스트로 충분한 실험이 있었나.** 실험 2·3의 로직(리다이렉트 대상 계산, SessionExpiredError 분기)은 jsdom 통합 테스트로도 잡을 수 있다. 반면 실험 1(미들웨어 리다이렉트)과 실험 4(SSR 초기 HTML)는 통합 테스트가 원리적으로 커버할 수 없는 영역이다. → **E2E-only 항목 2개 확인 (5-3 완료조건 충족)** — 인증 E2E가 "복원·만료·진입 차단"을 테스트하는 것은 중복이 아니라 커버리지 공백의 제거였다.
 
 **실험 흔적 정리.** `git diff` 확인 — 구현 코드에는 변경이 남지 않았다(실험 4 원복 완료). 남은 diff는 실험 4를 잡기 위해 강화한 테스트 단언 1건뿐이며, 이것은 5-2의 결과물로 의도적으로 커밋한다.
+
+---
+
+## E. 4단계 구현 기록 — 격리 방식과 trace 관찰
+
+### E-1. 병렬 격리 방식 (4-1)
+
+- **워커별로 갈란 것: 계정 + storageState 파일.** `auth.setup.ts`가 계정 8개(looper1~8)로 각각 폼 로그인을 1회 수행해 `.auth/worker-0~7.json` 8개를 만든다(`.gitignore` 처리). `e2e/fixtures.ts`의 storageState 픽스처가 `workerIndex % 8`로 파일을 배정한다 — 워커 × 저장 파일 1:1.
+- 워커가 8개를 넘으면 파일을 순환 재사용하지만, storageState는 파일을 **복사해 읽는** 방식이라 컨텍스트(쿠키 자리)가 워커마다 분리되어 세션 오염은 없다.
+- **storageState를 쓰는/안 쓰는 경계는 프로젝트 구조로 강제한다**: `playwright.config.ts`의 `auth` 프로젝트(storageState 없음)만 `e2e/auth/`를 실행하고, `chromium` 프로젝트(testIgnore `/auth\//`)는 이 폴더를 아예 로드하지 않는다. 이유 — 저장된 로그인 상태로 시작하면 로그인 과정 자체를 검증할 수 없기 때문.
+- 현재 C-5 시나리오는 전부 인증 자체를 검증하므로 storageState 미사용이다. 셋업 인프라는 로그인 상태가 필요한 시나리오(예: 주문 플로우 추가 시)를 위한 준비물이며, 그 스펙은 `e2e/fixtures.ts`의 test를 import하도록 한다.
+
+### E-2. trace 관찰 기록 (4-4)
+
+실험: 테스트 ①의 복원 단언을 `/\/broken-path$/`로 일부러 틀리게 바꾸고 `--trace=on --project=auth` 실행.
+
+- 실패 1건, `test-results/` 아래 **실패 테스트에 trace.zip 생성 확인** (성공 2건에도 생성 — trace: on).
+- `pnpm exec playwright show-trace <zip>` 안내 경로 확인 후, zip을 풀어 `0-trace.trace`(JSONL)를 직접 읽어 관찰했다:
+  - 액션이 시간순으로 전부 기록되어 있다 — `goto('/orders')` → `toHaveURL(/login?redirectTo=%2Forders$)` → `getByLabel('이메일')` fill → `getByLabel('비밀번호')` fill → `getByRole(button '로그인')` click → `toHaveURL(/broken-path$)`.
+  - 마지막 expect의 로그: `Expect "toHaveURL" with timeout 5000ms` → 5초 대기 → `locator resolved to <html…>` + `unexpected value`.
+  - **판별**: 액션 전부는 성공했고(로그인·이동 정상), 기대값(내가 틀리게 쓴 단언)만 틀렸다 — trace가 "구현 문제 vs 테스트 문제"를 즉시 가려준다.
+  - screencast 프레임 10개·프레임 스냅샷 15개가 함께 저장되어 뷰어에서 단계별 화면 재생이 가능하다.
+- 단언 원복 후 3 passed 확인.
