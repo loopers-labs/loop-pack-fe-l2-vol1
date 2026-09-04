@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { sessionQueries } from '@/entities/session';
 import { UnauthorizedError } from '@/shared/api/errors';
@@ -20,6 +21,15 @@ export default function CommerceError({
 }) {
   const queryClient = useQueryClient();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const expired = error instanceof UnauthorizedError;
+
+  // 캐시 쓰기는 커밋 이후에 한다 — 렌더 중에 쓰면 다른 컴포넌트(헤더)를 렌더 도중에 갱신하게 된다.
+  useEffect(() => {
+    if (expired) {
+      queryClient.setQueryData(sessionQueries.me().queryKey, null);
+    }
+  }, [expired, queryClient]);
 
   // reset()만으로는 복구되지 않는다 — TanStack이 에러를 캐시에 들고 있어
   // 재마운트한 useQuery가 캐시된 에러를 throwOnError로 즉시 다시 던진다(재현으로 확인).
@@ -31,10 +41,10 @@ export default function CommerceError({
     reset();
   };
 
-  if (error instanceof UnauthorizedError) {
-    // 서버는 이 쿠키를 더 인정하지 않는다 — 헤더도 로그아웃 상태로 맞춘다.
-    queryClient.setQueryData(sessionQueries.me().queryKey, null);
-    const next = encodeURIComponent(pathname);
+  if (expired) {
+    // 복원 경로는 proxy와 같은 모양으로 만든다 — pathname만 쓰면 /orders?page=2가 /orders로 죽는다.
+    const query = searchParams.toString();
+    const next = encodeURIComponent(query ? `${pathname}?${query}` : pathname);
     return (
       <div role="alert">
         <p>세션이 만료됐어요. 다시 로그인해주세요.</p>

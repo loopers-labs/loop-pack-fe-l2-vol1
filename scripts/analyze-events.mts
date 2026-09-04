@@ -552,6 +552,12 @@ const main = () => {
   const top = parseInteger(values.top, 20, '--top');
 
   const events = readEvents(file);
+  // 파일이 시간순이라는 보장이 없다(세션이 섞여 들어온다) — ts의 최소·최대로 구한다.
+  const timestamps = events.map((event) => event.ts).sort();
+  const period = {
+    first: timestamps.at(0)?.slice(0, 10) ?? '-',
+    last: timestamps.at(-1)?.slice(0, 10) ?? '-',
+  };
   const rawSessions = groupSessions(events);
   const activeFilters = [
     filters.dropDupes && '--drop-dupes',
@@ -566,7 +572,7 @@ const main = () => {
   const out: string[] = [
     `# 시드 로그 집계 — ${path.relative(process.cwd(), file)}`,
     '',
-    `이벤트 ${events.length}개, 세션 ${rawSessions.length}개, 기간 ${events.at(0)?.ts.slice(0, 10) ?? '-'} ~ ${events.at(-1)?.ts.slice(0, 10) ?? '-'} (UTC)`,
+    `이벤트 ${events.length}개, 세션 ${rawSessions.length}개, 기간 ${period.first} ~ ${period.last} (UTC)`,
     `퍼널 순서: ${funnelSteps.join(' → ')}`,
     `적용 필터: ${activeFilters.length > 0 ? activeFilters.join(' ') : '없음 (원본)'}`,
     '',
