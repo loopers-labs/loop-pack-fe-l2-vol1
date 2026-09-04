@@ -4,7 +4,6 @@ import "@/_app/styles/globals.css";
 import "@/_app/styles/commerce.css";
 import { Providers } from "@/_app/providers";
 import { metadataOrigin } from "@/shared/config";
-import { Header } from "@/widgets/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,11 +45,10 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        {/* Header는 layout에 두어 페이지 이동 중에도 store 개수가 유지되는 걸 보인다. */}
-        <Providers>
-          <Header />
-          {children}
-        </Providers>
+        {/* Header는 (shop) 그룹 layout으로 내렸다 — 세션을 읽으려면 쿠키가 필요하고,
+            그걸 루트에 두면 측정용 랩 페이지까지 동적이 된다. 근거는 그 파일에 적었다.
+            Providers는 여기 남는다. 모든 라우트가 QueryClient를 쓴다. */}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
