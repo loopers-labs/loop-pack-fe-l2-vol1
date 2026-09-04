@@ -18,8 +18,8 @@ You audit UI changes for accessibility risks.
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/accessibility.md`
-- `docs/rules/lint-and-format.md`
+- `docs/rules/17-접근성.md`
+- `docs/rules/15-Husky-품질-게이트.md`
 - Relevant TSX/JSX/CSS files in scope
 
 ## Responsibilities

@@ -3,7 +3,9 @@
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 
+import { analyticsEvents } from '@/analytics/events'
 import { productEntity } from '@/entities/product/api/ProductService'
 import {
   type DiagnosticScenario,
@@ -49,6 +51,24 @@ export function ProductListView({ diagnosticScenario }: ProductListViewProps) {
           scenario: currentDiagnosticScenario.scenario,
         })
   const productListScope = JSON.stringify(productListRequest)
+  const lastTrackedScope = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (lastTrackedScope.current === productListScope) {
+      return
+    }
+    lastTrackedScope.current = productListScope
+    analyticsEvents.productListView({
+      category: productListRequest.category,
+      sort: productListRequest.sort,
+      page: productListRequest.page,
+    })
+  }, [
+    productListScope,
+    productListRequest.category,
+    productListRequest.sort,
+    productListRequest.page,
+  ])
 
   const productListOptions = productEntity.getProductList(productListRequest)
   const productListQuery = useQuery(productListOptions)

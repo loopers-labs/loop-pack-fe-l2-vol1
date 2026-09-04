@@ -331,6 +331,12 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    files: ['src/analytics/consoleProvider.ts'],
+    rules: {
+      'no-console': ['error', { allow: ['info', 'warn', 'error'] }],
+    },
+  },
+  {
     files: nextFrameworkFiles,
     rules: {
       'no-restricted-syntax': ['error', ...restrictedSyntaxBase],

@@ -17,6 +17,15 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+      - name: Detect mutation target changes
+        id: changes
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+        with:
+          filters: |
+            mutation:
+              - 'src/views/product-list/model/ProductListStatePolicy.ts'
+              - 'src/entities/product/model/ProductListRouteParams.ts'
+              - 'src/entities/product/model/ProductQueryKeyFactory.ts'
       - name: Set up pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
@@ -35,5 +44,8 @@ jobs:
           fi
       - name: Run quality checks
         run: pnpm check
+      - name: Run mutation tests for changed targets
+        if: steps.changes.outputs.mutation == 'true'
+        run: pnpm test:mutate
       - name: Run production end-to-end tests
         run: pnpm test:e2e

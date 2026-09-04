@@ -25,12 +25,14 @@ When changed files are needed, inspect the working tree with read-only git comma
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/conventions/README.md`
-- `docs/rules/lint-and-format.md`
-- `docs/rules/architecture/README.md`
-- `docs/rules/accessibility.md`
-- `docs/rules/testing/verification.md`
-- `docs/rules/audit.md`
+- `docs/rules/README.md`
+- `docs/rules/02-디렉토리-구조.md`
+- `docs/rules/05-API-패턴.md`
+- `docs/rules/11-테스트-패턴.md`
+- `docs/rules/13-피처-구조-패턴.md`
+- `docs/rules/15-Husky-품질-게이트.md`
+- `docs/rules/17-접근성.md`
+- `docs/rules/18-감사.md`
 
 ## Route to Auditors
 
