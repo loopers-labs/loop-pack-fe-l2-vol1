@@ -7,12 +7,40 @@ import {
   resetOrderSubmission,
   resetPrivateOrderQueries,
 } from '@/entities/order'
+import {
+  getLoginFailure,
+  getLoginSource,
+  identifyUser,
+  trackLoginFail,
+  trackLoginStart,
+  trackLoginSuccess,
+} from '@/analytics/events'
 import { ApiError } from '@/shared/api/apiError'
 import { getSafeReturnPath } from '@/shared/lib/getSafeReturnPath'
 import { login } from '../api/authClient'
 
 const DEFAULT_ERROR_MESSAGE = '로그인에 실패했습니다.'
 const EXPIRED_SESSION_MESSAGE = '세션이 만료되었습니다. 다시 로그인해주세요.'
+
+let activeLoginOperation: AbortController | null = null
+
+function startLoginOperation(): AbortController {
+  activeLoginOperation?.abort()
+
+  const controller = new AbortController()
+  activeLoginOperation = controller
+  return controller
+}
+
+function isCurrentLoginOperation(controller: AbortController): boolean {
+  return activeLoginOperation === controller && !controller.signal.aborted
+}
+
+function finishLoginOperation(controller: AbortController): void {
+  if (activeLoginOperation === controller) {
+    activeLoginOperation = null
+  }
+}
 
 interface LoginFormProps {
   returnTo?: string
@@ -22,19 +50,35 @@ interface LoginFormProps {
 export function LoginForm({ returnTo, reason }: LoginFormProps): JSX.Element {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const safeReturnPath = getSafeReturnPath(returnTo)
+  const from = getLoginSource(safeReturnPath)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isPending, setIsPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const activeRequestRef = useRef<AbortController | null>(null)
+  const hasTrackedLoginStart = useRef(false)
 
   useEffect(
     () => () => {
-      activeRequestRef.current?.abort()
+      const controller = activeRequestRef.current
+      controller?.abort()
+      if (controller !== null) {
+        finishLoginOperation(controller)
+      }
       activeRequestRef.current = null
     },
     [],
   )
+
+  useEffect(() => {
+    if (hasTrackedLoginStart.current) {
+      return
+    }
+
+    hasTrackedLoginStart.current = true
+    trackLoginStart({ from })
+  }, [from])
 
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
@@ -44,31 +88,35 @@ export function LoginForm({ returnTo, reason }: LoginFormProps): JSX.Element {
       return
     }
 
-    const controller = new AbortController()
+    const controller = startLoginOperation()
     activeRequestRef.current = controller
     setErrorMessage(null)
     setIsPending(true)
 
     try {
-      await login({ email, password }, controller.signal)
-      if (controller.signal.aborted) {
+      const user = await login({ email, password }, controller.signal)
+      if (!isCurrentLoginOperation(controller)) {
         return
       }
+      trackLoginSuccess({ from })
+      identifyUser(user.id)
       resetOrderSubmission()
       await resetPrivateOrderQueries(queryClient)
-      if (controller.signal.aborted) {
+      if (!isCurrentLoginOperation(controller)) {
         return
       }
-      router.replace(getSafeReturnPath(returnTo))
+      router.replace(safeReturnPath)
       router.refresh()
     } catch (error) {
-      if (controller.signal.aborted) {
+      if (!isCurrentLoginOperation(controller)) {
         return
       }
+      trackLoginFail(getLoginFailure(error))
       setErrorMessage(
         error instanceof ApiError ? error.message : DEFAULT_ERROR_MESSAGE,
       )
     } finally {
+      finishLoginOperation(controller)
       if (activeRequestRef.current === controller) {
         activeRequestRef.current = null
         setIsPending(false)

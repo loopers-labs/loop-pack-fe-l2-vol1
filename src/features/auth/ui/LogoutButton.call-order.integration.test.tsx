@@ -4,6 +4,7 @@ import { HttpResponse, http } from 'msw'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { resetUser } from '@/analytics/events'
 import { server } from '@/test/mocks/server'
 import { LogoutButton } from './LogoutButton'
 
@@ -22,10 +23,17 @@ vi.mock('@/entities/wishlist', () => ({
   useClearWishlist: () => dependencies.clearWishlist,
 }))
 
+vi.mock('@/analytics/events', () => ({
+  resetUser: vi.fn(),
+}))
+
+const mockedResetUser = vi.mocked(resetUser)
+
 describe('LogoutButton side-effect order', () => {
   beforeEach(() => {
     dependencies.clearWishlist.mockReset()
     dependencies.router.refresh.mockReset()
+    mockedResetUser.mockReset()
   })
 
   it('clears wishlist state before refreshing after a 204 logout response', async () => {
@@ -45,15 +53,66 @@ describe('LogoutButton side-effect order', () => {
     await user.click(screen.getByRole('button', { name: '로그아웃' }))
 
     await vi.waitFor(() => {
+      expect(mockedResetUser).toHaveBeenCalledOnce()
       expect(dependencies.clearWishlist).toHaveBeenCalledOnce()
       expect(dependencies.router.refresh).toHaveBeenCalledOnce()
     })
+    const resetOrder = mockedResetUser.mock.invocationCallOrder[0]
     const clearOrder = dependencies.clearWishlist.mock.invocationCallOrder[0]
     const refreshOrder = dependencies.router.refresh.mock.invocationCallOrder[0]
 
-    if (clearOrder === undefined || refreshOrder === undefined) {
+    if (
+      resetOrder === undefined ||
+      clearOrder === undefined ||
+      refreshOrder === undefined
+    ) {
       throw new Error('Logout side effects were not recorded.')
     }
+    expect(resetOrder).toBeLessThan(clearOrder)
     expect(clearOrder).toBeLessThan(refreshOrder)
+  })
+
+  it('aborts a delayed logout on unmount before it can reset or clean up state', async () => {
+    let requestSignal: AbortSignal | undefined
+    let releaseResponse: (() => void) | undefined
+    let markHandlerReturned: (() => void) | undefined
+    const responseGate = new Promise<void>((resolve) => {
+      releaseResponse = resolve
+    })
+    const handlerReturned = new Promise<void>((resolve) => {
+      markHandlerReturned = resolve
+    })
+    server.use(
+      http.post(LOGOUT_ENDPOINT, async ({ request }) => {
+        requestSignal = request.signal
+        await responseGate
+        markHandlerReturned?.()
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const user = userEvent.setup()
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <LogoutButton />
+      </QueryClientProvider>,
+    )
+
+    await user.click(screen.getByRole('button'))
+    await vi.waitFor(() => {
+      expect(requestSignal).toBeDefined()
+    })
+    view.unmount()
+
+    expect(requestSignal?.aborted).toBe(true)
+    releaseResponse?.()
+    await handlerReturned
+    await Promise.resolve()
+
+    expect(mockedResetUser).not.toHaveBeenCalled()
+    expect(dependencies.clearWishlist).not.toHaveBeenCalled()
+    expect(dependencies.router.refresh).not.toHaveBeenCalled()
   })
 })

@@ -41,9 +41,10 @@ export async function login(
   return session.user
 }
 
-export async function logout(): Promise<void> {
+export async function logout(signal?: AbortSignal): Promise<void> {
   const response = await fetch(LOGOUT_ENDPOINT, {
     method: 'POST',
+    signal,
   })
 
   if (response.status !== 204) {
