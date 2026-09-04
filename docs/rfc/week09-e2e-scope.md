@@ -195,7 +195,7 @@ E2E 후보와 같은 사용자 목적 단위로 묶고, 이벤트별 수치는 �
 
 ### 인증을 낮은 빈도에도 붙이는 이유
 
-인증은 상품 탐색이나 장바구니보다 세션 빈도가 낮지만, 실패 영향이 한 화면에 머물지 않는다. 미로그인 사용자의 보호 경로 진입, 로그인 응답의 httpOnly 쿠키 저장, 원래 내부 경로 복원, 서버가 읽은 세션이 반영된 보호 화면, 만료된 세션의 중앙 401 처리는 통합 테스트만으로 실제 배포 경계를 한 번에 증명할 수 없다. 로그 빈도보다 경로의 관문 역할과 E2E 고유 검증 가치가 크므로 필수로 둔다.
+인증은 상품 탐색이나 장바구니보다 세션 빈도가 낮지만, 실패 영향이 한 화면에 머물지 않는다. 미로그인 사용자의 보호 경로 진입, 로그인 응답의 httpOnly 쿠키 저장, 원래 내부 경로 복원, 서버가 읽은 세션이 반영된 보호 화면, 만료된 세션의 중앙 401 처리는 통합 테스트만으로 실제 배포 경계를 한 번에 증명할 수 없다. 로그 빈도보다 경로의 관문 역할과 실제 브라우저 연결 검증 가치가 크므로 필수로 둔다.
 
 ### 주문 완료를 붙이는 이유
 
@@ -240,6 +240,62 @@ E2E 후보와 같은 사용자 목적 단위로 묶고, 이벤트별 수치는 �
 | 주문서 제목이나 구조 변경 | 최종 도착 assertion 1개 |
 
 locator를 역할과 이름 기반 helper로 모으면 동일한 폼을 쓰는 세 테스트에서 각각 고치지 않고 공통 1~3곳을 수정한다. 반대로 접근 가능한 필드·버튼 이름과 복귀 URL 계약을 동시에 바꾸면 표에 적은 약 5개 지점을 수정할 것으로 예상한다. DOM 계층이나 CSS class에는 의존하지 않는다.
+
+## D. E2E 구현과 실행 증거
+
+### 계정과 저장 상태 경계
+
+인증 setup은 로그인 API를 직접 호출하지 않고 `/login` 화면에서 이메일과 비밀번호를 입력하고 `로그인` 버튼을 누른 뒤, `로그아웃` 버튼이 보이는 상태를 저장한다. setup 테스트 네 개는 실행 worker 수와 무관하게 명시적인 계정 인덱스 0~3을 사용해 `test-results/.auth/worker-0.json`부터 `worker-3.json`까지 만든다. 이 경로는 기존 `/test-results` 규칙으로 Git에서 제외된다.
+
+실제 인증 테스트의 `workerAccount`와 `authenticatedPage`는 모두 같은 `testInfo.parallelIndex`를 사용한다. 인증 context는 해당 인덱스의 `storageState`만 읽고 테스트가 끝나면 닫힌다. 미로그인 복원과 잘못된 자격 증명 테스트는 기본 `page`를 사용해 저장 상태를 읽지 않으며, 만료와 주문 테스트만 `authenticatedPage`를 사용한다. 주문 쓰기는 worker별 계정으로 격리하고, 이전 실행의 주문이 남아 있어도 이번 `POST /api/orders` 응답에서 받은 정확한 `order.id`를 주문 목록에서 확인한다.
+
+locator는 접근 가능한 label, role과 name을 사용한다. URL, HTTP method·status가 맞는 응답, 가시 요소를 대기 조건으로 사용했으며 `waitForTimeout`이나 시간 기반 sleep은 사용하지 않았다.
+
+### 안정성 행렬
+
+2026-09-04에 production server를 사용하는 `playwright.week09.config.ts` 전체 선택 범위를 아래 순서로 실행했다. 실행은 겹치지 않게 하나씩 완료한 뒤 다음 명령을 시작했다.
+
+| 실행 조건 | 결과 | Playwright 보고 시간 |
+| --- | ---: | ---: |
+| `--workers=1` | 16/16 통과 | 27.3초 |
+| `--workers=4` | 16/16 통과 | 12.6초 |
+| `--workers=4 --repeat-each=3` | 40/40 통과 | 28.6초 |
+
+반복 실행이 48개가 아니라 40개인 이유는 dependency인 인증 setup 4개는 한 번만 실행되고, 나머지 12개가 세 번씩 실행되기 때문이다. 세 실행 모두 retry 없이 통과했다.
+
+### 실제 실패 trace 확인
+
+잘못된 비밀번호 시나리오의 가시 오류 assertion을 실제 문구 `이메일 또는 비밀번호를 확인해주세요.`에서 `의도적으로 틀린 오류 메시지`로 잠시 바꾸고, 해당 테스트를 workers 1과 `--trace=on`으로 실행했다. 인증 setup 4개는 통과했고 대상 테스트는 의도한 `toBeVisible` 5초 timeout으로 실패했다. 생성된 `trace.zip`은 196,465 bytes였으며 `playwright show-trace`로 열어 trace viewer가 제공되는 것을 확인했다.
+
+실패 시점의 URL은 `/login?returnTo=%2Forders`였고, 화면에는 입력한 계정과 `wrong-password`, 실제 alert `이메일 또는 비밀번호를 확인해주세요.`가 남아 있었다. 따라서 앱은 로그인 `POST`의 401 처리와 오류 렌더링까지 완료했으며, 이 의도적 테스트 실패는 실제 alert와 불일치하는 locator에서 발생했다. assertion을 즉시 원래 문구로 되돌린 뒤 같은 focused 실행에서 setup 4개와 대상 테스트 1개가 모두 통과했다(5/5, 9.5초). 첫 trace 명령은 직전 production server가 3109 포트를 잠시 점유해 테스트 본문 전에 종료됐으며, listener가 사라진 뒤 동일 명령을 다시 실행해 위 trace를 수집했다.
+
+### 변이 실험
+
+선택한 E2E가 의도한 배포 경계의 회귀를 실제로 검출하는지 확인하려고 production 코드 한 줄씩만 임시로 바꿨다. 실험 중 테스트 코드는 바꾸지 않았으며, 각 RED를 관찰한 직후 production 코드를 원복했다.
+
+| # | 망가뜨린 곳 | 어떻게 바꿨나 | 결과 | 실패한 테스트 | 실패 메시지로 원인을 알 수 있었나 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | 로그인 응답의 세션 쿠키 `Path` | `path: '/'`를 `path: '/api/auth'`로 축소 | 잡힘 | setup 4개가 `auth.setup.ts:16`에서 실패했고, `--no-deps` 미로그인 복원은 `auth.spec.ts:50`에서 실패 | 부분 가능. 로그인 뒤 `주문서` heading이 없다는 단절 지점은 알 수 있지만, 메시지만으로 잘못된 `Path` 값까지 특정할 수는 없어 cookie 저장 상태를 함께 확인해야 했다. |
+| 2 | `/checkout` 미로그인 redirect | 원래 `returnTo` 대신 `/`를 인코딩 | 잡힘 | `auth.spec.ts:40`의 `toHaveURL` | 가능. 기대 URL은 `http://localhost:3109/login?returnTo=%2Fcheckout%3Fcoupon%3Dwelcome`, 실제 URL은 `http://localhost:3109/login?returnTo=%2F`로 표시돼 query 포함 복원 경로가 사라진 것을 바로 구분했다. |
+| 3 | 보호 API의 중앙 만료 처리 조건 | HTTP `401` 비교를 `403`으로 변경 | 잡힘 | `auth.spec.ts:73`의 `toHaveURL` | 가능. 기대 URL은 만료 안내 로그인 경로였고 실제 URL은 `http://localhost:3109/orders`여서 401 뒤 중앙 탐색이 실행되지 않은 것을 구분했다. |
+| 4 | 로그인 응답의 세션 쿠키 `Domain` | `domain: 'example.com'` 한 줄 추가 | 빠른 테스트에서는 살아남음, E2E에서 잡힘 | 빠른 route 테스트 11/11 통과. setup 4개와 `--no-deps` 미로그인 복원의 `auth.spec.ts:50` 실패 | 부분 가능. 로그인 뒤 서버 인증 화면이 없다는 것은 알 수 있지만, heading timeout만으로 Domain 부적합까지 특정할 수는 없다. 브라우저 cookie 적용 상태와 응답 옵션을 함께 봐야 했다. |
+| 보조 | 상품 목록 URL history | `push`를 `replace`로 변경 | 잡힘 | `week08-product-list.spec.ts:43` | 가능. 뒤로가기 후 `fashion`이 아니라 `카테고리` combobox 자체가 없어, 상품 목록 history entry가 사라졌음을 확인했다. 인증 변이 3개 계산에는 포함하지 않았다. |
+
+첫 두 변이를 모두 원복한 뒤 두 production 파일의 diff가 0임을 확인하고 원본 production build와 인증 focused 실행을 다시 수행했다. build는 성공했고 setup 4개와 인증 테스트 3개가 7/7로 통과했다(11.2초). 세 번째 변이도 즉시 `401`로 원복해 대상 production 파일의 diff가 0임을 확인했다. 원본 production build 성공 후 setup 4개와 만료 테스트가 5/5로 통과했다(9.2초). 따라서 최종 production 코드에는 세 인증 변이가 모두 남아 있지 않다.
+
+`Domain` 변이도 관찰 직후 한 줄을 제거하고 해당 옵션이 남아 있지 않음을 확인했다. 원본 production build와 관련 빠른 route 테스트 11/11이 다시 통과했고(652ms), 정식 dependency를 포함한 미로그인 복원 focused 실행도 setup 4개와 대상 1개가 모두 통과했다(5/5, 9.3초). 앞의 `path`, `returnTo`, 중앙 401 조건 변경 세 개가 인증 구현 변이 최소 3개를 충족한다. 추가 `Domain` 변경은 현재 빠른 테스트가 해당 속성을 단언하지 않아 살아남았지만 실제 브라우저 적용 단계에서 E2E가 실패한 항목이다. Domain 설정값 자체는 빠른 테스트로도 추가 검증할 수 있으며, 여기서 확인한 E2E의 가치는 브라우저의 쿠키 저장·전송과 보호 화면의 서버 렌더링이 실제로 연결되는지 검증한 데 있다.
+
+상품 목록 URL 상태의 history 방식을 `push`에서 `replace`로 바꾸는 보조 변이도 별도로 수행했다. production build는 성공했지만 기존 8주차 뒤로·앞으로 테스트가 `week08-product-list.spec.ts:43`에서 실패했다. `fashion` 값을 기대했으나 `page.goBack()` 뒤 `카테고리` combobox 자체를 5초 동안 찾지 못했다. 변이를 즉시 원복하고 대상 production 파일의 diff가 0임을 확인했으며, 원본 build 후 같은 테스트가 1/1로 통과했다(테스트 970ms, 전체 3.5초). 이 보조 변이는 기존 상품 탐색 E2E 재사용의 가치를 확인한 것이며, 과제가 요구한 인증 구현 변이 3개에는 포함하지 않는다.
+
+### 초기 HTML과 쿠키 경계 확인
+
+portable Node 22의 `fetch`로 production 로그인 요청과 세션 쿠키를 사용한 홈 document 요청을 차례로 보냈다. 응답은 `loginStatus=200`, `homeStatus=200`이었고, 31,529자인 raw response HTML에서 `루퍼1`과 `로그아웃`은 각각 확인됐으며 현재 markup의 비로그인 action 표식인 `>로그인<`은 발견되지 않았다. 브라우저 JavaScript가 실행된 뒤의 DOM이 아니라 서버가 반환한 HTML 원문을 검사한 결과이므로, 서버 응답 원문에 인증 사용자용 표식이 포함됨을 직접 확인했다.
+
+`HttpOnly`와 `SameSite` 같은 세션 쿠키 속성 자체는 route test가 `Set-Cookie` 계약으로 검사한다. E2E는 UI 로그인 응답 뒤 실제 브라우저에 형성된 세션이 보호 요청에 적용되고, `Path`에 따른 전송 결과가 서버 렌더링까지 이어지는지를 검사한다. 두 레벨의 보증 범위를 구분하며 E2E가 모든 쿠키 속성을 직접 단언한다고 주장하지 않는다.
+
+### AI 사용 범위
+
+요구사항 정리, 구현 후보 도출, 반복적인 테스트·fixture 작성과 정상·적대적 리뷰에 AI를 사용했다. 최종 E2E 범위와 각 테스트가 지킬 단언, 로그를 근거로 한 포함·제외 결정, 실제 검증 결과의 채택은 사용자가 검토하고 승인해 확정했다.
 
 ## 결정 요약
 
