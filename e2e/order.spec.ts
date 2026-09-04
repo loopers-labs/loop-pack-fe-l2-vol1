@@ -14,12 +14,29 @@ test.describe('주문', () => {
     const submitButton = page.getByRole('button', { name: /원 주문하기/ });
     await expect(submitButton).toBeEnabled();
 
+    const createOrderResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/orders') &&
+        response.request().method() === 'POST',
+    );
     await submitButton.click();
+    const response = await createOrderResponse;
+    expect(response.ok()).toBe(true);
+
+    const { order } = (await response.json()) as { order: { id: string } };
 
     await expect(page).toHaveURL('/orders');
     await expect(page.getByRole('heading', { name: '주문 내역' })).toBeVisible();
+    const createdOrder = page
+      .locator('article')
+      .filter({ hasText: `주문 번호 ${order.id}` });
+    await expect(createdOrder).toHaveCount(1);
     await expect(
-      page.getByRole('link', { name: TEST_CART_PRODUCT.name, exact: true }),
+      createdOrder.getByRole('link', {
+        name: TEST_CART_PRODUCT.name,
+        exact: true,
+      }),
     ).toBeVisible();
+    await expect(createdOrder.getByText('× 1', { exact: true })).toBeVisible();
   });
 });
