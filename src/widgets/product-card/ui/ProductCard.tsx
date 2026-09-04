@@ -1,12 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import type { Product } from '@/entities/product/model/types';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
+import { useAddToCart } from '@/features/cart/model/useAddToCart';
 import { formatWon } from '@/shared/lib/format';
-import { trackCartAdd } from '@/analytics/events';
 
 interface ProductCardProps {
   product: Product;
@@ -57,13 +56,12 @@ export function ProductCard({
 }: ProductCardProps) {
   const isWished = useWishlistStore((state) => state.ids.has(product.id));
   const toggleWishlist = useWishlistStore((state) => state.toggle);
-  const addItem = useCartStore((state) => state.addItem);
+  const addToCart = useAddToCart(product.id);
   const discount = getProductDiscount(product);
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
 
   const handleAddToCart = () => {
-    addItem(product.id);
-    trackCartAdd(product.id);
+    addToCart();
   };
 
   return (

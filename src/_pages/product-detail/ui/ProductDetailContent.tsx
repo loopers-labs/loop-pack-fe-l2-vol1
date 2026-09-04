@@ -6,14 +6,14 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
 import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
-import { useCartStore } from '@/entities/cart/model/useCartStore';
+import { useAddToCart } from '@/features/cart/model/useAddToCart';
 import { BackIcon } from '@/shared/ui/icons/BackIcon';
 import { StarIcon } from '@/shared/ui/icons/StarIcon';
 import { formatWon } from '@/shared/lib/format';
 import { SizeSelect } from './SizeSelect';
 import type { SelectOption } from '@/shared/ui/select';
 import type { SizeValue } from '@/entities/product/model/types';
-import { trackCartAdd, trackProductDetailView } from '@/analytics/events';
+import { trackProductDetailView } from '@/analytics/events';
 import { useAnalyticsPageView } from '@/analytics/useAnalyticsPageView';
 
 const CATEGORY_NAME: Record<string, string> = {
@@ -30,7 +30,7 @@ export function ProductDetailContent() {
 
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
   const toggle = useWishlistStore((s) => s.toggle);
-  const addItem = useCartStore((s) => s.addItem);
+  const addToCart = useAddToCart(product.id);
 
   const discount = getProductDiscount(product);
   useAnalyticsPageView(
@@ -45,8 +45,7 @@ export function ProductDetailContent() {
   }));
 
   const handleAddToCart = () => {
-    addItem(product.id);
-    trackCartAdd(product.id);
+    addToCart();
   };
 
   return (
