@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { trackCategoryFilterChange, trackPageChange, trackProductListView, trackSortChange } from '@/analytics/events';
 import SearchInput from './SearchInput';
 import ProductGridSkeleton from './ProductGridSkeleton';
 import { useProductListFilters } from '../model/useProductListFilters';
@@ -123,12 +124,32 @@ export default function ProductListSection() {
   }, [filters.page, productList, isPlaceholderData, isError, correctPage]);
 
   function handleCategoryChange(value: string) {
-    if (isCategoryOption(value)) setCategory(value);
+    if (isCategoryOption(value)) {
+      trackCategoryFilterChange(value);
+      setCategory(value);
+    }
   }
 
   function handleSortChange(value: string) {
-    if (isSortOption(value)) setSort(value);
+    if (isSortOption(value)) {
+      trackSortChange(value);
+      setSort(value);
+    }
   }
+
+  function handlePageChange(value: number) {
+    trackPageChange(value);
+    setPage(value);
+  }
+
+  // product_list_view는 마운트 1회만 보낸다. 시드 로그도 필터·정렬·페이지 변경 뒤 재발화가
+  // 없다(0/4,090건). deps에 filters를 두면 exhaustive-deps 경고 없이 ref로 1회를 보장한다.
+  const hasTrackedListView = useRef(false);
+  useEffect(() => {
+    if (hasTrackedListView.current) return;
+    hasTrackedListView.current = true;
+    trackProductListView({ category: filters.category, sort: filters.sort, page: filters.page });
+  }, [filters]);
 
   // AI 생성: 필터를 바꾼 갱신이 실패하면 새 query key에는 데이터가 없어(keepPreviousData는 pending
   // 동안에만 이전 결과를 준다) 사용자가 보던 목록이 통째로 사라졌다. 이때만 직전 성공 결과를 query
@@ -197,7 +218,7 @@ export default function ProductListSection() {
                 </button>
               )}
             </p>
-            <ProductResults products={shownList.products} page={filters.page} totalPages={totalPages} isStale={isUpdating || isError} onPageChange={setPage} />
+            <ProductResults products={shownList.products} page={filters.page} totalPages={totalPages} isStale={isUpdating || isError} onPageChange={handlePageChange} />
           </>
         )}
       </section>

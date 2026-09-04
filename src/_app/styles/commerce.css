@@ -34,6 +34,16 @@
   outline-offset: 3px;
 }
 
+/* 오류 문구는 색이 아니라 굵기로 구분한다(02-new-pages-design.md 2장). 기존에는 로그인 폼에만
+   있었는데, 9주차에 추가한 화면들(장바구니·주문서·주문 내역·위시리스트·로그아웃)의 오류 문구도
+   같은 규칙을 따라야 해서 공통 wrapper로 올린다. .login-form [role='alert']는 더 구체적이라
+   이 규칙과 값이 같아도 그대로 둔다. */
+.page-container [role='alert'] {
+  margin: 0;
+  color: #000;
+  font-weight: 600;
+}
+
 /* 헤더 */
 .site-header-inner {
   justify-content: space-between;
@@ -162,6 +172,60 @@
   }
 }
 
+/* 로그인 폼 */
+.login-page {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+}
+
+.login-page h1 {
+  text-align: center;
+}
+
+.login-form {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: 360px;
+  padding: 32px 28px;
+  border: 1px solid #c8c8c8;
+}
+
+.login-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.login-form input {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+.login-form [role='alert'] {
+  margin: 0;
+  color: #000;
+  font-weight: 600;
+}
+
+.login-form button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+  font-weight: 600;
+}
+
+.login-form button:disabled {
+  border-color: #c8c8c8;
+  background: #c8c8c8;
+  color: #666;
+}
+
 /* 목록 pending 폴백과 갱신 표시 (week-07 2단계) */
 
 /* 카테고리 옵션은 서버 응답으로 채워진다. select 폭은 가장 긴 옵션이 정하므로 데이터가 도착하는
@@ -200,4 +264,260 @@
 
 .product-card-skeleton button {
   border-color: #ececec;
+}
+
+/* 스크린리더 전용 텍스트. 숫자 여러 개가 나란히 놓인 자리(단가·수량·소계)에 의미를 붙인다 */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 버튼처럼 보이는 링크. .login-form button과 같은 값을 쓰되 기존 규칙은 건드리지 않는다 */
+.primary-action,
+.order-submit button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+  font-weight: 600;
+}
+
+.order-submit button {
+  width: 100%;
+}
+
+.order-submit button:disabled {
+  border-color: #c8c8c8;
+  background: #c8c8c8;
+  color: #666;
+}
+
+/* 비어 있는 목록·실패 안내 */
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 48px 0;
+  text-align: center;
+}
+
+.empty-state-action,
+.empty-state button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+/* 로그인 — 만료 안내. 자격 증명 실패(role=alert)와 구분되게 상자로 두른다 */
+.login-notice {
+  width: 100%;
+  max-width: 360px;
+  padding: 16px;
+  border: 1px solid #c8c8c8;
+  font-weight: 600;
+}
+
+/* 마이페이지 */
+.account-box {
+  display: grid;
+  gap: 6px;
+  padding: 20px 24px;
+  border: 1px solid #c8c8c8;
+}
+
+.account-name {
+  font-size: 1.125rem;
+}
+
+.account-email {
+  color: #666;
+}
+
+.logout-area {
+  display: grid;
+  gap: 8px;
+}
+
+.logout-button {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+/* 주문 카드 (주문 내역) */
+.order-card-list {
+  display: grid;
+  gap: 20px;
+  list-style: none;
+}
+
+.order-card {
+  border: 1px solid #c8c8c8;
+}
+
+.order-card-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid #c8c8c8;
+  font-size: 1rem;
+}
+
+.order-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #c8c8c8;
+}
+
+.order-card-note {
+  color: #666;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+/* 주문 상품 줄 (주문 내역·주문서 공용) */
+.order-line-list {
+  list-style: none;
+}
+
+.order-line-list-boxed,
+.order-line-boxed {
+  border: 1px solid #c8c8c8;
+}
+
+.order-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.order-line + .order-line {
+  border-top: 1px solid #ececec;
+}
+
+/* 실제 이미지와 자리 표시자가 같은 상자를 쓴다. 이미지가 늦게 와도 줄이 밀리지 않는다 */
+.order-line-image {
+  display: block;
+  flex: 0 0 auto;
+  width: 80px;
+  height: 80px;
+  background: #ececec;
+  object-fit: cover;
+}
+
+.order-line-body {
+  display: grid;
+  gap: 6px;
+  /* flex-basis를 0으로 둔다. auto면 긴 상품명의 최소 너비가 남은 폭을 넘겨 좁은 화면에서
+     본문 전체가 다음 줄로 내려가, 상품명이 짧은 줄과 이미지 위치가 어긋난다. */
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.order-line-meta {
+  color: #666;
+}
+
+.order-line-subtotal {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 주문서 — 수량 */
+/* 장바구니 — 수량 입력. 수량을 바꾸는 화면은 여기 하나다(주문서는 읽기 전용).
+   "25,000원 · [ 4 ]개"처럼 문장 안에 놓이므로 inline으로 두고, 터치 목표 44px은 유지한다. */
+.cart-quantity {
+  width: 4.5rem;
+  min-height: 44px;
+  margin: 0 4px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+/* 소계와 삭제를 오른쪽 열에 세로로 쌓는다 */
+.order-line-trailing {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+  gap: 8px;
+}
+
+.order-line-remove {
+  padding: 4px 8px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: #666;
+}
+
+/* 주문서에서 수량을 왜 못 바꾸는지 알려주는 안내 */
+.order-line-note {
+  margin-top: 12px;
+  color: #666;
+}
+
+.order-line-note a {
+  text-decoration: underline;
+}
+
+/* 주문서 — 결제 금액과 주문 버튼 */
+.order-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* 수량 변경으로 자릿수가 바뀌어도 아래 주문 버튼이 움직이지 않게 높이를 예약한다 */
+  min-height: 62px;
+  padding: 16px 20px;
+  border: 1px solid #c8c8c8;
+}
+
+.order-submit {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* 오류 문구가 없어도 자리를 예약해, 오류가 나타날 때 주문 버튼이 밀리지 않게 한다 */
+.order-submit-error {
+  min-height: 1lh;
+}
+
+/* 로딩 폴백. 실제 요소와 같은 태그·텍스트를 두고 색만 감춰 교체 시 상자 크기가 같게 한다 */
+.order-card-skeleton .order-card-head,
+.order-card-skeleton .order-line-name,
+.order-card-skeleton .order-line-meta,
+.order-card-skeleton .order-line-subtotal {
+  background: #ececec;
+  color: transparent;
+}
+
+@media (max-width: 480px) {
+  .order-line {
+    flex-wrap: wrap;
+  }
+
+  .order-line-subtotal {
+    width: 100%;
+    text-align: right;
+  }
 }

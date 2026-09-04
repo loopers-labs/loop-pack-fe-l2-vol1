@@ -1,7 +1,7 @@
 // AI 생성
 import { defineConfig, devices } from '@playwright/test';
 
-const APP_ORIGIN = 'http://localhost:3000';
+export const APP_ORIGIN = 'http://localhost:3000';
 
 export default defineConfig({
   testDir: './e2e',

@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { formatPrice } from '@/shared/lib/formatPrice';
+import { trackClientError } from '@/analytics/events';
 import type { Product } from '../model/types';
 
 interface ProductCardProps {
@@ -14,7 +17,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, headingLevel: Heading, actions }: ProductCardProps) {
   return (
     <article className="product-card">
-      <Image className="product-card-image" src={product.image} alt={product.name} width={400} height={400} />
+      <Image className="product-card-image" src={product.image} alt={product.name} width={400} height={400} onError={() => trackClientError({ code: 'IMAGE_LOAD_FAILED', productId: product.id })} />
       <p>{product.brand}</p>
       <Heading>{product.name}</Heading>
       <strong>{formatPrice(product.price)}</strong>
