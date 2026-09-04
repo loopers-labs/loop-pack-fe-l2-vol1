@@ -66,6 +66,9 @@ export default tseslint.config(
       ],
 
       eqeqeq: 'error',
+      // Playwright fixture는 첫 인자를 반드시 객체 구조분해로 써야 한다(의존 fixture를 이름으로 읽음).
+      // 의존이 없으면 `{}`가 되므로, 매개변수 자리의 빈 패턴만 허용한다.
+      'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },

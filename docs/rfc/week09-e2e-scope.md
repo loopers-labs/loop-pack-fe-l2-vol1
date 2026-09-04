@@ -216,3 +216,64 @@ E1 하나에 **최대 3곳, 폼은 1곳**. 토스인컴 사례("35개 파일 →
 - 격리: **계정 = 워커**(`looper${parallelIndex+1}`, 8개). 주문은 서버 메모리에 userId별로 쌓이므로 계정 분리가 곧 데이터 분리. 주문 내역 단언은 절대 개수가 아니라 **+1**.
 - 셀렉터: 역할·이름 기반. `getByTestId` 없음. 첫 단언은 URL·상태(8주차 리뷰).
 - 이 문서만 읽고 4단계에 E1~E4가 들어갈 것과, 필터·카트·상세에 새 E2E가 없을 것을 예측할 수 있어야 한다.
+
+---
+
+## D. 4단계 실행 기록 (E2E 구현)
+
+### 구성
+
+| 파일 | 역할 |
+| --- | --- |
+| `e2e/base-url.ts` | baseURL 상수. worker fixture는 테스트 스코프 옵션인 `baseURL`을 받을 수 없어 config와 fixture가 이 상수를 함께 쓴다 |
+| `e2e/fixtures.ts` | `account`(워커별 계정) · `workerStorageState`(워커별 로그인 파일) worker fixture |
+| `e2e/pom/login.ts` · `pom/header.ts` | 함수형 POM. 폼·헤더 문구는 여기에만 있다 |
+| `e2e/auth.spec.ts` | E1 · E1-SSR · E3 (storageState **없음**) |
+| `e2e/session-expiry.spec.ts` | E2 (storageState 사용) |
+| `e2e/order.spec.ts` | E4 (storageState 사용) |
+
+### 격리 — 무엇을 갈랐나
+
+**계정**을 갈랐다. `parallelIndex % 8`로 `looper1~8`을 워커에 배분하고(worker fixture, `scope: 'worker'`), 로그인 상태 파일도 `e2e/.auth/worker-<N>.json`으로 워커마다 나눴다. 주문은 서버 메모리에 `userId`별로 쌓이므로 계정을 가르면 데이터도 갈린다 — 워커 4개가 같은 계정으로 주문하면 E4의 "+1" 단언이 서로 밟는다. storageState 파일을 하나로 두면 워커마다 다른 계정으로 로그인해도 파일이 서로 덮어써서 같은 문제가 난다.
+
+**데이터**는 절대값 대신 상대값으로 피했다. E4는 "주문 1건"이 아니라 진입 시점의 개수를 세고 `+1`을 단언한다 — 같은 서버 프로세스에서 이전 실행의 주문이 남아 있어도 결과가 같다.
+
+로그인은 **폼으로** 한다. `request.post('/api/auth/login')`으로 쿠키를 만들면 빠르지만 그건 "로그인 상태를 API로 위조"라 과제가 금지한 것이고, 폼이 깨져도 나머지 테스트가 통과해 버린다.
+
+### storageState의 경계
+
+| 쓴다 | 안 쓴다 |
+| --- | --- |
+| E2(만료) · E4(주문) — 검증 대상이 로그인이 아니다 | E1 · E1-SSR · E3 — **로그인 자체가 검증 대상**이다 |
+
+`e2e/auth.spec.ts`는 파일 상단에서 `test.use({ storageState: { cookies: [], origins: [] } })`로 비운다. 이미 로그인된 상태로 시작하면 proxy 리다이렉트도, `next` 복원도, 쿠키 발급도 일어나지 않아 **가드를 지워도 통과**한다.
+
+### 셀렉터
+
+전부 역할·이름 기반이고 `getByTestId`는 0건이다. 두 곳에서 좁히기가 필요했다.
+
+- `getByRole('alert')`이 Next의 라우트 안내자(`#__next-route-announcer__`, 역시 `role="alert"`)와 함께 2개로 잡혔다. E3는 `getByRole('main')` 안으로 좁혔고, E2는 error.tsx가 본문을 대체해 `main`이 없으므로 `.filter({ hasText: '세션이 만료됐어요' })`로 문구를 걸었다. 둘 다 테스트 id 없이 해결된다.
+
+### 시간 기반 대기
+
+없다. `waitForTimeout` 0건. 만료는 시계가 아니라 `scenario=expired` 쿠키로 재현한다(TTL을 줄이면 CI 속도에 따라 결과가 달라진다).
+
+### 결과
+
+| 실행 | 결과 |
+| --- | --- |
+| `--workers=4` | 12 passed (7.2s) |
+| `--workers=1` | 12 passed (18.6s) |
+| 기본 워커 3회 연속 | 12 passed / 12 passed / 12 passed (6.5 · 6.5 · 6.0s) |
+
+8주차 E2E 7개 + 이번 주 5개(E1 · E1-SSR · E2 · E3 · E4) = 12개. production build 위에서 돈다(`pnpm check`의 build → test:e2e 순서 그대로).
+
+### trace를 열어보고 본 것
+
+E1의 `toHaveURL('/login?next=%2Fcheckout')`을 `%2Fmypage`로 바꿔 실패시키고 `--trace=on`으로 기록해 열었다.
+
+- 타임라인에서 **어디서 멈췄는지가 액션 단위로 보인다**: `Navigate /products`(626ms) → `Click getByRole('banner').getByRole('link', {name:'주문서'})`(34ms) → `Expect toHaveURL`에서 **5006ms** 소모 후 실패. 앞의 두 액션은 정상이었으므로 "가드가 안 돌았다"가 아니라 "기대한 URL이 틀렸다"임이 시간 배분만 봐도 갈린다.
+- 대기 로그에 폴링 내역이 그대로 남는다: `unexpected value "http://127.0.0.1:3000/login?next=%2Fcheckout"`가 반복된다 — **실제 값이 무엇이었는지**를 trace가 알려준다. 터미널 출력에도 expected/received가 나오지만, trace에는 그 시점의 DOM 스냅샷(27개)과 네트워크가 함께 있어 "리다이렉트는 됐는데 파라미터만 다르다"를 화면으로 확인할 수 있었다.
+- 설정에 `trace` 옵션만 넣어두는 것과 읽는 것은 다르다는 말의 뜻: 실패 원인이 **단언인지 앱인지**를 가르는 게 이 타임라인이다.
+
+이 경험이 8주차 리뷰의 "요소 존재보다 URL·상태를 먼저 단언" 지적과 맞물린다. 이번 주 5개 테스트는 전부 `goto`/`click` 직후 URL을 먼저 단언하고 요소는 그 뒤에 본다.
