@@ -55,7 +55,7 @@ export const useWishlistStore = create<WishlistState>()(
     {
       name: WISHLIST_STORAGE_KEY,
       version: WISHLIST_STORAGE_VERSION,
-      storage: createValidatedStorage((stored) => ({
+      storage: createValidatedStorage(WISHLIST_STORAGE_VERSION, (stored) => ({
         productIds: toValidProductIds(stored?.productIds),
       })),
       skipHydration: true,

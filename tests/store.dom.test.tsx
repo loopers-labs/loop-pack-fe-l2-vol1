@@ -120,6 +120,18 @@ describe('헤더 개수', () => {
     await user.click(cartButtonIn('목록'));
     expect(headerCountText('장바구니')).toBe('장바구니 0');
   });
+
+  it('수량과 무관하게 서로 다른 상품 수를 보여준다', () => {
+    useCartStore.setState({
+      items: [
+        { productId: PRODUCT.id, quantity: 2, checked: true },
+        { productId: 'p-other', quantity: 3, checked: false },
+      ],
+    });
+    renderBothScreens();
+
+    expect(headerCountText('장바구니')).toBe('장바구니 2');
+  });
 });
 
 describe('구독 경계', () => {

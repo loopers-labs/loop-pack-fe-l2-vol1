@@ -1,15 +1,24 @@
 import { environmentManager, QueryClient } from '@tanstack/react-query';
 
+import { isUnauthorizedError } from './api-client';
+
 function makeQueryClient() {
+  const maxRetryCount = environmentManager.isServer() ? 0 : 2;
+
   return new QueryClient({
     defaultOptions: {
       queries: {
+        // 401은 다시 로그인하기 전엔 몇 번을 보내도 같으므로 재시도하지 않는다.
+        retry: (failureCount, error) =>
+          !isUnauthorizedError(error) && failureCount < maxRetryCount,
         /**
-         * 기본값은 서버 0회 · 브라우저 3회인데 `??` 병합이라 값을 그냥 넣으면 서버까지 덮어쓴다.
-         * 서버는 실패해도 브라우저가 다시 조회하므로 스트리밍을 막지 않게 0회를 유지한다.
-         * 브라우저는 3회차에 살아날 확률이 낮은 데 비해 대기만 4초 늘어 2회로 줄인다.
+         * 조회 실패는 각 화면이 인라인으로 처리하지만 401은 세션 만료라 화면 몫이 아니다.
+         * 렌더 단계에서 다시 던져 라우트 에러 경계가 상태 정리와 로그인 이동을 한 곳에서 맡는다.
          */
-        retry: environmentManager.isServer() ? 0 : 2,
+        throwOnError: isUnauthorizedError,
+      },
+      mutations: {
+        throwOnError: isUnauthorizedError,
       },
     },
   });

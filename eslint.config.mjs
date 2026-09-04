@@ -266,13 +266,27 @@ export default tseslint.config(
     rules: testingLibrary.configs['flat/react'].rules,
   },
   {
-    // 스타터가 제공한 mock 백엔드는 과제 판별 대상이라 수정하지 않고 스타일 룰만 끈다.
-    files: ['src/app/api/**'],
+    // 스타터가 제공한 mock 백엔드와 이벤트 로거는 과제 판별 대상이라 수정하지 않고 스타일 룰만 끈다.
+    files: ['src/app/api/**', 'src/analytics/**'],
     rules: {
       'import-x/order': 'off',
       '@stylistic/padding-line-between-statements': 'off',
       'boundaries/dependencies': 'off',
       'no-restricted-imports': 'off',
+    },
+  },
+  {
+    // 스타터 테스트는 단언 하네스 룰(위 테스트 블록)의 대상이 아니다.
+    files: ['src/app/api/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  {
+    // 콘솔에 찍는 게 역할인 프로바이더라 이 파일만 허용한다.
+    files: ['src/analytics/consoleProvider.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 );

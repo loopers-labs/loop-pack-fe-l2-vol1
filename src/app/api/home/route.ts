@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { categories, homeBanner, products, waitForMockApi } from "@/app/api/_data/commerce";
 import type { ApiErrorResponse, MockApiScenario } from "@/app/api/_data/types";
 import type { HomeResponse } from "@/entities/product";
+import { HTTP_STATUS } from "@/shared/http-status";
 
 const scenarioValues = ["empty", "error", "slow"] as const satisfies
   readonly MockApiScenario[];
@@ -17,7 +18,7 @@ export async function GET(
   if (scenario !== null && !isMockApiScenario(scenario)) {
     return NextResponse.json(
       { message: "요청 조건을 확인해주세요." },
-      { status: 400 },
+      { status: HTTP_STATUS.BAD_REQUEST },
     );
   }
 
@@ -26,7 +27,7 @@ export async function GET(
   if (scenario === "error") {
     return NextResponse.json(
       { message: "홈 데이터를 불러오지 못했습니다." },
-      { status: 500 },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 

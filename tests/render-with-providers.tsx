@@ -5,20 +5,31 @@ import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing';
 import type { ReactNode } from 'react';
 import { vi } from 'vitest';
 
+import { SessionProvider, type SessionUser } from '@/entities/session';
+
 type RenderWithProvidersOptions = {
   searchParams?: string;
   gcTime?: number;
+  queryClient?: QueryClient;
+  initialUser?: SessionUser | null;
 };
 
 /** 페이지급 통합 테스트가 앱과 같은 프로바이더(URL 상태, 서버 상태) 안에서 돌게 한다. */
 export function renderWithProviders(
   ui: ReactNode,
-  { searchParams = '', gcTime }: RenderWithProvidersOptions = {},
+  {
+    searchParams = '',
+    gcTime,
+    queryClient: providedQueryClient,
+    initialUser = null,
+  }: RenderWithProvidersOptions = {},
 ) {
-  const queryClient = new QueryClient({
-    // 조회 실패를 확인하는 테스트가 재시도 백오프를 실제로 기다리지 않게
-    defaultOptions: { queries: { retry: false, gcTime } },
-  });
+  const queryClient =
+    providedQueryClient ??
+    new QueryClient({
+      // 조회 실패를 확인하는 테스트가 재시도 백오프를 실제로 기다리지 않게
+      defaultOptions: { queries: { retry: false, gcTime } },
+    });
   // 진짜 라우터가 없으니 nuqs가 URL에 쓰려는 값은 이 콜백으로만 볼 수 있다
   const onUrlUpdate = vi.fn<(event: UrlUpdateEvent) => void>();
 
@@ -29,15 +40,18 @@ export function renderWithProviders(
       hasMemory
       onUrlUpdate={onUrlUpdate}
     >
-      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider initialUser={initialUser}>{ui}</SessionProvider>
+      </QueryClientProvider>
     </NuqsTestingAdapter>
   );
-  const { rerender } = render(tree(searchParams));
+  const { rerender, unmount } = render(tree(searchParams));
 
   return {
     user: userEvent.setup(),
     queryClient,
     onUrlUpdate,
+    unmount,
     // 뒤로 가기처럼 바깥에서 URL이 바뀐 상황. hasMemory면 어댑터가 새 searchParams를 URL로 동기화한다.
     // 단, 처음 넘긴 문자열과 같으면 어댑터가 변화를 못 보고 조용히 넘어가므로 막는다.
     navigate: (next: string) => {

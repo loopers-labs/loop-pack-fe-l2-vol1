@@ -58,12 +58,24 @@
 }
 
 .week05-filters input,
-.week05-filters select {
+.week05-filters select,
+.week05-form input {
   min-height: 40px;
   padding: 8px 10px;
   border: 1px solid #c8c8c8;
   background: transparent;
   color: inherit;
+}
+
+.week05-form {
+  display: grid;
+  gap: 12px;
+  max-width: 360px;
+}
+
+.week05-form label {
+  display: grid;
+  gap: 6px;
 }
 
 .week05-grid {

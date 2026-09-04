@@ -1,6 +1,12 @@
 import { http, HttpResponse } from 'msw';
 
-import { CATEGORIES, HOME_RESPONSE, PRODUCTS } from './fixtures';
+import {
+  CATEGORIES,
+  HOME_RESPONSE,
+  PRODUCTS,
+  SESSION_PASSWORD,
+  SESSION_USER,
+} from './fixtures';
 
 import {
   PRODUCT_SORTS,
@@ -8,6 +14,7 @@ import {
   type ProductListResponse,
   type ProductSort,
 } from '@/entities/product';
+import type { LoginRequest, SessionResponse } from '@/features/auth';
 
 const DEFAULT_PAGE_SIZE = 12;
 
@@ -58,9 +65,42 @@ export const productListResponse = (
   };
 };
 
+const isLoginRequest = (body: unknown): body is LoginRequest =>
+  typeof body === 'object' &&
+  body !== null &&
+  typeof (body as LoginRequest).email === 'string' &&
+  typeof (body as LoginRequest).password === 'string';
+
 export const handlers = [
   http.get('*/api/home', () => HttpResponse.json(HOME_RESPONSE)),
   http.get('*/api/products', ({ request }) =>
     HttpResponse.json(productListResponse(new URL(request.url).searchParams)),
   ),
+  /**
+   * 로그인만은 요청 계약을 검사한다. 본문 형태와 자격 증명을 확인하지 않으면
+   * 직렬화가 깨져도 통합 테스트가 통과해 API 연결을 단언하지 못한다.
+   */
+  http.post('*/api/auth/login', async ({ request }) => {
+    const body: unknown = await request.json().catch(() => null);
+
+    if (!isLoginRequest(body)) {
+      return HttpResponse.json(
+        { message: '요청 조건을 확인해주세요.' },
+        { status: 400 },
+      );
+    }
+
+    if (
+      body.email !== SESSION_USER.email ||
+      body.password !== SESSION_PASSWORD
+    ) {
+      return HttpResponse.json(
+        { message: '이메일 또는 비밀번호를 확인해주세요.' },
+        { status: 401 },
+      );
+    }
+
+    return HttpResponse.json<SessionResponse>({ user: SESSION_USER });
+  }),
+  http.post('*/api/auth/logout', () => new HttpResponse(null, { status: 204 })),
 ];

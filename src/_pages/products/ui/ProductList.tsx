@@ -2,10 +2,11 @@
 
 import { hashKey, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ProductListPending } from './ProductListPending';
 
+import { trackEvent } from '@/analytics/events';
 import {
   ProductCard,
   productQueries,
@@ -23,6 +24,16 @@ import { WishlistToggleButton } from '@/features/wishlist';
 export function ProductList() {
   const { conditions, changePage } = useProductListUrlState();
   const queryClient = useQueryClient();
+
+  // 진입 시점 조건으로 목록 진입당 한 번만 기록한다. 필터·정렬 변경은 계측 대상이 아니다.
+  useEffect(() => {
+    trackEvent('product_list_view', {
+      category: conditions.category,
+      sort: conditions.sort,
+      page: conditions.page,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 1회, 진입 시점 값 사용이 의도
+  }, []);
   const productListQuery = productQueries.list(toProductListQuery(conditions));
   const currentQueryHash = hashKey(productListQuery.queryKey);
   const [lastSuccessfulQueryKey, setLastSuccessfulQueryKey] = useState<

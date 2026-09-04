@@ -1,5 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { QueryClient } from '@tanstack/react-query';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
@@ -7,6 +7,7 @@ import { HomeContent } from '@/_pages/home/ui/HomeContent';
 import { productQueries } from '@/entities/product';
 import { HOME_RESPONSE } from '@tests/msw/fixtures';
 import { server } from '@tests/msw/server';
+import { renderWithProviders } from '@tests/render-with-providers';
 
 const failHome = () =>
   server.use(
@@ -19,11 +20,7 @@ const failHome = () =>
   );
 
 function renderHome(queryClient: QueryClient) {
-  render(
-    <QueryClientProvider client={queryClient}>
-      <HomeContent />
-    </QueryClientProvider>,
-  );
+  renderWithProviders(<HomeContent />, { queryClient });
 }
 
 function createTestQueryClient() {

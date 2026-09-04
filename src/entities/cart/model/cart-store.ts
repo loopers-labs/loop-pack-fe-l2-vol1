@@ -11,22 +11,35 @@ import {
 
 export const CART_STORAGE_KEY = 'commerce-cart';
 
-const CART_STORAGE_VERSION = 1;
+const CART_STORAGE_VERSION = 2;
+
+export type CartItem = {
+  productId: string;
+  quantity: number;
+  checked: boolean;
+};
 
 type CartState = {
-  productIds: string[];
+  items: CartItem[];
   /** 액션은 바뀌지 않아 상태가 아니다. 한 객체로 묶어 훅 하나로 내준다 */
   actions: {
     toggle: (productId: string) => void;
+    toggleChecked: (productId: string) => void;
+    setQuantity: (productId: string, quantity: number) => void;
+    removeItems: (productIds: string[]) => void;
   };
 };
 
-type PersistedCart = Pick<CartState, 'productIds'>;
+type PersistedCart = Pick<CartState, 'items'>;
 
-const EMPTY_PERSISTED_CART: PersistedCart = { productIds: [] };
+const EMPTY_PERSISTED_CART: PersistedCart = { items: [] };
+
+/** 주문 API가 요구하는 수량 계약과 같은 기준. 1 이상의 안전한 정수만 허용한다. */
+const isValidQuantity = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isSafeInteger(value) && value >= 1;
 
 /**
- * 유효한 상품 ID만 남긴다.
+ * 유효한 상품 ID만 남긴다. version 1 저장값을 옮길 때도 같은 기준을 쓴다.
  */
 const toValidProductIds = (value: unknown) =>
   Array.isArray(value)
@@ -39,35 +52,109 @@ const toValidProductIds = (value: unknown) =>
       ]
     : [];
 
+/** productId·수량·checked가 유효한 항목만 남기고, 같은 상품이 중복되면 앞의 것만 남긴다. */
+const toValidItems = (value: unknown): CartItem[] => {
+  if (!Array.isArray(value)) return [];
+
+  const itemByProductId = new Map<string, CartItem>();
+
+  for (const entry of value) {
+    const stored =
+      typeof entry === 'object' && entry !== null
+        ? (entry as Record<string, unknown>)
+        : undefined;
+    const productId = stored?.productId;
+    const quantity = stored?.quantity;
+    const checked = stored?.checked;
+
+    if (
+      typeof productId === 'string' &&
+      productId !== '' &&
+      isValidQuantity(quantity) &&
+      typeof checked === 'boolean' &&
+      !itemByProductId.has(productId)
+    ) {
+      itemByProductId.set(productId, { productId, quantity, checked });
+    }
+  }
+
+  return [...itemByProductId.values()];
+};
+
 export const useCartStore = create<CartState>()(
   persist(
-    (set) => ({
-      productIds: [],
+    (set, get) => ({
+      items: [],
       actions: {
         toggle: (productId) =>
           set((state) => ({
-            productIds: state.productIds.includes(productId)
-              ? state.productIds.filter((id) => id !== productId)
-              : [...state.productIds, productId],
+            items: state.items.some((item) => item.productId === productId)
+              ? state.items.filter((item) => item.productId !== productId)
+              : [...state.items, { productId, quantity: 1, checked: true }],
           })),
+        toggleChecked: (productId) => {
+          if (!get().items.some((item) => item.productId === productId)) return;
+
+          set((state) => ({
+            items: state.items.map((item) =>
+              item.productId === productId
+                ? { ...item, checked: !item.checked }
+                : item,
+            ),
+          }));
+        },
+        setQuantity: (productId, quantity) => {
+          if (!isValidQuantity(quantity)) return;
+
+          const item = get().items.find((item) => item.productId === productId);
+
+          if (!item || item.quantity === quantity) return;
+
+          set((state) => ({
+            items: state.items.map((item) =>
+              item.productId === productId ? { ...item, quantity } : item,
+            ),
+          }));
+        },
+        removeItems: (productIds) => {
+          const items = get().items;
+
+          if (!items.some((item) => productIds.includes(item.productId)))
+            return;
+
+          set({
+            items: items.filter((item) => !productIds.includes(item.productId)),
+          });
+        },
       },
     }),
     {
       name: CART_STORAGE_KEY,
       version: CART_STORAGE_VERSION,
-      storage: createValidatedStorage((stored) => ({
-        productIds: toValidProductIds(stored?.productIds),
+      storage: createValidatedStorage(CART_STORAGE_VERSION, (stored) => ({
+        items: toValidItems(stored?.items),
       })),
       skipHydration: true,
-      partialize: ({ productIds }) => ({ productIds }),
+      partialize: ({ items }) => ({ items }),
       /**
-       * 저장된 version이 CART_STORAGE_VERSION과 다를 때만 호출되고, 반환값이 곧 복원될 상태가 된다.
-       * 저장값은 코드보다 오래 살아남으므로, 담는 형태를 바꿀 때마다 version을 올리고
-       * 여기에 이전 버전을 새 형태로 옮기는 코드를 넣어야 한다. 예를 들어 수량이 붙어 1 -> 2로 올린다면
-       * `if (version === 1) return { items: persisted.productIds.map((id) => ({ id, quantity: 1 })) }` 처럼 쓴다.
-       * 지금은 옮겨올 이전 형태가 없어 알 수 없는 버전을 버리기만 한다.
+       * 저장값은 코드보다 오래 살아남는다. version 1은 수량 없는 ID 배열이므로
+       * 버리지 않고 수량 1에 선택된 항목으로 옮긴다. 그 밖의 알 수 없는 버전은 버린다.
        */
-      migrate: () => EMPTY_PERSISTED_CART,
+      migrate: (persisted, version) => {
+        if (version === 1) {
+          const storedV1 = persisted as { productIds?: unknown } | null;
+
+          return {
+            items: toValidProductIds(storedV1?.productIds).map((productId) => ({
+              productId,
+              quantity: 1,
+              checked: true,
+            })),
+          };
+        }
+
+        return EMPTY_PERSISTED_CART;
+      },
     },
   ),
 );

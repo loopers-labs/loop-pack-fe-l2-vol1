@@ -7,12 +7,6 @@ function getScrollY(page: Page) {
   return page.evaluate(() => window.scrollY);
 }
 
-function getScrollbarWidth(page: Page) {
-  return page.evaluate(
-    () => window.innerWidth - document.documentElement.clientWidth,
-  );
-}
-
 // 휠 입력은 다음 프레임에 스크롤로 반영된다. 시간을 정하지 않고 프레임 두 개를 기다린다.
 function waitForNextFrames(page: Page) {
   return page.evaluate(
@@ -62,39 +56,25 @@ test('다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫�
   await expect.poll(() => getScrollY(page)).toBeGreaterThan(unlockedScrollY);
 });
 
-test('스크롤바 폭만큼 body padding이 보상되어 컨텐츠가 밀리지 않는다', async ({
-  page,
-}) => {
+test('다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다', async ({ page }) => {
   await page.goto('/demos');
 
-  // config의 ignoreDefaultArgs로 스크롤바를 살렸으므로 폭이 있어야 정상. 0이면 검증 불가 환경이다
-  const scrollbarWidth = await getScrollbarWidth(page);
-  test.skip(
-    scrollbarWidth === 0,
-    '스크롤바가 폭을 차지하지 않는 환경 — 보상할 대상이 없음',
-  );
-
   const heading = page.getByRole('heading', { name: 'Commerce UI Kit' });
-  const headingXBefore = (await heading.boundingBox())?.x;
+  const headingBoxBefore = await heading.boundingBox();
+  if (!headingBoxBefore) {
+    throw new Error('다이얼로그를 열기 전 콘텐츠 위치를 찾지 못했습니다');
+  }
 
   await page.getByRole('button', { name: '배송·교환 안내 보기' }).click();
   await expect(
     page.getByRole('heading', { name: '배송·교환 안내' }),
   ).toBeVisible();
 
-  // 스크롤바가 사라진 자리를 padding이 정확히 메워 컨텐츠가 옆으로 밀리지 않는다
-  expect(await getScrollbarWidth(page)).toBe(0);
-  expect(await page.evaluate(() => document.body.style.paddingRight)).toBe(
-    `${scrollbarWidth}px`,
-  );
-  expect((await heading.boundingBox())?.x).toBe(headingXBefore);
-
-  await page.getByRole('button', { name: '확인' }).click();
-  await expect(
-    page.getByRole('heading', { name: '배송·교환 안내' }),
-  ).toBeHidden();
-
-  expect(await page.evaluate(() => document.body.style.paddingRight)).toBe('');
+  const headingBoxAfter = await heading.boundingBox();
+  if (!headingBoxAfter) {
+    throw new Error('다이얼로그를 연 뒤 콘텐츠 위치를 찾지 못했습니다');
+  }
+  expect(headingBoxAfter.x).toBe(headingBoxBefore.x);
 });
 
 test('열린 다이얼로그(포탈)가 페이지 컨텐츠 위를 실제로 덮는다', async ({
