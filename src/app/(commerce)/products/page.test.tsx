@@ -7,7 +7,7 @@ import { server } from "@/test/server";
 
 // 서버 컴포넌트를 client 컨텍스트(vitest)에서 부르므로 server-only 가드를 비운다.
 vi.mock("server-only", () => ({}));
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
+// redirect 호출은 이 아래에서 검증한다. next/navigation 목은 setup.ts가 전역으로 건다.
 
 import ProductList from "./page";
 

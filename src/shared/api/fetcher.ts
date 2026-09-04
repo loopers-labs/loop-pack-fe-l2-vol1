@@ -15,10 +15,24 @@ function resolveUrl(path: string): string {
 // 전역 throwOnError 정책이 kind·status를 보고 5xx는 경계로, 4xx·네트워크는 인라인으로 가른다.
 // no-store는 서버 프리패치가 자기 API를 부를 때 이 라우트를 매 요청 렌더로 만들어,
 // 빌드 타임에 빈 데이터가 구워지는 것을 막는다. 클라이언트 캐싱은 React Query가 맡는다.
-export async function fetchJson<T>(path: string, options?: { signal?: AbortSignal }): Promise<T> {
+type FetchOptions = {
+  signal?: AbortSignal;
+  method?: "GET" | "POST";
+  // 있으면 JSON으로 직렬화해 보낸다(로그인 등). GET 기본에는 없다.
+  body?: unknown;
+};
+
+export async function fetchJson<T>(path: string, options?: FetchOptions): Promise<T> {
+  const hasBody = options?.body !== undefined;
   let response: Response;
   try {
-    response = await fetch(resolveUrl(path), { cache: "no-store", signal: options?.signal });
+    response = await fetch(resolveUrl(path), {
+      method: options?.method ?? "GET",
+      cache: "no-store",
+      signal: options?.signal,
+      headers: hasBody ? { "Content-Type": "application/json" } : undefined,
+      body: hasBody ? JSON.stringify(options.body) : undefined,
+    });
   } catch (error) {
     // 취소(AbortError)는 그대로 던져 TanStack이 네트워크 실패가 아니라 취소로 인식하게 한다.
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -33,5 +47,9 @@ export async function fetchJson<T>(path: string, options?: { signal?: AbortSigna
     throw new ApiError("http", response.status, body?.message ?? "요청을 처리하지 못했습니다.");
   }
 
+  // 204(로그아웃)는 본문이 없어 json()이 실패하므로 그대로 반환한다.
+  if (response.status === 204) {
+    return undefined as T;
+  }
   return response.json() as Promise<T>;
 }

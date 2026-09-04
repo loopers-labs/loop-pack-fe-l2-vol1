@@ -1,0 +1,30 @@
+/* 로그인·로그아웃 버튼. 상태가 바뀌거나 로딩 점이 떠도 폭이 흔들리지 않게 크기를 고정한다. */
+.authButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 36px;
+  border: 1px solid transparent;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.authButton:disabled {
+  cursor: default;
+}
+
+/* 로그인은 로그인 페이지 주 버튼과 같은 채운 검정으로 강조한다. */
+.login {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+/* 로그아웃은 이미 로그인된 상태의 보조 동작이라 아웃라인으로 둔다(크기는 로그인과 같다). */
+.logout {
+  border-color: #c8c8c8;
+  background: transparent;
+  color: inherit;
+}

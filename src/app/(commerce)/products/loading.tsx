@@ -10,12 +10,27 @@ export default function Loading() {
     <>
       <section className="week05-section">
         <h1>상품 목록</h1>
+        {/* 실제 필터와 같은 구조·폭으로 그린다 — 라벨(위)+입력(아래) 구조와 컨트롤 폭을 그대로 맞춰
+            로드 후 가로·세로 이동이 없게 한다. 폭은 week-05-layout.css의 .week05-filters 고정값과 동일하다
+            (검색 200 / select 140 / 초기화 72). 초기화는 실제처럼 입력 바닥에 맞춰 하단 정렬한다. */}
         <div className="week05-filters" aria-hidden="true">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-16" />
+          <label>
+            검색
+            <Skeleton className="h-10 w-[200px]" />
+          </label>
+          <label>
+            카테고리
+            <Skeleton className="h-10 w-[140px]" />
+          </label>
+          <label>
+            정렬
+            <Skeleton className="h-10 w-[140px]" />
+          </label>
+          <label>
+            표시 개수
+            <Skeleton className="h-10 w-[140px]" />
+          </label>
+          <Skeleton className="h-10 w-[72px] self-end" />
         </div>
       </section>
 

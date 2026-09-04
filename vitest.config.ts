@@ -22,8 +22,16 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     // appOrigin은 미설정 시 throw하므로 테스트 환경에 origin을 준다(비배포 컨텍스트).
     env: { APP_ORIGIN: "http://localhost:3000" },
-    // e2e(Playwright)는 별도 러너라 제외한다. .stryker-tmp는 프로젝트 사본이 든 뮤테이션
-    // 샌드박스라, 제외하지 않으면 그 안의 (node_modules 포함) 테스트까지 주워 돈다.
-    exclude: ["e2e/**", "**/node_modules/**", ".claude/**", ".stryker-tmp/**"],
+    // e2e(Playwright)는 별도 러너라 제외한다. Advanced B의 생성 원본(docs/…)도 Playwright 문법이라
+    // 같은 이유로 뺀다 — 검수용 증거일 뿐 실행 대상이 아니다(vitest가 주우면 test.describe에서 터진다).
+    // .stryker-tmp는 프로젝트 사본이 든 뮤테이션 샌드박스라, 제외하지 않으면
+    // 그 안의 (node_modules 포함) 테스트까지 주워 돈다.
+    exclude: [
+      "e2e/**",
+      "docs/rfc/week09-advanced-b-generated/**",
+      "**/node_modules/**",
+      ".claude/**",
+      ".stryker-tmp/**",
+    ],
   },
 });

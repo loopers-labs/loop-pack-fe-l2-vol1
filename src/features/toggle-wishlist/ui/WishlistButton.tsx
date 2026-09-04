@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/analytics/schema";
 import { useIsWishlisted, useToggleWishlist } from "@/entities/wishlist";
 
 interface WishlistButtonProps {
@@ -12,13 +13,21 @@ export function WishlistButton({ productId, productName }: WishlistButtonProps) 
   const isWishlisted = useIsWishlisted(productId);
   const toggleWishlist = useToggleWishlist();
 
+  // 찜을 추가할 때만 wishlist_add를 찍는다. 해제에 대응하는 이벤트는 시드 스키마에 없다.
+  function handleClick() {
+    if (!isWishlisted) {
+      trackEvent("wishlist_add", { productId });
+    }
+    toggleWishlist(productId);
+  }
+
   return (
     <button
       type="button"
       className="week05-wish"
       aria-label={`${productName} 위시리스트`}
       aria-pressed={isWishlisted}
-      onClick={() => toggleWishlist(productId)}
+      onClick={handleClick}
     >
       {/* 상태는 aria-pressed가 전하므로 아이콘은 장식이다. 채움은 CSS가 그 속성으로 제어한다. */}
       <svg className="week05-wish-icon" viewBox="0 0 24 24" aria-hidden="true">

@@ -1,0 +1,14 @@
+/* 장바구니 비우기: 되돌릴 수 없는 보조 동작이라 주 버튼(주문서로 이동)과 경쟁하지 않게 작게 둔다. */
+.clear {
+  padding: 6px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: #767676;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.clear:disabled {
+  color: #c8c8c8;
+  cursor: default;
+}

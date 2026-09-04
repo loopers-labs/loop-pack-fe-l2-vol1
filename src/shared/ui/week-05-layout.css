@@ -21,7 +21,7 @@
   padding-bottom: 24px;
 }
 
-/* 헤더 버튼(장바구니 비우기)은 활성일 때 클릭 가능한 손 모양으로(빈 장바구니로 disabled면 기본 커서). */
+/* 헤더 버튼은 활성일 때 클릭 가능한 손 모양으로(disabled면 기본 커서). */
 .week05-header button:not(:disabled) {
   cursor: pointer;
 }
@@ -214,8 +214,19 @@
   color: inherit;
 }
 
+/* 컨트롤 폭을 고정한다. content-sized로 두면 로딩 스켈레톤(loading.tsx)이 폭을 못 맞춰 로드 시 가로로 틀어진다.
+   여기 값을 바꾸면 loading.tsx 스켈레톤 폭도 함께 맞춘다. */
+.week05-filters input {
+  width: 200px;
+}
+
+.week05-filters select {
+  width: 140px;
+}
+
 /* 초기화 버튼을 옆 select와 같은 40px 높이로 키우고, 라벨 텍스트가 없으니 아래로 정렬해 select 바닥에 맞춘다. */
 .week05-filters button {
+  width: 72px;
   height: 40px;
   align-self: flex-end;
 }

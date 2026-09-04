@@ -1,11 +1,12 @@
 "use client";
 
-import { type ChangeEvent, useEffect, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 
 import { QueryErrorResetBoundary, useQueryClient } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 
 import { useShellProductList } from "@/_pages/products/api/useShellProductList";
+import { trackEvent } from "@/analytics/schema";
 import type { CategoryId, ProductSort } from "@/entities/product/model/types";
 import { productListQueryOptions } from "@/features/products/api/queries";
 import { type PageSize } from "@/features/products/model/pagination";
@@ -32,6 +33,17 @@ export function ProductListView() {
 
   // 초기화가 비제어 검색 인풋(defaultValue)까지 비우도록, 리셋 시 이 key를 올려 인풋을 리마운트한다.
   const [filterResetKey, setFilterResetKey] = useState(0);
+
+  // 목록 진입을 1회 기록한다. 진입 시점의 조건을 담되, 이후 필터 변경은 각 핸들러가 별도로 찍는다.
+  // query를 deps에 넣으면 필터마다 재발화하므로 마운트 1회로 고정한다(진입 조건은 그 시점 값).
+  const enteredCondition = useRef({
+    category: query.category,
+    sort: query.sort,
+    page: query.page,
+  });
+  useEffect(() => {
+    trackEvent("product_list_view", enteredCondition.current);
+  }, []);
 
   // 다음 페이지를 미리 받아 둔다. 진입만으로 투기적으로 받지 않고,
   // "다음"에 마우스를 올리거나(hover) 포커스가 닿았을 때(keyboard) — 곧 누를 의도가 드러난 시점에만 받는다.
@@ -61,11 +73,15 @@ export function ProductListView() {
   }
 
   function handleCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
-    setQuery({ category: event.target.value as CategoryId | "all", page: 1 });
+    const category = event.target.value as CategoryId | "all";
+    trackEvent("category_filter_change", { category });
+    setQuery({ category, page: 1 });
   }
 
   function handleSortChange(event: ChangeEvent<HTMLSelectElement>) {
-    setQuery({ sort: event.target.value as ProductSort, page: 1 });
+    const sort = event.target.value as ProductSort;
+    trackEvent("sort_change", { sort });
+    setQuery({ sort, page: 1 });
   }
 
   // 개수를 바꾸면 기존 페이지 번호가 범위를 벗어날 수 있어 함께 1로 되돌린다.
@@ -75,6 +91,7 @@ export function ProductListView() {
   }
 
   function goToPage(page: number) {
+    trackEvent("page_change", { page });
     setQuery({ page });
   }
 

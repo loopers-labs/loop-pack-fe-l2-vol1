@@ -1,0 +1,13 @@
+/* 장바구니·주문서·주문내역 공통. 목록 하나뿐인 화면을 가운데 좁은 컬럼으로 모은다.
+   Tailwind preflight가 heading 기본 크기를 없애므로 제목 크기도 여기서 준다. */
+.page {
+  max-width: 480px;
+  margin: 56px auto 0;
+}
+
+.page h1 {
+  margin: 0 0 28px;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+}

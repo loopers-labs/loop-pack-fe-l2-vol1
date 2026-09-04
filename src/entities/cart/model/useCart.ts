@@ -6,6 +6,11 @@ export function useCartCount() {
   return useCartStore((state) => state.cartIds.length);
 }
 
+// 주문서가 담은 상품 id 목록을 읽는다. 배열이라 store가 바뀌면 리렌더된다(주문서는 라이브 cart를 보여준다).
+export function useCartIds() {
+  return useCartStore((state) => state.cartIds);
+}
+
 // 카드는 자기 상품의 포함 여부만 구독한다. 다른 상품이 담겨도 이 값이 안 바뀌면 리렌더되지 않는다.
 export function useIsInCart(productId: string) {
   return useCartStore((state) => state.cartIds.includes(productId));

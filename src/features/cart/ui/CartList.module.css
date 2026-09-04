@@ -1,0 +1,34 @@
+/* 비우기 같은 보조 동작을 목록 위 오른쪽에 둔다. 무엇을 넣을지는 페이지가 toolbar로 주입한다. */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.list {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid #ececec;
+}
+
+.remove {
+  padding: 6px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.message {
+  padding: 32px 0;
+  color: #767676;
+  text-align: center;
+}

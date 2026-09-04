@@ -2,6 +2,7 @@ export {
   useAddToCart,
   useCartCount,
   useCartHydrated,
+  useCartIds,
   useClearCart,
   useHydrateCart,
   useIsInCart,

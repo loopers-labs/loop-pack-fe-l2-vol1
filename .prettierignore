@@ -5,3 +5,5 @@ pnpm-lock.yaml
 # 제공된 이미지 매니페스트 표는 commerce.test.ts가 압축 형식(단일 공백)을 검증한다.
 # prettier의 표 정렬·밑줄 이스케이프가 그 계약을 깨므로 이 파일만 제외한다.
 docs/assets/week-05-product-images.md
+# Advanced B 생성 원본 — 검수용 증거라 포맷하지 않고 그대로 둔다
+docs/rfc/week09-advanced-b-generated/

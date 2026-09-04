@@ -4,8 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useCartStore } from "@/entities/cart/model/cartStore";
 import { useWishlistStore } from "@/entities/wishlist/model/wishlistStore";
+import { renderWithProviders } from "@/test/renderWithProviders";
+import { looperUser, withSession } from "@/test/session";
 import { Header } from "@/widgets/header/ui/Header";
 
+// 로그인 상태 테스트의 LogoutButton이 useRouter를 쓴다. next/navigation은 setup.ts에서 전역 목킹한다.
 beforeEach(() => {
   localStorage.clear();
   useCartStore.setState({ cartIds: [] });
@@ -72,5 +75,23 @@ describe("헤더 개수 파생", () => {
       useCartStore.getState().removeFromCart("p1");
     });
     expect(screen.getByText("장바구니 1")).toBeInTheDocument();
+  });
+});
+
+describe("헤더 로그인 상태", () => {
+  it("비로그인이면 로그인 링크를 보이고 로그아웃은 없다", () => {
+    // SessionProvider 없이 렌더하면 컨텍스트 기본값(null) → 비로그인.
+    render(<Header />);
+
+    expect(screen.getByRole("link", { name: "로그인" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "로그아웃" })).not.toBeInTheDocument();
+  });
+
+  it("로그인 상태면 이름과 로그아웃을 보이고 로그인 링크는 없다", () => {
+    renderWithProviders(withSession(looperUser(1), <Header />));
+
+    expect(screen.getByText("루퍼1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "로그인" })).not.toBeInTheDocument();
   });
 });

@@ -1,13 +1,18 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeProduct, makeProductListResponse } from "@/test/handlers";
 import { renderWithProviders } from "@/test/renderWithProviders";
 import { server } from "@/test/server";
 
 import { ProductListView } from "./ProductListView";
+
+const trackEvent = vi.hoisted(() => vi.fn());
+vi.mock("@/analytics/schema", () => ({ trackEvent }));
+
+beforeEach(() => trackEvent.mockClear());
 
 function renderView(searchParams?: Record<string, string>) {
   return renderWithProviders(<ProductListView />, { searchParams });
@@ -152,5 +157,51 @@ describe("ProductListView URL 재진입 — 컨트롤 복원", () => {
 
     expect(screen.getByRole("combobox", { name: /카테고리/ })).toHaveValue("fashion");
     expect(screen.getByRole("combobox", { name: /정렬/ })).toHaveValue("price-asc");
+  });
+});
+
+describe("ProductListView 계측 발화 조건", () => {
+  it("진입 시 product_list_view를 진입 시점 조건과 함께 1회 찍는다", () => {
+    renderView({ category: "fashion", sort: "popular", page: "2" });
+
+    expect(trackEvent).toHaveBeenCalledExactlyOnceWith("product_list_view", {
+      category: "fashion",
+      sort: "popular",
+      page: 2,
+    });
+  });
+
+  it("카테고리를 바꾸면 category_filter_change를 찍되 product_list_view는 다시 찍지 않는다", () => {
+    renderView();
+    trackEvent.mockClear(); // 진입 시 찍힌 product_list_view를 걷어내고 이후만 본다.
+
+    fireEvent.change(screen.getByRole("combobox", { name: /카테고리/ }), {
+      target: { value: "fashion" },
+    });
+
+    expect(trackEvent).toHaveBeenCalledExactlyOnceWith("category_filter_change", {
+      category: "fashion",
+    });
+  });
+
+  it("정렬을 바꾸면 sort_change를 찍는다", () => {
+    renderView();
+    trackEvent.mockClear();
+
+    fireEvent.change(screen.getByRole("combobox", { name: /정렬/ }), {
+      target: { value: "price-asc" },
+    });
+
+    expect(trackEvent).toHaveBeenCalledExactlyOnceWith("sort_change", { sort: "price-asc" });
+  });
+
+  it("다음 페이지로 이동하면 page_change를 새 page와 함께 찍는다", async () => {
+    // 페이지네이션은 totalCount>0일 때만 보이므로 결과가 있는 응답으로 렌더한다.
+    renderCapturingUrl({}, 30);
+    trackEvent.mockClear();
+
+    fireEvent.click(await screen.findByRole("button", { name: "다음" }));
+
+    expect(trackEvent).toHaveBeenCalledExactlyOnceWith("page_change", { page: 2 });
   });
 });

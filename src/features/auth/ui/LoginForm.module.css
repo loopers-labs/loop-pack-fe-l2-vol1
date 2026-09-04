@@ -1,0 +1,22 @@
+/* 목록 화면(week05)과 같은 팔레트·인풋 스타일을 쓴다. 포커스 아웃라인은 전역 .week05-page 규칙이 준다. */
+.form {
+  display: grid;
+  gap: 16px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.input {
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+}
+
+.error {
+  margin: 0;
+  color: #e0245e;
+  font-size: 14px;
+}

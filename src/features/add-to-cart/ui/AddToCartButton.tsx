@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/analytics/schema";
 import { useAddToCart, useIsInCart, useRemoveFromCart } from "@/entities/cart";
 
 interface AddToCartButtonProps {
@@ -13,13 +14,23 @@ export function AddToCartButton({ productId, productName }: AddToCartButtonProps
   const addToCart = useAddToCart();
   const removeFromCart = useRemoveFromCart();
 
+  // 담을 때만 cart_add를 찍는다. 빼기에 대응하는 이벤트는 시드 스키마에 없다.
+  function handleClick() {
+    if (isInCart) {
+      removeFromCart(productId);
+      return;
+    }
+    trackEvent("cart_add", { productId });
+    addToCart(productId);
+  }
+
   return (
     <button
       type="button"
       className="week05-cart"
       aria-label={`${productName} 장바구니`}
       aria-pressed={isInCart}
-      onClick={() => (isInCart ? removeFromCart(productId) : addToCart(productId))}
+      onClick={handleClick}
     >
       담기
     </button>

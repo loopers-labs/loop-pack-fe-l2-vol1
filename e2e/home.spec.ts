@@ -7,8 +7,10 @@ test("홈에 배너·카테고리·인기 상품·신상품이 보인다", async
 
   await expect(page.getByRole("heading", { name: "매일 새롭게 발견하는 취향" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "카테고리" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "인기 상품" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "신상품" })).toBeVisible();
+  // 섹션 제목은 h2로 좁힌다. 페이지 h1("… 인기 상품과 신상품")이 이 이름을 부분포함해,
+  // level을 안 주면 h1과 섹션 h2가 함께 잡혀 strict 위반이 난다.
+  await expect(page.getByRole("heading", { name: "인기 상품", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "신상품", level: 2 })).toBeVisible();
 });
 
 test("홈 첫 로드에서 클라이언트가 /api/home을 재요청하지 않는다", async ({ page }) => {
@@ -24,8 +26,9 @@ test("홈 첫 로드에서 클라이언트가 /api/home을 재요청하지 않�
   await page.goto("/");
   // 데이터가 첫 HTML에 이미 있어 서버 렌더 결과가 곧바로 보인다.
   await expect(page.getByRole("heading", { name: "매일 새롭게 발견하는 취향" })).toBeVisible();
-  // 하이드레이션 뒤 재요청이 없는지 잠시 지켜본다.
-  await page.waitForTimeout(500);
+  // 하이드레이션 뒤 재요청이 있었다면 네트워크가 잠잠해지기 전에 잡힌다. 고정 sleep 대신
+  // 네트워크 정지(조건)를 기다려, 늦은 재요청도 놓치지 않고 결정적으로 확인한다.
+  await page.waitForLoadState("networkidle");
 
   expect(homeApiRequests).toHaveLength(0);
 });

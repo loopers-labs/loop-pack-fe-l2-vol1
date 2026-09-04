@@ -1,11 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
+import { setupAnalytics } from "@/analytics/setup";
 import { useHydrateCart } from "@/entities/cart";
 import { useHydrateWishlist } from "@/entities/wishlist";
 import { makeQueryClient } from "@/shared/api/queryClient";
@@ -30,6 +31,10 @@ export function Providers({ children }: ProvidersProps) {
   const queryClient = getQueryClient();
   useHydrateCart();
   useHydrateWishlist();
+  // 계측을 클라 최상단에서 1회 켠다. 모든 화면 컴포넌트보다 먼저 초기화돼 첫 track이 큐를 거치지 않는다.
+  useEffect(() => {
+    setupAnalytics();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -1,0 +1,22 @@
+/* 화면의 주 동작 버튼. 로그인·주문서로 이동·주문하기가 같은 채운 검정 버튼이라 한 곳에서 정의한다.
+   button과 link 모두에 얹으므로 text-decoration도 여기서 없앤다. */
+.primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* button은 flex여도 기본이 content 폭이라, 컨테이너 폭을 채우게 명시한다(grid·anchor에도 무해). */
+  width: 100%;
+  min-height: 52px;
+  padding: 12px;
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  cursor: default;
+}
