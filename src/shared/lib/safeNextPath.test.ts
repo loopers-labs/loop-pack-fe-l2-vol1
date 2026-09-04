@@ -12,6 +12,12 @@ describe("safeNextPath — 외부로 나가는 값을 막는다", () => {
     ["스킴", "javascript:alert(1)"],
     ["빈 문자열", ""],
     ["깨진 퍼센트 이스케이프", "%E0%A4%A"],
+    // Codex 교차 검증에서 나온 자리. 브라우저 URL 파서가 탭·개행·캐리지리턴을
+    // 제거한 뒤 해석하므로, 제거 전에 보면 안전한 경로처럼 보인다.
+    ["인코딩된 개행", "/%0a/evil.example"],
+    ["인코딩된 캐리지리턴", "/%0d/evil.example"],
+    ["인코딩된 탭", "/%09/evil.example"],
+    ["생 개행", "/\n/evil.example"],
   ])("%s은 기본 경로로 떨어뜨린다 (%s)", (_label, input) => {
     expect(safeNextPath(input)).toBe(DEFAULT_NEXT_PATH);
   });

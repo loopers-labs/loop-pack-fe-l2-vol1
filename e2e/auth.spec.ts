@@ -1,3 +1,5 @@
+import { createSessionToken } from "@/app/api/_data/auth";
+import { SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
 import { authed, currentAccount, expect, setScenario, test } from "./support/fixtures";
 import { TEST_PASSWORD_VALUE } from "./support/accounts";
 import { checkoutPage, header, loginPage, ordersPage } from "./support/pages";
@@ -95,5 +97,35 @@ authed.describe("인증 — 세션 만료", () => {
     // 세션 만료 처리 자리가 한 곳(QueryCache.onError)이라, 화면은 그 결과만 그린다.
     await expect(ordersPage(page).failure()).toContainText("세션이 만료되었습니다");
     await expect(page.getByRole("main").getByRole("link", { name: "로그인" })).toBeVisible();
+  });
+});
+
+test.describe("인증 — 실제 TTL 만료", () => {
+  // 위 `expired` 시나리오가 못 덮는 경로다. 노브는 **서명이 유효한 쿠키를 그대로
+  // 두고** API만 401로 만들어서, 서버 레이아웃은 여전히 authenticated를 주입한다.
+  // 실제로 TTL이 지난 쿠키는 서버 검증에서도 떨어지므로 다른 코드를 탄다.
+  //
+  // Codex 교차 검증에서 이 구멍이 나왔다 — 고치기 전에는 초기 HTML이 그냥
+  // 미로그인이었고 "세션이 만료되었습니다"가 뜨지 않았다.
+  //
+  // 시간을 흘리지 않는다. 발급 시각을 과거로 준 토큰을 만든다.
+  test("TTL이 지난 쿠키로 들어오면 초기 HTML이 만료를 알린다", async ({ page }) => {
+    const account = currentAccount();
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+
+    await page.context().addCookies([
+      {
+        name: SESSION_COOKIE,
+        value: createSessionToken(account.id, twoHoursAgo),
+        url: "http://localhost:3000",
+      },
+    ]);
+
+    await page.goto("/orders");
+
+    // proxy는 쿠키가 있으니 통과시킨다(설계대로 — 서명 검증은 Edge에서 못 한다).
+    await expect(page).toHaveURL("/orders");
+    // 서버가 쿠키를 인정하지 않았다. 그건 미로그인이 아니라 만료다.
+    await expect(ordersPage(page).failure()).toContainText("세션이 만료되었습니다");
   });
 });

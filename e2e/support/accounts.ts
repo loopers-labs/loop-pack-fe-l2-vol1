@@ -11,9 +11,16 @@ import { accounts } from "@/app/api/_data/auth";
 // parallelIndex는 "동시에 도는 워커 슬롯" 번호다(0부터). workerIndex와 다르다 —
 // workerIndex는 재시작할 때마다 늘어나서 8을 넘을 수 있다.
 export const accountFor = (parallelIndex: number) => {
-  const account = accounts[parallelIndex % accounts.length];
+  // 처음엔 `parallelIndex % accounts.length`로 순환시켰는데, 그러면 동시 워커가
+  // 9개 이상일 때 슬롯 0과 8이 **같은 계정을 쓰면서 조용히 통과한다** —
+  // 서로의 주문이 상대 목록에 보이고, 그건 테스트 실패가 아니라 잘못된 초록불이다.
+  // 순환하지 않고 던진다(Codex 교차 검증에서 나온 자리다).
+  const account = accounts[parallelIndex];
   if (account === undefined) {
-    throw new Error("계정 목록이 비어 있습니다.");
+    throw new Error(
+      `워커 슬롯 ${parallelIndex}에 줄 계정이 없습니다(계정 ${accounts.length}개). ` +
+        `playwright.config.ts의 workers를 ${accounts.length} 이하로 두세요.`,
+    );
   }
   return account;
 };
