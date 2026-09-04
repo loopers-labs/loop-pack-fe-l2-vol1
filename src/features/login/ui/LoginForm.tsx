@@ -2,8 +2,10 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { sessionQueries } from '@/entities/session';
+import { analyticsEvents } from '@/shared/analytics/events';
+import { HttpError } from '@/shared/api/errors';
 import { useLogin } from '../model/useLogin';
 
 export function LoginForm({ redirectTo }: { redirectTo: string }) {
@@ -13,12 +15,26 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   const [password, setPassword] = useState('');
   const { mutate, isPending, error } = useLogin();
 
+  // 어디서 왔는지(`from`)는 복원 경로다 — 직접 진입이면 'direct' (RFC A절).
+  const from = redirectTo === '/' ? 'direct' : redirectTo;
+  useEffect(() => {
+    analyticsEvents.loginStart(from);
+  }, [from]);
+
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
     mutate(
       { email, password },
       {
+        onError: (loginError) => {
+          analyticsEvents.loginFail(
+            loginError instanceof HttpError && loginError.status === 401
+              ? 'INVALID_CREDENTIALS'
+              : 'SERVER_ERROR',
+          );
+        },
         onSuccess: (user) => {
+          analyticsEvents.loginSuccess(user.id, from);
           // 세션 캐시를 응답으로 바로 채운다 — 헤더가 이동 전에 갱신된다.
           queryClient.setQueryData(sessionQueries.me().queryKey, user);
           // replace: 뒤로 가기로 로그인 화면에 되돌아오지 않게 한다.
