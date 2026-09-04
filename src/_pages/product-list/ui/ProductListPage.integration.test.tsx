@@ -2,6 +2,7 @@ import '@/test/setup/msw'
 import { HttpResponse, delay, http } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { StrictMode, useState, type JSX } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
@@ -56,6 +57,44 @@ function renderAnalyticsProductList({
       </NuqsTestingAdapter>
     </QueryClientProvider>,
   )
+}
+
+function UrlDrivenProductList(): JSX.Element {
+  const [searchParams, setSearchParams] = useState('')
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setSearchParams('?category=fashion')}
+      >
+        패션 URL로 이동
+      </button>
+      <button type="button" onClick={() => setSearchParams('?q=fail')}>
+        실패 URL로 이동
+      </button>
+      <NuqsTestingAdapter searchParams={searchParams} hasMemory>
+        <ProductListPage />
+      </NuqsTestingAdapter>
+    </>
+  )
+}
+
+function renderUrlDrivenProductList(): {
+  queryClient: QueryClient
+  user: ReturnType<typeof userEvent.setup>
+} {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <UrlDrivenProductList />
+    </QueryClientProvider>,
+  )
+
+  return { queryClient, user: userEvent.setup() }
 }
 
 afterEach(() => {
@@ -297,6 +336,103 @@ describe('상품 목록 상태', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('총 3개')).toBeInTheDocument()
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull()
+  })
+
+  it('필터 갱신 중에는 이전 목록을 유지하고 최초 로딩 상태와 구분한다', async () => {
+    const updatedProduct = {
+      ...testProducts[1],
+      id: 'fashion-only',
+      name: '패션 전용 상품',
+    }
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, async ({ request }) => {
+        if (new URL(request.url).searchParams.get('category') === 'fashion') {
+          await delay(100)
+          return HttpResponse.json({
+            ...defaultProductListResponse,
+            products: [updatedProduct],
+            totalCount: 1,
+          })
+        }
+        return HttpResponse.json(defaultProductListResponse)
+      }),
+    )
+    const { container, user } = renderProductList()
+    const firstProduct = defaultProductListResponse.products[0]
+    const results = screen.getByRole('region', { name: '상품 검색 결과' })
+
+    expect(results).toHaveAttribute('aria-busy', 'true')
+    await screen.findByRole('heading', { name: firstProduct.name })
+    expect(results).toHaveAttribute('aria-busy', 'false')
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: '카테고리' }),
+      'fashion',
+    )
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '목록을 갱신하는 중입니다…',
+    )
+    expect(results).toHaveAttribute('aria-busy', 'false')
+    expect(container.querySelector('[aria-busy="true"]')).toBeNull()
+    expect(
+      screen.getByRole('heading', { name: firstProduct.name }),
+    ).toBeInTheDocument()
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull()
+
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    })
+    expect(
+      screen.getByRole('heading', { name: updatedProduct.name }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: firstProduct.name }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('URL로 이동한 직전 성공 목록을 다음 갱신 실패 때 유지한다', async () => {
+    const initialProduct = { ...testProducts[0], name: '최초 URL 상품' }
+    const fashionProduct = { ...testProducts[1], name: '패션 URL 상품' }
+    server.use(
+      http.get(PRODUCTS_ENDPOINT, ({ request }) => {
+        const params = new URL(request.url).searchParams
+        if (params.get('q') === 'fail') {
+          return HttpResponse.json(
+            { message: '목록을 불러오지 못했습니다.' },
+            { status: 500 },
+          )
+        }
+        const product =
+          params.get('category') === 'fashion' ? fashionProduct : initialProduct
+        return HttpResponse.json({
+          ...defaultProductListResponse,
+          products: [product],
+          totalCount: 1,
+        })
+      }),
+    )
+    const { queryClient, user } = renderUrlDrivenProductList()
+
+    await screen.findByRole('heading', { name: initialProduct.name })
+    await user.click(screen.getByRole('button', { name: '패션 URL로 이동' }))
+    await screen.findByRole('heading', { name: fashionProduct.name })
+    queryClient.setQueryData(['products', { prefetched: true }], {
+      ...defaultProductListResponse,
+      products: [{ ...testProducts[2], name: '화면에 표시하지 않은 상품' }],
+      totalCount: 1,
+    })
+    await user.click(screen.getByRole('button', { name: '실패 URL로 이동' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '목록을 갱신하지 못했습니다. 아래는 직전 결과입니다.',
+    )
+    expect(
+      screen.getByRole('heading', { name: fashionProduct.name }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: initialProduct.name }),
+    ).not.toBeInTheDocument()
   })
 
   it('빈 성공 응답은 0개 상태로 표시하고 상품과 페이지 이동을 숨긴다', async () => {
