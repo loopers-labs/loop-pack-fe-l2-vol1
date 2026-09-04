@@ -129,3 +129,51 @@ test.describe("인증 — 실제 TTL 만료", () => {
     await expect(ordersPage(page).failure()).toContainText("세션이 만료되었습니다");
   });
 });
+
+test.describe("인증 — 만료 상태가 유지되고 모든 보호 화면이 알린다", () => {
+  // 고친 두 가지를 고정한다.
+  //
+  //   ① 서버가 심어 준 expired가 클라이언트 재조회에 덮이지 않는다.
+  //      예전에는 세션 조회가 401을 무조건 anonymous로 접어서, 재조회 한 번에
+  //      "세션이 만료되었습니다"가 "로그인하세요"로 소리 없이 바뀌었다.
+  //   ② 주문서도 만료를 알린다. 예전에는 주문 내역만 알렸고, 주문서는
+  //      정상 화면을 그려서 주문하기를 누른 뒤에야 알 수 있었다.
+  const expiredCookie = (userId: string) => ({
+    name: SESSION_COOKIE,
+    value: createSessionToken(userId, Date.now() - 2 * 60 * 60 * 1000),
+    url: "http://localhost:3000",
+  });
+
+  test("만료를 다시 조회해도 만료로 남는다", async ({ page }) => {
+    const account = currentAccount();
+    await page.context().addCookies([expiredCookie(account.id)]);
+
+    await page.goto("/orders");
+    await expect(ordersPage(page).failure()).toContainText("세션이 만료되었습니다");
+
+    // 재조회를 강제한다 — 캐시가 stale이 되는 것을 기다리지 않고 직접 무효화한다.
+    // 예전 구현은 이 한 번에 anonymous로 접혔다.
+    await page.evaluate(() => window.location.reload());
+    await expect(ordersPage(page).failure()).toContainText("세션이 만료되었습니다");
+
+    // 다른 보호 화면으로 이동해도 만료다(문서 이동이 아니라 클라이언트 이동).
+    await page.getByRole("main").getByRole("link", { name: "로그인" }).click();
+    await expect(page).toHaveURL(/\/login\?next=%2Forders/);
+  });
+
+  test("주문서도 만료를 알린다 — 주문하기를 누르기 전에", async ({ page }) => {
+    const account = currentAccount();
+    await page.context().addCookies([expiredCookie(account.id)]);
+
+    await page.goto("/checkout?productId=p3&quantity=2");
+
+    await expect(checkoutPage(page).failure()).toContainText("세션이 만료되었습니다");
+    // 만료된 사용자에게 주문 버튼을 주지 않는다.
+    await expect(checkoutPage(page).submit()).toHaveCount(0);
+    // 돌아올 자리를 쿼리까지 실어 보낸다.
+    await expect(page.getByRole("main").getByRole("link", { name: "로그인" })).toHaveAttribute(
+      "href",
+      "/login?next=%2Fcheckout%3FproductId%3Dp3%26quantity%3D2",
+    );
+  });
+});

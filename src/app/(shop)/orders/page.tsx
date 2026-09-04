@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SessionGate } from "@/features/auth";
 import { OrdersPage } from "@/_pages/orders/ui/OrdersPage";
 
 export const metadata: Metadata = { title: "주문 내역" };
@@ -7,5 +8,9 @@ export const metadata: Metadata = { title: "주문 내역" };
 // 들어온 요청의 쿠키를 자동으로 싣지 않는다. 쿠키를 손으로 옮겨 self-HTTP를 하는
 // 대신 브라우저가 직접 조회한다 — 보호 경로라 proxy가 이미 걸러 준 뒤다.
 export default function Page() {
-  return <OrdersPage />;
+  return (
+    <SessionGate>
+      <OrdersPage />
+    </SessionGate>
+  );
 }

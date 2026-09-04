@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { HttpError, fetchJson, isServerFault } from "@/shared/api";
+import { acceptSession, rejectSession } from "../model/resolveSession";
 import type { SessionResponse, SessionState } from "../model/types";
 
 // 세션은 요청마다 값이 달라지는 서버 상태다. 5주차부터 써온 zustand 패턴을 쓰지 않는다 —
@@ -7,21 +8,23 @@ import type { SessionResponse, SessionState } from "../model/types";
 // 브라우저가 알 방법이 없다. 서버가 소유하고 화면은 조회한다.
 export const SESSION_QUERY_KEY = ["session"];
 
-export const ANONYMOUS: SessionState = { status: "anonymous" };
-
 // /api/auth/me는 "로그인 안 함"과 "세션 만료"를 같은 401로 돌려준다.
-// 이 조회는 둘을 가르지 않고 anonymous로 접는다. 만료는 응답 하나로 알 수 없고
-// "인정받던 세션이 거절됐다"는 전이로만 알 수 있어서, 그 판단은 sessionExpiry.ts에 있다.
+// 그래서 응답만 보고는 가를 수 없고, **직전 상태**와 함께 봐야 한다.
+// 그 규칙은 resolveSession.ts 한 곳에 있다 — 여기서 다시 판단하지 않는다.
+//
+// 이 조회가 직전 상태를 읽는 것이 중요하다. 예전에는 401을 무조건 anonymous로
+// 접었는데, 그러면 서버가 심어 준 expired가 60초 뒤 첫 재조회에서 지워졌다.
 export function sessionQueryOptions() {
   return queryOptions({
     queryKey: SESSION_QUERY_KEY,
-    queryFn: async (): Promise<SessionState> => {
+    queryFn: async ({ client }): Promise<SessionState> => {
+      const previous = client.getQueryData<SessionState>(SESSION_QUERY_KEY);
       try {
         const session = await fetchJson<SessionResponse>("/api/auth/me");
-        return { status: "authenticated", user: session.user };
+        return acceptSession(session.user);
       } catch (error) {
         if (error instanceof HttpError && error.status === 401) {
-          return ANONYMOUS;
+          return rejectSession(previous);
         }
         throw error;
       }

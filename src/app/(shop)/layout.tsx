@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getQueryClient } from "@/_app/getQueryClient";
 import { readSessionToken } from "@/app/api/_data/auth";
 import { SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
-import { ANONYMOUS, SESSION_QUERY_KEY, type SessionState } from "@/entities/session";
+import { SESSION_QUERY_KEY, sessionFromCookie } from "@/entities/session";
 import { Header } from "@/widgets/header";
 
 // ── 왜 라우트 그룹인가 ──────────────────────────────────────────────────────
@@ -39,12 +39,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   // 만료 판정이 클라이언트 쪽 전이에서 일어난다. 두 경로가 다르다.
   const cookie = (await cookies()).get(SESSION_COOKIE);
   const user = readSessionToken(cookie?.value);
-  const session: SessionState =
-    user !== null
-      ? { status: "authenticated", user }
-      : cookie === undefined
-        ? ANONYMOUS
-        : { status: "expired" };
+  const session = sessionFromCookie(cookie !== undefined, user);
 
   // 조회가 아니라 주입이다. 서버가 이미 답을 아는 값을 다시 물을 이유가 없고,
   // 브라우저의 첫 렌더가 같은 값을 보게 해야 hydration이 어긋나지 않는다.

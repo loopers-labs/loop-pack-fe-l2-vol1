@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { HttpError } from "@/shared/api";
 import { SESSION_QUERY_KEY } from "../api/sessionQuery";
+import { rejectSession } from "./resolveSession";
 import type { SessionState } from "./types";
 
 // ── 세션 만료를 처리하는 단 하나의 자리 ─────────────────────────────────────
@@ -31,10 +32,9 @@ export function handleQueryError(
     return;
   }
 
+  // 판정은 resolveSession이 한다. 여기서 하는 일은 "어떤 401을 세션 판정에
+  // 넘길지" 고르는 것뿐이다 — /api/auth/me의 401은 이 경로로 오지 않는다
+  // (그건 조회 자신이 직접 처리한다).
   const previous = queryClient.getQueryData<SessionState>(SESSION_QUERY_KEY);
-  // 로그인한 적 없는 사람이 보호된 API를 직접 부른 경우다. 만료가 아니다.
-  const next: SessionState =
-    previous?.status === "authenticated" ? { status: "expired" } : { status: "anonymous" };
-
-  queryClient.setQueryData(SESSION_QUERY_KEY, next);
+  queryClient.setQueryData(SESSION_QUERY_KEY, rejectSession(previous));
 }

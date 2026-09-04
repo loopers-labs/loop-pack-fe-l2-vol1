@@ -14,6 +14,9 @@ type CheckoutPageProps = {
 
 function describeFailure(error: unknown): string {
   if (error instanceof HttpError && error.status === 401) {
+    // 여기 오는 401은 "주문을 누른 순간 만료됐다"는 드문 경우다. 화면 진입 시점의
+    // 만료는 SessionGate가 이미 걸렀고, 이 401이 세션 상태를 expired로 바꾸면
+    // 다음 렌더에서 Gate가 받는다.
     return "세션이 만료되었습니다. 다시 로그인해 주세요.";
   }
   return "주문을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
