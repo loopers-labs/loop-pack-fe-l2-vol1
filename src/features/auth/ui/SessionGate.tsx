@@ -17,19 +17,30 @@ export function SessionGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  if (session?.status !== "expired") {
+  // **authenticated가 아니면 전부 막는다.** 처음엔 expired만 막았는데, 그러면
+  // 로그아웃 직후(anonymous)에 보호 화면이 이동이 끝날 때까지 계속 열려 있었다.
+  // 문의 이름이 "세션 게이트"라면 통과 조건은 "세션이 있다" 하나여야 한다.
+  if (session?.status === "authenticated") {
     return children;
   }
 
+  // 서버가 (shop) 레이아웃에서 항상 심어 주므로 여기서 undefined는 오지 않는다.
+  // 그래도 왔다면 "모른다"이지 "있다"가 아니므로 막는 쪽이 맞다.
+  const expired = session?.status === "expired";
+
   // 돌아올 자리를 그대로 실어 보낸다. 만료로 쫓겨난 사람이 로그인한 뒤
   // 홈으로 떨어지면, 하려던 일을 처음부터 다시 찾아야 한다.
-  const query = searchParams.toString();
+  // useSearchParams()는 null을 돌려줄 수 있다(Suspense 경계 밖 등).
+  // 조건을 못 읽었다고 로그인 링크를 못 만들 이유는 없다 — 경로만으로 돌아간다.
+  const query = searchParams?.toString() ?? "";
   const next = query === "" ? pathname : `${pathname}?${query}`;
 
   return (
     <main className="shop-page">
       <div className="shop-state" role="alert">
-        <p>세션이 만료되었습니다. 다시 로그인해 주세요.</p>
+        <p>
+          {expired ? "세션이 만료되었습니다. 다시 로그인해 주세요." : "로그인이 필요한 화면입니다."}
+        </p>
         <Link href={`/login?next=${encodeURIComponent(next)}`}>로그인</Link>
       </div>
     </main>

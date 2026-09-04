@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { resetCart } from "@/entities/cart";
-import { ANONYMOUS, SESSION_QUERY_KEY } from "@/entities/session";
+import { ANONYMOUS, AUTH_MUTATION_KEY, SESSION_QUERY_KEY } from "@/entities/session";
 import { resetWishlist } from "@/entities/wishlist";
 import { resetUser } from "@/shared/analytics";
 import { postJson } from "@/shared/api";
@@ -12,6 +12,9 @@ export function useLogout() {
   const router = useRouter();
 
   return useMutation({
+    // 세션 판정에서 빼는 표식. 로그인 실패의 401은 "자격 증명이 틀렸다"는
+    // 뜻이지 "세션이 만료됐다"가 아니다(entities/session/model/sessionExpiry.ts).
+    mutationKey: [...AUTH_MUTATION_KEY, "logout"],
     mutationFn: () => postJson<null>("/api/auth/logout"),
     onSuccess: () => {
       // ── 로그아웃 시 클라이언트 상태를 지운다 ────────────────────────────
@@ -30,6 +33,8 @@ export function useLogout() {
 
       // 서버 상태는 캐시를 통째로 비운다. 주문 내역처럼 그 사람 것만 담긴 응답이
       // 남아 있으면 다음 사람이 그것을 본다.
+      // 날아가 있던 세션 조회가 늦게 끝나 anonymous를 덮지 않게 먼저 끊는다.
+      void queryClient.cancelQueries({ queryKey: SESSION_QUERY_KEY });
       queryClient.clear();
       queryClient.setQueryData(SESSION_QUERY_KEY, ANONYMOUS);
       router.replace("/");

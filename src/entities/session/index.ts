@@ -1,5 +1,5 @@
 export { SESSION_QUERY_KEY, sessionQueryOptions } from "./api/sessionQuery";
-export { handleQueryError } from "./model/sessionExpiry";
+export { AUTH_MUTATION_KEY, handleMutationError, handleQueryError } from "./model/sessionExpiry";
 export {
   ANONYMOUS,
   EXPIRED,

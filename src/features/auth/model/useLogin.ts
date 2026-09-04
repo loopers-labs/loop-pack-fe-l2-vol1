@@ -1,6 +1,7 @@
 "use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  AUTH_MUTATION_KEY,
   SESSION_QUERY_KEY,
   type LoginRequest,
   type SessionResponse,
@@ -14,6 +15,9 @@ export function useLogin(nextPath: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // 세션 판정에서 빼는 표식. 로그인 실패의 401은 "자격 증명이 틀렸다"는
+    // 뜻이지 "세션이 만료됐다"가 아니다(entities/session/model/sessionExpiry.ts).
+    mutationKey: [...AUTH_MUTATION_KEY, "login"],
     // 로그인은 사용자 액션의 부수효과다 — effect가 아니라 이벤트 핸들러에서 부른다.
     mutationFn: (credentials: LoginRequest) =>
       postJson<SessionResponse>("/api/auth/login", credentials),
@@ -35,6 +39,8 @@ export function useLogin(nextPath: string | null) {
       trackEvent(EVENT.loginSuccess, { from: safeNextPath(nextPath) });
 
       const session: SessionState = { status: "authenticated", user: data.user };
+      // 날아가 있던 세션 조회가 늦게 끝나 방금 만든 상태를 덮지 않게 끊는다.
+      void queryClient.cancelQueries({ queryKey: SESSION_QUERY_KEY });
       // 응답이 이미 사용자를 주므로 다시 묻지 않는다.
       queryClient.setQueryData(SESSION_QUERY_KEY, session);
 
