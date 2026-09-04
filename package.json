@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "pnpm build && playwright test --config playwright.week08.config.ts",
+    "test:e2e": "pnpm build && playwright test --config playwright.week09.config.ts",
     "observe": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
