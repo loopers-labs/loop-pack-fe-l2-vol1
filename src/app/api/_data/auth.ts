@@ -1,4 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import type { Order, OrderItem } from "@/entities/order";
+import type { SessionUser } from "@/entities/session";
 import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
 
 // 이 파일은 node:crypto 를 쓴다. Node 런타임(API 라우트)에서만 import 해야 한다.
@@ -8,11 +10,9 @@ import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
 // 상품 id 검증을 모두 여기서 처리한다
 
 // 인증 응답 계약. 본인 구조에 맞는 자리로 옮겨도 된다
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-};
+// 화면과 공유하는 응답 계약은 entities가 소유한다(entities/product와 같은 방향).
+// 여기 남는 것은 mock 백엔드 안에서만 쓰는 타입과 서버 전용 헬퍼다.
+export type AuthUser = SessionUser;
 
 export type AuthScenario = "invalid" | "expired" | "error" | "slow";
 
@@ -20,37 +20,14 @@ export type AuthErrorResponse = {
   message: string;
 };
 
-export type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-export type SessionResponse = {
-  user: AuthUser;
-};
-
-export type OrderItem = {
-  productId: string;
-  quantity: number;
-};
-
-export type Order = {
-  id: string;
-  createdAt: string;
-  items: OrderItem[];
-};
-
-export type OrderCreateRequest = {
-  items: OrderItem[];
-};
-
-export type OrderCreateResponse = {
-  order: Order;
-};
-
-export type OrderListResponse = {
-  orders: Order[];
-};
+export type { LoginRequest, SessionResponse, SessionUser } from "@/entities/session";
+export type {
+  Order,
+  OrderCreateRequest,
+  OrderCreateResponse,
+  OrderItem,
+  OrderListResponse,
+} from "@/entities/order";
 
 export const TEST_PASSWORD = "looper1234";
 

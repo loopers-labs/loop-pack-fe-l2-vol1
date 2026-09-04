@@ -1,0 +1,35 @@
+"use client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { resetCart } from "@/entities/cart";
+import { ANONYMOUS, SESSION_QUERY_KEY } from "@/entities/session";
+import { resetWishlist } from "@/entities/wishlist";
+import { postJson } from "@/shared/api";
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: () => postJson<null>("/api/auth/logout"),
+    onSuccess: () => {
+      // ── 로그아웃 시 클라이언트 상태를 지운다 ────────────────────────────
+      // 장바구니·위시리스트는 서버에 없고 이 브라우저에만 있다. 남겨두면 공용
+      // PC에서 다음 사람이 앞사람이 담은 것을 본다. "편의"보다 "남의 흔적이
+      // 보이지 않는 것"이 크다고 봤다.
+      //
+      // 반대 선택(남기기)도 가능하다 — 로그인은 결제 경계에서만 요구하므로
+      // 장바구니는 비로그인 자산이라고 볼 수 있다. 그 경우 localStorage로
+      // 영속시켜야 말이 되는데, 그러면 공용 PC 문제가 더 커진다. 그래서 지운다.
+      resetCart();
+      resetWishlist();
+
+      // 서버 상태는 캐시를 통째로 비운다. 주문 내역처럼 그 사람 것만 담긴 응답이
+      // 남아 있으면 다음 사람이 그것을 본다.
+      queryClient.clear();
+      queryClient.setQueryData(SESSION_QUERY_KEY, ANONYMOUS);
+      router.replace("/");
+      router.refresh();
+    },
+  });
+}

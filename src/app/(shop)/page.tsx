@@ -4,7 +4,7 @@ import { getQueryClient } from "@/_app/getQueryClient";
 import { homeQueryOptions } from "@/_pages/home/api/homeQuery";
 import { HomePage } from "@/_pages/home/ui/HomePage";
 import { ConfigError, requireAppOrigin } from "@/shared/config";
-import { commonOpenGraph } from "./layout";
+import { commonOpenGraph } from "../layout";
 
 // 홈 데이터를 서버에서 미리 받아 초기 HTML에 담는다.
 // 이렇게 해야 Hero가 document 안에서 발견된다 — 브라우저가 JS를 받고 쿼리를
