@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { homeQueryOptions } from '@/_pages/home/api/homeQueries';
 import type { Product } from '@/entities/product/model/types';
@@ -76,12 +77,13 @@ export function HomeClient({ scenario }: HomeClientProps) {
                 href={`/products?category=${category.id}`}
                 className="group/category flex min-h-11 flex-col items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-950"
               >
-                <div className="aspect-square w-full max-w-28 overflow-hidden rounded-lg bg-neutral-100">
+                <div className="relative aspect-square w-full max-w-28 overflow-hidden rounded-lg bg-neutral-100">
                   {categoryThumbnails[category.id] && (
-                    <img
+                    <Image
                       src={categoryThumbnails[category.id]}
                       alt=""
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 639px) calc(20vw - 13px), (max-width: 671px) calc(20vw - 23px), 112px"
                       className="size-full object-cover transition-transform duration-300 group-hover/category:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover/category:scale-100"
                     />
                   )}

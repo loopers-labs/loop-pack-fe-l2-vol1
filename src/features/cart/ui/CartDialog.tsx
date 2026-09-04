@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/shared/ui/dialog';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
@@ -29,10 +30,12 @@ export function CartDialog() {
 
           {product && (
             <div className="mt-4 flex gap-3">
-              <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-bg">
-                <img
+              <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-bg">
+                <Image
                   src={product.image}
                   alt={product.name}
+                  fill
+                  sizes="64px"
                   className="size-full object-cover"
                 />
               </div>

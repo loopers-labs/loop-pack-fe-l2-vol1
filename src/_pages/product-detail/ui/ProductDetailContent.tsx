@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
 import { getProductDiscount } from '@/entities/product/lib/productPricing';
@@ -69,10 +70,13 @@ export function ProductDetailContent() {
       <main className="mx-auto w-full max-w-[1256px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
         <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-16">
           {/* 상품 이미지 */}
-          <div className="aspect-square overflow-hidden rounded-lg bg-neutral-100 lg:sticky lg:top-24">
-            <img
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100 lg:sticky lg:top-24">
+            <Image
               src={product.image}
               alt={product.name}
+              fill
+              preload
+              sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) calc(100vw - 48px), (max-width: 1279px) calc(50vw - 56px), 564px"
               className="size-full object-contain p-6 sm:p-10"
             />
           </div>

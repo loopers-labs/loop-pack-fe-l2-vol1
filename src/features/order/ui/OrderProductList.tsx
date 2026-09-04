@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { OrderItem } from '@/entities/order/model/types';
 import { ProductLinePrice } from '@/entities/product/ui/ProductLinePrice';
 import type { OrderProductMap } from '@/features/order/lib/orderSummary';
@@ -55,11 +56,13 @@ export function OrderProductList({
             <Link
               href={`/products/${product.id}`}
               aria-label={`${product.name} 상세 보기`}
-              className="size-20 shrink-0 overflow-hidden rounded-lg bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
+              className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
             >
-              <img
+              <Image
                 src={product.image}
                 alt=""
+                fill
+                sizes="80px"
                 className="size-full object-cover"
               />
             </Link>

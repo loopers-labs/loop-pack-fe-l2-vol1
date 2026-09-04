@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import type { Product } from '@/entities/product/model/types';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
@@ -72,11 +73,12 @@ export function ProductCard({
           aria-label={`${product.name} 상세 보기`}
           className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-950"
         >
-          <div className="aspect-square overflow-hidden rounded-lg bg-neutral-100">
-            <img
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100">
+            <Image
               src={product.image}
               alt={product.name}
-              loading="lazy"
+              fill
+              sizes="(max-width: 639px) calc(50vw - 22px), (max-width: 1023px) calc(33.333vw - 29px), (max-width: 1279px) calc(25vw - 34px), 280px"
               className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             />
           </div>

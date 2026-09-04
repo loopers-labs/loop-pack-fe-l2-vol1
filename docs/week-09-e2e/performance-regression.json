@@ -1,0 +1,91 @@
+{
+  "measuredAt": "2026-09-03T14:23:40.388Z",
+  "targetUrl": "http://127.0.0.1:3100/",
+  "build": "Next.js 16.2.10 production build (Turbopack)",
+  "browser": "Chrome 152.0.7977.75",
+  "collector": "Playwright CDP and PerformanceObserver",
+  "conditions": {
+    "viewport": {
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75
+    },
+    "requestLatencyMs": 562.5,
+    "downloadThroughputKbps": 1474.56,
+    "uploadThroughputKbps": 675,
+    "cpuSlowdownMultiplier": 4,
+    "cacheDisabled": true,
+    "runs": 5
+  },
+  "routes": {
+    "dynamic": [
+      "/",
+      "/cart",
+      "/login",
+      "/orders",
+      "/orders/new",
+      "/performance-lab/inp",
+      "/products",
+      "/products/[id]"
+    ],
+    "static": ["/robots.txt", "/sitemap.xml"]
+  },
+  "rows": [
+    {
+      "run": 1,
+      "fcp": 2096,
+      "lcp": 2232,
+      "cls": 0.02466290904334153,
+      "responseStart": 271.09999999403954
+    },
+    {
+      "run": 2,
+      "fcp": 1968,
+      "lcp": 2188,
+      "cls": 0.02466290904334153,
+      "responseStart": 22.099999994039536
+    },
+    {
+      "run": 3,
+      "fcp": 1964,
+      "lcp": 2216,
+      "cls": 0.02466290904334153,
+      "responseStart": 20.099999994039536
+    },
+    {
+      "run": 4,
+      "fcp": 1940,
+      "lcp": 2140,
+      "cls": 0.02466290904334153,
+      "responseStart": 23.599999994039536
+    },
+    {
+      "run": 5,
+      "fcp": 1976,
+      "lcp": 2192,
+      "cls": 0.02466290904334153,
+      "responseStart": 20.700000017881393
+    }
+  ],
+  "summary": {
+    "fcp": { "median": 1968, "min": 1940, "max": 2096 },
+    "lcp": { "median": 2192, "min": 2140, "max": 2232 },
+    "cls": {
+      "median": 0.02466290904334153,
+      "min": 0.02466290904334153,
+      "max": 0.02466290904334153
+    },
+    "responseStart": {
+      "median": 22.099999994039536,
+      "min": 20.099999994039536,
+      "max": 271.09999999403954
+    }
+  },
+  "layoutShiftDiagnosis": {
+    "lcpElement": "home hero image",
+    "largestShiftValue": 0.024301336573511544,
+    "largestShiftSource": "footer leaving the initial viewport as home content completes",
+    "otherShiftSource": "header navigation font metrics",
+    "authenticationStateWasNotAShiftSource": true
+  }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import type { CartItem } from '@/entities/cart/model/cartTypes';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { getProductPriceSummary } from '@/entities/product/lib/productPricing';
@@ -56,11 +57,13 @@ export function CartFilledState({ items }: CartFilledStateProps) {
 
               return (
                 <li key={item.id} className="flex gap-4 py-5 first:pt-0">
-                  <div className="size-20 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                  <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                     {product ? (
-                      <img
+                      <Image
                         src={product.image}
                         alt=""
+                        fill
+                        sizes="80px"
                         className="size-full object-cover"
                       />
                     ) : (
