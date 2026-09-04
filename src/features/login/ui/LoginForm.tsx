@@ -1,11 +1,14 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
+import { sessionQueries } from '@/entities/session';
 import { useLogin } from '../model/useLogin';
 
 export function LoginForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { mutate, isPending, error } = useLogin();
@@ -15,9 +18,13 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
     mutate(
       { email, password },
       {
-        // replace: 뒤로 가기로 로그인 화면에 되돌아오지 않게 한다.
-        // redirectTo는 서버(page.tsx)에서 이미 검증된 값이다 (RFC D4).
-        onSuccess: () => router.replace(redirectTo),
+        onSuccess: (user) => {
+          // 세션 캐시를 응답으로 바로 채운다 — 헤더가 이동 전에 갱신된다.
+          queryClient.setQueryData(sessionQueries.me().queryKey, user);
+          // replace: 뒤로 가기로 로그인 화면에 되돌아오지 않게 한다.
+          // redirectTo는 서버(page.tsx)에서 이미 검증된 값이다 (RFC D4).
+          router.replace(redirectTo);
+        },
       },
     );
   };
