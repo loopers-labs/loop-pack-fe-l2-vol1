@@ -53,4 +53,20 @@ test.describe('인증', () => {
     await expect(page).toHaveURL(/\/login\?returnTo=%2Forders/);
     await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
   });
+
+  test('외부 복원 경로가 주어져도 로그인 뒤 애플리케이션 origin을 벗어나지 않는다', async ({
+    page,
+    baseURL,
+  }) => {
+    if (!baseURL) {
+      throw new Error('Playwright baseURL이 필요합니다.');
+    }
+
+    await page.goto('/login?returnTo=%2F%2Fevil.example');
+    await page.getByRole('button', { name: '로그인' }).click();
+
+    await expect(page).toHaveURL('/');
+    expect(new URL(page.url()).origin).toBe(new URL(baseURL).origin);
+    await expect(page.getByRole('link', { name: '주문 내역' })).toBeVisible();
+  });
 });
