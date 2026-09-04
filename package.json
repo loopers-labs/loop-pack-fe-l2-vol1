@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --config eslint.config.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "next build && playwright test",
@@ -21,7 +21,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "eslint --fix"
+      "eslint --config eslint.config.mjs --fix"
     ]
   },
   "dependencies": {
