@@ -1,9 +1,10 @@
 import type { APIRequestContext } from '@playwright/test'
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
 
 import type { ProductListResponse } from '@/entities/product/model/types'
 
-import { parallelAccount, signIn, trackedEventNames } from './support/auth'
+import { trackedEventNames } from './support/auth'
+import { test } from './support/authenticatedTest'
 
 const productName = 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'
 
@@ -21,19 +22,16 @@ async function resolveProductId(request: APIRequestContext, name: string) {
   return product.id
 }
 
-test('Purchase completion - when a shopper adds a product and signs in - records the order and empties the cart', async ({
+test('Purchase completion - when an authenticated shopper adds a product - records the order and empties the cart', async ({
   page,
   request,
-}, testInfo) => {
+}) => {
   // Arrange
-  const account = parallelAccount(testInfo.parallelIndex)
   const productId = await resolveProductId(request, productName)
   await page.goto('/products')
   await page.getByRole('button', { name: `${productName} 장바구니` }).click()
   await expect(page.getByLabel('장바구니 1개')).toBeVisible()
   await page.goto('/checkout')
-  await signIn(page, account.email)
-  await page.waitForURL('/checkout')
   await expect(page.getByText('수량 1')).toBeVisible()
 
   // Act
