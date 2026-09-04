@@ -24,22 +24,22 @@ const sizeOptions = [
   { value: 26, stock: 12 },
   { value: 27, stock: 5 },
   { value: 28, stock: 0 },
-];
+]
 
 type ProductSeed = {
-  id: string;
-  brand?: string;
-  name: string;
-  category: CategoryId;
-  price: number;
-  originalPrice?: number;
-  image?: string;
-  freeShipping?: boolean;
-  sizes?: Product["sizes"];
-  rating: number;
-  reviewCount: number;
-  createdAt: string;
-};
+  id: string
+  brand?: string
+  name: string
+  category: CategoryId
+  price: number
+  originalPrice?: number
+  image?: string
+  freeShipping?: boolean
+  sizes?: Product['sizes']
+  rating: number
+  reviewCount: number
+  createdAt: string
+}
 
 const productSeeds: ProductSeed[] = [
   {
@@ -357,6 +357,6 @@ export const products = productSeeds.map(normalizeProduct)
 
 export const waitForMockApi = (requestedDelayMs = 500) =>
   new Promise<void>((resolve) => {
-    const delayMs = process.env.NODE_ENV === "test" ? 0 : requestedDelayMs;
-    setTimeout(resolve, delayMs);
-  });
+    const delayMs = process.env.NODE_ENV === 'test' ? 0 : requestedDelayMs
+    setTimeout(resolve, delayMs)
+  })

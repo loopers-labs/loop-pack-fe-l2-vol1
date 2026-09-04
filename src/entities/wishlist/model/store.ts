@@ -4,6 +4,7 @@ import { create } from 'zustand'
 interface WishlistState {
   wishIds: string[]
   toggleWish: (id: string) => void
+  clearWishlist: () => void
 }
 
 const toggle = (ids: string[], id: string): string[] =>
@@ -12,6 +13,7 @@ const toggle = (ids: string[], id: string): string[] =>
 const useWishlistStore = create<WishlistState>((set) => ({
   wishIds: [],
   toggleWish: (id) => set((state) => ({ wishIds: toggle(state.wishIds, id) })),
+  clearWishlist: () => set({ wishIds: [] }),
 }))
 
 export const useIsWished = (id: string): boolean =>
@@ -22,3 +24,6 @@ export const useWishCount = (): number =>
 
 export const useToggleWish = (): ((id: string) => void) =>
   useWishlistStore((state) => state.toggleWish)
+
+export const useClearWishlist = (): (() => void) =>
+  useWishlistStore((state) => state.clearWishlist)
