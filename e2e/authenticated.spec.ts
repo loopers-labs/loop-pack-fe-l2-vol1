@@ -1,5 +1,30 @@
 import { expect, test } from './fixtures'
 
+test('JavaScript 없이 받은 초기 HTML에 로그인 사용자가 들어 있다', async ({
+  browser,
+  workerStorageState,
+  account,
+  baseURL,
+}) => {
+  if (baseURL === undefined) throw new Error('Playwright baseURL이 필요합니다.')
+
+  const context = await browser.newContext({
+    baseURL,
+    storageState: workerStorageState,
+    javaScriptEnabled: false,
+  })
+
+  try {
+    const page = await context.newPage()
+    await page.goto('/orders')
+
+    await expect(page.getByText(`${account.name}님`)).toBeVisible()
+    await expect(page.getByRole('button', { name: '로그아웃' })).toBeVisible()
+  } finally {
+    await context.close()
+  }
+})
+
 test('세션 만료는 이유와 원래 경로를 담은 로그인 안내로 보낸다', async ({
   page,
   context,

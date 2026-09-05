@@ -33,6 +33,23 @@ test.describe('인증 흐름', () => {
     await expect(page.getByText(`${account.name}님`)).toBeVisible()
   })
 
+  test('로그아웃 상태에서 보호 링크를 먼저 보아도 로그인 후 경로를 복원한다', async ({
+    page,
+    account,
+  }) => {
+    await page.goto('/products')
+
+    const bagLink = page.getByRole('link', { name: /^Bag \d+$/ })
+    await bagLink.hover()
+    await bagLink.click()
+
+    await expect(page).toHaveURL(/\/login\?next=%2Forders%2Fnew$/)
+    await login(page, account)
+
+    await expect(page).toHaveURL('/orders/new')
+    await expect(page.getByRole('heading', { name: '주문서' })).toBeVisible()
+  })
+
   test('잘못된 자격 증명은 오류를 보여주고 로그인 화면에 머문다', async ({
     page,
     account,
