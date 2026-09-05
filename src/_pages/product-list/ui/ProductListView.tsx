@@ -3,6 +3,12 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  trackCategoryFilterChange,
+  trackPageChange,
+  trackProductListView,
+  trackSortChange,
+} from '@/analytics/events'
 import ProductGrid from '@/widgets/product-grid/ui/ProductGrid'
 import { errorMessageOf, isRetryable } from '@/shared/api/http'
 import { productListQueries } from '@/_pages/product-list/api/productList'
@@ -30,6 +36,20 @@ export default function ProductListView() {
     error,
     refetch,
   } = useQuery(productListQueries.list(condition))
+
+  // 목록 진입은 화면당 한 번이다. 조건이 바뀔 때마다 다시 보내면 필터를 다섯 번 바꾼
+  // 한 사람이 진입 다섯 번으로 세어져, 세션 기준 집계가 이벤트 기준 집계처럼 부푼다.
+  // 조건 변경은 아래 핸들러가 자기 이름으로 따로 보낸다.
+  const viewed = useRef(false)
+  useEffect(() => {
+    if (viewed.current) return
+    viewed.current = true
+    trackProductListView({
+      category: condition.category,
+      sort: condition.sort,
+      page: condition.page,
+    })
+  }, [condition])
 
   // 갱신이 최종 실패하면 새 key에는 데이터가 없다. placeholder는 pending에만 걸리기
   // 때문이다. 그러면 화면이 통째로 비어 사용자가 보던 목록과 위치를 잃는다.
@@ -74,17 +94,20 @@ export default function ProductListView() {
     )
     if (!next) return
     setFilters({ category: next, page: 1 })
+    trackCategoryFilterChange({ category: next })
   }
 
   const handleSortChange = (value: string) => {
     const next = sortValues.find((sortValue) => sortValue === value)
     if (!next) return
     setFilters({ sort: next, page: 1 })
+    trackSortChange({ sort: next })
   }
 
   // 페이지 이동만은 나머지 조건을 그대로 둔 채 page 하나만 바꾼다.
   const handlePageChange = (page: number) => {
     setFilters({ page })
+    trackPageChange({ page })
   }
 
   // 보여줄 목록이 이미 있는데 새 응답을 기다리는 상태다. 조건을 바꾼 경우와
