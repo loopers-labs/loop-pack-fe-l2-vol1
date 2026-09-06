@@ -13,7 +13,16 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
 
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "playwright-report/**",
+    "test-results/**",
+    "eslint.config.js",
+    "eslint.config.mjs",
+    "next-env.d.ts",
+  ]),
 
   // 베이스 + TypeScript strict
   js.configs.recommended,

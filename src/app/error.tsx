@@ -7,19 +7,19 @@ interface ErrorPageProps {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
   return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
+    <main className="flex min-h-[60vh] items-center justify-center px-4 py-16 sm:px-6">
+      <div className="w-full max-w-xl border-y border-border bg-bg-card px-6 py-14 text-center">
         <p className="text-sm text-text-secondary">
           {error.message || '오류가 발생했습니다.'}
         </p>
         <button
           type="button"
           onClick={reset}
-          className="text-[13px] font-medium text-brand transition-colors hover:text-brand/80"
+          className="mt-6 min-h-11 rounded-lg border border-border px-5 text-sm font-semibold text-text transition-colors hover:border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
         >
           다시 시도
         </button>
       </div>
-    </div>
+    </main>
   );
 }

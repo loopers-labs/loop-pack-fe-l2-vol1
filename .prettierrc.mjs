@@ -1,4 +1,4 @@
-export default {
+const prettierConfig = {
   printWidth: 80, // 한 줄 최대 문자 수
   tabWidth: 2, // 들여쓰기 시, 탭 너비 (js 표준인 2 indent를 권장함)
   useTabs: false, // 스페이스 대신 탭 사용
@@ -10,4 +10,6 @@ export default {
   proseWrap: 'preserve', // 마크다운(ex.readme.md) 포매팅 제외
   endOfLine: 'auto', // 개행문자 유지 (혼합일 경우, 첫 줄 개행문자로 통일)
   jsxSingleQuote: false, // JSX에 single Quotation 사용 여부
-}
+};
+
+export default prettierConfig;

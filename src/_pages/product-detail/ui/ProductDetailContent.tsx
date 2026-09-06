@@ -2,16 +2,20 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { productDetailQueryOptions } from '@/entities/product/api/productQueries';
+import { getProductDiscount } from '@/entities/product/lib/productPricing';
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
-import { useCartStore } from '@/entities/cart/model/cartStore';
+import { useAddToCart } from '@/features/cart/model/useAddToCart';
 import { BackIcon } from '@/shared/ui/icons/BackIcon';
 import { StarIcon } from '@/shared/ui/icons/StarIcon';
-import { formatWon, calcDiscount } from '@/shared/lib/format';
+import { formatWon } from '@/shared/lib/format';
 import { SizeSelect } from './SizeSelect';
 import type { SelectOption } from '@/shared/ui/select';
 import type { SizeValue } from '@/entities/product/model/types';
+import { trackProductDetailView } from '@/analytics/events';
+import { useAnalyticsPageView } from '@/analytics/useAnalyticsPageView';
 
 const CATEGORY_NAME: Record<string, string> = {
   casual: '캐주얼',
@@ -27,25 +31,33 @@ export function ProductDetailContent() {
 
   const isWished = useWishlistStore((s) => s.ids.has(product.id));
   const toggle = useWishlistStore((s) => s.toggle);
-  const addItem = useCartStore((s) => s.addItem);
+  const addToCart = useAddToCart(product.id);
 
-  const discount = product.originalPrice
-    ? calcDiscount(product.originalPrice, product.price)
-    : 0;
+  const discount = getProductDiscount(product);
+  useAnalyticsPageView(
+    () => trackProductDetailView(product.id),
+    true,
+    product.id,
+  );
 
   const sizeItems: SelectOption<SizeValue>[] = product.sizes.map((s) => ({
     value: s,
     isDisabled: s.stock === 0,
   }));
 
+  const handleAddToCart = () => {
+    addToCart();
+  };
+
   return (
     <>
       {/* 서브 네비게이션 */}
-      <div className="sticky top-0 z-20 border-b border-border/40 bg-bg-card/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-6 py-3">
+      <div className="sticky top-0 z-20 border-b border-border bg-bg-card/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-[1256px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <Link
             href="/products"
-            className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-bg hover:text-text"
+            aria-label="상품 목록으로 돌아가기"
+            className="flex size-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-neutral-100 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
           >
             <BackIcon />
           </Link>
@@ -55,120 +67,112 @@ export function ProductDetailContent() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-3xl">
-        {/* 상품 이미지 */}
-        <div className="bg-bg-card">
-          <div className="mx-auto aspect-square max-w-lg overflow-hidden">
-            <img
+      <main className="mx-auto w-full max-w-[1256px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+        <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-16">
+          {/* 상품 이미지 */}
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100 lg:sticky lg:top-24">
+            <Image
               src={product.image}
               alt={product.name}
-              className="size-full object-contain p-8"
+              fill
+              preload
+              sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) calc(100vw - 48px), (max-width: 1279px) calc(50vw - 56px), 564px"
+              className="size-full object-contain p-6 sm:p-10"
             />
           </div>
-        </div>
 
-        {/* 상품 정보 */}
-        <div className="bg-bg-card px-6 pb-10 pt-8">
-          {/* 배송 뱃지 */}
-          {product.freeShipping && (
-            <div className="flex items-center gap-2">
-              <span className="rounded-full border border-accent/40 px-3 py-1 text-[12px] font-medium text-accent">
+          {/* 상품 정보 */}
+          <section aria-labelledby="product-title" className="py-2 lg:py-4">
+            {product.freeShipping && (
+              <span className="inline-flex border border-neutral-300 px-2 py-1 text-[11px] font-semibold text-text-secondary">
                 무료배송
               </span>
-            </div>
-          )}
+            )}
 
-          {/* 브랜드 */}
-          <p className="mt-4 text-[12px] font-medium uppercase tracking-wider text-text-caption">
-            {product.brand}
-          </p>
+            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-text-caption">
+              {product.brand}
+            </p>
 
-          {/* 카테고리 */}
-          <Link
-            href={`/products?category=${product.category}`}
-            className="mt-2 inline-block rounded-full px-3 py-1 text-[12px] font-medium text-text-caption transition-colors hover:bg-brand-light hover:text-brand"
-          >
-            {CATEGORY_NAME[product.category] ?? product.category}
-          </Link>
+            <Link
+              href={`/products?category=${product.category}`}
+              className="mt-2 inline-block rounded-sm text-xs font-medium text-text-caption underline-offset-4 transition-colors hover:text-text hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-text"
+            >
+              {CATEGORY_NAME[product.category] ?? product.category}
+            </Link>
 
-          {/* 상품명 */}
-          <h2 className="mt-2 font-family-display text-2xl font-normal leading-snug text-text">
-            {product.name}
-          </h2>
+            <h1
+              id="product-title"
+              className="mt-3 text-3xl font-bold leading-tight tracking-[-0.04em] text-text sm:text-4xl"
+            >
+              {product.name}
+            </h1>
 
-          {/* 가격 */}
-          <div className="mt-6">
-            <div className="flex items-baseline gap-2.5">
-              {discount > 0 && (
-                <span className="text-2xl font-bold text-discount">
-                  {discount}%
+            <div className="mt-8">
+              <div className="flex items-baseline gap-2.5">
+                {discount && (
+                  <span className="text-2xl font-bold text-discount">
+                    {discount.rate}%
+                  </span>
+                )}
+                <span className="text-2xl font-bold tracking-[-0.02em] text-text">
+                  {formatWon(product.price)}
                 </span>
+              </div>
+              {discount && (
+                <p className="mt-1 text-sm text-text-caption line-through">
+                  {formatWon(discount.originalPrice)}
+                </p>
               )}
-              <span className="text-2xl font-bold text-text">
-                {formatWon(product.price)}
+            </div>
+
+            <div className="mt-5 flex items-center gap-1.5">
+              <StarIcon className="size-4 text-amber-500" />
+              <span className="text-sm font-semibold text-text">
+                {product.rating}
+              </span>
+              <span className="text-sm text-text-secondary">
+                ({product.reviewCount.toLocaleString('ko-KR')}개 리뷰)
               </span>
             </div>
-            {product.originalPrice && (
-              <p className="mt-1 text-[13px] text-text-caption line-through">
-                {formatWon(product.originalPrice)}
-              </p>
+
+            {sizeItems.length > 0 && (
+              <div className="mt-10 border-t border-border pt-8">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-text-secondary">
+                  사이즈 선택
+                </h2>
+                <SizeSelect options={sizeItems} />
+              </div>
             )}
-          </div>
 
-          {/* 리뷰 */}
-          <div className="mt-4 flex items-center gap-1.5">
-            <StarIcon className="size-4 text-amber-500" />
-            <span className="text-[13px] font-semibold text-text">
-              {product.rating}
-            </span>
-            <span className="text-[13px] text-text-secondary">
-              ({product.reviewCount.toLocaleString('ko-KR')}개 리뷰)
-            </span>
-          </div>
-
-          {/* 찜 · 담기 버튼 */}
-          <div className="mt-8 flex gap-3">
-            <button
-              type="button"
-              onClick={() => toggle(product.id)}
-              className={`flex h-[52px] shrink-0 items-center justify-center rounded-xl border px-6 text-[14px] font-medium transition-colors ${
-                isWished
-                  ? 'border-accent text-accent'
-                  : 'border-border text-text-secondary hover:bg-bg hover:text-text'
-              }`}
-            >
-              {isWished ? '찜 해제' : '찜하기'}
-            </button>
-            <button
-              type="button"
-              onClick={() => addItem(product.id)}
-              className="flex h-[52px] flex-1 items-center justify-center rounded-xl bg-text text-[15px] font-semibold text-bg-card transition-colors hover:bg-text/90"
-            >
-              장바구니 담기
-            </button>
-          </div>
+            <div className="mt-8 flex gap-3">
+              <button
+                type="button"
+                onClick={() => toggle(product.id)}
+                className={`flex min-h-[52px] shrink-0 items-center justify-center rounded-lg border px-6 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text ${
+                  isWished
+                    ? 'border-text bg-text text-white'
+                    : 'border-border text-text-secondary hover:border-neutral-400 hover:text-text'
+                }`}
+              >
+                {isWished ? '찜 해제' : '찜하기'}
+              </button>
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="flex min-h-[52px] flex-1 items-center justify-center rounded-lg bg-text px-6 text-[15px] font-semibold text-white transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
+              >
+                장바구니 담기
+              </button>
+            </div>
+          </section>
         </div>
 
-        {/* 사이즈 선택 */}
-        {sizeItems.length > 0 && (
-          <>
-            <div className="h-3 bg-bg" />
-            <div className="bg-bg-card px-6 py-8">
-              <h3 className="mb-5 text-[13px] font-semibold uppercase tracking-wider text-text-secondary">
-                사이즈 선택
-              </h3>
-              <SizeSelect options={sizeItems} />
-            </div>
-          </>
-        )}
-
         {/* 상품 정보 테이블 */}
-        <div className="h-3 bg-bg" />
-        <div className="bg-bg-card px-6 py-8">
-          <h3 className="mb-5 text-[13px] font-semibold uppercase tracking-wider text-text-secondary">
+        <section className="mt-16 border-t border-border py-10 sm:mt-20 sm:py-12">
+          <h2 className="text-xl font-bold tracking-[-0.03em] text-text">
             상품 정보
-          </h3>
-          <div className="overflow-hidden rounded-xl border border-border">
+          </h2>
+          <dl className="mt-6 grid border-t border-border sm:grid-cols-2">
             {[
               ['브랜드', product.brand],
               [
@@ -187,16 +191,16 @@ export function ProductDetailContent() {
             ].map(([label, value]) => (
               <div
                 key={label}
-                className="flex items-center border-t border-border/50 px-5 py-4 first:border-t-0"
+                className="flex items-center border-b border-border py-4 sm:odd:pr-8 sm:even:pl-8"
               >
-                <dt className="w-24 shrink-0 text-[13px] text-text-caption">
+                <dt className="w-24 shrink-0 text-sm text-text-caption">
                   {label}
                 </dt>
-                <dd className="text-[13px] text-text">{value}</dd>
+                <dd className="text-sm font-medium text-text">{value}</dd>
               </div>
             ))}
-          </div>
-        </div>
+          </dl>
+        </section>
       </main>
     </>
   );

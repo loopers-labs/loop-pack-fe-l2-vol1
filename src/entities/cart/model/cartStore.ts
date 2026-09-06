@@ -1,36 +1,62 @@
-import { create } from 'zustand';
+import { createStore } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { mergeCartItems } from './cartItems';
+import { cartPersistence } from './cartPersistence';
+import type { CartState } from './cartTypes';
+import type { CartOwnerKey } from './cartOwner';
 
-interface CartItem {
-  id: string;
-  quantity: number;
+export function createCartStore(ownerKey: CartOwnerKey) {
+  const pendingItemIds: string[] = [];
+
+  return createStore<CartState>()(
+    persist(
+      (set, get) => ({
+        ownerKey,
+        items: new Map(),
+        lastAddedId: null,
+        isHydrated: false,
+
+        addItem: (id) => {
+          if (!get().isHydrated) {
+            pendingItemIds.push(id);
+            return;
+          }
+
+          set((state) => {
+            const items = mergeCartItems(state.items, [{ id, quantity: 1 }]);
+            return { items, lastAddedId: id };
+          });
+        },
+
+        mergeItems: (items) =>
+          set((state) => ({ items: mergeCartItems(state.items, items) })),
+
+        removeItem: (id) =>
+          set((state) => {
+            const next = new Map(state.items);
+            next.delete(id);
+            return { items: next };
+          }),
+
+        clearItems: () => set({ items: new Map(), lastAddedId: null }),
+        clearLastAdded: () => set({ lastAddedId: null }),
+        setHydrated: () =>
+          set((state) => {
+            const pendingItems = pendingItemIds.map((id) => ({
+              id,
+              quantity: 1,
+            }));
+            const items = mergeCartItems(state.items, pendingItems);
+
+            const lastAddedId = pendingItemIds.at(-1) ?? state.lastAddedId;
+            pendingItemIds.length = 0;
+
+            return { items, lastAddedId, isHydrated: true };
+          }),
+      }),
+      cartPersistence.createOptions(ownerKey),
+    ),
+  );
 }
 
-interface CartState {
-  items: Map<string, CartItem>;
-  lastAddedId: string | null;
-  addItem: (id: string) => void;
-  removeItem: (id: string) => void;
-  clearLastAdded: () => void;
-}
-
-export const useCartStore = create<CartState>((set) => ({
-  items: new Map(),
-  lastAddedId: null,
-
-  addItem: (id) =>
-    set((state) => {
-      const next = new Map(state.items);
-      const existing = next.get(id);
-      next.set(id, { id, quantity: existing ? existing.quantity + 1 : 1 });
-      return { items: next, lastAddedId: id };
-    }),
-
-  removeItem: (id) =>
-    set((state) => {
-      const next = new Map(state.items);
-      next.delete(id);
-      return { items: next };
-    }),
-
-  clearLastAdded: () => set({ lastAddedId: null }),
-}));
+export type CartStore = ReturnType<typeof createCartStore>;

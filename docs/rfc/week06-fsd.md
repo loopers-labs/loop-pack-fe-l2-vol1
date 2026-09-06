@@ -80,6 +80,9 @@ src/
 ├── features/
 │   └── cart/
 │       └── ui/             # CartDialog
+├── widgets/
+│   └── product-card/
+│       └── ui/             # ProductCard, ProductCardSkeleton
 ├── entities/
 │   ├── product/
 │   │   ├── model/          # Product 타입, 상수 (CATEGORY_IDS 등)
@@ -100,7 +103,7 @@ src/
 | **shared** | ✅ | Dialog, Select, icons, formatPrice 등 도메인 무관 코드가 명확히 존재함 |
 | **entities** | ✅ | product, cart, wishlist — 3개 비즈니스 도메인이 명확 |
 | **features** | ✅ | 아래 상세 참고 |
-| **widgets** | ❌ | 아래 상세 참고 |
+| **widgets** | ✅ | 홈·상품 목록·장바구니 피드가 공유하는 상품 카드와 스켈레톤 |
 | **_pages** | ✅ | 아래 상세 참고 |
 | **_app** | ❌ | 아래 상세 참고 |
 
@@ -122,7 +125,7 @@ CartDialog는 cart store에서 담은 상품 id를 읽고, product queries로 �
 
 features/cart에 CartDialog를 배치하기로 결정. features 레이어는 CartDialog 하나를 위해 복원되었고, cart만 둔다.
 
-#### widgets — ❌
+#### widgets — 처음 ❌ → 최종 ✅
 
 widgets의 역할은 "여러 페이지에서 재사용되는 독립적인 큰 UI 블록"이다. 처음에는 ProductCard가 홈/목록/상세 3곳에서 쓰이니까 widget 후보인가 싶었지만, 실제 코드를 확인하면:
 
@@ -133,6 +136,20 @@ widgets의 역할은 "여러 페이지에서 재사용되는 독립적인 큰 UI
 | `ProductDetailContent.tsx` | 완전히 다른 상세 뷰 | 별개 UI |
 
 홈과 목록의 카드가 같은 컴포넌트가 아니다 (각각 다른 마크업). 여러 페이지에서 재사용되는 독립 UI 블록이 없으므로 widgets 레이어는 불필요.
+
+#### 2026-09-01 — 장바구니 전체상품 피드 추가 후 재검토
+
+공개 `/cart`의 빈 상태 아래에도 전체상품 무한 피드가 추가되면서 `widgets/product-feed` 도입을 다시 검토했다. 상품 목록 화면은 검색·카테고리·정렬 URL 상태와 목록 갱신 상태를 소유하지만, 장바구니 피드는 고정된 기본 조건과 빈 장바구니의 탐색 맥락만 소유한다. 카드의 heading 단계와 접근 가능한 버튼 이름도 각 페이지 문맥에 맞춰 다르다.
+
+두 화면이 공유하는 것은 상품 목록 조회 계약과 다음 페이지 계산이므로 `entities/product/api`의 `productListInfiniteQueryOptions`를 재사용한다. 표현 컴포넌트는 각각 `_pages/product-list`와 `_pages/cart`에 두고 서로 직접 import하지 않는다. 여러 페이지에서 같은 마크업과 상호작용을 실제로 공유하는 독립 블록이 생기기 전까지 widgets 레이어는 도입하지 않는다.
+
+#### 2026-09-02 — 상품 카드 통일로 widgets 도입
+
+홈·`/products`·`/cart` 전체상품 피드의 상품 카드 형식을 통일했다. 세 화면은 상품 정보, 할인·평점·배송 표시, 썸네일 안의 위시리스트·장바구니 행위를 같은 마크업으로 공유한다. `ProductCard`는 여러 페이지에서 재사용되는 독립 UI 블록이 되었으므로 `widgets/product-card/ui`로 이동한다.
+
+`ProductCard`는 product·cart·wishlist 엔티티를 조합한다. 이를 `entities/product/ui`에 두면 product 엔티티가 같은 레이어의 cart·wishlist 엔티티를 참조하므로 cross-slice 의존이 생긴다. widget에 두면 `_pages → widgets → entities/shared` 방향을 유지하면서 상품 표현과 사용자 행위를 한 경계에 응집할 수 있다. 페이지별 heading 단계는 `headingLevel`로 주입하고, 카드 구조를 반영하는 스켈레톤도 같은 widget에 둔다.
+
+상품 피드 전체는 공용 widget으로 만들지 않는다. `/products`는 URL 검색·필터·정렬과 목록 갱신 상태를 소유하고, `/cart` 피드는 고정 조건과 장바구니 탐색 문맥을 소유하므로 각 `_pages`에 유지한다. 각 페이지는 조회와 피드 문맥을 담당하고 공용 `ProductCard`와 `ProductCardSkeleton`만 조합한다.
 
 #### _pages — ✅
 
@@ -190,7 +207,9 @@ cart와 wishlist를 합칠지 분리할지 고민했다. 둘 다 "사용자 선�
 
 ```
 ✅ 허용
-_pages/home       → entities/product, features/cart, shared/ui
+_pages/home       → widgets/product-card, entities/product, shared/ui
+_pages/product-list → widgets/product-card, entities/product, shared/ui
+widgets/product-card → entities/product, entities/cart, entities/wishlist, shared/lib
 features/cart      → entities/cart, entities/product, shared/ui
 entities/product   → shared/lib, shared/ui
 entities/cart      → shared/lib
@@ -212,7 +231,7 @@ shared/ui          → entities/product    (하위 → 상위 역방향)
 | `types/commerce.ts`의 ApiErrorResponse | `entities/product/model` | `shared/api` | **shared/api** | 도메인 무관 공통 에러 타입 |
 | `homeQueries` | `entities/product/api` | `_pages/home/api` | **_pages/home/api** | 아래 상세 참고 |
 | `CartDialog` | `entities/cart/ui` | `features/cart/ui` | **features/cart/ui** | 레이어 선택 근거의 features 항목 참고 |
-| `ProductCard` (홈) | `entities/product/ui` | `_pages/home/ui` 내부 | **_pages 내부 유지** | 홈/목록/상세에서 카드 마크업이 전부 다름 (홈: 할인 뱃지+둥근 이미지, 목록: 인라인 article, 상세: 별개 뷰). 공유할 수 있는 공통 컴포넌트가 없으므로 각 _pages 전용으로 유지 |
+| `ProductCard` | `entities/product/ui` | `widgets/product-card/ui` | **widgets/product-card/ui** | 홈·상품 목록·장바구니 피드가 같은 마크업과 cart·wishlist 행위를 공유한다. 여러 엔티티의 조합은 widget에서 담당하고 페이지별 heading 단계만 prop으로 주입 |
 | `CategoryOption` / `CATEGORY_OPTIONS` | `entities/product/model` | `_pages/products/lib` | **entities/product/model** | 아래 상세 참고 |
 
 #### commerce.ts 분해 — 도메인별 분해(A) vs shared 유지(B) vs 일부만 분해(C)
@@ -263,8 +282,8 @@ homeQueries가 반환하는 데이터를 분석한 결과:
 | 상품 조회 결과 | 서버 / TanStack Query 캐시 | `entities/product/api` | _pages/home, _pages/product-list, _pages/product-detail | Query 캐시가 유일한 저장소. Zustand에 복사하지 않음 |
 | 홈 집계 데이터 (배너, 카테고리) | 서버 / TanStack Query 캐시 | `_pages/home/api` | _pages/home | homeQueries가 관리. product entity와 분리 |
 | 검색·카테고리·정렬·페이지 | URL / nuqs | `_pages/product-list/lib` (useProductSearchParams) | _pages/product-list | URL이 유일한 저장소. useState에 동기화하지 않음 |
-| 장바구니 (id + quantity) | Zustand (클라이언트) | `entities/cart/model` | features/cart, _pages 전체 (헤더) | id+quantity만 저장. 상품 정보는 렌더 시 Query 캐시에서 조회 |
-| 위시리스트 (id Set) | Zustand (클라이언트) | `entities/wishlist/model` | _pages 전체 (헤더, 상품 UI) | id만 저장 |
+| 장바구니 (id + quantity) | Zustand (클라이언트) | `entities/cart/model` | features/cart, widgets/product-card, _pages의 장바구니·상품 상세 UI | id+quantity만 저장. 상품 정보는 렌더 시 Query 캐시에서 조회 |
+| 위시리스트 (id Set) | Zustand (클라이언트) | `entities/wishlist/model` | widgets/product-card, HeaderNav, 상품 상세 UI | id만 저장 |
 | Dialog 열림 여부 | React 로컬 상태 | 해당 UI 컴포넌트 | 해당 컴포넌트만 | 컴포넌트 수명과 동일 |
 
 ---
@@ -431,8 +450,7 @@ FSD 전환 후 목표 구조 기준으로 분석. 기능별 응집이 됐는지 
 
 | 파일 | 수정 내용 |
 |------|-----------|
-| `_pages/home/ui/HomeClient.tsx` | 위시리스트 토글 버튼 제거 |
-| `_pages/products/ui/ProductListContent.tsx` | 위시리스트 토글 버튼 제거 |
+| `widgets/product-card/ui/ProductCard.tsx` | 위시리스트 상태 구독과 토글 버튼 제거 |
 | `_pages/product-detail/ui/ProductDetailContent.tsx` | 위시리스트 토글 버튼 제거 |
 | `app/_components/HeaderNav.tsx` | 위시리스트 개수 표시 제거 |
 
@@ -445,12 +463,11 @@ FSD 전환 후 목표 구조 기준으로 분석. 기능별 응집이 됐는지 
 | 파일 | 수정 내용 | 레이어 |
 |------|-----------|--------|
 | `entities/product/model/` 또는 `lib/` | `isNewProduct(createdAt)` 뱃지 판단 로직 추가 | entities |
-| `_pages/home/ui/HomeClient.tsx` | 홈 카드에 뱃지 렌더링 | _pages |
-| `_pages/products/ui/ProductListContent.tsx` | 목록 카드에 뱃지 렌더링 | _pages |
+| `widgets/product-card/ui/ProductCard.tsx` | 공용 카드에 뱃지 렌더링 | widgets |
 
 - 타입 변경 불필요 — `Product`에 이미 `createdAt: string`이 존재
-- 도메인 로직(`isNewProduct`)은 `entities/product` 안에서, UI 적용은 각 `_pages`에서 — 변경 반경을 자신 있게 예측할 수 있다
-- 의존 방향도 정상: `_pages`(상위) → `entities/product`(하위)
+- 도메인 로직(`isNewProduct`)은 `entities/product` 안에서, UI 적용은 `widgets/product-card`에서 담당한다
+- 의존 방향도 정상: `widgets`(상위) → `entities/product`(하위)
 
 ---
 
@@ -580,9 +597,9 @@ AR-01~03 해소 후 재점검. 역방향 import 0건, cross-slice 의존 0건, �
 
 ### 1. `ProductCard`가 찜 버튼을 직접 import하면 어떤 의존 규칙을 어기며, 어디에서 조합해야 하는가?
 
-`ProductCard`가 `entities/product`에서 `wishlist`를 직접 참조하면 같은 레이어 간 의존(cross-slice import)이 생겨 슬라이스 독립성이 깨질 수 있다고 생각했습니다.
+`ProductCard`를 `entities/product`에 두고 wishlist를 직접 참조하면 같은 레이어 간 의존(cross-slice import)이 생겨 슬라이스 독립성이 깨집니다.
 
-다만 제 프로젝트는 화면마다 카드 구조가 달라 공통 `ProductCard`를 만들지 않았고, 각 페이지에서 `product`와 `wishlist`를 함께 조합했습니다. 이후 공통화가 필요해진다면 `ProductCard`는 순수 UI만 담당하고, 찜 같은 행위는 slot이나 `children`으로 상위에서 주입하는 구조를 고려하고 있습니다.
+2026-09-02에 홈·상품 목록·장바구니 피드의 카드 마크업과 행위를 통일하면서 `ProductCard`를 `widgets/product-card`에 배치했습니다. widget은 product·cart·wishlist 엔티티를 조합하고, 각 `_pages`는 공용 카드를 가져와 페이지 문맥에 맞는 heading 단계만 주입합니다. 이 구조는 `_pages → widgets → entities` 의존 방향을 유지합니다.
 
 ### 2. 한 페이지에서만 쓰는 검색 로직도 반드시 feature여야 하는가?
 `useProductSearchParams`는 URL 파라미터를 다루는 페이지 전용 로직이라 feature보다는 `_pages/product-list/lib`에 두었습니다. 아직 여러 도메인을 엮는 독립적인 기능으로 보기 어렵고, 현재 사용처도 하나뿐이라 사용처 가까이에 두는 편이 응집도 측면에서 적절하다고 판단했습니다. 

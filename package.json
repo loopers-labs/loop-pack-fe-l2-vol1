@@ -10,17 +10,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --config eslint.config.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "next build && playwright test",
+    "analyze:week09": "node scripts/analyze-week09-events.mjs",
     "test:watch": "vitest",
     "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && playwright test",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "eslint --fix"
+      "eslint --config eslint.config.mjs --fix"
     ]
   },
   "dependencies": {
