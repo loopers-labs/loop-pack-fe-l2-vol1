@@ -27,12 +27,35 @@ export async function getServerSession(): Promise<AuthUser | null> {
   return resolveServerSession(await cookies()).user;
 }
 
-// 보호 페이지의 진입점. 쿠키가 없으면 로그인으로, 있는데 검증에 실패했으면 사유를 붙여 로그인으로 보낸다
-export async function requireServerSession(returnTo: string): Promise<AuthUser> {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+// 페이지가 받은 searchParams 를 proxy 가 싣는 것과 같은 모양(`?a=1&b=2`)으로 되돌린다.
+// 배열은 같은 키를 반복해 append 한다 — `?tag=a&tag=b` 가 `tag=a,b` 로 뭉개지지 않게
+const serializeSearch = (searchParams: SearchParams) => {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value === undefined) continue;
+    for (const item of Array.isArray(value) ? value : [value]) {
+      params.append(key, item);
+    }
+  }
+  const query = params.toString();
+  return query === "" ? "" : `?${query}`;
+};
+
+// 보호 페이지의 진입점. 쿠키가 없으면 로그인으로, 있는데 검증에 실패했으면 사유를 붙여 로그인으로 보낸다.
+// 복원 경로에는 쿼리까지 싣는다 — proxy 가 pathname+search 를 싣는 것과 같은 값이어야
+// "어느 관문에서 걸렸나" 에 따라 로그인 뒤 돌아오는 화면이 달라지지 않는다
+export async function requireServerSession(
+  pathname: string,
+  searchParams: SearchParams = {},
+): Promise<AuthUser> {
   const { hasCookie, user } = resolveServerSession(await cookies());
   if (user !== null) {
     return user;
   }
 
-  redirect(buildLoginUrl(returnTo, hasCookie ? "expired" : undefined));
+  redirect(
+    buildLoginUrl(`${pathname}${serializeSearch(searchParams)}`, hasCookie ? "expired" : undefined),
+  );
 }

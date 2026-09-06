@@ -7,8 +7,12 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function MyPageRoute() {
-  const user = await requireServerSession("/mypage");
+type MyPageRouteProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function MyPageRoute({ searchParams }: MyPageRouteProps) {
+  const user = await requireServerSession("/mypage", await searchParams);
 
   return <MyPage user={user} />;
 }

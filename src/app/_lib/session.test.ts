@@ -88,4 +88,24 @@ describe("requireServerSession", () => {
       "REDIRECT:/login?next=%2Fmypage&reason=expired",
     );
   });
+
+  it("쿼리스트링을 복원 경로에 그대로 싣는다", async () => {
+    mocks.cookieJar = { [SESSION_COOKIE]: "tampered.token" };
+
+    await expect(requireServerSession("/orders", { page: "2", sort: "latest" })).rejects.toThrow(
+      "REDIRECT:/login?next=%2Forders%3Fpage%3D2%26sort%3Dlatest&reason=expired",
+    );
+  });
+
+  it("같은 키가 여러 개인 쿼리도 잃지 않는다", async () => {
+    await expect(requireServerSession("/orders", { tag: ["a", "b"] })).rejects.toThrow(
+      "REDIRECT:/login?next=%2Forders%3Ftag%3Da%26tag%3Db",
+    );
+  });
+
+  it("쿼리가 비어 있으면 물음표를 붙이지 않는다", async () => {
+    await expect(requireServerSession("/orders", {})).rejects.toThrow(
+      "REDIRECT:/login?next=%2Forders",
+    );
+  });
 });
