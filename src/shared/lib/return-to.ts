@@ -14,6 +14,12 @@ const hasUnsafeCharacters = (value: string) =>
     return code < 0x20 || code === 0x7f;
   });
 
+const hasDotSegments = (value: string) =>
+  value
+    .split(/[?#]/, 1)[0]
+    .split("/")
+    .some((segment) => segment === "." || segment === "..");
+
 // 같은 사이트 안의 경로만 허용한다. 스킴·호스트가 섞이면 외부로 튕길 수 있으므로 전부 기본값으로 떨어뜨린다.
 // - "/" 로 시작해야 한다 ("//evil.com", "/\\evil.com" 은 브라우저가 호스트로 해석한다)
 // - 로그인 페이지 자기 자신은 복원 대상이 아니다 (로그인 → 로그인 루프)
@@ -27,6 +33,12 @@ export function sanitizeReturnTo(value: string | null | undefined): string {
   }
 
   if (hasUnsafeCharacters(value)) {
+    return DEFAULT_RETURN_TO;
+  }
+
+  // 점 세그먼트(`/./`, `/../`)는 위 `//` 검사를 우회하는 입력이다("/..//evil.com"). 앱이 만드는 복원 경로에는
+  // 정규화가 필요한 세그먼트가 없으므로, 있다는 것 자체가 비정상 입력이다
+  if (hasDotSegments(value)) {
     return DEFAULT_RETURN_TO;
   }
 
