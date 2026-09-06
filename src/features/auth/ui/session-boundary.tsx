@@ -1,9 +1,9 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { hashKey, useQueryClient, type MutationCacheNotifyEvent } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { logout, SESSION_QUERY_KEY } from "@/entities/session";
+import { LOGIN_MUTATION_KEY, logout, SESSION_QUERY_KEY } from "@/entities/session";
 import { isUnauthorizedError } from "@/shared/api/commerce-client";
 import { buildLoginUrl } from "@/shared/lib/return-to";
 import type { AuthUser } from "@/types/auth";
@@ -49,8 +49,14 @@ export function SessionBoundary() {
         void handle(event.action.error);
       }
     });
+
+    const isLoginMutation = (event: MutationCacheNotifyEvent) => {
+      const mutationKey = event.mutation?.options.mutationKey;
+      return mutationKey !== undefined && hashKey(mutationKey) === hashKey(LOGIN_MUTATION_KEY);
+    };
+
     const unsubscribeMutations = queryClient.getMutationCache().subscribe((event) => {
-      if (event.type === "updated" && event.action.type === "error") {
+      if (event.type === "updated" && event.action.type === "error" && !isLoginMutation(event)) {
         void handle(event.action.error);
       }
     });

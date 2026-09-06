@@ -99,4 +99,36 @@ describe("LoginForm", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("요청을 처리하지 못했습니다.");
   });
+
+  it("세션이 살아 있는 상태에서 비밀번호를 틀려도 만료로 처리하지 않는다", async () => {
+    // 만료 안내(/login?reason=expired)로 왔다가 재로그인 → 뒤로가기 를 하면 세션 캐시가 user 인 채로
+    // 로그인 화면에 머문다. 여기서의 401 은 자격 증명 실패이지 만료가 아니다
+    const logoutCalls = vi.fn();
+    server.use(
+      http.post("/api/auth/login", () =>
+        HttpResponse.json({ message: "이메일 또는 비밀번호를 확인해주세요." }, { status: 401 }),
+      ),
+      http.post("/api/auth/logout", () => {
+        logoutCalls();
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { queryClient } = renderWithProviders(
+      <>
+        <SessionBoundary />
+        <SessionProbe />
+        <LoginForm returnTo="/orders" />
+      </>,
+    );
+    queryClient.setQueryData(SESSION_QUERY_KEY, buildAuthUser());
+
+    await fillAndSubmit("looper1@loopers.dev", "wrong");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "이메일 또는 비밀번호를 확인해주세요.",
+    );
+    expect(logoutCalls).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(queryClient.getQueryData(SESSION_QUERY_KEY)).toEqual(buildAuthUser());
+  });
 });

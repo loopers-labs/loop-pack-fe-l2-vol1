@@ -3,6 +3,7 @@ import type { AuthUser } from "@/types/auth";
 import { getSession } from "../api/get-session";
 
 export const SESSION_QUERY_KEY = ["session"] as const;
+export const LOGIN_MUTATION_KEY = ["session", "login"] as const;
 
 export const sessionQueries = {
   me: () =>

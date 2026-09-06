@@ -1,7 +1,12 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { login, SESSION_QUERY_KEY, useSessionActions } from "@/entities/session";
+import {
+  login,
+  LOGIN_MUTATION_KEY,
+  SESSION_QUERY_KEY,
+  useSessionActions,
+} from "@/entities/session";
 import { identifyUser, trackEvent, type LoginFrom } from "@/shared/analytics";
 import { CommerceApiError } from "@/shared/api/commerce-client";
 
@@ -22,6 +27,7 @@ export function useLogin({ from }: UseLoginOptions) {
 
   return useMutation({
     mutationFn: login,
+    mutationKey: LOGIN_MUTATION_KEY,
     onSuccess: async (user) => {
       // 로그인 화면이 마운트될 때 시작된 미인증 세션 재확인(/api/auth/me → 401)이 아직 진행 중일 수 있다.
       // 그대로 두면 로그인 성공으로 세션을 채운 직후 도착한 401 을 SessionBoundary 가 만료로 읽는다.
