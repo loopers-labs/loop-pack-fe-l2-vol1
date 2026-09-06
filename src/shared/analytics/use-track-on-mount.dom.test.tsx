@@ -57,7 +57,8 @@ describe("useTrackOnMount", () => {
     expect(recorded[0].properties).toMatchObject({ page: 1 });
   });
 
-  it("enabled 가 false 면 보내지 않고, true 로 바뀐 뒤 한 번만 보낸다", async () => {
+  it("enabled 가 false 면 보내지 않고, 참인 구간(진입)마다 한 번씩 보낸다", async () => {
+    // 주문서에 머문 채 장바구니가 비었다 다시 차는 경우 — order_start 는 퍼널 분모라 재진입도 세야 한다
     const { provider, recorded } = createRecorder();
     await setupAnalytics([provider]);
 
@@ -65,10 +66,12 @@ describe("useTrackOnMount", () => {
     expect(recorded).toHaveLength(0);
 
     rerender(<ListProbe page={1} enabled />);
+    rerender(<ListProbe page={2} enabled />);
+    expect(recorded).toHaveLength(1);
+
     rerender(<ListProbe page={1} enabled={false} />);
     rerender(<ListProbe page={1} enabled />);
-
-    expect(recorded).toHaveLength(1);
+    expect(recorded).toHaveLength(2);
   });
 
   it("초기화 컴포넌트보다 먼저 마운트된 화면의 이벤트에도 공통 프로퍼티가 붙는다", async () => {
