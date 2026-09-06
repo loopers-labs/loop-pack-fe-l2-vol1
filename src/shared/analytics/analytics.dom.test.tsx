@@ -45,11 +45,28 @@ describe("shared/analytics", () => {
     expect(first.type === "track" && first.properties).toMatchObject({
       productId: "p1",
       quantity: 1,
-      sessionId: expect.stringMatching(/^s_[a-z0-9]{4}$/),
+      sessionId: expect.stringMatching(/^s_[0-9a-f]{8}-[0-9a-f-]{27}$/),
       device: expect.stringMatching(/^(mobile|tablet|desktop)$/),
       ts: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
     });
     expect(first.type === "track" && "userId" in first.properties).toBe(false);
+  });
+
+  it("sessionId 는 새 세션마다 다르다 (집계 키가 충돌하지 않는다)", async () => {
+    const { provider, recorded } = createRecorder();
+    await setupAnalytics([provider]);
+    const ids = new Set<string>();
+
+    for (let index = 0; index < 200; index += 1) {
+      window.sessionStorage.clear();
+      trackEvent("login_start", { from: "direct" });
+      const last = recorded.at(-1);
+      if (last?.type === "track") {
+        ids.add(String(last.properties.sessionId));
+      }
+    }
+
+    expect(ids.size).toBe(200);
   });
 
   it("sessionId 는 같은 탭에서 유지된다", async () => {

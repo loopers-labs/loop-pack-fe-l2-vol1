@@ -2,8 +2,18 @@ import type { CommonProperties } from "./events";
 
 const SESSION_STORAGE_KEY = "analytics.sessionId";
 
-// 시드 로그의 세션은 `s_` + 4자리다. 탭 하나가 한 세션이라 sessionStorage 에 둔다 (탭을 닫으면 끝난다)
-const newSessionId = () => `s_${Math.random().toString(36).slice(2, 6).padEnd(4, "0")}`;
+// 탭 하나가 한 세션이라 sessionStorage 에 둔다 (탭을 닫으면 끝난다).
+// 시드 로그는 `s_` + 4자리지만 그 형식은 표기일 뿐이고, 이 값은 세션 집계의 키다 — 36진수 4자리(약 168만 개)는
+// 두 사용자가 같은 값을 받아 세션이 하나로 합쳐질 수 있어 UUID 를 쓴다. 접두사만 시드와 맞춘다
+const newSessionId = () => `s_${randomId()}`;
+
+const randomId = () => {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+};
 
 let memorySessionId: string | null = null;
 
