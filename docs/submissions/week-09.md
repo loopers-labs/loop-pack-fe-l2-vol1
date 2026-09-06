@@ -58,3 +58,15 @@ RFC 부록 C. `init-agents --loop=claude` 로 planner → generator 를 돌렸�
 ## 🤖 AI 활용
 
 Claude Code 로 구현·검증을 진행했다. 단계마다 요구사항 검토 에이전트와 런타임 검증 에이전트를 병렬로 돌려 지적을 반영했다. **E2E 범위(인증 외 어디에 붙일지)는 시드 로그 집계 표와 후보 3개를 놓고 내가 직접 선택했고**(주문 완료 플로우 1개), 단언 대상은 RFC C.1 표에 먼저 적고 그대로 구현했다. 계측 코드·MSW 픽스처·Page Object·집계 스크립트 같은 반복 코드는 AI 가 작성했다.
+
+## 🔁 리뷰 피드백 반영 (2026-09-06)
+
+RFC 부록 D 에 항목별 문제·수정·테스트 표와 Route 표 전후가 있다. 요약:
+
+- **[필수] 로그인 실패 401 오판** — 로그인 mutation 에 `LOGIN_MUTATION_KEY` 를 붙이고 `SessionBoundary` 가 그 401 을 제외. 두 컴포넌트를 함께 마운트해 비밀번호를 틀리는 테스트를 먼저 빨간불로 만들고 고쳤다.
+- **[필수] 만료 복원 주소의 쿼리 유실** — `requireServerSession(pathname, searchParams)` 로 proxy 와 같은 값을 `next` 에 싣는다.
+- **[필수] 로그아웃 실패 시 무반응** — `onSettled` 로 성공·실패 모두 정리·이동(만료 경로와 같은 정책).
+- **[권고] `/..//evil.com`** — 점 세그먼트 차단 + 테스트 4건.
+- **[권고] `sessionId` 충돌** — `crypto.randomUUID()`.
+- **[권고] `order_start` 재진입 누락** — 가드를 "진입(enabled 구간)당 1회" 로.
+- **[리뷰 2] 루트 layout `cookies()`** — `(commerce)`/`(lab)` 라우트 그룹으로 분리. `pnpm build` 전후: 16개 전부 ƒ → `/select`·`/dialog`·`/performance-lab/inp`·`/_not-found` 가 ○ 로 복귀, 커머스 화면은 ƒ 유지. E2E 12개(4워커·1워커)와 8주차 스펙 3개는 그대로 통과.
