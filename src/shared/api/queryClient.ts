@@ -1,8 +1,33 @@
-import { QueryClient, environmentManager } from "@tanstack/react-query";
-import { isServerError } from "./apiError";
+import {
+  QueryCache,
+  QueryClient,
+  environmentManager,
+} from "@tanstack/react-query";
+// 배럴(@/shared/lib) 대신 파일을 직접 가리킨다. queryClient 는 서버 컴포넌트(메타데이터 등)에서
+// 도달하는데, 배럴은 client 훅(useDebouncedValue 등)까지 재노출해 서버 빌드를 깨뜨린다.
+// 같은 shared 레이어 내부(api↔lib) 참조라 public API(배럴)를 거칠 의무가 없다 — FSD 위반 아님.
+import {
+  isSessionExpiry,
+  notifySessionExpired,
+} from "@/shared/lib/sessionExpiry";
+import { HttpError, isServerError } from "./apiError";
 
 export function makeQueryClient() {
   return new QueryClient({
+    // TanStack 의 (error, query) 를 판정 입력으로 옮기는 얇은 어댑터다.
+    // 판정 로직(===401 등)은 isSessionExpiry 가 소유한다 — 여기 인라인하지 않는다.
+    // 쿼리 라이브러리를 갈아끼우면 이 어댑터만 다시 쓰면 된다.
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        const isExpiry = isSessionExpiry({
+          status: error instanceof HttpError ? error.status : undefined,
+          isAuthGuarded: query.meta?.authGuarded === true,
+          hadData: query.state.data !== undefined,
+        });
+
+        if (isExpiry) notifySessionExpired();
+      },
+    }),
     defaultOptions: {
       queries: {
         // 렌더 중 에러를 throw 할지 결정한다(→ true 면 가장 가까운 에러 경계에 잡힘). retry 를 다 쓰고도

@@ -11,3 +11,4 @@ export const useWishlistHasHydrated = () =>
   useWishlistStore((state) => state.hasHydrated);
 export const useToggleWishlist = () =>
   useWishlistStore((state) => state.toggle);
+export const useClearWishlist = () => useWishlistStore((state) => state.clear);

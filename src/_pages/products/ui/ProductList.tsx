@@ -8,6 +8,7 @@ import type { ProductListResponse } from "@/entities/product";
 import { ProductListSkeleton } from "./ProductListSkeleton";
 import { useProductListSearchParams } from "../model/useProductListSearchParams";
 import { buildProductListTitle } from "../model/productListMetadata";
+import { trackProductListView } from "../model/analytics";
 import { useDebouncedValue } from "@/shared/lib";
 import { SITE_NAME } from "@/shared/config";
 import { isServerError } from "@/shared/api";
@@ -55,6 +56,15 @@ export function ProductList() {
   useEffect(() => {
     document.title = `${buildProductListTitle(activeQuery, hasEmptyResult)} | ${SITE_NAME}`;
   }, [activeQuery, hasEmptyResult]);
+
+  // 목록 진입 계측 — 검색어(q)는 제외하고 표시 조건(category·sort·page)이 바뀔 때만 한 번.
+  useEffect(() => {
+    trackProductListView({
+      category: query.category,
+      sort: query.sort,
+      page: query.page,
+    });
+  }, [query.category, query.sort, query.page]);
 
   const currentListKey = productQueries.list(activeQuery).queryKey;
 

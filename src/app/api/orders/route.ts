@@ -57,7 +57,10 @@ const resolveSession = async (request: NextRequest): Promise<Resolved> => {
   if (user === null) {
     return {
       ok: false,
-      response: NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 }),
+      response: NextResponse.json(
+        { message: "로그인이 필요합니다." },
+        { status: 401 },
+      ),
     };
   }
 
@@ -70,16 +73,23 @@ const parseItems = (value: unknown): OrderItem[] | null => {
   }
 
   const items: OrderItem[] = [];
+
   for (const entry of value) {
     if (!isRecord(entry)) {
       return null;
     }
 
     const { productId, quantity } = entry;
+
     if (typeof productId !== "string" || !isKnownProductId(productId)) {
       return null;
     }
-    if (typeof quantity !== "number" || !Number.isSafeInteger(quantity) || quantity < 1) {
+
+    if (
+      typeof quantity !== "number" ||
+      !Number.isSafeInteger(quantity) ||
+      quantity < 1
+    ) {
       return null;
     }
     items.push({ productId, quantity });
@@ -92,29 +102,42 @@ export async function POST(
   request: NextRequest,
 ): Promise<NextResponse<OrderCreateResponse | AuthErrorResponse>> {
   const resolved = await resolveSession(request);
+
   if (!resolved.ok) {
     return resolved.response;
   }
 
   let body: unknown;
+
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: 400 },
+    );
   }
 
   const items = isRecord(body) ? parseItems(body.items) : null;
+
   if (items === null) {
-    return NextResponse.json({ message: "요청 조건을 확인해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 조건을 확인해주세요." },
+      { status: 400 },
+    );
   }
 
-  return NextResponse.json({ order: addOrder(resolved.user.id, items) }, { status: 201 });
+  return NextResponse.json(
+    { order: addOrder(resolved.user.id, items) },
+    { status: 201 },
+  );
 }
 
 export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<OrderListResponse | AuthErrorResponse>> {
   const resolved = await resolveSession(request);
+
   if (!resolved.ok) {
     return resolved.response;
   }

@@ -19,8 +19,11 @@ const sessionCookieFrom = (response: Response) =>
     .find((cookie) => cookie.startsWith(`${SESSION_COOKIE}=`)) ?? "";
 
 const signIn = async (email = accounts[0].email) => {
-  const response = await login(loginRequest({ email, password: TEST_PASSWORD }));
+  const response = await login(
+    loginRequest({ email, password: TEST_PASSWORD }),
+  );
   const cookie = sessionCookieFrom(response);
+
   return cookie.split(`${SESSION_COOKIE}=`)[1]?.split(";")[0] ?? "";
 };
 
@@ -29,6 +32,7 @@ const meRequest = (cookies: Record<string, string>, query = "") => {
   Object.entries(cookies).forEach(([name, value]) => {
     request.cookies.set(name, value);
   });
+
   return request;
 };
 
@@ -65,8 +69,12 @@ describe("POST /api/auth/login", () => {
 
   it("rejects a malformed body with 400", async () => {
     expect((await login(loginRequest("{not json"))).status).toBe(400);
-    expect((await login(loginRequest({ email: accounts[0].email }))).status).toBe(400);
-    expect((await login(loginRequest({ email: 1, password: 2 }))).status).toBe(400);
+    expect(
+      (await login(loginRequest({ email: accounts[0].email }))).status,
+    ).toBe(400);
+    expect((await login(loginRequest({ email: 1, password: 2 }))).status).toBe(
+      400,
+    );
   });
 
   it("rejects an unknown scenario before applying it", async () => {
@@ -78,7 +86,9 @@ describe("POST /api/auth/login", () => {
     );
 
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ message: "요청 조건을 확인해주세요." });
+    expect(await response.json()).toEqual({
+      message: "요청 조건을 확인해주세요.",
+    });
   });
 
   it("fails with 401 in the invalid scenario even with correct credentials", async () => {
@@ -102,7 +112,9 @@ describe("POST /api/auth/login", () => {
     );
 
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ message: "로그인에 실패했습니다." });
+    expect(await response.json()).toEqual({
+      message: "로그인에 실패했습니다.",
+    });
   });
 });
 

@@ -20,11 +20,13 @@ const createRecorder = (overrides: Partial<AnalyticsProvider> = {}) => {
   const provider: AnalyticsProvider = {
     name: "recorder",
     initialize: () => {},
-    track: (event, properties) => recorded.push({ type: "track", event, properties }),
+    track: (event, properties) =>
+      recorded.push({ type: "track", event, properties }),
     identify: (userId) => recorded.push({ type: "identify", userId }),
     reset: () => recorded.push({ type: "reset" }),
     ...overrides,
   };
+
   return { provider, recorded };
 };
 
@@ -80,7 +82,11 @@ describe("analytics logger", () => {
     track("order_complete");
 
     expect(recorded).toEqual([
-      { type: "track", event: "product_list_view", properties: { userId: null } },
+      {
+        type: "track",
+        event: "product_list_view",
+        properties: { userId: null },
+      },
       { type: "track", event: "order_complete", properties: { userId: "u3" } },
     ]);
   });
@@ -100,7 +106,9 @@ describe("analytics logger", () => {
   });
 
   it("프로바이더 하나가 실패해도 나머지로 계속 보낸다", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const broken: AnalyticsProvider = {
       name: "broken",
       initialize: () => {},
@@ -116,12 +124,16 @@ describe("analytics logger", () => {
 
     track("cart_add");
 
-    expect(recorded).toEqual([{ type: "track", event: "cart_add", properties: {} }]);
+    expect(recorded).toEqual([
+      { type: "track", event: "cart_add", properties: {} },
+    ]);
     expect(consoleError).toHaveBeenCalledOnce();
   });
 
   it("초기화가 실패한 프로바이더가 있어도 나머지를 초기화한다", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const { provider, recorded } = createRecorder({
       initialize: () => {
         throw new Error("초기화 실패");
@@ -132,7 +144,9 @@ describe("analytics logger", () => {
     await initAnalytics();
     track("cart_add");
 
-    expect(recorded).toEqual([{ type: "track", event: "cart_add", properties: {} }]);
+    expect(recorded).toEqual([
+      { type: "track", event: "cart_add", properties: {} },
+    ]);
     expect(consoleError).toHaveBeenCalledOnce();
   });
 

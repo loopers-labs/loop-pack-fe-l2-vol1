@@ -1,0 +1,29 @@
+/* 색상·간격 토큰은 조상 .page 에서 상속받는다. */
+.cart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* 주문서로 넘기는 주요 액션 — 주문서의 주문 버튼과 톤 통일. */
+.orderLink {
+  align-self: flex-start;
+  padding: 12px 16px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.orderLink:hover {
+  background: #1d4ed8;
+}
+
+.orderLink:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

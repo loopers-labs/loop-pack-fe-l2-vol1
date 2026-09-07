@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCartCount, useCartHasHydrated } from "@/entities/cart";
 import { useWishlistCount, useWishlistHasHydrated } from "@/entities/wishlist";
 import styles from "./CommerceHeaderCounts.module.css";
@@ -18,9 +19,11 @@ export function CommerceHeaderCounts() {
   // 이름을 가져오지 않으므로, aria-label 로 "장바구니 N" 을 이름으로 줘 SR·테스트가 role·이름으로 짚게 한다.
   return (
     <div className={styles.headerCounts}>
-      <span role="status" aria-label={`장바구니 ${cart}`}>
-        장바구니 {cart}
-      </span>
+      <Link href="/cart" className={styles.cartLink}>
+        <span role="status" aria-label={`장바구니 ${cart}`}>
+          장바구니 {cart}
+        </span>
+      </Link>
       <span role="status" aria-label={`위시리스트 ${wishlist}`}>
         위시리스트 {wishlist}
       </span>

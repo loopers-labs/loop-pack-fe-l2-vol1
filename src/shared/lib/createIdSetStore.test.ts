@@ -48,6 +48,19 @@ describe("영속화·복원", () => {
   });
 });
 
+// clear — 담긴 id 를 전부 비운다
+describe("비우기", () => {
+  test("clear 하면 담겨 있던 id 집합이 빈다", () => {
+    useStore.getState().toggle("p1");
+    useStore.getState().toggle("p2");
+    expect(useStore.getState().ids.size).toBe(2);
+
+    useStore.getState().clear();
+
+    expect(useStore.getState().ids.size).toBe(0);
+  });
+});
+
 // 완료조건 2 — hydration 불일치 없이 (skipHydration 불변식)
 describe("hydration 안전성", () => {
   test("skipHydration: rehydrate 전에는 저장값이 있어도 빈 상태다 (서버·클라 첫 렌더 일치)", () => {
