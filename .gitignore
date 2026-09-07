@@ -47,3 +47,5 @@ next-env.d.ts
 
 # stryker
 .stryker-tmp
+# Playwright 워커별 storageState (로그인 세션)
+/e2e/.auth/

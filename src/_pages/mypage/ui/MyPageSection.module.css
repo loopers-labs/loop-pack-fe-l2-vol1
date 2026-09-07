@@ -1,0 +1,15 @@
+/* 색상·간격 토큰은 조상 .page 에서 상속받는다. */
+.profile {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-sm) var(--space-lg);
+  font-size: 16px;
+}
+
+.profile dt {
+  color: var(--color-muted);
+}
+
+.profile dd {
+  font-weight: 600;
+}

@@ -1,0 +1,17 @@
+/* 색상·간격 토큰은 조상 .page 에서 상속받는다. */
+.authArea {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  font-size: 14px;
+}
+
+.userName {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.loginLink {
+  font-size: 14px;
+  color: var(--color-accent);
+}

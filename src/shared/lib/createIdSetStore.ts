@@ -8,6 +8,7 @@ export type IdSetStore = {
   // 복원(rehydrate)이 끝났는지. 복원 전엔 항상 빈 상태라, 소비부가 이 값으로 실제값/placeholder 를 가른다.
   hasHydrated: boolean;
   toggle: (id: string) => void;
+  clear: () => void;
   setHasHydrated: (value: boolean) => void;
 };
 
@@ -40,6 +41,7 @@ export function createIdSetStore(storageKey: string) {
         ids: new Set(),
         hasHydrated: false,
         toggle: (id) => set((state) => ({ ids: toggleInSet(state.ids, id) })),
+        clear: () => set({ ids: new Set() }),
         setHasHydrated: (value) => set({ hasHydrated: value }),
       }),
       {

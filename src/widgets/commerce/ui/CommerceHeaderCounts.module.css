@@ -5,3 +5,12 @@
   font-size: 14px;
   color: var(--color-muted);
 }
+
+.cartLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cartLink:hover {
+  text-decoration: underline;
+}
