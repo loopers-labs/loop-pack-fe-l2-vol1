@@ -1,4 +1,5 @@
 import '@/test/setup/msw'
+import { isCancelledError, QueryClient } from '@tanstack/react-query'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { fetchProducts } from '@/entities/product/api/api'
@@ -66,20 +67,16 @@ describe('jsdom HTTP 경계', () => {
         return HttpResponse.json(defaultProductListResponse)
       }),
     )
-    const controller = new AbortController()
-    const queryFn = productListQueryOptions({}).queryFn
-
-    if (typeof queryFn !== 'function') {
-      throw new Error('상품 목록 queryFn이 정의되어야 합니다.')
-    }
-
-    const request = queryFn({
-      signal: controller.signal,
-    } as never)
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const queryOptions = productListQueryOptions({})
+    const request = queryClient.fetchQuery(queryOptions)
+    const wasCancelled = request.then(() => false, isCancelledError)
     await handlerStarted
-    controller.abort()
+    await queryClient.cancelQueries({ queryKey: queryOptions.queryKey })
 
     expect(observedSignal?.aborted).toBe(true)
-    await expect(request).rejects.toMatchObject({ name: 'AbortError' })
+    await expect(wasCancelled).resolves.toBe(true)
   })
 })

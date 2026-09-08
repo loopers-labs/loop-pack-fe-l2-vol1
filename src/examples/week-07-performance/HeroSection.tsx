@@ -1,10 +1,7 @@
-import type { HomeResponse } from "@/types/commerce";
-import styles from "./HeroSection.module.css";
+import type { HomeResponse } from '@/types/commerce'
+import styles from './HeroSection.module.css'
 
-type HeroSectionProps = Pick<
-  HomeResponse["banner"],
-  "title" | "description"
->;
+type HeroSectionProps = Pick<HomeResponse['banner'], 'title' | 'description'>
 
 export function HeroSection({ title, description }: HeroSectionProps) {
   return (
@@ -23,5 +20,5 @@ export function HeroSection({ title, description }: HeroSectionProps) {
         <p>{description}</p>
       </div>
     </section>
-  );
+  )
 }

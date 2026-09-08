@@ -1,13 +1,21 @@
 'use client'
 
-import { Suspense, useEffect, useState, type JSX, type ReactNode } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type JSX,
+  type ReactNode,
+} from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   ProductGridFallback,
   productListQueryOptions,
   type ProductListResponse,
 } from '@/entities/product'
 import { getPageNumbers } from '@/shared/lib/getPageNumbers'
+import { trackProductListView } from '@/analytics/events'
 import { ProductFilters } from './ProductFilters'
 import { ProductResults } from './ProductResults'
 import { describeQuery } from '../model/describeQuery'
@@ -42,14 +50,18 @@ export function ProductListPage({
 
 function ProductsContentFallback(): JSX.Element {
   return (
-    <section className="week05-section" aria-label="상품 검색 결과">
+    <section
+      className="week05-section"
+      aria-label="상품 검색 결과"
+      aria-busy="true"
+    >
       <ProductGridFallback count={PAGE_SIZE} />
     </section>
   )
 }
 
 export function ProductListContent(): JSX.Element {
-  const queryClient = useQueryClient()
+  const lastTrackedQuerySignature = useRef<string | null>(null)
   const { query, setSearch, setCategory, setSort, setPage, replacePage } =
     useProductListQuery()
   // page < 1(0·음수)은 응답을 볼 것도 없이 잘못된 값이고, 서버도 400으로 거절한다.
@@ -57,8 +69,9 @@ export function ProductListContent(): JSX.Element {
   const isPageBelowMin = query.page < MIN_PAGE
   const listQuery = isPageBelowMin ? { ...query, page: MIN_PAGE } : query
   const requestedPage = listQuery.page
-  const [lastSuccessfulQuery, setLastSuccessfulQuery] = useState(listQuery)
   const [isRetrying, setIsRetrying] = useState(false)
+  const [lastSuccessfulData, setLastSuccessfulData] =
+    useState<ProductListResponse>()
 
   const {
     data,
@@ -69,19 +82,6 @@ export function ProductListContent(): JSX.Element {
     isFetching,
     refetch,
   } = useQuery(productListQueryOptions(listQuery))
-
-  const rememberDisplayedQuery = (): void => {
-    if (data !== undefined && !isError && !isPlaceholderData) {
-      setLastSuccessfulQuery(listQuery)
-    }
-  }
-
-  const previousData = isError
-    ? queryClient.getQueryData<ProductListResponse>(
-        productListQueryOptions(lastSuccessfulQuery).queryKey,
-      )
-    : undefined
-  const visibleData = data ?? previousData
 
   // 반대쪽 끝: 서버는 범위를 벗어난 page에도 200과 빈 목록을 준다(totalCount는 그대로).
   // 그대로 두면 결과가 30개인데도 "0개"로 보이고 페이지네이션까지 사라져 화면 안에
@@ -102,6 +102,29 @@ export function ProductListContent(): JSX.Element {
   // 보정은 양쪽 끝 모두 필요하다 — 1보다 작으면 첫 페이지로, 마지막을 넘으면 마지막 페이지로.
   const correctedPage = isPageBelowMin ? MIN_PAGE : outOfRangePage
 
+  if (
+    data !== undefined &&
+    !isError &&
+    !isPlaceholderData &&
+    correctedPage === null &&
+    !isCorrectingPage &&
+    data !== lastSuccessfulData
+  ) {
+    setLastSuccessfulData(data)
+  }
+
+  const previousData = data === undefined ? lastSuccessfulData : undefined
+  const visibleData = data ?? previousData
+  const hasList = visibleData !== undefined
+  const displayedQuerySignature = JSON.stringify([
+    listQuery.q,
+    listQuery.category,
+    listQuery.sort,
+    listQuery.page,
+    listQuery.pageSize,
+    listQuery.scenario,
+  ])
+
   const handleRetry = async (): Promise<void> => {
     setIsRetrying(true)
     await refetch()
@@ -114,14 +137,42 @@ export function ProductListContent(): JSX.Element {
     }
   }, [correctedPage, replacePage])
 
+  useEffect(() => {
+    if (
+      (data === undefined && !isError) ||
+      isPlaceholderData ||
+      correctedPage !== null ||
+      lastTrackedQuerySignature.current === displayedQuerySignature
+    ) {
+      return
+    }
+
+    lastTrackedQuerySignature.current = displayedQuerySignature
+    trackProductListView({
+      category: listQuery.category,
+      sort: listQuery.sort,
+      page: listQuery.page,
+    })
+  }, [
+    correctedPage,
+    data,
+    displayedQuerySignature,
+    isError,
+    isPlaceholderData,
+    listQuery.category,
+    listQuery.page,
+    listQuery.sort,
+  ])
+
   // 여섯 화면을 가르는 축은 둘뿐이다 — 보여줄 목록이 있는가, 지금 실패했는가.
   //   목록 없음 + 로딩  → 실제 크기의 pending UI
   //   목록 없음 + 실패  → 목록 대신 오류와 재시도
-  //   목록 있음 + 갱신  → 목록을 유지하고 갱신 중임을 표시(placeholderData·aria-busy)
+  //   목록 있음 + 갱신  → 사용 가능한 목록을 유지하고 별도 status로 갱신 중임을 알림
   //   목록 있음 + 실패  → 목록을 유지한 채 인라인 오류와 재시도
   //   성공 + 0건        → 현재 URL 조건과 0개임을 확정해 보여줌(ProductResults)
   //   취소              → 상태가 바뀌지 않으므로 아무 오류도 나타나지 않는다
-  const hasList = visibleData !== undefined
+  const isFirstLoad = !hasList && isPending && !isRetrying
+  const isUpdating = hasList && isFetching && !isError
   const retryButton = (
     <button
       type="button"
@@ -140,24 +191,18 @@ export function ProductListContent(): JSX.Element {
           q={query.q}
           category={query.category}
           sort={query.sort}
-          onSearch={(q) => {
-            rememberDisplayedQuery()
-            setSearch(q)
-          }}
-          onCategoryChange={(category) => {
-            rememberDisplayedQuery()
-            setCategory(category)
-          }}
-          onSortChange={(sort) => {
-            rememberDisplayedQuery()
-            setSort(sort)
-          }}
+          onSearch={setSearch}
+          onCategoryChange={setCategory}
+          onSortChange={setSort}
         />
       </section>
 
-      <section className="week05-section" aria-label="상품 검색 결과">
-        {(isPending && !isRetrying) ||
-        (hasList && (isPageOutOfRange || isCorrectingPage)) ? (
+      <section
+        className="week05-section"
+        aria-label="상품 검색 결과"
+        aria-busy={isFirstLoad}
+      >
+        {isFirstLoad || (hasList && (isPageOutOfRange || isCorrectingPage)) ? (
           <ProductGridFallback count={PAGE_SIZE} />
         ) : !hasList ? (
           <p className="commerce-status">
@@ -167,6 +212,11 @@ export function ProductListContent(): JSX.Element {
           </p>
         ) : (
           <>
+            {isUpdating && (
+              <p className="commerce-status" role="status">
+                목록을 갱신하는 중입니다…
+              </p>
+            )}
             {isError && (
               <p className="commerce-inline-error" role="status">
                 목록을 갱신하지 못했습니다. 아래는 직전 결과입니다.{' '}
@@ -175,10 +225,7 @@ export function ProductListContent(): JSX.Element {
             )}
             <ProductResults
               data={visibleData}
-              onPageChange={(page) => {
-                rememberDisplayedQuery()
-                setPage(page)
-              }}
+              onPageChange={setPage}
               isPlaceholderData={isPlaceholderData}
               conditionSummary={describeQuery(query)}
             />

@@ -7,7 +7,7 @@ import {
   type OnUrlUpdateFunction,
 } from 'nuqs/adapters/testing'
 import { ProductListPage } from '@/_pages/product-list'
-import { Header } from '@/widgets/header'
+import { HeaderActions } from '@/widgets/header'
 
 interface RenderProductListOptions {
   searchParams?: string
@@ -39,7 +39,7 @@ export function renderProductList({
         onUrlUpdate={onUrlUpdate}
         hasMemory
       >
-        {includeHeader && <Header />}
+        {includeHeader && <HeaderActions userName={null} />}
         <ProductListPage />
       </NuqsTestingAdapter>
     </QueryClientProvider>

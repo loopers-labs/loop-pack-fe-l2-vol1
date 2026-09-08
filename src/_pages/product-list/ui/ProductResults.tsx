@@ -34,7 +34,6 @@ export function ProductResults({
           className={
             isPlaceholderData ? 'week05-grid week05-grid--stale' : 'week05-grid'
           }
-          aria-busy={isPlaceholderData}
         >
           {data.products.map((product, index) => (
             <ProductCardWithActions

@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import { create } from "zustand";
+import Image from 'next/image'
+import { create } from 'zustand'
 import {
   calculateCardPresentation,
   performanceLabProducts,
   type PerformanceLabProduct,
-} from "./products";
-import styles from "./performance-lab.module.css";
+} from './products'
+import styles from './performance-lab.module.css'
 
 type WishlistState = {
-  wishlistIds: string[];
-  toggleWishlist: (productId: string) => void;
-};
+  wishlistIds: string[]
+  toggleWishlist: (productId: string) => void
+}
 
 const usePerformanceWishlist = create<WishlistState>((set) => ({
   wishlistIds: [],
@@ -22,19 +22,17 @@ const usePerformanceWishlist = create<WishlistState>((set) => ({
         ? state.wishlistIds.filter((id) => id !== productId)
         : [...state.wishlistIds, productId],
     })),
-}));
+}))
 
 function PerformanceProductCard({
   product,
 }: {
-  product: PerformanceLabProduct;
+  product: PerformanceLabProduct
 }) {
-  const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds);
-  const toggleWishlist = usePerformanceWishlist(
-    (state) => state.toggleWishlist,
-  );
-  const selected = wishlistIds.includes(product.id);
-  const presentation = calculateCardPresentation(product.id, selected);
+  const wishlistIds = usePerformanceWishlist((state) => state.wishlistIds)
+  const toggleWishlist = usePerformanceWishlist((state) => state.toggleWishlist)
+  const selected = wishlistIds.includes(product.id)
+  const presentation = calculateCardPresentation(product.id, selected)
 
   return (
     <article className={styles.card}>
@@ -52,10 +50,10 @@ function PerformanceProductCard({
         aria-pressed={selected}
         onClick={() => toggleWishlist(product.id)}
       >
-        {selected ? "찜 해제" : "찜하기"}
+        {selected ? '찜 해제' : '찜하기'}
       </button>
     </article>
-  );
+  )
 }
 
 export default function PerformanceLabPage() {
@@ -75,5 +73,5 @@ export default function PerformanceLabPage() {
         ))}
       </section>
     </main>
-  );
+  )
 }
