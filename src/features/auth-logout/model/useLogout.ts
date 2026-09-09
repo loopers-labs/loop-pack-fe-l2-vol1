@@ -7,6 +7,7 @@ import { sessionQueries } from '@/entities/session/api/sessionQueries';
 import { ordersQueries } from '@/entities/order/api/ordersQueries';
 import { isProtectedPath } from '@/shared/config/protected-routes';
 import { reset } from '@/analytics/logger';
+import { ApiError } from '@/shared/api';
 
 export function useLogout() {
   const router = useRouter();
@@ -37,10 +38,19 @@ export function useLogout() {
         router.push('/');
       }
     },
+    // onError가 없으면 실패해도 isPending만 풀리고 화면은 그대로라 "눌렀는데
+    // 아무 일도 안 일어난" 것처럼 보인다. 상태 정리(reset·캐시 제거·이동)는
+    // 실제로 로그아웃에 성공했을 때만 의미가 있어 onSuccess에만 둔다 — 여기선
+    // 에러 메시지만 노출한다.
+    onError: () => {},
   });
+
+  const errorMessage =
+    mutation.error instanceof ApiError ? mutation.error.message : null;
 
   return {
     handleLogout: () => mutation.mutate(),
     isPending: mutation.isPending,
+    errorMessage,
   };
 }
