@@ -7,7 +7,7 @@ import {
 } from '@/app/api/_data/auth-cookies';
 import { createLoginHref } from '@/features/auth/lib/authNavigation';
 import type { AuthUser } from '@/entities/auth/model/types';
-import type { LoginFrom } from '@/shared/lib/loginFrom';
+import type { LoginEntrySource } from '@/shared/lib/loginEntrySource';
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   const cookieStore = await cookies();
@@ -20,12 +20,12 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
 export async function requireCurrentUser(
   returnTo: string,
-  loginFrom: LoginFrom = 'direct',
+  loginSource: LoginEntrySource = 'direct',
 ): Promise<AuthUser> {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(createLoginHref(returnTo, loginFrom));
+    redirect(createLoginHref(returnTo, loginSource));
   }
 
   return user;

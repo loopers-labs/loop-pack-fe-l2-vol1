@@ -36,7 +36,7 @@ function renderLogin() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <LoginContent returnTo="/orders/new" loginFrom="cart" />
+      <LoginContent returnTo="/orders/new" loginSource="cart" />
     </QueryClientProvider>,
   );
 }

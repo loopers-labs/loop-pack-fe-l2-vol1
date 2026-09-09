@@ -92,7 +92,7 @@ describe('CartContent', () => {
     expect(screen.queryByText('원하는 상품을 담아보세요.')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '주문하기' })).toHaveAttribute(
       'href',
-      '/orders/new?from=cart',
+      '/orders/new?loginSource=cart',
     );
     expect(analytics.trackCartAdd).toHaveBeenCalledWith(product.id);
   });

@@ -1,6 +1,6 @@
 import { identify, reset, track } from './logger';
 import { setAnalyticsUserId } from './context';
-import type { LoginFrom } from '@/shared/lib/loginFrom';
+import type { LoginEntrySource } from '@/shared/lib/loginEntrySource';
 
 export const ANALYTICS_EVENT_NAMES = {
   productListView: 'product_list_view',
@@ -50,8 +50,8 @@ export function trackCartAdd(productId: string, quantity = 1): void {
   track(ANALYTICS_EVENT_NAMES.cartAdd, { productId, quantity });
 }
 
-export function trackLoginStart(from: LoginFrom): void {
-  track(ANALYTICS_EVENT_NAMES.loginStart, { from });
+export function trackLoginStart(source: LoginEntrySource): void {
+  track(ANALYTICS_EVENT_NAMES.loginStart, { from: source });
 }
 
 export function identifyAnalyticsUser(userId: string): void {
@@ -59,12 +59,15 @@ export function identifyAnalyticsUser(userId: string): void {
   identify(userId);
 }
 
-export function trackLoginSuccess(from: LoginFrom): void {
-  track(ANALYTICS_EVENT_NAMES.loginSuccess, { from });
+export function trackLoginSuccess(source: LoginEntrySource): void {
+  track(ANALYTICS_EVENT_NAMES.loginSuccess, { from: source });
 }
 
-export function trackLoginFail(from: LoginFrom, reason: string): void {
-  track(ANALYTICS_EVENT_NAMES.loginFail, { from, reason });
+export function trackLoginFail(
+  source: LoginEntrySource,
+  reason: string,
+): void {
+  track(ANALYTICS_EVENT_NAMES.loginFail, { from: source, reason });
 }
 
 export function trackOrderStart(properties: OrderProperties): void {

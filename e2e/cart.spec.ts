@@ -19,7 +19,7 @@ test.describe('장바구니', () => {
     ).toBeVisible();
     await page.getByRole('link', { name: '주문하기' }).click();
     await expect(page).toHaveURL(
-      '/login?returnTo=%2Forders%2Fnew&from=cart',
+      '/login?returnTo=%2Forders%2Fnew&loginSource=cart',
     );
     await fillLoginForm(page);
     await page.getByRole('button', { name: '로그인' }).click();

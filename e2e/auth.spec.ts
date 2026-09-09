@@ -83,7 +83,7 @@ test.describe('인증', () => {
     const response = await createOrderResponse;
     expect(response.status()).toBe(401);
     await expect(page).toHaveURL(
-      '/login?returnTo=%2Forders%2Fnew&from=orders',
+      '/login?returnTo=%2Forders%2Fnew&loginSource=orders',
     );
     await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
   });
