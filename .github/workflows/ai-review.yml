@@ -26,9 +26,14 @@ jobs:
     # 로컬 실행이 약 2분이다. 폭주하면 이 선에서 끊는다.
     timeout-minutes: 10
     permissions:
+      # action 이 코드를 고쳐 push 하는 것까지 허용하지 않는다. 여기서 받는 건
+      # 판정이지 수정이 아니다. write 로 열면 리뷰어가 브랜치를 건드릴 수 있다.
       contents: read
       # 리뷰 결과를 PR 코멘트로 남기는 데 필요하다. 이 job 에만 준다.
       pull-requests: write
+      # action 이 GitHub OIDC 토큰을 받아 단기 자격증명으로 교환한다.
+      # 없으면 인증 단계에서 바로 실패한다.
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
