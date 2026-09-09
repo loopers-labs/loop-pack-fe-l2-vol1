@@ -76,6 +76,11 @@ jobs:
       contents: read
       # paths-filter 가 PR 의 변경 파일 목록을 API 로 읽는다. 이 job 에만 준다.
       pull-requests: read
+    # build 와 E2E 서버가 실제로 읽는 값이다. 검증 대상이기도 하므로 job 전체에 준다.
+    # 나머지 두 job 은 빌드를 안 해서 필요 없다.
+    env:
+      APP_ORIGIN: ${{ secrets.APP_ORIGIN }}
+      AUTH_SESSION_SECRET: ${{ secrets.AUTH_SESSION_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -112,6 +117,10 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      # package.json 의 prebuild 로도 같은 스크립트가 돌지만 step 을 따로 둔다.
+      # 실패했을 때 Actions 목록에 이 이름이 보여야 로그를 열지 않고 원인을 안다.
+      - name: Validate env
+        run: node scripts/validate-env.mjs
       # 브라우저 바이너리는 ~/.cache/ms-playwright 에 깔린다.
       # setup-node 의 cache: pnpm 은 pnpm store 만 잡아서 이 경로는 캐시 대상에서 빠져 있었다.
       - name: Restore Playwright browsers
@@ -135,6 +144,10 @@ jobs:
       # E2E 는 이 결과물 위에서 돈다(playwright.config.ts 의 webServer 가 CI 에선 pnpm start).
       - name: Build
         run: pnpm build
+      # .next 가 존재하는 시점이 여기뿐이라 Build 바로 뒤에 둔다. 조건은 걸지 않는다.
+      # 초과분을 job summary 표로 남겨 로그를 열지 않고 PR 화면에서 보이게 한다.
+      - name: Bundle size budget
+        run: pnpm --silent size --json | node scripts/size-summary.mjs >> "$GITHUB_STEP_SUMMARY"
       - name: E2E test
         if: steps.e2e.outputs.run == 'true'
         run: pnpm test:e2e
