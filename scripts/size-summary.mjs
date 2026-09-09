@@ -41,12 +41,16 @@ const hasFailure = results.some((result) => !result.passed);
 
 console.log(`## 번들 예산 ${hasFailure ? "초과" : "통과"}`);
 console.log();
-console.log("| 대상 | 현재 | 예산 | 차이 | Slow 4G 전송 |");
+console.log("| 대상 | 현재 | 예산 | 차이 | Slow 4G 전송(계산값) |");
 console.log("| --- | ---: | ---: | ---: | ---: |");
 results.forEach((result) => console.log(formatRow(result)));
 console.log();
 console.log(
   "**예산 300 kB** = 가정한 회선 Slow 4G(1.6 Mbps = 200,000 B/s) × 1.5초. 측정값이 아니라 기준을 세우려고 잡은 가정이다.",
+);
+console.log();
+console.log(
+  "**전송 시간** = 바이트 ÷ 200,000 B/s. 같은 가정 위의 산술이라 RTT·핸드셰이크·파싱·실행이 빠져 있고 실제 체감은 이보다 길다.",
 );
 
 if (hasFailure) process.exit(1);
