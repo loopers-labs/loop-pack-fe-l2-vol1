@@ -1,5 +1,6 @@
 import { test as setup } from '@playwright/test';
 import { accounts } from './support/accounts';
+import { fillLoginForm } from './support/login-form';
 
 // 계정 8개 전부 미리 로그인해서 워커별 storageState 파일(.auth/worker-N.json)을
 // 만들어둔다. 실제 실행 워커 수가 몇이든(fixtures.ts가 workerIndex % 8로
@@ -11,8 +12,7 @@ import { accounts } from './support/accounts';
 for (const [index, account] of accounts.entries()) {
   setup(`로그인 상태를 저장한다 (계정 ${index})`, async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('이메일').fill(account.email);
-    await page.getByLabel('비밀번호').fill(account.password);
+    await fillLoginForm(page, account);
     await page.getByRole('button', { name: '로그인' }).click();
     await page.getByRole('button', { name: '로그아웃' }).waitFor();
 

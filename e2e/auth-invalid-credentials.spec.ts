@@ -1,4 +1,5 @@
 import { test, expect } from './support/fixtures';
+import { fillLoginForm } from './support/login-form';
 
 test.describe('잘못된 자격 증명', () => {
   // 로그인 실패를 검증하는 테스트라 storageState를 쓰지 않는다 — 이미
@@ -11,8 +12,10 @@ test.describe('잘못된 자격 증명', () => {
   }) => {
     await page.goto('/login');
 
-    await page.getByLabel('이메일').fill(account.email);
-    await page.getByLabel('비밀번호').fill('wrong-password');
+    await fillLoginForm(page, {
+      email: account.email,
+      password: 'wrong-password',
+    });
     await page.getByRole('button', { name: '로그인' }).click();
 
     // getByRole('alert')만 쓰면 Next.js가 라우트 변경 알림용으로 항상
