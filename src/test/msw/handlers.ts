@@ -28,4 +28,9 @@ export const handlers = [
   http.get('/api/products', () =>
     HttpResponse.json(minimalProductListResponse),
   ),
+  // 헤더가 모든 화면에서 로그인 상태를 조회하므로, 기본값은 비로그인(401)으로 둔다.
+  // 로그인 상태를 테스트해야 하는 곳은 server.use()로 개별 오버라이드한다.
+  http.get('/api/auth/me', () =>
+    HttpResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 }),
+  ),
 ];
