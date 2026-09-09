@@ -1,28 +1,18 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { withNuqsTestingAdapter } from 'nuqs/adapters/testing'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { useCartStore } from '@/entities/cart/model/CartStore'
-import { ProductService } from '@/entities/product/api/ProductService'
-import { ProductListRouteParams } from '@/entities/product/model/ProductListRouteParams'
 import type {
   Product,
   ProductListResponse,
 } from '@/entities/product/model/types'
-import { useWishlistStore } from '@/entities/wishlist/model/WishlistStore'
-import { useProductFilters } from '@/features/product-filter/model/useProductFilters'
-import { FilterBar } from '@/features/product-filter/ui/FilterBar'
-import { useProductListState } from '@/views/product-list/model/useProductListState'
-import { Header } from '@/widgets/header/ui/Header'
-import { ProductListSection } from '@/widgets/product-list/ui/ProductListSection'
 
+import {
+  renderProductListHarness,
+  resetProductListHarnessState,
+} from '../../../../tests/helpers/renderProductListHarness'
 import { server } from '../../../../tests/setup/mswServer'
 
 const productDefaults: Omit<
@@ -93,75 +83,9 @@ const productList = (
   pageSize: 12,
 })
 
-const productService = new ProductService()
-let activeQueryClient: QueryClient | undefined
-
-function ProductListHarness() {
-  const { filters, updateFilter, updatePage } = useProductFilters()
-  const request = ProductListRouteParams.toRequest({
-    q: filters.q,
-    category: filters.category,
-    sort: filters.sort,
-    page: String(filters.page),
-  })
-  const options = productService.getProductList(request)
-  const query = useQuery(options)
-  const state = useProductListState(
-    query,
-    options.queryKey,
-    JSON.stringify(request),
-  )
-
-  return (
-    <>
-      <Header />
-      <FilterBar
-        filters={filters}
-        totalCount={state.displayedData?.totalCount ?? 0}
-        pageSize={12}
-        updateFilter={updateFilter}
-        updatePage={updatePage}
-      />
-      <ProductListSection
-        query={query}
-        displayedData={state.displayedData}
-        displayedDataKey={state.displayedDataKey}
-        scope={JSON.stringify(request)}
-      />
-    </>
-  )
-}
-
-const renderProductList = (searchParams = '') => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
-  activeQueryClient = queryClient
-  const NuqsTestingAdapter = withNuqsTestingAdapter({
-    hasMemory: true,
-    searchParams,
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <NuqsTestingAdapter>
-        <ProductListHarness />
-      </NuqsTestingAdapter>
-    </QueryClientProvider>,
-  )
-}
-
-const resetTestState = () => {
-  activeQueryClient?.clear()
-  activeQueryClient = undefined
-  localStorage.clear()
-  useCartStore.setState({ items: {} })
-  useWishlistStore.setState({ items: {} })
-}
-
 describe('ProductList interactions', () => {
-  beforeEach(resetTestState)
-  afterEach(resetTestState)
+  beforeEach(resetProductListHarnessState)
+  afterEach(resetProductListHarnessState)
 
   it('Product list category filter - when the category changes from page two - resets to page one and shows matching products', async () => {
     // Arrange
@@ -180,7 +104,7 @@ describe('ProductList interactions', () => {
       }),
     )
 
-    renderProductList('?page=2')
+    renderProductListHarness({ searchParams: '?page=2', withHeader: true })
     await screen.findByRole('heading', { name: products.pageTwo.name })
 
     // Act
@@ -211,7 +135,7 @@ describe('ProductList interactions', () => {
       }),
     )
 
-    renderProductList('?page=2')
+    renderProductListHarness({ searchParams: '?page=2', withHeader: true })
     await screen.findByRole('heading', { name: products.pageTwo.name })
 
     // Act
@@ -237,7 +161,7 @@ describe('ProductList interactions', () => {
     )
 
     // Act
-    renderProductList()
+    renderProductListHarness({ withHeader: true })
 
     // Assert
     await screen.findByRole('heading', { name: products.pageOne.name })
@@ -258,7 +182,7 @@ describe('ProductList interactions', () => {
       }),
     )
 
-    renderProductList()
+    renderProductListHarness({ withHeader: true })
     await screen.findByRole('heading', { name: products.pageOne.name })
 
     // Act
@@ -281,7 +205,7 @@ describe('ProductList interactions', () => {
       ),
     )
 
-    renderProductList()
+    renderProductListHarness({ withHeader: true })
     await screen.findByRole('heading', { name: products.pageOne.name })
     const cartButton = screen.getByRole('button', {
       name: `${products.pageOne.name} 장바구니`,
@@ -303,7 +227,7 @@ describe('ProductList interactions', () => {
         HttpResponse.json(productList([products.pageOne])),
       ),
     )
-    renderProductList()
+    renderProductListHarness({ withHeader: true })
     await screen.findByRole('heading', { name: products.pageOne.name })
     const cartButton = screen.getByRole('button', {
       name: `${products.pageOne.name} 장바구니`,

@@ -27,6 +27,8 @@ const initialWishlistState: WishlistState = {
 
 const WISHLIST_STORAGE_KEY = 'commerce-wishlist'
 const WISHLIST_STORAGE_VERSION = 1
+const getWishlistStorage = () =>
+  typeof window === 'undefined' ? localStorage : window.localStorage
 
 const persistedWishlistSchema = z.object({
   items: z.record(z.string(), z.literal(true)),
@@ -55,7 +57,7 @@ export const useWishlistStore = create<WishlistStore>()(
       persist<WishlistStore, WishlistState>({
         name: WISHLIST_STORAGE_KEY,
         version: WISHLIST_STORAGE_VERSION,
-        storage: createJSONStorage(() => localStorage),
+        storage: createJSONStorage(getWishlistStorage),
         partialize: (state) => ({ items: state.items }),
         migrate: (persistedState) => migrateWishlist(persistedState),
         merge: mergeWishlistState,

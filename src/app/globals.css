@@ -13,3 +13,8 @@
   --color-panel: #fbfaf3;
   --color-overlay: rgb(8 6 13 / 0.55);
 }
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}

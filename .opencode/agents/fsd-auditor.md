@@ -18,10 +18,9 @@ You audit whether code follows the repository's Feature-Sliced Design rules.
 ## Read First
 
 - `AGENTS.md`
-- `docs/rules/architecture/fsd-layers.md`
-- `docs/rules/architecture/imports-and-public-api.md`
-- `docs/rules/architecture/domain-and-api-boundaries.md`
-- `docs/rules/conventions/exports-and-files.md`
+- `docs/rules/02-디렉토리-구조.md`
+- `docs/rules/05-API-패턴.md`
+- `docs/rules/13-피처-구조-패턴.md`
 
 ## Responsibilities
 

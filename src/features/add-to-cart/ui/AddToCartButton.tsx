@@ -1,5 +1,6 @@
 'use client'
 
+import { analyticsEvents } from '@/analytics/events'
 import { cartSelectors, useCartStore } from '@/entities/cart/model/CartStore'
 
 type AddToCartButtonProps = {
@@ -25,6 +26,7 @@ export function AddToCartButton({
           removeFromCart(productId)
         } else {
           addToCart(productId)
+          analyticsEvents.cartAdd({ productId })
         }
       }}
       className="flex-1 rounded border border-(--color-border) px-3 py-2 text-xs text-(--color-text) hover:bg-(--color-surface-muted)"

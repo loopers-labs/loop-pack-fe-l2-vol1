@@ -76,6 +76,7 @@ ESLint는 inline config를 허용하지 않는다.
 - unused variable은 error. 단, 의도적으로 미사용인 값은 `_` prefix를 사용한다.
 - Zod schema에서 파생되는 타입은 `z.infer<typeof Schema>`를 사용하고, schema와 같은 형태의 수동 타입을 중복 선언하지 않는다.
 - 런타임 검증이 필요한 경계에서는 `any`나 type assertion으로 외부 데이터를 믿지 않고 Zod `parse`/`safeParse`로 좁힌다.
+- `@typescript-eslint/no-extraneous-class`는 의도적으로 끈다. [`13-피처-구조-패턴.md`](13-피처-구조-패턴.md)의 FSD `lib` namespace class가 static method만 소유하는 구조를 허용하기 위한 설정이며, standalone export 제한과 함께 유지한다.
 
 ### 6. ESLint React 규칙
 
@@ -115,6 +116,7 @@ ESLint는 inline config를 허용하지 않는다.
 - `src` 내부 default export는 금지한다. Next 라우트 파일과 도구 설정 파일처럼 외부 도구가 요구하는 entry point만 예외로 한다.
 - FSD slice/entity root에는 `index.ts` Public API를 만들지 않고 실제 파일 경로를 직접 import한다. 폴더로 승격한 컴포넌트 내부의 선택적 `index.ts` 공개 경계에서는 필요한 named export만 명시하고 `export *`는 금지한다.
 - FSD `lib` segment에서 export되는 유틸리티는 namespace class의 static method로 묶는다. lint는 `lib` segment의 exported standalone function/arrow function을 제한하고, 세부 그룹명과 책임은 리뷰에서 확인한다. 단, React custom hook은 React 규약상 `use[A-Z0-9]...` 형태의 standalone function API가 필요하므로 이 제한에서 예외로 둔다.
+- `tailwindcss/no-custom-classname`은 Tailwind v4의 합법적인 임의 문법과 레거시 클래스 사용을 검토 대상으로 남기기 위해 `warn`으로 운용한다. warning은 품질 게이트를 막지 않지만 리뷰에서 확인하며, whitelist 추가에는 Tailwind 유틸리티로 대체할 수 없는 구체적인 근거가 필요하다.
 
 ### 9. 커밋 전에는 lint-staged를 통과한다
 
