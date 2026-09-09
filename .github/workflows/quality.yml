@@ -10,8 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  # 세 job 은 서로 의존하지 않아 병렬로 돈다.
+  # 각 job 이 checkout·install 을 반복하는 비용은 pnpm store 캐시가 흡수한다.
+  lint-and-types:
     runs-on: ubuntu-latest
+    timeout-minutes: 3 # 관측 중앙값 33초의 약 5배
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -28,10 +31,75 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
-        run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
-          fi
-      - name: Run quality checks
-        run: pnpm check
+      - name: Lint
+        run: pnpm lint
+      - name: Lint FSD boundaries
+        run: pnpm lint:fsd
+      - name: Typecheck
+        run: pnpm typecheck
+
+  unit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3 # 관측 중앙값 38초의 약 5배
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 10.15.1
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit test
+        run: pnpm test:unit
+
+  # build 와 E2E 를 한 job 에 두는 이유: 나누면 .next 를 artifact 로 주고받아야 하고
+  # 그 업로드·다운로드 비용이 병렬로 버는 시간보다 크다.
+  build-and-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5 # 관측 중앙값 64초 + E2E 재시도(retries: 2) 여유
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 10.15.1
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # 브라우저 바이너리는 ~/.cache/ms-playwright 에 깔린다.
+      # setup-node 의 cache: pnpm 은 pnpm store 만 잡아서 이 경로는 캐시 대상에서 빠져 있었다.
+      - name: Restore Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      # 캐시가 복원돼도 시스템 라이브러리는 러너에 남지 않는다.
+      # 생략해도 지금 러너 이미지에서는 E2E 가 통과하고 9초를 벌지만(측정함),
+      # 그건 이미지가 Chromium 의존 라이브러리를 갖고 있다는 보장 없는 성질에 기대는 것이다.
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      # E2E 는 이 결과물 위에서 돈다(playwright.config.ts 의 webServer 가 CI 에선 pnpm start).
+      - name: Build
+        run: pnpm build
+      - name: E2E test
+        run: pnpm test:e2e
