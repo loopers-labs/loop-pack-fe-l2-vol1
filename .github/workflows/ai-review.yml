@@ -1,0 +1,57 @@
+name: AI Review
+
+# Quality workflow 와 파일을 나눈 이유는 이 검사가 required 가 되면 안 되기 때문이다.
+# 같은 diff 에 다시 돌려도 지적이 달라지는 비결정적 검사라, 머지를 막는 자리에 두면
+# 통과 여부가 코드가 아니라 그날의 출력에 좌우된다. 참고용으로만 둔다.
+"on":
+  pull_request:
+    types: [labeled]
+
+# 기본은 읽기만. 코멘트를 다는 job 에서만 쓰기 권한을 더한다.
+permissions:
+  contents: read
+
+# 라벨을 여러 번 붙였다 뗐다 하면 같은 PR 에 리뷰가 겹쳐 돈다.
+# 마지막 것만 남긴다. Quality 와 달리 main 을 보호할 필요가 없어 조건 없이 취소한다.
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  convention-review:
+    # 모든 PR 에서 자동으로 돌리지 않는다. 리뷰 결과가 참고용인데 매번 코멘트가 달리면
+    # 읽히지 않는 코멘트가 쌓이고, 정작 봐야 할 때 묻힌다. 사람이 라벨을 붙여 부를 때만 돈다.
+    if: github.event.label.name == 'ai-review'
+    runs-on: ubuntu-latest
+    # 로컬 실행이 약 2분이다. 폭주하면 이 선에서 끊는다.
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      # 리뷰 결과를 PR 코멘트로 남기는 데 필요하다. 이 job 에만 준다.
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # base 와 비교하려면 얕은 클론으로는 부족하다.
+          fetch-depth: 0
+          persist-credentials: false
+      # v1 은 움직이는 태그라 릴리스 없이도 내용이 바뀐다. 커밋 SHA 로 고정한다.
+      - name: Convention review
+        uses: anthropics/claude-code-action@19dda84776b3518d98b8798e591daee763049ed3 # v1
+        with:
+          # 구독 토큰이다. 종량제 API 결제가 붙지 않는다.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          label_trigger: ai-review
+          # 리뷰 기준은 저장소 안의 스킬 파일이다. 여기에 기준을 다시 적지 않는다.
+          # 로컬 실행과 CI 가 같은 파일을 읽어야 두 결과를 비교할 수 있다.
+          prompt: |
+            /convention-review
+
+            이 PR 의 diff 를 리뷰하라. base 는 `${{ github.base_ref }}` 다.
+          # 로컬 실행과 모델을 맞춘다. 프롬프트를 고친 전후를 비교할 때
+          # 모델이 다르면 차이가 무엇 때문인지 가릴 수 없다.
+          claude_args: --model opus
+          # PR 코멘트로 진행 상황과 결과를 남긴다. 이게 없으면 결과가
+          # step 로그에만 남아서 PR 화면에서 안 보인다.
+          track_progress: true
