@@ -7,6 +7,8 @@ type CartState = { productIds: Set<string> };
 
 type CartActions = {
   setSingleIdInCart: (productId: string) => void;
+  /** 담은 목록을 초기 상태로 되돌린다. 주문 완료와 로그아웃이 부른다 */
+  clearCart: () => void;
 };
 
 type CartStore = CartState & CartActions;
@@ -19,6 +21,9 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           productIds: toggleSetItem<string>(state.productIds, productId),
         }));
+      },
+      clearCart: () => {
+        set({ productIds: new Set<string>() });
       },
     }),
     {

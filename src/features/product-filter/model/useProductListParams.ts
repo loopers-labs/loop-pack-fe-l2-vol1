@@ -1,6 +1,11 @@
 'use client';
 
 import { useQueryStates } from 'nuqs';
+import {
+  trackCategoryFilterChange,
+  trackPageChange,
+  trackSortChange,
+} from '@/analytics/trackEvents';
 import type { CategoryId } from '@/entities/category/model/category';
 import { DEFAULT_PRODUCT_LIST_QUERY, type ProductSort } from '@/entities/product/model/product';
 import { productSearchParams } from './productSearchParams';
@@ -14,9 +19,23 @@ export function useProductListParams() {
      페이지 이동(setPage)은 새 페이지를 처음부터 보는 게 자연스러워 scroll:true를 그대로 둔다 */
   // 디바운스로 계속 갱신되는 검색어는 매번 push하면 히스토리가 스팸처럼 쌓여서, replace로 덮어쓴다
   const setQuery = (q: string) => setParam({ q, page: 1 }, { history: 'replace', scroll: false });
-  const setCategory = (category: CategoryId | 'all') => setParam({ category, page: 1 });
-  const setSort = (sort: ProductSort) => setParam({ sort, page: 1 });
-  const setPage = (page: number) => setParam({ page });
+  // 값이 실제로 바뀔 때만, 그리고 조건이 반영된 뒤에 기록한다.
+  // 같은 값을 다시 고른 것까지 세면 "몇 번 바꿨나"가 부풀려진다
+  const setCategory = async (category: CategoryId | 'all') => {
+    if (category === param.category) return;
+    await setParam({ category, page: 1 });
+    trackCategoryFilterChange(category);
+  };
+  const setSort = async (sort: ProductSort) => {
+    if (sort === param.sort) return;
+    await setParam({ sort, page: 1 });
+    trackSortChange(sort);
+  };
+  const setPage = async (page: number) => {
+    if (page === param.page) return;
+    await setParam({ page });
+    trackPageChange(page);
+  };
   const resetQuery = () => setParam(DEFAULT_PRODUCT_LIST_QUERY);
 
   return { ...param, setQuery, setCategory, setSort, setPage, resetQuery };

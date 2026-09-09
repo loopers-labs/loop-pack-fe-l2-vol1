@@ -29,6 +29,10 @@ const eslintConfig = defineConfig([
         { type: 'features', pattern: 'src/features/*/**', capture: ['slice'] },
         { type: 'entities', pattern: 'src/entities/*/**', capture: ['slice'] },
         { type: 'shared', pattern: 'src/shared/**' },
+        // 계측은 FSD 슬라이스가 아니라 가로지르는 기반 모듈이다. 어느 레이어에도 넣지 않으면
+        // boundaries가 이 폴더를 아예 검사하지 않아(위반을 주입해 확인함) A-8의 분리가
+        // 개발자 주의에만 기대게 된다. 별도 타입으로 등록해 허용 방향을 명시한다.
+        { type: 'analytics', pattern: 'src/analytics/**' },
       ],
       // 테스트 파일은 "test" 카테고리로 분류 — 통합 테스트가 여러 슬라이스를 가로질러 import해야
       // 하는 건 정상이라, 아래 정책에서 이 카테고리만 예외로 허용한다.
@@ -44,7 +48,11 @@ const eslintConfig = defineConfig([
             {
               from: { file: { categories: 'test' } },
               allow: {
-                to: { element: { types: ['app', 'widgets', 'features', 'entities', 'shared'] } },
+                to: {
+                  element: {
+                    types: ['app', 'widgets', 'features', 'entities', 'shared', 'analytics'],
+                  },
+                },
               },
             },
             {
@@ -73,9 +81,21 @@ const eslintConfig = defineConfig([
               allow: { to: { element: { type: 'entities' } } },
               dependency: { kind: 'type' },
             },
+            // 계측은 shared와 자기 자신만 값으로 참조한다. 이벤트 프로퍼티가 도메인 용어를
+            // 그대로 쓰도록 entities는 타입 전용으로만 연다 — 값까지 열면 계측이 도메인 로직을
+            // 끌고 들어와, 화면과 분리했다는 A-8의 전제가 무너진다.
+            {
+              from: { element: { type: 'analytics' } },
+              allow: { to: { element: { types: ['shared', 'analytics'] } } },
+            },
+            {
+              from: { element: { type: 'analytics' } },
+              allow: { to: { element: { type: 'entities' } } },
+              dependency: { kind: 'type' },
+            },
             {
               from: { element: { type: 'features' } },
-              allow: { to: { element: { types: ['shared', 'entities'] } } },
+              allow: { to: { element: { types: ['shared', 'entities', 'analytics'] } } },
             },
             {
               from: { element: { type: 'features' } },
@@ -90,7 +110,7 @@ const eslintConfig = defineConfig([
             },
             {
               from: { element: { type: 'widgets' } },
-              allow: { to: { element: { types: ['shared', 'entities', 'features'] } } },
+              allow: { to: { element: { types: ['shared', 'entities', 'features', 'analytics'] } } },
             },
             {
               from: { element: { type: 'widgets' } },
@@ -105,7 +125,39 @@ const eslintConfig = defineConfig([
             },
             {
               from: { element: { type: 'app' } },
-              allow: { to: { element: { types: ['shared', 'entities', 'features', 'widgets'] } } },
+              allow: {
+                to: {
+                  element: { types: ['shared', 'entities', 'features', 'widgets', 'analytics'] },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Edge 런타임 경계 — src/proxy.ts는 Edge에서 돈다.
+  // node:crypto를 쓰는 src/app/api/_data/auth.ts가 여기로 딸려 들어오면 next build는 경고만 내고
+  // 통과한 뒤 실제 요청에서 500이 난다. 빌드로 잡히지 않는 실수라 규칙으로 막는다.
+  //
+  // boundaries/elements로는 막을 수 없다 — element 패턴은 폴더만 매칭해서 루트 파일인
+  // src/proxy.ts가 어떤 element에도 분류되지 않고, 그러면 boundaries/dependencies가 이 파일을
+  // 아예 검사하지 않는다(위반을 주입해 확인함). 그래서 파일 범위 규칙으로 직접 막는다.
+  {
+    files: ['src/proxy.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/app/*', '@/entities/*', '@/features/*', '@/widgets/*'],
+              message:
+                'proxy는 Edge에서 돈다. shared(@/shared/*)만 참조할 것 — 상위 레이어는 Node 전용 모듈을 끌고 올 수 있고, 그 실패는 build가 아니라 실행에서 500으로 나타난다.',
+            },
+            {
+              group: ['node:*'],
+              message: 'Edge 런타임에는 Node 내장 모듈이 없다.',
             },
           ],
         },
@@ -170,6 +222,17 @@ const eslintConfig = defineConfig([
       },
     },
   },
+  // 이벤트 로거는 콘솔 출력이 목적이라 no-console을 끈다.
+  // 이 규칙은 "디버깅 로그가 프로덕션 번들에 실리는 것"을 막으려는 것인데,
+  // consoleProvider는 개발 중 확인용 프로바이더로 콘솔에 찍는 게 존재 이유이고
+  // logger는 프로바이더 초기화·전송 실패를 알리는 자리다. 프로덕션 번들에서는
+  // next.config.ts의 removeConsole이 error를 뺀 나머지를 걷어낸다.
+  {
+    files: ['src/analytics/**/*.ts'],
+    rules: {
+      'no-console': 'warn',
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -179,6 +242,7 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     'dist/**', // 빌드 산출물 제외하기 위해 추가
     '.claude/**', //이 프로젝트와 무관한 격리된 git worktree 제외하기 위해 추가
+    'docs/local/**', //gitignore된 로컬 작업물(분석 스크립트 등) 제외
   ]),
 ]);
 

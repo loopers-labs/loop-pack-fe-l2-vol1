@@ -10,6 +10,8 @@ import { Pagination } from '@/shared/ui/Pagination/Pagination';
 import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useProductList } from '@/entities/product/api/useProductList';
+import { useScreenViewOnce } from '@/analytics/useScreenViewOnce';
+import { trackProductListView } from '@/analytics/trackEvents';
 
 const INITIAL_PAGE = 1;
 
@@ -20,6 +22,8 @@ export default function ProductView() {
   const { q, category, sort, page, setQuery, setCategory, setSort, setPage, resetQuery } =
     useProductListParams();
   const productListQuery = useProductList({ q, category, sort, page });
+
+  useScreenViewOnce(() => trackProductListView({ category, sort, page }));
 
   useEffect(() => {
     const data = productListQuery.data;
@@ -32,54 +36,56 @@ export default function ProductView() {
   }, [productListQuery.data, page, setPage]);
 
   return (
-    <main className="week05-page">
+    <div className="week05-page">
       <Header />
-      <PageHeading
-        title="상품 목록"
-        description="카테고리와 조건으로 원하는 상품을 찾아보세요."
-        compact
-      />
-      <section className="week05-section">
-        <ProductFilters
-          filters={{ q, category, sort }}
-          onSearch={setQuery}
-          onCategoryChange={setCategory}
-          onSortChange={setSort}
-          onReset={resetQuery}
+      <main>
+        <PageHeading
+          title="상품 목록"
+          description="카테고리와 조건으로 원하는 상품을 찾아보세요."
+          compact
         />
-      </section>
-      <QueryState
-        query={productListQuery}
-        renderError={(error) => (
-          <ErrorRetry message={error.message} onRetry={() => productListQuery.refetch()} />
-        )}
-        renderInlineError={(_error, onRetry) => (
-          <ErrorRetry
-            message="목록을 갱신하지 못했습니다. 이전 목록을 표시하고 있어요."
-            onRetry={onRetry}
+        <section className="week05-section">
+          <ProductFilters
+            filters={{ q, category, sort }}
+            onSearch={setQuery}
+            onCategoryChange={setCategory}
+            onSortChange={setSort}
+            onReset={resetQuery}
           />
-        )}
-      >
-        {(data) => (
-          <>
-            <ProductListSection
-              key={productListQuery.dataUpdatedAt}
-              products={data.products}
-              emptyMessage="검색 결과가 없습니다."
-              sectionLabel="상품 검색 결과"
-              isUpdating={productListQuery.isFetching}
-            >
-              <p>총 {data.totalCount}개</p>
-            </ProductListSection>
-            <Pagination
-              page={data.page}
-              pageSize={data.pageSize}
-              totalCount={data.totalCount}
-              onPageChange={setPage}
+        </section>
+        <QueryState
+          query={productListQuery}
+          renderError={(error) => (
+            <ErrorRetry message={error.message} onRetry={() => productListQuery.refetch()} />
+          )}
+          renderInlineError={(_error, onRetry) => (
+            <ErrorRetry
+              message="목록을 갱신하지 못했습니다. 이전 목록을 표시하고 있어요."
+              onRetry={onRetry}
             />
-          </>
-        )}
-      </QueryState>
-    </main>
+          )}
+        >
+          {(data) => (
+            <>
+              <ProductListSection
+                key={productListQuery.dataUpdatedAt}
+                products={data.products}
+                emptyMessage="검색 결과가 없습니다."
+                sectionLabel="상품 검색 결과"
+                isUpdating={productListQuery.isFetching}
+              >
+                <p>총 {data.totalCount}개</p>
+              </ProductListSection>
+              <Pagination
+                page={data.page}
+                pageSize={data.pageSize}
+                totalCount={data.totalCount}
+                onPageChange={setPage}
+              />
+            </>
+          )}
+        </QueryState>
+      </main>
+    </div>
   );
 }

@@ -77,9 +77,12 @@
   pointer-events: none;
 }
 
+/* .week05-button은 컨테이너에 묶이지 않은 버튼(로그인·로그아웃·초기화·주문)이
+   상품 카드·페이지네이션 버튼과 같은 모양을 갖게 한다. 값을 복제하지 않고 셀렉터만 합류시킨다 */
 .week05-categories a,
 .week05-product button,
-.week05-pagination button {
+.week05-pagination button,
+.week05-button {
   padding: 8px 12px;
   border: 1px solid #c8c8c8;
   background: transparent;
@@ -173,18 +176,97 @@
   object-fit: cover;
 }
 
-.week05-filters label {
+/* .week05-field는 검색 필터와 같은 "라벨 위 · 입력 아래" 배치를 필터 밖에서도 쓰게 한다 */
+.week05-filters label,
+.week05-field {
   display: grid;
   gap: 6px;
 }
 
 .week05-filters input,
-.week05-filters select {
+.week05-filters select,
+.week05-field input {
   min-height: 40px;
   padding: 8px 10px;
   border: 1px solid #c8c8c8;
   background: transparent;
   color: inherit;
+}
+
+/* 입력 폼을 세로로 쌓고 페이지 가로 중앙에 둔다. 제목(PageHeading)은 기존 정렬을 유지한다 */
+.week05-form {
+  display: grid;
+  gap: 16px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* 주문 상품·안내·주문 버튼을 로그인 폼과 같은 폭으로 묶어 페이지 가로 중앙에 둔다.
+   제목(PageHeading)은 로그인 화면과 마찬가지로 기존 정렬을 유지한다 */
+.week05-order {
+  display: grid;
+  gap: 16px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* 기본 목록 들여쓰기를 지우지 않으면 블록만 가운데고 내용은 오른쪽으로 밀려 보인다 */
+.week05-order ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 구분선을 항목 사이에만 두려면 gap 대신 padding으로 간격을 만들어야 한다 —
+   gap은 선 위아래 여백을 항목이 소유하지 않아 선이 한쪽으로 붙어 보인다 */
+.week05-order li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.week05-order li + li {
+  border-top: 1px solid #c8c8c8;
+}
+
+/* 표만 가로로 스크롤한다. 페이지 전체가 흔들리면 다른 요소까지 밀린다 */
+.week05-table-scroll {
+  overflow-x: auto;
+}
+
+.week05-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* 표 이름이자 건수 표시. 제목은 PageHeading이 이미 주므로 여기서는 정보만 얹는다 */
+.week05-table caption {
+  padding-bottom: 8px;
+  text-align: left;
+}
+
+.week05-table th,
+.week05-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #c8c8c8;
+  white-space: nowrap;
+}
+
+/* 행 머리글(주문번호)은 의미상 th지만 값이므로 본문과 같은 굵기로 둔다 */
+.week05-table tbody th {
+  font-weight: normal;
+}
+
+.week05-table thead th {
+  font-weight: 600;
+}
+
+/* 수량처럼 자릿수를 비교하는 값은 오른쪽으로 맞춘다 */
+.week05-table__number {
+  text-align: right;
 }
 
 .week05-pagination {
