@@ -1,5 +1,7 @@
+import { appendFileSync } from "node:fs";
+
 // build 앞에 도는 환경 변수 게이트. Node 내장만 쓴다(의존성 추가 금지).
-// 값은 어떤 경우에도 출력하지 않는다 — 로그에 비밀값이 남으면 게이트가 사고 원인이 된다.
+// 값은 어떤 경우에도 출력하지 않는다. 로그에 비밀값이 남으면 게이트가 사고 원인이 된다.
 
 const REQUIRED_KEYS = ["APP_ORIGIN", "AUTH_SESSION_SECRET"];
 const URL_KEYS = ["APP_ORIGIN"];
@@ -36,6 +38,25 @@ function findExposedSecrets(env) {
     );
 }
 
+// CI 에서는 실패 원인이 run 요약 화면에도 보여야 한다. step 로그를 펼쳐야만
+// 알 수 있으면 실무에서 안 읽힌다. 로컬에는 이 환경 변수가 없어 조용히 건너뛴다.
+function appendToJobSummary(failures) {
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+
+  if (!summaryPath) return;
+
+  const lines = [
+    `## 환경 변수 검증 실패 (${failures.length}건)`,
+    "",
+    ...failures.map((failure) => `- ${failure}`),
+    "",
+    "로컬은 `.env.local`, CI 는 workflow 의 `env:` 를 확인하세요.",
+    "",
+  ];
+
+  appendFileSync(summaryPath, lines.join("\n"));
+}
+
 const failures = [
   ...findMissingKeys(process.env),
   ...findUnparsableUrls(process.env),
@@ -43,6 +64,7 @@ const failures = [
 ];
 
 if (failures.length > 0) {
+  appendToJobSummary(failures);
   console.error(`\n환경 변수 검증 실패 (${failures.length}건)\n`);
   failures.forEach((failure) => console.error(`  ${failure}`));
   console.error("\n로컬은 .env.local, CI 는 workflow 의 env 를 확인하세요.\n");
