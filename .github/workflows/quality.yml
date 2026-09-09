@@ -9,6 +9,13 @@ name: Quality
 permissions:
   contents: read
 
+# 같은 브랜치에 새 커밋이 오면 아직 도는 run 을 취소한다.
+# group 키에 ref 를 넣지 않으면 PR push 가 main 의 run 까지 취소한다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # main 은 취소하지 않는다. 그 커밋이 검증됐다는 기록이 사라지기 때문이다.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # 세 job 은 서로 의존하지 않아 병렬로 돈다.
   # 각 job 이 checkout·install 을 반복하는 비용은 pnpm store 캐시가 흡수한다.
