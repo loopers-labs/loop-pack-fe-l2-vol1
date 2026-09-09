@@ -20,7 +20,7 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // 테스트 전 앱 서버를 자동 기동. dev 서버가 아니라 production build 위에서 돌린다(과제 요구).
   webServer: {
-    // CI 는 pnpm check 가 앞 단계에서 이미 build 하므로 그 결과물로 바로 기동한다.
+    // CI 는 워크플로가 앞 step 에서 이미 build 하므로 그 결과물로 바로 기동한다.
     // 로컬은 E2E 만 단독 실행하는 경우가 잦아 낡은 .next 로 도는 것을 막으려 매번 새로 빌드한다.
     command: process.env.CI ? "pnpm start" : "pnpm build && pnpm start",
     url: "http://localhost:3000", // 이 주소가 응답하면 "떴다"고 보고 테스트 시작

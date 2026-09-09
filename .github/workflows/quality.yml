@@ -72,11 +72,35 @@ jobs:
   build-and-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 5 # 관측 중앙값 64초 + E2E 재시도(retries: 2) 여유
+    permissions:
+      contents: read
+      # paths-filter 가 PR 의 변경 파일 목록을 API 로 읽는다. 이 job 에만 준다.
+      pull-requests: read
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+      # 문서만 바꾼 PR 에서 E2E 를 건너뛰기 위한 변경 경로 판정.
+      # "스킵할 파일" 을 적는 방식을 골랐다. 여기 안 적힌 파일은 전부 E2E 를 돈다.
+      # 반대로 "E2E 를 돌 파일" 을 적으면, 목록에 넣는 걸 깜빡한 파일만 고친 PR 이
+      # E2E 없이 초록불로 통과한다. 실수가 통과를 만드는 방향이라 안 쓴다.
+      - name: Detect changed paths
+        id: changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          # 기본값 'some' 은 부정 패턴을 무시해서 문서 변경도 code 로 잡는다.
+          predicate-quantifier: some-with-excludes
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+      # main push 는 필터를 보지 않는다. 머지된 결과는 조건 없이 전부 검증한다.
+      - name: Decide whether to run E2E
+        id: e2e
+        run: echo "run=${{ github.event_name == 'push' || steps.changes.outputs.code == 'true' }}" >> "$GITHUB_OUTPUT"
       - name: Set up pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
@@ -92,21 +116,25 @@ jobs:
       # setup-node 의 cache: pnpm 은 pnpm store 만 잡아서 이 경로는 캐시 대상에서 빠져 있었다.
       - name: Restore Playwright browsers
         id: playwright-cache
+        if: steps.e2e.outputs.run == 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright Chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.e2e.outputs.run == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps chromium
       # 캐시가 복원돼도 시스템 라이브러리는 러너에 남지 않는다.
       # 생략해도 지금 러너 이미지에서는 E2E 가 통과하고 9초를 벌지만(측정함),
       # 그건 이미지가 Chromium 의존 라이브러리를 갖고 있다는 보장 없는 성질에 기대는 것이다.
       - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        if: steps.e2e.outputs.run == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
+      # build 는 조건을 걸지 않는다. 문서만 바꾼 PR 에서도 빌드는 깨질 수 있고,
+      # 아껴야 할 시간(약 10초)보다 required check 로서의 값이 크다.
       # E2E 는 이 결과물 위에서 돈다(playwright.config.ts 의 webServer 가 CI 에선 pnpm start).
       - name: Build
         run: pnpm build
       - name: E2E test
+        if: steps.e2e.outputs.run == 'true'
         run: pnpm test:e2e
