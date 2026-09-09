@@ -27,6 +27,8 @@
 | `order_start` | 상품 조회가 끝나 주문 가능한 주문서가 됐을 때 | `productIds: string[]`, `itemCount: number`, `totalPrice: number`(원) |
 | `order_complete` | 주문 API 성공 후 장바구니를 비우기 전 | `orderId: string`, `productIds: string[]`, `itemCount: number`, `totalPrice: number`(원) |
 
+현재 앱에서 `product_list_view.page`는 무한 목록의 첫 진입만 계측하므로 항상 `1`이다. `cart_add.quantity`도 한 번의 담기 동작이 수량을 1만큼 늘리므로 항상 `1`이다. 두 프로퍼티는 시드 로그와 스키마를 맞추기 위해 유지하며, 현재 집계에서는 값별 차이를 분석하는 정보가 되지 않는다.
+
 `login_fail.reason`은 401을 `INVALID_CREDENTIALS`, 400을 `INVALID_REQUEST`, 500 이상을 `SERVER_ERROR`, 그 밖의 실패를 `UNKNOWN_ERROR`로 기록한다. `from`은 로그인 목적지가 아니라 실제 이전 화면이다. `/cart`의 주문 링크는 `cart`, 주문 화면과 세션 만료는 `orders`, 직접 진입과 일반 로그인은 `direct`로 기록한다. 허용되지 않은 값은 `direct`로 바꾼다.
 
 로그인 출처는 `cart`, `orders`, `direct` 중 하나이며 로그인 이동 과정에서 유지해야 하는 값이다. 코드에서는 이를 `LoginEntrySource` 타입으로 관리하고 URL에서는 `loginSource`로 전달한다. 분석 이벤트를 보낼 때만 이 값을 `from` 프로퍼티에 기록하므로 계측 프로퍼티 이름이 바뀌어도 URL 처리 코드는 영향을 받지 않는다.
