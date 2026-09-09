@@ -147,7 +147,12 @@ jobs:
       # .next 가 존재하는 시점이 여기뿐이라 Build 바로 뒤에 둔다. 조건은 걸지 않는다.
       # 초과분을 job summary 표로 남겨 로그를 열지 않고 PR 화면에서 보이게 한다.
       - name: Bundle size budget
-        run: pnpm --silent size --json | node scripts/size-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+        # tee 로 job summary 와 step 로그 양쪽에 남긴다. summary 로만 보내면
+        # 로그에는 exit code 만 남아서 이 step 을 펼친 사람이 원인을 못 본다.
+        # pipefail 이 없으면 파이프 마지막의 tee 성공이 실패를 덮는다.
+        run: |
+          set -o pipefail
+          pnpm --silent size --json | node scripts/size-summary.mjs | tee -a "$GITHUB_STEP_SUMMARY"
       - name: E2E test
         if: steps.e2e.outputs.run == 'true'
         run: pnpm test:e2e
