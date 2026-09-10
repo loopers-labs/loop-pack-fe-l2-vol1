@@ -68,6 +68,9 @@ jobs:
     name: build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -78,26 +81,67 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Detect app-affecting changes
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+        with:
+          filters: |
+            app:
+              - "src/**"
+              - "e2e/**"
+              - "public/**"
+              - "playwright.config.ts"
+              - "next.config.ts"
+              - "tsconfig.json"
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - ".github/workflows/quality.yml"
+              - ".github/actions/**"
+
+      # 이벤트 값은 run 본문에 보간하지 않고 env 로 넘긴다 (스크립트 인젝션 방지)
+      - name: Decide whether E2E runs
+        id: e2e
+        env:
+          EVENT: ${{ github.event_name }}
+          APP_CHANGED: ${{ steps.filter.outputs.app }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          LABELED: ${{ contains(github.event.pull_request.labels.*.name, 'run-e2e') }}
+        run: |
+          decide() {
+            echo "run=$1" >> "$GITHUB_OUTPUT"
+            printf '### E2E: %s\n\n%s\n\n' "$1" "$2" >> "$GITHUB_STEP_SUMMARY"
+            echo "e2e run=$1 — $2"
+          }
+          if [ "$EVENT" = "push" ]; then decide true "main push: 머지된 트리 전체를 검증한다"; exit 0; fi
+          if [ "$LABELED" = "true" ]; then decide true "run-e2e 라벨: 사람이 명시적으로 요청했다"; exit 0; fi
+          if [ "$DRAFT" = "true" ]; then decide false "draft PR: 작성 중이라 비싼 검증을 미룬다"; exit 0; fi
+          if [ "$APP_CHANGED" = "true" ]; then decide true "앱 경로 변경: build·start·Playwright 의 입력이 바뀌었다"; exit 0; fi
+          decide false "문서·설정만 변경: E2E 의 입력이 바뀌지 않았다"
+
       - name: Resolve Playwright version
         id: playwright
+        if: steps.e2e.outputs.run == 'true'
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Restore Playwright browsers
         id: playwright-cache
+        if: steps.e2e.outputs.run == 'true'
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
 
       - name: Install Playwright Chromium (cache miss)
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.e2e.outputs.run == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps chromium
 
       - name: E2E on the production build
+        if: steps.e2e.outputs.run == 'true'
         run: pnpm test:e2e
 
       - name: Upload Playwright report
-        if: failure()
+        if: failure() && steps.e2e.outputs.run == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report
