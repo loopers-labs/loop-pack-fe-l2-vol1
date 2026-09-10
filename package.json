@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
+    "validate-env": "node scripts/validate-env.mjs",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm validate-env && pnpm build && pnpm test:e2e",
     "prepare": "husky"
   },
   "dependencies": {
