@@ -34,6 +34,7 @@ const main = () => {
   let results;
   try {
     results = JSON.parse(raw);
+    if (!Array.isArray(results)) throw new TypeError("size-limit --json 은 배열이어야 한다");
   } catch {
     const fallback = [
       "## ❌ size-limit 출력을 읽을 수 없습니다",

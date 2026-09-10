@@ -180,12 +180,18 @@ export default defineConfig([
       // 자식 렌더 에러는 부모 try/catch로 잡히지 않음 -> Error Boundary 사용
       "react-hooks/error-boundaries": "error",
       "react/prop-types": "off",
-      "react/jsx-no-bind": [
-        "error",
-        { ignoreRefs: true, allowArrowFunctions: true },
-      ],
+      "react/jsx-no-bind": ["error", { ignoreRefs: true, allowArrowFunctions: true }],
     },
   },
   ...fsdHarness,
+  // CI 게이트 스크립트(scripts/*.mjs, .size-limit.js)도 린트 대상에 둔다 — ts 블록만 있으면 활성 규칙이 0개다
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: "latest",
+      globals: { ...globals.node },
+    },
+  },
   prettier,
 ]);
