@@ -57,7 +57,10 @@ jobs:
             이 PR 의 diff 를 리뷰하라. base 는 `${{ github.base_ref }}` 다.
           # 모델을 고정한다. 프롬프트를 고친 전후를 비교할 때 모델이 바뀌면
           # 결과 차이가 프롬프트 때문인지 모델 때문인지 가릴 수 없다.
-          claude_args: --model opus
+          #
+          # max-turns 는 관측값 12턴의 두 배로 잡았다. 리뷰가 정상적으로 끝나기
+          # 전에 잘리면 반쪽 결과가 통과로 보이는데, 그건 폭주보다 나쁘다.
+          claude_args: --model opus --max-turns 25
           # PR 코멘트로 진행 상황과 결과를 남긴다. 이게 없으면 결과가
           # step 로그에만 남아서 PR 화면에서 안 보인다.
           track_progress: true
