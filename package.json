@@ -21,7 +21,8 @@
     "test:watch": "vitest",
     "test:mutation": "stryker run",
     "check": "pnpm test && pnpm lint && pnpm lint:fsd && pnpm typecheck && pnpm build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:versions": "node scripts/validate-pnpm-version-source.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
