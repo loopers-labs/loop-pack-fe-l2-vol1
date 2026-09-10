@@ -17,26 +17,32 @@ if (process.env.APP_ORIGIN && process.env.APP_ORIGIN !== BASE_URL) {
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
-  // .only가 남으면 나머지 spec이 조용히 빠진 채로 초록이 된다.
+  // .only가 남으면 나머지 spec을 실행하지 않고 전체 결과가 통과로 표시된다.
   forbidOnly: Boolean(process.env.CI),
-  // 재시도를 켜지 않는다. 흔들리는 테스트를 재시도로 덮으면 무엇이 깨졌는지 알 수 없다.
-  // 대기는 전부 조건 기반이라 재시도로 살릴 실패는 진짜 실패여야 한다.
+  // 재시도를 켜지 않는다. 비결정적인 실패를 재시도로 감추면 실제 결함과 구분하기 어렵다.
+  // 대기는 전부 조건 기반이므로 재시도로 해결되는 실패도 실제 결함으로 취급한다.
   retries: 0,
+  // 과제의 병렬 격리 기준이다. CLI의 --workers=1로 직렬 결과와 비교할 수 있다.
+  workers: 4,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
+    // 재시도를 쓰지 않으므로 on-first-retry는 trace를 한 번도 만들지 않는다.
+    // 실패한 최초 실행을 그대로 남겨 screenshot·video와 같은 조건으로 진단한다.
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     // 이 설정은 이미 만들어진 production 산출물 위에서 서버만 띄운다.
     // build를 여기에 넣으면 `pnpm check`처럼 앞에서 이미 build를 끝낸 명령이 같은 빌드를
-    // 두 번 돌게 된다. 단독 실행은 `pnpm test:e2e`가 build를 앞에 붙여서 맡는다.
-    // 산출물이 없으면 next가 즉시 그렇게 말하며 멈춘다. 조용히 개발 서버로 내려가지 않는다.
+    // 두 번 실행된다. 단독 실행 시에는 `pnpm test:e2e`가 먼저 build를 실행한다.
+    // 산출물이 없으면 Next가 오류를 내고 종료한다. 개발 서버로 자동 전환하지 않는다.
     command: 'pnpm start',
     url: BASE_URL,
     // 로컬에서는 이미 떠 있는 서버를 재사용해 반복 실행을 빠르게 한다.
-    // CI에서는 항상 새로 띄운다. 남아 있던 서버가 옛 빌드를 서빙하면 결과가 거짓이 된다.
+    // CI에서는 항상 새로 실행한다. 기존 서버가 이전 빌드를 제공하면 잘못된 결과가 나올 수 있다.
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
     // build와 runtime에 같은 origin을 넣는다. 서버 metadata와 prefetch가 절대 URL을 만든다.

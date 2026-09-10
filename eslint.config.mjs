@@ -92,6 +92,27 @@ export default defineConfig(
   },
 
   {
+    // no-console allow-list의 첫 항목이다. 위 규칙 주석에 적힌 "의도적 로깅은
+    // allow-list 합의 후 허용한다"에 해당한다. 규칙을 끄지 않고 파일과 메서드만 지정해 허용한다.
+    //
+    // consoleProvider는 개발 중 이벤트를 눈으로 확인하는 용도라 콘솔 출력이 기능 자체다.
+    // info만 허용한다.
+    //
+    // logger는 프로바이더의 초기화·전송 실패를 알린다. 계측 실패로 화면을 멈출 수는 없어
+    // throw하지 않는 대신, 실패를 기록하지 않으면 이벤트가 수집되지 않는 원인을 찾을 수 없다. error만 허용한다.
+    //
+    // warn과 log는 두 파일 모두 허용하지 않는다. 디렉터리 전체에 적용하지 않는 이유는, 나중에
+    // src/analytics에 파일이 늘어도 예외가 자동으로 적용되지 않게 하기 위해서다.
+    files: ['src/analytics/consoleProvider.ts'],
+    rules: { 'no-console': ['error', { allow: ['info'] }] },
+  },
+
+  {
+    files: ['src/analytics/logger.ts'],
+    rules: { 'no-console': ['error', { allow: ['error'] }] },
+  },
+
+  {
     // 테스트 환경 규약의 자물쇠다. `.test.ts`는 node 환경에서, `.test.tsx`는 jsdom에서 돈다
     // (vitest.config.ts). 규약이 문서에만 있으면 DOM 테스트가 node 파일로 슬쩍 들어오고,
     // 그날부터 DOM이 필요 없는 테스트까지 브라우저 흉내 환경을 세우게 된다.

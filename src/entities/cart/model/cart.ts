@@ -47,6 +47,10 @@ const useCartStore = create<CartState>((set) => ({
 export const useCartCount = () =>
   useCartStore((state) => cartCountOf(state.cartIds))
 
+// 담긴 목록 자체가 필요한 소비자를 위한 selector다. 개수만 보는 헤더와 달리
+// 주문서는 무엇이 담겼는지 알아야 한다. store를 직접 열지 않고 여기서 한 겹 둔다.
+export const useCartIds = () => useCartStore((state) => state.cartIds)
+
 export const useIsInCart = (productId: string) =>
   useCartStore((state) => isInCartIds(state.cartIds, productId))
 

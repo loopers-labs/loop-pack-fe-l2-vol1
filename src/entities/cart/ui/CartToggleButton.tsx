@@ -1,5 +1,6 @@
 'use client'
 
+import { trackCartAdd } from '@/analytics/events'
 import { useIsInCart, useToggleCart } from '@/entities/cart/model/cart'
 
 interface CartToggleButtonProps {
@@ -22,7 +23,12 @@ export default function CartToggleButton({
       type="button"
       aria-label={`${productName} bag`}
       aria-pressed={isInCart}
-      onClick={() => toggleCart(productId)}
+      onClick={() => {
+        toggleCart(productId)
+        // 담을 때만 보낸다. 시드 로그에 담기 해제에 해당하는 이름이 없어,
+        // 새 이름을 만들면 그 로그로 세운 순위와 이어 볼 수 없다.
+        if (!isInCart) trackCartAdd({ productId })
+      }}
     >
       {isInCart ? 'Remove' : 'Add to bag'}
     </button>

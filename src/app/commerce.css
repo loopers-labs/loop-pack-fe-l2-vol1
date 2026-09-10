@@ -619,3 +619,143 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* 9주차 인증 화면. 기존 헤더 규칙이 a와 span만 다루므로 버튼을 함께 맞춘다. */
+.week05-header nav > button {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.week05-header nav > button:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.week05-header nav > button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.week09-auth {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.week09-auth h1 {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.week09-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.week09-auth-form input {
+  border: 1px solid var(--border, #d8dee6);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  background: var(--background, #fff);
+  color: inherit;
+}
+
+.week09-auth-form button {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--foreground, #1b1f24);
+  color: var(--background, #fff);
+}
+
+.week09-auth-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.week09-auth-notice {
+  color: var(--muted-foreground, #5a6675);
+}
+
+.week09-auth-error {
+  color: #c2334d;
+}
+
+/* 9주차 주문 화면. 인증 화면과 같은 폼 규칙을 주문서에도 적용한다. */
+.week09-orders {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.week09-orders h1 {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.week09-order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.week09-order-form input {
+  border: 1px solid var(--border, #d8dee6);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  background: var(--background, #fff);
+  color: inherit;
+}
+
+.week09-order-form button {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--foreground, #1b1f24);
+  color: var(--background, #fff);
+}
+
+.week09-order-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.week09-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+
+.week09-order-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border, #d8dee6);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
