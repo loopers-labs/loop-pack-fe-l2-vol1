@@ -23,7 +23,7 @@ jobs:
     # 읽히지 않는 코멘트가 쌓이고, 정작 봐야 할 때 묻힌다. 사람이 라벨을 붙여 부를 때만 돈다.
     if: github.event.label.name == 'ai-review'
     runs-on: ubuntu-latest
-    # 로컬 실행이 약 2분이다. 폭주하면 이 선에서 끊는다.
+    # 관측된 리뷰 실행 시간은 2분 안쪽이다. 폭주하면 이 선에서 끊는다.
     timeout-minutes: 10
     permissions:
       # action 이 코드를 고쳐 push 하는 것까지 허용하지 않는다. 여기서 받는 건
@@ -31,9 +31,6 @@ jobs:
       contents: read
       # 리뷰 결과를 PR 코멘트로 남기는 데 필요하다. 이 job 에만 준다.
       pull-requests: write
-      # action 이 GitHub OIDC 토큰을 받아 단기 자격증명으로 교환한다.
-      # 없으면 인증 단계에서 바로 실패한다.
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -47,15 +44,19 @@ jobs:
         with:
           # 구독 토큰이다. 종량제 API 결제가 붙지 않는다.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # 이걸 주면 action 이 Claude GitHub App 토큰을 발급받는 경로를 타지 않는다.
+          # App 을 설치하는 대신 job 이 이미 가진 토큰을 쓰는 것이라, 권한이 위
+          # permissions 블록에 그대로 묶이고 job 이 끝나면 만료된다.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           label_trigger: ai-review
           # 리뷰 기준은 저장소 안의 스킬 파일이다. 여기에 기준을 다시 적지 않는다.
-          # 로컬 실행과 CI 가 같은 파일을 읽어야 두 결과를 비교할 수 있다.
+          # 기준이 두 곳에 있으면 한쪽만 고쳐져 판정이 조용히 갈린다.
           prompt: |
             /convention-review
 
             이 PR 의 diff 를 리뷰하라. base 는 `${{ github.base_ref }}` 다.
-          # 로컬 실행과 모델을 맞춘다. 프롬프트를 고친 전후를 비교할 때
-          # 모델이 다르면 차이가 무엇 때문인지 가릴 수 없다.
+          # 모델을 고정한다. 프롬프트를 고친 전후를 비교할 때 모델이 바뀌면
+          # 결과 차이가 프롬프트 때문인지 모델 때문인지 가릴 수 없다.
           claude_args: --model opus
           # PR 코멘트로 진행 상황과 결과를 남긴다. 이게 없으면 결과가
           # step 로그에만 남아서 PR 화면에서 안 보인다.
