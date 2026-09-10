@@ -8,6 +8,12 @@ test('the real ESLint configuration blocks upward imports and permits downward i
   const repositoryRoot = resolve(import.meta.dirname, '../..');
   const entityFile = resolve(repositoryRoot, 'src/entities/product/model/types.ts');
   const appFile = resolve(repositoryRoot, 'src/app/api/_data/orderRepository.ts');
+  const entityConfig = await eslint.calculateConfigForFile(entityFile);
+  assert.equal(
+    entityConfig?.rules['no-restricted-imports']?.[0],
+    2,
+    JSON.stringify(entityConfig?.rules['no-restricted-imports']),
+  );
   // lintText checks synthetic content without changing the source files.
   const [aliasViolation] = await eslint.lintText("import '@/app/api/_data/orderRepository';\n", {
     filePath: entityFile,
