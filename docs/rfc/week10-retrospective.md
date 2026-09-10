@@ -7,7 +7,7 @@ Branch `feat/week-10` · Created 2026-09-11 · 근거 문서: `docs/rfc/week06-f
 Next.js 16 App Router 위의 커머스 데모다. 상품 목록(카테고리·정렬·페이지·검색을 URL 로), 위시리스트·장바구니(게스트 상태), 로그인·보호 경로·세션 만료, 주문서·주문 내역, 계측 이벤트까지 있다. 백엔드는 같은 앱의 Route Handler 가 흉내내는 mock 이고, 10주 동안 매주 하나의 관점(컴포넌트 → 상태 → 프레임워크 → 구조 → 성능 → 테스트 → E2E → CI)으로 같은 앱을 다시 만졌다.
 
 - 배포: Production `https://loop-pack-fe-l2-vol1-durumis-projects-5329bd23.vercel.app`, Preview `https://loop-pack-fe-l2-vol1-d1xhgizzl-durumis-projects-5329bd23.vercel.app`
-- 검증: vitest 190개(node·jsdom 분리), Playwright 12개, CI warm 63초
+- 검증: vitest 193개(node·jsdom 분리), Playwright 12개, CI warm 63초
 
 ## 2. 10주 동안의 구조 변화
 

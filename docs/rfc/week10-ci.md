@@ -109,13 +109,13 @@ E2E 는 `build` job 안의 **조건부 step** 이다(별도 job 이 아니다). 
 
 ### 2.3 자가 검증 (PR 5개, 모두 fork 안·머지 안 함)
 
-| PR               | 변경                           | 이벤트    | `Decide whether E2E runs` 로그                              | E2E step    | run               |
-| ---------------- | ------------------------------ | --------- | ----------------------------------------------------------- | ----------- | ----------------- |
-| #3 feat/week-10  | src 포함                       | push      | `run=true — 앱 경로 변경`                                   | 실행        | 34502215469       |
-| #5 exp/docs-only | `docs/fixtures/events.md` 1줄  | opened    | `run=false — 문서·설정만 변경: E2E 의 입력이 바뀌지 않았다` | **skipped** | 34502539690 (51s) |
-| #6 exp/src-touch | `src/shared/config/seo.ts` 1줄 | opened    | `run=true — 앱 경로 변경`                                   | 실행        | 34502548357 (58s) |
-| #5               | `run-e2e` 라벨 추가            | labeled   | `run=true — run-e2e 라벨: 사람이 명시적으로 요청했다`       | 실행        | 34502712392       |
-| #5               | 라벨 제거                      | unlabeled | `run=false`                                                 | skipped     | 34502867339       |
+| PR               | 변경                           | 이벤트                     | `Decide whether E2E runs` 로그                              | E2E step    | run               |
+| ---------------- | ------------------------------ | -------------------------- | ----------------------------------------------------------- | ----------- | ----------------- |
+| #3 feat/week-10  | src 포함                       | pull_request (synchronize) | `run=true — 앱 경로 변경`                                   | 실행        | 34502215469       |
+| #5 exp/docs-only | `docs/fixtures/events.md` 1줄  | opened                     | `run=false — 문서·설정만 변경: E2E 의 입력이 바뀌지 않았다` | **skipped** | 34502539690 (51s) |
+| #6 exp/src-touch | `src/shared/config/seo.ts` 1줄 | opened                     | `run=true — 앱 경로 변경`                                   | 실행        | 34502548357 (58s) |
+| #5               | `run-e2e` 라벨 추가            | labeled                    | `run=true — run-e2e 라벨: 사람이 명시적으로 요청했다`       | 실행        | 34502712392       |
+| #5               | 라벨 제거                      | unlabeled                  | `run=false`                                                 | skipped     | 34502867339       |
 
 **함정을 하나 밟았다.** 처음 #5·#6 을 fork `main` 기준으로 열자 문서만 바꿨는데도 E2E 가 돌았다(run 34502277255). `paths-filter` 는 PR 의 base 와 비교하므로 base 가 main 이면 10주차 브랜치의 누적 변경 162커밋(src 포함)이 전부 "변경" 이다. base 를 `feat/week-10` 으로 바꾸자 의도대로 동작했다. 필터의 결과는 "무엇을 바꿨나" 가 아니라 "무엇과 비교하나" 에 달려 있다.
 
@@ -163,6 +163,8 @@ Next 16 의 Turbopack 빌드는 `.next/static/chunks/` 에 해시 이름만 남�
 | public-secret-value                                   | 소유한 비밀값(`AUTH_SESSION_SECRET`)이 어떤 `NEXT_PUBLIC_*` 값 안에 복사됨                                                                      |
 | unknown-public (경고)                                 | 허용 목록에 없는 `NEXT_PUBLIC_*` (Vercel 시스템 변수 `NEXT_PUBLIC_VERCEL_*` 는 제외)                                                            |
 
+CI 에서는 `required` 규칙이 발화할 수 없다 — 워크플로 `env` 가 `APP_ORIGIN` 을 항상 주입하고 `AUTH_SESSION_SECRET` 은 직전 step 이 생성하므로, CI 게이트가 실제로 잡는 것은 형태 규칙(URL·이름·값 복사)이고 누락 방어는 Vercel 빌드에서만 살아 있다(3.6 의 첫 production 빌드가 그 경우).
+
 실패한 값은 `«redacted, N chars»` 로만 보인다. 결과는 stdout + `$GITHUB_STEP_SUMMARY` 표 + `::error::` 애노테이션으로, 성공 시에도 "0 error" 표를 남겨 "게이트가 통과했는지 안 돌았는지" 를 구분한다. 단위 테스트 13개(`scripts/validate-env.test.ts`).
 
 CI 는 secret 을 저장하지 않는다. build job 이 `openssl rand -hex 32` 로 `AUTH_SESSION_SECRET` 을 매 실행 새로 만들고 `::add-mask::` 한 뒤, 빌드 후 `grep -rqF "$AUTH_SESSION_SECRET" .next/static .next/server` 로 산출물에 박히지 않았는지 검사한다(`auth.ts` 가 요청 시점에 읽으므로 박히지 않아야 정상). fork PR 은 secrets 에 접근할 수 없으므로 이 구조가 upstream PR 에서도 그대로 동작한다.
@@ -175,7 +177,7 @@ CI 는 secret 을 저장하지 않는다. build job 이 `openssl rand -hex 32` �
 
 | PR (base `feat/week-10`, 머지 안 함) | 원인                                                                                  | 빨간 run    | 실패 step                        | PR 애노테이션에 보인 것                                                                                                                                         | 되돌린 뒤      |
 | ------------------------------------ | ------------------------------------------------------------------------------------- | ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| #7 `exp/bundle-over`                 | 헤더(모든 route 공통)에 `import moment from "moment"`                                 | 34504452516 | `Bundle budget`                  | `size-limit: First Load JS /products 217.1 kB > 예산 166.0 kB (+51.1 kB)` 외 6개 route 전부                                                                     | 34504663714 ✅ |
+| #7 `exp/bundle-over`                 | 헤더(모든 route 공통)에 `import moment from "moment"`                                 | 34504452516 | `Bundle budget`                  | `size-limit: First Load JS /products 217.1 kB > 예산 166.0 kB (+51.1 kB)` 등 6개 route 전부                                                                     | 34504663714 ✅ |
 | #8 `exp/env-invalid`                 | 워크플로 `env:` 에 `APP_ORIGIN: not-a-url`, `NEXT_PUBLIC_AUTH_SESSION_SECRET: leaked` | 34504457737 | `Validate environment`(build 전) | `validate-env APP_ORIGIN invalid-url — https://host 형태의 절대 origin`, `NEXT_PUBLIC_AUTH_SESSION_SECRET public-secret-name — 접두사를 떼고 서버에서만 읽는다` | 34504667923 ✅ |
 
 두 경우 모두 lint·typecheck·unit 은 초록이고 `build` 만 빨간불이라 체크 목록에서 어느 게이트인지 갈린다. 스크린샷: `docs/submissions/assets/week-10/red-bundle-run-summary.png`, `red-env-run-summary.png`(run 요약의 애노테이션), `red-*-pr-checks.png`(PR 화면).
@@ -209,7 +211,7 @@ Vercel 프로젝트 `loop-pack-fe-l2-vol1`(Production `https://loop-pack-fe-l2-v
 
 ### 4.1 리뷰 기준
 
-`.claude/skills/pr-review/SKILL.md` — 1주차 CLAUDE.md(R1 `any`/`as`/`eslint-disable`, R2 설명 없는 변경), 2–3주차(R3 Props 5개, R4 파생값 useEffect 동기화 금지, R5 hook 한 관심사), 5·7주차(R6 상태 분류·서버 응답 복사 금지, R7 URL 파서 단일화, R9 서버 컴포넌트 우선, R10 로딩 UI), 6주차(R8 FSD 경계·Public API), 8–9주차(R11 테스트 인프라, R12 셀렉터·구현 상수 import 금지, R13 세션 만료 단일 처리), 10주차(R14 워크플로 보안) 14개. 출력은 `파일:라인 / 규칙 / 근거(실제 코드 인용) / 확신 / 승격 가능 여부` 5줄, 끝에 **반복 패턴** 절(5단계의 입력). 이미 ESLint·tsc 가 막는 것은 "CI 가 이미 막음" 으로 분류만 한다.
+`.claude/skills/pr-review/SKILL.md` — 1주차 CLAUDE.md(R1 `any`/`as`/`eslint-disable`, R2 설명 없는 변경), 2–3주차(R3 Props 5개, R4 파생값 useEffect 동기화 금지, R5 hook 한 관심사), 5주차(R6 상태 분류·서버 응답 복사 금지, R7 URL 파서 단일화), 4·7주차(R9 서버 컴포넌트 우선, R10 로딩 UI), 6주차(R8 FSD 경계·Public API), 8–9주차(R11 테스트 인프라, R12 셀렉터·구현 상수 import 금지, R13 세션 만료 단일 처리), 10주차(R14 워크플로 보안) 14개. 출력은 `파일:라인 / 규칙 / 근거(실제 코드 인용) / 확신 / 승격 가능 여부` 5줄, 끝에 **반복 패턴** 절(5단계의 입력). 이미 ESLint·tsc 가 막는 것은 "CI 가 이미 막음" 으로 분류만 한다.
 
 로컬 Claude Code 에서 실행했고 CI 에는 붙이지 않았다. 근거: fork PR 은 secrets 에 접근할 수 없어 API 키를 둘 자리가 없고, 비결정적 출력이라 required 로 둘 수 없으며, 모든 PR 자동 실행은 비용·소음이 빠르게 커진다. **advisory** 다.
 
