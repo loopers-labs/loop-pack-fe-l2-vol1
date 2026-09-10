@@ -5,6 +5,7 @@ const DEV_SESSION_SECRET = "loopers-week09-secret";
 const MIN_SECRET_LENGTH = 32;
 const PUBLIC_PREFIX = "NEXT_PUBLIC_";
 const PUBLIC_ALLOWLIST = new Set();
+const PLATFORM_PUBLIC_PREFIX = "NEXT_PUBLIC_VERCEL_";
 const SECRET_LIKE =
   /(SECRET|TOKEN|KEY|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|SESSION|SIGNATURE|DSN|WEBHOOK)/i;
 const REQUIRED = ["APP_ORIGIN", "AUTH_SESSION_SECRET"];
@@ -129,7 +130,7 @@ export const validateEnv = (env) => {
         );
       }
     }
-    if (!PUBLIC_ALLOWLIST.has(name)) {
+    if (!PUBLIC_ALLOWLIST.has(name) && !name.startsWith(PLATFORM_PUBLIC_PREFIX)) {
       warn(
         name,
         "unknown-public",

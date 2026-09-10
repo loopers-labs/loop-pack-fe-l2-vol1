@@ -123,6 +123,15 @@ describe("validateEnv", () => {
     ).toEqual(["NEXT_PUBLIC_API_BASE:public-secret-value"]);
   });
 
+  it("Vercel 이 주입하는 NEXT_PUBLIC_VERCEL_* 시스템 변수는 경고하지 않는다", () => {
+    const result = validateEnv({
+      ...strictEnv,
+      NEXT_PUBLIC_VERCEL_ENV: "production",
+      NEXT_PUBLIC_VERCEL_URL: "commerce-abc123.vercel.app",
+    });
+    expect(result.findings).toEqual([]);
+  });
+
   it("허용 목록에 없는 NEXT_PUBLIC_ 변수는 경고만 남긴다", () => {
     const result = validateEnv({ ...strictEnv, NEXT_PUBLIC_FLAG: "on" });
     expect(result.errors).toEqual([]);
