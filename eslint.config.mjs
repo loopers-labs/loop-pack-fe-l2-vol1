@@ -25,7 +25,7 @@ const fsdAliasConfigs = fsdLayers.slice(1).map((layer, index) => ({
       'error',
       {
         patterns: fsdLayers.slice(0, index + 1).map((upper) => ({
-          group: [`@/${upper}`, `@/${upper}/**`],
+          regex: `^@/${upper}(?:/|$)`,
           message: `${layer} must not import the upper ${upper} layer`,
         })),
       },
