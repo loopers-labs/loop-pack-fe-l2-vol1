@@ -6,6 +6,7 @@ import type {
   ProductListResponse,
   ProductSort,
 } from "@/types/commerce";
+import type { AuthUser, Order } from "@/types/auth";
 
 const CATEGORY_IDS: CategoryId[] = ["casual", "fashion", "goods", "home", "digital"];
 
@@ -116,6 +117,24 @@ export function buildHomeResponse(overrides: Partial<HomeResponse> = {}): HomeRe
     categories: CATEGORIES,
     popularProducts: catalog.slice(0, 4),
     newProducts: catalog.slice(4, 8),
+    ...overrides,
+  };
+}
+
+export function buildAuthUser(overrides: Partial<AuthUser> = {}): AuthUser {
+  return {
+    id: "u1",
+    name: "루퍼1",
+    email: "looper1@loopers.dev",
+    ...overrides,
+  };
+}
+
+export function buildOrder(overrides: Partial<Order> = {}): Order {
+  return {
+    id: "o1",
+    createdAt: "2026-09-01T09:00:00.000Z",
+    items: [{ productId: "casual-1", quantity: 1 }],
     ...overrides,
   };
 }

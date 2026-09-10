@@ -3,6 +3,7 @@ import { create } from "zustand";
 export interface SelectionStore {
   ids: Set<string>;
   toggle: (id: string) => void;
+  clear: () => void;
 }
 
 export function createSelectionStore() {
@@ -18,5 +19,6 @@ export function createSelectionStore() {
         }
         return { ids };
       }),
+    clear: () => set({ ids: new Set<string>() }),
   }));
 }

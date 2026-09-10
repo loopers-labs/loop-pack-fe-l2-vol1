@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductGridSkeleton } from "@/entities/product";
+import { useTrackOnMount } from "@/shared/analytics";
 import { CommerceApiError } from "@/shared/api/commerce-client";
 import { Placeholder } from "@/shared/ui/placeholder";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +18,14 @@ export function ProductListContent() {
   const { data, isPending, isFetching, isError, error, refetch } = useQuery(
     productListQueries.list(search),
   );
+
+  // 목록 화면 진입. 필터·정렬·페이지 변경은 시드 스키마의 별도 이벤트라 여기서 다시 보내지 않는다
+  useTrackOnMount("product_list_view", {
+    category: search.category,
+    sort: search.sort,
+    page: search.page,
+    hasQuery: search.q.trim() !== "",
+  });
 
   const errorMessage =
     error instanceof CommerceApiError ? error.message : "잠시 후 다시 시도해 주세요.";

@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/app/providers";
 import { SITE_DESCRIPTION, SITE_NAME, sharedOpenGraph, withSiteName } from "@/shared/config/seo";
-import { HeaderActions } from "@/widgets/header";
 import "./globals.css";
 import "./week-05-layout.css";
-import Link from "next/link";
+import "./week-09-auth.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +30,7 @@ export const metadata: Metadata = {
   },
 };
 
+// 루트 layout 은 요청 정보를 읽지 않는다. 세션은 (commerce)/layout.tsx 가 읽어, 동적 렌더 범위를 그 그룹 안으로 줄인다
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,18 +39,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <Providers>
-          <div className="week05-page">
-            <header className="week05-header">
-              <Link href="/">Commerce</Link>
-              <nav aria-label="주요 메뉴">
-                <Link href="/products">상품</Link>
-                <HeaderActions />
-              </nav>
-            </header>
-            <main>{children}</main>
-          </div>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

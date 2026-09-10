@@ -7,50 +7,20 @@ import { SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
 // 6주차에 구조를 바꾼 뒤에도 그대로 동작해야 하므로 응답 타입, 지연,
 // 상품 id 검증을 모두 여기서 처리한다
 
-// 인증 응답 계약. 본인 구조에 맞는 자리로 옮겨도 된다
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-};
-
-export type AuthScenario = "invalid" | "expired" | "error" | "slow";
-
-export type AuthErrorResponse = {
-  message: string;
-};
-
-export type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-export type SessionResponse = {
-  user: AuthUser;
-};
-
-export type OrderItem = {
-  productId: string;
-  quantity: number;
-};
-
-export type Order = {
-  id: string;
-  createdAt: string;
-  items: OrderItem[];
-};
-
-export type OrderCreateRequest = {
-  items: OrderItem[];
-};
-
-export type OrderCreateResponse = {
-  order: Order;
-};
-
-export type OrderListResponse = {
-  orders: Order[];
-};
+// 인증 응답 계약은 src/types/auth.ts 로 옮겼다. FSD 레이어와 mock 백엔드가 같은 타입을 본다
+export type {
+  AuthErrorResponse,
+  AuthScenario,
+  AuthUser,
+  LoginRequest,
+  Order,
+  OrderCreateRequest,
+  OrderCreateResponse,
+  OrderItem,
+  OrderListResponse,
+  SessionResponse,
+} from "@/types/auth";
+import type { AuthScenario, AuthUser, Order, OrderItem } from "@/types/auth";
 
 export const TEST_PASSWORD = "looper1234";
 
@@ -63,8 +33,12 @@ export const accounts: AuthUser[] = Array.from({ length: 8 }, (_, index) => ({
   email: `looper${index + 1}@loopers.dev`,
 }));
 
-const authScenarios = ["invalid", "expired", "error", "slow"] as const satisfies
-  readonly AuthScenario[];
+const authScenarios = [
+  "invalid",
+  "expired",
+  "error",
+  "slow",
+] as const satisfies readonly AuthScenario[];
 
 export const isAuthScenario = (value: string): value is AuthScenario =>
   authScenarios.some((scenario) => scenario === value);
@@ -157,8 +131,7 @@ export const resetOrders = () => {
 };
 
 // 상품 데이터를 참조하지 않고 id 형식만 확인한다. mock 상품은 p1 ~ p30이다
-export const isKnownProductId = (productId: string) =>
-  /^p(?:[1-9]|1\d|2\d|30)$/.test(productId);
+export const isKnownProductId = (productId: string) => /^p(?:[1-9]|1\d|2\d|30)$/.test(productId);
 
 // 지연은 이 파일에서 처리한다. test 환경에서는 기다리지 않는다
 export const waitForAuthApi = (requestedDelayMs = 500) =>

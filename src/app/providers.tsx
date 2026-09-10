@@ -3,6 +3,7 @@
 import { QueryClientProvider, QueryErrorResetBoundary } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
+import { AnalyticsInit } from "@/shared/analytics";
 import { getQueryClient } from "@/shared/api/get-query-client";
 
 interface ProvidersProps {
@@ -15,7 +16,10 @@ export function Providers({ children }: ProvidersProps): React.JSX.Element {
   return (
     <QueryClientProvider client={queryClient}>
       <QueryErrorResetBoundary>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <NuqsAdapter>
+          <AnalyticsInit />
+          {children}
+        </NuqsAdapter>
       </QueryErrorResetBoundary>
     </QueryClientProvider>
   );
