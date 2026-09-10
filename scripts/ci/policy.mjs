@@ -3,9 +3,14 @@ export function planChecks(eventName, files, forceE2e = false) {
   if (eventName !== 'pull_request' || forceE2e) {
     return { e2e: true, reason: 'Full verification requested by event or label' };
   }
-  const isDocumentation = (file) =>
-    ['README.md', 'CLAUDE.md', 'AGENTS.md'].includes(file) ||
-    (file.startsWith('docs/') && file.endsWith('.md') && !file.split('/').includes('..'));
+  const isDocumentation = (file) => {
+    if (typeof file !== 'string' || file.includes('\\') || file.includes('\0')) return false;
+    if (['README.md', 'CLAUDE.md', 'AGENTS.md'].includes(file)) return true;
+    const segments = file.split('/');
+    return segments[0] === 'docs' && segments.length > 1 &&
+      segments.every((segment) => segment !== '' && segment !== '.' && segment !== '..') &&
+      file.endsWith('.md');
+  };
   const docsOnly = files.length > 0 && files.every(isDocumentation);
   return {
     e2e: !docsOnly,

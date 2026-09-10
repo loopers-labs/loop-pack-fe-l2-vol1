@@ -4,8 +4,10 @@ import { validateEnvironment } from './validate-env.mjs';
 
 test('CI accepts its local server but rejects missing, external and malformed origins', () => {
   assert.deepEqual(validateEnvironment({ APP_ORIGIN: 'http://127.0.0.1:3100' }, 'ci'), []);
+  assert.deepEqual(validateEnvironment({ APP_ORIGIN: 'http://localhost.:3100' }, 'ci'), []);
   for (const APP_ORIGIN of [undefined, '', 'broken', 'ftp://localhost', 'https://example.com',
-    'http://user:pass@localhost', 'http://localhost/path', 'http://localhost/?q=1', 'http://localhost/#x']) {
+    'http://0.0.0.0:3100', 'http://[::]:3100', 'http://user:pass@localhost',
+    'http://localhost/path', 'http://localhost/?q=1', 'http://localhost/#x']) {
     assert.ok(validateEnvironment({ APP_ORIGIN }, 'ci').length > 0);
   }
 });
@@ -18,6 +20,10 @@ test('deployments require explicit target and a non-default signing secret', () 
     assert.ok(validateEnvironment({ ...env, ...changed }, 'preview').length > 0);
   }
   assert.ok(validateEnvironment(env, undefined).length > 0);
+  for (const APP_ORIGIN of ['https://localhost.', 'https://app.localhost', 'https://127.1',
+    'https://[::1]', 'https://[::ffff:127.0.0.1]', 'https://0.0.0.0', 'https://[::]']) {
+    assert.ok(validateEnvironment({ ...env, APP_ORIGIN, EXPECTED_APP_ORIGIN: APP_ORIGIN }, 'preview').length > 0);
+  }
 });
 
 test('unapproved public variables fail without revealing their values', () => {

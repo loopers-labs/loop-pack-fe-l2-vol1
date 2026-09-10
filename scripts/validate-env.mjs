@@ -1,5 +1,18 @@
 import { pathToFileURL } from 'node:url';
 
+function isLoopbackHostname(hostname) {
+  const normalized = hostname.toLowerCase().replace(/\.$/, '');
+  return normalized === 'localhost' || normalized.endsWith('.localhost') ||
+    normalized === '[::1]' ||
+    /^127(?:\.\d{1,3}){3}$/.test(normalized) ||
+    /^\[::ffff:7f[0-9a-f]{2}:[0-9a-f]{1,4}\]$/.test(normalized);
+}
+
+function isLocalOnlyHostname(hostname) {
+  const normalized = hostname.toLowerCase().replace(/\.$/, '');
+  return isLoopbackHostname(normalized) || normalized === '0.0.0.0' || normalized === '[::]';
+}
+
 export function validateEnvironment(env, mode) {
   const errors = [];
   if (!['local', 'ci', 'preview', 'production'].includes(mode)) errors.push('Explicit environment mode is required');
@@ -11,12 +24,12 @@ export function validateEnvironment(env, mode) {
   } catch {
     errors.push('APP_ORIGIN must be an HTTP(S) origin without credentials, path, query or fragment');
   }
-  if (mode === 'ci' && origin && !['localhost', '127.0.0.1', '[::1]'].includes(origin.hostname)) {
+  if (mode === 'ci' && origin && !isLoopbackHostname(origin.hostname)) {
     errors.push('CI APP_ORIGIN must point to a loopback test server');
   }
   if (['preview', 'production'].includes(mode)) {
     if (origin?.protocol !== 'https:') errors.push('Deployed APP_ORIGIN must use HTTPS');
-    if (origin && ['localhost', '127.0.0.1', '[::1]'].includes(origin.hostname)) errors.push('Deployed APP_ORIGIN must not be loopback');
+    if (origin && isLocalOnlyHostname(origin.hostname)) errors.push('Deployed APP_ORIGIN must not be loopback');
     if (!env.EXPECTED_APP_ORIGIN || env.APP_ORIGIN !== env.EXPECTED_APP_ORIGIN) {
       errors.push('APP_ORIGIN must match the independently configured EXPECTED_APP_ORIGIN');
     }

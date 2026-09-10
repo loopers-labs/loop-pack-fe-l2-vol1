@@ -83,7 +83,7 @@ PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 진행 중 실행
 
 app → entities 같은 하향 참조는 허용한다. 같은 레이어의 slice 간 격리, Public API, analytics·test·examples·legacy 경계까지 강제하는 규칙은 아니다. 이 영역은 기존 저장소 규칙에 따라 리뷰한다.
 
-실제 ESLint 설정에 가상 소스를 전달하는 테스트로 entities → app 오류와 app → entities 정상 결과를 확인한다. 적용 중 기존 상품 목록 테스트의 _pages → app/HeaderNav 참조가 발견됐다. 헤더와 목록을 함께 검증하는 테스트를 `src/app/products/ProductListContent.test.tsx`로 옮기고 단언은 유지했다. 린트 예외를 추가하지 않았다.
+실제 파일 경로에 계산된 ESLint 설정을 메모리의 위반·정상 소스에 적용해 alias와 상대 경로의 entities → app 오류, app → entities 정상 결과를 확인한다. 테스트가 작업 트리에 임시 소스를 만들지는 않는다. 적용 중 기존 상품 목록 테스트의 _pages → app/HeaderNav 참조가 발견됐다. 헤더와 목록을 함께 검증하는 테스트를 `src/app/products/ProductListContent.test.tsx`로 옮기고 단언은 유지했다. 린트 예외를 추가하지 않았다.
 
 ## 5. 병합 보호와 보안
 
@@ -159,8 +159,8 @@ FSD 상향 참조 차단은 구현했고 정상·위반 입력으로 검사했�
 
 ## 9. 로컬 검증 기록
 
-이번 작업 환경은 Windows, Node 22.23.2, pnpm 10.15.1이다. CI의 .nvmrc Node 24.17.0 및 Ubuntu 환경과 다르므로 로컬 성공을 원격 성공으로 대체하지 않는다.
+이번 최종 로컬 검증 환경은 Windows, Node 24.17.0, pnpm 10.15.1이다. Node는 `.nvmrc`와 `package.json`에서 같은 버전으로 고정하고 `.npmrc`의 engine-strict로 다른 버전의 설치를 거부한다. 운영체제는 CI의 Ubuntu와 다르므로 로컬 성공을 원격 성공으로 대체하지 않는다.
 
-- 최종 `pnpm check` 통과: CI 정책·환경 변수·ESLint 설정 테스트 8개, Vitest 40파일 186개, lint, typecheck, production build, E2E 9개.
-- workflow YAML 파싱 확인. 이는 GitHub runner에서의 action 실행 검증은 아니다.
-- GitHub push, ruleset 변경, Vercel 배포는 이번 로컬 구현에 포함하지 않았다.
+- Node 24.17.0의 최종 `pnpm check` 통과: CI 정책·환경 변수·ESLint·도구 버전 테스트 9개, Vitest 40파일 186개, lint, typecheck, production build, E2E 9개.
+- PR의 Ubuntu 실행에서 side-effect import를 사용한 가상 FSD 검사가 위반을 감지하지 못해 gate가 실패했다. 실제 코드와 같은 named import를 사용하고 적용된 설정 자체도 단언하도록 수정했다.
+- workflow는 실제 GitHub PR에서 실행했다. ruleset 변경과 Vercel 배포는 아직 포함하지 않았다.

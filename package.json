@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "engines": {
-    "node": ">=22.12.0"
+    "node": "24.17.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:e2e": "next build && playwright test",
     "test:e2e:run": "playwright test",
-    "test:ci": "node --test scripts/ci/policy.test.mjs scripts/ci/fsd.test.mjs scripts/validate-env.test.mjs",
+    "test:ci": "node --test scripts/ci/policy.test.mjs scripts/ci/fsd.test.mjs scripts/ci/toolchain.test.mjs scripts/validate-env.test.mjs",
     "ci:plan": "node scripts/ci/plan.mjs",
     "ci:gate": "node scripts/ci/gate.mjs",
     "validate:env": "node scripts/validate-env.mjs",

@@ -5,7 +5,9 @@ import { checkOutcomes, planChecks } from './policy.mjs';
 test('only allowlisted docs skip E2E, including draft PRs with app changes', () => {
   assert.equal(planChecks('pull_request', ['README.md', 'docs/rfc/week10-ci.md']).e2e, false);
   for (const files of [[], ['src/help.md'], ['pnpm-workspace.yaml'], ['.github/workflows/quality.yml'],
-    ['docs/data.json'], ['docs/../src/page.md'], ['README.md', 'src/app/page.tsx']]) {
+    ['docs/data.json'], ['docs/../src/page.md'], ['docs/./guide.md'], ['docs//guide.md'],
+    ['docs\\guide.md'], ['Docs/guide.md'], ['docs/guide.MD'], ['docs/guide.md\0src/app/page.tsx'],
+    ['README.md', 'src/app/page.tsx']]) {
     assert.equal(planChecks('pull_request', files).e2e, true);
   }
 });

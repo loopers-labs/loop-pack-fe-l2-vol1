@@ -5,7 +5,7 @@ Loopers 프론트엔드 과정(TypeScript · React · Next.js)의 과제 제출 
 
 ## 시작하기
 
-필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`는 현재 권장 LTS를 고정하고, `package.json`의 Node.js 범위(`>=22.12.0`)는 지원 가능한 Node.js 22 이상을 허용합니다.
+필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`와 `package.json`은 같은 Node.js 버전을 고정하며, 다른 버전에서는 의존성 설치를 중단합니다.
 
 ```bash
 nvm use
