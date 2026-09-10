@@ -77,7 +77,7 @@ PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 진행 중 실행
 
 ### FSD 의존 방향
 
-`eslint.config.mjs`의 import/no-restricted-paths가 src의 TypeScript 파일에서 다음 순서의 상향 참조를 차단한다.
+`eslint.config.mjs`의 no-restricted-imports가 `@/` alias 상향 참조를 직접 차단하고, import/no-restricted-paths가 상대 경로 상향 참조를 차단한다. 두 규칙은 src의 TypeScript 파일에서 다음 순서를 적용한다.
 
 `app → _pages → widgets → features → entities → shared`
 

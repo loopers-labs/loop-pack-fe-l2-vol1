@@ -18,6 +18,21 @@ const fsdZones = fsdLayers.flatMap((layer, index) =>
   })),
 );
 
+const fsdAliasConfigs = fsdLayers.slice(1).map((layer, index) => ({
+  files: [`src/${layer}/**/*.{ts,tsx}`],
+  rules: {
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: fsdLayers.slice(0, index + 1).map((upper) => ({
+          group: [`@/${upper}`, `@/${upper}/**`],
+          message: `${layer} must not import the upper ${upper} layer`,
+        })),
+      },
+    ],
+  },
+}));
+
 const eslintConfig = defineConfig([
   // Next 전용 룰 — core-web-vitals + @next/eslint-plugin-next (import 플러그인 포함)
   ...nextVitals,
@@ -68,6 +83,9 @@ const eslintConfig = defineConfig([
       "react/no-danger": "error",
     },
   },
+
+  // Alias imports are checked without filesystem resolution so CI and local runs agree.
+  ...fsdAliasConfigs,
 
   // 타입 정보가 필요한 룰 — src만 대상
   {

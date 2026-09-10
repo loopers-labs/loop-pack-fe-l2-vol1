@@ -5,12 +5,20 @@ import { ESLint } from 'eslint';
 test('the real ESLint configuration blocks upward imports and permits downward imports', async () => {
   const eslint = new ESLint({ overrideConfigFile: 'eslint.config.mjs' });
   // lintText checks synthetic content without changing the source files.
-  const [violation] = await eslint.lintText("import '@/app/api/_data/orderRepository';\n", {
+  const [aliasViolation] = await eslint.lintText("import '@/app/api/_data/orderRepository';\n", {
     filePath: 'src/entities/product/model/types.ts',
   });
   assert.ok(
-    violation.messages.some(({ ruleId }) => ruleId === 'import/no-restricted-paths'),
-    JSON.stringify(violation.messages),
+    aliasViolation.messages.some(({ ruleId }) => ruleId === 'no-restricted-imports'),
+    JSON.stringify(aliasViolation.messages),
+  );
+  const [relativeViolation] = await eslint.lintText(
+    "import '../../../app/api/_data/orderRepository';\n",
+    { filePath: 'src/entities/product/model/types.ts' },
+  );
+  assert.ok(
+    relativeViolation.messages.some(({ ruleId }) => ruleId === 'import/no-restricted-paths'),
+    JSON.stringify(relativeViolation.messages),
   );
   const [normal] = await eslint.lintText("import '@/entities/product/model/types';\n", {
     filePath: 'src/app/api/_data/orderRepository.ts',
