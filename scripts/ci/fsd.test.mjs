@@ -8,7 +8,10 @@ test('the real ESLint configuration blocks upward imports and permits downward i
   const [violation] = await eslint.lintText("import '@/app/api/_data/orderRepository';\n", {
     filePath: 'src/entities/product/model/types.ts',
   });
-  assert.ok(violation.messages.some(({ ruleId }) => ruleId === 'import/no-restricted-paths'));
+  assert.ok(
+    violation.messages.some(({ ruleId }) => ruleId === 'import/no-restricted-paths'),
+    JSON.stringify(violation.messages),
+  );
   const [normal] = await eslint.lintText("import '@/entities/product/model/types';\n", {
     filePath: 'src/app/api/_data/orderRepository.ts',
   });
