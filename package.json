@@ -20,7 +20,7 @@
     "test:e2e": "playwright test",
     "test:watch": "vitest",
     "test:mutation": "stryker run",
-    "check": "pnpm test && pnpm lint && pnpm lint:fsd && pnpm typecheck && pnpm build",
+    "check": "pnpm test && pnpm lint && pnpm lint:fsd && pnpm lint:versions && pnpm typecheck && pnpm build && pnpm size",
     "prepare": "husky",
     "lint:versions": "node scripts/validate-pnpm-version-source.mjs"
   },
