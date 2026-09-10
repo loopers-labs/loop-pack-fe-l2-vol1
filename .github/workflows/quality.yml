@@ -78,8 +78,32 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
 
+      # 세션 서명 키는 요청 시점에 읽히므로 빌드 산출물에 들어가지 않는다. CI 마다 새로 만들고 마스킹한다
+      - name: Generate ephemeral session secret
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "AUTH_SESSION_SECRET=$secret" >> "$GITHUB_ENV"
+
+      - name: Validate environment
+        run: pnpm validate-env
+
       - name: Build
         run: pnpm build
+
+      - name: Bundle budget
+        run: |
+          status=0
+          pnpm exec size-limit --json > "$RUNNER_TEMP/size-limit.json" || status=$?
+          node scripts/size-limit-summary.mjs "$RUNNER_TEMP/size-limit.json"
+          exit $status
+
+      - name: Assert the session secret is not in the build output
+        run: |
+          if grep -rqF "$AUTH_SESSION_SECRET" .next/static .next/server; then
+            echo "::error::AUTH_SESSION_SECRET 값이 빌드 산출물에 들어 있습니다"
+            exit 1
+          fi
 
       - name: Detect app-affecting changes
         id: filter
