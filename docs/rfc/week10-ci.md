@@ -2,7 +2,7 @@
 
 Branch `feat/week-10` · Status: 제출 · Created 2026-09-11
 
-**문서 구조** — 1~~5절은 과제 1~~5단계의 결정과 증거, 6절은 워크플로 보안 하드닝, 7절은 "함께 생각해 볼 질문" 4개다. 숫자는 전부 fork(`yo-ong/loop-pack-fe-l2-vol1`) 의 Actions run·PR·Vercel 배포에서 가져왔고 run 번호를 함께 적었다. 실험용 PR(#2·#4~#8)은 머지하지 않고 닫았다.
+**문서 구조** — 1–5절은 과제 1–5단계의 결정과 증거, 6절은 워크플로 보안 하드닝, 7절은 "함께 생각해 볼 질문" 4개다. 숫자는 전부 fork(`yo-ong/loop-pack-fe-l2-vol1`) 의 Actions run·PR·Vercel 배포에서 가져왔고 run 번호를 함께 적었다. 실험용 PR(#2·#4–#8)은 머지하지 않고 닫았다.
 
 **빠르게 읽기** — 1.3 Before/After 표 · 1.4 캐시 실험(pnpm 캐시는 이득이 없었다) · 2.2 조건부 E2E 의 안전 논리 · 3.2 예산 근거표 · 3.5 빨간불 PR · 4.2 잘 잡은 리뷰 / 헛소리 · 5.3 기계·AI·사람 판단 · 7 질문 답변.
 
@@ -28,23 +28,23 @@ Before cold-1(run 34498107867 attempt 1, wall 101s) 의 step 별 소요:
 | **Run quality checks**          | **46s** | 로그 타임스탬프로 쪼개면 test 10 · lint 5 · typecheck 4 · build 10 · e2e 16 |
 | Post Set up Node.js (캐시 저장) |      5s |                                                                             |
 
-병목은 둘이다. (a) Playwright 브라우저 설치 24~25초 — 매 실행 반복되는 순수 다운로드. (b) `pnpm check` 46초 중 서로 독립인 test·lint·typecheck 19초가 build·e2e 와 직렬로 묶여 있다. build 10초와 e2e 16초는 검증 자체라 줄일 대상이 아니다.
+병목은 둘이다. (a) Playwright 브라우저 설치 24–25초 — 매 실행 반복되는 순수 다운로드. (b) `pnpm check` 46초 중 서로 독립인 test·lint·typecheck 19초가 build·e2e 와 직렬로 묶여 있다. build 10초와 e2e 16초는 검증 자체라 줄일 대상이 아니다.
 
 ### 1.3 Before / After
 
 | 조건        | raw (s)         |  중앙값 | 범위    | run                     |
 | ----------- | --------------- | ------: | ------- | ----------------------- |
-| Before cold | 101 / 107 / 106 | **106** | 101–107 | 34498107867 attempt 1~3 |
-| Before warm | 93 / 104 / 135  | **104** | 93–135  | 34498107867 attempt 4~6 |
-| After cold  | 104 / 83 / 82   |  **83** | 82–104  | 34499302247 attempt 5~7 |
-| After warm  | 63 / 63 / 55    |  **63** | 55–63   | 34499302247 attempt 2~4 |
+| Before cold | 101 / 107 / 106 | **106** | 101–107 | 34498107867 attempt 1–3 |
+| Before warm | 93 / 104 / 135  | **104** | 93–135  | 34498107867 attempt 4–6 |
+| After cold  | 104 / 83 / 82   |  **83** | 82–104  | 34499302247 attempt 5–7 |
+| After warm  | 63 / 63 / 55    |  **63** | 55–63   | 34499302247 attempt 2–4 |
 
 - warm 기준 **104 → 63초(−39%)**. Before warm 범위(93–135)와 After warm 범위(55–63)가 겹치지 않으므로 측정 흔들림보다 큰 변화다. Before warm-3 의 135초는 러너 편차(같은 step 구성에서 +30초)로, 3회 이상 재고 범위를 남기라는 지침이 왜 있는지 보여준 표본이다.
-- 줄어든 자리가 지목한 병목과 일치한다. After warm 의 build job: setup 15~~19 · build 10~~11 · **Playwright 캐시 복원 3~~5(설치 24~~39 대체)** · e2e 16~~18. lint 24~~34 · typecheck 22~~33 · unit 31~~38초는 build job 과 병렬로 돌아 임계 경로에서 빠졌다.
-- cold 는 106 → 83초. 브라우저 캐시가 없으면 After 도 22~39초를 다시 쓰므로 warm 만큼 줄지 않는다. 즉 개선의 절반은 캐시, 절반은 병렬화다.
+- 줄어든 자리가 지목한 병목과 일치한다. After warm 의 build job: setup 15–19 · build 10–11 · **Playwright 캐시 복원 3–5(설치 24–39 대체)** · e2e 16–18. lint 24–34 · typecheck 22–33 · unit 31–38초는 build job 과 병렬로 돌아 임계 경로에서 빠졌다.
+- cold 는 106 → 83초. 브라우저 캐시가 없으면 After 도 22–39초를 다시 쓰므로 warm 만큼 줄지 않는다. 즉 개선의 절반은 캐시, 절반은 병렬화다.
 - 검증 항목은 Before 와 After 가 같다(test 180 · lint · typecheck · build · e2e 12). 이후 3단계에서 validate-env·size-limit step 이 추가됐지만 1단계 After 측정은 그 전 커밋(`15918a05`)에서 했다.
 
-**함정 확인** — job 을 4개로 나누면 install 이 4번 돈다. 각 setup(composite action) 은 12~23초이고 lint·typecheck·unit job 은 임계 경로 밖이라 wall-clock 에는 영향이 없지만 **청구 시간은 늘어난다**(Σjob ≈ 150s vs Before 100s). 공개 저장소라 무료이고 PR 체크 목록에 항목별 초록·빨강이 보이는 값이 더 크다고 판단했다. build 와 e2e 를 한 job 에 둔 이유도 같다 — artifact 로 넘기려면 job 하나가 setup 에 20초 안팎을 더 쓰고 업/다운로드까지 더해 오히려 느리다.
+**함정 확인** — job 을 4개로 나누면 install 이 4번 돈다. 각 setup(composite action) 은 12–23초이고 lint·typecheck·unit job 은 임계 경로 밖이라 wall-clock 에는 영향이 없지만 **청구 시간은 늘어난다**(Σjob ≈ 150s vs Before 100s). 공개 저장소라 무료이고 PR 체크 목록에 항목별 초록·빨강이 보이는 값이 더 크다고 판단했다. build 와 e2e 를 한 job 에 둔 이유도 같다 — artifact 로 넘기려면 job 하나가 setup 에 20초 안팎을 더 쓰고 업/다운로드까지 더해 오히려 느리다.
 
 ### 1.4 캐시 hit / miss 증명
 
@@ -66,7 +66,7 @@ Cache restored from key: playwright-Linux-1.62.1
 
 Playwright 캐시는 키가 `@playwright/test` 버전(`playwright-Linux-1.62.1`)이라 lockfile 이 바뀌어도 hit 를 유지했다(run 34501543332). 실험이 끝난 뒤 PR #4 를 닫고 브랜치를 지웠으며 `feat/week-10` 의 lockfile 은 건드리지 않았다.
 
-**발견 1 — pnpm store 캐시는 이 레포에서 이득이 없다.** 625개 패키지를 GitHub 네트워크로 받는 데 5초, 196MB 캐시를 복원하는 데 10초가 든다. 효과가 있는 캐시는 Playwright 브라우저(269MB, 설치 22~~39초 → 복원 3~~8초)뿐이다. pnpm 캐시는 해롭지 않고 스타터가 준 설정이라 유지하되, "캐시를 걸었다 = 빨라졌다" 가 아님을 기록한다.
+**발견 1 — pnpm store 캐시는 이 레포에서 이득이 없다.** 625개 패키지를 GitHub 네트워크로 받는 데 5초, 196MB 캐시를 복원하는 데 10초가 든다. 효과가 있는 캐시는 Playwright 브라우저(269MB, 설치 22–39초 → 복원 3–8초)뿐이다. pnpm 캐시는 해롭지 않고 스타터가 준 설정이라 유지하되, "캐시를 걸었다 = 빨라졌다" 가 아님을 기록한다.
 
 **발견 2 — Actions 캐시는 브랜치(PR ref) 단위로 격리된다.** PR #3 의 첫 run(34499302247 attempt 1) 은 PR #2 가 방금 저장한 pnpm 캐시를 보지 못했다(`pnpm cache is not found` ×4 job). 새 PR 은 자기 ref 와 base(main) 의 캐시만 읽으므로, main 이 새 워크플로로 한 번 돌아 캐시를 저장해야 이후 PR 이 warm 으로 시작한다. 이 fork 의 main 은 과제 완료 후 머지되기 전까지 옛 lockfile 캐시만 갖고 있어 모든 실험 PR 이 첫 run 에서 cold 였다.
 
@@ -74,12 +74,12 @@ Playwright 캐시는 키가 `@playwright/test` 버전(`playwright-Linux-1.62.1`)
 
 | 전략                                         | 채택 | 근거                                                                                                                                                                                                                           |
 | -------------------------------------------- | :--: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Playwright 브라우저 캐시                     |  ✓   | 가장 긴 단일 step(24~25초) 이 순수 다운로드. 키는 lockfile 이 아니라 Playwright 버전으로 — 무관한 의존성 변경에 269MB 를 다시 받지 않게                                                                                        |
+| Playwright 브라우저 캐시                     |  ✓   | 가장 긴 단일 step(24–25초) 이 순수 다운로드. 키는 lockfile 이 아니라 Playwright 버전으로 — 무관한 의존성 변경에 269MB 를 다시 받지 않게                                                                                        |
 | job 병렬화 (lint·typecheck·unit ↔ build+e2e) |  ✓   | 독립 검증 19초가 직렬로 묶여 있었다. PR 체크 목록에 항목별 결과가 보이는 부수 효과                                                                                                                                             |
 | `concurrency` 그룹                           |  ✓   | 측정된 병목은 아니지만 같은 PR 연속 push 의 중복 실행을 막는 비용·정확성 장치. `group: ${{ github.workflow }}-${{ github.ref }}`, `cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}` 로 main push 는 취소하지 않는다 |
 | composite setup action                       |  ✓   | 4개 job 의 install 조건이 같아야 측정이 성립한다. pnpm 버전은 `packageManager` 한 곳에서만 읽는다                                                                                                                              |
 | build → e2e artifact 분리                    |  ✗   | job 추가 setup ≈ 20초 + 업/다운로드 > 얻는 병렬성. 1.3 의 셈법                                                                                                                                                                 |
-| `.next/cache` 캐시                           |  ✗   | Turbopack 영구 캐시가 꺼져 있어 1.2MB(폰트 캐시)뿐이고 CI build 는 이미 6~11초                                                                                                                                                 |
+| `.next/cache` 캐시                           |  ✗   | Turbopack 영구 캐시가 꺼져 있어 1.2MB(폰트 캐시)뿐이고 CI build 는 이미 6–11초                                                                                                                                                 |
 | e2e `workers` 증가 / `NODE_ENV=test`         |  ✗   | 2 vCPU 러너에서 workers 2 는 9주차의 의도적 상한. mock API 의 500ms 지연은 production 서버가 겪는 그대로 두어야 검증 대상이 같다                                                                                               |
 
 ---
@@ -137,7 +137,7 @@ Next 16 의 Turbopack 빌드는 `.next/static/chunks/` 에 해시 이름만 남�
 
 7주차는 Lighthouse LCP·CLS 와 이미지 전송량(7,545,525 B → 32,424 B)을 잰 주차라 **JS 번들 크기는 측정하지 않았다.** 그래서 JS 예산의 근거는 "7주차 값" 이 아니라 **이번 주 기준 빌드의 실측** 이고, 그 사실을 여기 적는다. 이미지는 `size-limit` 에 넣지 않았다 — `public/` 원본을 재면 사용자가 받는 `/_next/image` 응답이 아니라 7주차 Lighthouse 기록이 더 정확한 근거다.
 
-빌드는 결정적이다(같은 커밋 두 번 빌드 → `route-bundle-stats.json` diff 없음, 로컬 157.7 vs CI 157.8 kB). 측정 노이즈가 0 이므로 여유폭은 노이즈가 아니라 **정상 작업은 통과시키고 의미 없는 라이브러리는 잡는 폭** 이다. +5%(약 7~~8 kB)는 컴포넌트 몇 개(1~~3 kB)를 통과시키고 유틸 라이브러리 1개(≥10 kB brotli)를 잡는다. +20%(28 kB)면 zustand + react-query 만큼이 조용히 들어온다.
+빌드는 결정적이다(같은 커밋 두 번 빌드 → `route-bundle-stats.json` diff 없음, 로컬 157.7 vs CI 157.8 kB). 측정 노이즈가 0 이므로 여유폭은 노이즈가 아니라 **정상 작업은 통과시키고 의미 없는 라이브러리는 잡는 폭** 이다. +5%(약 7–8 kB)는 컴포넌트 몇 개(1–3 kB)를 통과시키고 유틸 라이브러리 1개(≥10 kB brotli)를 잡는다. +20%(28 kB)면 zustand + react-query 만큼이 조용히 들어온다.
 
 | route              | 실측 (brotli, run 34503930847) | 예산 = ceil(×1.05) |   여유 |
 | ------------------ | -----------------------------: | -----------------: | -----: |
@@ -198,7 +198,7 @@ Vercel 프로젝트 `loop-pack-fe-l2-vol1`(Production `https://loop-pack-fe-l2-v
 | -------------------------------------------------------- | :------: | --------------------------------------------------------------------------------------------------------------- |
 | `lint` `typecheck` `unit`                                |    ✓     | 결정적·저비용·항상 실행                                                                                         |
 | `build` (validate-env + build + size-limit + 조건부 E2E) |    ✓     | 결정적. E2E 는 step 이라 skip 되어도 보고된다                                                                   |
-| Lighthouse CI                                            |    ✗     | 미도입. 7주차 5회 측정에서 LCP 범위 2,869~3,124ms(±4%)로 흔들린다. 걸더라도 정기 실행·주요 화면 PR 의 참고 지표 |
+| Lighthouse CI                                            |    ✗     | 미도입. 7주차 5회 측정에서 LCP 범위 2,869–3,124ms(±4%)로 흔들린다. 걸더라도 정기 실행·주요 화면 PR 의 참고 지표 |
 | AI 리뷰                                                  |    ✗     | 비결정적. 4절                                                                                                   |
 
 `enforce_admins: false`(관리자 본인의 main 동기화 push 를 막지 않음), `strict: false`. 이 보호는 **fork 의 main 에만** 걸려 있고 upstream PR 은 upstream 의 설정으로 평가된다.
@@ -209,7 +209,7 @@ Vercel 프로젝트 `loop-pack-fe-l2-vol1`(Production `https://loop-pack-fe-l2-v
 
 ### 4.1 리뷰 기준
 
-`.claude/skills/pr-review/SKILL.md` — 1주차 CLAUDE.md(R1 `any`/`as`/`eslint-disable`, R2 설명 없는 변경), 2~~3주차(R3 Props 5개, R4 파생값 useEffect 동기화 금지, R5 hook 한 관심사), 5·7주차(R6 상태 분류·서버 응답 복사 금지, R7 URL 파서 단일화, R9 서버 컴포넌트 우선, R10 로딩 UI), 6주차(R8 FSD 경계·Public API), 8~~9주차(R11 테스트 인프라, R12 셀렉터·구현 상수 import 금지, R13 세션 만료 단일 처리), 10주차(R14 워크플로 보안) 14개. 출력은 `파일:라인 / 규칙 / 근거(실제 코드 인용) / 확신 / 승격 가능 여부` 5줄, 끝에 **반복 패턴** 절(5단계의 입력). 이미 ESLint·tsc 가 막는 것은 "CI 가 이미 막음" 으로 분류만 한다.
+`.claude/skills/pr-review/SKILL.md` — 1주차 CLAUDE.md(R1 `any`/`as`/`eslint-disable`, R2 설명 없는 변경), 2–3주차(R3 Props 5개, R4 파생값 useEffect 동기화 금지, R5 hook 한 관심사), 5·7주차(R6 상태 분류·서버 응답 복사 금지, R7 URL 파서 단일화, R9 서버 컴포넌트 우선, R10 로딩 UI), 6주차(R8 FSD 경계·Public API), 8–9주차(R11 테스트 인프라, R12 셀렉터·구현 상수 import 금지, R13 세션 만료 단일 처리), 10주차(R14 워크플로 보안) 14개. 출력은 `파일:라인 / 규칙 / 근거(실제 코드 인용) / 확신 / 승격 가능 여부` 5줄, 끝에 **반복 패턴** 절(5단계의 입력). 이미 ESLint·tsc 가 막는 것은 "CI 가 이미 막음" 으로 분류만 한다.
 
 로컬 Claude Code 에서 실행했고 CI 에는 붙이지 않았다. 근거: fork PR 은 secrets 에 접근할 수 없어 API 키를 둘 자리가 없고, 비결정적 출력이라 required 로 둘 수 없으며, 모든 PR 자동 실행은 비용·소음이 빠르게 커진다. **advisory** 다.
 
@@ -300,7 +300,7 @@ src/proxy.test.ts:3 · src/proxy.ts:2   '@/app/api/_data/auth-cookies'
 | 스크립트 인젝션              | `github.event.*` 를 `run:` 에 보간하지 않고 `env:` 로만 전달(`Decide whether E2E runs`)                                                                                               |
 | secrets 노출                 | secret 저장 없음. 임시 `AUTH_SESSION_SECRET` 은 `::add-mask::` 후 산출물 grep 검사. 실패값은 `«redacted»`                                                                             |
 | `persist-credentials: false` | 모든 checkout                                                                                                                                                                         |
-| `timeout-minutes`            | 모든 job(10~15분) — 폭주·탈취 시 상한                                                                                                                                                 |
+| `timeout-minutes`            | 모든 job(10–15분) — 폭주·탈취 시 상한                                                                                                                                                 |
 | `concurrency`                | ref 포함 그룹, main 은 취소 안 함                                                                                                                                                     |
 | 셸                           | `defaults.run.shell: bash`                                                                                                                                                            |
 
@@ -308,9 +308,9 @@ src/proxy.test.ts:3 · src/proxy.ts:2   '@/app/api/_data/auth-cookies'
 
 ## 7. 함께 생각해 볼 질문
 
-**1. E2E 를 모든 PR 에 required 로 걸면?** 이 레포에서도 E2E 는 16~18초 + 브라우저 준비이고, mock API 의 500ms 지연 위에서 돌아 러너 편차에 가장 민감한 step 이다(9주차 8워커 실험에서 15회 중 1회가 흔들렸고 그건 진짜 버그였다). 모든 PR required 면 문서 PR 도 그 비용과 거짓 빨간불을 지고, 조건부로 돌리면서 job 자체를 required 로 걸면 skip 된 PR 은 "체크 대기" 로 영영 머지되지 않는다. 그래서 E2E 는 `build` job 의 조건부 step 으로 두어 항상 보고되게 하고, 앱 경로 변경·라벨·main push 에서만 실행하며, merge queue 가 없는 개인 저장소에서는 main push 전체 실행이 최종 방어다.
+**1. E2E 를 모든 PR 에 required 로 걸면?** 이 레포에서도 E2E 는 16–18초 + 브라우저 준비이고, mock API 의 500ms 지연 위에서 돌아 러너 편차에 가장 민감한 step 이다(9주차 8워커 실험에서 15회 중 1회가 흔들렸고 그건 진짜 버그였다). 모든 PR required 면 문서 PR 도 그 비용과 거짓 빨간불을 지고, 조건부로 돌리면서 job 자체를 required 로 걸면 skip 된 PR 은 "체크 대기" 로 영영 머지되지 않는다. 그래서 E2E 는 `build` job 의 조건부 step 으로 두어 항상 보고되게 하고, 앱 경로 변경·라벨·main push 에서만 실행하며, merge queue 가 없는 개인 저장소에서는 main push 전체 실행이 최종 방어다.
 
-**2. Lighthouse 점수 하락은 항상 merge blocker 여야 할까?** 7주차 같은 커밋 5회 측정에서 LCP 는 2,869~3,124ms(±4%)로 흔들렸다. 변동 폭 안의 하락을 required 로 막으면 코드와 무관한 빨간불이 생기고 사람들은 곧 재실행으로 넘긴다 — 그 순간 게이트는 소음이다. 가를 기준은 "같은 입력에 같은 출력이 나오는가": 번들 크기는 결정적이라 막고(같은 커밋 두 번 빌드 → 바이트 동일), Lighthouse 는 정기 실행·주요 화면 PR 의 참고 지표로 두고 추세로 본다.
+**2. Lighthouse 점수 하락은 항상 merge blocker 여야 할까?** 7주차 같은 커밋 5회 측정에서 LCP 는 2,869–3,124ms(±4%)로 흔들렸다. 변동 폭 안의 하락을 required 로 막으면 코드와 무관한 빨간불이 생기고 사람들은 곧 재실행으로 넘긴다 — 그 순간 게이트는 소음이다. 가를 기준은 "같은 입력에 같은 출력이 나오는가": 번들 크기는 결정적이라 막고(같은 커밋 두 번 빌드 → 바이트 동일), Lighthouse 는 정기 실행·주요 화면 PR 의 참고 지표로 두고 추세로 본다.
 
 **3. Preview 가 production API 를 바라보면?** 이 앱은 서버 컴포넌트가 `APP_ORIGIN` 으로 자기 API 를 HTTP 로 다시 부른다(`commerce-client.ts`). Preview 에 production 주소가 들어가면 Preview 의 주문서가 production 주문 저장소에 쓰고, 실서비스라면 결제·이메일이 나간다. 게이트는 두 겹이다 — `validate-env` 가 `VERCEL_ENV ≠ production` 인데 `APP_ORIGIN` host 가 `VERCEL_PROJECT_PRODUCTION_URL` 과 같으면 빌드를 막고, 더 근본적으로 `resolveAppOrigin` 이 Preview 에서는 `APP_ORIGIN` 을 요구하지 않고 배포 자기 주소(`VERCEL_URL`)로 유도해 잘못 넣을 자리 자체를 없앴다. 실제로 첫 production 배포는 `APP_ORIGIN` 미설정으로 막혔고(3.6), Preview 는 og:url 이 자기 주소로 나온다.
 

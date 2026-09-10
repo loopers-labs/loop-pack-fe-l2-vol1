@@ -7,7 +7,7 @@
 - 주차: 10주차 — CI 파이프라인과 AI 협업
 - 무엇을 / 왜: 1주차 하네스(lint·type)를 CI 게이트로 끌어올렸다. 같은 커밋에서 cold/warm 3회씩 재어 병목(Playwright 설치 24초, 직렬 `pnpm check` 46초)만 고쳐 warm **104 → 63초**, E2E 는 앱 경로 변경·라벨·main push 에서만 돌게 하고 문서 PR 에서 skip 되어도 머지 가능함을 증명했다. 번들 예산(route 6개 First Load JS ×1.05)과 환경 변수 검증을 build 앞에 걸어 초과 PR 두 개가 빨간불로 막히는 것까지 확인했고, 팀 컨벤션 14개를 AI 리뷰 기준으로 명문화해 사람이 놓친 위반 1건(E2E 의 구현 상수 import)을 찾아 결정적 룰(`_data` import 금지)로 승격했다. Vercel Production·Preview 를 배포했고, 첫 production 빌드는 게이트가 막았다.
 
-설계·측정 문서: `docs/rfc/week10-ci.md`(1~5단계 + 보안 + 질문 4개) · 회고: `docs/rfc/week10-retrospective.md`
+설계·측정 문서: `docs/rfc/week10-ci.md`(1–5단계 + 보안 + 질문 4개) · 회고: `docs/rfc/week10-retrospective.md`
 
 ## 📚 이번 주 학습
 
@@ -23,7 +23,7 @@
 | After cold  |    83s | 82–104  |
 | After warm  |    63s | 55–63   |
 
-- 병목은 타임스탬프로 지목: Playwright 설치 24~25초(가장 긴 step), `pnpm check` 46초(test 10·lint 5·typecheck 4·build 10·e2e 16 직렬). 고른 전략은 브라우저 캐시(키 = Playwright 버전) + lint·typecheck·unit 병렬화 + concurrency(ref 포함). **안 고른 것**: build→e2e artifact 분리(setup 20초가 더 든다), `.next/cache`(1.2MB), e2e workers 증가.
+- 병목은 타임스탬프로 지목: Playwright 설치 24–25초(가장 긴 step), `pnpm check` 46초(test 10·lint 5·typecheck 4·build 10·e2e 16 직렬). 고른 전략은 브라우저 캐시(키 = Playwright 버전) + lint·typecheck·unit 병렬화 + concurrency(ref 포함). **안 고른 것**: build→e2e artifact 분리(setup 20초가 더 든다), `.next/cache`(1.2MB), e2e workers 증가.
 - 캐시 실험에서 두 가지를 배웠다. pnpm store 캐시는 복원 10초 > 다운로드 5초로 **이득이 없다**(Playwright 캐시만 효과). Actions 캐시는 **PR ref 단위로 격리**되어 새 PR 의 첫 run 은 항상 cold 다.
 - miss 재현: lockfile 끝 빈 줄 → `pnpm cache is not found`, `downloaded 625`. Playwright 캐시는 키가 달라 hit 유지.
 
@@ -38,7 +38,7 @@
 ### 3단계 — 예산 게이트 (RFC 3절)
 
 - Turbopack 청크는 이름이 해시라 `route-bundle-stats.json` 의 `firstLoadChunkPaths` 를 읽어 route 6개 First Load JS(brotli)를 잰다. 빈 측정이면 throw.
-- 근거: **7주차는 JS 크기를 재지 않았다** — 이미지 7.5MB→32KB 와 LCP 만 있다. 그래서 이번 주 기준 빌드 실측(147~158 kB) × 1.05 를 예산으로 걸고 그 사실을 문서에 적었다. 빌드는 결정적(로컬 = CI, 두 번 빌드 diff 0)이라 5% 는 노이즈가 아니라 "컴포넌트 몇 개는 통과, 유틸 라이브러리 1개(≥10 kB)는 차단" 의 폭.
+- 근거: **7주차는 JS 크기를 재지 않았다** — 이미지 7.5MB→32KB 와 LCP 만 있다. 그래서 이번 주 기준 빌드 실측(147–158 kB) × 1.05 를 예산으로 걸고 그 사실을 문서에 적었다. 빌드는 결정적(로컬 = CI, 두 번 빌드 diff 0)이라 5% 는 노이즈가 아니라 "컴포넌트 몇 개는 통과, 유틸 라이브러리 1개(≥10 kB)는 차단" 의 폭.
 - validate-env: 필수값·URL 형태·`NEXT_PUBLIC_`+비밀 이름·비밀값 복사·Preview→production 호스트. CI 와 Vercel(`vercel.json` buildCommand) 앞에 같은 게이트. secret 은 저장하지 않고 `openssl rand` 로 매 실행 생성 → 산출물 grep.
 - 가시성: step summary 표 + `::error::` 애노테이션. PR 코멘트 액션은 fork PR 의 읽기 전용 토큰에서 동작하지 않아 쓰지 않았다(그 결과 write 권한이 어느 job 에도 없다).
 - 빨간불: #7 `moment` import → 6 route 전부 `+51 kB` 초과, #8 잘못된 env → build 전 실패. 되돌리면 초록. 스크린샷 `docs/submissions/assets/week-10/`.
@@ -46,7 +46,7 @@
 
 ### 4단계 — AI 리뷰 (RFC 4절)
 
-- 기준: `.claude/skills/pr-review/SKILL.md` 규칙 14개(1·2~~3·5·6·7·8~~9·10주차). 로컬 Claude Code, advisory, CI 미통합(fork PR secrets 불가·비결정적·비용).
+- 기준: `.claude/skills/pr-review/SKILL.md` 규칙 14개(1·2–3·5·6·7·8–9·10주차). 로컬 Claude Code, advisory, CI 미통합(fork PR secrets 불가·비결정적·비용).
 - **잘 잡은 것**: `e2e/fixtures/auth.ts:3` 이 mock 의 `accounts`·`TEST_PASSWORD` 를 import — 9주차 RFC C.4 에 우리가 적은 원칙을 우리가 어긴 자리. **헛소리**: paths-filter 권한이 "비공개 저장소 전용" 이라며 제거 권고 — README 원문에 그런 구분 없음, 빼면 403.
 - v2(전제 확인·원문 인용·규칙 확장 분리): 같은 diff 에서 12 → 7건, 2 → 0건. v2 가 사실로 확인해 준 결함 3건(dependabot 이 composite action 을 안 훑음, 스크립트 lint 활성 규칙 0개, summary 입력 가드)을 반영.
 
@@ -74,4 +74,4 @@
 
 ## 함께 생각해 볼 질문
 
-RFC 7절에 4개 답변(각 2~4문장 + 이 레포의 사례).
+RFC 7절에 4개 답변(각 2–4문장 + 이 레포의 사례).
