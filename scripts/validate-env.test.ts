@@ -132,6 +132,16 @@ describe("validateEnv", () => {
     expect(result.findings).toEqual([]);
   });
 
+  it("플랫폼 변수 값이 공개 값에 우연히 포함된 것은 비밀 복사로 보지 않는다", () => {
+    expect(
+      rulesOf({
+        ...strictEnv,
+        TURBO_CI_VENDOR_ENV_KEY: "VERCEL_",
+        NEXT_PUBLIC_VERCEL_GIT_COMMIT_MESSAGE: "feat: VERCEL_URL 로 origin 을 유도한다",
+      }),
+    ).toEqual([]);
+  });
+
   it("허용 목록에 없는 NEXT_PUBLIC_ 변수는 경고만 남긴다", () => {
     const result = validateEnv({ ...strictEnv, NEXT_PUBLIC_FLAG: "on" });
     expect(result.errors).toEqual([]);

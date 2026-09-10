@@ -9,6 +9,9 @@ const PLATFORM_PUBLIC_PREFIX = "NEXT_PUBLIC_VERCEL_";
 const SECRET_LIKE =
   /(SECRET|TOKEN|KEY|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|SESSION|SIGNATURE|DSN|WEBHOOK)/i;
 const REQUIRED = ["APP_ORIGIN", "AUTH_SESSION_SECRET"];
+// 값 복사 검사는 우리가 소유한 비밀값만 본다 — 플랫폼 변수(TURBO_CI_VENDOR_ENV_KEY="VERCEL_" 등)를 넣으면
+// 커밋 메시지 같은 공개 값에 우연히 포함되어 오탐이 난다 (첫 Vercel 빌드에서 실제로 발생)
+const OWNED_SECRETS = ["AUTH_SESSION_SECRET"];
 
 const redact = (value) => `«redacted, ${value.length} chars»`;
 const shown = (value) => (value.length > 60 ? `${value.slice(0, 60)}…` : value);
@@ -111,9 +114,8 @@ export const validateEnv = (env) => {
     }
   }
 
-  const privateSecrets = Object.entries(env).filter(
-    ([name, value]) =>
-      !name.startsWith(PUBLIC_PREFIX) && SECRET_LIKE.test(name) && value && value.length >= 8,
+  const privateSecrets = OWNED_SECRETS.map((name) => [name, env[name]]).filter(
+    ([, value]) => value && value.length >= 8,
   );
   for (const [name, value = ""] of Object.entries(env)) {
     if (!name.startsWith(PUBLIC_PREFIX)) continue;
