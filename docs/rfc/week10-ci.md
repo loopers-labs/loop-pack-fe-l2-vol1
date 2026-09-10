@@ -83,7 +83,7 @@ PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 진행 중 실행
 
 app → entities 같은 하향 참조는 허용한다. 같은 레이어의 slice 간 격리, Public API, analytics·test·examples·legacy 경계까지 강제하는 규칙은 아니다. 이 영역은 기존 저장소 규칙에 따라 리뷰한다.
 
-실제 파일 경로에 계산된 ESLint 설정을 메모리의 위반·정상 소스에 적용해 alias와 상대 경로의 entities → app 오류, app → entities 정상 결과를 확인한다. 테스트가 작업 트리에 임시 소스를 만들지는 않는다. 적용 중 기존 상품 목록 테스트의 _pages → app/HeaderNav 참조가 발견됐다. 헤더와 목록을 함께 검증하는 테스트를 `src/app/products/ProductListContent.test.tsx`로 옮기고 단언은 유지했다. 린트 예외를 추가하지 않았다.
+테스트가 `src/entities` 아래에 소유권이 분명한 임시 파일을 먼저 만든 뒤 실제 ESLint 파일 검사로 alias와 상대 경로의 entities → app 오류, entities → shared 정상 결과를 확인한다. 임시 디렉터리는 위치를 검증하고 `finally`에서 제거하며, `pnpm check`와 CI는 이 정책 테스트와 전체 lint를 순차 실행한다. 적용 중 기존 상품 목록 테스트의 _pages → app/HeaderNav 참조가 발견됐다. 헤더와 목록을 함께 검증하는 테스트를 `src/app/products/ProductListContent.test.tsx`로 옮기고 단언은 유지했다. 린트 예외를 추가하지 않았다.
 
 ## 5. 병합 보호와 보안
 
