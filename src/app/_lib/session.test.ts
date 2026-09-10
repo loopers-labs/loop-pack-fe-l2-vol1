@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { accounts, createSessionToken } from "@/app/api/_data/auth";
-import { SESSION_COOKIE, SESSION_TTL_SECONDS } from "@/app/api/_data/auth-cookies";
+import { createSessionToken } from "@/app/api/auth/session-token";
+import { SESSION_COOKIE, SESSION_TTL_SECONDS } from "@/app/api/auth/session-cookie";
 import { requireServerSession, resolveServerSession } from "./session";
+
+// mock 계정을 import 하지 않고 테스트가 기대값을 소유한다 — 계정이 바뀌면 여기서 드러나야 한다
+const looper = (n: number) => ({ id: `u${n}`, name: `루퍼${n}`, email: `looper${n}@loopers.dev` });
 
 const storeOf = (cookies: Record<string, string>) => ({
   get: (name: string) => (name in cookies ? { value: cookies[name] } : undefined),
@@ -29,17 +32,17 @@ describe("resolveServerSession", () => {
 
   it("서명이 유효하고 만료 전이면 사용자를 돌려준다", () => {
     const now = Date.UTC(2026, 8, 3);
-    const token = createSessionToken(accounts[2].id, now);
+    const token = createSessionToken(looper(3).id, now);
 
     expect(resolveServerSession(storeOf({ [SESSION_COOKIE]: token }), now + 1_000)).toEqual({
       hasCookie: true,
-      user: accounts[2],
+      user: looper(3),
     });
   });
 
   it("만료된 쿠키는 '있지만 사용자 없음' 으로 구분된다", () => {
     const issued = Date.UTC(2026, 8, 3);
-    const token = createSessionToken(accounts[0].id, issued);
+    const token = createSessionToken(looper(1).id, issued);
 
     expect(
       resolveServerSession(
@@ -71,9 +74,9 @@ describe("requireServerSession", () => {
   });
 
   it("유효한 세션이면 사용자를 돌려준다", async () => {
-    mocks.cookieJar = { [SESSION_COOKIE]: createSessionToken(accounts[1].id) };
+    mocks.cookieJar = { [SESSION_COOKIE]: createSessionToken(looper(2).id) };
 
-    await expect(requireServerSession("/orders")).resolves.toEqual(accounts[1]);
+    await expect(requireServerSession("/orders")).resolves.toEqual(looper(2));
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 

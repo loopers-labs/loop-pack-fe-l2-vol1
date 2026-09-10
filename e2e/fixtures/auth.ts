@@ -1,6 +1,6 @@
 import path from "node:path";
 import { test as base, expect } from "@playwright/test";
-import { accounts, TEST_PASSWORD } from "../../src/app/api/_data/auth";
+import { TEST_PASSWORD, testAccounts as accounts } from "./accounts";
 import type { AuthUser } from "../../src/types/auth";
 import { LoginPage } from "../pages/login-page";
 
