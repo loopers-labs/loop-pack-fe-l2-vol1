@@ -56,6 +56,30 @@ describe("validateEnv", () => {
     expect(rulesOf({ ...strictEnv, APP_ORIGIN: "http://localhost:3000" })).toEqual([]);
   });
 
+  it("Preview 는 APP_ORIGIN 이 없어도 VERCEL_URL 로 유도하고, production 은 명시를 요구한다", () => {
+    const preview = validateEnv({
+      VERCEL_ENV: "preview",
+      VERCEL_URL: "commerce-abc123.vercel.app",
+      AUTH_SESSION_SECRET: "a".repeat(40),
+    });
+    expect(preview.errors).toEqual([]);
+    expect(preview.findings).toEqual([
+      expect.objectContaining({
+        level: "warn",
+        variable: "APP_ORIGIN",
+        rule: "derived",
+        seen: "https://commerce-abc123.vercel.app",
+      }),
+    ]);
+    expect(
+      rulesOf({
+        VERCEL_ENV: "production",
+        VERCEL_URL: "commerce-abc123.vercel.app",
+        AUTH_SESSION_SECRET: "a".repeat(40),
+      }),
+    ).toEqual(["APP_ORIGIN:required"]);
+  });
+
   it("Vercel production 은 https 를 요구한다", () => {
     expect(
       rulesOf({

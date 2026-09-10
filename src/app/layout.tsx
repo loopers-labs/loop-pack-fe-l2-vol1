@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "@/shared/config/app-origin";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/app/providers";
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_ORIGIN ?? "http://localhost:3000"),
+  metadataBase: new URL(APP_ORIGIN),
   title: {
     template: withSiteName("%s"),
     default: SITE_NAME,

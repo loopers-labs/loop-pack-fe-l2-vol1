@@ -33,8 +33,14 @@ export const validateEnv = (env) => {
   const warn = (variable, rule, seen, fix) =>
     findings.push({ level: "warn", variable, rule, seen, fix });
 
+  const derivedOrigin =
+    env.VERCEL_URL && env.VERCEL_ENV !== "production" ? `https://${env.VERCEL_URL}` : null;
   for (const name of REQUIRED) {
     if (env[name]) continue;
+    if (name === "APP_ORIGIN" && derivedOrigin) {
+      warn(name, "derived", derivedOrigin, "Preview 는 배포 자기 주소(VERCEL_URL)로 유도한다");
+      continue;
+    }
     (strict ? fail : warn)(
       name,
       "required",
