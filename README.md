@@ -19,7 +19,9 @@ pnpm dev
 APP_ORIGIN=http://localhost:3000
 ```
 
-`pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 테스트, lint, 타입 검사, 프로덕션 빌드를 순서대로 실행하며 네 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
+`pnpm test`는 전체 Vitest 테스트를 실행합니다. `pnpm check`는 CI 정책 테스트, Vitest, lint, 타입 검사, 프로덕션 빌드, Playwright E2E를 순서대로 실행합니다. E2E 실행 전 Chromium이 없다면 `pnpm exec playwright install chromium`으로 설치하세요.
+
+GitHub Actions는 검증을 단계별로 실행하고 CI 환경 변수도 검사합니다. 허용된 Markdown만 변경한 PR에서는 E2E만 생략하며, `main` push와 `merge_group`에서는 전체 검증을 실행합니다. 구현 범위와 원격 설정 절차는 [10주차 CI 설계](./docs/rfc/week10-ci.md)를 참고하세요.
 
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
 

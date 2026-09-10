@@ -14,9 +14,14 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "next build && playwright test",
+    "test:e2e:run": "playwright test",
+    "test:ci": "node --test scripts/ci/policy.test.mjs scripts/ci/fsd.test.mjs scripts/validate-env.test.mjs",
+    "ci:plan": "node scripts/ci/plan.mjs",
+    "ci:gate": "node scripts/ci/gate.mjs",
+    "validate:env": "node scripts/validate-env.mjs",
     "analyze:week09": "node scripts/analyze-week09-events.mjs",
     "test:watch": "vitest",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && playwright test",
+    "check": "pnpm test:ci && pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e:run",
     "prepare": "husky"
   },
   "lint-staged": {
