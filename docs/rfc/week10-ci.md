@@ -98,10 +98,106 @@ Playwright 17.2초(14개, 워커 2개), `next build`가 컴파일 3.3초 + TypeS
 그래서 이 파이프라인의 병목은 "설치가 느리다"가 아니라 **서로 독립인 검증을 한 줄로 세워 둔 것**이고,
 그 앞에 캐시를 타지 않는 브라우저 설치 24초가 붙어 있는 구조다.
 
-## 5. 다음 (미완)
+## 5. 고른 전략과 고르지 않은 전략
 
-- [ ] 병목에 맞는 전략만 골라 적용하고 근거 남기기. lint·typecheck·test는 서로 독립이므로 job 분리가 후보고,
-      pnpm store 캐시는 **이미 켜져 있고 버는 게 한 자릿수 초**라 더 손댈 이유가 없다는 쪽으로 기운다.
-- [ ] `concurrency` 그룹. 키에 ref를 넣어 `main` push까지 취소하지 않도록.
-- [ ] lockfile 해시를 깨서 miss 재현 (3절에 남긴 것).
-- [ ] 같은 cold/warm 조건에서 After 3회씩 재고 Before와 비교.
+| 전략 | 채택 | 근거 |
+| --- | --- | --- |
+| job 병렬화 | ○ | 병목 1에 직접 대응. lint·typecheck·test는 서로 독립이고 build는 E2E가 그 산출물 위에서 도니 같은 job에 둔다 |
+| Playwright `install-deps` 제거 | ○ | 병목 2를 apt와 다운로드로 갈라 재니 16초와 10초였다. apt 로그가 전부 `already the newest version` |
+| 브라우저 바이너리 캐시 | ○ | 남은 다운로드 10~11초를 없앤다. `~/.cache/ms-playwright`는 pnpm store 밖이라 setup-node 캐시가 덮지 않는다 |
+| pnpm store 캐시 | 손대지 않음 | 이미 켜져 있고, 2절대로 버는 게 한 자릿수 초다. 없는 걸 넣는 게 아니라 이미 있는 걸 그대로 뒀다 |
+| `concurrency` 그룹 | ○ (wall-clock 목적 아님) | 한 run을 빠르게 하지 않는다. 같은 PR에 연속 push할 때 쌓이는 run을 없앨 뿐이다. 키에 `github.ref`를 넣어 `main` push까지 취소하지 않게 했다 |
+
+공통 준비(pnpm·Node·install)는 네 job이 똑같이 하므로 `.github/actions/setup` composite로 뺐다.
+GitHub Actions에는 YAML 앵커가 없어서 안 빼면 같은 다섯 줄이 네 번 복사되고 갈라진다.
+
+**분할만으로는 안 줄었다.** 첫 After 시도(`74b44bd2`)가 1:49로 Before보다 오히려 길었다.
+가장 긴 job인 e2e가 혼자 1:45였기 때문이다. 병렬화는 **가장 긴 job이 기존 직렬 합보다 짧을 때만** 이득인데,
+e2e에 준비·브라우저 설치가 통째로 남아 있었다. 그 job의 step을 갈라 본 것이 `install-deps` 16초를 찾은 계기다.
+
+## 6. After — raw 값
+
+측정 방식은 0절과 같다. 커밋 `96a443df`, run `34562346033`. cold는 **캐시 두 개를 모두** 지운다
+(pnpm store와 Playwright 브라우저).
+
+| 조건 | 시도 | 전체 run |
+| --- | --- | --- |
+| cold 1 | attempt #4 | 1:20 (80s) |
+| cold 2 | attempt #5 | 1:13 (73s) |
+| cold 3 | attempt #6 | 1:06 (66s) |
+| warm 1 | 최초(push) | 0:52 (52s) |
+| warm 2 | attempt #2 | 0:57 (57s) |
+| warm 3 | attempt #3 | 0:56 (56s) |
+
+| 조건 | Before 중앙값(범위) | After 중앙값(범위) | 차이 |
+| --- | --- | --- | --- |
+| cold | 103s (96–104, 8) | 73s (66–80, 14) | **−30s (−29%)** |
+| warm | 92s (89–103, 14) | 56s (52–57, 5) | **−36s (−39%)** |
+
+**줄어든 폭이 흔들림보다 크다.** warm은 Before 범위 14초·After 범위 5초인데 중앙값이 36초 내려갔다.
+cold도 범위 8초와 14초에 대해 30초다. 두 분포는 겹치지 않는다.
+
+검증 항목은 Before와 같다. test·lint·typecheck·build·E2E 다섯 그대로고, 무엇도 빼지 않았다.
+단위 테스트 146개와 E2E 14개가 양쪽에서 같이 통과한다.
+
+## 7. 무엇이 줄었나 — step 귀속
+
+After의 job별 시간이다. 전체 run은 가장 긴 job으로 정해진다.
+
+| job | cold(attempt #6) | warm(최초) |
+| --- | --- | --- |
+| lint | 33s | 30s |
+| typecheck | 27s | 25s |
+| test | 36s | 33s |
+| **e2e** | **62s** | **48s** |
+| run 전체 | 66s | 52s |
+
+e2e가 양쪽 다 임계 경로다. 그 안쪽(cold)은 이렇다.
+
+| step | cold |
+| --- | --- |
+| Set up job · Checkout | 2s |
+| Setup (pnpm·Node·install) | 14s |
+| Cache Playwright browsers (miss) | 0s |
+| Install Playwright Chromium | 11s |
+| Build | 10s |
+| E2E | 16s |
+| Post Cache (저장) · Post Setup | 6s |
+
+Before의 단일 job 98초와 비교하면 줄어든 30초의 출처가 분명하다. `install-deps` 16초가 통째로 사라졌고,
+lint·typecheck·test 세 검증이 e2e와 같은 시계에서 겹쳐 돈다. warm에서는 브라우저 다운로드 11초까지 빠져 48초가 된다.
+
+**캐시 저장 비용은 흔들린다.** 같은 270MB를 저장하는데 한 번은 28초, 다른 한 번은 3초였다.
+저장은 lockfile이 바뀌어 키가 달라질 때만 생기므로 대부분의 run은 부담이 없지만,
+"캐시는 항상 이득"이라고 적기에는 관측이 일정하지 않아 그대로 남긴다.
+
+## 8. 사고 기록 — 잘못 핀한 action이 초록불로 통과했다
+
+job 분리 커밋(`74b44bd2`)에서 `actions/cache`를 이렇게 핀했다.
+
+```
+uses: actions/cache@d8cd72f230726cdf4457ebb61ec1b593a8d12337 # v6.1.0
+```
+
+주석은 v6.1.0인데 이 SHA는 태그가 아니다. `git ls-remote`로 대조하니 **`refs/pull/1768/head`**,
+즉 머지되지 않은 PR 브랜치의 커밋이었다. v6.1.0의 실제 커밋은 `55cc8345863c7cc4c66a329aec7e433d2d1c52a9`다.
+
+**그런데 CI는 초록불이었다.** GitHub은 저장소 안의 어떤 커밋이든 해석해 실행하므로,
+잘못된 핀은 실패로 드러나지 않고 조용히 리뷰되지 않은 코드를 돌린다. 커밋 SHA로 핀하는 목적이
+"태그가 옮겨가도 같은 코드를 쓴다"인데, 검증 없이 적으면 정반대로 **아무도 리뷰하지 않은 코드를 고정**한다.
+
+정정은 `2e5b9f08`. 같이 핀 4개를 전수 대조했다.
+
+```
+git ls-remote https://github.com/<owner>/<repo> 'refs/tags/*' | grep <sha>
+```
+
+`actions/checkout@9c091bb`(v7.0.0)와 `actions/setup-node@48b55a0`(v6.4.0)은 그대로 맞았다.
+`pnpm/action-setup@0ebf471`은 `refs/tags/v6.0.9`가 `008330…`으로 나와 한 번 어긋나 보였는데,
+annotated 태그라 태그 객체와 커밋이 다른 경우였다. `refs/tags/v6.0.9^{}`가 `0ebf471`이므로 핀이 맞다.
+
+## 9. 남은 것
+
+- [ ] lockfile 해시를 깨서 miss 재현 (3절). 지금은 캐시 삭제로만 miss를 봤다.
+- [ ] 2단계 조건부 실행. e2e가 임계 경로이자 가장 비싼 job이라 대상이 분명하다.
+- [ ] 시각 회귀 spec을 e2e job 안에 그대로 둘지. 지금은 나머지 E2E와 같이 돈다.
