@@ -398,6 +398,45 @@ CI의 셸이 167.9KB로 로컬 167.7KB와 0.2KB 다르다. 플랫폼 차이로 �
 결과는 `$GITHUB_STEP_SUMMARY`로 올린다. 초과 여부, 얼마나 넘었는지, 셸과 앱 코드의 몫,
 스로틀 환산까지 PR 화면에서 바로 보인다. 로그를 열어야만 보이면 실무에서 안 본다.
 
+### required를 실제로 걸어 보니
+
+`feat/week-10`에 classic branch protection을 걸었다. required는 다섯이다.
+
+| 체크 | required | 이유 |
+| --- | --- | --- |
+| `lint` · `typecheck` · `test` | ○ | 저비용 결정적 검증. 항상 돈다 |
+| `e2e-gate` · `budget-gate` | ○ | 조건부 검증을 대신 받는 자리 |
+| `e2e` · `budget` | ✗ | 조건부라 스킵될 수 있다. 걸면 스킵된 PR이 영영 대기한다 |
+| `changes` | ✗ | 판정만 하는 보조 job이다. 막을 것이 없다 |
+
+"Require a pull request before merging"과 "Do not allow bypassing"은 껐다. 켜면 `feat/week-10`에
+직접 push를 못 해 지금 작업 방식이 막힌다. 혼자 쓰는 포크라 사람 리뷰 강제는 의미가 없고,
+막고 싶은 건 **검증을 통과하지 않은 코드**지 PR 없는 머지가 아니다.
+
+결과는 두 PR에서 갈린다.
+
+| PR | 체크 | 머지 |
+| --- | --- | --- |
+| #2 문서 전용 | 2 skipped(`e2e`·`budget`), 6 successful | **가능** — All checks have passed |
+| #4 예산 초과 | `budget`·`budget-gate` 빨강 | **차단** |
+
+#2가 과제가 말한 충돌이 없다는 증거다. 조건부로 스킵된 검증이 required를 막지 않는다.
+#4는 gate가 실패를 그대로 넘긴다는 증거다.
+
+### 예상하지 못한 함정 — required 추가는 열린 PR을 멈춘다
+
+required를 건 직후 PR #2가 `budget-gate`에서 **`Expected — Waiting for status to be reported`**
+상태로 멈췄다. 조건부 실행 때문이 아니었다. **PR #2의 브랜치가 `budget` job이 생기기 전에
+갈라져 나와서**, 그 PR이 도는 워크플로에는 `budget-gate` job 자체가 없었다.
+보고할 주체가 없으니 GitHub은 무한정 기다린다.
+
+브랜치에 base를 머지해 워크플로를 최신으로 만드니 바로 보고됐다.
+
+이건 과제가 짚은 "조건부 스킵과 required의 충돌"과는 다른 축이다. **required 체크를 새로 추가하는 것은
+이미 열려 있는 모든 PR에 대한 breaking change다.** 추가하는 순간 그 PR들은 전부 대기 상태가 되고,
+각자 base를 머지해야 풀린다. 혼자 쓰는 저장소라 PR 세 개로 끝났지만, 팀이었다면 추가 시점에
+열려 있던 PR 전부를 건드려야 했을 것이다. 실무에서는 조건부 충돌보다 이쪽을 더 자주 밟을 것 같다.
+
 ## 11. 남은 것
 
 - [ ] lockfile 해시를 깨서 miss 재현 (3절). 지금은 캐시 삭제로만 miss를 봤다.
@@ -406,7 +445,7 @@ CI의 셸이 167.9KB로 로컬 167.7KB와 0.2KB 다르다. 플랫폼 차이로 �
 - [ ] 실험 브랜치·PR #2·#3·#4는 근거로만 남기고 머지하지 않는다. 제출 전에 닫을지 열어둘지 정한다.
 - [ ] Lighthouse 정기 실행(선택). 배포가 없어 러너에서 띄워 재야 하고, 7주차 LCP를 임계값으로
       옮길 수 없다. 임계값 없이 기록만 남기는 것으로 시작한다.
-- [ ] branch protection에서 required 네 개(`lint`·`typecheck`·`test`·`e2e-gate`)를 실제로 건다.
+- [x] branch protection required 다섯 개를 실제로 걸고 두 PR로 확인했다(10절).
 - [ ] 시각 회귀 spec을 e2e job 안에 그대로 둘지. 지금은 나머지 E2E와 같이 돈다.
 - [ ] `pnpm format:check`가 CI에 없다. `pnpm check`에 원래 없어서 Before와 조건을 맞추려고 그대로 뒀다.
       지금 포맷 게이트는 husky뿐이라 `--no-verify`나 웹 편집으로 들어오면 아무도 막지 않는다.
