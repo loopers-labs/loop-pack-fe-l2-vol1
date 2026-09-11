@@ -1,5 +1,8 @@
 'use client'
 
+// 7주차 INP 실험 전용 페이지다. 커머스 화면 흐름에 속하지 않으므로
+// 9주차 보호 경로 판단(사용자 고유 데이터를 보여주는 화면) 대상이 아니다.
+
 import Image from 'next/image'
 import { create } from 'zustand'
 import {

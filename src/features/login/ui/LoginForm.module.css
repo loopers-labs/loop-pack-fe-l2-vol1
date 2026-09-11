@@ -1,0 +1,48 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.field input {
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  font-weight: 400;
+}
+
+.form > button {
+  min-height: 46px;
+  border: 1px solid var(--foreground);
+  border-radius: 6px;
+  background: var(--foreground);
+  color: var(--background);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.form > button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+/* 오류가 없어도 자리를 차지해 메시지가 뜰 때 아래가 밀리지 않는다. */
+.error {
+  margin: 0;
+  min-height: 1.5em;
+  color: var(--danger);
+}

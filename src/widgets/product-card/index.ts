@@ -2,4 +2,3 @@
 export { ProductCard } from '@/widgets/product-card/ui/ProductCard'
 export { ProductGrid } from '@/widgets/product-card/ui/ProductGrid'
 export { ProductGridSkeleton } from '@/widgets/product-card/ui/ProductGridSkeleton'
-export type { ProductCardItem } from '@/widgets/product-card/model/types'

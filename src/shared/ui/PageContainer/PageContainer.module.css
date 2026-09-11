@@ -1,7 +1,7 @@
 .container {
   width: min(100% - 32px, 1200px);
   margin: 0 auto;
-  padding: 24px 0 64px;
+  padding: 28px 0 96px;
 }
 
 .container a:focus-visible,
@@ -10,4 +10,11 @@
 .container select:focus-visible {
   outline: 3px solid #2557a7;
   outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: min(100% - 24px, 1200px);
+    padding-top: 20px;
+  }
 }

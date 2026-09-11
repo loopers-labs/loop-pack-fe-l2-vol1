@@ -1,7 +1,7 @@
 // product 슬라이스의 Public API. 상품 도메인 타입과 목록 조회 계약을 공개한다.
 // 상품 표현 UI는 찜·담기 feature를 조합하는 widgets/product-card가 소유한다.
 export type { Category, CategoryId } from '@/entities/product/model/category'
-export type { Product, ProductSort } from '@/entities/product/model/product'
+export type { Product, ProductSort, ProductSummary } from '@/entities/product/model/product'
 
 // 목록 조회는 조회 훅과 응답 계약, 그리고 캐시에 남은 직전 목록을 읽는 함수만 공개한다.
 // fetch 구현(api.ts)과 요청 직렬화(query-schema.ts의 serializer)는 외부 소비처가 없으므로 숨긴다.

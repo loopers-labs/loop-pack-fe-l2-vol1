@@ -1,5 +1,7 @@
 import { useQueryState } from 'nuqs'
 import { productListParsers } from '@/_pages/product-list/model/search-params'
+import { APP_EVENT } from '@/analytics/app-events'
+import { track } from '@/analytics/logger'
 import { usePagination } from '@/shared/lib/usePagination'
 
 // 상품 목록의 page URL 상태를 범용 페이지네이션 로직에 연결하는 adapter.
@@ -11,6 +13,9 @@ export const useProductPagination = (totalCount: number, pageSize: number) => {
     totalCount,
     pageSize,
     currentPage,
-    onPageChange: (page) => setCurrentPage(page),
+    onPageChange: (page) => {
+      track(APP_EVENT.pageChange, { page })
+      return setCurrentPage(page)
+    },
   })
 }

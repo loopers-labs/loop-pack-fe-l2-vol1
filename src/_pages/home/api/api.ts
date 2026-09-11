@@ -1,10 +1,13 @@
 import type { GetHomeResponse } from './model'
+import { fetchWithTimeout } from '@/shared/api/fetch-with-timeout'
 import { getApiBaseUrl } from '@/shared/api/get-api-base-url'
 
-// HomeData의 서버 prefetch와 generateMetadata가 서버에서도 호출하므로 절대 URL 기반으로 요청한다.
-// 옵션 없는 native fetch라 같은 render 안의 세 호출이 Next의 request memoization으로 1회가 된다.
-export const getHome = async (): Promise<GetHomeResponse> => {
-  const response = await fetch(`${getApiBaseUrl()}/api/home`)
+/*
+ * 서버 prefetch와 generateMetadata에서도 호출되므로 기준 origin을 포함한 URL을 사용한다.
+ * 브라우저에서는 기준 origin 없이 상대경로로 요청한다.
+ */
+export const getHome = async (signal?: AbortSignal): Promise<GetHomeResponse> => {
+  const response = await fetchWithTimeout(`${getApiBaseUrl()}/api/home`, { signal })
   if (!response.ok) {
     throw new Error(`홈 정보를 불러오지 못했습니다 (status: ${response.status})`)
   }

@@ -2,6 +2,9 @@
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useQueryStates } from 'nuqs'
+import { useEffect, useRef } from 'react'
+import { APP_EVENT } from '@/analytics/app-events'
+import { track } from '@/analytics/logger'
 import { getLatestProductList, useProductListQuery } from '@/entities/product'
 import { productListParsers } from '@/_pages/product-list/model/search-params'
 import { ProductFilters } from '@/_pages/product-list/ui/ProductFilters'
@@ -22,6 +25,25 @@ export const ProductListContent = () => {
   // 최초 로딩 중에는 실제 input 대신 같은 공간을 차지하는 skeleton을 렌더링한다.
   // hydration 전 입력 유실을 막으면서 조회 완료 시 필터가 추가되어 생기던 layout shift도 줄인다.
   const categories = fallbackData?.categories ?? []
+  const lastTrackedViewRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!query.isSuccess) {
+      return
+    }
+
+    const viewKey = `${searchParams.page}:${searchParams.category}:${searchParams.sort}`
+    if (lastTrackedViewRef.current === viewKey) {
+      return
+    }
+
+    lastTrackedViewRef.current = viewKey
+    track(APP_EVENT.productListView, {
+      page: searchParams.page,
+      category: searchParams.category,
+      sort: searchParams.sort,
+    })
+  }, [query.isSuccess, searchParams.category, searchParams.page, searchParams.sort])
 
   return (
     <>

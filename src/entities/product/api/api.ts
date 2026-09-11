@@ -1,6 +1,7 @@
 import { PRODUCT_PAGE_SIZE, type GetProductListParams, type GetProductListResponse } from './model'
 import { serializeProductListQuery } from './query-schema'
 import { ApiError } from '@/shared/api/api-error'
+import { fetchWithTimeout } from '@/shared/api/fetch-with-timeout'
 import { getApiBaseUrl } from '@/shared/api/get-api-base-url'
 
 export const getProductList = async (
@@ -11,12 +12,10 @@ export const getProductList = async (
   let response: Response
 
   try {
-    // 이 함수는 클라이언트(useProductListQuery)와 서버(prefetch·generateMetadata) 양쪽에서 호출된다.
-    // getApiBaseUrl()이 브라우저에서는 빈 문자열을 반환하므로 클라이언트 요청 URL은 그대로 상대경로다.
-    response = await fetch(`${getApiBaseUrl()}/api/products${query}`, { signal })
+    /* 클라이언트에서는 상대경로, 서버에서는 기준 origin을 포함한 URL로 요청한다. */
+    response = await fetchWithTimeout(`${getApiBaseUrl()}/api/products${query}`, { signal })
   } catch (cause) {
-    // 취소는 실패가 아니다. ApiError로 감싸면 버려질 이전 요청이 화면에 오류로 보인다.
-    // 원본 AbortError를 그대로 올려 호출자(React Query)가 취소로 인식하게 둔다.
+    /* 취소된 이전 요청은 오류 UI로 바꾸지 않고 원본 AbortError를 유지한다. */
     if (signal?.aborted) {
       throw cause
     }

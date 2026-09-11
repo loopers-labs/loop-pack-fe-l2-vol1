@@ -1,9 +1,9 @@
-import type { ProductCardItem } from '@/widgets/product-card/model/types'
+import type { ProductSummary } from '@/entities/product'
 import { ProductCard } from '@/widgets/product-card/ui/ProductCard'
 import styles from './ProductGrid.module.css'
 
 type ProductGridProps = {
-  products: readonly ProductCardItem[]
+  products: readonly ProductSummary[]
   titleLevel: 2 | 3
 }
 

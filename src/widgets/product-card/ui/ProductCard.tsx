@@ -2,11 +2,11 @@ import Image from 'next/image'
 import { AddCartButton } from '@/features/add-to-cart'
 import { WishlistButton } from '@/features/add-to-wishlist'
 import { formatPrice } from '@/shared/lib/format-price'
-import type { ProductCardItem } from '@/widgets/product-card/model/types'
+import type { ProductSummary } from '@/entities/product'
 import styles from './ProductCard.module.css'
 
 type ProductCardProps = {
-  product: ProductCardItem
+  product: ProductSummary
   titleLevel: 2 | 3
 }
 
@@ -28,8 +28,8 @@ export const ProductCard = ({ product, titleLevel }: ProductCardProps) => {
       <ProductTitle>{product.name}</ProductTitle>
       <strong>{formatPrice(product.price)}</strong>
       <div className={styles.actions}>
-        <WishlistButton productId={product.id} productName={product.name} />
-        <AddCartButton productId={product.id} productName={product.name} />
+        <WishlistButton product={product} />
+        <AddCartButton product={product} />
       </div>
     </article>
   )
