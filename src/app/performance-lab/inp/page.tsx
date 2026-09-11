@@ -3,12 +3,13 @@
 import Image from "next/image";
 import { create } from "zustand";
 
-import styles from "./performance-lab.module.css";
 import {
   calculateCardPresentation,
   type PerformanceLabProduct,
   performanceLabProducts,
-} from "./products";
+} from "@/app/performance-lab/inp/products";
+
+import styles from "./performance-lab.module.css";
 
 type WishlistState = {
   wishlistIds: string[];

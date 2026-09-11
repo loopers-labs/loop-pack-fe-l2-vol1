@@ -4,8 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { useCartStore } from "@/entities/cart/model/cartStore";
 import { useWishlistStore } from "@/entities/wishlist/model/wishlistStore";
-
-import { ClearCartButton } from "./ClearCartButton";
+import { ClearCartButton } from "@/features/clear-cart/ui/ClearCartButton";
 
 beforeEach(() => {
   useCartStore.setState({ cartIds: [] });

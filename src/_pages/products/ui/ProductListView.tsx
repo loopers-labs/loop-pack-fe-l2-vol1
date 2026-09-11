@@ -6,6 +6,8 @@ import { QueryErrorResetBoundary, useQueryClient } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 
 import { useShellProductList } from "@/_pages/products/api/useShellProductList";
+import { ProductListResults } from "@/_pages/products/ui/ProductListResults";
+import { ProductSearchInput } from "@/_pages/products/ui/ProductSearchInput";
 import { trackEvent } from "@/analytics/schema";
 import type { CategoryId, ProductSort } from "@/entities/product/model/types";
 import { productListQueryOptions } from "@/features/products/api/queries";
@@ -17,9 +19,6 @@ import {
   SORT_OPTIONS,
 } from "@/features/products/ui/filterOptions";
 import { ErrorBoundary } from "@/shared/ui/error/ErrorBoundary";
-
-import { ProductListResults } from "./ProductListResults";
-import { ProductSearchInput } from "./ProductSearchInput";
 
 export function ProductListView() {
   const [query, setQuery] = useQueryStates(productSearchParsers, { history: "push" });

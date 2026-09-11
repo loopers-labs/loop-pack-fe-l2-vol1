@@ -3,11 +3,10 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
+import { ProductListResults } from "@/_pages/products/ui/ProductListResults";
 import { makeProduct, makeProductListResponse } from "@/test/handlers";
 import { renderWithProviders } from "@/test/renderWithProviders";
 import { server } from "@/test/server";
-
-import { ProductListResults } from "./ProductListResults";
 
 function renderResults() {
   return renderWithProviders(<ProductListResults />).client;

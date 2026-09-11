@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { GET } from "./route";
+import { GET } from "@/app/api/home/route";
 
 const request = (query = "") => GET(new NextRequest(`http://localhost/api/home${query}`));
 

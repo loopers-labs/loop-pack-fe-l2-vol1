@@ -6,6 +6,8 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // Node가 그대로 실행하는 scripts/*.mts를 확장자째 import하기 위해서다(noEmit이라 허용된다).
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",

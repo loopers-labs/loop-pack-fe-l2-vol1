@@ -11,13 +11,20 @@ const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 export default defineConfig({
   testDir: "./e2e",
   // 계정이 8개라 워커도 8개까지만 각자 다른 계정을 잡는다(그 이상이면 계정이 겹쳐 주문 격리가 깨진다).
-  // 완료조건이 요구하는 --workers=4·--workers=1은 이 안이다.
-  workers: 8,
-  // 재시도는 flaky를 "실패 후 통과"로 가려 결정성 검증을 흐리므로 두지 않는다(0을 명시해 의도를 드러낸다).
-  retries: 0,
-  // 실패한 테스트에만 trace를 남긴다(항상 켜면 무겁다). retries=0이라 on-first-retry는 안 찍혀 실패 기준으로 남긴다.
+  // CI 러너는 4 vCPU라 8개를 띄우면 서로 CPU를 뺏어 타임아웃이 난다. 4·1 워커가 8과 같은 결과를 내는 건 9주차에서 확인했다.
+  workers: process.env.CI ? 4 : 8,
+  // 로컬은 0이다 — 재시도가 "실패 후 통과"를 가리면 결정성을 확인할 수 없다.
+  // CI만 1이다 — 목적은 실패를 숨기는 게 아니라 흔들림과 진짜 실패를 가르는 것이다.
+  // 진짜 실패는 두 번 다 실패해 빨강이고, 재시도로 통과한 것은 Playwright가 flaky로 따로 표시해
+  // 아래 json 리포트를 거쳐 job summary에 드러난다.
+  retries: process.env.CI ? 1 : 0,
+  // 실패한 시도에만 trace를 남긴다(항상 켜면 무겁다). flaky의 첫 실패 시도도 실패라 trace가 남는다.
   // 실패를 직접 열 땐 --trace=on으로 강제한다.
   use: { baseURL: BASE_URL, trace: "retain-on-failure" },
+  // CI는 flaky 집계용 json을 함께 남긴다. github 리포터는 실패를 PR diff에 annotation으로 붙인다.
+  reporter: process.env.CI
+    ? [["list"], ["github"], ["json", { outputFile: "playwright-report/results.json" }]]
+    : "list",
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // 프로덕션 빌드 위에서 돌린다. 개발 서버로만 통과하는 E2E는 인정하지 않는다.
   // E2E_BASE_URL로 외부 서버를 가리키면 그 서버를 쓰므로 로컬 빌드를 띄우지 않는다.

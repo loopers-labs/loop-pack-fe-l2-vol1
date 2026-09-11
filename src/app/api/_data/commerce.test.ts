@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { homeBanner, products } from "./commerce";
+import { homeBanner, products } from "@/app/api/_data/commerce";
 
 const productImagesDirectory = join(process.cwd(), "public/images/products");
 const imageManifestPath = join(process.cwd(), "docs/assets/week-05-product-images.md");

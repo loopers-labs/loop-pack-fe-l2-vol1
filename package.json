@@ -19,7 +19,8 @@
     "dupcheck": "jscpd",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm dupcheck && pnpm build",
+    "size": "size-limit",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm dupcheck && pnpm build && pnpm size",
     "test:e2e": "playwright test",
     "prepare": "husky"
   },
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@size-limit/file": "^13.0.3",
     "@stryker-mutator/core": "^10.0.0",
     "@stryker-mutator/vitest-runner": "^10.0.0",
     "@tailwindcss/postcss": "^4.3.2",
@@ -61,12 +63,13 @@
     "lint-staged": "^17.0.7",
     "msw": "^2.15.0",
     "prettier": "^3.8.4",
+    "size-limit": "^13.0.3",
     "tailwindcss": "^4.3.2",
     "typescript": "^5",
     "vitest": "^4.1.10"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{ts,tsx,mts}": [
       "eslint --fix --max-warnings=0 --no-warn-ignored",
       "prettier --write"
     ],

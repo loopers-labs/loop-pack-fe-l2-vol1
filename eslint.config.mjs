@@ -154,6 +154,28 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // ── 상대경로 import 금지 (CLAUDE.md 규칙 7의 승격, 10주차) ──
+  // 1주차부터 사람이 지키던 규칙인데 src에 위반 18건이 쌓여 있었다 — 사람 눈으로는 안 지켜진다는 증거라 도구로 내린다.
+  // 절대경로면 슬라이스를 옮겨도 참조가 안 깨진다. 예외는 같은 폴더의 콜로케이트 CSS(*.module.css·globals.css)뿐이고,
+  // 테스트가 자기 대상을 ./로 부르는 것도 예외로 두지 않는다(1:1이 아닌 상대 import가 섞여 있어 원리가 아니었다).
+  // src 밖(루트 설정·scripts/)은 @/ alias가 없어 이 블록의 대상이 아니다.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*", "../*", "!./*.css"],
+              message: "상대경로 대신 @/ 절대경로로 import하세요(같은 폴더의 CSS만 예외).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // 7주차 과제 픽스처는 "일부러 최적화 안 한 LCP <img>"를 Before 기준으로 두고
   // 인라인 eslint-disable로 no-img-element를 끈다. 우리 하네스는 noInlineConfig라
   // 그 disable이 무효가 되어 커밋이 막히므로, 제공 픽스처를 고치지 않고

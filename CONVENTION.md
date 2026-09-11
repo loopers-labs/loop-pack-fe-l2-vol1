@@ -14,7 +14,7 @@
 - **`widgets`는 합성 UI 블록.** 헤더처럼 여러 화면이 공유하며 entities·features를 조합하는 UI를 둔다. 한 화면 전용이면 그 화면(views) 안에 둔다.
 - **레이어 안은 segment로.** `ui`(컴포넌트) / `model`(타입·상태) / `api`(데이터 접근) / `lib`(로직·유틸). 도메인 타입·store·그 selector 훅은 `model`에, JSX 없는 범용 헤드리스 훅은 `lib`에. `shared`는 slice 없이 segment를 바로 둔다.
 - **폴더는 kebab-case, 파일은 PascalCase**(컴포넌트명). 폴더를 소문자로 통일하면 OS 간 대소문자 충돌(Linux CI에서만 터지는 버그)을 막는다. CSS 모듈도 `Xxx.module.css`로 1:1.
-- **import는 절대경로(`@/`).** 슬라이스를 옮겨도 참조가 안 깨진다. 콜로케이트 에셋(`*.module.css`)만 상대경로 예외.
+- **import는 절대경로(`@/`).** 슬라이스를 옮겨도 참조가 안 깨진다. 같은 폴더의 CSS(`*.module.css`·`globals.css`)만 상대경로 예외 — 파일과 함께 움직이는 자산이라 이동에 안 깨진다. 테스트가 대상을 `./`로 부르는 건 예외가 아니다. `src/` 밖(루트 설정·`scripts/`)은 `@/` alias가 없어 상대경로를 쓴다.
 
 ## 🎨 CSS 전략
 

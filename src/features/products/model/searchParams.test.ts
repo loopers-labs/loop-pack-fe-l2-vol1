@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { DEFAULT_PAGE_SIZE } from "@/features/products/model/pagination";
-
-import { loadProductListSearchParams, parseAsPage } from "./searchParams";
+import { loadProductListSearchParams, parseAsPage } from "@/features/products/model/searchParams";
 
 // page는 1 이상 정수만 통과시키고, 나머지는 null로 돌려보낸다(nuqs가 기본값 1로 되돌린다).
 // 상한은 두지 않는다 — 아주 큰 수는 서버가 isSafeInteger·범위로 다시 거른다.

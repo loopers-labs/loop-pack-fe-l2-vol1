@@ -2,7 +2,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import CommerceLayout from "./layout";
+import CommerceLayout from "@/app/(commerce)/layout";
 
 // 서버 컴포넌트가 요청 시점 쿠키를 읽으므로 next/headers를 목킹한다.
 // 세션 쿠키 없음 → 비로그인 상태로 렌더된다(헤더·본문 렌더 자체는 로그인 여부와 무관).

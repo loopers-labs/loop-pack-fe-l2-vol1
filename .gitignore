@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/size-limit.json
 /test-results
 /playwright-report
 /blob-report

@@ -2,7 +2,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ProductSearchInput } from "./ProductSearchInput";
+import { ProductSearchInput } from "@/_pages/products/ui/ProductSearchInput";
 
 // setTimeout을 가짜로 돌려 debounce 창(300ms)을 손이 아니라 코드로 정확히 제어한다.
 afterEach(() => {

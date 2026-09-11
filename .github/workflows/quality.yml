@@ -2,16 +2,35 @@ name: Quality
 
 "on":
   push:
+    # kjeunn은 주차 브랜치가 병합되는 통합 브랜치라 병합 뒤에도 한 번 돌아야 한다(사후 방어).
+    # main은 upstream 동기화 전용이지만 그대로 둔다.
     branches:
       - main
+      - kjeunn
   pull_request:
+
+# 같은 PR에 연속 push하면 앞선 run은 취소한다. 통합 브랜치 push는 취소하지 않는다 —
+# 병합 결과의 검증이 다음 push에 밀려 사라지면 안 된다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
+# CI 빌드는 배포가 아니므로 로컬 origin을 준다. 둘 다 같은 값이어야 한다 —
+# APP_ORIGIN은 서버(self-fetch·metadataBase), NEXT_PUBLIC_BASE_URL은 브라우저 번들에 박히는 같은 origin이다.
+# 둘 중 하나라도 빠지면 Validate env가 막는다. 막지 않으면 빌드는 통과하고 브라우저에서 appOrigin이 throw해
+# 클라이언트 트리가 통째로 죽는다.
+env:
+  APP_ORIGIN: http://localhost:3000
+  NEXT_PUBLIC_BASE_URL: http://localhost:3000
+
 jobs:
   quality:
     runs-on: ubuntu-latest
+    # 러너 stall(pnpm setup이 7분 걸린 run이 있었다)이 무한정 점유하지 않게 한다. 정상은 2분 안이다.
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -28,13 +47,145 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
+      # 빌드가 쓸 env를 빌드 앞에서 거른다. next.config.ts도 같은 검사를 하지만,
+      # 여기 별도 step으로 두면 실패가 "Build"가 아니라 "Validate env"로 보이고 summary에 원인 표가 남는다.
+      - name: Validate env
+        run: node scripts/validate-env.mts
+      # Lint부터 Bundle budget까지는 package.json의 `check` 스크립트와 같은 항목이다.
+      # 한 명령으로 묶으면 Actions 로그에 step별 타임스탬프가 남지 않아
+      # 어느 검증이 느린지·어느 검증이 실패했는지 보이지 않는다. 그래서 항목을 여기 한 번 더 푼다.
+      # 순서만 다르다 — 여기서는 싼 검증(lint·typecheck)을 앞에 둬 실패를 빨리 본다.
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Duplicate check
+        run: pnpm dupcheck
+      - name: Build
+        run: pnpm build
+      # 라우트별 First Load JS를 커밋된 한도(.size-limit.mts)와 비교한다. 초과면 빨강이고,
+      # 통과·초과 모두 표를 남겨 "무엇이 얼마나"를 바로 보게 한다 — summary(PR 화면)와 step 로그 양쪽에.
+      # 로그에만 exit code가 남으면 step을 펼쳐도 원인이 안 보인다.
+      - name: Bundle budget
         run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
+          set +e
+          pnpm exec size-limit --json > size-limit.json
+          status=$?
+          set -e
+          {
+            echo "## 번들 예산 (gzip)"
+            echo
+            if jq -e 'type == "array"' size-limit.json >/dev/null 2>&1; then
+              jq -r '"| 진입점 | 크기 | 한도 | 결과 |\n|---|---|---|---|", (.[] | "| \(.name) | \(.size/1000*10|round/10) kB | \(.sizeLimit/1000) kB | \(if .passed then "통과" else "초과 +\((.size-.sizeLimit)/1000*10|round/10) kB" end) |")' size-limit.json
+            else
+              echo "size-limit이 결과를 내지 못했습니다(설정 오류·빌드 산출물 없음). 로그를 확인하세요."
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          exit $status
+
+  # E2E 스킵 조건은 이 job이 정한다. 기본이 실행이고 스킵을 명시한다 —
+  # 런타임에 실리지 않는 경로(문서·마크다운·AI 설정)만 바뀐 PR이면 e2e를 건너뛴다.
+  # "관련 경로가 바뀌면 실행"(allow-list)으로 짜면 목록에 없는 새 경로가 조용히 스킵돼 깨진 코드가 통과한다.
+  # push(통합 브랜치)는 필터를 거치지 않고 항상 돈다(아래 e2e의 if).
+  changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read # paths-filter가 PR의 변경 파일 목록을 API로 읽는다
+    outputs:
+      runtime: ${{ steps.filter.outputs.runtime }}
+    steps:
+      - name: Detect runtime changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          # some-with-excludes: 하나라도 '**'에 맞고 부정 패턴엔 안 걸리는 파일이 있을 때 true.
+          # 기본값(some)은 부정 패턴을 무시해 md 변경도 true가 된다.
+          predicate-quantifier: some-with-excludes
+          filters: |
+            runtime:
+              - "**"
+              - "!docs/**"
+              - "!**/*.md"
+              - "!.claude/**"
+
+  e2e:
+    needs: changes
+    # changes가 스킵된 push 이벤트에서도 평가되도록 !cancelled()를 앞에 둔다(needs가 스킵되면 기본 조건은 false).
+    # job 레벨 if로 스킵해야 required check가 "skipped=통과"로 집계된다.
+    # 워크플로 on.paths로 막으면 run 자체가 없어 check가 Expected에 영영 걸린다.
+    # changes가 실패하면(API 오류 등) outputs가 비어 스킵으로 흘러가는데, 그건 "판정 불가"이지 "안 바뀜"이 아니다.
+    # 그래서 판정이 성공하지 않았으면 돌린다 — 모르면 실행이 기본이다.
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.result != 'success' || needs.changes.outputs.runtime == 'true') }}
+    runs-on: ubuntu-latest
+    # 정상은 2분 안(빌드 + 서버 기동 + 29개 스펙). 러너 stall이 무한정 점유하지 않게 끊는다.
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 10.15.1
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # 브라우저 바이너리는 Playwright 버전에만 묶인다. 그 버전은 lockfile에 있으므로 lockfile 해시를 키로 쓴다.
+      # 다른 의존성이 바뀌어도 키가 갈려 한 번 더 받지만, 버전만 따로 추적하는 복잡함보다 낫다.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      # OS 라이브러리(apt)는 캐시 경로 밖이라 hit여도 매번 필요하다.
+      - name: Install Playwright OS dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      - name: Run E2E
+        run: pnpm test:e2e
+      # 재시도로 통과한 스펙을 PR 화면(Checks 탭 summary)에 드러낸다. 초록이어도 흔들린 건 보이게.
+      - name: Report flaky specs
+        if: always()
+        run: |
+          report=playwright-report/results.json
+          if [ ! -f "$report" ]; then
+            echo "리포트 없음(빌드·서버 기동 실패 등). 로그를 확인하세요." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
-      - name: Run quality checks
-        run: pnpm check
-        # appOrigin은 미설정 시 throw한다. CI build는 배포가 아니므로 로컬 origin을 준다.
-        env:
-          APP_ORIGIN: http://localhost:3000
+          if ! jq -e '.stats.flaky | numbers' "$report" >/dev/null 2>&1; then
+            echo "리포트를 읽을 수 없습니다(형식 불일치). 로그를 확인하세요." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          flaky=$(jq -r '.stats.flaky' "$report")
+          echo "## E2E: flaky ${flaky}건" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$flaky" != "0" ]; then
+            echo "재시도로 통과한 스펙 — 통과로 집계됐지만 흔들렸다:" >> "$GITHUB_STEP_SUMMARY"
+            jq -r '[.suites[] | .. | objects | select(has("specs")) | .specs[]]
+              | map(select(any(.tests[]; .status == "flaky")))
+              | .[] | "- \(.file):\(.line) \(.title)"' "$report" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      # 실패한 시도의 trace를 올린다. 재시도로 통과한(flaky) 시도의 trace도 실패 시도라 남아 있으므로
+      # job이 초록이어도 올린다 — 흔들린 원인을 열어볼 수 있게. trace가 없으면 조용히 건너뛴다.
+      # test-results 전체가 아니라 trace.zip만 올린다(워커별 storageState 파일은 올릴 이유가 없다).
+      - name: Upload traces
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-traces
+          path: test-results/**/trace.zip
+          if-no-files-found: ignore
+          retention-days: 7

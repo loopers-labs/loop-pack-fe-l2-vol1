@@ -2,9 +2,8 @@ import { afterAll, afterEach, beforeAll, vi } from "vitest";
 
 import { useCartStore } from "@/entities/cart/model/cartStore";
 import { useWishlistStore } from "@/entities/wishlist/model/wishlistStore";
-
-import { redirectMock, routerMock } from "./navigation";
-import { server } from "./server";
+import { redirectMock, routerMock } from "@/test/navigation";
+import { server } from "@/test/server";
 
 // toBeInTheDocument 같은 DOM 매처를 vitest의 expect에 붙인다(+ 타입 augmentation).
 // node 환경 테스트에서도 로드되지만 매처를 안 쓰면 그만이라 무해하다.

@@ -3,11 +3,10 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ProductListView } from "@/_pages/products/ui/ProductListView";
 import { makeProduct, makeProductListResponse } from "@/test/handlers";
 import { renderWithProviders } from "@/test/renderWithProviders";
 import { server } from "@/test/server";
-
-import { ProductListView } from "./ProductListView";
 
 const trackEvent = vi.hoisted(() => vi.fn());
 vi.mock("@/analytics/schema", () => ({ trackEvent }));

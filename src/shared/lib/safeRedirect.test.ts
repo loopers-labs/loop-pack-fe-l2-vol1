@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { safeRedirect } from "./safeRedirect";
+import { safeRedirect } from "@/shared/lib/safeRedirect";
 
 // 복원 경로는 오픈 리다이렉트의 표적이다. 내부 절대 경로만 통과시키고 나머지는 기본값으로 돌린다.
 describe("safeRedirect", () => {

@@ -9,7 +9,7 @@ import { server } from "@/test/server";
 vi.mock("server-only", () => ({}));
 // redirect 호출은 이 아래에서 검증한다. next/navigation 목은 setup.ts가 전역으로 건다.
 
-import ProductList from "./page";
+import ProductList from "@/app/(commerce)/products/page";
 
 // 서버 응답으로 계산: totalCount 20 / pageSize 10 → totalPages 2.
 // fetch를 직접 바꿔치기하지 않고, 이 조회에만 성공 응답을 MSW로 덮는다.
