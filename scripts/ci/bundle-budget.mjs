@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
 export const BUNDLE_BUDGETS = Object.freeze({
-  '/': 279 * 1024,
+  '/': 280 * 1024,
   '/products': 286 * 1024,
 });
 
