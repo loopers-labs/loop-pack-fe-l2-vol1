@@ -6,11 +6,11 @@ import { proxy } from './proxy';
 describe('orders proxy', () => {
   it('세션 쿠키가 없으면 내부 링크의 이전 화면 표식을 로그인 주소로 옮긴다', () => {
     const response = proxy(
-      new NextRequest('http://localhost/orders/new?from=cart'),
+      new NextRequest('http://localhost/orders/new?loginSource=cart'),
     );
 
     expect(response.headers.get('location')).toBe(
-      'http://localhost/login?returnTo=%2Forders%2Fnew&from=cart',
+      'http://localhost/login?returnTo=%2Forders%2Fnew&loginSource=cart',
     );
   });
 
@@ -19,7 +19,7 @@ describe('orders proxy', () => {
       new NextRequest('http://localhost/orders/new'),
     );
     const invalidResponse = proxy(
-      new NextRequest('http://localhost/orders?from=external'),
+      new NextRequest('http://localhost/orders?loginSource=external'),
     );
 
     expect(directResponse.headers.get('location')).toBe(

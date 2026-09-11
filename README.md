@@ -5,7 +5,7 @@ Loopers 프론트엔드 과정(TypeScript · React · Next.js)의 과제 제출 
 
 ## 시작하기
 
-필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`는 현재 권장 LTS를 고정하고, `package.json`의 Node.js 범위(`>=22.12.0`)는 지원 가능한 Node.js 22 이상을 허용합니다.
+필수 도구는 Node.js 24.17.0과 pnpm 10.15.1입니다. `.nvmrc`와 `package.json`은 같은 Node.js 버전을 고정하며, 다른 버전에서는 의존성 설치를 중단합니다.
 
 ```bash
 nvm use
@@ -19,13 +19,20 @@ pnpm dev
 APP_ORIGIN=http://localhost:3000
 ```
 
-`pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 테스트, lint, 타입 검사, 프로덕션 빌드를 순서대로 실행하며 네 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
+`pnpm test`는 전체 Vitest 테스트를 실행합니다. `pnpm check`는 CI 정책 테스트, Vitest, lint, 타입 검사, 프로덕션 빌드, Playwright E2E를 순서대로 실행합니다. E2E 실행 전 Chromium이 없다면 `pnpm exec playwright install chromium`으로 설치하세요.
+
+GitHub Actions는 검증을 단계별로 실행하고 CI 환경 변수도 검사합니다. 허용된 Markdown만 변경한 PR에서는 E2E만 생략하며, `main` push와 `merge_group`에서는 전체 검증을 실행합니다. 구현 범위와 원격 설정 절차는 [10주차 CI 설계](./docs/rfc/week10-ci.md)를 참고하세요.
+
+배포된 데모는 [Vercel Production](https://loop-pack-fe-l2-vol1-pi.vercel.app)에서 확인할 수 있습니다. 인증과 주문 저장소는 과제용 mock이며 주문은 인스턴스 재시작 사이에 보존되지 않습니다.
 
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
 
 ## 기술 개선 기록
 
 - [7주차 — 초기 로딩 성능과 목록 상태 설계](./docs/week-07-performance/README.md)
+- [10주차 — CI 설계 및 검증 기록](./docs/rfc/week10-ci.md)
+- [10주차 — AI 코드 리뷰 기록](./docs/rfc/week10-ai-review.md)
+- [10주 기술 회고](./docs/rfc/week10-retrospective.md)
 
 ## 구조 (최소 골격)
 

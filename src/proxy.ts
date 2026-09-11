@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/app/api/_data/auth-cookies';
-import { createLoginHref } from '@/features/auth/lib/authNavigation';
-import { getLoginFrom } from '@/shared/lib/loginFrom';
+import {
+  createLoginHref,
+  LOGIN_SOURCE_SEARCH_PARAM,
+} from '@/features/auth/lib/authNavigation';
+import { getLoginEntrySource } from '@/shared/lib/loginEntrySource';
 
 export function proxy(request: NextRequest) {
   if (request.cookies.has(SESSION_COOKIE)) {
@@ -10,11 +13,13 @@ export function proxy(request: NextRequest) {
   }
 
   const returnUrl = request.nextUrl.clone();
-  const loginFrom = getLoginFrom(returnUrl.searchParams.get('from'));
-  returnUrl.searchParams.delete('from');
+  const loginSource = getLoginEntrySource(
+    returnUrl.searchParams.get(LOGIN_SOURCE_SEARCH_PARAM),
+  );
+  returnUrl.searchParams.delete(LOGIN_SOURCE_SEARCH_PARAM);
   const returnTo = `${returnUrl.pathname}${returnUrl.search}`;
   return NextResponse.redirect(
-    new URL(createLoginHref(returnTo, loginFrom), request.url),
+    new URL(createLoginHref(returnTo, loginSource), request.url),
   );
 }
 

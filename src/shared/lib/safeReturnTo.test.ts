@@ -3,8 +3,8 @@ import { getSafeReturnTo } from './safeReturnTo';
 
 describe('getSafeReturnTo', () => {
   it('내부 경로와 query string을 유지한다', () => {
-    expect(getSafeReturnTo('/orders/new?from=cart')).toBe(
-      '/orders/new?from=cart',
+    expect(getSafeReturnTo('/orders/new?loginSource=cart')).toBe(
+      '/orders/new?loginSource=cart',
     );
   });
 

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { seedCartState, TEST_CART_PRODUCT } from './fixtures/cartState';
+import { fillLoginForm } from './fixtures/loginForm';
 
 test.describe('장바구니', () => {
   test('로그인하면 비회원 장바구니 상품을 주문서에 유지한다', async ({
@@ -18,8 +19,9 @@ test.describe('장바구니', () => {
     ).toBeVisible();
     await page.getByRole('link', { name: '주문하기' }).click();
     await expect(page).toHaveURL(
-      '/login?returnTo=%2Forders%2Fnew&from=cart',
+      '/login?returnTo=%2Forders%2Fnew&loginSource=cart',
     );
+    await fillLoginForm(page);
     await page.getByRole('button', { name: '로그인' }).click();
     await expect(page).toHaveURL('/orders/new');
     await expect(page.getByRole('heading', { name: '주문서' })).toBeVisible();

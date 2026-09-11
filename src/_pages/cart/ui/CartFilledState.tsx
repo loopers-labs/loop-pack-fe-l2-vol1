@@ -8,6 +8,7 @@ import { getProductPriceSummary } from '@/entities/product/lib/productPricing';
 import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
 import { ProductLinePrice } from '@/entities/product/ui/ProductLinePrice';
 import { ProductPriceDetails } from '@/entities/product/ui/ProductPriceDetails';
+import { createLoginSourceHref } from '@/features/auth/lib/authNavigation';
 
 interface CartFilledStateProps {
   items: CartItem[];
@@ -141,7 +142,7 @@ export function CartFilledState({ items }: CartFilledStateProps) {
             )}
           </div>
           <Link
-            href="/orders/new?from=cart"
+            href={createLoginSourceHref('/orders/new', 'cart')}
             className="mt-6 flex min-h-[52px] w-full items-center justify-center rounded-lg bg-text px-5 text-sm font-semibold text-white transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
           >
             주문하기

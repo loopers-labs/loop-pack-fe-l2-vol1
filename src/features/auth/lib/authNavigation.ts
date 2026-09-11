@@ -1,28 +1,47 @@
 import { replaceDocumentLocation } from '@/shared/lib/browserNavigation';
 import {
-  getLoginFromPathname,
-  type LoginFrom,
-} from '@/shared/lib/loginFrom';
+  getLoginEntrySourceFromPathname,
+  type LoginEntrySource,
+} from '@/shared/lib/loginEntrySource';
 import { getSafeReturnTo } from '@/shared/lib/safeReturnTo';
+
+export const LOGIN_SOURCE_SEARCH_PARAM = 'loginSource';
+
+export type LoginSourceSearchParams = {
+  [LOGIN_SOURCE_SEARCH_PARAM]?: string;
+};
+
+export function createLoginSourceHref(
+  href: string,
+  loginSource: LoginEntrySource,
+): string {
+  const safeHref = getSafeReturnTo(href);
+  if (loginSource === 'direct') return safeHref;
+
+  const url = new URL(safeHref, 'http://localhost');
+  url.searchParams.set(LOGIN_SOURCE_SEARCH_PARAM, loginSource);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 
 export function createLoginHref(
   returnTo: string,
-  loginFrom: LoginFrom = 'direct',
+  loginSource: LoginEntrySource = 'direct',
 ): string {
   const searchParams = new URLSearchParams({
     returnTo: getSafeReturnTo(returnTo),
   });
-  if (loginFrom !== 'direct') {
-    searchParams.set('from', loginFrom);
-  }
-
-  return `/login?${searchParams.toString()}`;
+  return createLoginSourceHref(
+    `/login?${searchParams.toString()}`,
+    loginSource,
+  );
 }
 
 export function redirectToLogin(): void {
   if (typeof window === 'undefined') return;
 
   const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-  const loginFrom = getLoginFromPathname(window.location.pathname);
-  replaceDocumentLocation(createLoginHref(returnTo, loginFrom));
+  const loginSource = getLoginEntrySourceFromPathname(
+    window.location.pathname,
+  );
+  replaceDocumentLocation(createLoginHref(returnTo, loginSource));
 }

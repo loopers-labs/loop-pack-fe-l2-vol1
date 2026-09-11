@@ -1,9 +1,6 @@
 {
-  "measuredAt": "2026-09-03T14:23:40.388Z",
+  "measuredAt": "2026-09-09T18:06:37.929Z",
   "targetUrl": "http://127.0.0.1:3100/",
-  "build": "Next.js 16.2.10 production build (Turbopack)",
-  "browser": "Chrome 152.0.7977.75",
-  "collector": "Playwright CDP and PerformanceObserver",
   "conditions": {
     "viewport": {
       "width": 412,
@@ -14,78 +11,602 @@
     "downloadThroughputKbps": 1474.56,
     "uploadThroughputKbps": 675,
     "cpuSlowdownMultiplier": 4,
-    "cacheDisabled": true,
-    "runs": 5
-  },
-  "routes": {
-    "dynamic": [
-      "/",
-      "/cart",
-      "/login",
-      "/orders",
-      "/orders/new",
-      "/performance-lab/inp",
-      "/products",
-      "/products/[id]"
-    ],
-    "static": ["/robots.txt", "/sitemap.xml"]
+    "cacheDisabled": true
   },
   "rows": [
     {
       "run": 1,
-      "fcp": 2096,
-      "lcp": 2232,
-      "cls": 0.02466290904334153,
-      "responseStart": 271.09999999403954
+      "fcp": 2204,
+      "lcp": 2288,
+      "cls": 0.024771505936790235,
+      "lcpElement": "img.HeroSection-module__TTRdOq__image",
+      "shifts": [
+        {
+          "startTime": 2205.2000000476837,
+          "value": 0.00010509853617336183,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 237.578125,
+                "y": 18,
+                "width": 158.421875,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 237.578125
+              },
+              "currentRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2638.899999976158,
+          "value": 0.024301336573511544,
+          "sources": [
+            {
+              "node": "footer.border-t border-border bg-bg-card",
+              "previousRect": {
+                "x": 0,
+                "y": 802.890625,
+                "width": 412,
+                "height": 20.109375,
+                "top": 802.890625,
+                "right": 412,
+                "bottom": 823,
+                "left": 0
+              },
+              "currentRect": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2936.5,
+          "value": 0.00025647393365662587,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              },
+              "currentRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 3552.100000023842,
+          "value": 0.00010859689344870581,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              },
+              "currentRect": {
+                "x": 256.109375,
+                "y": 18,
+                "width": 139.890625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 256.109375
+              }
+            }
+          ]
+        }
+      ],
+      "responseStart": 52.700000047683716
     },
     {
       "run": 2,
-      "fcp": 1968,
-      "lcp": 2188,
+      "fcp": 2024,
+      "lcp": 2208,
       "cls": 0.02466290904334153,
-      "responseStart": 22.099999994039536
+      "lcpElement": "img.HeroSection-module__TTRdOq__image",
+      "shifts": [
+        {
+          "startTime": 2036,
+          "value": 0.00010509853617336183,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 237.578125,
+                "y": 18,
+                "width": 158.421875,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 237.578125
+              },
+              "currentRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2537.7999999523163,
+          "value": 0.024301336573511544,
+          "sources": [
+            {
+              "node": "footer.border-t border-border bg-bg-card",
+              "previousRect": {
+                "x": 0,
+                "y": 802.890625,
+                "width": 412,
+                "height": 20.109375,
+                "top": 802.890625,
+                "right": 412,
+                "bottom": 823,
+                "left": 0
+              },
+              "currentRect": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2842.6999999284744,
+          "value": 0.00025647393365662587,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              },
+              "currentRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              }
+            }
+          ]
+        }
+      ],
+      "responseStart": 24.699999928474426
     },
     {
       "run": 3,
-      "fcp": 1964,
-      "lcp": 2216,
-      "cls": 0.02466290904334153,
-      "responseStart": 20.099999994039536
+      "fcp": 2016,
+      "lcp": 2168,
+      "cls": 0.024771505936790235,
+      "lcpElement": "img.HeroSection-module__TTRdOq__image",
+      "shifts": [
+        {
+          "startTime": 2039.8999999761581,
+          "value": 0.00010509853617336183,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 237.578125,
+                "y": 18,
+                "width": 158.421875,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 237.578125
+              },
+              "currentRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2539.100000023842,
+          "value": 0.024301336573511544,
+          "sources": [
+            {
+              "node": "footer.border-t border-border bg-bg-card",
+              "previousRect": {
+                "x": 0,
+                "y": 802.890625,
+                "width": 412,
+                "height": 20.109375,
+                "top": 802.890625,
+                "right": 412,
+                "bottom": 823,
+                "left": 0
+              },
+              "currentRect": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2885,
+          "value": 0.00025647393365662587,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              },
+              "currentRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 3250.399999976158,
+          "value": 0.00010859689344870581,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              },
+              "currentRect": {
+                "x": 256.109375,
+                "y": 18,
+                "width": 139.890625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 256.109375
+              }
+            }
+          ]
+        }
+      ],
+      "responseStart": 21.199999928474426
     },
     {
       "run": 4,
-      "fcp": 1940,
-      "lcp": 2140,
+      "fcp": 2060,
+      "lcp": 2228,
       "cls": 0.02466290904334153,
-      "responseStart": 23.599999994039536
+      "lcpElement": "img.HeroSection-module__TTRdOq__image",
+      "shifts": [
+        {
+          "startTime": 2081.6999999284744,
+          "value": 0.00010509853617336183,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 237.578125,
+                "y": 18,
+                "width": 158.421875,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 237.578125
+              },
+              "currentRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2562.899999976158,
+          "value": 0.024301336573511544,
+          "sources": [
+            {
+              "node": "footer.border-t border-border bg-bg-card",
+              "previousRect": {
+                "x": 0,
+                "y": 802.890625,
+                "width": 412,
+                "height": 20.109375,
+                "top": 802.890625,
+                "right": 412,
+                "bottom": 823,
+                "left": 0
+              },
+              "currentRect": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2839.100000023842,
+          "value": 0.00025647393365662587,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              },
+              "currentRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              }
+            }
+          ]
+        }
+      ],
+      "responseStart": 25.899999976158142
     },
     {
       "run": 5,
-      "fcp": 1976,
-      "lcp": 2192,
-      "cls": 0.02466290904334153,
-      "responseStart": 20.700000017881393
+      "fcp": 2076,
+      "lcp": 2228,
+      "cls": 0.024771505936790235,
+      "lcpElement": "img.HeroSection-module__TTRdOq__image",
+      "shifts": [
+        {
+          "startTime": 2093.6999999284744,
+          "value": 0.00010509853617336183,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 237.578125,
+                "y": 18,
+                "width": 158.421875,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 237.578125
+              },
+              "currentRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2528.600000023842,
+          "value": 0.024301336573511544,
+          "sources": [
+            {
+              "node": "footer.border-t border-border bg-bg-card",
+              "previousRect": {
+                "x": 0,
+                "y": 802.890625,
+                "width": 412,
+                "height": 20.109375,
+                "top": 802.890625,
+                "right": 412,
+                "bottom": 823,
+                "left": 0
+              },
+              "currentRect": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 2835.6999999284744,
+          "value": 0.00025647393365662587,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 241.796875,
+                "y": 18,
+                "width": 154.203125,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 241.796875
+              },
+              "currentRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              }
+            }
+          ]
+        },
+        {
+          "startTime": 3214.1999999284744,
+          "value": 0.00010859689344870581,
+          "sources": [
+            {
+              "node": "nav.flex items-center gap-3 text-[13px] font-semibold text-text-secondary sm:gap-7 sm:text-[14px]",
+              "previousRect": {
+                "x": 251.359375,
+                "y": 18,
+                "width": 144.640625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 251.359375
+              },
+              "currentRect": {
+                "x": 256.109375,
+                "y": 18,
+                "width": 139.890625,
+                "height": 44,
+                "top": 18,
+                "right": 396,
+                "bottom": 62,
+                "left": 256.109375
+              }
+            }
+          ]
+        }
+      ],
+      "responseStart": 22.299999952316284
     }
   ],
   "summary": {
-    "fcp": { "median": 1968, "min": 1940, "max": 2096 },
-    "lcp": { "median": 2192, "min": 2140, "max": 2232 },
+    "fcp": {
+      "median": 2060,
+      "min": 2016,
+      "max": 2204
+    },
+    "lcp": {
+      "median": 2228,
+      "min": 2168,
+      "max": 2288
+    },
     "cls": {
-      "median": 0.02466290904334153,
+      "median": 0.024771505936790235,
       "min": 0.02466290904334153,
-      "max": 0.02466290904334153
+      "max": 0.024771505936790235
     },
     "responseStart": {
-      "median": 22.099999994039536,
-      "min": 20.099999994039536,
-      "max": 271.09999999403954
+      "median": 24.699999928474426,
+      "min": 21.199999928474426,
+      "max": 52.700000047683716
     }
-  },
-  "layoutShiftDiagnosis": {
-    "lcpElement": "home hero image",
-    "largestShiftValue": 0.024301336573511544,
-    "largestShiftSource": "footer leaving the initial viewport as home content completes",
-    "otherShiftSource": "header navigation font metrics",
-    "authenticationStateWasNotAShiftSource": true
   }
 }

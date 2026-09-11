@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { LoginContent } from '@/_pages/login/ui/LoginContent';
 import { getCurrentUser } from '@/app/_lib/session';
-import { getLoginFrom } from '@/shared/lib/loginFrom';
+import {
+  LOGIN_SOURCE_SEARCH_PARAM,
+  type LoginSourceSearchParams,
+} from '@/features/auth/lib/authNavigation';
+import { getLoginEntrySource } from '@/shared/lib/loginEntrySource';
 import { getSafeReturnTo } from '@/shared/lib/safeReturnTo';
 
 export const metadata: Metadata = {
@@ -11,19 +15,21 @@ export const metadata: Metadata = {
 };
 
 interface LoginPageProps {
-  searchParams: Promise<{ returnTo?: string; from?: string }>;
+  searchParams: Promise<{ returnTo?: string } & LoginSourceSearchParams>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { returnTo: requestedReturnTo, from: requestedFrom } =
-    await searchParams;
+  const params = await searchParams;
+  const requestedReturnTo = params.returnTo;
   const returnTo = getSafeReturnTo(requestedReturnTo);
-  const loginFrom = getLoginFrom(requestedFrom);
+  const loginSource = getLoginEntrySource(
+    params[LOGIN_SOURCE_SEARCH_PARAM],
+  );
   const user = await getCurrentUser();
 
   if (user) {
     redirect(returnTo);
   }
 
-  return <LoginContent returnTo={returnTo} loginFrom={loginFrom} />;
+  return <LoginContent returnTo={returnTo} loginSource={loginSource} />;
 }

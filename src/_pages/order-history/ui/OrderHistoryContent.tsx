@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { orderListQueryOptions } from '@/entities/order/api/orderQueries';
 import { useProductsByIds } from '@/entities/product/model/useProductsByIds';
+import { createLoginSourceHref } from '@/features/auth/lib/authNavigation';
 import { OrderHistoryCard } from './OrderHistoryCard';
 
 export function OrderHistoryContent() {
@@ -93,7 +94,7 @@ export function OrderHistoryContent() {
           </p>
         </div>
         <Link
-          href="/orders/new?from=orders"
+          href={createLoginSourceHref('/orders/new', 'orders')}
           className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-bg-card px-5 text-sm font-semibold text-text transition-colors hover:border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
         >
           현재 장바구니 주문하기

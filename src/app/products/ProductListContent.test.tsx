@@ -18,7 +18,7 @@ import { productListInfiniteQueryOptions } from '@/entities/product/api/productQ
 import { useWishlistStore } from '@/entities/wishlist/model/wishlistStore';
 import { productListFixture } from '@/test/msw/fixtures';
 import { server } from '@/test/msw/server';
-import { ProductListContent } from './ProductListContent';
+import { ProductListContent } from '@/_pages/product-list/ui/ProductListContent';
 
 const router = vi.hoisted(() => ({
   replace: vi.fn(),
