@@ -137,3 +137,18 @@ E2E를 job 전체가 아니라 **job 안의 일부 step만** 스킵하는 구조
   `dorny/paths-filter`는 `pull_request` 이벤트에서 `token`이 주어져 있으면(기본적으로 `GITHUB_TOKEN`이 암묵적으로 제공됨) **우리가 지정한 `base`를 그냥 무시**하고, GitHub API로 "이 PR이 지금까지 건드린 전체 파일 목록"(133개)을 가져와 그 기준으로 판단하도록 만들어져 있었다. 즉 1차 수정에서 넣은 `base` 값은 애초에 반영된 적이 없었다.
 - **고친 방법**: `token: ''`을 명시해서 API 경로 대신 로컬 git diff 경로를 타도록 강제했다. 이제야 우리가 지정한 `base`(이번 push 구간)가 실제로 쓰인다.
 - **배운 것**: 액션 하나를 설정할 때 "옵션을 넣었다"와 "그 옵션이 실제로 적용된다"는 다른 문제다. 로그를 안 열어보고 `base`만 넣고 넘어갔다면, 조건부 실행이 겉보기엔 설정된 것처럼 보이지만 실제로는 전혀 작동 안 하는 채로 계속 갔을 것이다 — 자가 검증(직접 PR을 걸어보고 로그로 확인하기)이 왜 필요한지를 그대로 보여주는 사례.
+
+### 최종 자가 검증 — 걸리는 PR / 안 걸리는 PR
+
+`token: ''` 수정 이후 실제로 두 케이스를 만들어 확인했다.
+
+| 케이스 | 변경 파일 | 결과 | 근거 |
+| --- | --- | --- | --- |
+| **안 걸리는 PR** (스킵돼야 함) | `docs/rfc/week10-ci.md`, `.github/workflows/quality.yml` | `Install Playwright Chromium`·`Run E2E tests` 모두 **Skipped**(회색), 전체 59s로 단축 | run [34558399605](https://github.com/zaenny/loop-pack-fe-l2-vol1/actions/runs/34558399605) |
+| **걸리는 PR** (실행돼야 함) | `e2e/sanity.spec.ts` (주석 한 줄) | E2E **정상 실행**, `25 passed (15.4s)` | run [34558534663](https://github.com/zaenny/loop-pack-fe-l2-vol1/actions/runs/34558534663) |
+
+두 케이스 모두 의도한 대로 동작함을 확인했다. required check와의 충돌 여부는 이 PR엔 branch protection이 설정돼 있지 않아 직접 재현하지는 않았고, 위 "required check와의 충돌 여부" 절의 구조적 근거(step 조건이라 job 자체는 항상 완료됨)로 갈음한다.
+
+### flaky 대비 정책
+
+`playwright.config.ts`에 이미 `retries: process.env.CI ? 2 : 0`이 설정돼 있다. CI 러너는 네트워크·타이밍이 로컬보다 흔들리기 쉬워 일시적 실패가 섞일 수 있는 반면, 로컬 개발 중에는 실패를 즉시 재현해서 봐야 하므로 재시도를 켜두면 오히려 진짜 실패를 숨긴다. 그래서 CI에서만 2회 재시도하도록 분리해뒀다 — 흔들림은 흡수하되, 재시도 없이 로컬에서 실패를 그대로 보고 고치는 흐름은 유지.
