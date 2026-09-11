@@ -28,8 +28,10 @@ export default defineConfig({
     },
   ],
   // production build 위에서 실행 (개발 서버 아님)
+  // CI에서는 이 앞의 `pnpm check`(quality checks) 단계에서 이미 build가 끝나 있으므로
+  // 여기서 다시 build하지 않는다 (10주차 CI 측정에서 발견한 중복 build 제거, week10-ci.md 참고)
   webServer: {
-    command: 'pnpm build && pnpm start',
+    command: process.env.CI ? 'pnpm start' : 'pnpm build && pnpm start',
     url: `http://localhost:${DEV_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: WEB_SERVER_TIMEOUT_MS,
