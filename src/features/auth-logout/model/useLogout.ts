@@ -45,8 +45,18 @@ export function useLogout() {
   // 캐시 제거·이동)는 실제로 로그아웃에 성공했을 때만 의미가 있어서 실패
   // 시엔 안 도는 게 맞고, 대신 실패를 조용히 넘기지 않게 에러 메시지만
   // 여기서 뽑아 노출한다 — 안 그러면 버튼만 원상복구되고 아무 안내가 없다.
-  const errorMessage =
-    mutation.error instanceof ApiError ? mutation.error.message : null;
+  //
+  // ApiError(서버가 응답한 실패)만 처리하면 fetch 자체가 던진 네트워크
+  // 오류(오프라인 등)는 걸러지지 않고 errorMessage가 null로 남아 똑같이
+  // "아무 안내 없음" 상태가 된다(10주차 코드 리뷰에서 발견). isError로
+  // 먼저 실패 여부를 보고, ApiError가 아니면 일반 문구로 대체한다.
+  let errorMessage: string | null = null;
+  if (mutation.isError) {
+    errorMessage =
+      mutation.error instanceof ApiError
+        ? mutation.error.message
+        : '네트워크 오류로 로그아웃하지 못했습니다. 다시 시도해주세요.';
+  }
 
   return {
     handleLogout: () => mutation.mutate(),

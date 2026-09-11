@@ -39,7 +39,10 @@ jobs:
           # PR 전체 누적 diff(=base) 대신, 이번 push로 새로 추가된 커밋만 비교한다.
           # 이 레포는 주차별 브랜치가 이어져 있어 PR의 base(main)가 한참 뒤처져 있고,
           # 그 상태로 기본 동작(PR 전체 diff)을 쓰면 필터가 사실상 항상 true가 된다.
-          base: ${{ github.event.before || github.event.pull_request.base.sha }}
+          # workflow_dispatch(수동 실행)는 event.before도 pull_request도 없어서
+          # 두 값 다 비면 base가 빈 문자열이 된다(10주차 코드 리뷰에서 발견) —
+          # 그 경우 직전 커밋(HEAD~1) 기준으로 최소한 뭔가 비교되게 한다.
+          base: ${{ github.event.before || github.event.pull_request.base.sha || 'HEAD~1' }}
           filters: |
             e2e:
               - 'src/**'

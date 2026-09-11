@@ -8,8 +8,15 @@ import { join } from 'node:path';
 
 const TARGET_DIRS = ['src', 'e2e', 'scripts'];
 const FILE_EXTENSIONS = ['.ts', '.tsx'];
-const DISABLE_PATTERN = /eslint-disable(?:-next-line|-line)?/;
-const REASON_PATTERN = /eslint-disable(?:-next-line|-line)?\s[^\n]*--\s*\S/;
+
+// 진짜 eslint-disable 지시어는 항상 주석 시작 바로 뒤에 온다
+// (// eslint-disable-next-line ... 또는 /* eslint-disable ... */).
+// 앞에 anchor를 걸어야 "이유 없는 eslint-disable을 쓰지 마세요" 같은
+// 일반 산문 주석을 지시어로 오인하지 않는다(10주차 코드 리뷰에서 발견).
+const DISABLE_PATTERN =
+  /(?:\/\/|\/\*)\s*eslint-disable(?:-next-line|-line)?\b/;
+const REASON_PATTERN =
+  /(?:\/\/|\/\*)\s*eslint-disable(?:-next-line|-line)?\b[^\n]*--\s*\S/;
 
 function collectFiles(dir) {
   const entries = readdirSync(dir, { withFileTypes: true });
