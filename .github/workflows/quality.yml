@@ -20,6 +20,38 @@ concurrency:
 # job 98초 중 검증 46초 + 브라우저 설치 24초가 71%였다. lint·typecheck·test는 서로
 # 독립이므로 job으로 가른다. build는 E2E가 그 산출물 위에서 돌므로 같은 job에 둔다.
 jobs:
+  # 2단계 조건부 실행. 무엇이 바뀌었는지 한 번만 판정해 job 사이로 넘긴다.
+  # PR에서만 판정한다 — main push는 조건 없이 전부 돌려 최종 방어선으로 둔다.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      e2e: ${{ steps.filter.outputs.e2e }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Filter paths
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            e2e:
+              - 'src/**'
+              - 'e2e/**'
+              - 'public/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'next.config.ts'
+              - 'playwright.config.ts'
+              - 'tsconfig.json'
+              - '.github/**'
+
+  # lint·typecheck·test는 조건을 붙이지 않는다. 저비용 결정적 검증이기도 하고,
+  # 이 저장소에서는 문서 변경이 검증에 영향이 없다는 통념이 실제로 거짓이다 —
+  # src/app/api/_data/commerce.test.ts가 docs/assets/week-05-product-images.md를 읽는다.
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -59,7 +91,11 @@ jobs:
       - name: Unit·integration tests
         run: pnpm test
 
+  # 가장 비싼 검증(1단계 측정에서 임계 경로). 관련 경로가 바뀐 PR에서만 돌린다.
+  # main push는 `changes`가 판정을 내지 않으므로 조건 없이 돈다.
   e2e:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -92,3 +128,20 @@ jobs:
         run: pnpm build
       - name: E2E
         run: pnpm test:e2e
+
+  # branch protection에서 required로 둘 체크. e2e 자체를 required로 걸면 조건에 안 걸린 PR이
+  # 영영 "대기"로 남아 머지되지 않는다. 이 job은 항상 돌고, e2e가 성공이거나 스킵이면 통과한다.
+  e2e-gate:
+    needs: e2e
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check e2e result
+        run: |
+          result='${{ needs.e2e.result }}'
+          echo "e2e 결과: $result"
+          case "$result" in
+            success | skipped) exit 0 ;;
+            *) exit 1 ;;
+          esac

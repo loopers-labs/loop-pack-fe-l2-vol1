@@ -210,10 +210,78 @@ git ls-remote https://github.com/<owner>/<repo> 'refs/tags/*' | grep <sha>
 `pnpm/action-setup@0ebf471`은 `refs/tags/v6.0.9`가 `008330…`으로 나와 한 번 어긋나 보였는데,
 annotated 태그라 태그 객체와 커밋이 다른 경우였다. `refs/tags/v6.0.9^{}`가 `0ebf471`이므로 핀이 맞다.
 
-## 9. 남은 것
+## 9. 2단계 — 조건부 실행
+
+### 조건을 붙인 것은 e2e 하나뿐이다
+
+1단계 측정에서 e2e가 임계 경로이자 가장 비싼 job이었다(cold 62초·warm 48초, 나머지는 25~36초).
+조건을 붙일 값어치가 있는 검증은 이것 하나다.
+
+lint·typecheck·test에는 조건을 붙이지 않았다. 저비용 결정적 검증이라는 일반론 때문만은 아니다.
+**이 저장소에서는 "문서만 바꿨으니 검증을 건너뛰어도 된다"가 사실이 아니다.**
+`src/app/api/_data/commerce.test.ts`가 `docs/assets/week-05-product-images.md`를
+`readFileSync`로 읽어 상품 이미지 목록을 대조한다. 문서 하나를 고치면 단위 테스트가 깨질 수 있다.
+경로 필터를 이 세 job에 붙였다면 그 실패를 스킵으로 덮었을 것이다.
+
+### 수단 — workflow `on.paths`가 아니라 job 분기
+
+`on.pull_request.paths`는 workflow 자체를 트리거하지 않으므로 lint·typecheck·test까지 같이 사라진다.
+"저비용 검증은 모든 PR에서"와 정면으로 부딪힌다. 그래서 `dorny/paths-filter`로 판정만 한 번 하고
+그 결과를 job 사이로 넘기는 구조를 택했다.
+
+```yaml
+changes:
+  outputs:
+    e2e: ${{ steps.filter.outputs.e2e }}
+e2e:
+  needs: changes
+  if: github.event_name != 'pull_request' || needs.changes.outputs.e2e == 'true'
+```
+
+판정은 **PR에서만** 한다. `main` push는 조건 없이 전부 돈다.
+
+### 무엇을 스킵하고, 왜 안전한가
+
+e2e를 돌리는 경로는 `src/**`, `e2e/**`, `public/**`, `package.json`, `pnpm-lock.yaml`,
+`next.config.ts`, `playwright.config.ts`, `tsconfig.json`, `.github/**`이다.
+여기 없는 것 중 실제로 스킵되는 건 `docs/**`, `*.md`, `scripts/**`, `fixtures/**`다.
+
+안전 논리는 세 겹이다.
+
+1. e2e는 production build 위에서 앱을 조작한다. 스킵 대상 네 경로는 번들에 들어가지 않으므로
+   빌드 산출물이 같고, 같은 산출물에 같은 스펙을 돌리면 결과가 같다.
+2. 스킵되는 PR에서도 lint·typecheck·test는 그대로 돈다. 위에서 적은 docs 의존도 여기서 잡힌다.
+3. `main` push에서 조건 없이 한 번 더 돈다. 필터가 틀렸더라도 머지 직후에 드러난다.
+
+세 번째는 게이트가 아니라 사후 방어선이다. merge queue를 쓰면 머지 직전에 막을 수 있지만,
+이 저장소는 혼자 쓰는 포크라 큐를 둘 만큼의 동시성이 없다고 보고 넣지 않았다.
+
+### required와 조건부 스킵의 충돌
+
+과제가 짚은 함정이다. e2e를 branch protection의 required로 걸면, 조건에 걸리지 않은 PR에서는
+그 체크가 아예 보고되지 않아 "대기" 상태로 영영 머지되지 않는다.
+
+그래서 `e2e-gate`를 따로 뒀다. `needs: e2e` + `if: always()`라 항상 돌고,
+`needs.e2e.result`가 `success`거나 `skipped`면 통과, 그 외(`failure`·`cancelled`)면 실패한다.
+required로 둘 체크는 `lint`·`typecheck`·`test`·`e2e-gate` 넷이고 `e2e`는 넣지 않는다.
+
+### flaky 정책
+
+`retries: process.env.CI ? 1 : 0`.
+
+재시도를 실패를 감추는 장치로 쓰지 않는다. Playwright는 재시도 뒤 통과한 테스트를 `flaky`로
+따로 세어 보고하므로, 재시도는 결과를 숨기는 대신 **흔들림에 이름을 붙인다**. 진짜 실패는
+1회 재시도로도 그대로 실패한다. 로컬은 0을 유지한다 — 흔들림을 그 자리에서 보는 편이 낫다.
+
+반복해서 flaky로 찍히는 스펙이 생기면 `test.fixme`로 격리하고 이슈로 남긴다. 지금까지 CI에서
+e2e를 열 번 넘게 돌리는 동안 흔들린 적은 없어서, 이 정책은 아직 실제로 발동한 적이 없다.
+
+## 10. 남은 것
 
 - [ ] lockfile 해시를 깨서 miss 재현 (3절). 지금은 캐시 삭제로만 miss를 봤다.
-- [ ] 2단계 조건부 실행. e2e가 임계 경로이자 가장 비싼 job이라 대상이 분명하다.
+- [ ] 2단계 자가 검증. 조건에 걸리는 PR과 안 걸리는 PR을 각각 하나씩 만들어
+      e2e가 돌 때는 돌고 스킵될 때는 스킵되는 것을 Actions 로그로 보여야 한다.
+- [ ] branch protection에서 required 네 개(`lint`·`typecheck`·`test`·`e2e-gate`)를 실제로 건다.
 - [ ] 시각 회귀 spec을 e2e job 안에 그대로 둘지. 지금은 나머지 E2E와 같이 돈다.
 - [ ] `pnpm format:check`가 CI에 없다. `pnpm check`에 원래 없어서 Before와 조건을 맞추려고 그대로 뒀다.
       지금 포맷 게이트는 husky뿐이라 `--no-verify`나 웹 편집으로 들어오면 아무도 막지 않는다.
