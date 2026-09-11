@@ -14,6 +14,9 @@
     "prepare": "husky",
     "lint": "eslint .",
     "architecture:check": "vitest run fsdImportBoundaries",
+    "validate:env": "node scripts/validate-env.mjs",
+    "budget:bundle": "size-limit",
+    "budget": "pnpm validate:env && pnpm build && pnpm budget:bundle",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "APP_ORIGIN=http://127.0.0.1:3000 pnpm build && pnpm test:e2e:prebuilt",
@@ -46,6 +49,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "@size-limit/file": "^13.0.3",
     "@stryker-mutator/core": "^10.0.0",
     "@stryker-mutator/vitest-runner": "^10.0.0",
     "@tailwindcss/postcss": "^4.3.2",
@@ -64,6 +68,7 @@
     "msw": "^2.15.0",
     "prettier": "^3.8.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
+    "size-limit": "^13.0.3",
     "tailwindcss": "^4.3.2",
     "typescript": "^5",
     "vitest": "^4.1.10"

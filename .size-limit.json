@@ -1,0 +1,7 @@
+[
+  {
+    "name": "Initial client JS/CSS",
+    "path": ".next/static/chunks/*.{js,css}",
+    "limit": "340 KiB"
+  }
+]
