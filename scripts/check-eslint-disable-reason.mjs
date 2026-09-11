@@ -7,12 +7,15 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const TARGET_DIRS = ['src', 'e2e', 'scripts'];
-const FILE_EXTENSIONS = ['.ts', '.tsx'];
+// scripts/ 안의 실제 파일은 .mjs인데 .ts/.tsx만 보고 있어서 scripts/를
+// 대상에 넣어놓고도 실제로는 아무것도 검사하지 않고 있었다(2차 코드
+// 리뷰에서 발견 — validate-env.mjs의 불필요한 disable을 이 스크립트가
+// 못 잡았던 것도 이 때문이었다).
+const FILE_EXTENSIONS = ['.ts', '.tsx', '.mjs'];
 
-// 진짜 eslint-disable 지시어는 항상 주석 시작 바로 뒤에 온다
-// (// eslint-disable-next-line ... 또는 /* eslint-disable ... */).
-// 앞에 anchor를 걸어야 "이유 없는 eslint-disable을 쓰지 마세요" 같은
-// 일반 산문 주석을 지시어로 오인하지 않는다(10주차 코드 리뷰에서 발견).
+// 진짜 eslint-disable 지시어는 항상 line/block 주석 시작 바로 뒤에 온다.
+// 그 위치에 anchor를 걸어야 "이유 없이 disable 쓰지 마세요" 같은 일반
+// 산문 주석을 지시어로 오인하지 않는다(10주차 코드 리뷰에서 발견).
 const DISABLE_PATTERN =
   /(?:\/\/|\/\*)\s*eslint-disable(?:-next-line|-line)?\b/;
 const REASON_PATTERN =

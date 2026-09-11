@@ -25,9 +25,18 @@ jobs:
     # (10주차 코드 리뷰에서 발견: pull_request 조건만 있고 이 조건이
     # 빠져있어서 PR의 모든 댓글에 반응하고 있었다 — 문서에 적은 "명시적으로
     # 부를 때만"이라는 설계와 실제 동작이 달랐다.)
+    #
+    # author_association 확인 추가(2차 코드 리뷰에서 발견): 누가 댓글을
+    # 달았는지 확인 안 하면, 이 레포에 쓰기 권한 없는 아무나 "@claude"만
+    # 써도 pull-requests: write·id-token: write 권한으로 실행이 된다.
+    # OWNER/MEMBER/COLLABORATOR만 트리거 가능하도록 제한.
     if: >
       github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, '@claude')
+      contains(github.event.comment.body, '@claude') &&
+      contains(
+        fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
+        github.event.comment.author_association
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -35,6 +44,11 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          # issue_comment 이벤트는 github.sha/github.ref가 PR 브랜치가 아니라
+          # default 브랜치(main)를 가리킨다. ref를 명시 안 하면 checkout이
+          # main을 받아버려서, 지금까지 이 워크플로가 실제로는 PR 코드가
+          # 아니라 main을 리뷰하고 있었다(10주차 코드 리뷰 2차에서 발견).
+          ref: refs/pull/${{ github.event.issue.number }}/head
 
       - name: Claude Code Review
         uses: anthropics/claude-code-action@0a8d3c9443bbff909ab973b6a17a340b913f229f # v1.0.221
