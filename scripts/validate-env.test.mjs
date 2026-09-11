@@ -62,3 +62,19 @@ test('CLI validates variables loaded by Next from production environment files',
     rmSync(fixtureDirectory, { recursive: true, force: true });
   }
 });
+
+test('CLI uses the Vercel deployment environment when no mode argument is supplied', () => {
+  const origin = 'https://preview.example.com';
+  const result = spawnSync(process.execPath, [validatorPath], {
+    encoding: 'utf8',
+    env: {
+      APP_ORIGIN: origin,
+      AUTH_SESSION_SECRET: 'x'.repeat(43),
+      EXPECTED_APP_ORIGIN: origin,
+      VERCEL_ENV: 'preview',
+    },
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Environment validation passed/);
+});
