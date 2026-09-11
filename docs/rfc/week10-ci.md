@@ -1,182 +1,174 @@
-# 10주차 CI 설계와 검증 기록
+# 10주차 CI 설계 및 검증 기록
 
-이 문서는 [10주차 과제](../assignments/week-10.md)에 대한 현재 구현, 검증 근거, 남은 작업을 구분한다. CI 기본 검증과 번들 예산은 구현했지만 반복 CI 측정과 원격 자가 검증이 남아 있어 과제 전체가 완료된 상태는 아니다. 배포는 별도 작업이다.
+이 문서는 PR이 `feat/week-10`이나 `main`에 들어가기 전에 어떤 검사를 거치는지 설명한다. 반복 측정과 의도적 결함 주입 결과도 함께 기록해, 설정 파일만 읽지 않고 실제 차단 여부까지 확인할 수 있게 한다. 실행 명령은 `package.json`, 자동화 동작은 `.github/workflows/quality.yml`을 기준으로 한다.
 
-문서는 고정된 완성본이 아니다. 구현이나 정책이 바뀌면 관련 PR에서 함께 수정한다. 실행 명령은 `package.json`, 자동화 동작은 `.github/workflows/quality.yml`과 검사 스크립트를 기준으로 확인한다. 측정 결과에는 대상 commit과 환경을 남기고, 과거 결과를 새 구현의 결과로 바꿔 적지 않는다.
+## 1. 현재 결론
 
-## 1. 현재 상태
-
-| 항목 | 상태 | 근거 또는 남은 작업 |
+| 항목 | 현재 상태 | 확인 방법 |
 | --- | --- | --- |
-| test · lint · typecheck · build | 구현 | 기존 Quality workflow를 단계별로 분리 |
-| 조건부 E2E와 최종 gate | 구현 | 허용된 Markdown만 바뀐 PR에서 E2E 생략, 실행 결과 대조 |
-| 환경 변수 검사 | 일부 구현 | CI에 연결, 배포 환경 연결은 미구현 |
-| FSD 상향 import 차단 | 구현 | 실제 ESLint 설정을 정상·위반 입력으로 검증 |
-| 원격 병합 차단 | 확인 필요 | GitHub ruleset 설정과 실제 PR 실행 필요 |
-| CI 시간 최적화 | 미검증 | Before/After 및 cold/warm 반복 측정 없음 |
-| 번들 예산 게이트 | 로컬 구현 | `/`, `/products`의 gzip JS 예산과 정상·초과·CLI 실패 테스트 구현. 원격 실패·복구 증거 필요 |
-| AI 리뷰 과제 증거 | 일부 | 실제 리뷰 기록과 수용·반려 근거 정리 필요 |
-| Vercel 배포 · smoke · rollback | 미구현 | 프로젝트 연결과 배포 정책 적용 필요 |
+| 기본 품질 검사 | 적용 완료 | CI 정책, 환경, Vitest, lint, typecheck, production build, 번들 예산을 순서대로 실행 |
+| 조건부 E2E | 구현 완료, 원격 조건 검증 중 | 허용된 Markdown만 바뀌면 생략하고 소스·설정·테스트 변경에서는 실행 |
+| 병합 차단 | 적용 완료 | Ruleset `22857523`이 `main`, `feat/week-10`에 최신 base와 `merge-gate` 성공을 요구 |
+| 번들 예산 | 적용 및 원격 검증 완료 | 초과 run `34552726498`, 복구 run `34553000992` |
+| 환경 변수 검사 | CI 검증 완료, 배포 연결 미완료 | 실패 run `34554784036`, 복구 run `34554921387` |
+| CI 최적화 | 반복 측정 완료 | Chromium 다운로드 중앙값 12초에서 6초로 감소 |
+| 반복 구조 위반 | lint 규칙으로 고정 | FSD 실패 run `34553958857`, 복구 run `34554441399` |
+| Vercel | 확인 불가 | 현재 작업 환경에 프로젝트 연결과 인증 정보가 없음 |
 
-## 2. 실행 경로
+CI가 성공했다는 사실은 Preview나 Production 배포 성공을 뜻하지 않는다. 배포 환경의 origin과 session secret 검증은 Vercel 프로젝트를 연결한 뒤 별도로 완료해야 한다.
 
-Quality는 PR, `main` push, `merge_group`, 수동 실행에서 시작한다. workflow 전체에 경로 필터를 걸지 않는다.
+## 2. 품질 검사 순서
 
-1. checkout 및 Node·pnpm 설정
-2. PR 변경 파일을 읽어 E2E 실행 여부 결정
-3. `pnpm install --frozen-lockfile`
-4. `pnpm test:ci` → `pnpm validate:env ci`
-5. `pnpm test` → `pnpm lint` → `pnpm typecheck` → `pnpm build`
-6. `pnpm bundle:check`로 라우트별 JavaScript 예산 검사
-7. 필요한 경우 Playwright 시스템 의존성 설치 → Chromium 다운로드 → `pnpm test:e2e:run`
-8. `pnpm ci:gate`로 단계별 결과와 실행 계획 대조
-9. `merge-gate`에서 quality job의 성공 여부 확인
+Quality workflow는 PR, `main` push, `merge_group`, 수동 실행에서 시작한다.
 
-일반 단계는 앞 단계가 실패하면 중단한다. 결과 검사와 최종 gate는 `always()`로 실행을 시도한다. runner 종료 등으로 실행되지 못해도 성공으로 간주하지 않는다.
+1. 저장소를 checkout하고 Node.js 24.17.0과 pnpm 10.15.1을 준비한다.
+2. PR 변경 파일과 이벤트를 읽어 E2E 실행 여부를 정한다.
+3. `pnpm install --frozen-lockfile`로 lockfile과 같은 의존성을 설치한다.
+4. `pnpm test:ci`와 `pnpm validate:env ci`로 CI 정책과 환경을 검사한다.
+5. `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`를 실행한다.
+6. `pnpm bundle:check`로 `/`, `/products`의 JavaScript 예산을 검사한다.
+7. E2E가 필요하면 Playwright 시스템 의존성과 Chromium headless shell을 설치한 뒤 `pnpm test:e2e:run`을 실행한다.
+8. `pnpm ci:gate`가 필수 단계의 실패·취소·누락·예상하지 않은 생략을 거부한다.
+9. 별도 `merge-gate` job이 Quality 결과를 하나의 required check로 전달한다.
 
-Node는 `.nvmrc`, pnpm은 현재 `packageManager`와 같은 10.15.1을 사용한다. workflow의 pnpm 버전은 자동 동기화되지 않으므로 버전 변경 시 두 곳을 함께 갱신한다. quality timeout은 20분, merge-gate는 2분이다. 이는 안전 상한이지 성능 예산이나 실측 병목의 근거가 아니다.
+앞 단계가 실패하면 뒤의 일반 검사는 중단한다. 결과 검사는 `always()`로 실행해 실패 원인을 Summary에 남긴다. quality timeout은 20분, `merge-gate` timeout은 2분이다. 이 값은 러너 정지에 대비한 상한이며 성능 목표가 아니다.
 
-로컬 전체 검증은 `pnpm check`다. CI 정책 테스트, Vitest, lint, 타입 검사, 빌드, 번들 예산, E2E를 순서대로 실행하며 E2E를 생략하지 않는다. Chromium이 없다면 먼저 `pnpm exec playwright install chromium`을 실행한다. CI 환경 변수 검사는 workflow에서 별도로 실행한다.
+로컬 전체 검증 명령은 `pnpm check`다. 이 명령은 CI 정책 테스트부터 E2E까지 실행하며 E2E를 생략하지 않는다. `pnpm test:e2e:run`은 기존 production build를 사용하므로 소스를 바꾼 뒤에는 먼저 `pnpm build`를 실행해야 한다.
 
-`pnpm test:e2e`는 빌드까지 포함한다. `pnpm test:e2e:run`은 기존 production build를 사용하므로 소스를 바꾼 뒤 빌드 없이 단독 실행하면 안 된다.
+## 3. 조건부 E2E 계약
 
-## 3. E2E 생략 조건과 안전장치
-
-| 변경 또는 이벤트 | E2E |
+| 변경 또는 이벤트 | E2E 판단 |
 | --- | --- |
-| PR에서 루트 README.md, CLAUDE.md, AGENTS.md, docs 아래 Markdown만 변경 | 생략 |
-| 소스 · 설정 · 의존성 · workflow · 테스트 변경 | 실행 |
-| 허용 목록 밖의 파일 또는 빈 변경 목록 | 실행 |
-| Draft PR의 애플리케이션 변경 | 실행 |
-| PR에 run-e2e 라벨 있음 | 실행 |
-| main push · merge_group · 수동 실행 | 실행 |
-| 변경 파일 조회 실패 | job 실패, 생략으로 처리하지 않음 |
+| 루트 `README.md`, `CLAUDE.md`, `AGENTS.md`, `docs/**/*.md`만 바뀐 PR | 생략 |
+| 소스, 설정, 의존성, workflow, 테스트 변경 | 실행 |
+| 허용 목록 밖 파일이나 빈 변경 목록 | 실행 |
+| `run-e2e` 라벨이 있는 PR | 실행 |
+| `main` push, `merge_group`, 수동 실행 | 실행 |
+| 변경 파일 조회 실패 | job 실패 |
 
-`git diff base...head --name-only --no-renames -z`로 변경 목록을 읽는다. 삭제를 포함하고, 이름 변경은 이전 경로의 삭제와 새 경로의 추가로 판단한다. 공백이 있는 파일명도 NUL 구분자로 처리한다. SHA는 형식을 검사한 뒤 shell을 거치지 않고 git 인자로 전달한다.
+변경 목록은 `git diff base...head --name-only --no-renames -z`로 읽는다. 삭제와 공백이 포함된 파일명을 처리하며, SHA 형식을 검사한 뒤 shell 문자열이 아니라 git 인자로 전달한다.
 
-문서 변경에서도 test · lint · typecheck · build는 실행한다. `docs/assets/week-05-product-images.md`는 단위 테스트가 읽으므로 문서 전체를 검증 대상에서 빼지 않는다. 향후 문서를 런타임 입력으로 사용하면 E2E 허용 목록도 수정해야 한다.
+문서 전용 PR에서도 CI 정책, 환경, Vitest, lint, typecheck, production build, 번들 예산은 실행한다. E2E 관련 세 단계만 생략한다. `docs/assets/week-05-product-images.md`처럼 테스트 입력으로 쓰는 문서는 허용 목록에서 제외한다.
 
-`ci:gate`는 필수 단계의 실패, 취소, 누락, 예상하지 않은 skip을 거부한다. browser_deps, browser, E2E의 skip은 실행 계획이 명시적으로 false인 경우에만 허용한다. 계획 값 누락도 실패다.
+PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 PR 실행만 취소한다. `main` 실행에는 `cancel-in-progress: false`를 적용해 배포 후보 검증을 중간에 끊지 않는다. 실제 PR 취소 증거는 [run 34548096276](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34548096276)에 남아 있다.
 
-PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 진행 중 실행을 취소한다. main 실행에는 진행 중 취소를 적용하지 않는다. 이 설정이 별도 Vercel 배포를 취소하거나 순서를 보장하지는 않는다.
-
-## 4. 검사 규칙의 범위
+## 4. 결정적 게이트
 
 ### 환경 변수
 
-`scripts/validate-env.mjs`의 CLI는 Next 16.2.10이 의존하는 `@next/env`로 production 환경 파일과 process 환경 변수를 같은 방식으로 합친 뒤 검사한다. 테스트에서 실제 `.env.production`의 금지된 공개 변수도 감지한다. 실행 모드 local, ci, preview, production은 명시해야 한다.
+`pnpm validate:env <mode>`는 `local`, `ci`, `preview`, `production` 중 하나를 요구한다.
 
-- 공통: APP_ORIGIN은 경로·query·fragment·사용자 정보가 없는 HTTP(S) origin이어야 한다.
-- CI: localhost, 127.0.0.1, ::1 중 하나여야 한다. workflow는 Playwright 서버와 같은 http://127.0.0.1:3100을 지정한다.
-- Preview/Production: HTTPS, 검사에 등록된 loopback 호스트 금지, 독립적으로 설정한 EXPECTED_APP_ORIGIN과의 정확한 일치를 요구한다.
-- Preview/Production: 기본값이 아닌 43자 이상의 AUTH_SESSION_SECRET을 요구한다. 실제 생성 기준은 암호학적 난수 32바이트의 base64url 인코딩이다.
-- 현재 앱은 NEXT_PUBLIC_*를 사용하지 않으므로 공개 변수 허용 목록을 비워 둔다. 추가 시 용도 검토와 테스트를 함께 추가한다.
+- 모든 모드에서 `APP_ORIGIN`은 자격 증명, 경로, query, fragment가 없는 HTTP(S) origin이어야 한다.
+- CI에서는 `localhost`, `127.0.0.1`, `::1` 계열만 허용한다.
+- Preview와 Production에서는 HTTPS와 비로컬 호스트를 요구한다.
+- 배포 origin은 독립적으로 설정한 `EXPECTED_APP_ORIGIN`과 같아야 한다.
+- Preview와 Production에서는 32바이트 난수를 base64url로 인코딩한 43자 이상의 `AUTH_SESSION_SECRET`을 요구한다.
+- 현재 앱은 공개 환경 변수를 사용하지 않으므로 `NEXT_PUBLIC_*` 허용 목록은 비어 있다.
 
-오류에 변수 값을 출력하지 않는다. 길이 검사만으로 난수 품질을 증명하지 않으며, 모든 사설 주소·외부 API·환경 간 secret 재사용을 탐지하는 것도 아니다. EXPECTED_APP_ORIGIN을 같은 잘못된 값으로 복사하면 환경 혼동을 막지 못한다.
+검사 오류에는 환경 변수 값을 출력하지 않는다. 길이 검사만으로 secret의 난수성을 증명하지 못하며, 같은 잘못된 값을 `APP_ORIGIN`과 `EXPECTED_APP_ORIGIN`에 복사하면 환경 혼동을 막을 수 없다.
 
-배포 모드 검사는 아직 배포 빌드나 런타임에 연결하지 않았다. 현재 CI 성공은 실제 배포 환경의 안전성을 증명하지 않는다.
+### JavaScript 번들 예산
 
-### FSD 의존 방향
+production build가 만든 manifest에서 공통 초기 chunk와 route entry JavaScript를 찾는다. 같은 route에서 중복 경로는 한 번만 세고, 브라우저가 파일을 따로 받는 방식에 맞춰 각 파일을 gzip한 크기를 합한다.
 
-`eslint.config.mjs`의 no-restricted-imports가 `@/` alias 상향 참조를 직접 차단하고, import/no-restricted-paths가 상대 경로 상향 참조를 차단한다. 두 규칙은 src의 TypeScript 파일에서 다음 순서를 적용한다.
+| Route | Budget | 복구 run actual | 여유 |
+| --- | ---: | ---: | ---: |
+| `/` | 286,720B | 286,235B | 485B |
+| `/products` | 292,864B | 291,958B | 906B |
 
-`app → _pages → widgets → features → entities → shared`
+manifest가 없거나 필수 식별자 형식이 바뀐 경우도 실패한다. AI 리뷰에서 필수 `globalThis.__RSC_MANIFEST[` 식별자가 없어도 다른 JSON 할당문을 읽는 결함을 발견했고, `da9fea6a`에서 식별자가 없으면 즉시 실패하도록 고쳤다. 자세한 과정은 [AI 리뷰 기록](./week10-ai-review.md)에 남겼다.
 
-app → entities 같은 하향 참조는 허용한다. 같은 레이어의 slice 간 격리, Public API, analytics·test·examples·legacy 경계까지 강제하는 규칙은 아니다. 이 영역은 기존 저장소 규칙에 따라 리뷰한다.
+### FSD import 방향
 
-테스트가 `src/entities` 아래에 소유권이 분명한 임시 파일을 먼저 만든 뒤 실제 ESLint 파일 검사로 alias와 상대 경로의 entities → app 오류, entities → shared 정상 결과를 확인한다. 임시 디렉터리는 위치를 검증하고 `finally`에서 제거하며, `pnpm check`와 CI는 이 정책 테스트와 전체 lint를 순차 실행한다. 적용 중 기존 상품 목록 테스트의 _pages → app/HeaderNav 참조가 발견됐다. 헤더와 목록을 함께 검증하는 테스트를 `src/app/products/ProductListContent.test.tsx`로 옮기고 단언은 유지했다. 린트 예외를 추가하지 않았다.
+6주차 리뷰에서 `entities → app`과 `_pages → app` 역방향 참조가 반복됐다. 현재 lint는 alias를 `no-restricted-imports`, 상대 경로를 `import/no-restricted-paths`로 차단한다. 허용 방향은 `app → _pages → widgets → features → entities → shared`다.
+
+이 규칙은 레이어 간 방향만 판정한다. 같은 레이어의 slice 분리, Public API 선택, 파일 책임은 자동화하지 않고 리뷰에서 판단한다. 따라서 FSD를 별도 required job으로 만들지 않고 기존 lint와 `merge-gate` 안에 둔다.
 
 ## 5. 병합 보호와 보안
 
-YAML 파일만으로 GitHub의 병합 버튼이 차단되지는 않는다. 원격 실행 후 main ruleset에 다음 사항을 적용·확인해야 한다.
+저장소 Ruleset [`22857523`](https://github.com/manual-hue/loop-pack-fe-l2-vol1/rules/22857523)은 `refs/heads/main`과 `refs/heads/feat/week-10`에 다음 규칙을 적용한다.
 
-1. PR을 통한 변경을 요구한다.
-2. 실제 생성된 merge-gate check를 required로 지정하고 제공자를 GitHub Actions로 제한한다. 기존 required check가 있다면 새 check의 생성·성공을 확인한 뒤 전환한다.
-3. merge queue를 사용하면 merge_group 실행을 확인한다. 사용하지 않으면 **Require branches to be up to date before merging**을 활성화한다.
-4. force push와 branch 삭제를 차단하고 bypass 주체를 확인한다.
+- PR을 통한 변경을 요구한다.
+- 최신 base를 반영한 `merge-gate` 성공을 요구한다.
+- branch 삭제와 non-fast-forward push를 차단한다.
+- 승인 리뷰 수는 0으로 두되 우회 주체는 두지 않는다.
 
-Strict check는 최신 base branch를 반영한 검증을 요구한다. 설정 기능과 이용 범위는 [GitHub ruleset 문서](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets)를 따른다. 이 저장소의 원격 설정은 아직 확인하지 않았다.
+PR #2는 Ruleset 적용 후 `merge-gate`가 성공한 상태에서만 `feat/week-10`에 병합됐다. workflow는 `contents: read`만 허용하고 checkout credential을 남기지 않는다. Production secret을 PR 코드에 전달하지 않으며 `pull_request_target`도 사용하지 않는다.
 
-workflow는 contents: read, checkout의 persist-credentials: false, 기존 action의 full SHA 고정을 유지한다. PR 코드에 Production secret을 전달하지 않고 pull_request_target도 사용하지 않는다. PR에서 workflow·gate 자체를 수정할 수 있으므로 CI 정책 변경에는 사람의 리뷰가 필요하다.
+AI 리뷰와 Lighthouse는 required check에 넣지 않았다. AI 결과는 모델과 입력 문맥에 따라 달라지고, Lighthouse는 hosted runner와 네트워크 조건의 변동성이 크기 때문이다. 두 결과는 후보를 찾는 advisory 자료로만 사용하고, 실제 차단은 재현 가능한 테스트·lint·빌드·예산 검사에 맡긴다.
 
-Playwright trace와 screenshot은 인증 정보나 응답 데이터를 담을 수 있어 현재 workflow에서 artifact로 업로드하지 않는다. 향후 도입 시 수집 범위, 접근 권한, 민감 데이터, 보관 기간부터 결정한다. retry는 기존 CI 설정의 1회를 유지하며, flaky 자동 집계와 issue 생성은 구현하지 않았다.
+## 6. CI 반복 측정
 
-## 6. CI 측정과 번들 예산
+### 측정 계약
 
-현재 로그만으로 GitHub CI의 병목이나 개선율을 주장하지 않는다. 검증 job 병렬화·추가 캐시는 도입하지 않았고 기존 setup-node의 pnpm cache를 유지했다. install은 cache hit 여부와 관계없이 실행한다.
+Before와 After는 같은 애플리케이션 commit 계열, `ubuntu-latest`, Node.js 24.17.0, pnpm 10.15.1, 전체 검증과 E2E 9개를 사용했다. queue 대기는 quality 시간에서 제외하고 생성부터 최종 완료까지의 wall-clock에는 포함했다.
 
-summary에는 commit, E2E 실행 여부·이유, setup-node가 보고한 cache hit, 단계 outcome을 남긴다. 번들 검사 단계는 라우트별 actual·budget·delta를 별도 표로 남긴다. step 시간은 Actions timeline에서 확인하고 cache 복원 key와 실제 복원 성공은 setup 로그도 함께 확인한다. summary는 아직 단계별 시간 집계와 flaky 통계를 제공하지 않는다.
+`measure-ci` 라벨이 붙은 실행은 `.ci-cache-scope`에 `measurement-<run-id>`를 기록한다. 각 run의 attempt 1은 새 key라 `pnpm cache is not found`가 출력되고, attempt 2는 같은 key의 `Cache restored from key`를 확인했다. 일반 공유 캐시를 삭제하거나 lockfile을 바꾸지 않았다.
 
-### 측정 절차
+표의 단계는 `Node setup / install / CI policy / env / unit / lint / type / build / bundle / browser deps / browser / E2E` 순서이며 단위는 초다.
 
-1. 같은 애플리케이션 코드, Node·pnpm, runner 종류, 검증 목록을 가진 기준 workflow를 마련한다. 이번에 추가한 검사 비용을 최적화 효과와 섞지 않는다.
-2. Before/After 각각 cold 3회 이상, warm 3회 이상을 측정한다. E2E 생략에 따른 비용 절감은 동일 검증의 속도 개선과 분리한다.
-3. cold 반복은 각각 복원할 캐시가 없는 상태를 증명해야 한다. 같은 key로 세 번 실행하고 모두 cold라고 적지 않는다. 필요하면 별도 측정 workflow에서 실행별 격리 key와 restore fallback 없는 구성을 사용한다. 이 측정 workflow는 아직 없다.
-4. warm은 같은 key의 캐시 생성·복원을 확인한 뒤 측정한다. miss 재현은 격리된 실험에서 수행하고, 공유 캐시 삭제나 의존성 변경을 일반 비교 결과에 섞지 않는다.
-5. run URL, commit, cache key·hit, install 시간, 각 step 시간, 전체 wall-clock 원시값과 중앙값·범위를 기록한다. queue 대기 포함 여부도 동일하게 유지한다.
-6. 가장 긴 구간에 맞는 변경만 적용하고 같은 검증 조건으로 다시 측정한다.
+| 조건 | Run·attempt | Cache scope·결과 | 단계별 시간 | Quality | Wall |
+| --- | --- | --- | --- | ---: | ---: |
+| Before cold | [34548194561·1](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34548194561/attempts/1) | `measurement-34548194561` miss | `6/6/4/1/12/10/4/11/1/11/11/21` | 112 | 131 |
+| Before cold | [34549011773·1](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34549011773/attempts/1) | `measurement-34549011773` miss | `5/4/3/0/10/8/4/9/0/12/12/18` | 98 | 114 |
+| Before cold | [34549450575·1](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34549450575/attempts/1) | `measurement-34549450575` miss | `7/6/5/0/13/11/5/12/1/12/12/21` | 122 | 138 |
+| Before warm | [34548194561·2](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34548194561/attempts/2) | 같은 scope restore | `11/2/4/0/14/11/5/11/0/13/12/20` | 115 | 130 |
+| Before warm | [34549011773·2](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34549011773/attempts/2) | 같은 scope restore | `8/2/4/1/13/10/5/11/0/12/11/20` | 107 | 115 |
+| Before warm | [34549450575·2](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34549450575/attempts/2) | 같은 scope restore | `9/2/4/0/14/10/5/11/1/11/12/20` | 112 | 122 |
+| After cold | [34550075695·1](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34550075695/attempts/1) | `measurement-34550075695` miss | `7/6/4/0/13/10/5/11/0/13/6/21` | 112 | 121 |
+| After cold | [34550677128·1](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34550677128/attempts/1) | `measurement-34550677128` miss | `5/7/3/0/11/8/4/9/1/18/5/18` | 100 | 413¹ |
+| After cold | [34551453952·1](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34551453952/attempts/1) | `measurement-34551453952` miss | `6/7/4/0/12/10/4/11/0/14/6/20` | 110 | 120 |
+| After warm | [34550075695·2](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34550075695/attempts/2) | 같은 scope restore | `9/2/5/0/14/11/4/12/0/13/7/22` | 115 | 124 |
+| After warm | [34550677128·2](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34550677128/attempts/2) | 같은 scope restore | `11/2/4/1/13/11/4/12/0/12/6/22` | 109 | 118 |
+| After warm | [34551453952·2](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34551453952/attempts/2) | 같은 scope restore | `11/2/4/0/14/10/5/11/1/11/6/20` | 108 | 117 |
 
-### 번들 측정 계약
+¹ run `34550677128`은 GitHub 대기열에서 약 5분 7초를 기다렸다. quality 실행은 100초였으므로 이 대기 시간을 성능 비교에서 제외하고 raw wall-clock에만 남겼다.
 
-주요 진입점은 홈 `/`과 상품 목록 `/products`다. production build가 만든 `build-manifest.json`의 polyfill·root main chunk와 각 라우트의 client reference manifest에 기록된 entry JavaScript를 합친다. 같은 라우트에서 중복된 chunk는 한 번만 세고, 실제로 개별 전송되는 방식에 맞춰 파일마다 gzip한 크기를 더한다. 이미지 전송량과 Lighthouse 수치는 이 JavaScript 지표에 섞지 않는다.
+### 중앙값과 판단
 
-검사는 manifest가 없거나 형식이 바뀐 경우, JavaScript가 아닌 경로, build 바깥을 가리키는 경로, 필수 chunk 누락도 실패시킨다. `pnpm bundle:measure`는 측정만 하고 `pnpm bundle:check`는 actual·budget·delta를 출력한 뒤 하나라도 초과하면 종료 코드 1을 반환한다. 계산의 정상·경계·초과와 실제 CLI 실패·격리된 GitHub Summary 기록을 `node:test`로 검증한다.
+| 조건 | Before 중앙값·범위 | After 중앙값·범위 | 판단 |
+| --- | --- | --- | --- |
+| Cold quality | 112초 · 98~122초 | 110초 · 100~112초 | 2초 감소지만 범위가 겹쳐 전체 개선으로 확정하지 않음 |
+| Warm quality | 112초 · 107~115초 | 109초 · 108~115초 | 3초 감소지만 범위가 겹쳐 전체 개선으로 확정하지 않음 |
+| pnpm install | cold 6초 · 4~6초 / warm 2초 | cold 7초 · 6~7초 / warm 2초 | cache hit은 install만 줄이고 전체 병목은 아님 |
+| Chromium 다운로드 | 12초 · 11~12초 | 6초 · 5~7초 | 중앙값 6초, 50% 감소 |
+| E2E | 20~21초 중심 | 20~22초 중심 | 테스트 실행 시간은 줄지 않음 |
 
-### 기준값 복원과 예산 결정
+가장 안정적으로 줄어든 구간은 Chromium 다운로드였다. headless E2E는 전체 Chrome 184.3MiB가 필요하지 않아 `playwright install --only-shell chromium`으로 114.7MiB headless shell만 받도록 바꿨다. 전체 quality 시간은 러너 편차를 넘는 개선이라고 주장하지 않는다. 검증 범위를 줄이지 않으면서 직접 비용이 절반으로 줄었기 때문에 이 변경은 유지한다.
 
-Windows, Node.js 24.17.0, pnpm 10.15.1, Next.js 16.2.10의 production build에서 각 대상을 세 번 측정했다. chunk hash와 gzip 합계는 세 번 모두 같았다.
+## 7. 원격 실패와 복구
 
-| 대상 | commit | `/` raw | `/products` raw | 범위 |
-| --- | --- | --- | --- | --- |
-| 7주차 After | `a924f54f369719be27588b8d96a79dd9e9852373` | 211,501B × 3 | 216,253B × 3 | 두 route 모두 min=max |
-| 현재 애플리케이션 | `88414582` | 286,260B × 3 | 291,987B × 3 | 두 route 모두 min=max |
+| 검증 | 실패 | 복구 | 확인한 동작 |
+| --- | --- | --- | --- |
+| 번들 예산 | [run 34552726498](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34552726498) | [run 34553000992](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34553000992) | `/`가 539B 초과하면 bundle과 `merge-gate` 실패, 280KiB 복구 후 E2E 9개까지 성공 |
+| 환경 변수 | [PR #4, run 34554784036](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34554784036) | [run 34554921387](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34554921387) | 허용하지 않은 `NEXT_PUBLIC_*`에서 build 전 실패, 변수 제거 후 전체 성공 |
+| FSD import | [PR #3, run 34553958857](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34553958857) | [run 34554441399](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34554441399) | `entities → app`을 두 lint 규칙이 차단하고 `merge-gate`로 전파, 임시 파일 제거 후 성공 |
 
-7주차 commit은 CSS에서 `tailwindcss`를 사용하면서 직접 의존성으로 선언하지 않아 격리 설치만으로는 빌드되지 않았다. 같은 lockfile의 `tailwindcss@4.3.3`을 top-level에서 해석할 수 있게 연결한 뒤 소스 수정 없이 복원했다. 따라서 이 제약과 복원 방법을 제외하고 기준값을 재현했다고 주장하지 않는다.
+실험 PR #3과 #4는 최종 diff를 원래 상태로 복구한 뒤 병합하지 않고 닫았다. 번들 예산 실험도 마지막 커밋에서 정상값을 복구한 뒤 PR #2로 `feat/week-10`에 병합했다. 최종 코드에는 낮춘 예산, 금지 환경 변수, 위반 import가 남아 있지 않다.
 
-현재 값은 7주차보다 홈 74,759B(35.3%), 상품 목록 75,734B(35.0%) 늘었다. 8~9주차에 전역 Provider·analytics 초기화·인증·회원별 장바구니와 주문 흐름이 추가된 제품 범위 변화가 있으므로 7주차 값을 그대로 hard limit으로 사용하지 않았다. 현재 세 번의 측정값을 각각 다음 1KiB로 올린 홈 280KiB(286,720B), 상품 목록 286KiB(292,864B)를 초기 예산으로 정했다. 예산 변경은 기능 근거와 재측정값을 같은 PR에 남겨야 한다.
+docs-only와 `run-e2e` 라벨의 원격 실행 결과는 이 문서 PR에서 확인한 뒤 표에 추가한다.
 
-로컬 정상 통과는 확인했지만, 의도적 초과 PR의 실패와 복구 후 성공은 아직 원격에서 증명하지 않았다.
+## 8. 배포 연결 한계
 
-Lighthouse는 별도 환경 변동성이 있으므로 점수 한 번의 하락을 즉시 required 실패로 만들지 않는다. Lighthouse 자동 측정도 현재 미구현이다.
+현재 작업 환경에는 `.vercel` 연결 정보와 Vercel CLI 인증이 없다. 따라서 Preview URL, deployment ID, Production branch, 실제 배포 환경 변수, smoke test, rollback을 확인했다고 쓰지 않는다.
 
-## 7. Vercel 배포: CI와 별도 작업
+Vercel을 연결할 때는 다음 조건을 충족해야 한다.
 
-Vercel은 배포 후보이며 현재 프로젝트 연결·환경 설정·URL·배포 성공은 확인하지 않았다. 배포 자체는 과제의 별도 채점 대상이 아니지만 운영 회고의 근거가 된다.
+- Preview와 Production에 서로 다른 `APP_ORIGIN`, `EXPECTED_APP_ORIGIN`, `AUTH_SESSION_SECRET`을 설정한다.
+- Preview build 전에 `pnpm validate:env preview`, Production build 전에 `pnpm validate:env production`을 실행한다.
+- Production branch는 `main`으로 지정하고 같은 commit의 `merge-gate` 성공 뒤에만 승격한다.
+- 상품 목록, 비인증 주문 접근, 로그인, 주문 조회를 smoke test로 확인한다.
+- 직전 정상 deployment와 rollback 후 smoke 절차를 기록한다.
 
-Git 연동만으로 Production 배포가 main CI 성공을 기다린다고 가정하지 않는다. 동일 commit의 검사를 배포 승격 조건으로 연결해야 한다. Vercel의 [Deployment Checks](https://vercel.com/docs/deployment-checks) 또는 별도 명시적 승격 흐름 중 프로젝트에서 사용할 수 있는 방식을 확인한 뒤 구현한다.
+현재 주문 저장소는 메모리 `Map`이라 인스턴스 재시작과 다중 인스턴스 사이에서 주문을 보존하지 못한다. 배포 smoke는 이 한계를 명시한 데모 범위로만 실행하거나, 운영 전 영속 저장소로 교체해야 한다.
 
-배포 전 필수 결정과 수정 사항은 다음과 같다.
+## 9. 관련 기록
 
-- Preview와 Production의 origin·secret·외부 자원을 분리하고 배포 환경에 validator를 연결한다. CI용 로컬 주소를 복사하지 않는다.
-- `src/app/api/_data/auth.ts`의 공개된 secret fallback과 mock 계정을 운영용 인증으로 간주하지 않는다. 배포 시 secret 누락은 런타임에서도 실패해야 한다.
-- `src/app/api/_data/orderRepository.ts`의 메모리 Map은 재시작 시 사라지고 인스턴스 간 공유되지 않는다. 주문 생성과 조회가 다른 인스턴스로 가면 demo에서도 불일치가 발생한다. 일관된 주문 흐름이 필요한 배포 전 영속 저장소로 교체해야 한다.
-- 배포 commit SHA와 URL을 기록하고 상품 조회, 비인증 주문 경로의 로그인 이동, 로그인·주문 흐름을 검사한다. 쓰기 검사는 격리된 테스트 자원에서만 실행한다.
-- rollback 대상과 복구 후 smoke 검사를 정한다. 이전 코드로 돌아가도 외부 데이터 변경까지 되돌려지는 것은 아니다.
+- [10주차 AI 리뷰 기록](./week10-ai-review.md)
+- [10주 기술 회고](./week10-retrospective.md)
+- [6주차 FSD 설계와 아키텍처 리뷰](./week06-fsd.md)
+- [8주차 테스트 계획](./week08-test-plan.md)
+- [9주차 E2E 범위](./week09-e2e-scope.md)
+- [7주차 성능 측정](../week-07-performance/README.md)
 
-현재 CI 성공만으로 이 항목이 해결되거나 실제 서비스 운영이 가능하다고 보고하지 않는다.
-
-## 8. AI 리뷰와 남은 과제 증거
-
-AI 리뷰는 required check가 아니다. 저장소 규칙과 diff를 주고, 각 지적에 파일·줄, 재현 조건, 위반 규칙을 요구한다. 구조·상태 소유권·보안 경계처럼 맥락이 필요한 판단은 사람이 확인한다.
-
-이번 문서 교정에서는 실측 없는 병목 주장과 근거가 부족한 번들 임계값을 철회했다. 기존 초안의 “AI가 pnpm cache를 node_modules 복원으로 오해했고 이를 반려했다”는 표는 실제 리뷰 기록이 아니므로 삭제했다. 예시를 실제 수용·반려 증거로 제출하지 않는다.
-
-FSD 상향 참조 차단은 구현했고 정상·위반 입력으로 검사했다. 과제의 “반복 지적을 룰로 승격” 증거에는 추가로 이전 실제 지적과 현재 규칙의 연결을 제시해야 한다.
-
-완료 전 남겨야 할 증거:
-
-- GitHub에서 docs-only, 소스 변경, run-e2e, 실패·취소 시 gate 결과
-- required check와 최신 base 반영 설정의 실제 병합 차단
-- Before/After cold·warm 반복 실행과 cache hit·miss 로그
-- 번들 예산의 근거 및 초과·복구 PR
-- 환경 변수 오류와 FSD 위반의 원격 실패·복구 기록
-- 실제 AI 리뷰의 수용·반려 근거 및 룰 승격 연결
-- 10주 기술 회고; 배포했다면 URL·smoke·rollback 결과
-
-## 9. 로컬 검증 기록
-
-이번 최종 로컬 검증 환경은 Windows, Node 24.17.0, pnpm 10.15.1이다. Node는 `.nvmrc`와 `package.json`에서 같은 버전으로 고정하고 `.npmrc`의 engine-strict로 다른 버전의 설치를 거부한다. 운영체제는 CI의 Ubuntu와 다르므로 로컬 성공을 원격 성공으로 대체하지 않는다.
-
-- 현재 변경은 Node 24.17.0과 pnpm 10.15.1로 `pnpm check`의 각 명령을 같은 순서로 실행했다. CI·번들·환경·ESLint·도구 버전 테스트 15개, Vitest 40파일 186개, lint, typecheck, production build, 번들 예산, E2E 9개가 통과했다. Codex 실행 환경의 pnpm 전환 프록시가 오프라인 서명 조회를 시도해 단일 wrapper 명령은 실행하지 못했으며, 3100 포트의 기존 사용자 프로세스를 보존하려고 E2E는 3101에서 실행했다.
-- PR의 Ubuntu 실행에서 side-effect import를 사용한 가상 FSD 검사가 위반을 감지하지 못해 gate가 실패했다. 실제 코드와 같은 named import를 사용하고 적용된 설정 자체도 단언하도록 수정했다.
-- workflow는 실제 GitHub PR에서 실행했다. ruleset 변경과 Vercel 배포는 아직 포함하지 않았다.
+최종 로컬 검증은 Node.js 24.17.0과 pnpm 10.15.1에서 `pnpm check`로 실행한다. Windows 성공은 Ubuntu Actions 결과를 대신하지 않으므로, 문서 PR에서도 `quality`와 required `merge-gate` 성공을 별도로 확인한다.

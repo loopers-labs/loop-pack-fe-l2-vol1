@@ -28,6 +28,9 @@ GitHub Actions는 검증을 단계별로 실행하고 CI 환경 변수도 검사
 ## 기술 개선 기록
 
 - [7주차 — 초기 로딩 성능과 목록 상태 설계](./docs/week-07-performance/README.md)
+- [10주차 — CI 설계 및 검증 기록](./docs/rfc/week10-ci.md)
+- [10주차 — AI 코드 리뷰 기록](./docs/rfc/week10-ai-review.md)
+- [10주 기술 회고](./docs/rfc/week10-retrospective.md)
 
 ## 구조 (최소 골격)
 
