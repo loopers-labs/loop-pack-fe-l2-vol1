@@ -11,6 +11,42 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import testingLibrary from 'eslint-plugin-testing-library';
 import tseslint from 'typescript-eslint';
 
+// 날짜를 로케일 문자열로 직접 만들면 표시 결과가 실행 환경의 타임존을 따라간다.
+// 구현과 테스트가 같은 식을 호출하면 CI(UTC)와 로컬(KST)이 서로 다른 값을 단언하면서
+// 양쪽 다 통과한다 — 화면이 틀린 시각을 보여줘도 빨간불이 뜨지 않는다.
+// 표시 타임존을 고정한 shared/format-datetime의 포맷터만 쓴다.
+const LOCALE_DATE_MESSAGE =
+  '표시 타임존이 실행 환경을 따라갑니다. shared/format-datetime의 포맷터를 쓰세요.';
+const LOCALE_DATE_SELECTORS = [
+  {
+    // toLocaleDateString · toLocaleTimeString은 Date에만 있어 수신자를 따질 필요가 없다.
+    selector:
+      'CallExpression[callee.property.name=/^toLocale(Date|Time)String$/]',
+    message: LOCALE_DATE_MESSAGE,
+  },
+  {
+    // toLocaleString은 Number에도 있다(금액 표시). 수신자가 new Date()일 때만 막는다.
+    selector:
+      "CallExpression[callee.object.type='NewExpression'][callee.object.callee.name='Date'][callee.property.name='toLocaleString']",
+    message: LOCALE_DATE_MESSAGE,
+  },
+];
+
+// flat config에서 뒤 블록의 같은 규칙은 앞 블록을 통째로 덮는다.
+// 테스트 블록이 no-restricted-syntax를 다시 정의하므로 거기에도 같이 실어야 한다.
+const TEST_ASSERTION_SELECTORS = [
+  {
+    selector:
+      'CallExpression[callee.property.name=/^(toBeTruthy|toBeDefined)$/]',
+    message: '값 · 개수 · 텍스트로 단언합니다.',
+  },
+  {
+    selector:
+      "CallExpression[callee.property.name='toBeNull'][callee.object.property.name='not']",
+    message: '값 · 개수 · 텍스트로 단언합니다.',
+  },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -234,6 +270,15 @@ export default tseslint.config(
     },
   },
   {
+    // 날짜 표시 하네스 — 위 LOCALE_DATE_SELECTORS 주석 참고.
+    // 포맷터 자신은 타임존을 고정하는 곳이라 대상에서 뺀다.
+    files: ['{src,tests,e2e,scripts}/**/*.{ts,tsx}'],
+    ignores: ['src/shared/format-datetime.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', ...LOCALE_DATE_SELECTORS],
+    },
+  },
+  {
     // 테스트 규칙 하네스 — .claude/rules/testing.md 중 기계로 잡을 수 있는 것.
     // 비활성화·단언 없음·truthiness 단언은 문장 규칙이 아니라 린트 에러로 막는다.
     files: ['{src,tests}/**/*.test.{ts,tsx}'],
@@ -246,16 +291,8 @@ export default tseslint.config(
       'vitest/expect-expect': 'error',
       'no-restricted-syntax': [
         'error',
-        {
-          selector:
-            'CallExpression[callee.property.name=/^(toBeTruthy|toBeDefined)$/]',
-          message: '값 · 개수 · 텍스트로 단언합니다.',
-        },
-        {
-          selector:
-            "CallExpression[callee.property.name='toBeNull'][callee.object.property.name='not']",
-          message: '값 · 개수 · 텍스트로 단언합니다.',
-        },
+        ...TEST_ASSERTION_SELECTORS,
+        ...LOCALE_DATE_SELECTORS,
       ],
     },
   },

@@ -25,6 +25,7 @@ type CartState = {
   actions: {
     toggle: (productId: string) => void;
     toggleChecked: (productId: string) => void;
+    setAllChecked: (checked: boolean) => void;
     setQuantity: (productId: string, quantity: number) => void;
     removeItems: (productIds: string[]) => void;
   };
@@ -103,6 +104,10 @@ export const useCartStore = create<CartState>()(
             ),
           }));
         },
+        setAllChecked: (checked) =>
+          set((state) => ({
+            items: state.items.map((item) => ({ ...item, checked })),
+          })),
         setQuantity: (productId, quantity) => {
           if (!isValidQuantity(quantity)) return;
 

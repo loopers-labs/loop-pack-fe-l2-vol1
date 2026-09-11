@@ -37,6 +37,11 @@
 ## 코드 규칙
 
 - 코드 작성은 @CONVENTIONS.md 를 따른다.
+- 테스트를 쓰면 [testing.md](.claude/rules/testing.md), 화면을 그리면 [rendering.md](.claude/rules/rendering.md), 성능을 이유로 들면 [performance.md](.claude/rules/performance.md)를 함께 읽는다.
+- 상태나 캐시를 손대면 [state-data.md](.claude/rules/state-data.md)를 함께 읽는다.
+- E2E 범위를 정하거나 포함·제외 근거를 검토하면 [e2e-scope-review](.claude/skills/e2e-scope-review/SKILL.md)를, 상태를 어디에 둘지 정하기 전에는 [state-design-review](.claude/skills/state-design-review/SKILL.md)를 읽는다.
+- 무엇을 테스트할지, 어느 층에서 볼지 정하기 전에는 [test-design-review](.claude/skills/test-design-review/SKILL.md)를 읽는다.
+- CI workflow나 그 호출 스크립트를 바꾸거나 검토하면 [workflow-review](.claude/skills/workflow-review/SKILL.md)를 읽는다.
 
 ## 명령어
 
@@ -48,5 +53,6 @@
 | `pnpm build`         | 프로덕션 빌드                |
 | `pnpm start`         | 빌드 결과 실행               |
 | `pnpm lint`          | ESLint 검사                  |
+| `pnpm typecheck`     | 타입 검사                    |
 | `pnpm test`          | 단위·통합 테스트             |
 | `pnpm test:mutation` | 뮤테이션 테스팅 (수동, 느림) |

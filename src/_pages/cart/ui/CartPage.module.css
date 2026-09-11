@@ -4,6 +4,17 @@
   align-items: flex-start;
 }
 
+.selectAllRow {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.selectAllLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .list {
   flex: 1;
   margin: 0;
@@ -90,15 +101,16 @@
 }
 
 .quantity {
-  min-width: 36px;
+  width: 64px;
+  height: 32px;
+  padding: 0 4px;
+  color: inherit;
+  background: var(--background);
+  border: none;
   text-align: center;
   font-size: 14px;
   border-left: 1px solid #eef1f4;
   border-right: 1px solid #eef1f4;
-  align-self: stretch;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .removeButton {

@@ -1,0 +1,45 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:3000/", "http://localhost:3000/products"],
+      "numberOfRuns": 3,
+      "startServerCommand": "pnpm start",
+      "startServerReadyPattern": "Ready",
+      "settings": { "preset": "desktop" }
+    },
+    "assert": {
+      "assertMatrix": [
+        {
+          "matchingUrlPattern": "^http://localhost:3000/$",
+          "assertions": {
+            "largest-contentful-paint": [
+              "error",
+              { "maxNumericValue": 680, "aggregationMethod": "median" }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              { "maxNumericValue": 0.08, "aggregationMethod": "median" }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^http://localhost:3000/products$",
+          "assertions": {
+            "largest-contentful-paint": [
+              "error",
+              { "maxNumericValue": 832, "aggregationMethod": "median" }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              { "maxNumericValue": 0.01, "aggregationMethod": "median" }
+            ]
+          }
+        }
+      ]
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "reports/lighthouse"
+    }
+  }
+}

@@ -1,26 +1,105 @@
 name: Quality
 
-"on":
+# 실행 정책:
+# - 모든 PR: lint·typecheck·unit 전체·CLI integration 전체·변경 관련 앱 integration·빌드용 env 검증→production build→번들 예산 검사→서버 env 실행 검사
+#   (CI는 .env.example 값으로 검증하고, 배포로 이어지는 Vercel 원격 빌드가 각 환경의 실제 값으로 재검증)
+#   결과는 job summary(상세)와 PR 코멘트 하나(핵심)로 표시한다 — 표시를 위해 검사를 다시 돌리지 않는다.
+# - main 대상 · non-draft · 런타임 변경 PR: + 핵심 E2E(@critical 3개)
+# - main push: 전체 검증(통합·E2E 5종) 성공 후 같은 SHA를 Production에 배포
+# - 주 1회 schedule은 main, 수동 dispatch는 선택한 브랜치: 전체 검증 + Lighthouse, 배포 없음
+'on':
   push:
     branches:
       - main
   pull_request:
+    # edited: base 변경 재판정, ready_for_review/converted_to_draft: draft 전환 재판정.
+    # edited는 제목·본문 수정에도 발생하지만 낡은 run은 concurrency가 취소한다.
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - ready_for_review
+      - converted_to_draft
+  schedule:
+    # 매주 월요일 03:30 KST (일요일 18:30 UTC) — 주초 시작 전 감시, 정시 피크 회피
+    - cron: '30 18 * * 0'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# PR의 연속 push는 이전 run을 취소해 러너 낭비를 막는다.
+# PR 외 이벤트(push·schedule·dispatch)는 run마다 고유 그룹(run_id)이라 취소도 대기 탈락도 불가능하다
+# — cancel-in-progress: false만으로는 "대기 중" run이 다음 push에 밀려 취소된다(머지 직후 검증 누락 사고).
+concurrency:
+  # Actions 표현식엔 case·삼항이 없어 &&/|| 관용구를 쓴다 (github.ref는 항상 truthy라 안전).
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  quality:
+  # PR diff를 base 대비 판별해 문서/런타임을 분류한다.
+  # 조회 실패·목록 누락은 이 job의 실패이고, guard가 그대로 병합 차단으로 전파한다.
+  changes:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      runtime: ${{ steps.classify.outputs.runtime }}
+      runtime-files: ${{ steps.classify.outputs.runtime_files }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+      - name: Detect changed files
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          list-files: json
+          # 앱·빌드·테스트 입력이 아님을 확인한 문서 Markdown·루트 안내 문서만 docs다.
+          # 나머지 전부(미분류 포함)가 런타임 — classify-changes.mjs가 all-docs 집합 차로 계산한다.
+          filters: |
+            all:
+              - "**"
+            docs:
+              - "docs/**/*.md"
+              - "specs/**/*.md"
+              - "README.md"
+              - "AGENTS.md"
+              - "CLAUDE.md"
+              - "CONVENTIONS.md"
+              - "LICENSE"
+      - name: Classify changes
+        id: classify
+        env:
+          ALL_FILES: ${{ steps.filter.outputs.all_files }}
+          DOCS_FILES: ${{ steps.filter.outputs.docs_files }}
+          # API의 파일 목록은 최대 3,000개에서 잘린다 — PR의 실제 변경 수와 대조해 잘림을 검출한다.
+          EXPECTED_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+        run: node scripts/week-10-ci/classify-changes.mjs
+
+  checks:
+    needs: changes
+    # push·schedule·dispatch에서는 changes가 의도적으로 skip된다.
+    # changes가 실패(판별 실패)해도 기본 검사(unit·CLI integration·lint·typecheck)는 모든 PR에서 실행한다 —
+    # 마지막의 관련 integration step이 빈 판별 입력으로 실패해 checks가 빨간불이 되고,
+    # guard도 판별 실패를 실패로 보고한다.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    # 파일별 선택 프로브(파일당 수 초) + 관련 합집합 1회 또는 전체 폴백을 수용하는 값.
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # pnpm 버전은 package.json의 packageManager가 단일 출처다.
       - name: Set up pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          version: 10.15.1
       - name: Set up Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
@@ -28,10 +107,318 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
+      - name: Unit tests (전체)
+        run: pnpm test:unit
+      - name: CLI integration tests (전체)
+        if: github.event_name == 'pull_request'
+        run: pnpm test:integration:cli
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      # 판별 실패 시에도 위의 기본 검사는 이미 끝난 뒤 이 step만 실패하도록 마지막에 둔다.
+      - name: App integration tests (변경 관련)
+        if: github.event_name == 'pull_request'
+        env:
+          RUNTIME_FILES: ${{ needs.changes.outputs.runtime-files }}
+        run: node scripts/week-10-ci/related-integration.mjs
+      - name: Integration tests (전체)
+        if: github.event_name != 'pull_request'
+        run: pnpm test:integration
+
+  build-e2e:
+    needs: changes
+    # changes가 실패해도 build는 모든 PR에서 실행한다. 핵심 E2E는 판정 불가로 생략되고
+    # guard가 판별 실패를 실패로 보고해 병합을 차단한다.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    # PR은 핵심 E2E까지 15분이면 충분하지만, push·정기·수동은 전체 E2E 5종에
+    # Lighthouse(2URL×3회)·캐시 miss 브라우저 설치까지 쌓여 예산을 더 준다.
+    # 첫 schedule run 실측으로 교정한다.
+    timeout-minutes: ${{ github.event_name == 'pull_request' && 15 || 30 }}
+    outputs:
+      core-e2e-expected: ${{ steps.e2e-scope.outputs.core }}
+      core-e2e-reason: ${{ steps.e2e-scope.outputs.reason }}
+      core-e2e-outcome: ${{ steps.core-e2e.outcome }}
+      full-e2e-outcome: ${{ steps.full-e2e.outcome }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # pnpm 버전은 package.json의 packageManager가 단일 출처다.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # 핵심 E2E 조건: main 대상 AND non-draft AND 런타임 관련 변경.
+      # 문서 전용·draft·main 외 PR은 브라우저 준비와 E2E만 생략하고 build는 유지한다.
+      # 조건은 decide-e2e-scope.mjs 한 곳에만 있다 — guard는 재계산하지 않고 이 결정을 검증한다.
+      - name: Decide E2E scope
+        id: e2e-scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+          RUNTIME: ${{ needs.changes.outputs.runtime }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+        run: node scripts/week-10-ci/decide-e2e-scope.mjs
+      - name: Get Playwright version
+        id: playwright-version
+        if: steps.e2e-scope.outputs.browsers == 'true'
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        if: steps.e2e-scope.outputs.browsers == 'true'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+      - name: Install Playwright browsers
+        if: steps.e2e-scope.outputs.browsers == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright OS deps
+        if: steps.e2e-scope.outputs.browsers == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      # pnpm build는 next.config의 빌드용 env 검증 후 production build를 진행하고,
+      # build 후에는 기존 산출물로 서버 env 실행 검사를 한다 — draft·문서 전용도 실행한다.
+      # 이 빌드는 배포되지 않아 로컬 템플릿(.env.example) 값으로 검증 경로까지 실행한다
+      # — 새 변수는 템플릿·스키마만 고치면 되고, 템플릿이 낡으면 이 빌드가 실패해 드러난다.
+      # 배포 빌드는 실제 빌드용 값으로, 서버 시작은 instrumentation에서 실제 서버용 값으로 검증한다.
+      # 성공 기록은 여기서 남기지 않는다 — 뒤의 서버 env 실행 검사가 두 단계를 묶어
+      # 한 번만 기록한다. 빌드용 실패는 검증기가 그 자리에서 변수명·이유와 함께 남긴다.
+      - name: Build
+        id: build
         run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
+          cp .env.example .env
+          pnpm build
+      # "이 PR이 얼마나 늘렸나"를 코멘트에 싣기 위한 기준선. main push가 남긴 측정값을 받아온다.
+      # base SHA가 정확히 맞으면 그것을, 없으면 가장 최근 main 측정을 쓴다. 없어도 판정은 그대로다.
+      - name: Restore main budget baseline
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: baseline
+          key: budget-baseline-main-${{ github.event.pull_request.base.sha }}
+          restore-keys: budget-baseline-main-
+      # 예산 검사는 build와 분리된 step이다 — build는 산출물을 만들고, 이 step이 정책으로 판정한다.
+      # draft·문서 전용·캐시 hit도 예외 없이 실행한다. 실패는 build-e2e 실패 → guard 실패로 전파된다.
+      - name: Bundle budget
+        id: budget
+        run: pnpm check:budget
+      - name: Save main budget baseline
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p baseline
+          cp reports/budget.json baseline/budget.json
+      - name: Cache main budget baseline
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: baseline
+          key: budget-baseline-main-${{ github.sha }}
+      # 예산 초과여도 서버 env는 계속 판정한다 — 코멘트가 예산만 빨간불로,
+      # env는 실제 결과로 보이도록. build 실패로 산출물이 없을 때만 생략한다.
+      - name: Server env lifecycle
+        id: env-lifecycle
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: node scripts/week-10-ci/check-env-lifecycle.mjs
+      # PR Comment workflow가 재측정 없이 같은 결과를 게시하도록 넘긴다.
+      # 실패해도 남은 결과는 올린다 — 없는 항목은 코멘트가 미측정으로 표시한다.
+      - name: Upload gate reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gate-reports
+          path: |
+            reports/budget.md
+            reports/budget.json
+            reports/env.md
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Core E2E (@critical)
+        id: core-e2e
+        if: steps.e2e-scope.outputs.core == 'true'
+        env:
+          # 핵심 스펙을 추가·제거하면 이 기대값도 함께 바꾼다. 실행 후 JSON 리포트로
+          # 실제 실행·통과 수를 대조해 태그 누락·0개 선택·격리(skip·fixme·fail 마킹)를 성공으로 두지 않는다.
+          CRITICAL_EXPECTED: 3
+          MODE: core
+        run: |
+          pnpm exec playwright test --grep @critical
+          node scripts/week-10-ci/assert-e2e.mjs
+      - name: Full E2E
+        id: full-e2e
+        if: steps.e2e-scope.outputs.full == 'true'
+        env:
+          MODE: full
+        run: |
+          pnpm test:e2e
+          node scripts/week-10-ci/assert-e2e.mjs
+      # E2E가 실제로 돌았는지(계획됐어도 build 실패 등으로 스킵되면 false)를 한 곳에서 계산한다.
+      - name: Record E2E ran
+        id: e2e-ran
+        if: ${{ !cancelled() }}
+        run: echo "ran=${{ steps.core-e2e.conclusion != 'skipped' || steps.full-e2e.conclusion != 'skipped' }}" >> "$GITHUB_OUTPUT"
+      - name: E2E summary
+        if: ${{ !cancelled() && steps.e2e-ran.outputs.ran == 'true' }}
+        run: node scripts/week-10-ci/e2e-summary.mjs
+      # 실패 시에도 리포트·trace를 남긴다. 인증 storageState(.auth)는 제외한다.
+      - name: Upload E2E artifacts
+        if: ${{ !cancelled() && steps.e2e-ran.outputs.ran == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report
+            reports/e2e-results.json
+            test-results
+            !test-results/**/.auth/**
+          retention-days: 7
+      # Lighthouse는 정기·수동 검증 전용이다 — 변동성이 있어 PR required·배포 게이트로 쓰지 않는다.
+      # 홈·상품 목록을 각 3회 측정한다.
+      # 성능 리포트는 독립 산출물이라 E2E가 실패한 주간에도 수집한다 (build 성공이 전제).
+      - name: Lighthouse CI
+        id: lighthouse
+        if: ${{ !cancelled() && steps.build.conclusion == 'success' && steps.e2e-scope.outputs.periodic == 'true' }}
+        env:
+          # lhci가 아니라 lhci의 startServerCommand(pnpm start)로 뜨는 앱 서버가 읽는 값이다.
+          APP_ORIGIN: http://localhost:3000
+        run: pnpm dlx @lhci/cli@0.15.1 autorun
+      - name: Upload Lighthouse reports
+        if: ${{ !cancelled() && steps.lighthouse.conclusion != 'skipped' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/lighthouse
+          retention-days: 30
+
+  # 앞선 결과와 생략 이유를 대조해 최종 성공·실패를 보고하는 required용 job.
+  # 테스트를 다시 돌리지 않는다. always()는 실행 조건일 뿐 무조건 성공이 아니다 —
+  # 필요한 검증의 실패·취소·예상 밖 생략은 성공으로 바뀌지 않는다.
+  guard:
+    needs: [changes, checks, build-e2e]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Evaluate results
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          BUILD_E2E_RESULT: ${{ needs.build-e2e.result }}
+          RUNTIME: ${{ needs.changes.outputs.runtime }}
+          CORE_EXPECTED: ${{ needs.build-e2e.outputs.core-e2e-expected }}
+          CORE_OUTCOME: ${{ needs.build-e2e.outputs.core-e2e-outcome }}
+          CORE_SKIP_REASON: ${{ needs.build-e2e.outputs.core-e2e-reason }}
+        run: |
+          fail() {
+            echo "::error::guard 실패 — $1"
+            echo "## guard: FAIL — $1" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          [ "$CHANGES_RESULT" = "success" ] || fail "변경 판별이 성공하지 않았다 (${CHANGES_RESULT})"
+          [ "$CHECKS_RESULT" = "success" ] || fail "기본 checks가 성공하지 않았다 (${CHECKS_RESULT})"
+          [ "$BUILD_E2E_RESULT" = "success" ] || fail "build·E2E job이 성공하지 않았다 (${BUILD_E2E_RESULT})"
+          if [ "$RUNTIME" != "true" ] && [ "$RUNTIME" != "false" ]; then
+            fail "판별 성공인데 runtime 출력이 비었다('${RUNTIME}') — 출력 누락을 생략 성공으로 바꾸지 않는다"
           fi
-      - name: Run quality checks
-        run: pnpm check
+
+          # 실행 조건은 decide-e2e-scope.mjs가 판정하고 진리표 정책 테스트가 지킨다.
+          # guard는 재계산하지 않고, 선언된 결정이 실제 outcome과 맞는지만 대조한다 —
+          # 조건 버그로 인한 침묵 생략을 여기서 잡는다.
+          case "$CORE_EXPECTED" in
+            true|false) ;;
+            *) fail "핵심 E2E 결정이 true/false가 아니다('${CORE_EXPECTED}') — 출력 누락을 생략 성공으로 바꾸지 않는다" ;;
+          esac
+          if [ "$CORE_EXPECTED" = "true" ]; then
+            [ "$CORE_OUTCOME" = "success" ] || fail "핵심 E2E가 성공이 아니다 (${CORE_OUTCOME})"
+            echo "## guard: PASS — 핵심 E2E 실행·성공" >> "$GITHUB_STEP_SUMMARY"
+          else
+            [ "$CORE_OUTCOME" = "skipped" ] || fail "핵심 E2E가 조건 밖에서 실행됐다 (${CORE_OUTCOME}) — 조건 버그"
+            echo "## guard: PASS — 핵심 E2E 의도적 생략 (${CORE_SKIP_REASON})" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # 결과 게시는 PR Comment workflow(workflow_run)가 맡는다 — 이 workflow의 job은
+  # PR 코드를 실행하므로 pull-requests: write를 주지 않는다.
+
+  # main에 병합된 SHA가 전체 검증(checks + build + 전체 E2E)을 통과해야 Production을 게시한다.
+  # PR·schedule·dispatch에서는 실행되지 않아 배포 자격 증명을 쓰지 않는다.
+  deploy:
+    needs: [checks, build-e2e]
+    # 암묵 success()는 skip된 조상 job(changes)의 전파 규칙에 좌우되므로,
+    # 직접 의존 두 job의 성공을 명시적으로 검사해 배포 조건을 결정적으로 만든다.
+    # full E2E step outcome도 대조해, 조건 버그로 E2E가 생략된 성공 job이 배포로 이어지지 않게 한다.
+    if: ${{ !cancelled() && needs.checks.result == 'success' && needs.build-e2e.result == 'success' && needs.build-e2e.outputs.full-e2e-outcome == 'success' && github.event_name == 'push' && github.repository == 'heeji289/loop-pack-fe-l2-vol1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # 게시를 직렬화한다. queue 기본값(single)은 pending 1개만 유지해, 늦게 도착한 과거 run이
+    # 대기 중인 최신 배포를 밀어낼 수 있어 max로 넓힌다. 최신성은 아래 freshness 검사가 판정한다.
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # pnpm 버전은 package.json의 packageManager가 단일 출처다.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+      # 오래된 run의 늦은 완료가 최신 Production을 덮지 않게 한다.
+      # ls-remote와 게시 사이 수 초의 race는 남는다. 문제가 되면 배포 후 alias 대조로 승격.
+      - name: Skip if main moved on
+        id: freshness
+        run: |
+          latest=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)
+          if [ -z "$latest" ]; then
+            echo "::error::main head 조회 실패 — 최신성 판정 없이 배포하지 않는다."
+            exit 1
+          fi
+          if [ "$latest" != "$GITHUB_SHA" ]; then
+            echo "::notice::main이 ${latest}로 전진했다 — 이 run(${GITHUB_SHA})은 배포를 건너뛴다."
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Verify and promote Vercel Production candidate
+        if: steps.freshness.outputs.superseded != 'true'
+        env:
+          VERCEL_CLI: vercel@59.14.0
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::error::Vercel secrets(TOKEN·ORG_ID·PROJECT_ID) 중 빈 값이 있다 — 배포 단계를 침묵 통과로 바꾸지 않는다."
+            exit 1
+          fi
+          # 소스를 올려 Vercel 원격 빌드로 배포한다 — 시크릿을 러너로 내려받지 않아
+          # Sensitive 값이 [SENSITIVE] 자리표시자로 로컬 빌드에 새는 경로가 없다.
+          deployment=$(pnpm dlx "$VERCEL_CLI" deploy --prod --skip-domain --yes --non-interactive --json --token="$VERCEL_TOKEN")
+          url=$(printf '%s' "$deployment" | jq -er '.deployment.url')
+          node scripts/week-10-ci/check-deployment.mjs "$url"
+          # 후보 검증 중 main이 전진했다면 운영 도메인을 바꾸지 않는다.
+          latest=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)
+          if [ -z "$latest" ]; then
+            echo "::error::승격 전 main SHA를 확인하지 못했다."
+            exit 1
+          fi
+          if [ "$latest" != "$GITHUB_SHA" ]; then
+            echo "::notice::main이 전진해 검증한 후보의 승격을 생략한다."
+            exit 0
+          fi
+          pnpm dlx "$VERCEL_CLI" promote "$url" --yes --token="$VERCEL_TOKEN"
+          {
+            echo "## Production 배포"
+            echo "- 검증·배포 SHA: \`${GITHUB_SHA}\`"
+            echo "- URL: ${url}"
+          } >> "$GITHUB_STEP_SUMMARY"

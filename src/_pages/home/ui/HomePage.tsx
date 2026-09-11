@@ -16,7 +16,7 @@ import { makeQueryClient } from '@/shared/query-client';
 export function HomePage() {
   return (
     <>
-      <section className={styles.hero} aria-label="이번 주의 발견">
+      <section className={styles.hero} aria-labelledby="home-hero-title">
         <Image
           className={styles.image}
           src="/images/week-07/hero-original.jpg"
@@ -28,7 +28,10 @@ export function HomePage() {
         />
 
         <div className={styles.copy}>
-          <p className={styles.eyebrow}>이번 주의 발견</p>
+          {/* 조회 결과인 banner 제목은 h2라, 대기 없이 나오는 이 문구가 홈의 h1이다. */}
+          <h1 id="home-hero-title" className={styles.eyebrow}>
+            이번 주의 발견
+          </h1>
 
           <Suspense>
             <HeroCopy />

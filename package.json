@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "check:budget": "node scripts/week-10-ci/check-budget.mjs",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -17,9 +18,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:unit": "vitest run --project unit-node --project unit-jsdom",
+    "test:integration": "vitest run --project integration-node --project integration-jsdom --project integration-cli",
+    "test:integration:cli": "vitest run --project integration-cli",
     "test:e2e": "playwright test",
     "test:mutation": "stryker run",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm check:budget && pnpm test:e2e",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -38,6 +42,7 @@
     "nuqs": "^2.9.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "zod": "^4.6.1",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
@@ -45,6 +50,7 @@
     "@eslint/js": "^10.0.1",
     "@next/eslint-plugin-next": "16.2.10",
     "@playwright/test": "^1.61.1",
+    "@size-limit/file": "^13.0.3",
     "@stryker-mutator/core": "^10.0.0",
     "@stryker-mutator/vitest-runner": "^10.0.0",
     "@stylistic/eslint-plugin": "^5.10.0",
@@ -71,6 +77,7 @@
     "msw": "^2.15.0",
     "postcss": "^8.5.16",
     "prettier": "^3.9.4",
+    "size-limit": "^13.0.3",
     "tailwindcss": "^4.3.2",
     "typescript": "^5",
     "typescript-eslint": "^8.63.0",

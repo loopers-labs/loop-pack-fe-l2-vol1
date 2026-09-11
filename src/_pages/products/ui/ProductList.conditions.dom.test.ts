@@ -76,8 +76,9 @@ describe('카테고리 변경', () => {
     await user.selectOptions(filter('카테고리'), option('홈'));
 
     expect(filter('카테고리')).toHaveValue('home');
+    // 이전 개수를 그대로 두되 갱신 중임을 같은 줄에서 알린다
     expect(
-      screen.getByText(totalCountText(PRODUCTS.length)),
+      screen.getByText(`${totalCountText(PRODUCTS.length)} · 갱신 중`),
     ).toBeInTheDocument();
     expect(productHeading(otherProducts[0].name)).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();

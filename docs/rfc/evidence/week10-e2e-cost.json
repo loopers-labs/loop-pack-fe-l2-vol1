@@ -1,0 +1,4647 @@
+{
+  "local": {
+    "sha": "66b3e83a4da91ed01a5f69078b18e2b966dc792e",
+    "date": "2026-09-10T18:06:00.285850+00:00",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "node": "v24.17.0",
+    "pnpm": "10.15.1",
+    "workers": 2,
+    "retries": 2,
+    "build_id": "1T2A-ERKyMRxYopYMjkS_",
+    "lock_sha256": "1f7ddb060b3c1443a3cd70c3d396e3f339de4d4af4064a160c7abcbc4a5c10f2",
+    "runs": [
+      {
+        "mode": "core",
+        "phase": "warmup",
+        "index": 1,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2",
+          "--grep",
+          "@critical"
+        ],
+        "elapsed_ms": 9845.444958,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:06:02.053Z",
+          "duration": 8585.803,
+          "expected": 3,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1425,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2002,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 4627,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "full",
+        "phase": "warmup",
+        "index": 2,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2"
+        ],
+        "elapsed_ms": 18570.553834,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:06:11.223Z",
+          "duration": 17951.251999999997,
+          "expected": 16,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 943,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1036,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫히면 풀린다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 535,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 153,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "열린 다이얼로그(포탈)가 페이지 컨텐츠 위를 실제로 덮는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 160,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3699,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "필터를 바꾸면 주소에 남고, 그 주소로 다시 들어가도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2016,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "범위를 벗어난 페이지로 들어가면 마지막 페이지로 보정된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2043,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "뒤로 가면 이전 조건이, 앞으로 가면 바꾼 조건이 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1520,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "페이지 보정은 히스토리에 남지 않아 뒤로 가면 원래 있던 곳으로 나간다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1701,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "조건을 바꾸고 새로고침해도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1977,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "정렬과 페이지를 함께 바꾼 뒤 새로고침해도 둘 다 살아남는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3976,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "목록에서 담으면 헤더 숫자가 오른다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 676,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "담은 상품은 새로고침해도 남아 있다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1577,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "세션이 만료되면 로그인으로 가고, 재로그인하면 보호 경로로 돌아오며 다음 만료도 처리한다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 850,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "주문서에서 만료돼도 재로그인하면 checkout draft가 복원된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 4657,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "core",
+        "phase": "measured",
+        "index": 1,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2",
+          "--grep",
+          "@critical"
+        ],
+        "elapsed_ms": 7756.920084,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:06:30.068Z",
+          "duration": 6859.873,
+          "expected": 3,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1506,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1158,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3814,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "full",
+        "phase": "measured",
+        "index": 2,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2"
+        ],
+        "elapsed_ms": 19039.25625,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:06:37.599Z",
+          "duration": 18393.888,
+          "expected": 16,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1401,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1092,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫히면 풀린다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 783,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 162,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "열린 다이얼로그(포탈)가 페이지 컨텐츠 위를 실제로 덮는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 547,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 4002,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "필터를 바꾸면 주소에 남고, 그 주소로 다시 들어가도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2265,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "범위를 벗어난 페이지로 들어가면 마지막 페이지로 보정된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2154,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "뒤로 가면 이전 조건이, 앞으로 가면 바꾼 조건이 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1619,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "페이지 보정은 히스토리에 남지 않아 뒤로 가면 원래 있던 곳으로 나간다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1801,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "조건을 바꾸고 새로고침해도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2100,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "정렬과 페이지를 함께 바꾼 뒤 새로고침해도 둘 다 살아남는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3047,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "목록에서 담으면 헤더 숫자가 오른다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 741,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "담은 상품은 새로고침해도 남아 있다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1248,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "세션이 만료되면 로그인으로 가고, 재로그인하면 보호 경로로 돌아오며 다음 만료도 처리한다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 891,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "주문서에서 만료돼도 재로그인하면 checkout draft가 복원된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 4897,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "full",
+        "phase": "measured",
+        "index": 3,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2"
+        ],
+        "elapsed_ms": 18355.422542,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:06:56.723Z",
+          "duration": 17591.202,
+          "expected": 16,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 968,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1322,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫히면 풀린다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 614,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 194,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "열린 다이얼로그(포탈)가 페이지 컨텐츠 위를 실제로 덮는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 183,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3617,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "필터를 바꾸면 주소에 남고, 그 주소로 다시 들어가도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2193,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "범위를 벗어난 페이지로 들어가면 마지막 페이지로 보정된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1958,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "뒤로 가면 이전 조건이, 앞으로 가면 바꾼 조건이 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1580,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "페이지 보정은 히스토리에 남지 않아 뒤로 가면 원래 있던 곳으로 나간다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1805,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "조건을 바꾸고 새로고침해도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2229,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "정렬과 페이지를 함께 바꾼 뒤 새로고침해도 둘 다 살아남는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3152,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "목록에서 담으면 헤더 숫자가 오른다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 724,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "담은 상품은 새로고침해도 남아 있다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1213,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "세션이 만료되면 로그인으로 가고, 재로그인하면 보호 경로로 돌아오며 다음 만료도 처리한다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1008,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "주문서에서 만료돼도 재로그인하면 checkout draft가 복원된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 5044,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "core",
+        "phase": "measured",
+        "index": 4,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2",
+          "--grep",
+          "@critical"
+        ],
+        "elapsed_ms": 7265.544166,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:07:14.992Z",
+          "duration": 6608.189,
+          "expected": 3,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1101,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1105,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3712,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "core",
+        "phase": "measured",
+        "index": 5,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2",
+          "--grep",
+          "@critical"
+        ],
+        "elapsed_ms": 7190.786583,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:07:22.283Z",
+          "duration": 6517.928,
+          "expected": 3,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1034,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1045,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 3603,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mode": "full",
+        "phase": "measured",
+        "index": 6,
+        "command": [
+          "pnpm",
+          "exec",
+          "playwright",
+          "test",
+          "--workers=2"
+        ],
+        "elapsed_ms": 19541.11625,
+        "exit_code": 0,
+        "stats": {
+          "startTime": "2026-09-10T18:07:29.463Z",
+          "duration": 18854.628,
+          "expected": 16,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "actual_workers": 2,
+        "tests": [
+          {
+            "file": "auth.spec.ts",
+            "title": "미로그인 사용자는 로그인 후 원래 보호 경로로 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1234,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "auth.spec.ts",
+            "title": "잘못된 자격 증명은 로그인 화면에 오류를 남기고 세션을 만들지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1056,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그가 열리면 유저 스크롤이 실제로 잠기고, 닫히면 풀린다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 822,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 208,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "dialog.spec.ts",
+            "title": "열린 다이얼로그(포탈)가 페이지 컨텐츠 위를 실제로 덮는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 226,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "order.spec.ts",
+            "title": "장바구니 수량을 직접 입력하고 바로 구매하면 같은 수량으로 주문된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 5057,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "필터를 바꾸면 주소에 남고, 그 주소로 다시 들어가도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2035,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "범위를 벗어난 페이지로 들어가면 마지막 페이지로 보정된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2107,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "뒤로 가면 이전 조건이, 앞으로 가면 바꾼 조건이 돌아온다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2621,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "페이지 보정은 히스토리에 남지 않아 뒤로 가면 원래 있던 곳으로 나간다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1894,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "조건을 바꾸고 새로고침해도 같은 화면이다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2328,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "정렬과 페이지를 함께 바꾼 뒤 새로고침해도 둘 다 살아남는다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 2920,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "목록에서 담으면 헤더 숫자가 오른다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 694,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "products.spec.ts",
+            "title": "담은 상품은 새로고침해도 남아 있다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 1235,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "세션이 만료되면 로그인으로 가고, 재로그인하면 보호 경로로 돌아오며 다음 만료도 처리한다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 858,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          },
+          {
+            "file": "session-expired.spec.ts",
+            "title": "주문서에서 만료돼도 재로그인하면 checkout draft가 복원된다",
+            "expectedStatus": "passed",
+            "status": "expected",
+            "results": [
+              {
+                "status": "passed",
+                "duration": 4931,
+                "retry": 0,
+                "errors": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "ci": {
+    "selection": "Most recent 50 fork Quality runs as queried 2026-09-11 KST; latest attempt per run only",
+    "runs": [
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:27:09Z",
+          "event": "workflow_dispatch",
+          "head_sha": "5caafb1a9e494da98c0b208a38f1209899edb344",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34508298144",
+          "id": 34508298144,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:28:01Z",
+            "completed_at": "2026-09-10T17:28:01Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:28:01Z",
+            "completed_at": "2026-09-10T17:28:20Z",
+            "seconds": 19.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:27:14Z",
+            "completed_at": "2026-09-10T17:30:04Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:27:13Z",
+            "completed_at": "2026-09-10T17:28:29Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:27:11Z",
+            "completed_at": "2026-09-10T17:27:11Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:30:05Z",
+            "completed_at": "2026-09-10T17:30:04Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:30:05Z",
+            "completed_at": "2026-09-10T17:30:04Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tFull E2E\t2026-09-10T17:28:04.1585211Z Running 16 tests using 2 workers",
+          "build-e2e\tFull E2E\t2026-09-10T17:28:20.5341455Z   16 passed (17.9s)",
+          "build-e2e\tFull E2E\t2026-09-10T17:28:20.5976405Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "build-e2e\tE2E summary\t2026-09-10T17:28:20.6451439Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:22:44Z",
+          "event": "pull_request",
+          "head_sha": "b4c1c5633ee8aa84b2dc6dff0da1fd6c56217d49",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34507839978",
+          "id": 34507839978,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:24:00Z",
+            "completed_at": "2026-09-10T17:24:11Z",
+            "seconds": 11.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:24:11Z",
+            "completed_at": "2026-09-10T17:24:11Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:47Z",
+            "completed_at": "2026-09-10T17:22:55Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:58Z",
+            "completed_at": "2026-09-10T17:24:17Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:59Z",
+            "completed_at": "2026-09-10T17:24:16Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:24:20Z",
+            "completed_at": "2026-09-10T17:24:24Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:24:18Z",
+            "completed_at": "2026-09-10T17:24:18Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:24:03.9481902Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:24:11.0171963Z   3 passed (9.2s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:24:11.0847771Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T17:24:11.1412141Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:22:42Z",
+          "event": "push",
+          "head_sha": "66b3e83a4da91ed01a5f69078b18e2b966dc792e",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34507836049",
+          "id": 34507836049,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:23:39Z",
+            "completed_at": "2026-09-10T17:23:39Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:23:39Z",
+            "completed_at": "2026-09-10T17:24:01Z",
+            "seconds": 22.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:44Z",
+            "completed_at": "2026-09-10T17:23:50Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:45Z",
+            "completed_at": "2026-09-10T17:24:04Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:22:43Z",
+            "completed_at": "2026-09-10T17:22:42Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:24:43Z",
+            "completed_at": "2026-09-10T17:25:54Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:24:04Z",
+            "completed_at": "2026-09-10T17:24:04Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tFull E2E\t2026-09-10T17:23:42.6968359Z Running 16 tests using 2 workers",
+          "build-e2e\tFull E2E\t2026-09-10T17:24:01.0325271Z   16 passed (20.2s)",
+          "build-e2e\tFull E2E\t2026-09-10T17:24:01.1098458Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "build-e2e\tE2E summary\t2026-09-10T17:24:01.1654590Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:22:18Z",
+          "event": "pull_request",
+          "head_sha": "ccdbefec7dffb3743f1d332274c86aa51701333c",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34507796483",
+          "id": 34507796483,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:23:31Z",
+            "completed_at": "2026-09-10T17:23:41Z",
+            "seconds": 10.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:23:41Z",
+            "completed_at": "2026-09-10T17:23:41Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:21Z",
+            "completed_at": "2026-09-10T17:22:30Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:32Z",
+            "completed_at": "2026-09-10T17:23:49Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:32Z",
+            "completed_at": "2026-09-10T17:23:46Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:23:52Z",
+            "completed_at": "2026-09-10T17:23:56Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:23:50Z",
+            "completed_at": "2026-09-10T17:23:50Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:23:35.0558006Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:23:41.1532249Z   3 passed (8.3s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:23:41.2232649Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T17:23:41.2808077Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:18:57Z",
+          "event": "pull_request",
+          "head_sha": "ccdbefec7dffb3743f1d332274c86aa51701333c",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34507452081",
+          "id": 34507452081,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:20:14Z",
+            "completed_at": "2026-09-10T17:20:23Z",
+            "seconds": 9.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:20:23Z",
+            "completed_at": "2026-09-10T17:20:23Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:19:00Z",
+            "completed_at": "2026-09-10T17:19:10Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:19:12Z",
+            "completed_at": "2026-09-10T17:20:32Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:19:13Z",
+            "completed_at": "2026-09-10T17:20:34Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:20:37Z",
+            "completed_at": "2026-09-10T17:20:40Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:20:35Z",
+            "completed_at": "2026-09-10T17:20:35Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:20:17.3265030Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:20:23.6368172Z   3 passed (8.6s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:20:23.7035835Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T17:20:23.7506541Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:18:34Z",
+          "event": "pull_request",
+          "head_sha": "b4c1c5633ee8aa84b2dc6dff0da1fd6c56217d49",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34507412652",
+          "id": 34507412652,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:21:46Z",
+            "completed_at": "2026-09-10T17:21:58Z",
+            "seconds": 12.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:21:58Z",
+            "completed_at": "2026-09-10T17:21:58Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:19:57Z",
+            "completed_at": "2026-09-10T17:20:03Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:20:06Z",
+            "completed_at": "2026-09-10T17:21:17Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:20:06Z",
+            "completed_at": "2026-09-10T17:22:04Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:22:06Z",
+            "completed_at": "2026-09-10T17:22:10Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:22:04Z",
+            "completed_at": "2026-09-10T17:22:04Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:21:49.1521910Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:21:58.9126033Z   3 passed (12.0s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:21:58.9803655Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T17:21:59.0368093Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "cancelled",
+          "created_at": "2026-09-10T17:18:16Z",
+          "event": "pull_request",
+          "head_sha": "b4c1c5633ee8aa84b2dc6dff0da1fd6c56217d49",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34507380289",
+          "id": 34507380289,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:19:24Z",
+            "completed_at": "2026-09-10T17:19:33Z",
+            "seconds": 9.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:19:33Z",
+            "completed_at": "2026-09-10T17:19:33Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:18:19Z",
+            "completed_at": "2026-09-10T17:18:28Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "cancelled",
+            "started_at": "2026-09-10T17:18:31Z",
+            "completed_at": "2026-09-10T17:19:38Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "cancelled",
+            "started_at": "2026-09-10T17:18:32Z",
+            "completed_at": "2026-09-10T17:19:48Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T17:19:50Z",
+            "completed_at": "2026-09-10T17:19:53Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "cancelled",
+            "started_at": "2026-09-10T17:19:49Z",
+            "completed_at": "2026-09-10T17:19:48Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:19:27.4139995Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:19:33.4864690Z   3 passed (8.0s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:19:33.5390300Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T17:19:33.5841745Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:14:40Z",
+          "event": "pull_request",
+          "head_sha": "4d35ab9a19e16570349ae7efd8676bb16eff8f46",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34507001416",
+          "id": 34507001416,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:15:33Z",
+            "completed_at": "2026-09-10T17:15:33Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:15:33Z",
+            "completed_at": "2026-09-10T17:15:33Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:14:44Z",
+            "completed_at": "2026-09-10T17:14:51Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:14:53Z",
+            "completed_at": "2026-09-10T17:15:37Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:14:54Z",
+            "completed_at": "2026-09-10T17:15:40Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:15:47Z",
+            "completed_at": "2026-09-10T17:15:52Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:15:41Z",
+            "completed_at": "2026-09-10T17:15:40Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:14:26Z",
+          "event": "push",
+          "head_sha": "8962a006bbb6519b58a3f5685d25eb0df05b88a9",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34506974352",
+          "id": 34506974352,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:15:30Z",
+            "completed_at": "2026-09-10T17:15:30Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:15:30Z",
+            "completed_at": "2026-09-10T17:15:52Z",
+            "seconds": 22.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:14:30Z",
+            "completed_at": "2026-09-10T17:15:57Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:14:30Z",
+            "completed_at": "2026-09-10T17:15:41Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:14:27Z",
+            "completed_at": "2026-09-10T17:14:27Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:16:00Z",
+            "completed_at": "2026-09-10T17:17:17Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:15:58Z",
+            "completed_at": "2026-09-10T17:15:57Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tFull E2E\t2026-09-10T17:15:32.8323701Z Running 16 tests using 2 workers",
+          "build-e2e\tFull E2E\t2026-09-10T17:15:52.0256576Z   16 passed (21.0s)",
+          "build-e2e\tFull E2E\t2026-09-10T17:15:52.1022924Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "build-e2e\tE2E summary\t2026-09-10T17:15:52.1556538Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:09:41Z",
+          "event": "pull_request",
+          "head_sha": "9c76b94c6e82a28ec2e73b4fac9f5b441252fc6c",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34506500366",
+          "id": 34506500366,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:10:58Z",
+            "completed_at": "2026-09-10T17:11:07Z",
+            "seconds": 9.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:11:07Z",
+            "completed_at": "2026-09-10T17:11:07Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:09:44Z",
+            "completed_at": "2026-09-10T17:09:51Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:09:53Z",
+            "completed_at": "2026-09-10T17:11:11Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:09:54Z",
+            "completed_at": "2026-09-10T17:10:58Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:11:13Z",
+            "completed_at": "2026-09-10T17:11:15Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:11:11Z",
+            "completed_at": "2026-09-10T17:11:11Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:11:01.3095066Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:11:07.4878851Z   3 passed (8.3s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:11:07.5572940Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T17:11:07.6135089Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:07:54Z",
+          "event": "pull_request",
+          "head_sha": "fdba5038ea8ae421cf2c845c45228234d591d0c2",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34506315141",
+          "id": 34506315141,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:08:53Z",
+            "completed_at": "2026-09-10T17:09:03Z",
+            "seconds": 10.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:09:03Z",
+            "completed_at": "2026-09-10T17:09:03Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:07:57Z",
+            "completed_at": "2026-09-10T17:08:03Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:08:05Z",
+            "completed_at": "2026-09-10T17:09:06Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:08:06Z",
+            "completed_at": "2026-09-10T17:09:15Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:09:18Z",
+            "completed_at": "2026-09-10T17:09:21Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:09:16Z",
+            "completed_at": "2026-09-10T17:09:15Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:08:56.2280646Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:09:03.6610100Z   3 passed (9.4s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T17:09:03.7302643Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T17:09:03.7857031Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:03:33Z",
+          "event": "pull_request",
+          "head_sha": "b3a46e035ca368db1aa726d1f4a4cf3767e4a8ba",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34505870102",
+          "id": 34505870102,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:04:22Z",
+            "completed_at": "2026-09-10T17:04:22Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:04:22Z",
+            "completed_at": "2026-09-10T17:04:22Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:03:36Z",
+            "completed_at": "2026-09-10T17:03:44Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:03:47Z",
+            "completed_at": "2026-09-10T17:04:49Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:03:46Z",
+            "completed_at": "2026-09-10T17:04:26Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:04:56Z",
+            "completed_at": "2026-09-10T17:05:00Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:04:53Z",
+            "completed_at": "2026-09-10T17:04:53Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:02:53Z",
+          "event": "push",
+          "head_sha": "c7d56c3c4e335e60047d7f162a45e7175d93314f",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34505800363",
+          "id": 34505800363,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:03:43Z",
+            "completed_at": "2026-09-10T17:03:43Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:03:43Z",
+            "completed_at": "2026-09-10T17:04:04Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:02:56Z",
+            "completed_at": "2026-09-10T17:04:07Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:02:56Z",
+            "completed_at": "2026-09-10T17:04:02Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:02:54Z",
+            "completed_at": "2026-09-10T17:02:53Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:04:09Z",
+            "completed_at": "2026-09-10T17:05:13Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:04:08Z",
+            "completed_at": "2026-09-10T17:04:07Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T17:03:45.7412388Z Running 16 tests using 2 workers",
+          "2026-09-10T17:04:04.5538819Z   16 passed (20.6s)",
+          "2026-09-10T17:04:04.6284283Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T17:04:04.6893876Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T17:00:49Z",
+          "event": "pull_request",
+          "head_sha": "37b4b0c53bc0a56ffdc703b35a993ad0163c0a74",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34505588433",
+          "id": 34505588433,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:01:59Z",
+            "completed_at": "2026-09-10T17:02:07Z",
+            "seconds": 8.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:02:08Z",
+            "completed_at": "2026-09-10T17:02:08Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:00:54Z",
+            "completed_at": "2026-09-10T17:01:04Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:01:06Z",
+            "completed_at": "2026-09-10T17:02:18Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:01:06Z",
+            "completed_at": "2026-09-10T17:02:12Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T17:02:21Z",
+            "completed_at": "2026-09-10T17:02:26Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T17:02:18Z",
+            "completed_at": "2026-09-10T17:02:18Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T17:02:01.9004645Z Running 3 tests using 2 workers",
+          "2026-09-10T17:02:07.8384422Z   3 passed (8.1s)",
+          "2026-09-10T17:02:07.8895856Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T17:02:08.2776829Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:50:13Z",
+          "event": "workflow_dispatch",
+          "head_sha": "c5eb77f7e3bc06504d96388d6080441b4a6639b8",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34504527236",
+          "id": 34504527236,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:51:02Z",
+            "completed_at": "2026-09-10T16:51:02Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:51:02Z",
+            "completed_at": "2026-09-10T16:51:23Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:50:17Z",
+            "completed_at": "2026-09-10T16:52:58Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:50:17Z",
+            "completed_at": "2026-09-10T16:51:26Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:50:15Z",
+            "completed_at": "2026-09-10T16:50:15Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:52:58Z",
+            "completed_at": "2026-09-10T16:52:58Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:52:58Z",
+            "completed_at": "2026-09-10T16:52:58Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:51:05.1696686Z Running 16 tests using 2 workers",
+          "2026-09-10T16:51:23.0614860Z   16 passed (19.6s)",
+          "2026-09-10T16:51:23.1447650Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T16:51:23.2074373Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:50:08Z",
+          "event": "workflow_dispatch",
+          "head_sha": "c5eb77f7e3bc06504d96388d6080441b4a6639b8",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34504517419",
+          "id": 34504517419,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:51:02Z",
+            "completed_at": "2026-09-10T16:51:02Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:51:02Z",
+            "completed_at": "2026-09-10T16:51:23Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:50:11Z",
+            "completed_at": "2026-09-10T16:51:13Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:50:12Z",
+            "completed_at": "2026-09-10T16:52:59Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:50:15Z",
+            "completed_at": "2026-09-10T16:50:09Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:53:00Z",
+            "completed_at": "2026-09-10T16:52:59Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:53:00Z",
+            "completed_at": "2026-09-10T16:52:59Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:51:05.4443025Z Running 16 tests using 2 workers",
+          "2026-09-10T16:51:23.8334417Z   16 passed (20.0s)",
+          "2026-09-10T16:51:23.9114271Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T16:51:23.9710918Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:50:03Z",
+          "event": "workflow_dispatch",
+          "head_sha": "c5eb77f7e3bc06504d96388d6080441b4a6639b8",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34504508321",
+          "id": 34504508321,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:50:54Z",
+            "completed_at": "2026-09-10T16:50:54Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:50:54Z",
+            "completed_at": "2026-09-10T16:51:14Z",
+            "seconds": 20.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:50:08Z",
+            "completed_at": "2026-09-10T16:51:18Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:50:08Z",
+            "completed_at": "2026-09-10T16:52:47Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:50:06Z",
+            "completed_at": "2026-09-10T16:50:06Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:52:47Z",
+            "completed_at": "2026-09-10T16:52:47Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:52:47Z",
+            "completed_at": "2026-09-10T16:52:47Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:50:56.7556788Z Running 16 tests using 2 workers",
+          "2026-09-10T16:51:14.4311148Z   16 passed (19.3s)",
+          "2026-09-10T16:51:14.5102111Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T16:51:14.5667405Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:34:47Z",
+          "event": "push",
+          "head_sha": "38fa8487071a5b91f362c815044f475e58ba1d74",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34502967531",
+          "id": 34502967531,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:35:38Z",
+            "completed_at": "2026-09-10T16:35:38Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:35:38Z",
+            "completed_at": "2026-09-10T16:35:58Z",
+            "seconds": 20.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:34:50Z",
+            "completed_at": "2026-09-10T16:36:02Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:34:51Z",
+            "completed_at": "2026-09-10T16:36:09Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:34:48Z",
+            "completed_at": "2026-09-10T16:34:48Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:36:12Z",
+            "completed_at": "2026-09-10T16:37:21Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:36:09Z",
+            "completed_at": "2026-09-10T16:36:09Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:35:41.0689901Z Running 16 tests using 2 workers",
+          "2026-09-10T16:35:58.5744053Z   16 passed (19.3s)",
+          "2026-09-10T16:35:58.6546397Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T16:35:58.7161924Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:32:31Z",
+          "event": "pull_request",
+          "head_sha": "f6e32ca4e8dff4512b909dae7b8c67a6a7a13764",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34502734079",
+          "id": 34502734079,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:33:34Z",
+            "completed_at": "2026-09-10T16:33:44Z",
+            "seconds": 10.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:33:44Z",
+            "completed_at": "2026-09-10T16:33:44Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:32:34Z",
+            "completed_at": "2026-09-10T16:32:41Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:32:44Z",
+            "completed_at": "2026-09-10T16:33:45Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:32:44Z",
+            "completed_at": "2026-09-10T16:33:50Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:33:52Z",
+            "completed_at": "2026-09-10T16:33:56Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:33:51Z",
+            "completed_at": "2026-09-10T16:33:50Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:33:37.8250100Z Running 3 tests using 2 workers",
+          "2026-09-10T16:33:44.6474799Z   3 passed (9.2s)",
+          "2026-09-10T16:33:44.7108226Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T16:33:44.7592567Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "failure",
+          "created_at": "2026-09-10T16:25:15Z",
+          "event": "push",
+          "head_sha": "f3b0d1ee4e050da05f640ac5130ff19f2fb00fb3",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34501975852",
+          "id": 34501975852,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:26:19Z",
+            "completed_at": "2026-09-10T16:26:19Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:26:19Z",
+            "completed_at": "2026-09-10T16:26:40Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:25:18Z",
+            "completed_at": "2026-09-10T16:26:34Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:25:18Z",
+            "completed_at": "2026-09-10T16:26:47Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:25:16Z",
+            "completed_at": "2026-09-10T16:25:16Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T16:26:50Z",
+            "completed_at": "2026-09-10T16:27:50Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:26:48Z",
+            "completed_at": "2026-09-10T16:26:48Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:26:22.6364425Z Running 16 tests using 2 workers",
+          "2026-09-10T16:26:40.3643440Z   16 passed (19.6s)",
+          "2026-09-10T16:26:40.4418705Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T16:26:40.5023439Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:23:25Z",
+          "event": "pull_request",
+          "head_sha": "f3c560ead697e7b208699912329d8bdd35bb689a",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34501780251",
+          "id": 34501780251,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:24:31Z",
+            "completed_at": "2026-09-10T16:24:42Z",
+            "seconds": 11.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:24:42Z",
+            "completed_at": "2026-09-10T16:24:42Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:23:28Z",
+            "completed_at": "2026-09-10T16:23:35Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:23:37Z",
+            "completed_at": "2026-09-10T16:24:35Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:23:38Z",
+            "completed_at": "2026-09-10T16:24:46Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:24:48Z",
+            "completed_at": "2026-09-10T16:24:52Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:24:46Z",
+            "completed_at": "2026-09-10T16:24:46Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:24:34.6718531Z Running 3 tests using 2 workers",
+          "2026-09-10T16:24:42.4427796Z   3 passed (10.1s)",
+          "2026-09-10T16:24:42.5194825Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T16:24:42.5805609Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:21:41Z",
+          "event": "pull_request",
+          "head_sha": "23e472f5751d3fa65d803903e53469a12bb4ac43",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34501597916",
+          "id": 34501597916,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:22:55Z",
+            "completed_at": "2026-09-10T16:23:05Z",
+            "seconds": 10.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:23:05Z",
+            "completed_at": "2026-09-10T16:23:05Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:21:44Z",
+            "completed_at": "2026-09-10T16:21:53Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:21:55Z",
+            "completed_at": "2026-09-10T16:23:20Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:21:56Z",
+            "completed_at": "2026-09-10T16:23:12Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:23:23Z",
+            "completed_at": "2026-09-10T16:23:26Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:23:21Z",
+            "completed_at": "2026-09-10T16:23:21Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:22:58.3822978Z Running 3 tests using 2 workers",
+          "2026-09-10T16:23:05.3032915Z   3 passed (9.2s)",
+          "2026-09-10T16:23:05.3769748Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T16:23:05.4360741Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "failure",
+          "created_at": "2026-09-10T16:19:16Z",
+          "event": "pull_request",
+          "head_sha": "8eb4e0b69c2c760f3a81ddf0f3cdc8729f69ae46",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34501339378",
+          "id": 34501339378,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:20:13Z",
+            "completed_at": "2026-09-10T16:20:13Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:20:13Z",
+            "completed_at": "2026-09-10T16:20:13Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:19:19Z",
+            "completed_at": "2026-09-10T16:19:26Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:19:28Z",
+            "completed_at": "2026-09-10T16:20:46Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T16:19:28Z",
+            "completed_at": "2026-09-10T16:20:15Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T16:20:49Z",
+            "completed_at": "2026-09-10T16:20:51Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:20:47Z",
+            "completed_at": "2026-09-10T16:20:47Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T16:18:22Z",
+          "event": "pull_request",
+          "head_sha": "1761aeba434247ab219052dd895dcd0efc168075",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34501245339",
+          "id": 34501245339,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:19:25Z",
+            "completed_at": "2026-09-10T16:19:36Z",
+            "seconds": 11.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:19:36Z",
+            "completed_at": "2026-09-10T16:19:36Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:18:24Z",
+            "completed_at": "2026-09-10T16:18:30Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:18:33Z",
+            "completed_at": "2026-09-10T16:19:53Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:18:33Z",
+            "completed_at": "2026-09-10T16:19:43Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T16:19:56Z",
+            "completed_at": "2026-09-10T16:20:00Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T16:19:54Z",
+            "completed_at": "2026-09-10T16:19:53Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T16:19:28.3692884Z Running 3 tests using 2 workers",
+          "2026-09-10T16:19:35.9517916Z   3 passed (9.6s)",
+          "2026-09-10T16:19:36.0255129Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T16:19:36.0856507Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T14:46:25Z",
+          "event": "pull_request",
+          "head_sha": "fa250afe40a5015e38778d0604143d0d37e5a697",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34491264523",
+          "id": 34491264523,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:47:39Z",
+            "completed_at": "2026-09-10T14:47:47Z",
+            "seconds": 8.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:47:47Z",
+            "completed_at": "2026-09-10T14:47:47Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:46:28Z",
+            "completed_at": "2026-09-10T14:46:35Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:46:37Z",
+            "completed_at": "2026-09-10T14:47:45Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:46:38Z",
+            "completed_at": "2026-09-10T14:47:53Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:47:56Z",
+            "completed_at": "2026-09-10T14:48:00Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:47:54Z",
+            "completed_at": "2026-09-10T14:47:54Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T14:47:41.6140902Z Running 3 tests using 2 workers",
+          "2026-09-10T14:47:47.7957618Z   3 passed (8.0s)",
+          "2026-09-10T14:47:47.8474586Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T14:47:48.1817456Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T14:37:10Z",
+          "event": "push",
+          "head_sha": "27b6220cc620dc541422c618db32e7b46266ff12",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34490240780",
+          "id": 34490240780,
+          "run_attempt": 2
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:38:17Z",
+            "completed_at": "2026-09-10T14:38:17Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:38:17Z",
+            "completed_at": "2026-09-10T14:38:37Z",
+            "seconds": 20.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:42:07Z",
+            "completed_at": "2026-09-10T14:37:11Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:42:10Z",
+            "completed_at": "2026-09-10T14:43:12Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:37:13Z",
+            "completed_at": "2026-09-10T14:38:29Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:42:08Z",
+            "completed_at": "2026-09-10T14:38:43Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:37:13Z",
+            "completed_at": "2026-09-10T14:38:42Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T14:38:20.1013093Z Running 16 tests using 2 workers",
+          "2026-09-10T14:38:37.4534676Z   16 passed (18.8s)",
+          "2026-09-10T14:38:37.5065501Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T14:38:37.5480040Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T14:32:22Z",
+          "event": "pull_request",
+          "head_sha": "e07e8a6e9e971dc02c97123bdb4be86a0740be4a",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34489717927",
+          "id": 34489717927,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:33:34Z",
+            "completed_at": "2026-09-10T14:33:44Z",
+            "seconds": 10.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:33:44Z",
+            "completed_at": "2026-09-10T14:33:44Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:32:25Z",
+            "completed_at": "2026-09-10T14:32:33Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:32:37Z",
+            "completed_at": "2026-09-10T14:33:54Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:32:35Z",
+            "completed_at": "2026-09-10T14:33:49Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:34:32Z",
+            "completed_at": "2026-09-10T14:34:34Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:33:54Z",
+            "completed_at": "2026-09-10T14:33:54Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T14:33:37.3120196Z Running 3 tests using 2 workers",
+          "2026-09-10T14:33:44.4984928Z   3 passed (9.4s)",
+          "2026-09-10T14:33:44.5705342Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T14:33:44.6314848Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "failure",
+          "created_at": "2026-09-10T14:18:38Z",
+          "event": "pull_request",
+          "head_sha": "e213d02d858d63bf3550391063ed8f408aaa1558",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34488205085",
+          "id": 34488205085,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:19:48Z",
+            "completed_at": "2026-09-10T14:19:48Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:19:48Z",
+            "completed_at": "2026-09-10T14:19:48Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:18:41Z",
+            "completed_at": "2026-09-10T14:18:51Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T14:18:54Z",
+            "completed_at": "2026-09-10T14:19:50Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:18:54Z",
+            "completed_at": "2026-09-10T14:20:04Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T14:20:06Z",
+            "completed_at": "2026-09-10T14:20:09Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:20:04Z",
+            "completed_at": "2026-09-10T14:20:04Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "failure",
+          "created_at": "2026-09-10T14:15:13Z",
+          "event": "pull_request",
+          "head_sha": "186fbd90c8245360430659f63c8259318fc8d111",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34487825524",
+          "id": 34487825524,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:15:59Z",
+            "completed_at": "2026-09-10T14:15:59Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:15:59Z",
+            "completed_at": "2026-09-10T14:15:59Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:15:16Z",
+            "completed_at": "2026-09-10T14:15:23Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T14:15:25Z",
+            "completed_at": "2026-09-10T14:16:01Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:15:26Z",
+            "completed_at": "2026-09-10T14:16:33Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T14:16:36Z",
+            "completed_at": "2026-09-10T14:16:38Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:16:34Z",
+            "completed_at": "2026-09-10T14:16:34Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T14:14:13Z",
+          "event": "pull_request",
+          "head_sha": "8606734c73b0436b49e94d2f6f1259da998c297c",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34487715872",
+          "id": 34487715872,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:15:36Z",
+            "completed_at": "2026-09-10T14:15:46Z",
+            "seconds": 10.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:15:46Z",
+            "completed_at": "2026-09-10T14:15:46Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:14:16Z",
+            "completed_at": "2026-09-10T14:14:23Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:14:27Z",
+            "completed_at": "2026-09-10T14:15:52Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:14:27Z",
+            "completed_at": "2026-09-10T14:15:41Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T14:15:55Z",
+            "completed_at": "2026-09-10T14:15:59Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T14:15:53Z",
+            "completed_at": "2026-09-10T14:15:52Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T14:15:39.4954306Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T14:15:46.6541399Z   3 passed (9.4s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T14:15:46.7292542Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T14:15:46.7954071Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T08:05:11Z",
+          "event": "push",
+          "head_sha": "492affc41ac0996f1a7a053f9b6531ac2282139a",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34453270555",
+          "id": 34453270555,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T08:06:03Z",
+            "completed_at": "2026-09-10T08:06:03Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:06:03Z",
+            "completed_at": "2026-09-10T08:06:24Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:05:14Z",
+            "completed_at": "2026-09-10T08:06:28Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:05:13Z",
+            "completed_at": "2026-09-10T08:06:25Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T08:05:18Z",
+            "completed_at": "2026-09-10T08:05:11Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:06:30Z",
+            "completed_at": "2026-09-10T08:07:23Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T08:06:29Z",
+            "completed_at": "2026-09-10T08:06:28Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T08:06:05.9682640Z Running 16 tests using 2 workers",
+          "2026-09-10T08:06:23.9154699Z   16 passed (19.4s)",
+          "2026-09-10T08:06:23.9763187Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T08:06:24.3285661Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T08:03:55Z",
+          "event": "pull_request",
+          "head_sha": "716be55f974355de86620b45034785d3024179be",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34453154818",
+          "id": 34453154818,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T08:04:39Z",
+            "completed_at": "2026-09-10T08:04:39Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T08:04:39Z",
+            "completed_at": "2026-09-10T08:04:39Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:03:58Z",
+            "completed_at": "2026-09-10T08:04:03Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:04:06Z",
+            "completed_at": "2026-09-10T08:04:43Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:04:06Z",
+            "completed_at": "2026-09-10T08:04:54Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T08:04:57Z",
+            "completed_at": "2026-09-10T08:05:00Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T08:04:55Z",
+            "completed_at": "2026-09-10T08:04:55Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T07:27:25Z",
+          "event": "push",
+          "head_sha": "df9a924765b515a1c430e8f462bd9f9107f59379",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34450040046",
+          "id": 34450040046,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T07:28:17Z",
+            "completed_at": "2026-09-10T07:28:17Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:28:17Z",
+            "completed_at": "2026-09-10T07:28:38Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:27:28Z",
+            "completed_at": "2026-09-10T07:28:49Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:27:28Z",
+            "completed_at": "2026-09-10T07:28:42Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T07:27:26Z",
+            "completed_at": "2026-09-10T07:27:26Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:28:52Z",
+            "completed_at": "2026-09-10T07:29:47Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T07:28:50Z",
+            "completed_at": "2026-09-10T07:28:50Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T07:28:20.2467564Z Running 16 tests using 2 workers",
+          "2026-09-10T07:28:38.3019658Z   16 passed (19.8s)",
+          "2026-09-10T07:28:38.3832202Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T07:28:38.4437894Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T07:13:08Z",
+          "event": "pull_request",
+          "head_sha": "792c1c98c64f34f48853f546e1f14eb59af637cf",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34448866011",
+          "id": 34448866011,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:14:01Z",
+            "completed_at": "2026-09-10T07:14:10Z",
+            "seconds": 9.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T07:14:10Z",
+            "completed_at": "2026-09-10T07:14:10Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:13:11Z",
+            "completed_at": "2026-09-10T07:13:17Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:13:19Z",
+            "completed_at": "2026-09-10T07:14:13Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:13:19Z",
+            "completed_at": "2026-09-10T07:14:14Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:14:16Z",
+            "completed_at": "2026-09-10T07:14:20Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T07:14:14Z",
+            "completed_at": "2026-09-10T07:14:14Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T07:14:04.7228669Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T07:14:10.8604198Z   3 passed (8.2s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T07:14:10.9316059Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T07:14:10.9933771Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T07:06:32Z",
+          "event": "pull_request",
+          "head_sha": "792c1c98c64f34f48853f546e1f14eb59af637cf",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34448327394",
+          "id": 34448327394,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:07:40Z",
+            "completed_at": "2026-09-10T07:07:49Z",
+            "seconds": 9.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T07:07:49Z",
+            "completed_at": "2026-09-10T07:07:49Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:06:35Z",
+            "completed_at": "2026-09-10T07:06:48Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:06:51Z",
+            "completed_at": "2026-09-10T07:07:58Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:06:51Z",
+            "completed_at": "2026-09-10T07:07:54Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T07:08:01Z",
+            "completed_at": "2026-09-10T07:08:05Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T07:07:59Z",
+            "completed_at": "2026-09-10T07:07:58Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T07:07:43.0767164Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T07:07:49.0801784Z   3 passed (8.0s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T07:07:49.1428265Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T07:07:49.1907642Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:48:13Z",
+          "event": "pull_request",
+          "head_sha": "33bcc2359d043f17bffdc0b456d4b4baaa6356f4",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34446869651",
+          "id": 34446869651,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:49:23Z",
+            "completed_at": "2026-09-10T06:49:33Z",
+            "seconds": 10.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:49:33Z",
+            "completed_at": "2026-09-10T06:49:33Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:48:16Z",
+            "completed_at": "2026-09-10T06:48:23Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:48:25Z",
+            "completed_at": "2026-09-10T06:49:27Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:48:25Z",
+            "completed_at": "2026-09-10T06:49:37Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:49:39Z",
+            "completed_at": "2026-09-10T06:49:43Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:49:37Z",
+            "completed_at": "2026-09-10T06:49:37Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T06:49:26.4693092Z Running 3 tests using 2 workers",
+          "2026-09-10T06:49:33.7129658Z   3 passed (9.2s)",
+          "2026-09-10T06:49:33.7894445Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T06:49:33.8536187Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:40:50Z",
+          "event": "pull_request",
+          "head_sha": "4e23fef7d3a1a2cd4871d71a20225617d4d6db92",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34446293956",
+          "id": 34446293956,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:41:53Z",
+            "completed_at": "2026-09-10T06:42:02Z",
+            "seconds": 9.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:42:02Z",
+            "completed_at": "2026-09-10T06:42:02Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:40:53Z",
+            "completed_at": "2026-09-10T06:41:01Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:41:04Z",
+            "completed_at": "2026-09-10T06:42:06Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:41:03Z",
+            "completed_at": "2026-09-10T06:42:07Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:42:09Z",
+            "completed_at": "2026-09-10T06:42:12Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:42:08Z",
+            "completed_at": "2026-09-10T06:42:08Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:41:56.6651954Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:42:02.5924829Z   3 passed (8.0s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:42:02.6616187Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T06:42:02.9875179Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:32:10Z",
+          "event": "push",
+          "head_sha": "39afb5df313aca0cb5c07febafb5e52aa53e718f",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34445633910",
+          "id": 34445633910,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:32:56Z",
+            "completed_at": "2026-09-10T06:32:56Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:32:56Z",
+            "completed_at": "2026-09-10T06:33:17Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:32:13Z",
+            "completed_at": "2026-09-10T06:33:15Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:32:13Z",
+            "completed_at": "2026-09-10T06:33:20Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:32:11Z",
+            "completed_at": "2026-09-10T06:32:11Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:33:23Z",
+            "completed_at": "2026-09-10T06:34:16Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:33:21Z",
+            "completed_at": "2026-09-10T06:33:20Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T06:32:59.5297936Z Running 16 tests using 2 workers",
+          "2026-09-10T06:33:17.1509330Z   16 passed (19.4s)",
+          "2026-09-10T06:33:17.2332169Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T06:33:17.2959230Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:30:46Z",
+          "event": "pull_request",
+          "head_sha": "858058683caf20cde54e0cd3d1793b2df3c7055f",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34445526852",
+          "id": 34445526852,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:31:30Z",
+            "completed_at": "2026-09-10T06:31:30Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:31:30Z",
+            "completed_at": "2026-09-10T06:31:30Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:30:49Z",
+            "completed_at": "2026-09-10T06:30:57Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:31:00Z",
+            "completed_at": "2026-09-10T06:31:54Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:30:59Z",
+            "completed_at": "2026-09-10T06:31:33Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:31:56Z",
+            "completed_at": "2026-09-10T06:31:59Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:31:55Z",
+            "completed_at": "2026-09-10T06:31:54Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:09:35Z",
+          "event": "push",
+          "head_sha": "fe557728c3c75d9284c5bf907880fe36e90a6ce2",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34443992861",
+          "id": 34443992861,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:10:29Z",
+            "completed_at": "2026-09-10T06:10:29Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:10:29Z",
+            "completed_at": "2026-09-10T06:10:50Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:09:37Z",
+            "completed_at": "2026-09-10T06:10:48Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:09:38Z",
+            "completed_at": "2026-09-10T06:10:54Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:09:35Z",
+            "completed_at": "2026-09-10T06:09:35Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:10:57Z",
+            "completed_at": "2026-09-10T06:12:00Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:10:55Z",
+            "completed_at": "2026-09-10T06:10:54Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T06:10:32.1693203Z Running 16 tests using 2 workers",
+          "2026-09-10T06:10:50.0714921Z   16 passed (19.6s)",
+          "2026-09-10T06:10:50.1481248Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T06:10:50.2096301Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:07:20Z",
+          "event": "pull_request",
+          "head_sha": "1e6841e139cd45e777345dc6028ae87880074fb0",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34443836321",
+          "id": 34443836321,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:08:19Z",
+            "completed_at": "2026-09-10T06:08:30Z",
+            "seconds": 11.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:08:30Z",
+            "completed_at": "2026-09-10T06:08:30Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:07:23Z",
+            "completed_at": "2026-09-10T06:07:32Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:07:35Z",
+            "completed_at": "2026-09-10T06:08:55Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:07:34Z",
+            "completed_at": "2026-09-10T06:08:32Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:08:58Z",
+            "completed_at": "2026-09-10T06:09:00Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:08:55Z",
+            "completed_at": "2026-09-10T06:08:55Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:08:22.2864418Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:08:30.2614448Z   3 passed (9.8s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:08:30.3279062Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T06:08:30.3858381Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:04:10Z",
+          "event": "push",
+          "head_sha": "774eedb5eb24f2f23bb48cd18a51b09bd3ed421a",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34443612200",
+          "id": 34443612200,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:05:08Z",
+            "completed_at": "2026-09-10T06:05:08Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:05:08Z",
+            "completed_at": "2026-09-10T06:05:31Z",
+            "seconds": 23.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:04:13Z",
+            "completed_at": "2026-09-10T06:05:16Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:04:13Z",
+            "completed_at": "2026-09-10T06:05:34Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:04:11Z",
+            "completed_at": "2026-09-10T06:04:11Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:05:36Z",
+            "completed_at": "2026-09-10T06:06:22Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:05:35Z",
+            "completed_at": "2026-09-10T06:05:34Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T06:05:11.4625104Z Running 16 tests using 2 workers",
+          "2026-09-10T06:05:31.3541529Z   16 passed (21.6s)",
+          "2026-09-10T06:05:31.4344217Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T06:05:31.4958527Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T06:01:58Z",
+          "event": "pull_request",
+          "head_sha": "4dfcb1ecb9a06e0d3d70fdd1dd9c7f2d7b74644b",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34443456604",
+          "id": 34443456604,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:03:02Z",
+            "completed_at": "2026-09-10T06:03:10Z",
+            "seconds": 8.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:03:10Z",
+            "completed_at": "2026-09-10T06:03:10Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:02:01Z",
+            "completed_at": "2026-09-10T06:02:16Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:02:18Z",
+            "completed_at": "2026-09-10T06:03:30Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:02:18Z",
+            "completed_at": "2026-09-10T06:03:14Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T06:03:32Z",
+            "completed_at": "2026-09-10T06:03:34Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T06:03:30Z",
+            "completed_at": "2026-09-10T06:03:30Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:03:05.2212309Z Running 3 tests using 2 workers",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:03:10.8459519Z   3 passed (7.4s)",
+          "build-e2e\tCore E2E (@critical)\t2026-09-10T06:03:10.9037106Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "build-e2e\tE2E summary\t2026-09-10T06:03:11.2111995Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T05:50:49Z",
+          "event": "push",
+          "head_sha": "143418a96713d3eee2dca39938abf9c7259890e1",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34442705301",
+          "id": 34442705301,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:51:33Z",
+            "completed_at": "2026-09-10T05:51:33Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:51:33Z",
+            "completed_at": "2026-09-10T05:51:54Z",
+            "seconds": 21.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:50:51Z",
+            "completed_at": "2026-09-10T05:51:57Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:50:52Z",
+            "completed_at": "2026-09-10T05:52:01Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:50:50Z",
+            "completed_at": "2026-09-10T05:50:49Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:52:04Z",
+            "completed_at": "2026-09-10T05:53:03Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:52:02Z",
+            "completed_at": "2026-09-10T05:52:01Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T05:51:36.2737213Z Running 16 tests using 2 workers",
+          "2026-09-10T05:51:54.0837591Z   16 passed (19.5s)",
+          "2026-09-10T05:51:54.1572614Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T05:51:54.2165059Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T05:49:34Z",
+          "event": "pull_request",
+          "head_sha": "8340413937c55e0936bdce6ca57756b5ee5b79b4",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34442618976",
+          "id": 34442618976,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:50:18Z",
+            "completed_at": "2026-09-10T05:50:18Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:50:18Z",
+            "completed_at": "2026-09-10T05:50:18Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:49:37Z",
+            "completed_at": "2026-09-10T05:49:45Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:49:47Z",
+            "completed_at": "2026-09-10T05:50:20Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:49:47Z",
+            "completed_at": "2026-09-10T05:50:36Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:50:38Z",
+            "completed_at": "2026-09-10T05:50:41Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:50:36Z",
+            "completed_at": "2026-09-10T05:50:36Z"
+          }
+        ],
+        "e2e_log_lines": []
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T05:44:41Z",
+          "event": "workflow_dispatch",
+          "head_sha": "8e54c236516361650bd2dbf01fde26dea7d0bfbe",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34442293948",
+          "id": 34442293948,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:45:35Z",
+            "completed_at": "2026-09-10T05:45:35Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:45:35Z",
+            "completed_at": "2026-09-10T05:45:55Z",
+            "seconds": 20.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:44:44Z",
+            "completed_at": "2026-09-10T05:47:30Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:44:44Z",
+            "completed_at": "2026-09-10T05:45:31Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:44:42Z",
+            "completed_at": "2026-09-10T05:44:42Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:47:30Z",
+            "completed_at": "2026-09-10T05:47:30Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:47:31Z",
+            "completed_at": "2026-09-10T05:47:30Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T05:45:37.8688448Z Running 16 tests using 2 workers",
+          "2026-09-10T05:45:55.5012231Z   16 passed (19.3s)",
+          "2026-09-10T05:45:55.5792263Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T05:45:55.6353204Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T05:41:55Z",
+          "event": "push",
+          "head_sha": "8e54c236516361650bd2dbf01fde26dea7d0bfbe",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34442109441",
+          "id": 34442109441,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:42:47Z",
+            "completed_at": "2026-09-10T05:42:47Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:42:47Z",
+            "completed_at": "2026-09-10T05:43:07Z",
+            "seconds": 20.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:41:57Z",
+            "completed_at": "2026-09-10T05:42:57Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:41:58Z",
+            "completed_at": "2026-09-10T05:43:12Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:41:55Z",
+            "completed_at": "2026-09-10T05:41:55Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:43:15Z",
+            "completed_at": "2026-09-10T05:44:10Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:43:13Z",
+            "completed_at": "2026-09-10T05:43:12Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T05:42:49.9687346Z Running 16 tests using 2 workers",
+          "2026-09-10T05:43:07.5313983Z   16 passed (19.2s)",
+          "2026-09-10T05:43:07.6091089Z E2E 16개 실행·통과 (flaky 0개, mode=full).",
+          "2026-09-10T05:43:07.6677910Z passed 16 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T05:40:14Z",
+          "event": "pull_request",
+          "head_sha": "0ccb9660495e50f2599e24876751d5ce6d2ce5fe",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34442001212",
+          "id": 34442001212,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:41:26Z",
+            "completed_at": "2026-09-10T05:41:37Z",
+            "seconds": 11.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:41:37Z",
+            "completed_at": "2026-09-10T05:41:37Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:40:17Z",
+            "completed_at": "2026-09-10T05:40:25Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:40:28Z",
+            "completed_at": "2026-09-10T05:41:20Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:40:28Z",
+            "completed_at": "2026-09-10T05:41:41Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:41:43Z",
+            "completed_at": "2026-09-10T05:41:46Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:41:42Z",
+            "completed_at": "2026-09-10T05:41:41Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T05:41:29.3103176Z Running 3 tests using 2 workers",
+          "2026-09-10T05:41:37.2585718Z   3 passed (10.0s)",
+          "2026-09-10T05:41:37.3110948Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T05:41:37.3675538Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "failure",
+          "created_at": "2026-09-10T05:37:34Z",
+          "event": "push",
+          "head_sha": "0488e138cef7a905192d9e5d24900b5f9a478b39",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34441821105",
+          "id": 34441821105,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:38:37Z",
+            "completed_at": "2026-09-10T05:38:37Z",
+            "seconds": 0.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T05:38:37Z",
+            "completed_at": "2026-09-10T05:38:59Z",
+            "seconds": 22.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "build-e2e",
+            "conclusion": "failure",
+            "started_at": "2026-09-10T05:37:37Z",
+            "completed_at": "2026-09-10T05:39:04Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:37:37Z",
+            "completed_at": "2026-09-10T05:38:46Z"
+          },
+          {
+            "name": "changes",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:37:35Z",
+            "completed_at": "2026-09-10T05:37:34Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:39:05Z",
+            "completed_at": "2026-09-10T05:39:04Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:39:05Z",
+            "completed_at": "2026-09-10T05:39:04Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "build-e2e\tFull E2E\t2026-09-10T05:38:40.1660972Z Running 16 tests using 2 workers",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:43.4840759Z   ✘   3 [chromium] › e2e/dialog.spec.ts:59:5 › 다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다 (443ms)",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:44.5322327Z   ✘   5 [chromium] › e2e/dialog.spec.ts:59:5 › 다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다 (retry #1) (422ms)",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:45.8209429Z   ✘   7 [chromium] › e2e/dialog.spec.ts:59:5 › 다이얼로그를 열어도 콘텐츠가 좌우로 밀리지 않는다 (retry #2) (638ms)",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:59.8416604Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:59.8425746Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:59.8435487Z   1 failed",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:59.8437058Z   15 passed (21.3s)",
+          "build-e2e\tFull E2E\t2026-09-10T05:38:59.8957468Z  ELIFECYCLE  Command failed with exit code 1.",
+          "build-e2e\tE2E summary\t2026-09-10T05:38:59.9660213Z passed 15 · flaky 0 · failed 1 · skipped 0",
+          "build-e2e\tE2E summary\t2026-09-10T05:38:59.9670879Z ### failed (재시도 소진)"
+        ]
+      },
+      {
+        "run": {
+          "conclusion": "success",
+          "created_at": "2026-09-10T05:35:48Z",
+          "event": "pull_request",
+          "head_sha": "f91df1dae4639484d092bc7e36075b37b68f6cfb",
+          "html_url": "https://github.com/heeji289/loop-pack-fe-l2-vol1/actions/runs/34441705772",
+          "id": 34441705772,
+          "run_attempt": 1
+        },
+        "e2e": [
+          {
+            "name": "Core E2E (@critical)",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:36:55Z",
+            "completed_at": "2026-09-10T05:37:04Z",
+            "seconds": 9.0
+          },
+          {
+            "name": "Full E2E",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:37:04Z",
+            "completed_at": "2026-09-10T05:37:04Z",
+            "seconds": 0.0
+          }
+        ],
+        "job_timing": [
+          {
+            "name": "changes",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:35:51Z",
+            "completed_at": "2026-09-10T05:35:59Z"
+          },
+          {
+            "name": "checks",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:36:02Z",
+            "completed_at": "2026-09-10T05:37:09Z"
+          },
+          {
+            "name": "build-e2e",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:36:02Z",
+            "completed_at": "2026-09-10T05:37:10Z"
+          },
+          {
+            "name": "guard",
+            "conclusion": "success",
+            "started_at": "2026-09-10T05:37:12Z",
+            "completed_at": "2026-09-10T05:37:15Z"
+          },
+          {
+            "name": "deploy",
+            "conclusion": "skipped",
+            "started_at": "2026-09-10T05:37:11Z",
+            "completed_at": "2026-09-10T05:37:10Z"
+          }
+        ],
+        "e2e_log_lines": [
+          "2026-09-10T05:36:58.3315281Z Running 3 tests using 2 workers",
+          "2026-09-10T05:37:04.3207347Z   3 passed (8.0s)",
+          "2026-09-10T05:37:04.3900183Z E2E 3개 실행·통과 (flaky 0개, mode=core).",
+          "2026-09-10T05:37:04.4487939Z passed 3 · flaky 0 · failed 0 · skipped 0"
+        ]
+      }
+    ]
+  },
+  "wall_clock_model": {
+    "formula": "max(checks_end, build_e2e_end + 11s) - max(checks_end, build_e2e_end)",
+    "assumption": "Other step durations, runner start times, postprocessing and guard scheduling unchanged; historical unpaired medians only",
+    "rows": [
+      {
+        "run": 34507839978,
+        "headroom_seconds": 1.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 10.0
+      },
+      {
+        "run": 34507796483,
+        "headroom_seconds": 3.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 8.0
+      },
+      {
+        "run": 34507452081,
+        "headroom_seconds": 2.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 9.0
+      },
+      {
+        "run": 34507412652,
+        "headroom_seconds": -47.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34506500366,
+        "headroom_seconds": -13.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34506315141,
+        "headroom_seconds": 9.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 2.0
+      },
+      {
+        "run": 34505588433,
+        "headroom_seconds": 6.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 5.0
+      },
+      {
+        "run": 34502734079,
+        "headroom_seconds": -5.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34501780251,
+        "headroom_seconds": -11.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34501597916,
+        "headroom_seconds": 8.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 3.0
+      },
+      {
+        "run": 34501245339,
+        "headroom_seconds": 10.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 1.0
+      },
+      {
+        "run": 34491264523,
+        "headroom_seconds": -8.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34489717927,
+        "headroom_seconds": 5.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 6.0
+      },
+      {
+        "run": 34487715872,
+        "headroom_seconds": -11.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34448866011,
+        "headroom_seconds": -1.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34448327394,
+        "headroom_seconds": 4.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 7.0
+      },
+      {
+        "run": 34446869651,
+        "headroom_seconds": -10.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34446293956,
+        "headroom_seconds": -1.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34443836321,
+        "headroom_seconds": 23.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 0.0
+      },
+      {
+        "run": 34443456604,
+        "headroom_seconds": 16.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 0.0
+      },
+      {
+        "run": 34442001212,
+        "headroom_seconds": -21.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      },
+      {
+        "run": 34441705772,
+        "headroom_seconds": -1.0,
+        "assumed_e2e_delta_seconds": 11,
+        "estimated_extra_seconds": 11
+      }
+    ]
+  }
+}

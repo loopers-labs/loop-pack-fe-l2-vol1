@@ -115,7 +115,13 @@ export function ProductList() {
           </button>
         </p>
       )}
-      <p>총 {visibleData.totalCount}개</p>
+      {/*
+       * 이전 목록을 유지하는 갱신은 대기 화면을 띄우지 않아 진행 중임이 드러나지 않는다.
+       * 결과가 0건이라 그릴 목록이 없을 때도 알려야 해서 개수 줄이 그 역할을 맡는다.
+       */}
+      <p aria-live="polite">
+        총 {visibleData.totalCount}개{isFetching && ' · 갱신 중'}
+      </p>
       {visibleData.totalCount === 0 ? (
         <p className="week05-empty">조건에 맞는 상품이 없습니다.</p>
       ) : (

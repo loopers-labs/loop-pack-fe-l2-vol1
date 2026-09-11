@@ -30,7 +30,10 @@ export async function LoginPage({
   } = await loadLoginParams(searchParams);
 
   return (
-    <section className="week05-section" aria-labelledby="login-title">
+    <section
+      className="week05-section week05-login"
+      aria-labelledby="login-title"
+    >
       <h1 id="login-title">로그인</h1>
       {reason && <p role="status">{LOGIN_REASON_MESSAGE[reason]}</p>}
       <LoginForm

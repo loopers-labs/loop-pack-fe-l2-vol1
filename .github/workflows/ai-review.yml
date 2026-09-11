@@ -1,0 +1,140 @@
+name: AI PR Review
+
+# default branch의 실행 코드만 사용한다. Quality의 성공 여부는 advisory 실행 조건이 아니다.
+'on':
+  workflow_run:
+    workflows: [Quality]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-review-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  target:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      run: ${{ steps.target.outputs.run }}
+      pr: ${{ steps.target.outputs.pr }}
+      base: ${{ steps.target.outputs.base }}
+      head: ${{ steps.target.outputs.head }}
+      comment: ${{ steps.target.outputs.comment }}
+      marker: ${{ steps.target.outputs.marker }}
+    steps:
+      - name: Pin PR and reserve one review
+        id: target
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT);
+            const repo = context.repo;
+            if (run.head_repository?.full_name !== `${repo.owner}/${repo.repo}`) {
+              await core.summary.addRaw('AI review: auth_unavailable — 외부 fork는 자동 리뷰하지 않습니다.').write();
+              return;
+            }
+            const pulls = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+              ...repo, commit_sha: run.head_sha, per_page: 100,
+            });
+            const candidates = pulls.filter(p => p.state === 'open' && p.head.sha === run.head_sha && p.head.repo?.full_name === `${repo.owner}/${repo.repo}`);
+            if (candidates.length !== 1) {
+              await core.summary.addRaw('AI review: skipped — 현재 SHA에 대응하는 열린 PR을 하나로 확정할 수 없습니다.').write();
+              return;
+            }
+            const { data: pr } = await github.rest.pulls.get({ ...repo, pull_number: candidates[0].number });
+            if (pr.draft || pr.head.sha !== run.head_sha) {
+              await core.summary.addRaw('AI review: skipped — draft 또는 오래된 실행입니다.').write();
+              return;
+            }
+            const key = `<!-- ai-review:${pr.base.sha}:${pr.head.sha} -->`;
+            const comments = await github.paginate(github.rest.issues.listComments, { ...repo, issue_number: pr.number, per_page: 100 });
+            const previous = comments.find(c => c.user?.login === 'github-actions[bot]' && c.body?.startsWith(key));
+            const attempt = previous ? Number(previous.body.match(/<!-- attempt:(\d+) -->/)?.[1] ?? 2) + 1 : 1;
+            if (previous && (runAttempt === 1 || attempt > 2)) {
+              await core.summary.addRaw('AI review: skipped — 같은 base/head는 자동 1회, AI workflow 수동 재실행 1회까지입니다.').write();
+              return;
+            }
+            const marker = `${key}\n<!-- attempt:${attempt} -->`;
+            const link = `${context.serverUrl}/${repo.owner}/${repo.repo}/actions/runs/${context.runId}/attempts/${runAttempt}`;
+            const body = `${marker}\nAI 리뷰 실행 중 · head: \`${pr.head.sha}\` · [실행 기록](${link})\n\n취소되거나 결과 게시가 실패하면 이 실행 기록에서 상태를 확인하세요.`;
+            const { data: comment } = previous
+              ? await github.rest.issues.updateComment({ ...repo, comment_id: previous.id, body })
+              : await github.rest.issues.createComment({ ...repo, issue_number: pr.number, body });
+            for (const [key, value] of Object.entries({ run: 'true', pr: pr.number, base: pr.base.sha, head: pr.head.sha, comment: comment.id, marker })) core.setOutput(key, value);
+
+  review:
+    needs: target
+    # failed jobs만 재실행하면 target이 다시 돌지 않으므로 여기서도 횟수를 제한한다.
+    if: needs.target.outputs.run == 'true' && fromJSON(github.run_attempt) <= 2
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout trusted driver
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Fetch pinned objects without checking out PR code
+        env:
+          BASE_SHA: ${{ needs.target.outputs.base }}
+          HEAD_SHA: ${{ needs.target.outputs.head }}
+        run: |
+          mkdir -p reports
+          git fetch --no-tags --no-recurse-submodules --depth=1000 origin "$BASE_SHA" "$HEAD_SHA"
+      - name: Review once with project criteria
+        env:
+          BASE_SHA: ${{ needs.target.outputs.base }}
+          HEAD_SHA: ${{ needs.target.outputs.head }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/week-10-ci/pr-review.mjs
+      - name: Preserve result even when incomplete
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ai-review-${{ github.run_attempt }}
+          path: reports/ai-review.*
+          if-no-files-found: warn
+          retention-days: 7
+
+  publish:
+    needs: [target, review]
+    if: ${{ !cancelled() && needs.target.outputs.run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Checkout trusted publisher
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Download this review result
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ai-review-${{ github.run_attempt }}
+          path: reports
+      - name: Publish only for the current head and base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ needs.target.outputs.pr }}
+          BASE_SHA: ${{ needs.target.outputs.base }}
+          HEAD_SHA: ${{ needs.target.outputs.head }}
+          COMMENT_ID: ${{ needs.target.outputs.comment }}
+          COMMENT_MARKER: ${{ needs.target.outputs.marker }}
+          REVIEW_RESULT: ${{ needs.review.result }}
+        run: node scripts/week-10-ci/pr-review.mjs --publish

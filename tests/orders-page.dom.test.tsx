@@ -48,19 +48,12 @@ describe('주문 내역', () => {
       name: '주문 order-7',
     });
 
-    // 화면에 표시된 주문 ID·시각을 단언한다 (시각은 구현과 같은 로케일 포맷으로 비교)
+    // 화면에 표시된 주문 ID·시각을 단언한다. 기대값은 구현을 다시 부르지 않고 리터럴로 둔다 —
+    // 같은 식으로 만들면 실행 환경의 타임존을 따라가 CI(UTC)와 로컬(KST)이 서로 다른 값을
+    // 단언하면서 양쪽 다 통과한다. 09:00Z는 표시 타임존(Asia/Seoul)에서 18:00이다.
     expect(within(order).getByText('주문 order-7')).toBeInTheDocument();
     expect(
-      within(order).getByText(
-        new Date('2026-08-30T09:00:00.000Z').toLocaleString('ko-KR', {
-          year: '2-digit',
-          month: '2-digit',
-          day: '2-digit',
-          weekday: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      ),
+      within(order).getByText('26. 08. 30. (일) 오후 06:00'),
     ).toBeInTheDocument();
     expect(
       await within(order).findByText(knownProduct.name),

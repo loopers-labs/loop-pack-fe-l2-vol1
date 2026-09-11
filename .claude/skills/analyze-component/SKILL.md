@@ -1,12 +1,12 @@
 ---
 name: analyze-component
-description: React 컴포넌트와 공통 UI API를 디자인 패턴 관점으로 분석한다. Headless, Compound, Controlled/Uncontrolled, Provider vs Singleton, Portal 적용 여부와 리렌더 경로, 책임 범위, 상태 소유권, props/합성 경계, 사용처 코드 단순성을 검토할 때 사용한다. Radix UI, Headless UI, downshift 같은 라이브러리 소스 분석, Dialog/Select/Tabs/Accordion/Toast 설계 리뷰, 커머스 공통 컴포넌트 과제의 패턴 선택 근거 점검에 사용한다.
+description: 공통 UI의 공개 API를 Headless · Compound · Controlled/Uncontrolled · Provider vs Singleton · Portal 관점으로 분석하고, 그 패턴이 사용처를 단순하게 만들었는지 판단한다. Dialog/Select/Tabs/Toast 같은 공통 컴포넌트 설계 리뷰, Radix UI·Headless UI·downshift 같은 라이브러리 소스 학습, 패턴 선택 근거 점검에 사용한다.
 ---
 
 # /analyze-component 컴포넌트 패턴 분석
 
 React 공통 컴포넌트나 라이브러리 구현을 패턴 관점으로 읽는 스킬.
-목표는 "어떤 패턴을 썼는가"가 아니라, **그 패턴 덕분에 사용처 코드가 더 단순해졌는가**를 판단하는 것이다.
+이 스킬이 답하는 질문은 하나다 — **이 공개 API가 사용처를 더 단순하게 만드는가.** 어떤 패턴을 썼는지는 그 다음이다. 화면을 무엇으로 나눌지는 `component-review`가 본다.
 
 ---
 
@@ -15,11 +15,12 @@ React 공통 컴포넌트나 라이브러리 구현을 패턴 관점으로 읽�
 1. 분석 대상 파일과 사용 예시를 확인한다. 로컬 코드면 컴포넌트, hook, context/store, story/test, 실제 call site를 함께 읽는다.
 2. 컴포넌트의 공개 API를 먼저 적는다. props, children/slot, compound child, controlled prop, callback, imperative 함수가 무엇인지 정리한다.
 3. 상태 소유권을 분류한다. 서버 상태, 클라이언트 상태, 파생값, 외부 store 상태를 구분한다.
-4. 사용처 코드가 패턴 적용 전보다 단순해졌는지 확인한다. 사용 예시가 없으면 "사용처 판단 보류"로 표시하고 구현만 보고 단정하지 않는다.
-5. 아래 패턴 선택 가이드로 실제 요구와 패턴이 맞는지 매핑한다.
+4. 사용처 코드가 패턴 적용 전보다 단순해졌는지 확인한다. 사용 예시·스토리·테스트가 없으면 구현만 보고 단정하지 말고 판단을 보류한 뒤 필요한 파일을 미검토 범위에 적는다.
+5. 아래 패턴 선택 가이드로 실제 요구와 패턴이 맞는지 매핑한다. 적용한 패턴뿐 아니라 **적용하지 않은 패턴도 왜 필요 없는지** 한 줄로 남긴다.
 6. 리렌더 경로와 책임 범위를 추적한다.
 7. 더 단순한 대안이 있으면 함께 비교한다.
-8. 문제는 심각도순으로 보고하고, 패턴을 쓰지 않아도 되는 단순 UI는 그대로 두라고 판단한다.
+8. 프로젝트 코드를 볼 때는 `.claude/rules/rendering.md`(로딩 자리·접근성·오류 위치)를 함께 기준으로 삼는다. 라이브러리 소스 학습 분석이면 생략한다.
+9. 문제는 심각도순으로 보고하고, 패턴을 쓰지 않아도 되는 단순 UI는 그대로 두라고 판단한다.
 
 ---
 
@@ -50,7 +51,6 @@ React 공통 컴포넌트나 라이브러리 구현을 패턴 관점으로 읽�
 ### 2) 책임 범위
 
 - 컴포넌트, hook, context/store, service의 책임을 각각 한 문장으로 설명할 수 있는가?
-- 한 문장에 "그리고"가 여러 번 들어가면 분리 후보로 본다.
 - UI 렌더링과 상태 전이, DOM 이벤트 처리와 도메인 정책이 과하게 섞이지 않았는가?
 - API 호출부 순수성 등 책임 분리의 일반 원칙은 CONVENTIONS.md 3장을 기준으로 적용한다.
 
@@ -58,7 +58,6 @@ React 공통 컴포넌트나 라이브러리 구현을 패턴 관점으로 읽�
 
 - controlled prop이 넘어오면 외부 값을 단일 출처로 삼고, 아니면 내부 state를 단일 출처로 삼는가?
 - `defaultValue`, `defaultOpen`은 초기값으로만 쓰고 이후 동기화 state로 복제하지 않는가?
-- props, URL search param, 서버 응답에서 계산 가능한 값을 별도 state로 복사하지 않았는가?
 - 외부 store singleton은 SSR, 테스트 격리, 중복 mount 상황에서 상태가 새지 않는가?
 
 ### 4) 리렌더 경로
@@ -70,10 +69,13 @@ React 공통 컴포넌트나 라이브러리 구현을 패턴 관점으로 읽�
 
 ### 5) API와 합성 경계
 
-- boolean props 조합으로 불가능한 상태가 생기면 union, variant, slot, compound API를 제안한다.
+- props 개수만으로 나쁘다고 판단하지 않는다. 각 prop이 독립적이고 이름이 역할을 드러내면 허용할 수 있다.
+- boolean props 조합으로 불가능한 상태가 생기면 union, variant, slot, compound API로 타입에서 막는다. 런타임 규칙으로 미루지 않는다.
+- Context는 props drilling이 깊거나 같은 값을 여러 곳에서 쓸 때 검토한다. 기본은 composition을 먼저 본다.
 - 정해진 위치에 UI를 끼우는 경우는 slot/ReactNode, 내부 상태를 넘겨 사용처가 렌더를 결정해야 하는 경우는 render prop으로 구분한다.
 - Compound child가 부모 context 밖에서 쓰일 때의 에러 메시지나 fallback이 명확한가?
 - Portal은 렌더 위치 문제만 해결하고, open 상태나 호출 API의 책임까지 떠안지 않는가?
+- 사용처가 필요로 하는 native prop(`type`, `aria-*`, `className`, `ref`)을 그대로 위임하는가? 쓰지도 않는 `as`/`asChild`는 붙이지 않는다.
 
 ### 6) 사용처 단순성
 
@@ -122,6 +124,10 @@ React 공통 컴포넌트나 라이브러리 구현을 패턴 관점으로 읽�
 
 ### 유지할 선택
 - {패턴을 적용하지 않아도 되는 부분이나 현재 설계를 유지할 근거}
+- {적용하지 않은 패턴과 지금 필요 없는 이유}
+
+### 미검토 범위
+- {사용처·스토리·테스트가 없어 판단을 보류한 것과 필요한 자료}
 
 ### 질문
 - {사람 리뷰어 또는 구현자에게 확인하면 좋은 설계 질문}

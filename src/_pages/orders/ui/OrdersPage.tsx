@@ -9,6 +9,7 @@ import styles from './OrdersPage.module.css';
 import { orderQueries } from '@/entities/order';
 import { productQueries } from '@/entities/product';
 import { sessionQueries } from '@/entities/session';
+import { formatDateTime } from '@/shared/format-datetime';
 
 export function OrdersPage() {
   return (
@@ -128,7 +129,7 @@ function OrdersContent() {
           >
             <div className={styles.orderHeader}>
               <time className={styles.orderedAt} dateTime={order.createdAt}>
-                {formatOrderedAt(order.createdAt)}
+                {formatDateTime(order.createdAt)}
               </time>
               <span className={styles.orderId}>주문 {order.id}</span>
             </div>
@@ -167,13 +168,3 @@ function OrdersContent() {
     </>
   );
 }
-
-const formatOrderedAt = (createdAt: string) =>
-  new Date(createdAt).toLocaleString('ko-KR', {
-    year: '2-digit',
-    month: '2-digit',
-    day: '2-digit',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });

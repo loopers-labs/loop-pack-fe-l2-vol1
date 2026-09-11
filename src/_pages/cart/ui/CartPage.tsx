@@ -32,6 +32,7 @@ function CartContent() {
     refetch: refetchSession,
   } = useQuery(sessionQueries.me());
   const items = useCart((cart) => cart.items);
+  const { setAllChecked } = useCartActions();
   const { createCheckoutDraft } = useCheckoutActions();
 
   const {
@@ -82,6 +83,10 @@ function CartContent() {
     selectedTotalPrice !== undefined &&
     user !== undefined;
 
+  const handleToggleAllChecked = () => {
+    setAllChecked(!items.every((item) => item.checked));
+  };
+
   const handlePurchaseClick = () => {
     if (!canPurchase) return;
 
@@ -130,6 +135,16 @@ function CartContent() {
 
       <div className={styles.layout}>
         <ul className={styles.list}>
+          <li className={styles.selectAllRow}>
+            <label className={styles.selectAllLabel}>
+              <input
+                type="checkbox"
+                checked={items.every((item) => item.checked)}
+                onChange={handleToggleAllChecked}
+              />
+              전체 선택
+            </label>
+          </li>
           {items.map((item) => (
             <CartItemRow
               key={item.productId}
@@ -199,6 +214,7 @@ function CartItemRow({
   const { toggleChecked, setQuantity, removeItems } = useCartActions();
   const { productId, quantity, checked } = item;
   const productLabel = product?.name ?? productId;
+  const [quantityInput, setQuantityInput] = useState<string | null>(null);
 
   return (
     <li className={styles.row}>
@@ -257,9 +273,28 @@ function CartItemRow({
         >
           -
         </button>
-        <output className={styles.quantity} aria-label={`${productLabel} 수량`}>
-          {quantity}
-        </output>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={Number.MAX_SAFE_INTEGER}
+          step={1}
+          required
+          className={styles.quantity}
+          aria-label={`${productLabel} 수량`}
+          title="1 이상의 정수를 입력하세요. 잘못된 입력은 마지막 수량으로 복원됩니다."
+          value={quantityInput ?? quantity}
+          onChange={(event) => {
+            setQuantityInput(event.currentTarget.value);
+            setQuantity(productId, event.currentTarget.valueAsNumber);
+          }}
+          onBlur={() => {
+            setQuantityInput(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.currentTarget.blur();
+          }}
+        />
         <button
           type="button"
           className={styles.stepperButton}

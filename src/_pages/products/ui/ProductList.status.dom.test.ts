@@ -71,6 +71,22 @@ describe('목록 조회', () => {
     expect(await screen.findByText(totalCountText)).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
+
+  // 같은 조건 재조회라 화면의 페이지 번호는 이미 확정된 값이다. 알리되 막지는 않는다.
+  it('같은 조건으로 다시 조회하는 동안 갱신 중임을 알리되 페이지 이동은 막지 않는다', async () => {
+    const { queryClient } = renderProductList();
+
+    expect(await screen.findByText(totalCountText)).toBeInTheDocument();
+
+    // 응답을 주지 않는 핸들러로 조회 중인 순간을 붙잡는다
+    server.use(http.get('*/api/products', () => delay('infinite')));
+    void queryClient.refetchQueries();
+
+    expect(
+      await screen.findByText(`${totalCountText} · 갱신 중`),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다음' })).toBeEnabled();
+  });
 });
 
 describe('조건에 맞는 상품이 없을 때', () => {
@@ -94,6 +110,24 @@ describe('조건에 맞는 상품이 없을 때', () => {
     expect(
       screen.queryByRole('navigation', { name: '페이지 이동' }),
     ).not.toBeInTheDocument();
+  });
+
+  // 그릴 목록이 없어 갱신 표시를 얹을 자리도 없다. 개수 줄이 그 역할을 맡는지 확인한다.
+  it('조건을 바꾸면 결과가 0건이어도 갱신 중임을 알린다', async () => {
+    emptyProductList();
+
+    const { user } = renderProductList();
+
+    expect(await screen.findByText('총 0개')).toBeInTheDocument();
+
+    // 응답을 주지 않는 핸들러로 갱신 중인 순간을 붙잡는다
+    server.use(http.get('*/api/products', () => delay('infinite')));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: '카테고리' }),
+      'home',
+    );
+
+    expect(await screen.findByText('총 0개 · 갱신 중')).toBeInTheDocument();
   });
 });
 

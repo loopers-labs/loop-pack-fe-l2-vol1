@@ -1,5 +1,15 @@
 import type { NextConfig } from 'next';
+import {
+  PHASE_DEVELOPMENT_SERVER,
+  PHASE_PRODUCTION_BUILD,
+} from 'next/constants';
 
-const nextConfig: NextConfig = {/* config options here */};
+import { validateBuildEnv } from './src/env/validate';
 
-export default nextConfig;
+export default function nextConfig(phase: string): NextConfig {
+  if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
+    validateBuildEnv();
+  }
+
+  return {};
+}

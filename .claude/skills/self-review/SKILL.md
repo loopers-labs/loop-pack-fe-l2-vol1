@@ -12,9 +12,11 @@ description: 구현 후 spec 기준으로 변경된 코드의 기능, 품질, �
 ## 절차
 
 1. `git diff`로 변경 파일 목록을 확인하고 변경된 모든 파일을 Read로 읽는다.
-2. spec 파일과 CONVENTIONS.md 를 읽는다.
-3. 변경 파일에 테스트 관련 파일(`{src,tests}/**/*.test.{ts,tsx}` · `tests/**` · `e2e/**` · `vitest*.ts` · `playwright*.ts`)이 있으면 그 목록을 넘겨 `test-review`를 실행하고, 그 지적을 심각도 그대로 승계한다. blocker만 판정에 반영한다.
-4. 아래 관점으로 검증하고 결과를 형식에 맞춰 보고한다.
+2. spec 파일과 CONVENTIONS.md, 변경 파일에 걸리는 `.claude/rules/*.md`를 읽는다.
+3. 변경 파일에 테스트 관련 파일(`{scripts,src,tests}/**/*.test.{ts,tsx}` · `tests/**` · `e2e/**` · `vitest*.ts` · `playwright*.ts`)이 있으면 그 목록을 넘겨 `test-review`를 실행한다.
+4. 변경 종류에 맞는 리뷰 스킬만 함께 실행한다. 화면 컴포넌트를 무엇으로 나눴는지는 `component-review`, 공통 UI의 공개 API는 `analyze-component`, 레이어·폴더 이동은 `architecture-review`. 변경과 무관한 스킬은 실행하지 않는다.
+5. 하위 스킬의 지적을 **심각도 그대로 승계한다.** 지적마다 출처를 달아 지적 사항에 그대로 싣고, `blocker`만 판정에 반영한다. `architecture-review`는 위반을 `blocker`, 회색 지대를 질문, 구조 냄새를 `nit`으로 옮겨 받는다. 하위 스킬의 미검토 범위도 그대로 가져온다.
+6. 아래 관점으로 검증하고 결과를 형식에 맞춰 보고한다. 확인하지 못한 것은 통과로 적지 않고 미검토 범위에 남긴다.
 
 ---
 
@@ -40,10 +42,21 @@ description: 구현 후 spec 기준으로 변경된 코드의 기능, 품질, �
 - 보안 문제
 - 테스트 추가가 필요한 변경인지
 
-### 4) 규칙 준수
+### 4) diff 전체에서 보는 네 축
 
-- `pnpm build`(타입 체크) · `pnpm lint` 통과
-- CONVENTIONS.md 준수
+축마다 한 줄씩 결론을 낸다. 걸리는 것이 없으면 "해당 없음"으로 적는다.
+
+- **상태 변화**: 새로 생긴 상태의 수명과 소유자를 적는다. 계산으로 구할 수 있는 값은 계산으로 남긴다.
+- **의존성과 기존 유틸**: 새로 쓴 함수가 이미 있는 것과 겹치는지 `shared/`부터 확인한다.
+- **타입 침묵**: `any` · `!` · 설명 없는 `eslint-disable`은 린트가 이미 막는다. 여기서는 린트가 못 보는 것을 본다 — `as` 단언(특히 응답 본문·`as unknown as`), `@ts-expect-error`, 타입을 넓혀 오류를 없앤 자리. 경계에서 검증한 단언과 `as const`는 침묵이 아니다.
+- **입력 신뢰 경계**: 밖에서 온 값(URL 파라미터, 폼, 응답 본문, redirect 대상)은 쓰기 전에 검증한다. `href` · `dangerouslySetInnerHTML`에 들어가는 값을 확인하고, 밖으로 나가는 값(분석 이벤트 props 등)에 토큰 · 쿠키 · 비밀번호가 실리지 않았는지 본다.
+
+AI가 생성한 부분도 작성자가 설명할 수 있어야 한다. 근거를 말할 수 없는 코드는 지적한다.
+
+### 5) 규칙 준수
+
+- `pnpm typecheck` · `pnpm lint` 통과
+- CONVENTIONS.md와 적용되는 `.claude/rules/*.md` 준수
 - AGENTS.md Boundaries 위반 없는지
 - 기존 코드 패턴과 일관성
 
@@ -61,14 +74,18 @@ description: 구현 후 spec 기준으로 변경된 코드의 기능, 품질, �
 - [ ] {완료 조건} — {빠진 점}
 
 ### 정적 검사
-- `pnpm build` · `pnpm lint`: PASS / FAIL
-- `test-review`: PASS / FAIL / 해당 없음
+- `pnpm typecheck` · `pnpm lint`: PASS / FAIL
+- 함께 실행한 리뷰 스킬: {스킬명} {지적 수}건 승계 / 해당 없음
 
-### 지적 사항 (심각도순)
+### 지적 사항 (심각도순, 하위 스킬 지적은 출처와 함께)
+- `[blocker · test-review]` {파일:줄} — {문제} → {고칠 방법}
 - `[blocker]` {파일:줄} — {문제} → {고칠 방법}
-- `[개선]` {파일:줄} — {문제} → {고칠 방법}
+- `[개선 · component-review]` {파일:줄} — {문제} → {고칠 방법}
 - `[nit]` {파일:줄} — {문제} → {고칠 방법}
 (없으면 "없음")
+
+### 미검토 범위
+- {실행하지 못한 검사, 자료가 없어 판단하지 않은 것}
 ```
 
 ---

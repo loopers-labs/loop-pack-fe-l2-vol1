@@ -1,0 +1,50 @@
+name: PR Comment
+
+# Quality가 끝난 뒤 그 결과를 PR 코멘트 하나로 게시한다.
+# workflow_run이라 default branch의 이 파일과 스크립트만 실행된다 — PR 코드는 체크아웃하지 않는다.
+# 그래서 pull-requests: write를 들고도 PR이 고친 코드가 이 job에서 돌지 않는다.
+# pull_request_target이나 별도 고권한 토큰으로 우회하지 않는다.
+'on':
+  workflow_run:
+    workflows: [Quality]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-comment-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  comment:
+    # PR이 없는 push·schedule·dispatch 실행은 summary만 남기고 코멘트하지 않는다.
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Checkout trusted publisher
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      # 리포트가 없어도 게시는 진행한다 — 코멘트가 미측정과 그 이유를 대신 싣는다.
+      - name: Download gate reports
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: gate-reports
+          path: reports
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Update PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: node scripts/week-10-ci/pr-comment.mjs
