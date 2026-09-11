@@ -19,10 +19,18 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          # paths-filter가 이번 push 구간(before..after)을 로컬 git으로 비교할 수 있도록
+          # 최소한의 히스토리를 가져온다. 전체 히스토리(fetch-depth: 0)는 1단계에서
+          # 최적화한 checkout 속도를 다시 늦출 수 있어 적당한 값으로 제한.
+          fetch-depth: 50
       - name: Detect changed paths
         id: filter
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
+          # PR 전체 누적 diff(=base) 대신, 이번 push로 새로 추가된 커밋만 비교한다.
+          # 이 레포는 주차별 브랜치가 이어져 있어 PR의 base(main)가 한참 뒤처져 있고,
+          # 그 상태로 기본 동작(PR 전체 diff)을 쓰면 필터가 사실상 항상 true가 된다.
+          base: ${{ github.event.before || github.event.pull_request.base.sha }}
           filters: |
             e2e:
               - 'src/**'
