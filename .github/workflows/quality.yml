@@ -27,6 +27,10 @@ jobs:
         id: filter
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
+          # token이 있으면 pull_request 이벤트에서 base를 무시하고 GitHub API로
+          # "PR 전체 누적 변경 파일"을 가져와버린다(로그로 확인함). token: ''을 줘서
+          # 로컬 git diff를 쓰게 하고, 우리가 지정한 base(이번 push 구간)를 실제로 반영시킨다.
+          token: ''
           # PR 전체 누적 diff(=base) 대신, 이번 push로 새로 추가된 커밋만 비교한다.
           # 이 레포는 주차별 브랜치가 이어져 있어 PR의 base(main)가 한참 뒤처져 있고,
           # 그 상태로 기본 동작(PR 전체 diff)을 쓰면 필터가 사실상 항상 true가 된다.
