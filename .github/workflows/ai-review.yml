@@ -15,6 +15,9 @@ permissions:
   contents: read
   pull-requests: write
   issues: read
+  # claude-code-action이 내부적으로 OIDC 토큰을 발급받는 데 필요(로그로 확인함:
+  # "Could not fetch an OIDC token" 에러 → id-token: write 없어서 발생).
+  id-token: write
 
 jobs:
   claude-review:
