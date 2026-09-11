@@ -7,7 +7,7 @@
 | 항목 | 현재 상태 | 확인 방법 |
 | --- | --- | --- |
 | 기본 품질 검사 | 적용 완료 | CI 정책, 환경, Vitest, lint, typecheck, production build, 번들 예산을 순서대로 실행 |
-| 조건부 E2E | 구현 완료, 원격 조건 검증 중 | 허용된 Markdown만 바뀌면 생략하고 소스·설정·테스트 변경에서는 실행 |
+| 조건부 E2E | 구현 및 원격 검증 완료 | docs-only 생략, `run-e2e` 강제 실행, 라벨 제거 후 재생략 확인 |
 | 병합 차단 | 적용 완료 | Ruleset `22857523`이 `main`, `feat/week-10`에 최신 base와 `merge-gate` 성공을 요구 |
 | 번들 예산 | 적용 및 원격 검증 완료 | 초과 run `34552726498`, 복구 run `34553000992` |
 | 환경 변수 검사 | CI 검증 완료, 배포 연결 미완료 | 실패 run `34554784036`, 복구 run `34554921387` |
@@ -138,6 +138,18 @@ Before와 After는 같은 애플리케이션 commit 계열, `ubuntu-latest`, Nod
 
 ## 7. 원격 실패와 복구
 
+### 조건부 E2E
+
+| PR #5 상태 | Run | 결과 |
+| --- | --- | --- |
+| Markdown 4개만 변경 | [34556326026](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34556326026) | 기본 검사 성공, Playwright 세 단계 생략, `merge-gate` 성공 |
+| `run-e2e` 라벨 추가 | [34556537166](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34556537166) | `Full verification requested by event or label`, E2E 9개와 `merge-gate` 성공 |
+| `run-e2e` 라벨 제거 | [34556938890](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34556938890) | Markdown 생략으로 복귀, `merge-gate` 성공 |
+
+docs-only 실행에서도 CI 정책, 환경, Vitest, lint, typecheck, production build, 번들 예산은 모두 실행됐다. 생략된 단계는 Playwright 시스템 의존성, Chromium headless shell, E2E뿐이다.
+
+### 결함 주입과 복구
+
 | 검증 | 실패 | 복구 | 확인한 동작 |
 | --- | --- | --- | --- |
 | 번들 예산 | [run 34552726498](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34552726498) | [run 34553000992](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34553000992) | `/`가 539B 초과하면 bundle과 `merge-gate` 실패, 280KiB 복구 후 E2E 9개까지 성공 |
@@ -145,8 +157,6 @@ Before와 After는 같은 애플리케이션 commit 계열, `ubuntu-latest`, Nod
 | FSD import | [PR #3, run 34553958857](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34553958857) | [run 34554441399](https://github.com/manual-hue/loop-pack-fe-l2-vol1/actions/runs/34554441399) | `entities → app`을 두 lint 규칙이 차단하고 `merge-gate`로 전파, 임시 파일 제거 후 성공 |
 
 실험 PR #3과 #4는 최종 diff를 원래 상태로 복구한 뒤 병합하지 않고 닫았다. 번들 예산 실험도 마지막 커밋에서 정상값을 복구한 뒤 PR #2로 `feat/week-10`에 병합했다. 최종 코드에는 낮춘 예산, 금지 환경 변수, 위반 import가 남아 있지 않다.
-
-docs-only와 `run-e2e` 라벨의 원격 실행 결과는 이 문서 PR에서 확인한 뒤 표에 추가한다.
 
 ## 8. 배포 연결 한계
 
