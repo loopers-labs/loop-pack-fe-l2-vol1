@@ -2,6 +2,24 @@
 
 <!-- AI 초안 -->
 
+## 근거 링크
+
+측정과 자가 검증은 전부 포크(`twldnjs/loop-pack-fe-l2-vol1`)의 Actions·PR에 남아 있다.
+제출 PR은 upstream이지만, 실행 로그를 만들고 캐시를 지우는 일은 내가 소유한 저장소에서만
+가능해서 그쪽에서 돌렸다.
+
+| 무엇 | 링크 |
+| --- | --- |
+| 측정용 PR — CI를 돌리는 창구 (머지 금지) | [#1](https://github.com/twldnjs/loop-pack-fe-l2-vol1/pull/1) |
+| 1단계 Before 측정 6회 (cold 3 · warm 3) | [run 34560012066](https://github.com/twldnjs/loop-pack-fe-l2-vol1/actions/runs/34560012066) |
+| 1단계 After 측정 6회 | [run 34562346033](https://github.com/twldnjs/loop-pack-fe-l2-vol1/actions/runs/34562346033) |
+| 2단계 자가 검증 — 문서 전용 PR, e2e 스킵 | [#2](https://github.com/twldnjs/loop-pack-fe-l2-vol1/pull/2) |
+| 2단계 자가 검증 — 소스 변경 PR, e2e 실행 | [#3](https://github.com/twldnjs/loop-pack-fe-l2-vol1/pull/3) |
+| 3단계 빨간불 — 예산 초과, budget·budget-gate 빨강 | [#4](https://github.com/twldnjs/loop-pack-fe-l2-vol1/pull/4) |
+| 그 run의 job summary (`budget summary` 카드) | [run 34597173345](https://github.com/twldnjs/loop-pack-fe-l2-vol1/actions/runs/34597173345) |
+| branch protection 규칙 | 저장소 Settings → Branches (`feat/week-10`) |
+
+
 ## 0. 측정 환경
 
 - 대상 워크플로: `.github/workflows/quality.yml` (6주차 스타터에서 들어온 것, 이번 주 착수 시점까지 무변경).
