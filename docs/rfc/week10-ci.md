@@ -147,6 +147,31 @@ E2E를 job 전체가 아니라 **job 안의 일부 step만** 스킵하는 구조
 | **안 걸리는 PR** (스킵돼야 함) | `docs/rfc/week10-ci.md`, `.github/workflows/quality.yml` | `Install Playwright Chromium`·`Run E2E tests` 모두 **Skipped**(회색), 전체 59s로 단축 | run [34558399605](https://github.com/zaenny/loop-pack-fe-l2-vol1/actions/runs/34558399605) |
 | **걸리는 PR** (실행돼야 함) | `e2e/sanity.spec.ts` (주석 한 줄) | E2E **정상 실행**, `25 passed (15.4s)` | run [34558534663](https://github.com/zaenny/loop-pack-fe-l2-vol1/actions/runs/34558534663) |
 
+## G. 3단계 — 예산 게이트 + 결과 가시성
+
+### 번들 예산 (`size-limit`)
+
+- **측정 대상**: `.next/static/chunks/**/*.js` 전체(gzip). 이 Next.js(16, Turbopack) 빌드는 옛 Webpack처럼 route별 "First Load JS" 표를 안 찍어줘서, 클라이언트에 실제로 전달되는 JS 청크 전체를 기준으로 삼았다.
+- **임계값 근거**: 7주차는 병목이 Hero 이미지(7.5MB→400KB)였어서 JS 번들 kB 수치를 남기지 않았다. 그래서 **오늘 직접 `pnpm build` 후 `size-limit`으로 실측**했다 — gzip 251.9KB(측정마다 246~252KB 사이로 약간 흔들림, Turbopack 청크 해시 차이로 추정). 여기에 **약 20% 여유폭**을 둬서 임계값을 **300KB**로 정했다("적당히 300KB"가 아니라 실측값+여유폭 계산 결과가 우연히 300 근처로 떨어진 것).
+- **자가 검증**: 로컬에서 limit을 일부러 10KB로 낮춰 실행 → `❌`로 실패(exit 1)하고 표에 원인(크기 246.0KB > 제한 9.8KB)이 그대로 나오는 것 확인 → 다시 300KB로 원복 후 통과 확인.
+
+### 환경 변수 검증 (`scripts/validate-env.mjs`)
+
+- **왜 필요한가**: 기존 코드(`src/app/api/_data/auth.ts`)에 `process.env.AUTH_SESSION_SECRET ?? "loopers-week09-secret"`처럼 **레포에 그대로 박힌 기본 시크릿**이 있었다. 환경 변수를 안 넣어도 조용히 이 기본값으로 빌드/배포되던 상태라, 실수로 실제 배포에 secret을 안 넣어도 아무 에러 없이 넘어갈 수 있었다.
+- **검증 내용**: (1) `AUTH_SESSION_SECRET` 같은 필수 값이 비어있으면 실패, (2) `NEXT_PUBLIC_` 접두어가 붙은 이름에 `SECRET`/`TOKEN`/`PASSWORD`/`KEY` 같은 민감한 키워드가 들어있으면 실패(브라우저 노출 위험), (3) `_URL`로 끝나는 `NEXT_PUBLIC_` 값은 `new URL()`로 형식 검증.
+- **build 전 게이트로 연결**: `package.json`에 `prebuild` 스크립트로 등록해, `pnpm build`(그리고 그걸 호출하는 `pnpm check`)를 실행할 때마다 자동으로 먼저 돈다. 따로 CI 단계를 안 추가해도 되는 구조.
+- **자가 검증**: `AUTH_SESSION_SECRET` 없이 `pnpm build` → prebuild에서 즉시 실패, `next build` 자체는 시작도 안 함(빌드 낭비 방지). `NEXT_PUBLIC_API_SECRET=leaked`로 실행 → 노출 위험 메시지와 함께 실패. 정상 값만 있을 때는 통과. 세 경우 모두 로컬에서 실행해 exit code까지 확인.
+- **CI 반영**: CI에는 실제 시크릿이 없으니 `quality.yml`의 job `env`에 `AUTH_SESSION_SECRET: ci-placeholder-secret-not-for-production`라는 **더미 값**을 넣어뒀다(코드의 기본값 `loopers-week09-secret`을 CI에서 그대로 쓰지 않기 위한 의도적 구분).
+
+### 결과 가시성
+
+`Check bundle size` step에서 `size-limit --json` 결과를 표로 만들어 `$GITHUB_STEP_SUMMARY`에 적는다 — PR의 Actions 요약 화면에서 로그를 안 열어봐도 항목별 크기·제한·통과 여부(✅/❌)를 바로 볼 수 있다.
+
+### required 판단
+
+- `Run quality checks`(lint/type/test/build)와 `Check bundle size`(번들 예산), env 검증(prebuild)은 **결정적**이라 required로 걸 만하다고 판단.
+- `Run E2E tests`는 2단계에서 설계한 대로 조건부 실행이라 required로 걸려면 항상 완료되는 구조(이 job은 step 단위 스킵이라 문제없음, F절 참고)여야 하는데, 이 프로젝트는 지금 branch protection 자체를 설정하지 않은 개인 학습 포크라 실제로 걸지는 않았다 — 구조적으로 가능하다는 것까지만 확인.
+
 두 케이스 모두 의도한 대로 동작함을 확인했다. required check와의 충돌 여부는 이 PR엔 branch protection이 설정돼 있지 않아 직접 재현하지는 않았고, 위 "required check와의 충돌 여부" 절의 구조적 근거(step 조건이라 job 자체는 항상 완료됨)로 갈음한다.
 
 ### flaky 대비 정책
