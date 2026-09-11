@@ -69,6 +69,9 @@ test('parses the JSON assignment from a Next.js client reference manifest', () =
     { entryJSFiles: { page: [] } },
   );
   assert.throws(() => parseClientReferenceManifest('globalThis.value = missing;'));
+  assert.throws(() => parseClientReferenceManifest(
+    'globalThis.value = {"entryJSFiles":{"page":[]}};',
+  ));
 });
 
 test('sums each unique initial route chunk gzip size exactly once', async () => {

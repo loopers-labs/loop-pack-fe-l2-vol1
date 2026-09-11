@@ -19,7 +19,10 @@ function readJson(path) {
 
 export function parseClientReferenceManifest(source) {
   const manifestAssignment = source.lastIndexOf('globalThis.__RSC_MANIFEST[');
-  const assignment = source.indexOf('=', Math.max(0, manifestAssignment));
+  if (manifestAssignment < 0) {
+    throw new Error('Client reference manifest does not contain an RSC manifest assignment');
+  }
+  const assignment = source.indexOf('=', manifestAssignment);
   const start = source.indexOf('{', assignment);
   const end = source.lastIndexOf('}');
   if (assignment < 0 || start < 0 || end < start) {
