@@ -9,29 +9,79 @@ on:
 permissions:
   contents: read
 
+# 같은 PR에 연속으로 push하면 앞선 run을 취소한다.
+# 키에 ref를 넣어 브랜치별로 가른다 — 넣지 않으면 main push의 run까지 같이 취소된다.
+# 이건 run 하나의 wall-clock을 줄이는 최적화가 아니라 낭비되는 run을 줄이는 것이다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 1단계 측정 결과(docs/rfc/week10-ci.md): 한 job에서 pnpm check를 직렬로 돌리면
+# job 98초 중 검증 46초 + 브라우저 설치 24초가 71%였다. lint·typecheck·test는 서로
+# 독립이므로 job으로 가른다. build는 E2E가 그 산출물 위에서 돌므로 같은 job에 둔다.
 jobs:
-  quality:
+  lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          version: 10.15.1
-      - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Typecheck
+        run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
-        run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
-          fi
-      - name: Run quality checks
-        run: pnpm check
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Unit·integration tests
+        run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      # 브라우저 바이너리는 pnpm store 밖(~/.cache/ms-playwright)에 있어서
+      # setup-node의 캐시가 덮지 않는다. 측정에서 이 설치가 24초로 두 번째 병목이었다.
+      - name: Cache Playwright browsers
+        uses: actions/cache@d8cd72f230726cdf4457ebb61ec1b593a8d12337 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      # apt 쪽과 바이너리 쪽을 갈라 둔다. 합쳐 두면 24초가 어디서 나온 건지 보이지 않는다.
+      - name: Install Playwright OS deps
+        run: pnpm exec playwright install-deps chromium
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium
+      - name: Build
+        run: pnpm build
+      - name: E2E
+        run: pnpm test:e2e
