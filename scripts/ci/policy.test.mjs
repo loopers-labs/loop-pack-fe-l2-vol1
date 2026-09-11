@@ -20,8 +20,8 @@ test('merge group, push, manual execution and explicit label always run E2E', ()
 });
 
 const outcomes = (e2e) => Object.fromEntries(
-  ['plan', 'install', 'ci_tests', 'environment', 'test', 'lint', 'types', 'build', 'browser', 'e2e']
-    .map((id) => [id, { outcome: !e2e && ['browser', 'e2e'].includes(id) ? 'skipped' : 'success' }]),
+  ['plan', 'install', 'ci_tests', 'environment', 'test', 'lint', 'types', 'build', 'bundle', 'browser_deps', 'browser', 'e2e']
+    .map((id) => [id, { outcome: !e2e && ['browser_deps', 'browser', 'e2e'].includes(id) ? 'skipped' : 'success' }]),
 );
 
 test('gate accepts successful full runs and authorized documentation skips', () => {

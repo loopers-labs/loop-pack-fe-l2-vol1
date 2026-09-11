@@ -67,10 +67,17 @@ jobs:
       - name: Production build
         id: build
         run: pnpm build
-      - name: Install Chromium
+      - name: Check JavaScript bundle budgets
+        id: bundle
+        run: pnpm bundle:check
+      - name: Install Playwright system dependencies
+        id: browser_deps
+        if: steps.plan.outputs.e2e == 'true'
+        run: pnpm exec playwright install-deps chromium
+      - name: Download Chromium
         id: browser
         if: steps.plan.outputs.e2e == 'true'
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
       - name: E2E against the production build
         id: e2e
         if: steps.plan.outputs.e2e == 'true'

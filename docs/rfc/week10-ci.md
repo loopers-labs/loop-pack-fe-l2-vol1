@@ -1,6 +1,6 @@
 # 10주차 CI 설계와 검증 기록
 
-이 문서는 [10주차 과제](../assignments/week-10.md)에 대한 현재 구현, 검증 근거, 남은 작업을 구분한다. CI 기본 검증은 구현했지만 원격 실행 증거와 성능 예산이 없어 과제 전체가 완료된 상태는 아니다. 배포는 별도 작업이다.
+이 문서는 [10주차 과제](../assignments/week-10.md)에 대한 현재 구현, 검증 근거, 남은 작업을 구분한다. CI 기본 검증과 번들 예산은 구현했지만 반복 CI 측정과 원격 자가 검증이 남아 있어 과제 전체가 완료된 상태는 아니다. 배포는 별도 작업이다.
 
 문서는 고정된 완성본이 아니다. 구현이나 정책이 바뀌면 관련 PR에서 함께 수정한다. 실행 명령은 `package.json`, 자동화 동작은 `.github/workflows/quality.yml`과 검사 스크립트를 기준으로 확인한다. 측정 결과에는 대상 commit과 환경을 남기고, 과거 결과를 새 구현의 결과로 바꿔 적지 않는다.
 
@@ -14,7 +14,7 @@
 | FSD 상향 import 차단 | 구현 | 실제 ESLint 설정을 정상·위반 입력으로 검증 |
 | 원격 병합 차단 | 확인 필요 | GitHub ruleset 설정과 실제 PR 실행 필요 |
 | CI 시간 최적화 | 미검증 | Before/After 및 cold/warm 반복 측정 없음 |
-| 번들 예산 게이트 | 미구현 | 비교 가능한 측정값과 임계값 합의 필요 |
+| 번들 예산 게이트 | 로컬 구현 | `/`, `/products`의 gzip JS 예산과 정상·초과·CLI 실패 테스트 구현. 원격 실패·복구 증거 필요 |
 | AI 리뷰 과제 증거 | 일부 | 실제 리뷰 기록과 수용·반려 근거 정리 필요 |
 | Vercel 배포 · smoke · rollback | 미구현 | 프로젝트 연결과 배포 정책 적용 필요 |
 
@@ -27,15 +27,16 @@ Quality는 PR, `main` push, `merge_group`, 수동 실행에서 시작한다. wor
 3. `pnpm install --frozen-lockfile`
 4. `pnpm test:ci` → `pnpm validate:env ci`
 5. `pnpm test` → `pnpm lint` → `pnpm typecheck` → `pnpm build`
-6. 필요한 경우 Chromium 설치 → `pnpm test:e2e:run`
-7. `pnpm ci:gate`로 단계별 결과와 실행 계획 대조
-8. `merge-gate`에서 quality job의 성공 여부 확인
+6. `pnpm bundle:check`로 라우트별 JavaScript 예산 검사
+7. 필요한 경우 Playwright 시스템 의존성 설치 → Chromium 다운로드 → `pnpm test:e2e:run`
+8. `pnpm ci:gate`로 단계별 결과와 실행 계획 대조
+9. `merge-gate`에서 quality job의 성공 여부 확인
 
 일반 단계는 앞 단계가 실패하면 중단한다. 결과 검사와 최종 gate는 `always()`로 실행을 시도한다. runner 종료 등으로 실행되지 못해도 성공으로 간주하지 않는다.
 
 Node는 `.nvmrc`, pnpm은 현재 `packageManager`와 같은 10.15.1을 사용한다. workflow의 pnpm 버전은 자동 동기화되지 않으므로 버전 변경 시 두 곳을 함께 갱신한다. quality timeout은 20분, merge-gate는 2분이다. 이는 안전 상한이지 성능 예산이나 실측 병목의 근거가 아니다.
 
-로컬 전체 검증은 `pnpm check`다. CI 정책 테스트, Vitest, lint, 타입 검사, 빌드, E2E를 순서대로 실행하며 E2E를 생략하지 않는다. Chromium이 없다면 먼저 `pnpm exec playwright install chromium`을 실행한다. CI 환경 변수 검사는 workflow에서 별도로 실행한다.
+로컬 전체 검증은 `pnpm check`다. CI 정책 테스트, Vitest, lint, 타입 검사, 빌드, 번들 예산, E2E를 순서대로 실행하며 E2E를 생략하지 않는다. Chromium이 없다면 먼저 `pnpm exec playwright install chromium`을 실행한다. CI 환경 변수 검사는 workflow에서 별도로 실행한다.
 
 `pnpm test:e2e`는 빌드까지 포함한다. `pnpm test:e2e:run`은 기존 production build를 사용하므로 소스를 바꾼 뒤 빌드 없이 단독 실행하면 안 된다.
 
@@ -55,7 +56,7 @@ Node는 `.nvmrc`, pnpm은 현재 `packageManager`와 같은 10.15.1을 사용한
 
 문서 변경에서도 test · lint · typecheck · build는 실행한다. `docs/assets/week-05-product-images.md`는 단위 테스트가 읽으므로 문서 전체를 검증 대상에서 빼지 않는다. 향후 문서를 런타임 입력으로 사용하면 E2E 허용 목록도 수정해야 한다.
 
-`ci:gate`는 필수 단계의 실패, 취소, 누락, 예상하지 않은 skip을 거부한다. browser와 E2E의 skip은 실행 계획이 명시적으로 false인 경우에만 허용한다. 계획 값 누락도 실패다.
+`ci:gate`는 필수 단계의 실패, 취소, 누락, 예상하지 않은 skip을 거부한다. browser_deps, browser, E2E의 skip은 실행 계획이 명시적으로 false인 경우에만 허용한다. 계획 값 누락도 실패다.
 
 PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 진행 중 실행을 취소한다. main 실행에는 진행 중 취소를 적용하지 않는다. 이 설정이 별도 Vercel 배포를 취소하거나 순서를 보장하지는 않는다.
 
@@ -63,7 +64,7 @@ PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 진행 중 실행
 
 ### 환경 변수
 
-`scripts/validate-env.mjs`는 process 환경 변수만 읽는다. .env.local을 자동으로 읽지 않는다. 실행 모드 local, ci, preview, production을 명시해야 한다.
+`scripts/validate-env.mjs`의 CLI는 Next 16.2.10이 의존하는 `@next/env`로 production 환경 파일과 process 환경 변수를 같은 방식으로 합친 뒤 검사한다. 테스트에서 실제 `.env.production`의 금지된 공개 변수도 감지한다. 실행 모드 local, ci, preview, production은 명시해야 한다.
 
 - 공통: APP_ORIGIN은 경로·query·fragment·사용자 정보가 없는 HTTP(S) origin이어야 한다.
 - CI: localhost, 127.0.0.1, ::1 중 하나여야 한다. workflow는 Playwright 서버와 같은 http://127.0.0.1:3100을 지정한다.
@@ -100,11 +101,11 @@ workflow는 contents: read, checkout의 persist-credentials: false, 기존 actio
 
 Playwright trace와 screenshot은 인증 정보나 응답 데이터를 담을 수 있어 현재 workflow에서 artifact로 업로드하지 않는다. 향후 도입 시 수집 범위, 접근 권한, 민감 데이터, 보관 기간부터 결정한다. retry는 기존 CI 설정의 1회를 유지하며, flaky 자동 집계와 issue 생성은 구현하지 않았다.
 
-## 6. 측정과 번들 예산: 아직 미완료
+## 6. CI 측정과 번들 예산
 
 현재 로그만으로 GitHub CI의 병목이나 개선율을 주장하지 않는다. 검증 job 병렬화·추가 캐시는 도입하지 않았고 기존 setup-node의 pnpm cache를 유지했다. install은 cache hit 여부와 관계없이 실행한다.
 
-summary에는 commit, E2E 실행 여부·이유, setup-node가 보고한 cache hit, 단계 outcome을 남긴다. step 시간은 Actions timeline에서 확인한다. cache 복원 key와 실제 복원 성공은 setup 로그도 함께 확인한다. summary는 아직 번들 수치, 단계별 시간 집계, flaky 통계를 제공하지 않는다.
+summary에는 commit, E2E 실행 여부·이유, setup-node가 보고한 cache hit, 단계 outcome을 남긴다. 번들 검사 단계는 라우트별 actual·budget·delta를 별도 표로 남긴다. step 시간은 Actions timeline에서 확인하고 cache 복원 key와 실제 복원 성공은 setup 로그도 함께 확인한다. summary는 아직 단계별 시간 집계와 flaky 통계를 제공하지 않는다.
 
 ### 측정 절차
 
@@ -115,11 +116,26 @@ summary에는 commit, E2E 실행 여부·이유, setup-node가 보고한 cache h
 5. run URL, commit, cache key·hit, install 시간, 각 step 시간, 전체 wall-clock 원시값과 중앙값·범위를 기록한다. queue 대기 포함 여부도 동일하게 유지한다.
 6. 가장 긴 구간에 맞는 변경만 적용하고 같은 검증 조건으로 다시 측정한다.
 
-### 예산 결정
+### 번들 측정 계약
 
-기존 초안의 280 KiB는 hard gate로 확정하지 않는다. 서로 다른 route의 단발성 값을 반복 측정처럼 사용할 수 없고, 이미지 중심 7주차 결과를 JavaScript 예산의 직접 근거로 삼을 수도 없다.
+주요 진입점은 홈 `/`과 상품 목록 `/products`다. production build가 만든 `build-manifest.json`의 polyfill·root main chunk와 각 라우트의 client reference manifest에 기록된 entry JavaScript를 합친다. 같은 라우트에서 중복된 chunk는 한 번만 세고, 실제로 개별 전송되는 방식에 맞춰 파일마다 gzip한 크기를 더한다. 이미지 전송량과 Lighthouse 수치는 이 JavaScript 지표에 섞지 않는다.
 
-대상 route, 초기 로드·상호작용 범위, 공유 chunk 중복 제거 방식, gzip 또는 실제 전송량 중 어떤 지표인지 먼저 고정한다. 같은 조건의 기준값과 제품 요구를 바탕으로 한계를 정한 뒤 actual/budget/delta를 출력하는 검사를 구현한다. 초과 → 실패 → 수정 후 통과의 원격 증거도 필요하다.
+검사는 manifest가 없거나 형식이 바뀐 경우, JavaScript가 아닌 경로, build 바깥을 가리키는 경로, 필수 chunk 누락도 실패시킨다. `pnpm bundle:measure`는 측정만 하고 `pnpm bundle:check`는 actual·budget·delta를 출력한 뒤 하나라도 초과하면 종료 코드 1을 반환한다. 계산의 정상·경계·초과와 실제 CLI 실패·격리된 GitHub Summary 기록을 `node:test`로 검증한다.
+
+### 기준값 복원과 예산 결정
+
+Windows, Node.js 24.17.0, pnpm 10.15.1, Next.js 16.2.10의 production build에서 각 대상을 세 번 측정했다. chunk hash와 gzip 합계는 세 번 모두 같았다.
+
+| 대상 | commit | `/` raw | `/products` raw | 범위 |
+| --- | --- | --- | --- | --- |
+| 7주차 After | `a924f54f369719be27588b8d96a79dd9e9852373` | 211,501B × 3 | 216,253B × 3 | 두 route 모두 min=max |
+| 현재 애플리케이션 | `88414582` | 286,260B × 3 | 291,987B × 3 | 두 route 모두 min=max |
+
+7주차 commit은 CSS에서 `tailwindcss`를 사용하면서 직접 의존성으로 선언하지 않아 격리 설치만으로는 빌드되지 않았다. 같은 lockfile의 `tailwindcss@4.3.3`을 top-level에서 해석할 수 있게 연결한 뒤 소스 수정 없이 복원했다. 따라서 이 제약과 복원 방법을 제외하고 기준값을 재현했다고 주장하지 않는다.
+
+현재 값은 7주차보다 홈 74,759B(35.3%), 상품 목록 75,734B(35.0%) 늘었다. 8~9주차에 전역 Provider·analytics 초기화·인증·회원별 장바구니와 주문 흐름이 추가된 제품 범위 변화가 있으므로 7주차 값을 그대로 hard limit으로 사용하지 않았다. 현재 세 번의 측정값을 각각 다음 1KiB로 올린 홈 280KiB(286,720B), 상품 목록 286KiB(292,864B)를 초기 예산으로 정했다. 예산 변경은 기능 근거와 재측정값을 같은 PR에 남겨야 한다.
+
+로컬 정상 통과는 확인했지만, 의도적 초과 PR의 실패와 복구 후 성공은 아직 원격에서 증명하지 않았다.
 
 Lighthouse는 별도 환경 변동성이 있으므로 점수 한 번의 하락을 즉시 required 실패로 만들지 않는다. Lighthouse 자동 측정도 현재 미구현이다.
 
@@ -161,6 +177,6 @@ FSD 상향 참조 차단은 구현했고 정상·위반 입력으로 검사했�
 
 이번 최종 로컬 검증 환경은 Windows, Node 24.17.0, pnpm 10.15.1이다. Node는 `.nvmrc`와 `package.json`에서 같은 버전으로 고정하고 `.npmrc`의 engine-strict로 다른 버전의 설치를 거부한다. 운영체제는 CI의 Ubuntu와 다르므로 로컬 성공을 원격 성공으로 대체하지 않는다.
 
-- Node 24.17.0의 최종 `pnpm check` 통과: CI 정책·환경 변수·ESLint·도구 버전 테스트 9개, Vitest 40파일 186개, lint, typecheck, production build, E2E 9개.
+- 현재 변경은 Node 24.17.0과 pnpm 10.15.1로 `pnpm check`의 각 명령을 같은 순서로 실행했다. CI·번들·환경·ESLint·도구 버전 테스트 15개, Vitest 40파일 186개, lint, typecheck, production build, 번들 예산, E2E 9개가 통과했다. Codex 실행 환경의 pnpm 전환 프록시가 오프라인 서명 조회를 시도해 단일 wrapper 명령은 실행하지 못했으며, 3100 포트의 기존 사용자 프로세스를 보존하려고 E2E는 3101에서 실행했다.
 - PR의 Ubuntu 실행에서 side-effect import를 사용한 가상 FSD 검사가 위반을 감지하지 못해 gate가 실패했다. 실제 코드와 같은 named import를 사용하고 적용된 설정 자체도 단언하도록 수정했다.
 - workflow는 실제 GitHub PR에서 실행했다. ruleset 변경과 Vercel 배포는 아직 포함하지 않았다.

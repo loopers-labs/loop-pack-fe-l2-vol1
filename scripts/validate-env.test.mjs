@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { validateEnvironment } from './validate-env.mjs';
+
+const validatorPath = fileURLToPath(new URL('./validate-env.mjs', import.meta.url));
 
 test('CI accepts its local server but rejects missing, external and malformed origins', () => {
   assert.deepEqual(validateEnvironment({ APP_ORIGIN: 'http://127.0.0.1:3100' }, 'ci'), []);
@@ -31,4 +38,27 @@ test('unapproved public variables fail without revealing their values', () => {
   const errors = validateEnvironment({ APP_ORIGIN: 'http://localhost:3100', NEXT_PUBLIC_KEY: secret }, 'ci');
   assert.ok(errors.length > 0);
   assert.equal(errors.join('').includes(secret), false);
+});
+
+test('CLI validates variables loaded by Next from production environment files', () => {
+  const fixtureDirectory = mkdtempSync(join(tmpdir(), 'loopers-env-'));
+  const secret = 'must-not-appear-in-output';
+  try {
+    writeFileSync(
+      join(fixtureDirectory, '.env.production'),
+      `NEXT_PUBLIC_API_SECRET=${secret}\n`,
+      'utf8',
+    );
+    const result = spawnSync(process.execPath, [validatorPath, 'ci'], {
+      cwd: fixtureDirectory,
+      encoding: 'utf8',
+      env: { APP_ORIGIN: 'http://127.0.0.1:3100' },
+    });
+
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Unapproved NEXT_PUBLIC_ variable/);
+    assert.equal(`${result.stdout}${result.stderr}`.includes(secret), false);
+  } finally {
+    rmSync(fixtureDirectory, { recursive: true, force: true });
+  }
 });

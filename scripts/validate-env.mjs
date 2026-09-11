@@ -1,4 +1,9 @@
+import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+
+const require = createRequire(import.meta.url);
+const requireFromNext = createRequire(require.resolve('next/package.json'));
+const { loadEnvConfig } = requireFromNext('@next/env');
 
 function isLoopbackHostname(hostname) {
   const normalized = hostname.toLowerCase().replace(/\.$/, '');
@@ -46,7 +51,13 @@ export function validateEnvironment(env, mode) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const errors = validateEnvironment(process.env, process.argv[2]);
+  const { combinedEnv } = loadEnvConfig(
+    process.cwd(),
+    false,
+    { info() {}, error() {} },
+    true,
+  );
+  const errors = validateEnvironment(combinedEnv, process.argv[2]);
   for (const error of errors) console.error(error);
   if (!errors.length) console.log('Environment validation passed (values omitted)');
   process.exitCode = errors.length ? 1 : 0;

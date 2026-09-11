@@ -20,10 +20,10 @@ export function planChecks(eventName, files, forceE2e = false) {
 
 export function checkOutcomes(steps, e2e) {
   if (e2e !== 'true' && e2e !== 'false') return ['Invalid or missing E2E plan'];
-  const required = ['plan', 'install', 'ci_tests', 'environment', 'test', 'lint', 'types', 'build'];
+  const required = ['plan', 'install', 'ci_tests', 'environment', 'test', 'lint', 'types', 'build', 'bundle'];
   const failures = required.filter((id) => steps[id]?.outcome !== 'success')
     .map((id) => `${id}: expected success, received ${steps[id]?.outcome ?? 'missing'}`);
-  for (const id of ['browser', 'e2e']) {
+  for (const id of ['browser_deps', 'browser', 'e2e']) {
     const expected = e2e === 'true' ? 'success' : 'skipped';
     if (steps[id]?.outcome !== expected) failures.push(`${id}: expected ${expected}, received ${steps[id]?.outcome ?? 'missing'}`);
   }
