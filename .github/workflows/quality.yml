@@ -14,6 +14,11 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # build 전 검증(scripts/validate-env.mjs)을 통과시키기 위한 CI 전용 더미 값.
+      # 실제 서비스 시크릿이 아니며, 코드의 기본값(loopers-week09-secret)을 CI에서
+      # 그대로 쓰지 않기 위해 별도로 지정한다.
+      AUTH_SESSION_SECRET: ci-placeholder-secret-not-for-production
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -62,6 +67,28 @@ jobs:
           fi
       - name: Run quality checks
         run: pnpm check
+      - name: Check bundle size
+        run: |
+          set +e
+          pnpm exec size-limit --json > .size-limit-result.json
+          exit_code=$?
+          set -e
+          {
+            echo "### 📦 번들 크기 (gzip)"
+            echo ""
+            echo "| 항목 | 크기 | 제한 | 결과 |"
+            echo "| --- | --- | --- | --- |"
+            node -e "
+              const rows = require('./.size-limit-result.json');
+              for (const r of rows) {
+                const mark = r.passed ? '✅' : '❌';
+                const size = (r.size / 1024).toFixed(1) + ' KB';
+                const limit = (r.sizeLimit / 1024).toFixed(1) + ' KB';
+                console.log(\`| \${r.name} | \${size} | \${limit} | \${mark} |\`);
+              }
+            "
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $exit_code
       - name: Run E2E tests
         if: steps.filter.outputs.e2e == 'true'
         run: pnpm test:e2e
