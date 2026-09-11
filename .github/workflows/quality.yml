@@ -72,7 +72,7 @@ jobs:
       # 브라우저 바이너리는 pnpm store 밖(~/.cache/ms-playwright)에 있어서
       # setup-node의 캐시가 덮지 않는다. 측정에서 이 설치가 24초로 두 번째 병목이었다.
       - name: Cache Playwright browsers
-        uses: actions/cache@d8cd72f230726cdf4457ebb61ec1b593a8d12337 # v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
