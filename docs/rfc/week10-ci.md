@@ -265,6 +265,23 @@ e2e를 돌리는 경로는 `src/**`, `e2e/**`, `public/**`, `package.json`, `pnp
 `needs.e2e.result`가 `success`거나 `skipped`면 통과, 그 외(`failure`·`cancelled`)면 실패한다.
 required로 둘 체크는 `lint`·`typecheck`·`test`·`e2e-gate` 넷이고 `e2e`는 넣지 않는다.
 
+### 자가 검증 — PR 두 개
+
+조건에 걸리는 PR과 안 걸리는 PR을 하나씩 만들어 같은 워크플로가 갈라지는 것을 확인했다.
+둘 다 `feat/week-10`을 base로 하는 draft PR이고 머지하지 않는다.
+
+| PR | diff | run | e2e | 전체 |
+| --- | --- | --- | --- | --- |
+| #2 문서 전용 | `docs/rfc/week10-ci.md` 한 줄 | Quality #8 | **skipped** | 39s |
+| #3 소스 변경 | `src/app/gallery/stories.ts` 주석 한 줄 | Quality #9 | 실행 | 1m 30s |
+
+두 PR 모두 `changes`·`lint`·`typecheck`·`test`·`e2e-gate`는 초록불이다. 갈린 건 `e2e` 하나뿐이고,
+**문서만 바꾼 PR에서 51초가 줄었다.**
+
+required 충돌도 여기서 확인됐다. PR #2에서 `e2e`는 스킵인데 `e2e-gate`는 통과다.
+gate를 required로 걸어두면 이 PR은 정상적으로 머지 가능 상태가 된다. e2e를 직접 required로
+걸었다면 "대기"에서 멈췄을 자리다.
+
 ### flaky 정책
 
 `retries: process.env.CI ? 1 : 0`.
@@ -279,8 +296,9 @@ e2e를 열 번 넘게 돌리는 동안 흔들린 적은 없어서, 이 정책은
 ## 10. 남은 것
 
 - [ ] lockfile 해시를 깨서 miss 재현 (3절). 지금은 캐시 삭제로만 miss를 봤다.
-- [ ] 2단계 자가 검증. 조건에 걸리는 PR과 안 걸리는 PR을 각각 하나씩 만들어
-      e2e가 돌 때는 돌고 스킵될 때는 스킵되는 것을 Actions 로그로 보여야 한다.
+- [x] 2단계 자가 검증. PR #2·#3으로 확인했다(9절).
+- [ ] 실험 브랜치 `exp/e2e-skip-docs`·`exp/e2e-run-src`와 PR #2·#3은 근거로만 남기고 머지하지 않는다.
+      제출 전에 닫을지, 로그 근거로 열어둘지 정한다.
 - [ ] branch protection에서 required 네 개(`lint`·`typecheck`·`test`·`e2e-gate`)를 실제로 건다.
 - [ ] 시각 회귀 spec을 e2e job 안에 그대로 둘지. 지금은 나머지 E2E와 같이 돈다.
 - [ ] `pnpm format:check`가 CI에 없다. `pnpm check`에 원래 없어서 Before와 조건을 맞추려고 그대로 뒀다.
