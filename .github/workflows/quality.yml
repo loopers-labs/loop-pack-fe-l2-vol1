@@ -23,15 +23,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3 # 관측 중앙값 33초의 약 5배
     steps:
+      # actions/* 는 GitHub 이 직접 관리해 태그 운영을 신뢰할 수 있으므로 major 태그로 둔다.
+      # 패치·보안 수정이 자동으로 들어온다. 서드파티 action 은 태그가 실제로 움직이는 것을
+      # 확인했으므로 커밋 SHA 로 고정한다.
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Set up pnpm
         # version 을 주지 않으면 package.json 의 packageManager 를 읽는다.
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -54,14 +57,14 @@ jobs:
     timeout-minutes: 3 # 관측 중앙값 38초의 약 5배
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Set up pnpm
         # version 을 주지 않으면 package.json 의 packageManager 를 읽는다.
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -86,7 +89,7 @@ jobs:
       AUTH_SESSION_SECRET: ${{ secrets.AUTH_SESSION_SECRET }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       # 문서만 바꾼 PR 에서 E2E 를 건너뛰기 위한 변경 경로 판정.
@@ -113,7 +116,7 @@ jobs:
         # version 을 주지 않으면 package.json 의 packageManager 를 읽는다.
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -128,7 +131,7 @@ jobs:
       - name: Restore Playwright browsers
         id: playwright-cache
         if: steps.e2e.outputs.run == 'true'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
