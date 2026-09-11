@@ -76,9 +76,11 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      # apt 쪽과 바이너리 쪽을 갈라 둔다. 합쳐 두면 24초가 어디서 나온 건지 보이지 않는다.
-      - name: Install Playwright OS deps
-        run: pnpm exec playwright install-deps chromium
+      # apt 쪽과 바이너리 쪽을 갈라 재 봤더니 24초는 apt 16초 + 다운로드 10초였다.
+      # 그리고 apt 로그에는 설치가 없다 — 필요한 라이브러리가 ubuntu-24.04 러너 이미지에
+      # 이미 다 들어 있어서 매 실행 16초를 쓰고 아무것도 안 깔았다. 그래서 install-deps를 뺀다.
+      # 러너 이미지가 라이브러리를 빼면 chromium이 뜨지 않아 이 job이 빨간불이 된다 —
+      # 그때는 이 자리에 `pnpm exec playwright install-deps chromium`을 되살린다.
       - name: Install Playwright Chromium
         run: pnpm exec playwright install chromium
       - name: Build
