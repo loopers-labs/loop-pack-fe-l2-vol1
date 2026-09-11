@@ -85,10 +85,10 @@ jobs:
         id: browser_deps
         if: steps.plan.outputs.e2e == 'true'
         run: pnpm exec playwright install-deps chromium
-      - name: Download Chromium
+      - name: Download Chromium headless shell
         id: browser
         if: steps.plan.outputs.e2e == 'true'
-        run: pnpm exec playwright install chromium
+        run: pnpm exec playwright install --only-shell chromium
       - name: E2E against the production build
         id: e2e
         if: steps.plan.outputs.e2e == 'true'
