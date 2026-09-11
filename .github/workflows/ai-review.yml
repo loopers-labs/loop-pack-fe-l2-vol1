@@ -21,8 +21,13 @@ permissions:
 
 jobs:
   claude-review:
-    # PR의 코멘트에서만 반응한다(일반 issue 코멘트는 무시).
-    if: github.event.issue.pull_request != null
+    # PR의 코멘트 중 "@claude"가 실제로 포함된 것에만 반응한다.
+    # (10주차 코드 리뷰에서 발견: pull_request 조건만 있고 이 조건이
+    # 빠져있어서 PR의 모든 댓글에 반응하고 있었다 — 문서에 적은 "명시적으로
+    # 부를 때만"이라는 설계와 실제 동작이 달랐다.)
+    if: >
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
