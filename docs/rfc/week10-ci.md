@@ -154,7 +154,11 @@ E2E를 job 전체가 아니라 **job 안의 일부 step만** 스킵하는 구조
 - **도구 선정 기준**: (1) 목적이 정확히 일치 — "경로에 맞는 파일 크기를 재고 기준 초과 시 CI를 실패시키는" 게이트 역할 자체가 이 도구의 존재 이유이며, gzip 압축까지 기본 지원. (2) 번들러에 안 얽매임 — `@next/bundle-analyzer`류는 Webpack/Next.js 내부 구조에 맞춰야 하는데, size-limit은 glob 패턴으로 파일만 지정하면 되므로 이 프로젝트의 Turbopack 빌드에도 그대로 붙는다. (3) 외부 서비스·계정 불필요 — `bundlewatch` 등은 GitHub App 연동이 추가로 필요한데, size-limit은 npm 패키지 설치만으로 로컬·CI에서 동일하게 동작하고 `--json` 출력이 있어 PR 요약 표 생성도 직접 구현하기 쉽다.
 - **측정 대상**: `.next/static/chunks/**/*.js` 전체(gzip). 이 Next.js(16, Turbopack) 빌드는 옛 Webpack처럼 route별 "First Load JS" 표를 안 찍어줘서, 클라이언트에 실제로 전달되는 JS 청크 전체를 기준으로 삼았다.
 - **임계값 근거**: 7주차는 병목이 Hero 이미지(7.5MB→400KB)였어서 JS 번들 kB 수치를 남기지 않았다. 그래서 **오늘 직접 `pnpm build` 후 `size-limit`으로 실측**했다 — gzip 251.9KB(측정마다 246~252KB 사이로 약간 흔들림, Turbopack 청크 해시 차이로 추정). 여기에 **약 20% 여유폭**을 둬서 임계값을 **300KB**로 정했다("적당히 300KB"가 아니라 실측값+여유폭 계산 결과가 우연히 300 근처로 떨어진 것).
-- **자가 검증**: 로컬에서 limit을 일부러 10KB로 낮춰 실행 → `❌`로 실패(exit 1)하고 표에 원인(크기 246.0KB > 제한 9.8KB)이 그대로 나오는 것 확인 → 다시 300KB로 원복 후 통과 확인.
+- **자가 검증(로컬)**: limit을 일부러 10KB로 낮춰 실행 → `❌`로 실패(exit 1)하고 표에 원인(크기 246.0KB > 제한 9.8KB)이 그대로 나오는 것 확인 → 다시 300KB로 원복 후 통과 확인.
+- **자가 검증(실제 CI, 빨간불→초록불)**: `.size-limit.json`의 limit을 실제로 10KB로 낮춘 커밋을 PR #3에 push해 CI를 빨갛게 만들고, 로그를 안 열어봐도 PR summary만 보고 원인을 알 수 있는지 확인했다.
+  - 빨간불: `Check bundle size` step 실패, summary에 `246.0 KB / 9.8 KB / ❌` 표 노출 — 스크린샷: `docs/images/week10-budget-exceeded.png`
+  - 다음 커밋에서 300KB로 원복 → `Check bundle size` 다시 통과, PR 전체 초록불로 복귀 확인.
+  - 실험 커밋(limit을 낮춘 커밋)은 PR #3 안에 그대로 남겨두되 머지는 하지 않고, 원복 커밋으로 실제 제출 상태를 정상화했다.
 
 ### 환경 변수 검증 (`scripts/validate-env.mjs`)
 
