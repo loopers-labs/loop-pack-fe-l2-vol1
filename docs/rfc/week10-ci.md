@@ -213,3 +213,18 @@ E2E를 job 전체가 아니라 **job 안의 일부 step만** 스킵하는 구조
 ### required 판단
 
 AI 리뷰는 비결정적이라 **advisory(참고용)**로 둔다 — required 게이트로 걸지 않는다. 과제 문서 권장과 동일한 판단.
+
+### 실제 연동 시도 — 4번 실패하고 로컬 리뷰로 전환
+
+`@claude` 멘션을 실제로 달아보며 4번 반복해서 디버깅했다. 그때그때 원인을 로그로 확인하고 고쳤지만, 마지막엔 근본 원인을 못 찾은 채로 시간상 로컬 리뷰로 방향을 틀었다.
+
+| 시도 | 결과 | 원인(로그 확인) | 조치 |
+| --- | --- | --- | --- |
+| 1 | 실패 | `Could not fetch an OIDC token` — `permissions`에 `id-token: write` 누락 | 추가 |
+| 2 | 실패 | `Claude Code is not installed on this repository` — GitHub App 미설치 | `github.com/apps/claude` 설치 |
+| 3 | 성공(success)이지만 댓글 0개, `permission_denials_count: 22`, 14턴·7분·$0.76 | Bash 도구가 보안상 기본 비활성화 — diff를 보려던 git 명령이 전부 거부당함(공식 FAQ 확인) | `claude_args`에 `--allowedTools "Bash(git diff/log/show:*)"` 추가 |
+| 4 | 실패, `Reached maximum number of turns (8)` | 범위를 "최근 커밋만"으로 제한하는 프롬프트를 추가했지만 8턴으론 부족 | `--max-turns 12`로 상향 |
+| 5 | 실패, `Reached maximum number of turns (12)` | 여전히 부족 | `--max-turns 20`으로 재상향 |
+| 6 | 실패, 20턴도 부족(추정) | **근본 원인 미확정.** `claude-code-action`엔 리뷰 범위(diff)를 제한하는 공식 입력(`diff`/`base`/`range` 등)이 없음(`action.yml` 직접 확인함) — 2단계에서 겪은 "PR base(main)가 뒤처져 있어 누적 diff 전체를 보는 문제"가 여기서도 재현됐을 가능성이 높지만, 로그에 실제 컨텍스트 크기가 안 나와 확정할 수 없었다 | 로컬 리뷰로 전환(아래) |
+
+**판단**: `max_turns`를 계속 올리는 건 증상 대응이지 원인 해결이 아니었다 — 이 액션이 리뷰 범위를 좁히는 공식 수단을 제공하지 않는 한, 이 레포처럼 PR base가 뒤처진 구조에선 안정적으로 돌리기 어렵다고 판단해 CI 연동을 여기서 중단했다. **AI가 만든(혹은 공식 문서대로 따라 만든) workflow를 그대로 신뢰하지 않고, 실제로 여러 번 돌려보며 검증한 과정 자체**를 이번 4단계의 자가 검증 증거로 남긴다. workflow 파일(`ai-review.yml`)은 향후 개선 과제로 레포에 남겨두되, 이번 주 리뷰 산출물(잘 잡은 것/헛소리)은 아래처럼 로컬(이 세션)에서 직접 확보한다.
