@@ -5,6 +5,7 @@ name: Quality
     branches:
       - main
   pull_request:
+  workflow_dispatch: # 10주차 CI 측정용 — Actions 탭에서 수동으로 재실행하기 위해 추가
 
 permissions:
   contents: read
@@ -12,6 +13,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
