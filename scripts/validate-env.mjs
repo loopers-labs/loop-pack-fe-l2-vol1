@@ -42,9 +42,13 @@ export function validateEnvironment(env, mode) {
       errors.push('AUTH_SESSION_SECRET must be supplied (32 random bytes, base64url encoded); source fallback is forbidden');
     }
   }
-  // This app currently consumes no NEXT_PUBLIC_* variables. An explicit allowlist
-  // avoids guessing whether arbitrary names are secrets. Values are never logged.
-  if (Object.keys(env).some((name) => name.startsWith('NEXT_PUBLIC_'))) {
+  // This app consumes no custom NEXT_PUBLIC_* variables. Vercel's Next.js preset
+  // injects public deployment metadata, so only that reserved system namespace is allowed.
+  const hasUnapprovedPublicVariable = Object.keys(env).some((name) =>
+    name.startsWith('NEXT_PUBLIC_') &&
+    !(env.VERCEL === '1' && name.startsWith('NEXT_PUBLIC_VERCEL_')),
+  );
+  if (hasUnapprovedPublicVariable) {
     errors.push('Unapproved NEXT_PUBLIC_ variable: public variable allowlist is empty');
   }
   return errors;

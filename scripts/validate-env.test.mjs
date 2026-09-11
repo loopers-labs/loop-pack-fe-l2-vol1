@@ -40,6 +40,21 @@ test('unapproved public variables fail without revealing their values', () => {
   assert.equal(errors.join('').includes(secret), false);
 });
 
+test('Vercel deployment metadata is allowed only in the reserved system namespace', () => {
+  const origin = 'https://preview.example.com';
+  const env = {
+    APP_ORIGIN: origin,
+    AUTH_SESSION_SECRET: 'x'.repeat(43),
+    EXPECTED_APP_ORIGIN: origin,
+    NEXT_PUBLIC_VERCEL_URL: 'generated-preview.vercel.app',
+    VERCEL: '1',
+  };
+
+  assert.deepEqual(validateEnvironment(env, 'preview'), []);
+  assert.ok(validateEnvironment({ ...env, VERCEL: undefined }, 'preview').length > 0);
+  assert.ok(validateEnvironment({ ...env, NEXT_PUBLIC_CUSTOM_KEY: 'public' }, 'preview').length > 0);
+});
+
 test('CLI validates variables loaded by Next from production environment files', () => {
   const fixtureDirectory = mkdtempSync(join(tmpdir(), 'loopers-env-'));
   const secret = 'must-not-appear-in-output';
