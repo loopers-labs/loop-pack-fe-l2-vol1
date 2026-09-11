@@ -113,3 +113,12 @@ E2E(`Install Playwright Chromium`, `Run E2E tests` step)는 아래 경로가 바
 ### required check와의 충돌 여부
 
 E2E를 job 전체가 아니라 **job 안의 일부 step만** 스킵하는 구조라, 조건에 안 걸려도 `quality` job 자체는 항상 끝까지 실행되고 success/failure를 보고한다. 따라서 `quality`를 branch protection의 required로 걸어도, E2E가 스킵된다고 PR이 "체크 대기"로 멈추는 문제가 애초에 생기지 않는다(job 자체가 아예 안 도는 구조일 때만 생기는 문제).
+
+### 자가 검증 중 발견한 실패 — 필터가 처음엔 작동하지 않았다
+
+`docs/rfc/week10-ci.md`와 `quality.yml`만 바꾼 커밋(`cb000477`, `cc06d1c4`)을 push해서 "이번엔 E2E가 스킵돼야 한다"를 확인하려 했는데, **실제로는 `Install Playwright Chromium`이 그대로 실행됐다.**
+
+- **원인**: `dorny/paths-filter`는 `pull_request` 이벤트에서 기본적으로 **PR 전체의 누적 diff**(head vs base 브랜치)를 기준으로 파일 변경 여부를 판단한다. 이 PR(#3)은 base(`main`)가 여러 주차만큼 뒤처져 있어 커밋이 256개나 잡히는 상태였고(PR #3 확인 과정 참고), 그 누적 diff 안에는 당연히 `src/`, `e2e/`가 잔뜩 포함돼 있다. 그래서 이번 push 하나만 보면 `docs/`·workflow 파일만 바꿨는데도, 필터는 "PR 전체 기준으로는 `src/`도 바뀌었다"고 판단해 조건이 항상 `true`가 됐다.
+- **왜 위험한가**: 이건 과제 문서가 경고한 "path filter가 필요한 검증을 스킵하지 않는가"의 반대 실패 사례다 — 여기선 **스킵돼야 할 게 안 스킵된** 것이라 당장 사고로 이어지진 않지만, 반대로 좁은 필터가 필요한 검증을 놓치는 방향으로도 똑같이 틀릴 수 있다는 걸 보여준다. 자가 검증(2단계 요구사항)을 실제로 돌려보지 않았다면 "필터를 걸었다"는 것만 보고 안심했을 것이다.
+- **고친 방법**: `base`를 PR 전체 base 대신 **이번 push로 추가된 커밋 구간**(`github.event.before` → 없으면 PR base로 fallback)으로 명시해서, "PR 전체가 건드린 파일"이 아니라 "이번 push가 건드린 파일"만 보도록 바꿨다. 로컬 git으로 그 구간을 비교할 수 있도록 `actions/checkout`의 `fetch-depth`도 1(기본, shallow)에서 50으로 늘렸다(0=전체 히스토리는 checkout 속도를 다시 늦출 수 있어 지양, 1단계에서 확인한 대로 checkout은 원래 1~3s로 빠른 step이었다).
+- **한계로 남는 것**: 이 방식은 한 번의 push에 커밋이 아주 많이 몰리면(fetch-depth 50을 넘는 경우) 일부 오래된 커밋의 변경분을 놓칠 수 있다. 이 프로젝트의 실제 사용 패턴(측정용 커밋을 하나씩 push)에서는 문제없지만, 팀 컨벤션상 한 번에 대량 커밋을 rebase해서 올리는 경우가 있다면 재검토가 필요하다.
