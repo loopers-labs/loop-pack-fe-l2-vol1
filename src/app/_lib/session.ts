@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { readSessionToken } from "@/app/api/_data/auth";
-import { SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
+import { readSessionToken } from "@/app/api/auth/session-token";
+import { SESSION_COOKIE } from "@/app/api/auth/session-cookie";
 import { buildLoginUrl } from "@/shared/lib/return-to";
 import type { AuthUser } from "@/types/auth";
 

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
+import { SESSION_COOKIE } from "@/app/api/auth/session-cookie";
 import { buildLoginUrl } from "@/shared/lib/return-to";
 
 // 보호 경로 가드. 세션 쿠키의 존재만 본다.

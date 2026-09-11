@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    # "/" 는 .github/workflows 와 루트 action.yml 만 훑는다. composite action 은 경로를 따로 준다
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: monthly

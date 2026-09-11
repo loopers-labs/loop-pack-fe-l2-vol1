@@ -11,7 +11,7 @@ export default defineConfig({
   workers: isCI ? 2 : 4,
   retries: 0,
   forbidOnly: isCI,
-  reporter: isCI ? [["list"], ["html", { open: "never" }]] : [["list"]],
+  reporter: isCI ? [["list"], ["github"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL: "http://localhost:3000",
     // 실패한 테스트만 trace 를 남긴다. 읽는 법은 PR 본문의 trace 기록 참고

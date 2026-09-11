@@ -52,9 +52,10 @@ const fsdHarness = [
       ],
     },
   })),
-  // 라우팅 존(src/app, api 제외)도 계측은 shared/analytics 를 통해서만
+  // 라우팅 존(src/app, api 제외)과 src 루트(proxy)도 계측은 shared/analytics 를 통해서만.
+  // mock 백엔드 내부(_data)는 응답 빌더·세션 계약 같은 공개 모듈을 통해서만 쓴다 (10주차 승격 룰)
   {
-    files: ["src/app/**/*.{ts,tsx}"],
+    files: ["src/app/**/*.{ts,tsx}", "src/*.{ts,tsx}"],
     ignores: ["src/app/api/**"],
     rules: {
       "@typescript-eslint/no-restricted-imports": [
@@ -64,6 +65,30 @@ const fsdHarness = [
             {
               group: ["@/analytics", "@/analytics/*"],
               message: "계측은 @/shared/analytics 의 trackEvent 를 사용하세요",
+            },
+            {
+              group: ["@/app/api/_data", "@/app/api/_data/*"],
+              message:
+                "mock 백엔드 내부(_data)는 import 할 수 없습니다. @/app/api/auth/session-cookie·session-token 같은 공개 모듈을 사용하세요",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // E2E 는 앱 구현을 import 하지 않는다 — 구현이 바뀌면 기대값도 따라 바뀌어 회귀를 못 잡는다 (week09 RFC C.4)
+  {
+    files: ["e2e/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["../../src/*", "../src/*", "@/*"],
+              allowTypeImports: true,
+              message:
+                "E2E 는 앱 코드에서 타입만 가져올 수 있습니다. 계정·상수는 e2e/fixtures 에 테스트 소유 값으로 둡니다",
             },
           ],
         },
@@ -180,12 +205,18 @@ export default defineConfig([
       // 자식 렌더 에러는 부모 try/catch로 잡히지 않음 -> Error Boundary 사용
       "react-hooks/error-boundaries": "error",
       "react/prop-types": "off",
-      "react/jsx-no-bind": [
-        "error",
-        { ignoreRefs: true, allowArrowFunctions: true },
-      ],
+      "react/jsx-no-bind": ["error", { ignoreRefs: true, allowArrowFunctions: true }],
     },
   },
   ...fsdHarness,
+  // CI 게이트 스크립트(scripts/*.mjs, .size-limit.js)도 린트 대상에 둔다 — ts 블록만 있으면 활성 규칙이 0개다
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: "latest",
+      globals: { ...globals.node },
+    },
+  },
   prettier,
 ]);

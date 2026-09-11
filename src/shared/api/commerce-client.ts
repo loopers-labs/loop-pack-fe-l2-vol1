@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "../config/app-origin";
 import type { ApiErrorResponse } from "@/types/commerce";
 
 export class CommerceApiError extends Error {
@@ -14,8 +15,7 @@ export const isUnauthorizedError = (error: unknown): error is CommerceApiError =
   error instanceof CommerceApiError && error.status === 401;
 
 // 서버(metadata 등)에서는 절대 URL이 필요하다. 클라이언트는 상대 URL 그대로 사용
-const serverOrigin = () =>
-  typeof window === "undefined" ? (process.env.APP_ORIGIN ?? "http://localhost:3000") : "";
+const serverOrigin = () => (typeof window === "undefined" ? APP_ORIGIN : "");
 
 type RequestOptions = {
   method?: "GET" | "POST";

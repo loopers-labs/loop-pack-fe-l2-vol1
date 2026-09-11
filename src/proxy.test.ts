@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { SESSION_COOKIE } from "@/app/api/_data/auth-cookies";
+import { SESSION_COOKIE } from "@/app/api/auth/session-cookie";
 import { config, proxy } from "./proxy";
 
 const requestTo = (path: string, cookie?: string) => {
