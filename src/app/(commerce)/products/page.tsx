@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getQueryClient } from "@/_app/config/getQueryClient";
 import {
-  loadProductListSearchParams,
   PRODUCT_LIST_PAGE_SIZE,
   ProductListPageClient,
   ProductListPageSkeleton,
+  loadProductListQueryParams,
   productQueries,
 } from "@/_pages/products";
 import { buildProductListMetadata } from "@/_pages/products/model/productListMetadata";
@@ -19,13 +19,14 @@ type ProductsPageProps = {
 };
 
 export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
-  const params = await loadProductListSearchParams(searchParams);
+  const params = await loadProductListQueryParams(searchParams);
   const query = productQueries.serverList({
     q: params.q,
     category: params.category,
     sort: params.sort,
     page: params.page,
     pageSize: PRODUCT_LIST_PAGE_SIZE,
+    scenario: params.scenario,
   });
 
   try {
@@ -39,7 +40,7 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = await loadProductListSearchParams(searchParams);
+  const params = await loadProductListQueryParams(searchParams);
   const queryClient = getQueryClient();
 
   void queryClient.prefetchQuery(
@@ -49,6 +50,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       sort: params.sort,
       page: params.page,
       pageSize: PRODUCT_LIST_PAGE_SIZE,
+      scenario: params.scenario,
     }),
   );
 

@@ -12,9 +12,8 @@ describe("getProducts", () => {
     vi.restoreAllMocks();
   });
 
-  it("slow 관찰 환경에서는 사용자 조회 조건과 별개로 API 요청에만 slow scenario를 붙인다", async () => {
+  it("재현용 scenario가 있으면 API 요청 조건에 함께 붙인다", async () => {
     vi.stubEnv("APP_ORIGIN", TEST_API_ORIGIN);
-    vi.stubEnv("NEXT_PUBLIC_PRODUCT_API_SCENARIO", "slow");
     let requestedUrl: string | undefined;
     server.use(
       http.get(`${TEST_API_ORIGIN}/api/products`, ({ request }) => {
@@ -30,6 +29,7 @@ describe("getProducts", () => {
       sort: "popular",
       page: 2,
       pageSize: 12,
+      scenario: "slow",
     });
 
     expect(requestedUrl).toBe(

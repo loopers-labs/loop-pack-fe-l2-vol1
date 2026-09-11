@@ -32,7 +32,8 @@ function renderHomePageClient() {
 describe("HomePageClient", () => {
   beforeEach(() => {
     useCartStore.setState({
-      cartProductIdMap: {},
+      cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
     });
     useWishlistStore.setState({
       wishlistProductIdMap: {},

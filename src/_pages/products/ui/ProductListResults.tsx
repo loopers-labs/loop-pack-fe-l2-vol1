@@ -9,13 +9,14 @@ import { ProductListContent } from "./ProductListContent";
 import { PRODUCT_LIST_PAGE_SIZE } from "../model/constants";
 import { useRetainedProductListDataOnRefreshError } from "../model/useRetainedProductListDataOnRefreshError";
 import { productQueries } from "../queries/productQueries";
-import type { ProductCategoryFilter, ProductSort } from "../model/types";
+import type { ProductCategoryFilter, ProductListScenario, ProductSort } from "../model/types";
 
 type ProductListParams = {
   q: string;
   category: ProductCategoryFilter;
   sort: ProductSort;
   page: number;
+  scenario: ProductListScenario;
 };
 
 type ProductListResultsProps = {
@@ -38,8 +39,9 @@ export function ProductListResults({
         sort: params.sort,
         page: params.page,
         pageSize: PRODUCT_LIST_PAGE_SIZE,
+        scenario: params.scenario,
       }),
-    [params.category, params.page, params.q, params.sort],
+    [params.category, params.page, params.q, params.scenario, params.sort],
   );
   const productsQuery = useQuery(productListQueryOptions);
   const displayData = useRetainedProductListDataOnRefreshError({
@@ -80,6 +82,7 @@ export function ProductListResults({
         sort: params.sort,
         page: params.page + 1,
         pageSize: PRODUCT_LIST_PAGE_SIZE,
+        scenario: params.scenario,
       }),
     );
   }, [
@@ -87,6 +90,7 @@ export function ProductListResults({
     params.category,
     params.page,
     params.q,
+    params.scenario,
     params.sort,
     productsQuery.data,
     queryClient,

@@ -2,13 +2,14 @@
 
 import { useQueryStates } from "nuqs";
 import { useCallback } from "react";
-import { productListSearchParams } from "./searchParams";
+import { productListScenarioSearchParams, productListSearchParams } from "./searchParams";
 import type { ProductCategoryFilter, ProductSort } from "./types";
 
 export function useProductListSearchParams() {
   const [params, setParams] = useQueryStates(productListSearchParams, {
     history: "push",
   });
+  const [scenarioParams] = useQueryStates(productListScenarioSearchParams);
 
   const setSearchQuery = useCallback(
     (q: string) => {
@@ -55,7 +56,7 @@ export function useProductListSearchParams() {
   }, [setParams]);
 
   return {
-    params,
+    params: { ...params, scenario: scenarioParams.scenario },
     setSearchQuery,
     setCategory,
     setSort,

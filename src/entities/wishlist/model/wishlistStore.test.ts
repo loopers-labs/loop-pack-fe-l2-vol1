@@ -24,6 +24,14 @@ describe("useWishlistStore", () => {
     expect(useWishlistStore.getState().wishlistProductIdMap).toEqual({});
   });
 
+  it("clearWishlist를 호출하면 위시리스트를 비운다", () => {
+    useWishlistStore.setState({ wishlistProductIdMap: { p1: true, p2: true } });
+
+    useWishlistStore.getState().clearWishlist();
+
+    expect(useWishlistStore.getState().wishlistProductIdMap).toEqual({});
+  });
+
   it("위시리스트 상태가 map이 아니어도 toggle하면 안전한 map으로 복구한다", () => {
     useWishlistStore.setState(JSON.parse('{ "wishlistProductIdMap": "24" }'));
 
@@ -42,6 +50,7 @@ describe("useWishlistStore", () => {
     const currentState = {
       wishlistProductIdMap: {},
       toggleWishlist: () => undefined,
+      clearWishlist: () => undefined,
       hasHydrated: false,
       setHasHydrated: () => undefined,
     } satisfies WishlistStore;

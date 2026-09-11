@@ -4,6 +4,7 @@ import {
   selectWishlistHasHydrated,
   useWishlistStore,
 } from "@/entities/wishlist";
+import { trackWishlistAdd } from "@/analytics/commerceEvents";
 
 export function useToggleWishlist(productId: string) {
   const hasHydrated = useWishlistStore(selectWishlistHasHydrated);
@@ -13,6 +14,12 @@ export function useToggleWishlist(productId: string) {
   return {
     isPressed: hasHydrated ? isInWishlist : false,
     disabled: !hasHydrated,
-    onClick: () => toggleWishlist(productId),
+    onClick: () => {
+      toggleWishlist(productId);
+
+      if (!isInWishlist) {
+        trackWishlistAdd({ productId });
+      }
+    },
   };
 }

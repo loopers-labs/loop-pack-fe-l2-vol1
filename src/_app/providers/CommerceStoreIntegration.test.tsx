@@ -37,7 +37,8 @@ function renderHomeSectionWithProductList() {
 describe("CommerceStoreIntegration", () => {
   beforeEach(() => {
     useCartStore.setState({
-      cartProductIdMap: {},
+      cartProductQuantityMap: {},
+      selectedCartProductIdMap: {},
       hasHydrated: true,
     });
     useWishlistStore.setState({

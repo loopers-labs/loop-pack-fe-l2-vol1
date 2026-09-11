@@ -1,18 +1,20 @@
-import {
-  selectCartHasHydrated,
-  selectIsProductInCart,
-  selectToggleCart,
-  useCartStore,
-} from "@/entities/cart";
+import { selectAddCartItem, selectCartHasHydrated, useCartStore } from "@/entities/cart";
+import { trackCartAdd } from "@/analytics/commerceEvents";
 
 export function useAddToCart(productId: string) {
   const hasHydrated = useCartStore(selectCartHasHydrated);
-  const isInCart = useCartStore(selectIsProductInCart(productId));
-  const toggleCart = useCartStore(selectToggleCart);
+  const addCartItem = useCartStore(selectAddCartItem);
 
   return {
-    isPressed: hasHydrated ? isInCart : false,
     disabled: !hasHydrated,
-    onClick: () => toggleCart(productId),
+    onClick: () => {
+      const previousQuantity = useCartStore.getState().cartProductQuantityMap[productId] ?? 0;
+
+      addCartItem(productId);
+      trackCartAdd({
+        productId,
+        quantity: previousQuantity + 1,
+      });
+    },
   };
 }

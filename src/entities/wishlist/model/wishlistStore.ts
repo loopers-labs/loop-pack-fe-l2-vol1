@@ -12,6 +12,7 @@ import {
 export type WishlistStore = {
   wishlistProductIdMap: IdSet;
   toggleWishlist: (productId: string) => void;
+  clearWishlist: () => void;
   hasHydrated: boolean;
   setHasHydrated: (hasHydrated: boolean) => void;
 };
@@ -34,6 +35,9 @@ export const useWishlistStore = create<WishlistStore>()(
             wishlistProductIdMap: { ...wishlistProductIdMap, [productId]: true },
           };
         });
+      },
+      clearWishlist: () => {
+        set({ wishlistProductIdMap: {} });
       },
       hasHydrated: false,
       setHasHydrated: (hasHydrated) => {
