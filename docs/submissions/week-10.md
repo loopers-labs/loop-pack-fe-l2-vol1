@@ -41,7 +41,7 @@
 - 근거: **7주차는 JS 크기를 재지 않았다** — 이미지 7.5MB→32KB 와 LCP 만 있다. 그래서 이번 주 기준 빌드 실측(147–158 kB) × 1.05 를 예산으로 걸고 그 사실을 문서에 적었다. 빌드는 결정적(로컬 = CI, 두 번 빌드 diff 0)이라 5% 는 노이즈가 아니라 "컴포넌트 몇 개는 통과, 유틸 라이브러리 1개(≥10 kB)는 차단" 의 폭.
 - validate-env: 필수값·URL 형태·`NEXT_PUBLIC_`+비밀 이름·비밀값 복사·Preview→production 호스트. CI 와 Vercel(`vercel.json` buildCommand) 앞에 같은 게이트. secret 은 저장하지 않고 `openssl rand` 로 매 실행 생성 → 산출물 grep.
 - 가시성: step summary 표 + `::error::` 애노테이션. PR 코멘트 액션은 fork PR 의 읽기 전용 토큰에서 동작하지 않아 쓰지 않았다(그 결과 write 권한이 어느 job 에도 없다).
-- 빨간불: #7 `moment` import → 6 route 전부 `+51 kB` 초과, #8 잘못된 env → build 전 실패. 되돌리면 초록. 스크린샷 `docs/submissions/assets/week-10/`.
+- 빨간불(둘 다 fork `yo-ong/loop-pack-fe-l2-vol1` 안의 실험 PR, 머지 안 함): `exp/bundle-over` 의 `moment` import → 6 route 전부 `+51 kB` 초과, `exp/env-invalid` 의 잘못된 env → build 전 실패. 되돌리면 초록. 스크린샷 `docs/submissions/assets/week-10/`.
 - Vercel: 첫 production 빌드를 `APP_ORIGIN required` 로 막았고(의도), 이어서 **게이트의 오탐**(플랫폼 변수 `TURBO_CI_VENDOR_ENV_KEY` 가 커밋 메시지에 우연히 포함 → "비밀 복사")으로 두 번 막혀 검사를 소유한 비밀값으로 좁혔다. Preview 는 `APP_ORIGIN` 대신 `VERCEL_URL` 로 유도해 production API 를 바라볼 자리를 없앴다.
 
 ### 4단계 — AI 리뷰 (RFC 4절)
