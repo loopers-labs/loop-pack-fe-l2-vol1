@@ -3,6 +3,7 @@ import { create } from 'zustand';
 type CartState = {
   cart: string[];
   toggleCart: (id: string) => void;
+  clearCart: () => void;
 };
 
 const toggle = (list: string[], id: string) =>
@@ -15,6 +16,8 @@ const toggle = (list: string[], id: string) =>
 export const useCartStore = create<CartState>((set) => ({
   cart: [],
   toggleCart: (id) => set((state) => ({ cart: toggle(state.cart, id) })),
+  // 주문이 완료되면 담은 것이 주문으로 넘어갔으므로 비운다 (9주차 주문서).
+  clearCart: () => set({ cart: [] }),
 }));
 
 // 개수는 저장하지 않고 length로 파생 — 헤더는 이것만 구독.
@@ -22,3 +25,6 @@ export const useCartCount = () => useCartStore((state) => state.cart.length);
 export const useIsInCart = (id: string) =>
   useCartStore((state) => state.cart.includes(id));
 export const useToggleCart = () => useCartStore((state) => state.toggleCart);
+// 주문서가 담은 상품 id 목록 자체를 읽는다 — 개수만으로는 주문을 만들 수 없다.
+export const useCartItems = () => useCartStore((state) => state.cart);
+export const useClearCart = () => useCartStore((state) => state.clearCart);

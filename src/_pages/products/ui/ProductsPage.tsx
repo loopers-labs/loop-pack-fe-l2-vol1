@@ -1,11 +1,12 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ProductGrid } from '@/entities/product';
 import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
 import { WishButton } from '@/features/toggle-wishlist/ui/WishButton';
 import type { ProductListQuery } from '@/types/commerce';
+import { analyticsEvents } from '@/shared/analytics/events';
 import { productQueries } from '../api/products.queries';
 import { CATEGORY_OPTIONS, describeFilters } from '../model/describeFilters';
 import { useProductFilters } from '../model/useProductFilters';
@@ -116,6 +117,16 @@ export function ProductsPage() {
 function ProductsPageContent() {
   const { filters, setSearch, setCategory, setSort, setPage } =
     useProductFilters();
+
+  // 목록 진입 계측 — 조건(카테고리·정렬·페이지)이 바뀌면 다른 목록을 본 것으로 센다 (RFC A절).
+  // 검색어는 시드 스키마에 없어 props에 넣지 않는다.
+  useEffect(() => {
+    analyticsEvents.productListView({
+      category: filters.category,
+      sort: filters.sort,
+      page: filters.page,
+    });
+  }, [filters.category, filters.sort, filters.page]);
 
   return (
     <main>

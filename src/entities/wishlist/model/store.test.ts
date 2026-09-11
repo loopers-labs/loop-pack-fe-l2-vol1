@@ -8,7 +8,8 @@ describe('위시리스트 스토어', () => {
   });
 
   it('아무것도 찜하지 않았으면 목록이 비어 있어 개수가 0이다', () => {
-    expect(useWishlistStore.getState().wishlist).toEqual([]);
+    // 장바구니와 같은 이유로 선언된 초기 상태를 본다.
+    expect(useWishlistStore.getInitialState().wishlist).toEqual([]);
   });
 
   it('찜하면 목록에 들어가고 다시 누르면 빠진다', () => {
@@ -25,6 +26,16 @@ describe('위시리스트 스토어', () => {
     useWishlistStore.getState().toggleWish('p1');
 
     expect(useWishlistStore.getState().wishlist).toEqual(['p1']);
+  });
+
+  it('가운데 상품만 빼도 나머지 순서는 유지된다', () => {
+    useWishlistStore.getState().toggleWish('p1');
+    useWishlistStore.getState().toggleWish('p2');
+    useWishlistStore.getState().toggleWish('p3');
+
+    useWishlistStore.getState().toggleWish('p2');
+
+    expect(useWishlistStore.getState().wishlist).toEqual(['p1', 'p3']);
   });
 
   it('장바구니와 별개로 관리된다 — 찜해도 장바구니 목록은 그대로다', async () => {

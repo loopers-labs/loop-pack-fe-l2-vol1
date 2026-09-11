@@ -7,6 +7,7 @@ test.describe('목록에서 담기 → 헤더 확인', () => {
     page,
   }) => {
     await page.goto('/products');
+    await expect(page).toHaveURL('/products');
 
     const header = page.getByRole('banner');
     await expect(header).toContainText('장바구니 0');
@@ -29,6 +30,7 @@ test.describe('목록에서 담기 → 헤더 확인', () => {
     page,
   }) => {
     await page.goto('/products');
+    await expect(page).toHaveURL('/products');
 
     const header = page.getByRole('banner');
     const addToCartButtons = page.getByRole('button', { name: /장바구니$/ });
@@ -49,6 +51,7 @@ test.describe('목록에서 담기 → 헤더 확인', () => {
     page,
   }) => {
     await page.goto('/products');
+    await expect(page).toHaveURL('/products');
 
     await page
       .getByRole('button', { name: /장바구니$/ })

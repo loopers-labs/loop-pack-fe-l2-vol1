@@ -9,7 +9,9 @@ describe('장바구니 스토어', () => {
   });
 
   it('아무것도 담지 않았으면 목록이 비어 있어 개수가 0이다', () => {
-    expect(useCartStore.getState().cart).toEqual([]);
+    // getState()는 beforeEach가 넣은 값이라 초기 상태 검증이 못 된다(변이 실험에서 확인).
+    // 스토어가 선언한 초기 상태 자체를 본다.
+    expect(useCartStore.getInitialState().cart).toEqual([]);
   });
 
   it('담으면 목록에 들어가고 개수는 목록 길이로 늘어난다', () => {
