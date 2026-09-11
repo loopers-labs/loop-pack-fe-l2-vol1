@@ -1,0 +1,8 @@
+[
+  {
+    "name": "클라이언트 JS 전체 (전 라우트 청크 합계, gzip)",
+    "path": ".next/static/chunks/**/*.js",
+    "limit": "300 KB",
+    "gzip": true
+  }
+]

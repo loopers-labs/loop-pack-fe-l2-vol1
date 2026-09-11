@@ -9,29 +9,155 @@ name: Quality
 permissions:
   contents: read
 
+# 같은 브랜치에 새 커밋이 오면 아직 도는 run 을 취소한다.
+# group 키에 ref 를 넣지 않으면 PR push 가 main 의 run 까지 취소한다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # main 은 취소하지 않는다. 그 커밋이 검증됐다는 기록이 사라지기 때문이다.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  quality:
+  # 세 job 은 서로 의존하지 않아 병렬로 돈다.
+  # 각 job 이 checkout·install 을 반복하는 비용은 pnpm store 캐시가 흡수한다.
+  lint-and-types:
     runs-on: ubuntu-latest
+    timeout-minutes: 3 # 관측 중앙값 33초의 약 5배
     steps:
+      # actions/* 는 GitHub 이 직접 관리해 태그 운영을 신뢰할 수 있으므로 major 태그로 둔다.
+      # 패치·보안 수정이 자동으로 들어온다. 서드파티 action 은 태그가 실제로 움직이는 것을
+      # 확인했으므로 커밋 SHA 로 고정한다.
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Set up pnpm
+        # version 을 주지 않으면 package.json 의 packageManager 를 읽는다.
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          version: 10.15.1
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
+      - name: Lint
+        run: pnpm lint
+      - name: Lint FSD boundaries
+        run: pnpm lint:fsd
+      # 워크플로가 pnpm 버전을 따로 박으면 job 마다 다른 pnpm 이 돌 수 있는데
+      # 어느 job 도 실패하지 않아 초록불로 지나간다. 정적으로 판별되는 규칙이라
+      # 빌드가 필요 없는 이 job 에 둔다.
+      - name: Lint version sources
+        run: pnpm lint:versions
+      - name: Typecheck
+        run: pnpm typecheck
+
+  unit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3 # 관측 중앙값 38초의 약 5배
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        # version 을 주지 않으면 package.json 의 packageManager 를 읽는다.
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit test
+        run: pnpm test:unit
+
+  # build 와 E2E 를 한 job 에 두는 이유: 나누면 .next 를 artifact 로 주고받아야 하고
+  # 그 업로드·다운로드 비용이 병렬로 버는 시간보다 크다.
+  build-and-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5 # 관측 중앙값 64초 + E2E 재시도(retries: 2) 여유
+    permissions:
+      contents: read
+      # paths-filter 가 PR 의 변경 파일 목록을 API 로 읽는다. 이 job 에만 준다.
+      pull-requests: read
+    # build 와 E2E 서버가 실제로 읽는 값이다. 검증 대상이기도 하므로 job 전체에 준다.
+    # 나머지 두 job 은 빌드를 안 해서 필요 없다.
+    env:
+      APP_ORIGIN: ${{ secrets.APP_ORIGIN }}
+      AUTH_SESSION_SECRET: ${{ secrets.AUTH_SESSION_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # 문서만 바꾼 PR 에서 E2E 를 건너뛰기 위한 변경 경로 판정.
+      # "스킵할 파일" 을 적는 방식을 골랐다. 여기 안 적힌 파일은 전부 E2E 를 돈다.
+      # 반대로 "E2E 를 돌 파일" 을 적으면, 목록에 넣는 걸 깜빡한 파일만 고친 PR 이
+      # E2E 없이 초록불로 통과한다. 실수가 통과를 만드는 방향이라 안 쓴다.
+      - name: Detect changed paths
+        id: changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          # 기본값 'some' 은 부정 패턴을 무시해서 문서 변경도 code 로 잡는다.
+          predicate-quantifier: some-with-excludes
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+      # main push 는 필터를 보지 않는다. 머지된 결과는 조건 없이 전부 검증한다.
+      - name: Decide whether to run E2E
+        id: e2e
+        run: echo "run=${{ github.event_name == 'push' || steps.changes.outputs.code == 'true' }}" >> "$GITHUB_OUTPUT"
+      - name: Set up pnpm
+        # version 을 주지 않으면 package.json 의 packageManager 를 읽는다.
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # package.json 의 prebuild 로도 같은 스크립트가 돌지만 step 을 따로 둔다.
+      # 실패했을 때 Actions 목록에 이 이름이 보여야 로그를 열지 않고 원인을 안다.
+      - name: Validate env
+        run: node scripts/validate-env.mjs
+      # 브라우저 바이너리는 ~/.cache/ms-playwright 에 깔린다.
+      # setup-node 의 cache: pnpm 은 pnpm store 만 잡아서 이 경로는 캐시 대상에서 빠져 있었다.
+      - name: Restore Playwright browsers
+        id: playwright-cache
+        if: steps.e2e.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Playwright Chromium
+        if: steps.e2e.outputs.run == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      # 캐시가 복원돼도 시스템 라이브러리는 러너에 남지 않는다.
+      # 생략해도 지금 러너 이미지에서는 E2E 가 통과하고 9초를 벌지만(측정함),
+      # 그건 이미지가 Chromium 의존 라이브러리를 갖고 있다는 보장 없는 성질에 기대는 것이다.
+      - name: Install Playwright system dependencies
+        if: steps.e2e.outputs.run == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      # build 는 조건을 걸지 않는다. 문서만 바꾼 PR 에서도 빌드는 깨질 수 있고,
+      # 아껴야 할 시간(약 10초)보다 required check 로서의 값이 크다.
+      # E2E 는 이 결과물 위에서 돈다(playwright.config.ts 의 webServer 가 CI 에선 pnpm start).
+      - name: Build
+        run: pnpm build
+      # .next 가 존재하는 시점이 여기뿐이라 Build 바로 뒤에 둔다. 조건은 걸지 않는다.
+      # 초과분을 job summary 표로 남겨 로그를 열지 않고 PR 화면에서 보이게 한다.
+      - name: Bundle size budget
+        # tee 로 job summary 와 step 로그 양쪽에 남긴다. summary 로만 보내면
+        # 로그에는 exit code 만 남아서 이 step 을 펼친 사람이 원인을 못 본다.
+        # pipefail 이 없으면 파이프 마지막의 tee 성공이 실패를 덮는다.
         run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
-          fi
-      - name: Run quality checks
-        run: pnpm check
+          set -o pipefail
+          pnpm --silent size --json | node scripts/size-summary.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: E2E test
+        if: steps.e2e.outputs.run == 'true'
+        run: pnpm test:e2e
