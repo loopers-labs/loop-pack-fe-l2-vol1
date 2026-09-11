@@ -13,9 +13,9 @@
 | 환경 변수 검사 | CI·Vercel build 검증 완료 | 실패 run `34554784036`, 복구 run `34554921387`, Production deployment `dpl_5NAL4CJ8Q8EbMzbzKddVXLLr3SvH` |
 | CI 최적화 | 반복 측정 완료 | Chromium 다운로드 중앙값 12초에서 6초로 감소 |
 | 반복 구조 위반 | lint 규칙으로 고정 | FSD 실패 run `34553958857`, 복구 run `34554441399` |
-| Vercel | 수동 배포 완료 | Preview·Production이 `READY`; Production smoke 통과, GitHub 자동 연결은 미완료 |
+| Vercel | 배포·Git 연결 완료 | Preview·Production이 `READY`; Production smoke 통과, origin 연결과 Production Branch `main` 확인 |
 
-CI와 배포는 별도로 검증했다. GitHub Actions는 병합 전 품질을 검사하고, Vercel build는 환경별 origin과 session secret을 검사한 뒤 Next.js를 빌드한다. 현재 Production은 수동 CLI 배포이며 GitHub push 기반 자동 배포는 연결하지 못했다.
+CI와 배포는 별도로 검증했다. GitHub Actions는 병합 전 품질을 검사하고, Vercel build는 환경별 origin과 session secret을 검사한 뒤 Next.js를 빌드한다. 첫 Preview와 Production은 CLI로 검증했고, 이후 origin 저장소를 연결해 일반 브랜치는 Preview, `main`은 Production을 생성하도록 설정했다.
 
 ## 2. 품질 검사 순서
 
@@ -171,7 +171,7 @@ Vercel은 Node.js를 major 단위로 선택해 build 당시 24.19.0을 사용했
 
 Production smoke에서는 홈과 상품 목록이 200을 반환했다. 비인증 `/orders/new`는 로그인으로 이동했고, 로그인 후 주문서로 복귀했다. 주문 API는 201을 반환했으며 주문 내역 화면까지 이동했다.
 
-Vercel GitHub App이 origin 저장소에 접근하지 못해 Git 연결은 실패했다. 따라서 Production Branch를 `main`으로 고정한 push 기반 자동 배포는 아직 검증하지 못했고, 이번 Preview와 Production은 CLI로 배포했다. GitHub App에 `manual-hue/loop-pack-fe-l2-vol1` 접근 권한을 부여한 뒤 프로젝트의 Git 설정에서 저장소를 연결해야 한다.
+초기 CLI 배포 뒤 Vercel GitHub App에 origin 저장소 접근 권한을 부여하고 `manual-hue/loop-pack-fe-l2-vol1`을 프로젝트에 연결했다. Vercel 프로젝트 설정에서 Git 공급자 `github`, 저장소 `manual-hue/loop-pack-fe-l2-vol1`, Production Branch `main`을 확인했다. 따라서 일반 브랜치 push는 Preview, `main` push는 Production 배포를 생성한다.
 
 현재 deployment가 첫 정상 Production 기준점이다. 다음 Production이 실패하면 `vercel rollback`으로 직전 정상 deployment로 되돌리고, 홈·상품 목록·인증 redirect·로그인·주문 생성 smoke를 다시 실행한다. Hobby plan에서는 직전 Production까지만 rollback할 수 있다.
 
