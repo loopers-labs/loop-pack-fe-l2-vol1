@@ -1,0 +1,12 @@
+.git
+.github
+.next
+node_modules
+storybook-static
+test-results
+playwright-report
+docs
+e2e
+*.log
+.env*
+!.env.example

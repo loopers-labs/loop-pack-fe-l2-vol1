@@ -33,6 +33,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.7.0)
+      '@next/env':
+        specifier: 16.2.10
+        version: 16.2.10
       '@next/eslint-plugin-next':
         specifier: 16.2.10
         version: 16.2.10

@@ -13,6 +13,24 @@ import importPlugin from 'eslint-plugin-import'
 import next from '@next/eslint-plugin-next'
 import prettier from 'eslint-config-prettier'
 
+const rawAnalyticsImportRestriction = {
+  group: [
+    '@/analytics/logger',
+    '@/analytics/logger.*',
+    '**/analytics/logger',
+    '**/analytics/logger.*',
+  ],
+  importNames: ['track', 'identify', 'reset'],
+  message:
+    '화면에서는 원시 계측 함수를 호출하지 않는다. src/analytics/events.ts의 타입 wrapper를 사용한다.',
+}
+
+const rawAnalyticsDynamicImportRestriction = {
+  selector: 'ImportExpression[source.value=/analytics\\/logger(\\.[^/]+)?$/]',
+  message:
+    '화면에서는 analytics logger를 동적으로 가져오지 않는다. src/analytics/events.ts의 타입 wrapper를 정적으로 사용한다.',
+}
+
 export default defineConfig(
   {
     ignores: [
@@ -113,6 +131,20 @@ export default defineConfig(
   },
 
   {
+    // 9주차에 화면의 원시 계측 호출을 금지했지만 문서만으로는 우회할 수 있었다.
+    // alias와 상대경로를 함께 막되, wrapper를 구현하는 analytics 내부는 제외한다.
+    files: ['src/**/*.{ts,tsx,js,jsx,mjs}'],
+    ignores: ['src/analytics/**/*', '**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [rawAnalyticsImportRestriction] },
+      ],
+      'no-restricted-syntax': ['error', rawAnalyticsDynamicImportRestriction],
+    },
+  },
+
+  {
     // 테스트 환경 규약의 자물쇠다. `.test.ts`는 node 환경에서, `.test.tsx`는 jsdom에서 돈다
     // (vitest.config.ts). 규약이 문서에만 있으면 DOM 테스트가 node 파일로 슬쩍 들어오고,
     // 그날부터 DOM이 필요 없는 테스트까지 브라우저 흉내 환경을 세우게 된다.
@@ -127,9 +159,13 @@ export default defineConfig(
               message:
                 'DOM이 필요한 테스트는 jsdom 프로젝트가 맡는다. 파일 확장자를 .test.tsx로 바꾼다.',
             },
+            rawAnalyticsImportRestriction,
           ],
         },
       ],
+      // 위 블록이 `.test.ts`를 ignores로 빼는 바람에 동적 import 제한까지 함께 빠졌다.
+      // 정적 import만 막으면 테스트 파일이 남은 우회로가 된다. 같은 제한을 다시 건다.
+      'no-restricted-syntax': ['error', rawAnalyticsDynamicImportRestriction],
     },
   },
 
