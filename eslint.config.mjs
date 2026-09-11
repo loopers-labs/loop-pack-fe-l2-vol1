@@ -6,6 +6,46 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import next from '@next/eslint-plugin-next';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
+// 6주차에 정한 FSD 의존 방향을 결정적 게이트로 내린다 (10주차 5단계).
+// 규칙 자체는 docs/rfc/week06-fsd.md에 6주차부터 있었지만 **문서에만** 있었고,
+// 그래서 10주 동안 사람 리뷰도 AI 리뷰도 잡지 못했다. 실제로 위반이 남아 있었다.
+//
+// 레이어 순서(왼쪽이 하위): shared → entities → features → _pages → app
+// 상위가 하위를 쓰는 것이 정방향이다. 막는 건 역방향과, 같은 레이어 슬라이스 간 직접 import다.
+const FSD_LAYERS = ['shared', 'entities', 'features', '_pages', 'app'];
+
+// 슬라이스로 나뉘는 레이어만 같은 레이어끼리도 막는다. 6주차 문서의 금지 예시가 이 둘이다.
+// shared와 app은 슬라이스 구조가 아니라 내부 참조가 정상이므로 제외한다
+// (예: shared/test/render.tsx → @/shared/api/query-client).
+const FSD_SLICED = new Set(['entities', 'features']);
+
+function fsdBoundary(layer) {
+  const higher = FSD_LAYERS.slice(FSD_LAYERS.indexOf(layer) + 1);
+  const patterns = higher.map((upper) => ({
+    group: [`@/${upper}/*`, `@/${upper}/*/**`],
+    message: `FSD 역방향 import — ${layer}는 상위 레이어(${upper})를 알면 안 된다. 조합은 상위에서 한다. 근거: docs/rfc/week06-fsd.md`,
+  }));
+
+  if (FSD_SLICED.has(layer)) {
+    patterns.push({
+      group: [`@/${layer}/*`, `@/${layer}/*/**`],
+      message: `같은 레이어의 다른 슬라이스를 직접 import — 슬라이스끼리는 서로 모른다. 조합은 상위 레이어에서, 슬라이스 내부는 상대 경로로. 근거: docs/rfc/week06-fsd.md`,
+    });
+  }
+
+  return {
+    files: [`src/${layer}/**/*.{ts,tsx}`],
+    // 테스트 파일은 제외한다. 통합 테스트는 여러 슬라이스를 한 화면에 조합하는 것이 본질이고,
+    // 그 조합은 배포되는 결합이 아니다. 막으면 정상 코드를 막는 오탐이 된다 — 실제로
+    // AddToCartButton.dom.test.tsx가 헤더(app)와 다른 feature의 버튼을 함께 렌더해
+    // "둘이 같은 스토어를 보는가"를 검증한다. 그 조합이 곧 검증 대상이다.
+    ignores: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns }],
+    },
+  };
+}
+
 export default tseslint.config(
   {
     ignores: [
@@ -92,6 +132,12 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+
+  // app은 최상위라 역방향이 없고 슬라이스도 아니므로 대상이 아니다.
+  fsdBoundary('shared'),
+  fsdBoundary('entities'),
+  fsdBoundary('features'),
+  fsdBoundary('_pages'),
 
   eslintConfigPrettier,
 );
