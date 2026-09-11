@@ -10,12 +10,12 @@
 | 조건부 E2E | 구현 및 원격 검증 완료 | docs-only 생략, `run-e2e` 강제 실행, 라벨 제거 후 재생략 확인 |
 | 병합 차단 | 적용 완료 | Ruleset `22857523`이 `main`, `feat/week-10`에 최신 base와 `merge-gate` 성공을 요구 |
 | 번들 예산 | 적용 및 원격 검증 완료 | 초과 run `34552726498`, 복구 run `34553000992` |
-| 환경 변수 검사 | CI 검증 완료, 배포 연결 미완료 | 실패 run `34554784036`, 복구 run `34554921387` |
+| 환경 변수 검사 | CI·Vercel build 검증 완료 | 실패 run `34554784036`, 복구 run `34554921387`, Production deployment `dpl_5NAL4CJ8Q8EbMzbzKddVXLLr3SvH` |
 | CI 최적화 | 반복 측정 완료 | Chromium 다운로드 중앙값 12초에서 6초로 감소 |
 | 반복 구조 위반 | lint 규칙으로 고정 | FSD 실패 run `34553958857`, 복구 run `34554441399` |
-| Vercel | 확인 불가 | 현재 작업 환경에 프로젝트 연결과 인증 정보가 없음 |
+| Vercel | 수동 배포 완료 | Preview·Production이 `READY`; Production smoke 통과, GitHub 자동 연결은 미완료 |
 
-CI가 성공했다는 사실은 Preview나 Production 배포 성공을 뜻하지 않는다. 배포 환경의 origin과 session secret 검증은 Vercel 프로젝트를 연결한 뒤 별도로 완료해야 한다.
+CI와 배포는 별도로 검증했다. GitHub Actions는 병합 전 품질을 검사하고, Vercel build는 환경별 origin과 session secret을 검사한 뒤 Next.js를 빌드한다. 현재 Production은 수동 CLI 배포이며 GitHub push 기반 자동 배포는 연결하지 못했다.
 
 ## 2. 품질 검사 순서
 
@@ -63,7 +63,7 @@ PR의 연속 실행은 workflow와 ref 단위로 묶어 이전 PR 실행만 취�
 - Preview와 Production에서는 HTTPS와 비로컬 호스트를 요구한다.
 - 배포 origin은 독립적으로 설정한 `EXPECTED_APP_ORIGIN`과 같아야 한다.
 - Preview와 Production에서는 32바이트 난수를 base64url로 인코딩한 43자 이상의 `AUTH_SESSION_SECRET`을 요구한다.
-- 현재 앱은 공개 환경 변수를 사용하지 않으므로 `NEXT_PUBLIC_*` 허용 목록은 비어 있다.
+- 현재 앱은 사용자 정의 공개 환경 변수를 사용하지 않는다. `VERCEL=1`인 build에서 Vercel이 자동 주입하는 `NEXT_PUBLIC_VERCEL_*` 메타데이터만 허용한다.
 
 검사 오류에는 환경 변수 값을 출력하지 않는다. 길이 검사만으로 secret의 난수성을 증명하지 못하며, 같은 잘못된 값을 `APP_ORIGIN`과 `EXPECTED_APP_ORIGIN`에 복사하면 환경 혼동을 막을 수 없다.
 
@@ -158,19 +158,24 @@ docs-only 실행에서도 CI 정책, 환경, Vitest, lint, typecheck, production
 
 실험 PR #3과 #4는 최종 diff를 원래 상태로 복구한 뒤 병합하지 않고 닫았다. 번들 예산 실험도 마지막 커밋에서 정상값을 복구한 뒤 PR #2로 `feat/week-10`에 병합했다. 최종 코드에는 낮춘 예산, 금지 환경 변수, 위반 import가 남아 있지 않다.
 
-## 8. 배포 연결 한계
+## 8. Vercel 배포 결과와 한계
 
-현재 작업 환경에는 `.vercel` 연결 정보와 Vercel CLI 인증이 없다. 따라서 Preview URL, deployment ID, Production branch, 실제 배포 환경 변수, smoke test, rollback을 확인했다고 쓰지 않는다.
+Vercel 프로젝트 `manual-hue/loop-pack-fe-l2-vol1`을 만들고 commit `ee5d44c1`의 tracked 파일만 clean worktree에서 배포했다. Preview와 Production에는 서로 다른 `APP_ORIGIN`, `EXPECTED_APP_ORIGIN`, `AUTH_SESSION_SECRET`을 저장했으며 값은 로그와 문서에 남기지 않았다.
 
-Vercel을 연결할 때는 다음 조건을 충족해야 한다.
+| 환경 | Deployment | 고정 URL | 결과 |
+| --- | --- | --- | --- |
+| Preview | [`dpl_72JxBf6bUjU17aqA3va5Jfw3w3Df`](https://vercel.com/manual-hue/loop-pack-fe-l2-vol1/72JxBf6bUjU17aqA3va5Jfw3w3Df) | `https://loop-pack-fe-l2-vol1-preview.vercel.app` | `READY`; Vercel Authentication으로 보호됨 |
+| Production | [`dpl_5NAL4CJ8Q8EbMzbzKddVXLLr3SvH`](https://vercel.com/manual-hue/loop-pack-fe-l2-vol1/5NAL4CJ8Q8EbMzbzKddVXLLr3SvH) | [공개 데모](https://loop-pack-fe-l2-vol1-pi.vercel.app) | `READY`; Chromium smoke 통과 |
 
-- Preview와 Production에 서로 다른 `APP_ORIGIN`, `EXPECTED_APP_ORIGIN`, `AUTH_SESSION_SECRET`을 설정한다.
-- Preview build 전에 `pnpm validate:env preview`, Production build 전에 `pnpm validate:env production`을 실행한다.
-- Production branch는 `main`으로 지정하고 같은 commit의 `merge-gate` 성공 뒤에만 승격한다.
-- 상품 목록, 비인증 주문 접근, 로그인, 주문 조회를 smoke test로 확인한다.
-- 직전 정상 deployment와 rollback 후 smoke 절차를 기록한다.
+Vercel은 Node.js를 major 단위로 선택해 build 당시 24.19.0을 사용했다. GitHub CI와 로컬은 24.17.0 고정을 유지하고, `vercel.json`의 install·build 명령에서만 engine strict를 해제했다. 두 환경 모두 `pnpm validate:env`가 Next build보다 먼저 실행됐고 값은 출력하지 않았다.
 
-현재 주문 저장소는 메모리 `Map`이라 인스턴스 재시작과 다중 인스턴스 사이에서 주문을 보존하지 못한다. 배포 smoke는 이 한계를 명시한 데모 범위로만 실행하거나, 운영 전 영속 저장소로 교체해야 한다.
+Production smoke에서는 홈과 상품 목록이 200을 반환했다. 비인증 `/orders/new`는 로그인으로 이동했고, 로그인 후 주문서로 복귀했다. 주문 API는 201을 반환했으며 주문 내역 화면까지 이동했다.
+
+Vercel GitHub App이 origin 저장소에 접근하지 못해 Git 연결은 실패했다. 따라서 Production Branch를 `main`으로 고정한 push 기반 자동 배포는 아직 검증하지 못했고, 이번 Preview와 Production은 CLI로 배포했다. GitHub App에 `manual-hue/loop-pack-fe-l2-vol1` 접근 권한을 부여한 뒤 프로젝트의 Git 설정에서 저장소를 연결해야 한다.
+
+현재 deployment가 첫 정상 Production 기준점이다. 다음 Production이 실패하면 `vercel rollback`으로 직전 정상 deployment로 되돌리고, 홈·상품 목록·인증 redirect·로그인·주문 생성 smoke를 다시 실행한다. Hobby plan에서는 직전 Production까지만 rollback할 수 있다.
+
+현재 주문 저장소는 메모리 `Map`이라 인스턴스 재시작과 다중 인스턴스 사이에서 주문을 보존하지 못한다. 이 배포는 해당 한계를 명시한 데모이며 운영 전에는 영속 저장소로 교체해야 한다.
 
 ## 9. 관련 기록
 

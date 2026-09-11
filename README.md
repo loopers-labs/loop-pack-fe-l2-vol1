@@ -23,6 +23,8 @@ APP_ORIGIN=http://localhost:3000
 
 GitHub Actions는 검증을 단계별로 실행하고 CI 환경 변수도 검사합니다. 허용된 Markdown만 변경한 PR에서는 E2E만 생략하며, `main` push와 `merge_group`에서는 전체 검증을 실행합니다. 구현 범위와 원격 설정 절차는 [10주차 CI 설계](./docs/rfc/week10-ci.md)를 참고하세요.
 
+배포된 데모는 [Vercel Production](https://loop-pack-fe-l2-vol1-pi.vercel.app)에서 확인할 수 있습니다. 인증과 주문 저장소는 과제용 mock이며 주문은 인스턴스 재시작 사이에 보존되지 않습니다.
+
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
 
 ## 기술 개선 기록
