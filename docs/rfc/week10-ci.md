@@ -122,3 +122,18 @@ E2E를 job 전체가 아니라 **job 안의 일부 step만** 스킵하는 구조
 - **왜 위험한가**: 이건 과제 문서가 경고한 "path filter가 필요한 검증을 스킵하지 않는가"의 반대 실패 사례다 — 여기선 **스킵돼야 할 게 안 스킵된** 것이라 당장 사고로 이어지진 않지만, 반대로 좁은 필터가 필요한 검증을 놓치는 방향으로도 똑같이 틀릴 수 있다는 걸 보여준다. 자가 검증(2단계 요구사항)을 실제로 돌려보지 않았다면 "필터를 걸었다"는 것만 보고 안심했을 것이다.
 - **고친 방법**: `base`를 PR 전체 base 대신 **이번 push로 추가된 커밋 구간**(`github.event.before` → 없으면 PR base로 fallback)으로 명시해서, "PR 전체가 건드린 파일"이 아니라 "이번 push가 건드린 파일"만 보도록 바꿨다. 로컬 git으로 그 구간을 비교할 수 있도록 `actions/checkout`의 `fetch-depth`도 1(기본, shallow)에서 50으로 늘렸다(0=전체 히스토리는 checkout 속도를 다시 늦출 수 있어 지양, 1단계에서 확인한 대로 checkout은 원래 1~3s로 빠른 step이었다).
 - **한계로 남는 것**: 이 방식은 한 번의 push에 커밋이 아주 많이 몰리면(fetch-depth 50을 넘는 경우) 일부 오래된 커밋의 변경분을 놓칠 수 있다. 이 프로젝트의 실제 사용 패턴(측정용 커밋을 하나씩 push)에서는 문제없지만, 팀 컨벤션상 한 번에 대량 커밋을 rebase해서 올리는 경우가 있다면 재검토가 필요하다.
+
+### 2차 실패 — `base`를 줬는데도 여전히 안 먹힘
+
+위 수정(`base` 지정)을 push하고 다시 확인했는데도 `Run E2E tests`가 스킵되지 않고 그대로 실행됐다(`25 passed (14.5s)`).
+
+- **원인**: `Detect changed paths` step 로그에 원인이 그대로 찍혀 있었다.
+  ```
+  Warning: 'base' input parameter is ignored when action is triggered by pull request event
+  and 'token' is provided - set token: '' to detect changes using git diff against 'base'
+  Fetching list of changed files for PR#3 from GitHub API
+  Detected 133 changed files
+  ```
+  `dorny/paths-filter`는 `pull_request` 이벤트에서 `token`이 주어져 있으면(기본적으로 `GITHUB_TOKEN`이 암묵적으로 제공됨) **우리가 지정한 `base`를 그냥 무시**하고, GitHub API로 "이 PR이 지금까지 건드린 전체 파일 목록"(133개)을 가져와 그 기준으로 판단하도록 만들어져 있었다. 즉 1차 수정에서 넣은 `base` 값은 애초에 반영된 적이 없었다.
+- **고친 방법**: `token: ''`을 명시해서 API 경로 대신 로컬 git diff 경로를 타도록 강제했다. 이제야 우리가 지정한 `base`(이번 push 구간)가 실제로 쓰인다.
+- **배운 것**: 액션 하나를 설정할 때 "옵션을 넣었다"와 "그 옵션이 실제로 적용된다"는 다른 문제다. 로그를 안 열어보고 `base`만 넣고 넘어갔다면, 조건부 실행이 겉보기엔 설정된 것처럼 보이지만 실제로는 전혀 작동 안 하는 채로 계속 갔을 것이다 — 자가 검증(직접 PR을 걸어보고 로그로 확인하기)이 왜 필요한지를 그대로 보여주는 사례.
