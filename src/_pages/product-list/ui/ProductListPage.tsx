@@ -1,7 +1,8 @@
 "use client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ProductListResponse } from "@/entities/product";
+import { EVENT, trackEvent } from "@/shared/analytics";
 import { ProductCardWithActions } from "@/widgets/product-card";
 import { productListQueryOptions } from "../api/productListQuery";
 import { categoryOptions, isCategoryValue, isSortValue, sortOptions } from "../config/options";
@@ -61,6 +62,24 @@ export function ProductListPage() {
 
   const totalPages = hasList ? Math.max(1, Math.ceil(list.totalCount / list.pageSize)) : 1;
 
+  // ── 목록 진입 ──────────────────────────────────────────────────────────
+  // 화면 조회는 사용자 액션이 아니라 "이 조건의 목록이 보였다"는 사실이라
+  // effect가 맞는 도구다(외부 시스템 동기화). 조건이 바뀌면 다시 보낸다 —
+  // 시드 로그의 product_list_view도 세션당 1건 이상이고 props에 조건이 담겨 있다.
+  //
+  // 목록이 실제로 그려진 뒤에만 보낸다. 마운트 시점에 보내면 첫 요청이 실패해
+  // 아무것도 못 본 세션까지 "목록을 봤다"로 집계된다 — 3단계 이탈률이 그만큼 낮게 나온다.
+  useEffect(() => {
+    if (!hasList) {
+      return;
+    }
+    trackEvent(EVENT.productListView, {
+      category: params.category,
+      sort: params.sort,
+      page: params.page,
+    });
+  }, [hasList, params.category, params.sort, params.page]);
+
   return (
     <main className="shop-page">
       <section className="shop-section">
@@ -79,6 +98,7 @@ export function ProductListPage() {
               onChange={(event) => {
                 // 필터 변경 시 page를 1로 되돌린다.
                 if (isCategoryValue(event.target.value)) {
+                  trackEvent(EVENT.categoryFilterChange, { category: event.target.value });
                   setParams({ category: event.target.value, page: 1 });
                 }
               }}
@@ -96,6 +116,7 @@ export function ProductListPage() {
               value={params.sort}
               onChange={(event) => {
                 if (isSortValue(event.target.value)) {
+                  trackEvent(EVENT.sortChange, { sort: event.target.value });
                   setParams({ sort: event.target.value, page: 1 });
                 }
               }}
@@ -168,7 +189,10 @@ export function ProductListPage() {
                   <button
                     type="button"
                     disabled={params.page <= 1}
-                    onClick={() => setParams({ page: params.page - 1 })}
+                    onClick={() => {
+                      trackEvent(EVENT.pageChange, { page: params.page - 1 });
+                      setParams({ page: params.page - 1 });
+                    }}
                   >
                     이전
                   </button>
@@ -178,7 +202,10 @@ export function ProductListPage() {
                   <button
                     type="button"
                     disabled={params.page >= totalPages}
-                    onClick={() => setParams({ page: params.page + 1 })}
+                    onClick={() => {
+                      trackEvent(EVENT.pageChange, { page: params.page + 1 });
+                      setParams({ page: params.page + 1 });
+                    }}
                   >
                     다음
                   </button>

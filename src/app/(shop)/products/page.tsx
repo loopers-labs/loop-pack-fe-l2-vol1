@@ -7,7 +7,7 @@ import { productListQueryOptions } from "@/_pages/product-list/api/productListQu
 import { categoryOptions, sortOptions } from "@/_pages/product-list/config/options";
 import { resolveProductListQuery } from "@/_pages/product-list/model/resolveProductListQuery";
 import { ProductListPage } from "@/_pages/product-list/ui/ProductListPage";
-import { commonOpenGraph } from "../layout";
+import { commonOpenGraph } from "../../layout";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

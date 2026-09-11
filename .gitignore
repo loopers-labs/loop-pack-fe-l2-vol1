@@ -45,3 +45,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# E2E 워커별 로그인 상태. 쿠키가 담기므로 커밋하지 않는다.
+/playwright/.auth

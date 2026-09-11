@@ -1,0 +1,46 @@
+// spec: specs/auth-plan.md
+// seed: e2e/seed.spec.ts
+import { expect, test } from "@playwright/test";
+
+test.describe("인증 플로우", () => {
+  test("로그인하면 원래 가려던 경로로 돌아온다", async ({ page }) => {
+    // 1. /checkout?productId=p3&quantity=2로 이동한다 (로그인으로 리다이렉트된다)
+    await page.goto("/checkout?productId=p3&quantity=2");
+    await expect(page).toHaveURL("/login?next=%2Fcheckout%3FproductId%3Dp3%26quantity%3D2");
+    await expect(page).toHaveTitle("로그인 · Commerce");
+    await expect(page.getByRole("link", { name: "로그인" })).toBeVisible();
+    await expect(page.getByText("위시리스트 0")).toBeVisible();
+    await expect(page.getByText("장바구니 0")).toBeVisible();
+    await expect(page.getByText("looper1@loopers.dev")).toBeVisible();
+    await expect(page.getByText("looper8@loopers.dev")).toBeVisible();
+    await expect(page.getByText("looper1234")).toBeVisible();
+
+    // 2. 이메일에 looper1@loopers.dev를 입력한다
+    await page.getByRole("textbox", { name: "이메일" }).fill("looper1@loopers.dev");
+
+    // 3. 비밀번호에 looper1234를 입력한다
+    await page.getByRole("textbox", { name: "비밀번호" }).fill("looper1234");
+
+    // 4. 로그인 버튼을 클릭한다
+    await page.getByRole("button", { name: "로그인" }).click();
+
+    // 5~13. 복원과 화면 확인
+    await expect(page).toHaveURL("/checkout?productId=p3&quantity=2");
+    await expect(page).toHaveTitle("주문서 · Commerce");
+    await expect(page.getByRole("link", { name: "로그인" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "주문 내역" })).toBeVisible();
+    await expect(page.getByText("루퍼1")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "주문서" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 2,
+        name: "[1+1] 베이직 무지 롱 슬리브 102-CVL 17수 긴팔티",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("Loopers Select")).toBeVisible();
+    await expect(page.getByText("수량 2개")).toBeVisible();
+    await expect(page.getByText("68,000원")).toBeVisible();
+    await expect(page.getByRole("button", { name: "주문하기" })).toBeVisible();
+  });
+});
