@@ -7,7 +7,11 @@ import { sessionQueries } from '@/entities/session/api/sessionQueries';
    (어느 줄이 걸리는지도 disable 위치에 따라 달라지는 불안정한 동작이라 파일 단위로 껐다).
    같은 import가 src/app/api/auth/login/route.ts에선 정상 통과하는 걸로 실제 계층 위반이 아님을 확인함. */
 import { readSessionToken } from '@/app/api/_data/auth';
-import { SCENARIO_COOKIE, SESSION_COOKIE } from '@/app/api/_data/auth-cookies';
+import {
+  SCENARIO_COOKIE,
+  SESSION_COOKIE,
+  isExpiredScenario,
+} from '@/app/api/_data/auth-cookies';
 /* eslint-enable boundaries/element-types */
 import { Header } from '@/widgets/header';
 
@@ -26,10 +30,9 @@ export default async function CommerceLayout({
   // 모순이 생긴다(staleTime: Infinity라 클라이언트가 스스로 재검증하지도 않음).
   const cookieStore = await cookies();
   const scenario = cookieStore.get(SCENARIO_COOKIE)?.value;
-  const user =
-    scenario === 'expired'
-      ? null
-      : readSessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+  const user = isExpiredScenario(scenario)
+    ? null
+    : readSessionToken(cookieStore.get(SESSION_COOKIE)?.value);
 
   const queryClient = getQueryClient();
   queryClient.setQueryData(sessionQueries.me().queryKey, user);

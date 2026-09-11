@@ -1,4 +1,5 @@
 import { test, expect } from './support/fixtures';
+import { fillLoginForm } from './support/login-form';
 
 test.describe('미로그인 → 로그인 → 원래 경로 복원', () => {
   // 로그인 자체를 검증하는 테스트라 storageState를 쓰지 않는다 — 이미
@@ -16,8 +17,7 @@ test.describe('미로그인 → 로그인 → 원래 경로 복원', () => {
     // proxy.ts가 session 쿠키가 없는 요청을 여기서 걸러낸다.
     await expect(page).toHaveURL(/\/login\?redirect=%2Forders%2Fnew/);
 
-    await page.getByLabel('이메일').fill(account.email);
-    await page.getByLabel('비밀번호').fill(account.password);
+    await fillLoginForm(page, account);
     await page.getByRole('button', { name: '로그인' }).click();
 
     await expect(page).toHaveURL('/orders/new');
@@ -43,8 +43,7 @@ test.describe('미로그인 → 로그인 → 원래 경로 복원', () => {
     await page.route('https://evil.com/**', (route) => route.abort());
 
     await page.goto('/login?redirect=https%3A%2F%2Fevil.com');
-    await page.getByLabel('이메일').fill(account.email);
-    await page.getByLabel('비밀번호').fill(account.password);
+    await fillLoginForm(page, account);
     await page.getByRole('button', { name: '로그인' }).click();
 
     await expect(page).toHaveURL('/');

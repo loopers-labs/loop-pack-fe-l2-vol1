@@ -5,6 +5,7 @@ name: Quality
     branches:
       - main
   pull_request:
+  workflow_dispatch: # 10주차 CI 측정용 — Actions 탭에서 수동으로 재실행하기 위해 추가
 
 permissions:
   contents: read
@@ -12,11 +13,44 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # build 전 검증(scripts/validate-env.mjs)을 통과시키기 위한 CI 전용 더미 값.
+      # 실제 서비스 시크릿이 아니며, 코드의 기본값(loopers-week09-secret)을 CI에서
+      # 그대로 쓰지 않기 위해 별도로 지정한다.
+      AUTH_SESSION_SECRET: ci-placeholder-secret-not-for-production
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          # paths-filter가 이번 push 구간(before..after)을 로컬 git으로 비교할 수 있도록
+          # 최소한의 히스토리를 가져온다. 전체 히스토리(fetch-depth: 0)는 1단계에서
+          # 최적화한 checkout 속도를 다시 늦출 수 있어 적당한 값으로 제한.
+          fetch-depth: 50
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          # token이 있으면 pull_request 이벤트에서 base를 무시하고 GitHub API로
+          # "PR 전체 누적 변경 파일"을 가져와버린다(로그로 확인함). token: ''을 줘서
+          # 로컬 git diff를 쓰게 하고, 우리가 지정한 base(이번 push 구간)를 실제로 반영시킨다.
+          token: ''
+          # PR 전체 누적 diff(=base) 대신, 이번 push로 새로 추가된 커밋만 비교한다.
+          # 이 레포는 주차별 브랜치가 이어져 있어 PR의 base(main)가 한참 뒤처져 있고,
+          # 그 상태로 기본 동작(PR 전체 diff)을 쓰면 필터가 사실상 항상 true가 된다.
+          # workflow_dispatch(수동 실행)는 event.before도 pull_request도 없어서
+          # 두 값 다 비면 base가 빈 문자열이 된다(10주차 코드 리뷰에서 발견) —
+          # 그 경우 직전 커밋(HEAD~1) 기준으로 최소한 뭔가 비교되게 한다.
+          base: ${{ github.event.before || github.event.pull_request.base.sha || 'HEAD~1' }}
+          filters: |
+            e2e:
+              - 'src/**'
+              - 'e2e/**'
+              - 'playwright.config.ts'
+              - 'next.config.ts'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
       - name: Set up pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
@@ -29,11 +63,35 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Playwright Chromium when used
+        if: steps.filter.outputs.e2e == 'true'
         run: |
           if pnpm exec playwright --version >/dev/null 2>&1; then
             pnpm exec playwright install --with-deps chromium
           fi
       - name: Run quality checks
         run: pnpm check
+      - name: Check bundle size
+        run: |
+          set +e
+          pnpm exec size-limit --json > .size-limit-result.json
+          exit_code=$?
+          set -e
+          {
+            echo "### 📦 번들 크기 (gzip)"
+            echo ""
+            echo "| 항목 | 크기 | 제한 | 결과 |"
+            echo "| --- | --- | --- | --- |"
+            node -e "
+              const rows = require('./.size-limit-result.json');
+              for (const r of rows) {
+                const mark = r.passed ? '✅' : '❌';
+                const size = (r.size / 1024).toFixed(1) + ' KB';
+                const limit = (r.sizeLimit / 1024).toFixed(1) + ' KB';
+                console.log(\`| \${r.name} | \${size} | \${limit} | \${mark} |\`);
+              }
+            "
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $exit_code
       - name: Run E2E tests
+        if: steps.filter.outputs.e2e == 'true'
         run: pnpm test:e2e

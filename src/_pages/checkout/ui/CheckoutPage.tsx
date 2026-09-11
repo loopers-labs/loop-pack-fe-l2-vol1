@@ -17,7 +17,7 @@ export function CheckoutPage() {
   // /orders/new는 보호 경로라 이 시점엔 항상 로그인 상태이므로 user는 사실상 항상 존재한다.
   useEffect(() => {
     track('order_start', { productIds: items, userId: user?.id });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 화면 진입 시점 1회만 기록
   }, []);
 
   if (items.length === 0) {
