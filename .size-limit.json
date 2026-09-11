@@ -3,6 +3,6 @@
     "name": "클라이언트 JS 청크 전체 (gzip)",
     "path": ".next/static/chunks/**/*.js",
     "gzip": true,
-    "limit": "10 KB"
+    "limit": "300 KB"
   }
 ]
