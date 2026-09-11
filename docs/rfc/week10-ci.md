@@ -91,3 +91,25 @@ cold·warm 모두 전체 시간(96~104s)의 절반 가까이가 `Run quality che
 
 - **줄어든 시간이 측정 흔들림(범위)보다 큰 변화인가**: `Run E2E tests`는 명확하다. Before 범위(cold 23~26s, warm 23~29s)와 After 범위(cold 15~19s, warm 16~17s)가 전혀 겹치지 않는다 — 흔들림으로 설명 안 되는 실질적 감소. wall-clock 전체는 cold에서 1m36s→1m29s(7s), warm에서 1m42s→1m27s(15s)로 줄었지만, `Install Playwright Chromium` 등 다른 step의 러너 변동성이 섞여 있어 전체 시간 하나만으로는 흔들림 대비 확신하기 어렵다. `Run quality checks`는 Before/After 범위가 거의 겹쳐(20~28s대) 사실상 변화 없음 — 예상대로다(이 step은 안 건드렸으니까).
 - **그 변화가 지목한 병목과 연결되는가**: 그렇다. 고친 지점이 정확히 `Run E2E tests`의 `webServer.command`(중복 build 제거)였고, 그 step에서만 뚜렷하고 일관된 감소가 나타났다. `Run quality checks`는 그대로 build를 포함하므로 변화가 없는 게 오히려 "이 수정이 의도한 곳에만 영향을 줬다"는 근거가 된다.
+
+## F. 2단계 — 조건부 실행 설계
+
+### 실행 조건
+
+E2E(`Install Playwright Chromium`, `Run E2E tests` step)는 아래 경로가 바뀔 때만 실행한다.
+
+- 실행: `src/**`, `e2e/**`, `playwright.config.ts`, `next.config.ts`, `package.json`, `pnpm-lock.yaml`
+- 스킵: 그 외(`docs/**`, `*.md`, `LICENSE` 등 — 실제 앱 동작에 영향을 줄 수 없는 변경)
+
+### job 분리 대신 step 조건을 고른 이유
+
+"E2E를 별도 job으로 분리해서 조건 걸기"가 일반적으로 권장되는 방식이지만, 이 프로젝트에는 안 맞다고 판단했다.
+
+- **job은 매번 완전히 새 러너(가상 머신)를 할당받는 단위**라, job을 분리하면 `Run E2E tests`가 도는 러너에 `Run quality checks`가 만든 `.next` build 산출물이 없다. 결국 E2E job이 checkout·install부터 build까지 전부 다시 해야 하고, 이는 1단계에서 없앤 "build 중복"을 다시 만드는 셈이다.
+- job 분리(병렬 실행)가 이득이 되려면 "동시에 돌려서 버는 시간"이 "checkout·install 재실행 + artifact 업로드/다운로드 비용"보다 커야 한다. 이 프로젝트는 전체 워크플로가 1분 20초~1분 40초 수준으로 작아서, 분리에 드는 고정 비용(재설치 등)이 병렬 이득보다 클 가능성이 높다.
+- 그래서 **job은 하나로 유지하고, 그 안의 두 step에만 `if:` 조건을 건다.** `Run quality checks`(lint/type/test/build)는 저비용·결정적이라 조건 없이 항상 실행한다.
+- **판단 기준(프로젝트가 커지면 재검토)**: E2E 자체가 수 분 단위로 길어지고, lint/type/test/build와 병렬로 돌렸을 때 버는 시간이 build 산출물을 artifact로 넘기는 비용보다 뚜렷하게 커지면 그때 job 분리로 전환하는 게 맞다. 지금 규모에서는 아니라고 판단.
+
+### required check와의 충돌 여부
+
+E2E를 job 전체가 아니라 **job 안의 일부 step만** 스킵하는 구조라, 조건에 안 걸려도 `quality` job 자체는 항상 끝까지 실행되고 success/failure를 보고한다. 따라서 `quality`를 branch protection의 required로 걸어도, E2E가 스킵된다고 PR이 "체크 대기"로 멈추는 문제가 애초에 생기지 않는다(job 자체가 아예 안 도는 구조일 때만 생기는 문제).
