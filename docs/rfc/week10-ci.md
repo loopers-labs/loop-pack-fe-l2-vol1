@@ -37,8 +37,16 @@ cold·warm 모두 전체 시간(96~104s)의 절반 가까이가 `Run quality che
 
 ## B. 캐시 hit/miss 증명
 
-- hit 로그 (warm 실행 중 "Cache restored from key: ..." 캡처):
-- miss 재현 (lockfile을 일부러 깨서 "Cache not found" 확인 후 install 시간 비교, 실험 후 원복 확인):
+- **hit 로그** (after-warm 3회차, `Set up Node.js` step):
+  ```
+  Cache hit for: node-cache-Linux-x64-pnpm-70674e444f367b1bbfdf84dc96f5ccef7494f46d80d41b3c53e5ff64736a6dc5
+  Received 207120563 of 207120563 (100.0%), 235.7 MBs/sec
+  Cache Size: ~198 MB (207120563 B)
+  Cache restored successfully
+  Cache restored from key: node-cache-Linux-x64-pnpm-70674e444f367b1bbfdf84dc96f5ccef7494f46d80d41b3c53e5ff64736a6dc5
+  ```
+- **miss 로그** (cold 1회차, `Set up Node.js` step): `pnpm cache is not found` — GitHub Actions Caches 페이지에서 `refs/pull/3/merge` 캐시를 직접 삭제해 매 cold 회차마다 의도적으로 재현함(lockfile을 바꿔 해시를 깨는 대신 캐시 자체를 지우는 방식 — 결과적으로 동일하게 "정확히 일치하는 키가 없다"는 조건을 만들어 더 직접적으로 검증함).
+- **install 시간 차이**: miss(cold) 시 `Install dependencies` 5~7s, hit(warm) 시 1~4s — cache가 실제로 install 단계를 단축시키는 걸 확인.
 
 ## C. 적용한 전략과 이유
 
@@ -54,23 +62,32 @@ cold·warm 모두 전체 시간(96~104s)의 절반 가까이가 `Run quality che
 
 | 회차 | wall-clock | Install dependencies | Run quality checks | Run E2E tests |
 | ---- | ---------- | --------------------- | ------------------- | -------------- |
-| 1    |            |                        |                      |                |
-| 2    |            |                        |                      |                |
-| 3    |            |                        |                      |                |
-| 중앙값 |            |                        |                      |                |
-| 범위  |            |                        |                      |                |
+| 1    | 1m 41s     | 6s                     | 27s                  | 19s             |
+| 2    | 1m 29s     | 5s                     | 21s                  | 15s             |
+| 3    | 1m 28s     | 5s                     | 22s                  | 15s             |
+| 중앙값 | 1m 29s     | 5s                     | 22s                  | 15s             |
+| 범위  | 1m28s~1m41s | 5s~6s                 | 21s~27s              | 15s~19s         |
 
 ### Warm (캐시 있음)
 
 | 회차 | wall-clock | Install dependencies | Run quality checks | Run E2E tests |
 | ---- | ---------- | --------------------- | ------------------- | -------------- |
-| 1    |            |                        |                      |                |
-| 2    |            |                        |                      |                |
-| 3    |            |                        |                      |                |
-| 중앙값 |            |                        |                      |                |
-| 범위  |            |                        |                      |                |
+| 1    | 1m 22s     | 2s                     | 27s                  | 16s             |
+| 2    | 1m 31s     | 4s                     | 19s                  | 16s             |
+| 3    | 1m 27s     | 2s                     | 27s                  | 17s             |
+| 중앙값 | 1m 27s     | 2s                     | 27s                  | 16s             |
+| 범위  | 1m22s~1m31s | 2s~4s                 | 19s~27s              | 16s~17s         |
 
 ## E. Before/After 비교
 
-- 줄어든 시간이 측정 흔들림(범위)보다 큰 변화인가:
-- 그 변화가 지목한 병목과 연결되는가:
+### 요약
+
+| | wall-clock 중앙값 | Run quality checks 중앙값 | Run E2E tests 중앙값 |
+| --- | --- | --- | --- |
+| Before cold | 1m 36s | 20s | 25s |
+| After cold | 1m 29s | 22s | **15s** |
+| Before warm | 1m 42s | 26s | 26s |
+| After warm | 1m 27s | 27s | **16s** |
+
+- **줄어든 시간이 측정 흔들림(범위)보다 큰 변화인가**: `Run E2E tests`는 명확하다. Before 범위(cold 23~26s, warm 23~29s)와 After 범위(cold 15~19s, warm 16~17s)가 전혀 겹치지 않는다 — 흔들림으로 설명 안 되는 실질적 감소. wall-clock 전체는 cold에서 1m36s→1m29s(7s), warm에서 1m42s→1m27s(15s)로 줄었지만, `Install Playwright Chromium` 등 다른 step의 러너 변동성이 섞여 있어 전체 시간 하나만으로는 흔들림 대비 확신하기 어렵다. `Run quality checks`는 Before/After 범위가 거의 겹쳐(20~28s대) 사실상 변화 없음 — 예상대로다(이 step은 안 건드렸으니까).
+- **그 변화가 지목한 병목과 연결되는가**: 그렇다. 고친 지점이 정확히 `Run E2E tests`의 `webServer.command`(중복 build 제거)였고, 그 step에서만 뚜렷하고 일관된 감소가 나타났다. `Run quality checks`는 그대로 build를 포함하므로 변화가 없는 게 오히려 "이 수정이 의도한 곳에만 영향을 줬다"는 근거가 된다.
