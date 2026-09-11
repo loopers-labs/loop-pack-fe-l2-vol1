@@ -10,6 +10,10 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
   reporter: 'list',
+  // 시각적 회귀의 픽셀 허용치. 기본값 0.2는 YIQ 색 거리 기준이라 회색 #ececec → #e3e3e3(9/255)를
+  // "같다"고 본다 — 의도한 변경 실험에서 실제로 통과해 버렸다(RFC H절). 이 앱은 애니메이션·폰트
+  // 로딩이 없어 같은 트리는 픽셀까지 같으므로(3회 연속 동일) 허용치 없이 본다.
+  expect: { toHaveScreenshot: { threshold: 0 } },
   use: {
     baseURL,
     // mock API의 500ms 고정 지연은 조건 기반 대기로 흡수한다 (sleep 금지).
