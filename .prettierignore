@@ -2,3 +2,4 @@ dist
 pnpm-lock.yaml
 docs
 eslint-rationale.md
+e2e/.auth

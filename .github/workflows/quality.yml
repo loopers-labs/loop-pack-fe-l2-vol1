@@ -9,29 +9,186 @@ on:
 permissions:
   contents: read
 
+# 같은 PR에 연속으로 push하면 앞선 run을 취소한다.
+# 키에 ref를 넣어 브랜치별로 가른다 — 넣지 않으면 main push의 run까지 같이 취소된다.
+# 이건 run 하나의 wall-clock을 줄이는 최적화가 아니라 낭비되는 run을 줄이는 것이다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 1단계 측정 결과(docs/rfc/week10-ci.md): 한 job에서 pnpm check를 직렬로 돌리면
+# job 98초 중 검증 46초 + 브라우저 설치 24초가 71%였다. lint·typecheck·test는 서로
+# 독립이므로 job으로 가른다. build는 E2E가 그 산출물 위에서 돌므로 같은 job에 둔다.
 jobs:
-  quality:
+  # 2단계 조건부 실행. 무엇이 바뀌었는지 한 번만 판정해 job 사이로 넘긴다.
+  # PR에서만 판정한다 — main push는 조건 없이 전부 돌려 최종 방어선으로 둔다.
+  changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      e2e: ${{ steps.filter.outputs.e2e }}
+      bundle: ${{ steps.filter.outputs.bundle }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - name: Filter paths
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
-          version: 10.15.1
-      - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+          filters: |
+            e2e:
+              - 'src/**'
+              - 'e2e/**'
+              - 'public/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'next.config.ts'
+              - 'playwright.config.ts'
+              - 'tsconfig.json'
+              - '.github/**'
+            # 번들에 들어가는 것만. e2e/**와 public/**은 첫 화면 JS 크기를 바꾸지 않는다.
+            bundle:
+              - 'src/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'next.config.ts'
+              - 'tsconfig.json'
+              - '.github/**'
+
+  # lint·typecheck·test는 조건을 붙이지 않는다. 저비용 결정적 검증이기도 하고,
+  # 이 저장소에서는 문서 변경이 검증에 영향이 없다는 통념이 실제로 거짓이다 —
+  # src/app/api/_data/commerce.test.ts가 docs/assets/week-05-product-images.md를 읽는다.
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        run: pnpm lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Typecheck
+        run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Unit·integration tests
+        run: pnpm test
+
+  # 가장 비싼 검증(1단계 측정에서 임계 경로). 관련 경로가 바뀐 PR에서만 돌린다.
+  # main push는 `changes`가 판정을 내지 않으므로 조건 없이 돈다.
+  e2e:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.e2e == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      # 브라우저 바이너리는 pnpm store 밖(~/.cache/ms-playwright)에 있어서
+      # setup-node의 캐시가 덮지 않는다. 측정에서 이 설치가 24초로 두 번째 병목이었다.
+      # 캐시 내용물은 Playwright 버전에만 달려 있다. 키를 lockfile 전체 해시로 잡으면
+      # 무관한 의존성 하나만 바뀌어도 270MB를 다시 받는다.
+      - name: Resolve Playwright version
+        id: playwright-version
+        run: echo "value=$(pnpm exec playwright --version | awk '{print $NF}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.value }}
+      # apt 쪽과 바이너리 쪽을 갈라 재 봤더니 24초는 apt 16초 + 다운로드 10초였다.
+      # 그리고 apt 로그에는 설치가 없다 — 필요한 라이브러리가 ubuntu-24.04 러너 이미지에
+      # 이미 다 들어 있어서 매 실행 16초를 쓰고 아무것도 안 깔았다. 그래서 install-deps를 뺀다.
+      # 러너 이미지가 라이브러리를 빼면 chromium이 뜨지 않아 이 job이 빨간불이 된다 —
+      # 그때는 이 자리에 `pnpm exec playwright install-deps chromium`을 되살린다.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium
+      - name: Build
+        run: pnpm build
+      - name: E2E
+        run: pnpm test:e2e
+
+  # 3단계 예산 게이트. 빌드가 있어야 재므로 번들에 영향 있는 변경에서만 돌린다.
+  # 환경 변수 검증은 빌드 앞에 둔다 — 설정이 틀린 채로 만든 산출물을 재봐야 의미가 없다.
+  budget:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.bundle == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Validate env
+        run: pnpm validate:env
+      - name: Build
+        run: pnpm build
+      # 초과 사실과 얼마나 넘었는지를 job summary로 올린다. 로그를 열어야만 보이면 실무에서 안 본다.
+      - name: Bundle budget
+        run: pnpm budget
+
+  # 예산도 조건부라 e2e와 같은 이유로 guard가 필요하다.
+  budget-gate:
+    needs: budget
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check budget result
         run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
-          fi
-      - name: Run quality checks
-        run: pnpm check
+          result='${{ needs.budget.result }}'
+          echo "budget 결과: $result"
+          case "$result" in
+            success | skipped) exit 0 ;;
+            *) exit 1 ;;
+          esac
+
+  # branch protection에서 required로 둘 체크. e2e 자체를 required로 걸면 조건에 안 걸린 PR이
+  # 영영 "대기"로 남아 머지되지 않는다. 이 job은 항상 돌고, e2e가 성공이거나 스킵이면 통과한다.
+  e2e-gate:
+    needs: e2e
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check e2e result
+        run: |
+          result='${{ needs.e2e.result }}'
+          echo "e2e 결과: $result"
+          case "$result" in
+            success | skipped) exit 0 ;;
+            *) exit 1 ;;
+          esac

@@ -1,0 +1,70 @@
+name: Lighthouse
+
+# 정기 실행으로만 둔다. 모든 PR에 붙이지 않는 이유:
+# Lighthouse는 변동성이 큰 지표이고, 이 저장소에는 배포가 없어 러너 안에서 띄워 재야 한다.
+# 공유 러너에서 잰 값은 이웃 작업에 흔들리므로 PR을 막는 근거로 쓰기 어렵다.
+# 그래서 임계값 없이 추세만 기록한다. 판단 근거는 docs/rfc/week10-ci.md.
+#
+# pull_request 트리거를 이 파일 경로로만 건 이유: 워크플로를 고칠 때 그 PR에서 바로
+# 검증되게 하려는 것이다. "AI가 만든 workflow를 그대로 머지하지 않는다"의 실행 방법이다.
+on:
+  schedule:
+    # 매주 일요일 18:00 UTC (월요일 03:00 KST)
+    - cron: '0 18 * * 0'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/lighthouse.yml'
+      - 'scripts/lighthouse-summary.mts'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Build
+        run: pnpm build
+      # E2E와 같은 조건으로 띄운다 — production build 위에서 재지 않으면 의미가 없다.
+      - name: Start server
+        run: |
+          pnpm start &
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null 2>&1; then
+              echo "서버 준비됨"; exit 0
+            fi
+            sleep 1
+          done
+          echo "서버가 60초 안에 뜨지 않았다"; exit 1
+      - name: Run Lighthouse
+        run: |
+          set -e
+          for target in "home:/" "products:/products"; do
+            name="${target%%:*}"
+            path="${target#*:}"
+            pnpm dlx lighthouse@12 "http://127.0.0.1:3000${path}" \
+              --quiet \
+              --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage" \
+              --output=json \
+              --output-path="lh-${name}.json"
+          done
+      - name: Summarize
+        run: node --no-warnings=ExperimentalWarning scripts/lighthouse-summary.mts home lh-home.json products lh-products.json
+      - name: Upload reports
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: lighthouse-reports
+          path: lh-*.json
+          retention-days: 14
