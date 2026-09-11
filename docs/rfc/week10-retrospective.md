@@ -60,7 +60,7 @@ CI는 Node.js 24.17.0과 pnpm 10.15.1을 고정하고 frozen lockfile을 사용�
 
 AI 리뷰는 CI에 자동 연결하지 않았다. PR #2 diff를 대화형으로 검토해 manifest 식별자가 없는 입력을 정상 처리하는 결함을 찾았고, 재현 테스트 뒤 `da9fea6a`에서 수정했다. 반대로 route 파일을 모두 연결해 한 번 gzip하라는 지적은 실제 HTTP 전송과 문서화한 지표에 맞지 않아 반려했다.
 
-Vercel Preview와 Production에는 origin과 session secret을 분리해 저장했고, 환경 validator를 Next build 앞에 연결했다. Production smoke에서 홈·상품·인증 redirect·로그인 복귀·주문 생성을 확인했다. 다만 Vercel GitHub App의 저장소 권한이 없어 push 기반 자동 배포는 연결하지 못했고, 현재 배포는 CLI로 만들었다.
+Vercel Preview와 Production에는 origin과 session secret을 분리해 저장했고, 환경 validator를 Next build 앞에 연결했다. Production smoke에서 홈·상품·인증 redirect·로그인 복귀·주문 생성을 확인했다. 첫 배포는 CLI로 검증한 뒤 GitHub App에 origin 저장소 권한을 부여했고, Production Branch를 `main`으로 고정해 Git 기반 배포 흐름도 연결했다.
 
 ## 7. AI·사람·기계의 책임
 
