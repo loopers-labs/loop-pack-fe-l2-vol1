@@ -27,6 +27,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       e2e: ${{ steps.filter.outputs.e2e }}
+      bundle: ${{ steps.filter.outputs.bundle }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -46,6 +47,14 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'next.config.ts'
               - 'playwright.config.ts'
+              - 'tsconfig.json'
+              - '.github/**'
+            # 번들에 들어가는 것만. e2e/**와 public/**은 첫 화면 JS 크기를 바꾸지 않는다.
+            bundle:
+              - 'src/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'next.config.ts'
               - 'tsconfig.json'
               - '.github/**'
 
@@ -128,6 +137,44 @@ jobs:
         run: pnpm build
       - name: E2E
         run: pnpm test:e2e
+
+  # 3단계 예산 게이트. 빌드가 있어야 재므로 번들에 영향 있는 변경에서만 돌린다.
+  # 환경 변수 검증은 빌드 앞에 둔다 — 설정이 틀린 채로 만든 산출물을 재봐야 의미가 없다.
+  budget:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.bundle == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Validate env
+        run: pnpm validate:env
+      - name: Build
+        run: pnpm build
+      # 초과 사실과 얼마나 넘었는지를 job summary로 올린다. 로그를 열어야만 보이면 실무에서 안 본다.
+      - name: Bundle budget
+        run: pnpm budget
+
+  # 예산도 조건부라 e2e와 같은 이유로 guard가 필요하다.
+  budget-gate:
+    needs: budget
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check budget result
+        run: |
+          result='${{ needs.budget.result }}'
+          echo "budget 결과: $result"
+          case "$result" in
+            success | skipped) exit 0 ;;
+            *) exit 1 ;;
+          esac
 
   # branch protection에서 required로 둘 체크. e2e 자체를 required로 걸면 조건에 안 걸린 PR이
   # 영영 "대기"로 남아 머지되지 않는다. 이 job은 항상 돌고, e2e가 성공이거나 스킵이면 통과한다.

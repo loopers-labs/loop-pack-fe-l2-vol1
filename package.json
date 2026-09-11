@@ -19,6 +19,8 @@
     "test:e2e": "playwright test",
     "test:mutation": "stryker run",
     "analyze:events": "node --no-warnings=ExperimentalWarning scripts/analyze-events.mts",
+    "budget": "node --no-warnings=ExperimentalWarning scripts/check-bundle-budget.mts",
+    "validate:env": "node --no-warnings=ExperimentalWarning scripts/validate-env.mts",
     "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
     "prepare": "husky"
   },
