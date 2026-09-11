@@ -1,7 +1,7 @@
 import { expect, test as base } from '@playwright/test'
 import path from 'node:path'
 import { accountMenu, submitLogin } from './login-actions'
-import { accountForSlot, type TestAccount } from './test-accounts'
+import { accountForProjectSlot, type TestAccount } from './test-accounts'
 
 type WorkerFixtures = {
   account: TestAccount
@@ -17,14 +17,17 @@ export const test = base.extend<object, WorkerFixtures>({
   account: [
     // Playwright가 첫 인자에 구조 분해 패턴을 요구한다. 이 fixture는 다른 fixture를 쓰지 않는다.
     async ({}, use, workerInfo) => {
-      await use(accountForSlot(workerInfo.parallelIndex))
+      await use(accountForProjectSlot(workerInfo.project.name, workerInfo.parallelIndex))
     },
     { scope: 'worker' },
   ],
 
   workerStorageState: [
     async ({ browser, account }, use, workerInfo) => {
-      const statePath = path.join(AUTH_STATE_DIR, `worker-${workerInfo.parallelIndex}.json`)
+      const statePath = path.join(
+        AUTH_STATE_DIR,
+        `${workerInfo.project.name}-worker-${workerInfo.parallelIndex}.json`,
+      )
       // 이 fixture는 테스트가 시작되기 전에 돈다. 그 시점의 browser.newContext()에는
       // config의 use 옵션이 적용되지 않으므로 baseURL을 직접 넘긴다.
       const context = await browser.newContext({

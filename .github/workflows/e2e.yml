@@ -5,27 +5,341 @@ name: E2E
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
-  e2e:
+  changes:
+    name: Detect E2E scope
     runs-on: ubuntu-latest
+    outputs:
+      run_e2e: ${{ steps.scope.outputs.run_e2e }}
+      all: ${{ steps.scope.outputs.all }}
+      test_files: ${{ steps.scope.outputs.test_files }}
     steps:
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            styles:
+              - '**/*.css'
+              - '**/*.scss'
+              - '**/*.sass'
+              - '**/*.less'
+            auth:
+              - 'src/features/login/**'
+              - 'src/features/logout/**'
+              - 'src/entities/session/**'
+              - 'src/_pages/login/**'
+              - 'e2e/auth.spec.ts'
+              - 'e2e/logout.spec.ts'
+            cart:
+              - 'src/features/add-to-cart/**'
+              - 'src/entities/cart/**'
+              - 'src/_pages/cart/**'
+              - 'e2e/add-to-cart.spec.ts'
+            wishlist:
+              - 'src/features/add-to-wishlist/**'
+              - 'src/entities/wishlist/**'
+              - 'src/_pages/wishlist/**'
+              - 'e2e/add-to-wishlist.spec.ts'
+            product:
+              - 'src/entities/product/**'
+              - 'src/_pages/product-list/**'
+              - 'src/widgets/product-card/**'
+              - 'e2e/state-restoration.spec.ts'
+            order:
+              - 'src/features/place-order/**'
+              - 'src/entities/order/**'
+              - 'src/_pages/checkout/**'
+              - 'src/_pages/orders/**'
+              - 'e2e/order.spec.ts'
+            shared:
+              - 'src/shared/**'
+              - 'src/_app/**'
+              - 'src/widgets/header/**'
+              - 'src/components/**'
+              - 'src/_pages/home/**'
+              - 'src/_pages/mypage/**'
+              - 'src/analytics/**'
+              - 'src/fonts/**'
+            fixtures:
+              - 'e2e/fixtures/**'
+            config:
+              - '.github/workflows/**'
+              - '.nvmrc'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'playwright.config.ts'
+              - 'next.config.*'
+              - 'tsconfig*.json'
+              - 'vitest.config.*'
+              - 'eslint.config.*'
+              - '.prettier*'
+            logic:
+              - 'src/**/*.ts'
+              - 'src/**/*.tsx'
+              - 'src/**/*.js'
+              - 'src/**/*.jsx'
+              - 'e2e/*.spec.ts'
+      - name: Detect unknown paths
+        id: unknown
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
+        with:
+          predicate-quantifier: every
+          filters: |
+            unknown:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!**/*.css'
+              - '!**/*.scss'
+              - '!**/*.sass'
+              - '!**/*.less'
+              # 현재 분류된 src 경로만 제외한다. 새 슬라이스가 추가되면 이 목록에 없으므로
+              # unknown=true가 되어 전체 E2E로 승격된다.
+              - '!src/features/login/**'
+              - '!src/features/logout/**'
+              - '!src/features/add-to-cart/**'
+              - '!src/features/add-to-wishlist/**'
+              - '!src/features/place-order/**'
+              - '!src/entities/session/**'
+              - '!src/entities/cart/**'
+              - '!src/entities/wishlist/**'
+              - '!src/entities/product/**'
+              - '!src/entities/order/**'
+              - '!src/_pages/login/**'
+              - '!src/_pages/cart/**'
+              - '!src/_pages/wishlist/**'
+              - '!src/_pages/product-list/**'
+              - '!src/_pages/checkout/**'
+              - '!src/_pages/orders/**'
+              - '!src/_pages/home/**'
+              - '!src/_pages/mypage/**'
+              - '!src/shared/**'
+              - '!src/_app/**'
+              - '!src/widgets/header/**'
+              - '!src/widgets/product-card/**'
+              - '!src/components/**'
+              - '!src/analytics/**'
+              - '!src/fonts/**'
+              - '!e2e/auth.spec.ts'
+              - '!e2e/logout.spec.ts'
+              - '!e2e/add-to-cart.spec.ts'
+              - '!e2e/add-to-wishlist.spec.ts'
+              - '!e2e/state-restoration.spec.ts'
+              - '!e2e/order.spec.ts'
+              - '!e2e/fixtures/**'
+              - '!.github/workflows/**'
+              - '!.nvmrc'
+              - '!package.json'
+              - '!pnpm-lock.yaml'
+              - '!playwright.config.ts'
+              - '!next.config.*'
+              - '!tsconfig*.json'
+              - '!vitest.config.*'
+              - '!eslint.config.*'
+              - '!.prettier*'
+      - name: Select test scope
+        id: scope
+        env:
+          AUTH: ${{ steps.filter.outputs.auth }}
+          CART: ${{ steps.filter.outputs.cart }}
+          WISHLIST: ${{ steps.filter.outputs.wishlist }}
+          PRODUCT: ${{ steps.filter.outputs.product }}
+          ORDER: ${{ steps.filter.outputs.order }}
+          SHARED: ${{ steps.filter.outputs.shared }}
+          FIXTURES: ${{ steps.filter.outputs.fixtures }}
+          CONFIG: ${{ steps.filter.outputs.config }}
+          LOGIC: ${{ steps.filter.outputs.logic }}
+          UNKNOWN: ${{ steps.unknown.outputs.unknown }}
+        shell: bash
+        run: |
+          all=false
+          run_e2e=false
+          test_files="e2e/order.spec.ts"
+
+          echo "scope inputs: shared=$SHARED fixtures=$FIXTURES config=$CONFIG unknown=$UNKNOWN logic=$LOGIC"
+
+          if [[ "$UNKNOWN" == "true" ]]; then
+            # 분류할 수 없는 경로는 기능별 테스트를 생략하지 않고 전체 E2E로 승격한다.
+            all=true
+          elif [[ "$SHARED" == "true" || "$FIXTURES" == "true" || "$CONFIG" == "true" ]]; then
+            all=true
+          fi
+
+          if [[ "$all" == "true" || "$LOGIC" == "true" ]]; then
+            run_e2e=true
+          fi
+
+          if [[ "$all" == "true" ]]; then
+            test_files=""
+          elif [[ "$run_e2e" == "true" ]]; then
+            test_files="e2e/order.spec.ts"
+
+            if [[ "$AUTH" == "true" ]]; then
+              test_files+=" e2e/auth.spec.ts e2e/logout.spec.ts"
+            fi
+            if [[ "$CART" == "true" ]]; then
+              test_files+=" e2e/add-to-cart.spec.ts"
+            fi
+            if [[ "$WISHLIST" == "true" ]]; then
+              test_files+=" e2e/add-to-wishlist.spec.ts"
+            fi
+            if [[ "$PRODUCT" == "true" ]]; then
+              test_files+=" e2e/state-restoration.spec.ts"
+            fi
+          fi
+
+          # $GITHUB_OUTPUT은 로그에 보이지 않는다. 판정값을 stdout에도 남겨
+          # Detect job 로그만으로 최종 scope를 확인할 수 있게 한다.
+          if [[ "$run_e2e" == "true" ]]; then
+            tests_log="${test_files:-all}"
+          else
+            # run_e2e=false면 test_files 초기값은 실행되지 않는다. 실행 목록으로 오해하지 않게 한다.
+            tests_log="(skipped)"
+          fi
+          echo "scope result: all=$all, run_e2e=$run_e2e, tests=$tests_log"
+
+          {
+            echo "run_e2e=$run_e2e"
+            echo "all=$all"
+            echo "test_files=$test_files"
+          } >> "$GITHUB_OUTPUT"
+
+  e2e:
+    name: E2E (${{ matrix.browser }})
+    needs: changes
+    if: always()
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 브라우저마다 의존성 설치 비용이 다르다. 실측(run 34576318813)에서
+        # `playwright install --with-deps`의 apt 구간은 chromium 23.7초, webkit 25.8초였고
+        # 브라우저 다운로드는 각각 5.2초, 5.9초였다. 설치 시간의 80%가 apt다.
+        #
+        # apt가 실제로 새로 깐 패키지는 chromium 9개(전부 폰트), webkit 181개
+        # (gstreamer·libavcodec·libde265 등 실제 런타임 라이브러리)였다. 즉 chromium의
+        # 런타임 의존성은 러너에 이미 있고, webkit은 없다.
+        #
+        # 그래서 chromium은 --with-deps 없이 설치하고, webkit은 의존성이 미리 깔린 공식
+        # 이미지를 쓴다. 태그는 pnpm-lock.yaml의 playwright 버전과 정확히 같아야 한다.
+        # 다르면 브라우저 리비전이 맞지 않아 실행 시점에 실패한다.
+        include:
+          - browser: chromium
+            container: ''
+          - browser: webkit
+            container: mcr.microsoft.com/playwright:v1.61.1-noble
+    container: ${{ matrix.container }}
+    timeout-minutes: 10
+    # build와 playwright의 webServer(pnpm start)가 모두 이 값을 쓴다.
+    # playwright.config.ts의 baseURL과 일치해야 한다.
+    # secrets를 우선 읽는 이유와, fork PR에서 localhost로 떨어뜨리는 이유는
+    # quality.yml 주석 참고.
+    env:
+      APP_ORIGIN: ${{ secrets.APP_ORIGIN || 'http://localhost:3000' }}
+    steps:
+      # 감지 실패를 이 step에서 한 번만 전체 실행으로 승격한다. 이후 step은
+      # needs.changes를 다시 보지 않고 이 step의 출력만 사용하므로, fallback이
+      # 이전 step의 실패까지 덮어쓰지 않는다.
+      - name: Finalize E2E scope
+        id: scope
+        if: ${{ !cancelled() }}
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          RUN_E2E: ${{ needs.changes.outputs.run_e2e }}
+          ALL: ${{ needs.changes.outputs.all }}
+          TEST_FILES: ${{ needs.changes.outputs.test_files }}
+        shell: bash
+        run: |
+          echo "scope inputs: changes_result=$CHANGES_RESULT run_e2e=$RUN_E2E all=$ALL test_files=$TEST_FILES"
+
+          if [[ "$CHANGES_RESULT" != "success" || -z "$RUN_E2E" ]]; then
+            # 분류 결과를 신뢰할 수 없으므로 생략하지 않고 전체 E2E로 승격한다.
+            if [[ "$CHANGES_RESULT" != "success" ]]; then
+              reason="Detect E2E scope job 결과가 '$CHANGES_RESULT'"
+            else
+              reason="Detect E2E scope job은 성공했지만 run_e2e 출력이 비어 있음"
+            fi
+            all=true
+            run_e2e=true
+            test_files=""
+            echo "E2E fallback: $reason. 분류를 신뢰할 수 없어 전체 E2E로 승격한다"
+          else
+            all="$ALL"
+            run_e2e="$RUN_E2E"
+            test_files="$TEST_FILES"
+          fi
+
+          if [[ "$run_e2e" == "true" ]]; then
+            tests_log="${test_files:-all}"
+          else
+            tests_log="(skipped)"
+          fi
+          echo "scope result: all=$all, run_e2e=$run_e2e, tests=$tests_log"
+
+          if [[ "$run_e2e" != "true" ]]; then
+            echo "E2E skipped: docs/style-only or no executable change"
+          fi
+
+          {
+            echo "run_e2e=$run_e2e"
+            echo "all=$all"
+            echo "test_files=$test_files"
+          } >> "$GITHUB_OUTPUT"
       - name: Checkout
+        if: ${{ !cancelled() && !failure() && steps.scope.outputs.run_e2e == 'true' }}
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up pnpm
+        if: ${{ !cancelled() && !failure() && steps.scope.outputs.run_e2e == 'true' }}
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           version: 10.15.1
       - name: Set up Node.js
+        if: ${{ !cancelled() && !failure() && steps.scope.outputs.run_e2e == 'true' }}
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - name: Install dependencies
+        if: ${{ !cancelled() && !failure() && steps.scope.outputs.run_e2e == 'true' }}
         run: pnpm install --frozen-lockfile
+      # 컨테이너를 쓰는 job은 브라우저와 의존성이 이미 이미지 안에 있으므로 건너뛴다.
+      # 컨테이너가 없는 chromium만 설치하며, 러너에 런타임 의존성이 이미 있어
+      # --with-deps를 붙이지 않는다. 빠지는 것은 폰트뿐이고 스크린샷 비교 테스트가 없어
+      # 단언에 영향이 없다.
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium webkit
-      - name: Run E2E tests
-        run: pnpm test:e2e
+        if: ${{ !cancelled() && !failure() && steps.scope.outputs.run_e2e == 'true' && matrix.container == '' }}
+        run: pnpm exec playwright install ${{ matrix.browser }}
+      - name: Run production build
+        if: ${{ !cancelled() && !failure() && steps.scope.outputs.run_e2e == 'true' }}
+        run: pnpm build
+      - name: Run selected E2E tests
+        id: e2e
+        if: ${{ !cancelled() && !failure() && steps.scope.outputs.run_e2e == 'true' }}
+        env:
+          TEST_FILES: ${{ steps.scope.outputs.test_files }}
+        # TEST_FILES는 공백으로 구분된 여러 경로이므로 의도적으로 따옴표 없이 전개한다.
+        # 비어 있으면 전체 spec이 실행된다.
+        run: pnpm exec playwright test $TEST_FILES --project=${{ matrix.browser }}
+      # trace는 retain-on-failure로 남지만 job이 끝나면 사라진다. 실패 원인을 사후에
+      # 확인할 수 있도록 테스트가 실행됐으면 올린다.
+      #
+      # 조건을 conclusion == 'failure'로 두면 안 된다. 재시도로 통과한 flaky는 step이
+      # success라서 정작 필요한 첫 실패 trace가 버려진다(PR #19에서 확인).
+      # 전부 통과하면 retain-on-failure가 trace를 지워 test-results가 비므로
+      # if-no-files-found: ignore로 두면 초록불 실행에는 아티팩트가 생기지 않는다.
+      - name: Upload Playwright artifacts
+        if: ${{ !cancelled() && steps.e2e.conclusion != 'skipped' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-${{ matrix.browser }}-attempt${{ github.run_attempt }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore

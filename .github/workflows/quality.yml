@@ -8,10 +8,27 @@ name: Quality
 
 permissions:
   contents: read
+  # 번들 예산 결과를 PR 대화 화면에 코멘트로 남기기 위해 필요하다.
+  # job summary는 Checks 탭을 눌러야 보여서 초과를 놓치기 쉽다.
+  pull-requests: write
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # app/layout.tsx의 metadataBase가 빌드 시점에 getApiBaseUrl()을 평가하므로
+    # build가 도는 job에는 APP_ORIGIN이 있어야 한다. E2E의 baseURL과 같은 값을 쓴다.
+    #
+    # 비밀 값은 아니지만 secrets를 우선 읽는다. Actions는 step 헤더에 그 step이 받는 env를
+    # 그대로 나열하는데, 자동 마스킹은 secrets 컨텍스트 값에만 적용된다. 평문으로 두면
+    # 모든 step 로그에 값이 찍히고, 나중에 진짜 비밀을 같은 자리에 넣었을 때 그대로 샌다.
+    #
+    # fork PR에는 base 저장소의 secrets가 전달되지 않아 값이 빈 문자열이 된다. 그때는
+    # CI의 유일한 정답인 localhost origin으로 떨어뜨린다. 설정 실수를 가리는 폴백이 아니라,
+    # CI에서 쓸 값이 애초에 이 하나뿐이기 때문이다(playwright.config.ts의 baseURL과 동일).
+    # 배포 환경의 누락·오지정 차단은 Vercel이 부르는 pnpm build에서 그대로 동작한다.
+    env:
+      APP_ORIGIN: ${{ secrets.APP_ORIGIN || 'http://localhost:3000' }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -28,10 +45,43 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
-        run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
-          fi
-      - name: Run quality checks
-        run: pnpm check
+      # json 리포터를 함께 켜 PR 코멘트용 요약을 만든다. default와 github-actions
+      # 리포터는 그대로 두어 로그 출력과 job summary가 바뀌지 않게 한다.
+      - name: Run unit tests
+        run: >-
+          pnpm exec vitest run
+          --reporter=default --reporter=github-actions --reporter=json
+          --outputFile.json=ci-report/vitest.json
+      - name: Report test results
+        if: ${{ !cancelled() }}
+        run: node scripts/report-test-results.mjs ci-report/vitest.json
+      - name: Run lint
+        run: pnpm lint
+      - name: Run typecheck
+        run: pnpm typecheck
+      # 설정 실수를 build 전에 막는다. 값은 출력하지 않고 변수 이름과 사유만 남긴다.
+      - name: Validate environment
+        run: node scripts/validate-env.mjs
+      - name: Run production build
+        run: pnpm build
+      # size-limit은 .next 산출물을 읽으므로 반드시 build 뒤에 둔다.
+      # 앞에 두면 "can't find files at .next/static/chunks/**/*.js"로 실패한다.
+      # 번들 초과는 머지를 막지 않는다. 되돌리기 쉬운 문제이고 변동성도 없어서,
+      # 막는 것보다 보이게 하는 쪽이 낫다는 작성자 판단이다. 환경 변수 게이트는 그대로 막는다.
+      # continue-on-error가 붙으면 step이 실패해도 conclusion은 success가 되므로,
+      # 아래 리포트 step 조건은 그대로 동작한다.
+      - name: Check bundle budget
+        id: budget
+        continue-on-error: true
+        run: pnpm exec size-limit --json > size-limit-result.json
+      # 초과로 앞 step이 실패해도 리포트는 남아야 한다. 조건을 "성공했을 때"가 아니라
+      # "측정이 실행됐을 때"로 두는 이유다(2단계 아티팩트 업로드에서 겪은 것과 같은 구조).
+      - name: Report bundle budget
+        if: ${{ !cancelled() && steps.budget.conclusion != 'skipped' }}
+        run: node scripts/report-bundle-budget.mjs size-limit-result.json
+      # 앞 step이 실패해 섹션이 일부만 모여도 그때까지의 결과는 올린다.
+      - name: Post CI summary comment
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/post-ci-comment.mjs

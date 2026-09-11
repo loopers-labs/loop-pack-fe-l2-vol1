@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { expectProductCount } from './fixtures/product-list-assertions'
 
 const expectSearchParam = async (page: Page, key: string, value: string | null) => {
   await expect.poll(() => new URL(page.url()).searchParams.get(key)).toBe(value)
@@ -64,7 +65,7 @@ test.describe('URL·스토리지에 담긴 상태 복원', () => {
       await expect(sharedPage.getByRole('textbox', { name: '검색' })).toHaveValue('스탠리')
       await expect(sharedPage.getByRole('combobox', { name: '카테고리' })).toHaveValue('home')
       await expect(sharedPage.getByRole('combobox', { name: '정렬' })).toHaveValue('price-desc')
-      await expect(sharedPage.getByText('총 4개', { exact: true })).toBeVisible()
+      await expectProductCount(sharedPage, '총 4개')
     } finally {
       await sharedContext.close()
     }
@@ -115,21 +116,21 @@ test.describe('URL·스토리지에 담긴 상태 복원', () => {
     const searchInput = page.getByRole('textbox', { name: '검색' })
     await searchInput.fill('스탠리')
     await expectSearchParam(page, 'q', '스탠리')
-    await expect(page.getByText('총 4개', { exact: true })).toBeVisible()
+    await expectProductCount(page, '총 4개')
 
     await searchInput.fill('메이커스')
     await expectSearchParam(page, 'q', '메이커스')
-    await expect(page.getByText('총 1개', { exact: true })).toBeVisible()
+    await expectProductCount(page, '총 1개')
 
     await page.goBack()
     await expectSearchParam(page, 'q', '스탠리')
     await expect(searchInput).toHaveValue('스탠리')
-    await expect(page.getByText('총 4개', { exact: true })).toBeVisible()
+    await expectProductCount(page, '총 4개')
 
     await page.goForward()
     await expectSearchParam(page, 'q', '메이커스')
     await expect(searchInput).toHaveValue('메이커스')
-    await expect(page.getByText('총 1개', { exact: true })).toBeVisible()
+    await expectProductCount(page, '총 1개')
   })
 
   test('페이지네이션 경계와 뒤로·앞으로 이동에서 URL 상태가 복원된다', async ({ page }) => {

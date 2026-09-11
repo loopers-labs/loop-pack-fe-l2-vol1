@@ -1,0 +1,1847 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 · 예산 게이트 설계</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --page: #f4f7f6;
+        --surface: #fbfdfc;
+        --text: #17211f;
+        --muted: #53635f;
+        --line: #cbd8d4;
+        --accent: #056354;
+        --accent-soft: #d7eee8;
+        --cold-line: #2f6f9e;
+        --cold-fill: #e3eff8;
+        --cold-text: #1f4a6b;
+        --pending-fill: #eee7fa;
+        --pending-line: #7255a5;
+        --pending-text: #3e2d5e;
+        --warning-fill: #fbeeda;
+        --warning-line: #b56a20;
+        --warning-text: #6b3f0d;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: #101715;
+          --surface: #151e1b;
+          --text: #e8efed;
+          --muted: #aab9b5;
+          --line: #31413c;
+          --accent: #88e3d0;
+          --accent-soft: #173d34;
+          --cold-line: #6fa9d2;
+          --cold-fill: #172835;
+          --cold-text: #a9cee8;
+          --pending-fill: #2b2238;
+          --pending-line: #b9a0e4;
+          --pending-text: #decff7;
+          --warning-fill: #33261a;
+          --warning-line: #e0a05c;
+          --warning-text: #f2c894;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--text);
+        font-family:
+          Pretendard,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        line-height: 1.8;
+        word-break: keep-all;
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 0.2em;
+      }
+      code {
+        padding: 0.1rem 0.3rem;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--surface);
+        font-family: 'SFMono-Regular', Consolas, monospace;
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 14rem minmax(0, 1fr);
+        gap: 4rem;
+        max-width: 76rem;
+        margin: auto;
+        padding: 2rem 1.5rem 5rem;
+      }
+      nav {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100vh - 4rem);
+        overflow: auto;
+        border-left: 3px solid var(--accent);
+        padding-left: 1rem;
+      }
+      nav strong {
+        color: var(--accent);
+      }
+      nav ol {
+        margin: 0.7rem 0;
+        padding: 0;
+        list-style: none;
+      }
+      nav li + li {
+        margin-top: 0.5rem;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      header,
+      section {
+        margin-bottom: 4rem;
+        scroll-margin-top: 2rem;
+      }
+      header {
+        padding: 3rem 0;
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.3;
+        letter-spacing: -0.035em;
+      }
+      h1 {
+        margin: 0.8rem 0 1.2rem;
+        font-size: 3.5rem;
+      }
+      h2 {
+        margin: 0 0 1.2rem;
+        font-size: 2rem;
+      }
+      h3 {
+        margin: 0 0 0.6rem;
+        font-size: 1.2rem;
+      }
+      .record-heading {
+        padding-top: 1.5rem;
+      }
+      .eyebrow,
+      .time {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.9rem;
+        font-weight: 750;
+      }
+      .lead {
+        max-width: 43rem;
+        color: var(--muted);
+        font-size: 1.15rem;
+      }
+      .callout,
+      .card,
+      .done {
+        margin: 1.3rem 0;
+        padding: 1.2rem 1.4rem;
+        border: 0;
+        border-left: 4px solid var(--accent);
+        border-radius: 0 12px 12px 0;
+        background: var(--accent-soft);
+      }
+      .callout p,
+      .card p {
+        margin: 0.4rem 0;
+      }
+      .pending {
+        border-left-color: var(--pending-line);
+        background: var(--pending-fill);
+        color: var(--pending-text);
+      }
+      .cold {
+        border-left-color: var(--cold-line);
+        background: var(--cold-fill);
+        color: var(--cold-text);
+      }
+      .warning {
+        border-left-color: var(--warning-line);
+        background: var(--warning-fill);
+        color: var(--warning-text);
+      }
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 1.4rem;
+        margin: 1.5rem 0;
+      }
+      .card {
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+      .card.recommended {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .step {
+        border-top: 1px solid var(--line);
+        padding-top: 2rem;
+      }
+      li + li {
+        margin-top: 0.55rem;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.94rem;
+      }
+      caption {
+        margin-bottom: 0.6rem;
+        color: var(--muted);
+        text-align: left;
+      }
+      th,
+      td {
+        padding: 0.75rem;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--accent-soft);
+      }
+      pre {
+        overflow-x: auto;
+        margin: 1.2rem 0;
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 0.88rem;
+        line-height: 1.7;
+      }
+      pre code {
+        padding: 0;
+        border: 0;
+        background: none;
+      }
+      .mermaid {
+        overflow-x: auto;
+        margin: 1.2rem 0;
+        padding: 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+      footer {
+        color: var(--muted);
+      }
+      @media (max-width: 820px) {
+        .shell {
+          display: block;
+          padding: 1rem;
+        }
+        nav {
+          position: static;
+          margin-bottom: 1rem;
+        }
+        h1 {
+          font-size: 2.5rem;
+        }
+      }
+      @media print {
+        :root {
+          color-scheme: light;
+          --page: #fff;
+          --surface: #fff;
+          --text: #111;
+          --muted: #444;
+          --line: #bbb;
+          --accent: #185f4d;
+          --accent-soft: #e8f4f0;
+        }
+        .shell {
+          display: block;
+          padding: 0;
+        }
+        nav {
+          display: none;
+        }
+        header,
+        section,
+        .callout,
+        .card,
+        tr {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <div class="shell">
+      <nav aria-label="문서 목차">
+        <strong>WEEK 10 · 예산 게이트</strong>
+        <ol>
+          <li><a href="#status">현재 상태</a></li>
+          <li><a href="#baseline">01 근거로 쓸 값</a></li>
+          <li><a href="#tooling">02 도구 선택</a></li>
+          <li><a href="#budget">03 번들 예산</a></li>
+          <li><a href="#env">04 환경 변수 게이트</a></li>
+          <li><a href="#visibility">05 결과 가시성</a></li>
+          <li><a href="#required">06 required 배치</a></li>
+          <li><a href="#redlight">07 빨간불 자가 검증</a></li>
+          <li><a href="#measured">08 측정 결과</a></li>
+          <li><a href="#decided">09 결정과 설정</a></li>
+          <li><a href="#open">작성자가 정할 것</a></li>
+        </ol>
+      </nav>
+      <main id="main">
+        <header>
+          <p class="eyebrow">LOOP PACK · WEEK 10 · 3단계</p>
+          <h1>무엇을 어디서 막고,<br />왜 막혔는지 어떻게 보일까</h1>
+          <p class="lead">
+            번들 예산과 환경 변수 게이트를 걸고, 막혔을 때 PR 화면만 보고 원인을 알 수 있게 만든다.
+            임계값은 7주차 측정값과 현재 값의 범위에 근거해야 한다.
+          </p>
+          <p>
+            이 문서는 착수 전 설계다. 아래 임계값, required 배치, 도구 선택은 아직 확정하지 않았고
+            측정도 하지 않았다. 완료로 표시한 항목은 없다.
+          </p>
+          <div class="callout cold">
+            <strong>이후 진행 · 2026-09-11</strong>
+            <p>
+              측정과 도구 결정을 마쳤다. 01~07절은 당시 설계 기록으로 그대로 두고, 결과는
+              <a href="#measured">08 측정 결과</a>와 <a href="#decided">09 결정과 설정</a>에 적는다.
+              CI 연결, 환경 변수 게이트, 빨간불 실험은 아직 하지 않았다.
+            </p>
+          </div>
+          <p class="source-link">
+            과제 원문:
+            <a
+              href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/blob/main/docs/assignments/week-10.md#L204-L226"
+              >3단계 — 예산 게이트를 걸고 결과를 보이게 해요 (204–226줄)</a
+            >
+          </p>
+        </header>
+
+        <section id="status">
+          <p class="time">00 · 현재 상태</p>
+          <h2>착수 전에 확인한 사실만 적는다</h2>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                2026-09-11 저장소 조사 결과
+              </caption>
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>상태</th>
+                  <th>확인 방법</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>size-limit</code> 계열</td>
+                  <td>미설치</td>
+                  <td><code>package.json</code> 의존성 검색</td>
+                </tr>
+                <tr>
+                  <td>현재 번들 크기</td>
+                  <td>미측정</td>
+                  <td><code>pnpm build</code>를 아직 실행하지 않음</td>
+                </tr>
+                <tr>
+                  <td>환경 변수</td>
+                  <td>
+                    <code>AUTH_SESSION_SECRET</code>, <code>APP_ORIGIN</code>, <code>PORT</code> 3개
+                  </td>
+                  <td><code>rg "process.env.[A-Z_]+"</code></td>
+                </tr>
+                <tr>
+                  <td><code>NEXT_PUBLIC_</code> 변수</td>
+                  <td>없음</td>
+                  <td>같은 검색에서 0건</td>
+                </tr>
+                <tr>
+                  <td><code>.env</code> 파일</td>
+                  <td>없음</td>
+                  <td>저장소 루트 확인</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout cold">
+            <strong>갱신 · 2026-09-11</strong>
+            <p>
+              위 표의 <code>size-limit</code> 계열 &ldquo;미설치&rdquo;와 현재 번들 크기
+              &ldquo;미측정&rdquo;은 해소됐다. <code>size-limit@13.0.3</code>과
+              <code>@size-limit/file@13.0.3</code>을 devDependency로 설치했고, 전체 번들은
+              <strong>273.74 kB</strong>(gzip)로 측정됐다. 환경 변수 관련 세 줄은 그대로다.
+            </p>
+          </div>
+          <div class="callout pending">
+            <strong>1·2단계와 이어지는 지점</strong>
+            <p>
+              2단계에서 <code>Detect E2E scope</code>, <code>E2E (chromium)</code>,
+              <code>E2E (webkit)</code>을 required로 두는 구조를 만들었다. 이번에 추가하는 게이트도
+              같은 질문을 다시 받는다. 조건부로 생성되지 않는 check를 required로 두면 PR이 영구
+              대기한다.
+            </p>
+          </div>
+        </section>
+
+        <section id="baseline" class="step">
+          <p class="time">01 · 근거로 쓸 값</p>
+          <h2>7주차 기록에 같은 숫자를 두 가지로 부르는 곳이 있다</h2>
+          <p>
+            과제는 임계값 근거를 &ldquo;7주차에 잰 실제 전송 크기 + 현재 값의 범위&rdquo;로
+            요구한다. 그런데 <a href="../week-07/measurement.md">7주차 측정 기록</a>이 같은 값을 두
+            이름으로 쓴다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                docs/week-07/measurement.md의 상충하는 두 서술
+              </caption>
+              <thead>
+                <tr>
+                  <th>위치</th>
+                  <th>표기</th>
+                  <th>포함 범위</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>209행 · Network waterfall 표</td>
+                  <td><code>178.8KB</code></td>
+                  <td>CSS·JS 청크 14개 &mdash; <strong>CSS 포함</strong></td>
+                </tr>
+                <tr>
+                  <td>242행 · 본문</td>
+                  <td><code>178.8KB</code></td>
+                  <td>JS 청크 합계 &mdash; <strong>JS만</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warning">
+            <strong>이 값을 그대로 쓰면 감점 함정에 걸린다</strong>
+            <p>
+              과제는 &ldquo;적당히 300KB는 감점&rdquo;이라고 못박았고, 진행표도 전체 페이지 전송량과
+              JS 번들을 같은 값으로 취급하지 말라고 경고한다. 둘 중 어느 쪽인지 확정하지 못한 숫자를
+              JS 한도의 근거로 인용할 수 없다.
+            </p>
+          </div>
+          <h3>대신 쓸 수 있는 값</h3>
+          <p>
+            같은 문서 1258행에 리소스 종류별 분해가 있다. 이쪽은 JS만 따로 표기된 유일한 값이다.
+          </p>
+          <pre><code>After 총 전송량 2,603,503 B
+  폰트 79.0% · 이미지 13.3% · JS 6.8% · 텍스트 0.9%</code></pre>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                JS 전송량 환산 · 백분율이 소수점 첫째 자리라 폭이 생긴다
+              </caption>
+              <thead>
+                <tr>
+                  <th>계산</th>
+                  <th>값</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2,603,503 B × 6.8%</td>
+                  <td>약 177.0KB</td>
+                </tr>
+                <tr>
+                  <td>6.75% ~ 6.85% 범위</td>
+                  <td>175.7KB ~ 178.3KB</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout pending">
+            <strong>이 값의 한계</strong>
+            <p>
+              홈(<code>/</code>) 진입점 하나이고, 7주차 코드 기준이다. 이후 8주차 테스트와 9주차
+              인증이 들어갔으므로 현재 값과 다를 가능성이 크다. 임계값을 정하려면
+              <code>pnpm build</code>로 현재 값을 먼저 재야 한다.
+            </p>
+            <p>
+              측정 방식도 다르다. 7주차는 브라우저가 실제로 받은 전송 크기이고, 도구가 재는 값은
+              빌드 산출물의 압축 크기다. 같은 단위로 비교하려면 어느 쪽 기준을 쓸지 먼저 정해야
+              한다.
+            </p>
+          </div>
+        </section>
+
+        <section id="tooling" class="step">
+          <p class="time">02 · 도구 선택</p>
+          <h2>무엇으로 잴지부터 정한다</h2>
+          <p>과제는 <code>size-limit</code> 또는 동등 도구를 요구한다. 현재 저장소에는 없다.</p>
+          <div class="status-grid">
+            <div class="card">
+              <h3><code>size-limit</code></h3>
+              <p>
+                파일 glob에 gzip·brotli 한도를 걸고 초과분을 출력한다. PR 코멘트 액션이 따로 있다.
+                의존성이 늘어난다.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Next.js build 출력 파싱</h3>
+              <p>
+                <code>pnpm build</code>가 출력하는 First Load JS를 스크립트로 검사한다. 의존성이
+                늘지 않지만 출력 형식이 바뀌면 깨진다.
+              </p>
+            </div>
+            <div class="card">
+              <h3><code>.next</code> 산출물 직접 계측</h3>
+              <p>
+                청크 파일을 직접 읽어 gzip 크기를 잰다. 7주차 &ldquo;전송 크기&rdquo;와 단위를
+                맞추기 가장 쉽지만 직접 구현해야 한다.
+              </p>
+            </div>
+          </div>
+          <div class="callout">
+            <strong>선택 기준</strong>
+            <p>
+              어느 쪽이든 <strong>7주차 값과 같은 단위로 비교되는지</strong>가 먼저다. 진입점 범위,
+              압축 방식, 단위를 맞추지 않으면 임계값 근거가 성립하지 않는다.
+            </p>
+          </div>
+          <div class="callout cold">
+            <strong>정정 · 2026-09-11 · 후보 하나가 성립하지 않는다</strong>
+            <p>
+              위 &ldquo;Next.js build 출력 파싱&rdquo; 카드는 실행 가능한 후보가 아니다. Next 16의
+              <code>pnpm build</code> 출력에는 Size와 First Load JS 컬럼이 아예 없어 파싱할 대상이
+              없다. 근거는 <a href="#measured">08절</a>에 있다.
+            </p>
+            <p>
+              채택 결과는 <a href="#decided">09절</a>에 있다. 위 카드들은 당시 검토 기록으로 그대로
+              둔다.
+            </p>
+          </div>
+        </section>
+
+        <section id="budget" class="step">
+          <p class="time">03 · 번들 예산</p>
+          <h2>측정 → 범위 확인 → 임계값 순서로만 정한다</h2>
+          <ol>
+            <li>
+              <code>pnpm build</code>로 현재 값을 잰다. 한 번이 아니라 여러 번 재서
+              <strong>범위</strong>를 본다. 빌드마다 흔들리는 폭보다 여유폭이 작으면 게이트가
+              무의미해진다.
+            </li>
+            <li>7주차 값과 단위·범위를 대조한다. 다르면 왜 다른지 적는다.</li>
+            <li>임계값과 여유폭을 정하고 <strong>왜 그 값인지</strong>를 함께 남긴다.</li>
+            <li>일부러 초과시키는 실험으로 실제로 막히는지 확인한다.</li>
+          </ol>
+          <div class="callout warning">
+            <strong>미측정 · 미결정</strong>
+            <p>
+              이 절의 모든 숫자는 아직 없다. 현재 값을 재기 전에는 임계값도, 여유폭도, 대상 진입점도
+              확정하지 않는다.
+            </p>
+          </div>
+          <div class="callout cold">
+            <strong>이후 상태 · 2026-09-11</strong>
+            <p>
+              1~3번은 마쳤다. 측정값과 편차는 <a href="#measured">08절</a>, 임계값과 근거는
+              <a href="#decided">09절</a>에 있다. 4번 &ldquo;일부러 초과시키는 실험&rdquo;은 아직
+              하지 않았다.
+            </p>
+          </div>
+        </section>
+
+        <section id="env" class="step">
+          <p class="time">04 · 환경 변수 게이트</p>
+          <h2>이 저장소에서는 노출 검사가 실질적인 형태다</h2>
+          <p>
+            과제는 누락, 잘못된 URL, 비공개 값의 <code>NEXT_PUBLIC_</code> 노출 세 가지를 build 전에
+            막으라고 한다. 그런데 현재 코드에는 <code>NEXT_PUBLIC_</code> 변수가 하나도 없다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                현재 사용 중인 환경 변수와 검증 후보
+              </caption>
+              <thead>
+                <tr>
+                  <th>변수</th>
+                  <th>사용처</th>
+                  <th>성격</th>
+                  <th>검증 후보</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>AUTH_SESSION_SECRET</code></td>
+                  <td><code>app/api/_data/auth.ts</code></td>
+                  <td>비공개</td>
+                  <td>누락 시 실패 · <code>NEXT_PUBLIC_</code> 접두사로 새면 실패</td>
+                </tr>
+                <tr>
+                  <td><code>APP_ORIGIN</code></td>
+                  <td><code>src/shared/api/get-api-base-url.ts</code></td>
+                  <td>공개 가능</td>
+                  <td>형식이 URL인지 검사</td>
+                </tr>
+                <tr>
+                  <td><code>PORT</code></td>
+                  <td>같은 파일</td>
+                  <td>공개 가능</td>
+                  <td>숫자 범위 검사</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warning">
+            <strong>값을 로그에 출력하지 않는다</strong>
+            <p>
+              검증 스크립트는 변수 이름과 실패 사유만 출력한다. 값 자체나 그 일부를 로그·PR 코멘트에
+              남기지 않는다. 과제의 공통 보안 항목이자 실패 리포트가 secret 유출 경로가 되지 않게
+              하려는 것이다.
+            </p>
+          </div>
+
+          <div class="callout cold">
+            <strong>구현 결과 · 2026-09-11</strong>
+            <p>
+              위 표의 <code>PORT</code>는 게이트 대상에서 뺐다. 세 변수 중 실제로 사고 경로가 있는
+              것은 <code>APP_ORIGIN</code>과 <code>AUTH_SESSION_SECRET</code> 둘이다.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <caption>
+                  <code>scripts/validate-env.mjs</code
+                  >의 검사 세 가지
+                </caption>
+                <thead>
+                  <tr>
+                    <th>검사</th>
+                    <th>대상</th>
+                    <th>실패 조건</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>누락</td>
+                    <td><code>APP_ORIGIN</code></td>
+                    <td>비어 있으면 실패</td>
+                  </tr>
+                  <tr>
+                    <td>형식</td>
+                    <td><code>APP_ORIGIN</code></td>
+                    <td><code>new URL()</code> 파싱 실패 또는 http/https가 아님</td>
+                  </tr>
+                  <tr>
+                    <td>노출</td>
+                    <td><code>APP_ORIGIN</code>, <code>AUTH_SESSION_SECRET</code></td>
+                    <td><code>NEXT_PUBLIC_</code> 변형이 존재하면 실패</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              노출 검사가 핵심이다. <code>get-api-base-url.ts:4-8</code>에
+              <strong>주석으로만</strong>
+              있던 규칙 &mdash; &ldquo;<code>NEXT_PUBLIC_</code>을 붙이면 서버 내부 origin이
+              브라우저에 그대로 노출된다&rdquo; &mdash; 을 기계가 지키게 한 것이다. 제출 질문 3번
+              &ldquo;Preview 환경이 production API를 바라보면&rdquo;이 묻는 사고 경로가 이것이다.
+            </p>
+          </div>
+
+          <div class="callout warning">
+            <strong>5주차 판단을 뒤집었다 · <code>APP_ORIGIN</code> 폴백 제거</strong>
+            <p>
+              <code>getApiBaseUrl()</code>의 <code>?? http://localhost:${PORT}</code> 폴백을 걷어내
+              <code>APP_ORIGIN</code>을 진짜 필수로 만들었다. <code>AUTH_SESSION_SECRET</code>은
+              mock 백엔드라 폴백을 유지하고 노출 검사만 적용한다.
+            </p>
+            <p>
+              이 폴백은 5주차에 의도적으로 남긴 것이다.
+              <code>docs/week-05/decisions.md:208</code>의 이유는 &ldquo;배포 환경이 정해지기 전에는
+              어떤 env를 읽어야 할지 알 수 없다&rdquo;였고,
+              <strong>배포 설정이 없다는 조건은 지금도 그대로다.</strong> 바꾼 근거는 배포 환경이
+              정해져서가 아니라,
+              <strong>설정 계약을 선언하고 CI가 지키게 하는 것 자체가 이번 과제</strong>이기
+              때문이다. 5주차 기록은 지우지 않는다.
+            </p>
+            <p>
+              폴백이 있으면 origin을 빠뜨려도 조용히 localhost로 흘러간다. 로컬에서는 통과하고 배포
+              환경에서만 엉뚱한 곳을 가리키는, 설정 사고 중 가장 늦게 발견되는 형태다.
+            </p>
+          </div>
+
+          <div class="callout">
+            <strong>로컬 검증 · 2026-09-11</strong>
+            <p>검사 여섯 경로를 모두 확인했다. 값은 어느 출력에도 나타나지 않았다.</p>
+            <pre><code>통과              APP_ORIGIN=http://localhost:3000          → 0
+누락              APP_ORIGIN=                              → 1
+형식 오류         APP_ORIGIN=not-a-url                     → 1
+프로토콜 오류     APP_ORIGIN=ftp://example.com             → 1
+노출(origin)      NEXT_PUBLIC_APP_ORIGIN=...               → 1
+노출(secret)      NEXT_PUBLIC_AUTH_SESSION_SECRET=...      → 1</code></pre>
+            <p>폴백 제거가 깨뜨리는 곳도 확인했다.</p>
+            <ul>
+              <li>
+                <code>pnpm build</code> (값 없음) &mdash; <code>/_not-found</code> page data
+                수집에서 실패. <code>app/layout.tsx:29</code>의 <code>metadataBase</code>가 빌드
+                시점에 평가되기 때문이다. 오류 메시지에 조치 방법이 그대로 나온다
+              </li>
+              <li><code>APP_ORIGIN</code>을 주면 빌드 성공</li>
+              <li>
+                <code>pnpm verify</code> &mdash; 29개 파일 164개 테스트 통과. vitest는 값이 필요
+                없다. <code>api.test.ts</code>가 <code>@vitest-environment jsdom</code>이라
+                <code>window</code>가 있고 <code>getApiBaseUrl()</code>이 조기 반환한다
+              </li>
+              <li>
+                <code>playwright test e2e/order.spec.ts</code> &mdash; 두 브라우저 통과.
+                <code>webServer.env</code>로 <code>pnpm start</code>에 값이 전달된다
+              </li>
+            </ul>
+          </div>
+
+          <div class="callout pending">
+            <strong>값을 공급하는 곳 · <code>.env</code> 파일은 커밋하지 않는다</strong>
+            <div class="table-wrap">
+              <table>
+                <caption>
+                  빌드가 도는 모든 경로에 값이 필요하다
+                </caption>
+                <thead>
+                  <tr>
+                    <th>위치</th>
+                    <th>방식</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>quality.yml</code></td>
+                    <td>
+                      job 레벨 <code>env</code> + build 앞에 <code>Validate environment</code> step
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>e2e.yml</code></td>
+                    <td>
+                      <code>e2e</code> job 레벨 <code>env</code>(<code>changes</code> job은 불필요)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>playwright.config.ts</code></td>
+                    <td><code>webServer.env</code>로 <code>pnpm start</code>에 전달</td>
+                  </tr>
+                  <tr>
+                    <td>로컬</td>
+                    <td><code>.env.local</code>을 각자 만든다</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              <code>.env.example</code> 같은 템플릿 파일은 만들지 않았다. 만들려면
+              <code>.gitignore</code>의 <code>.env*</code> 규칙에 negation을 추가해 느슨하게 해야
+              하는데 그만한 이득이 없다.
+              <strong>설정 계약은 검증 스크립트의 변수 목록이 맡고</strong>, 값이 없을 때 무엇을
+              어떻게 설정해야 하는지는 실패 메시지가 알려준다.
+            </p>
+          </div>
+
+          <div class="callout warning">
+            <strong>Actions 검증에서 잡은 것 · 2026-09-11 · 스크립트만으로는 부족했다</strong>
+            <p>
+              빨간불 실험(PR #20)에서 <code>APP_ORIGIN</code>을 <code>not-a-valid-origin</code>으로
+              바꿔 게이트를 실패시켰다. 값을 비우지 않고 형식을 깨뜨린 이유는
+              <strong>값이 로그에 새는지까지 함께 보기 위해서</strong>였다. 그 판단이 문제를 하나
+              잡았다.
+            </p>
+            <p>스크립트 출력에는 값이 없었다. 그런데 로그 전체를 검색하니 값이 8번 나왔다.</p>
+            <pre><code>##[group]Run actions/checkout@...
+  submodules: false
+  set-safe-directory: true
+env:
+  APP_ORIGIN: not-a-valid-origin     ← 여기
+##[endgroup]</code></pre>
+            <p>
+              <strong
+                >Actions가 모든 step 헤더에 그 step이 받는 <code>env</code>를 나열한다.</strong
+              >
+              성공한 실행에서도 같은 값이 11번 나왔으므로 실패와 무관하고,
+              <code>uses:</code>·<code>run:</code> 양쪽 step 모두에서 나타난다. 다만 이 로깅 동작은
+              문서에 명시된 것이 아니라 이 저장소의 두 실행에서 관찰한 사실이다.
+            </p>
+            <p>
+              바로 옆 줄이 대비를 보여준다. <code>token: ***</code>는 마스킹되고
+              <code>APP_ORIGIN</code>은 그대로다.
+              <a
+                href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets"
+                >공식 문서</a
+              >는 <strong>자동 마스킹이 <code>secrets</code> 컨텍스트 값에만 적용된다</strong>고
+              명시하고, 비밀이 아닌 민감한 값은 <code>::add-mask::</code>로 직접 가리라고 안내한다.
+            </p>
+          </div>
+
+          <div class="callout cold">
+            <strong>대응 · <code>APP_ORIGIN</code>을 secrets로 옮겼다</strong>
+            <p>
+              <code>http://localhost:3000</code>은 비밀이 아니다. 그런데도 secrets에 넣은 이유는
+              <strong
+                >값을 어디서 가져오느냐가 스크립트가 무엇을 출력하느냐보다 중요하기 때문</strong
+              >이다. 평문 <code>env:</code>는 자리 자체가 새는 자리라, 나중에 진짜 비밀을 같은
+              자리에 넣으면 모든 step 헤더에 그대로 찍힌다.
+            </p>
+            <pre><code>env:
+  APP_ORIGIN: ${{ secrets.APP_ORIGIN }}</code></pre>
+            <p>
+              감수하는 것이 하나 있다. <strong>fork PR에는 secrets가 전달되지 않아</strong> 외부
+              기여자의 PR에서는 게이트가 &ldquo;누락&rdquo;으로 실패한다. 이 저장소는 지금까지 모든
+              PR이 같은 소유자(<code>im-wen3y</code>)에서 왔으므로 해당되지 않지만, 외부 기여를 받게
+              되면 다시 판단해야 한다.
+            </p>
+          </div>
+
+          <div class="done">
+            <strong>정정 · 2026-09-11 · 그 조건은 이미 성립해 있었다</strong>
+            <p>
+              바로 위의 &ldquo;해당되지 않는다&rdquo;는 판단은 틀렸다. 기록은 지우지 않고 정정만
+              덧붙인다. <strong>과제 제출 PR 자체가 fork에서 upstream으로 올리는 PR</strong>이라,
+              외부 기여를 받게 될 미래가 아니라 같은 주에 그 조건을 밟았다. 제출 PR에서
+              <code>quality</code>, <code>E2E (chromium)</code>, <code>E2E (webkit)</code> 세 job이
+              모두 실패했고, 로그의 <code>APP_ORIGIN</code>은 빈 값이었다.
+            </p>
+            <p>
+              게이트는 설계대로 동작했고 값 공급만 끊긴 상태였다. 그래서 값을
+              <code>${{ secrets.APP_ORIGIN || 'http://localhost:3000' }}</code>로 바꿨다. secret이
+              있으면 마스킹된 값을 쓰고, 없으면 CI에서 쓸 유일한 값으로 떨어진다. 이 기본값은
+              <code>getApiBaseUrl()</code>에서 걷어낸 폴백과 자리가 다르다. 그쪽은 애플리케이션이
+              설정 누락을 조용히 넘기는 자리였고, 이쪽은 CI가 쓸 값이
+              <code>playwright.config.ts</code>의 <code>baseURL</code> 하나로 고정된 자리다.
+            </p>
+            <p>
+              조치 후 같은 fork PR에서 Quality와 E2E가 모두 통과해 재검증을 마쳤다. 내 저장소 안의
+              PR은 secret이 있어 조치 여부와 무관하게 통과하므로 근거가 되지 못한다.
+              <strong
+                >게이트의 동작 조건을 바꾼 변경은 그 조건이 실제로 성립하는 환경에서 확인해야
+                한다.</strong
+              >
+              같은 로그에서 <code>APP_ORIGIN</code>이 마스킹 없이 평문으로 찍힌 것과, PR 코멘트가
+              <code>skipped: 코멘트 쓰기 실패 (403)</code>으로 생략된 것도 함께 확인했다. 자세한
+              내용은 <code>docs/rfc/week10-ci.md</code>의 「secrets 취급」과 「결과 가시성」에 있다.
+            </p>
+            <p>
+              과제 공통 보안 항목(358행) &ldquo;secrets를 로그로 찍지 않는다&rdquo;가 말하는 것이
+              이것이다. <strong>스크립트가 값을 안 찍는 것만으로는 부족했다.</strong>
+            </p>
+          </div>
+
+          <div class="callout pending">
+            <strong>아직 Actions에서 확인하지 않았다</strong>
+            <p>
+              위는 모두 로컬 실행 결과다. <code>Validate environment</code>가 실제 CI에서
+              <code>Run production build</code> 앞에 서는지, job summary에 결과가 뜨는지, 빨간불
+              실험에서 build가 Skipped 되는지는 push 후 확인한다. required 배치도 미결정이다.
+            </p>
+            <p>
+              <strong>이후 확인 · 2026-09-11</strong> &mdash; 세 항목 모두 Actions에서 확인했다.
+              성공 실행(PR #12)에서 <code>Validate environment</code>가 build 앞에서 통과했고 번들은
+              <strong>273.79 kB</strong>로 로컬 측정과 정확히 일치했다. 실패 실행(PR #20)에서는
+              <code>Run production build</code>부터 세 step이 <code>skipped</code>였다. 남은 것은
+              job summary가 PR 화면에 표로 렌더되는지 눈으로 보는 것과 required 배치다.
+            </p>
+          </div>
+
+          <div class="callout cold">
+            <strong
+              >이후 확인 · 2026-09-11 · Vercel에서 <code>APP_ORIGIN</code>은 필수가 아니다</strong
+            >
+            <p>
+              위 표는 <code>APP_ORIGIN</code>을 &ldquo;누락 시 실패&rdquo;로 적었다. 배포 환경이
+              생기면서 이 판단이 한 군데에서 바뀐다.
+              <strong>Vercel은 배포마다 URL이 달라</strong> 고정값을 미리 넣을 수 없고, 대신
+              <code>VERCEL_URL</code>이 그 배포의 도메인을 프로토콜 없이 담아 준다. 그래서
+              <code>VERCEL=1</code>이고 <code>VERCEL_URL</code>이 있으면 누락 검사를 건너뛴다.
+            </p>
+            <pre><code>if (isOnVercel &amp;&amp; process.env.VERCEL_URL) return null</code></pre>
+            <p>
+              계약이 느슨해진 것이 아니라 <strong>공급자가 바뀐 것</strong>이다. 절대 origin이
+              필요하다는 요구는 그대로고, 그 값을 사람이 넣느냐 플랫폼이 넣느냐만 다르다. Vercel
+              밖(로컬 · CI)에서는 여전히 없으면 실패한다.
+            </p>
+          </div>
+
+          <div class="callout warning">
+            <strong>검사를 짠 것과 검사가 도는 것은 별개였다</strong>
+            <p>
+              Preview가 다른 환경을 가리키는지 보는 <code>checkSelfReference()</code>는
+              <code>VERCEL_ENV === 'preview'</code>일 때만 동작한다. 그런데 Vercel이 부르는
+              <code>pnpm build</code>는 <code>next build</code> 하나였다. 검증은 GitHub Actions의
+              별도 step에서만 돌고 있었고, Actions에서는 그 조건이 참이 될 수 없다.
+              <strong>즉 이 검사는 어디에서도 실행되지 않는 죽은 코드였다.</strong>
+            </p>
+            <pre><code>- "build": "next build"
++ "build": "node scripts/validate-env.mjs &amp;&amp; next build"</code></pre>
+            <p>
+              게이트는 &ldquo;조건이 맞으면 막는가&rdquo;뿐 아니라
+              <strong>&ldquo;실제로 빌드하는 명령에 걸려 있는가&rdquo;</strong>까지 확인해야
+              완성이다. CI에만 붙이면 배포 경로는 무방비다.
+            </p>
+          </div>
+
+          <div class="callout cold">
+            <strong>제출 질문 3번 실험 · Preview에 Production URL 넣기</strong>
+            <p>
+              Vercel Settings &rarr; Environment Variables에서 <code>APP_ORIGIN</code>을
+              <strong>Preview 환경에만</strong> Production URL로 지정하고 재배포했다. 결과는 아래와
+              같다.
+            </p>
+            <pre><code>&gt; node scripts/validate-env.mjs &amp;&amp; next build
+
+## ❌ 환경 변수 검증 실패
+
+- APP_ORIGIN이 이 Preview 배포가 아닌 다른 환경을 가리킵니다. …</code></pre>
+            <div class="table-wrap">
+              <table>
+                <caption>
+                  실험에서 확인한 세 가지
+                </caption>
+                <thead>
+                  <tr>
+                    <th>확인 항목</th>
+                    <th>결과</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>build 앞에서 막히는가</td>
+                    <td>
+                      <code>&amp;&amp;</code> 앞에서 종료. <code>next build</code> 미실행 &mdash;
+                      잘못된 설정으로 만든 배포물이 존재하지 않는다
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>사유가 로그에 보이는가</td>
+                    <td>변수 이름과 무엇이 잘못됐는지, 어떻게 고치는지까지 출력</td>
+                  </tr>
+                  <tr>
+                    <td>값이 로그에 남는가</td>
+                    <td><strong>남지 않는다.</strong> Production URL 문자열이 어디에도 없다</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Preview 변수를 지우고 재배포해 초록불로 복구했다. 복구 후 Preview
+              <code>/products</code>의 서버 응답 HTML에 <code>총 30개</code>가 들어 있는 것으로
+              <code>VERCEL_URL</code> 분기가 동작함을 확인했다 &mdash; 브라우저가 나중에 채운 값이
+              아니라 서버가 만든 HTML에 이미 있다는 뜻이다.
+            </p>
+          </div>
+
+          <div class="callout warning">
+            <strong>곁가지 · Deployment Protection이 SSR 자기 호출을 막는다</strong>
+            <p>
+              위 확인에 도달하기까지 Preview가 스켈레톤에서 멈춰 있었다. 브라우저로 API 경로를
+              부르면 200이었는데, 같은 경로를 <code>curl</code>로 부르니 302로
+              <code>vercel.com/sso-api</code>에 튕겼다.
+              <strong>브라우저에는 SSO 쿠키가 있고 서버가 스스로 부르는 요청에는 없다.</strong> 같은
+              URL인데 호출 주체에 따라 결과가 갈린 것이다.
+            </p>
+            <p>
+              Vercel 문서도 Standard Protection에서는 <code>VERCEL_URL</code>로 향하는 fetch를 쓰지
+              말라고 명시한다. 보호 범위는 Standard(production 제외 전부)와 All Deployments
+              둘뿐이고, <strong>production만 보호하는 선택지는 Enterprise 전용</strong>이라
+              Hobby에서 켤 수 있는 유일한 옵션이 정확히 Preview를 잠그는 옵션이었다. 보호를 끄고
+              해결했다.
+            </p>
+            <p>
+              얻은 기준 하나.
+              <strong
+                >접근 제한이 걸린 환경에서 &ldquo;브라우저에서 200&rdquo;은 서버도 통과한다는 근거가
+                되지 않는다.</strong
+              >
+              서버 쪽 요청을 따로 확인해야 한다.
+            </p>
+          </div>
+        </section>
+
+        <section id="visibility" class="step">
+          <p class="time">05 · 결과 가시성</p>
+          <h2>로그를 열어야 알 수 있으면 실무에서 안 본다</h2>
+          <p>
+            과제는 &ldquo;무엇이 얼마나 초과했나&rdquo;를 PR 화면에서 바로 볼 수 있어야 한다고
+            요구한다. 2단계에서 <code>scope result:</code>를 stdout에 출력한 것과 같은 이유다. 당시
+            <code>$GITHUB_OUTPUT</code>에만 값을 넣어 로그에서 판정값을 볼 수 없었고, 그 때문에 실행
+            스크립트 원문을 결과로 오해했다.
+          </p>
+          <pre class="mermaid" aria-label="게이트 결과가 PR 화면까지 이어지는 흐름">
+flowchart TD
+  gate["환경 변수 검증 → build → 번들 크기 측정"] --> judge{"게이트 통과?"}
+  judge -->|"예"| pass["Success"]
+  judge -->|"아니오"| fail["Failure"]
+  pass --> summary["job summary 기록<br/>측정값 · 한도 · 초과량"]
+  fail --> summary
+  summary --> view["PR 화면에서 확인<br/>로그를 열지 않아도 됨"]
+
+  classDef decision fill:#eee7fa,stroke:#7255a5,color:#3e2d5e
+  classDef safe fill:#d7eee8,stroke:#056354,color:#17483f
+  classDef report fill:#e3eff8,stroke:#2f6f9e,color:#1f4a6b
+  classDef failure fill:#fff0ee,stroke:#b5473c,color:#762820
+  class judge decision
+  class gate,pass,view safe
+  class summary report
+  class fail failure
+</pre>
+          <div class="callout cold">
+            <strong>구현 결과 · 2026-09-11 · PR 코멘트 하나로 모았다</strong>
+            <p>
+              처음에는 job summary만 썼다. 그런데 PR #21을 눈으로 확인해보니 대화 화면에는
+              <code>All checks have passed</code>만 뜨고 초과 정보가 없었다. summary는
+              <strong>Checks 탭을 눌러 들어가야</strong> 보인다. 번들 예산은
+              <code>continue-on-error</code>로 막지 않으므로 이 상태면 초과를 놓친다.
+            </p>
+            <p>
+              그래서 PR 코멘트를 붙였다. 번들만 올리다가,
+              <strong>통과 여부도 PR에서 바로 확인하고 싶다는 작성자 판단</strong>으로 테스트·환경
+              변수까지 한 코멘트로 묶었다.
+            </p>
+            <pre><code># CI 검증 요약
+
+## ✅ 단위·통합 테스트 통과   | 테스트 164/164 · 스위트 68/68
+## ✅ 환경 변수 검증 통과      | 검사 대상: APP_ORIGIN, AUTH_SESSION_SECRET
+## ❌ 번들 예산 초과          | 273.79 kB / 270.00 kB · 초과 3.79 kB</code></pre>
+          </div>
+
+          <div class="callout warning">
+            <strong>막힌 지점 · <code>$GITHUB_STEP_SUMMARY</code>는 step마다 다른 파일이다</strong>
+            <p>
+              리포트 step에서 vitest가 쓴 요약을 읽어 그대로 올리려 했으나 되지 않는다. step마다
+              별도 파일이라 다른 step의 요약에 접근할 수 없다. 각 스크립트가 공유 디렉터리에 섹션을
+              남기고 마지막 step이 모으는 구조로 바꿨다.
+            </p>
+            <pre><code>ci-report/10-tests.md    ← report-test-results.mjs
+ci-report/20-env.md      ← validate-env.mjs
+ci-report/30-budget.md   ← report-bundle-budget.mjs
+         ↓
+post-ci-comment.mjs  →  PR 코멘트 하나 (표식으로 갱신, 쌓이지 않음)</code></pre>
+            <p>
+              파일명의 숫자가 코멘트 안 순서다. <code>Post CI summary comment</code> step의 조건은
+              <code>!cancelled()</code>라, 앞 step이 실패해 섹션이 일부만 모여도 그때까지의 결과는
+              올라간다.
+            </p>
+            <p>
+              vitest 요약은 <code>json</code> 리포터를 추가해 만든다.
+              <code>--reporter=default --reporter=github-actions --reporter=json</code>으로 기존
+              로그 출력과 job summary를 그대로 두고 json만 얹었다. 리포터를 명시하면
+              <code>github-actions</code> 자동 활성화가 꺼질 수 있어 함께 지정했다.
+            </p>
+          </div>
+
+          <div class="callout">
+            <strong>실패했을 때도 리포트가 남아야 한다</strong>
+            <p>
+              게이트가 실패하면 step이 거기서 끝나 summary 기록까지 건너뛰기 쉽다. 2단계 아티팩트
+              업로드에서 겪은 것과 같은 구조다. 조건을 &ldquo;실패했을 때&rdquo;가 아니라
+              &ldquo;측정이 실행됐을 때&rdquo;로 두어야 실패 리포트가 남는다.
+            </p>
+          </div>
+        </section>
+
+        <section id="required" class="step">
+          <p class="time">06 · required 배치</p>
+          <h2>비용·변동성·리스크로 나눈다</h2>
+          <p>
+            과제는 required로 둘 check와 제외할 check를 구분하고 이유를 적으라고 한다. 판단 기준은
+            셋이다.
+          </p>
+          <ul>
+            <li><strong>결정적인가</strong> — 같은 입력에 같은 결과가 나오는가</li>
+            <li><strong>비용</strong> — 모든 PR에서 돌려도 되는 시간인가</li>
+            <li><strong>리스크</strong> — 막지 못했을 때 main에 무엇이 들어가는가</li>
+          </ul>
+          <div class="callout pending">
+            <strong>미결정</strong>
+            <p>
+              환경 변수 검증은 결정적이고 저렴하며 실패 시 배포 사고로 이어진다. 번들 예산은
+              임계값을 정하기 전까지 판단할 수 없다. 어느 것을 required로 둘지는 작성자가 정한다. 이
+              문서에서 확정하지 않는다.
+            </p>
+          </div>
+
+          <div class="callout cold">
+            <strong>결정 · 2026-09-11 · 번들 예산은 막지 않고 경고만</strong>
+            <p>
+              작성자 판단이다.
+              <strong>번들 초과는 되돌리기 쉬운 문제라 머지를 막을 이유가 약하다.</strong> 크기는
+              나중에 줄여도 되고, 그 사이 다른 작업이 막히는 비용이 더 크다. 환경 변수 검증은 그대로
+              막는다. 설정 실수는 배포까지 흘러가면 되돌리기가 훨씬 비싸다.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <caption>
+                  비용 · 변동성 · 리스크로 나눈 판단
+                </caption>
+                <thead>
+                  <tr>
+                    <th>게이트</th>
+                    <th>변동성</th>
+                    <th>비용</th>
+                    <th>막지 못하면</th>
+                    <th>배치</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>환경 변수</td>
+                    <td>없음(결정적)</td>
+                    <td>1초 미만</td>
+                    <td>잘못된 설정이 배포까지 간다</td>
+                    <td><strong>차단</strong></td>
+                  </tr>
+                  <tr>
+                    <td>번들 예산</td>
+                    <td>없음(재빌드 편차 0)</td>
+                    <td>build 재사용, 수 초</td>
+                    <td>번들이 조용히 커진다. 다만 되돌리기 쉽다</td>
+                    <td><strong>경고</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="callout warning">
+            <strong>별도 job으로 분리하지 않은 이유</strong>
+            <p>
+              &ldquo;번들만 required에서 빼기&rdquo;를 위해 별도 job으로 나누는 방법도 있었다.
+              그러면
+              <code>size-limit</code>이 <code>.next</code>를 읽어야 하므로 checkout·setup·install과
+              <strong>build를 한 번 더 돌려야 한다.</strong> 1단계 실측 기준으로 약 25~32초가
+              추가된다.
+            </p>
+            <p>
+              이는 1단계 체크리스트의 &ldquo;<code
+                >job 병렬화로 각 job의 install 비용을 중복시키지 않았는가</code
+              >&rdquo;에 정면으로 걸린다. 1단계에서 Quality의 불필요한 Chromium 설치 24초를
+              걷어냈는데 비슷한 비용을 도로 넣는 셈이다.
+            </p>
+            <p>
+              대신 step에 <code>continue-on-error: true</code>를 붙였다. 빌드 중복도, required check
+              추가도 없이 같은 결과를 얻는다.
+            </p>
+            <pre><code>- name: Check bundle budget
+  id: budget
+  continue-on-error: true
+  run: pnpm exec size-limit --json &gt; size-limit-result.json</code></pre>
+          </div>
+
+          <div class="callout pending">
+            <strong>경고가 묻히지 않게</strong>
+            <p>
+              <code>continue-on-error</code>만 붙이면 <code>quality</code> check가 초록불로 남아
+              초과를 놓치기 쉽다. 리포트 스크립트가 초과 시 <code>::warning::</code> 주석을 함께
+              남겨 PR 화면에 드러나게 했다.
+            </p>
+            <pre><code>::warning title=번들 예산 초과::전체 클라이언트 JS 번들이(가)
+한도를 23.79 kB 넘었습니다 (273.79 kB / 250.00 kB)</code></pre>
+            <p>
+              <code>continue-on-error</code>가 붙으면 step이 실패해도
+              <code>steps.budget.conclusion</code>은 <code>success</code>가 된다. 리포트 step의
+              조건은 <code>!= 'skipped'</code>이므로 그대로 동작한다. 실제 실패 여부가 필요하면
+              <code>conclusion</code>이 아니라 <code>outcome</code>을 봐야 한다.
+            </p>
+          </div>
+
+          <div class="callout cold">
+            <strong>required check 구조</strong>
+            <p>
+              두 게이트는 <code>quality</code> job 안의 step이므로 따로 required로 걸 수 없다.
+              <code>develop</code>의 ruleset <code>merge-required-ci</code>에는
+              <code>quality</code>, <code>Detect E2E scope</code>, <code>E2E (chromium)</code>,
+              <code>E2E (webkit)</code> 네 개가 등록돼 있고,
+              <strong>ruleset은 그대로 둔다.</strong> 환경 변수 검증이 실패하면
+              <code>quality</code>가 실패해 머지가 막히고, 번들 초과는
+              <code>continue-on-error</code> 때문에 막지 않는다.
+            </p>
+          </div>
+        </section>
+
+        <section id="redlight" class="step">
+          <p class="time">07 · 빨간불 자가 검증</p>
+          <h2>일부러 넘겨서 막히는지 본다</h2>
+          <p>
+            2단계에서 정상 경로만으로는 수정이 효과 있는지 증명되지 않아 실험 브랜치로 실패 경로를
+            만들었다. 여기서도 같은 방식이 필요하다. 게이트를 넣어두고 초록불만 보면, 그 게이트가
+            실제로 막는지는 확인되지 않는다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                실행할 실험 · 계획
+              </caption>
+              <thead>
+                <tr>
+                  <th>실험</th>
+                  <th>만드는 방법</th>
+                  <th>확인할 것</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>번들 예산 초과</td>
+                  <td>큰 라이브러리를 무의미하게 import</td>
+                  <td>빨간불 · PR 화면에 초과량 표시 · 되돌린 뒤 초록불</td>
+                </tr>
+                <tr>
+                  <td>환경 변수 누락</td>
+                  <td>필수 변수를 비운 채 실행</td>
+                  <td>build 전에 실패 · 변수 이름이 메시지에 나옴</td>
+                </tr>
+                <tr>
+                  <td>비공개 값 노출</td>
+                  <td>비공개 변수에 <code>NEXT_PUBLIC_</code> 접두사</td>
+                  <td>실패 · 값 자체는 로그에 없음</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout cold">
+            <strong>실행 결과 · 2026-09-11 · 두 게이트가 다르게 동작했다</strong>
+            <div class="table-wrap">
+              <table>
+                <caption>
+                  PR #20(환경 변수) · PR #21(번들 예산)
+                </caption>
+                <thead>
+                  <tr>
+                    <th>항목</th>
+                    <th>환경 변수 · PR #20</th>
+                    <th>번들 예산 · PR #21</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>만든 방법</td>
+                    <td><code>APP_ORIGIN</code>을 잘못된 형식으로</td>
+                    <td>한도를 270 kB로 낮춤</td>
+                  </tr>
+                  <tr>
+                    <td>해당 step</td>
+                    <td><code>failure</code></td>
+                    <td><code>success</code>(실제 outcome은 failure)</td>
+                  </tr>
+                  <tr>
+                    <td>이후 step</td>
+                    <td><strong>build부터 3개 skipped</strong></td>
+                    <td>계속 진행</td>
+                  </tr>
+                  <tr>
+                    <td><code>quality</code> check</td>
+                    <td><strong>failure</strong></td>
+                    <td><strong>pass</strong></td>
+                  </tr>
+                  <tr>
+                    <td>머지</td>
+                    <td>막힘</td>
+                    <td>허용</td>
+                  </tr>
+                  <tr>
+                    <td>알림</td>
+                    <td>summary ❌ · PR 코멘트</td>
+                    <td>summary ❌ · PR 코멘트 · <code>::warning::</code> 주석</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              의도한 대로 갈렸다. 설정 실수는 build 전에 막히고, 번들 초과는 알리되 막지 않는다.
+            </p>
+          </div>
+
+          <div class="callout warning">
+            <strong>부수 발견 1 · 예산은 클라이언트 청크만 잰다</strong>
+            <p>
+              처음에는 &ldquo;큰 라이브러리를 무의미하게 import&rdquo;하는 방식으로 실제 번들을
+              키우려 했다. 클라이언트 컴포넌트(<code>HeaderNav</code>)에 137KB짜리 모듈을 넣었는데
+              클라이언트 번들이 커지지 않았다.
+            </p>
+            <pre><code>.next/server/chunks/ssr/...   ← payload 있음
+.next/static/chunks/          ← 없음</code></pre>
+            <p>
+              <code>'use client'</code> 컴포넌트여도 <code>.length</code>만 참조하니 클라이언트
+              번들에서는 트리 셰이킹으로 걷히고 서버 번들에만 남았다. 소스를 60KB에서 137KB로 키워도
+              측정값은 286.28 kB 그대로였다.
+            </p>
+            <p>
+              <strong>이 예산이 무엇을 재는지 확인한 셈이다.</strong>
+              <code>.next/static/chunks/**</code>, 즉 브라우저가 실제로 받는 JS만 센다. 서버 전용
+              코드는 들어가지 않는다. 그래서 한도를 낮추는 방식으로 바꿨다.
+            </p>
+          </div>
+
+          <div class="callout warning">
+            <strong>실험 PR은 머지하지 않는다</strong>
+            <p>
+              2단계 실험 PR과 같은 규칙이다. 제목에 머지 금지를 적고, 확인이 끝나면 실험 변경이 최종
+              diff에 남지 않았는지 대조한다.
+            </p>
+          </div>
+        </section>
+
+        <section id="measured" class="step">
+          <p class="time">08 · 측정 결과 · 2026-09-11</p>
+          <h2>Next 16에서는 진입점별 예산을 걸 수 없다</h2>
+          <p>
+            02절에서 도구 후보 셋을 놓고 &ldquo;7주차 값과 같은 단위로 비교되는지&rdquo;를 기준으로
+            삼았다. 실제로 재보니 그 전에 걸리는 제약이 먼저 나왔다.
+          </p>
+
+          <h3>Next.js 16 · Turbopack의 제약</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                확인한 사실과 확인 방법
+              </caption>
+              <thead>
+                <tr>
+                  <th>확인한 것</th>
+                  <th>결과</th>
+                  <th>방법</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>build 출력의 Size · First Load JS 컬럼</td>
+                  <td><strong>없음</strong></td>
+                  <td><code>pnpm build</code> 출력에 라우트 이름만 있다</td>
+                </tr>
+                <tr>
+                  <td>라우트별 청크 매니페스트</td>
+                  <td><strong>없음</strong></td>
+                  <td><code>app-build-manifest.json</code>이 생성되지 않는다</td>
+                </tr>
+                <tr>
+                  <td>청크 파일명의 라우트 정보</td>
+                  <td><strong>없음</strong></td>
+                  <td><code>1pzmcf1-np989.js</code>처럼 해시뿐이고 빌드마다 바뀐다</td>
+                </tr>
+                <tr>
+                  <td><code>--experimental-analyze</code></td>
+                  <td>산출물 없음</td>
+                  <td>실행해도 <code>.next/analyze</code>가 생기지 않는다</td>
+                </tr>
+                <tr>
+                  <td>출력 파일명 설정 옵션</td>
+                  <td>없음</td>
+                  <td>
+                    Vite의 <code>rollupOptions.output.chunkFileNames</code>에 해당하는 설정을 Next이
+                    노출하지 않는다. <code>next.config</code>의 <code>webpack()</code> 훅은
+                    Turbopack 빌드에서 무시된다
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>next build --webpack</code>으로 빌드하면 청크가
+            <code>.next/static/chunks/app/(home)/</code>처럼 라우트 디렉터리로 나뉜다. 다만 두
+            가지가 걸린다.
+          </p>
+          <ul>
+            <li>
+              <code>app/(home)/</code> 아래는 <code>page-*.js</code> 하나뿐이다. 홈이 실제로 받는
+              11개 중 나머지는 공유 청크로 밖에 있어,
+              <strong>홈 전용 조각은 골라도 홈이 받는 전부는 여전히 못 고른다.</strong>
+            </li>
+            <li>
+              webpack 산출물은 40개 324.5KB, Turbopack은 23개 266.9KB로 <strong>21% 차이</strong>가
+              난다. 배포하지 않는 번들에 예산을 거는 셈이 되고, 1단계에서 잰 CI 시간 근거도
+              흔들린다.
+            </li>
+          </ul>
+          <p>따라서 webpack 전환은 채택하지 않는다.</p>
+
+          <h3 class="record-heading">측정 방법을 두 번 고쳤다</h3>
+          <p>
+            처음에는 응답의 <code>content-length</code>로 쟀다. 그런데
+            <strong>압축 응답에는 그 헤더가 없다.</strong> chunked로 오기 때문이다. 값이 0이라 압축
+            해제된 본문 크기로 넘어갔고, 홈 JS가 609KB로 나왔다. 실제 전송량의 3.4배다.
+          </p>
+          <p>
+            CDP의 <code>Network.loadingFinished</code>가 주는 <code>encodedDataLength</code>로
+            바꿨다. 7주차가 Chrome DevTools 트레이스에서 쓴 것과 같은 값이다.
+          </p>
+
+          <h3 class="record-heading">측정값</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                프로덕션 서버(<code>pnpm start</code
+                >) · 각 3회
+              </caption>
+              <thead>
+                <tr>
+                  <th>대상</th>
+                  <th>JS 전송량</th>
+                  <th>3회 편차</th>
+                  <th>요청 수</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>홈 <code>/</code></td>
+                  <td><strong>183,776 B (179.5KB)</strong></td>
+                  <td>0 B</td>
+                  <td>11개</td>
+                </tr>
+                <tr>
+                  <td><code>/products</code></td>
+                  <td>189,218 B (184.8KB)</td>
+                  <td>0 B</td>
+                  <td>11개</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout">
+            <strong>7주차와 같은 단위라는 교차 검증</strong>
+            <pre><code>폰트   7주차 2,057,992 B  /  현재 2,057,992 B   → 차이 0 B
+총계   7주차 2,603,503 B  /  현재 2,608,990 B
+JS     7주차 약 177,038 B (6.8% 환산)  /  현재 183,776 B (7.04%)</code></pre>
+            <p>
+              폰트가 바이트 단위까지 일치한다. 같은 파일을 같은 방식으로 재고 있다는 근거다.
+              01절에서 &ldquo;어느 쪽 기준을 쓸지 먼저 정해야 한다&rdquo;고 남겼던 항목이 여기서
+              해소됐다.
+            </p>
+            <p>JS는 8·9주차에 인증과 테스트가 들어갔는데도 약 6.7KB(3.8%) 증가에 그쳤다.</p>
+          </div>
+
+          <h3 class="record-heading">편차는 두 층 모두 0이다</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                03절이 요구한 &ldquo;범위&rdquo; 확인
+              </caption>
+              <thead>
+                <tr>
+                  <th>무엇을 반복했나</th>
+                  <th>결과</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>같은 빌드를 3회 로드</td>
+                  <td>183,776 B로 동일 · 폭 0 B</td>
+                </tr>
+                <tr>
+                  <td><strong>재빌드 3회</strong> 후 gzip 합 비교</td>
+                  <td>273,262 B로 동일 · 폭 <strong>0 B (0.000%)</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warning">
+            <strong>정정 · 편차 0은 같은 Node 버전 안에서만 성립한다</strong>
+            <p>
+              위 재빌드 3회는 모두 Node 22.14.0에서 잰 값이다. Node 24.17.0으로 올려 다시 재니 값이
+              달라졌다.
+            </p>
+            <pre><code>Node 22.14.0   273,743 B   273.74 kB
+Node 24.17.0   273,790 B   273.79 kB
+               차이 +47 B  (+0.017%)</code></pre>
+            <p>
+              Node 24에서도 재빌드 3회 모두 273.79 kB로 동일했다. 즉
+              <strong>같은 Node 안에서는 편차가 0이고, Node 메이저가 바뀔 때만 움직인다.</strong>
+              0.017%는 여유폭 5%에 비해 판정을 뒤집을 크기가 아니지만, 측정 조건에 Node 버전을 함께
+              적어야 한다.
+            </p>
+          </div>
+          <div class="callout pending">
+            <strong>03절의 전제가 바뀐다</strong>
+            <p>
+              03절에는 &ldquo;빌드마다 흔들리는 폭보다 여유폭이 작으면 게이트가
+              무의미해진다&rdquo;고 적었다. 재빌드해도 바이트가 같으므로
+              <strong>여유폭에 노이즈 흡수분을 넣을 필요가 없다.</strong> 여유폭은 순수하게
+              &ldquo;앞으로 허용할 증가분&rdquo;이 된다.
+            </p>
+            <p>
+              1단계 CI 시간 측정과 대비된다. 그때는 같은 커밋이 58·69·69초로 흔들려 13초 단축을
+              확정하지 못했다.
+            </p>
+          </div>
+
+          <h3 class="record-heading">압축 방식에 따라 값이 갈린다</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                Turbopack 산출물 23개
+              </caption>
+              <thead>
+                <tr>
+                  <th>기준</th>
+                  <th>값</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>원본</td>
+                  <td>868,641 B (848.3KB)</td>
+                  <td>&mdash;</td>
+                </tr>
+                <tr>
+                  <td><strong>gzip 개별합</strong></td>
+                  <td><strong>273,743 B (267.3KB)</strong></td>
+                  <td>서버 실전송과 대응 · 7주차와 같은 단위</td>
+                </tr>
+                <tr>
+                  <td>brotli 개별합</td>
+                  <td>238,706 B (233.1KB)</td>
+                  <td><code>size-limit</code> 기본값 · gzip의 87.2%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            홈 11개만 gzip 개별합으로 재면 178,863 B(174.7KB)로, 서버 실전송 183,776 B와
+            <strong>2.7% 안에서 붙는다.</strong> 압축 레벨 차이일 뿐 같은 것을 재고 있다는 뜻이라,
+            두 단위를 오갈 수 있다.
+          </p>
+        </section>
+
+        <section id="decided" class="step">
+          <p class="time">09 · 결정과 설정 · 2026-09-11</p>
+          <h2>전체 번들에 걸되, 근거는 홈 실측에서 끌어온다</h2>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                작성자가 내린 결정
+              </caption>
+              <thead>
+                <tr>
+                  <th>결정할 것</th>
+                  <th>결정</th>
+                  <th>이유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>측정 도구</td>
+                  <td><code>size-limit</code> + <code>@size-limit/file</code></td>
+                  <td>
+                    과제가 이름으로 지정한 도구이고 관리 포인트가 하나다. 제출물 형식
+                    <code>.size-limit.*</code>도 그대로 맞는다
+                  </td>
+                </tr>
+                <tr>
+                  <td>예산 대상</td>
+                  <td>전체 클라이언트 JS 번들</td>
+                  <td>
+                    홈만 고르는 glob을 쓸 수 없다(08절). 대신 근거를 홈 실측에서 끌어와 세운다
+                  </td>
+                </tr>
+                <tr>
+                  <td>압축 방식</td>
+                  <td>gzip (<code>"gzip": true</code>)</td>
+                  <td>
+                    7주차 전송량·홈 실측과 같은 단위. brotli 기본값을 쓰면 근거 사슬을 다시 세워야
+                    한다
+                  </td>
+                </tr>
+                <tr>
+                  <td>여유폭</td>
+                  <td><strong>5%</strong></td>
+                  <td>편차가 0이라 노이즈 흡수분이 아니라 온전한 증가 허용분이다</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>임계값 근거</h3>
+          <pre><code>① 7주차 홈 JS 전송량      약 177.0KB   2,603,503 B × 6.8%
+② 현재 홈 JS 전송량          179.5KB   CDP 실측 · 3회 편차 0  → +1.4%
+③ 단위 대응 검증          gzip 개별합 174.7KB vs 실전송 179.5KB (-2.7%)
+④ 현재 전체 번들          273.74 kB   size-limit 실측
+⑤ 재빌드 3회 편차                0 B   노이즈 흡수분 불필요
+⑥ 여유폭 5% → 한도        287.4 kB   Node 22 기준 273.74 × 1.05
+                                     CI 기준선 273.79에 대해서는 4.97%</code></pre>
+          <p>
+            여유폭 5%의 뜻은
+            <strong
+              >&ldquo;7주차에서 현재까지 홈이 1.4% 늘었으니, 그 3배쯤 되는 증가 한 번을
+              허용한다&rdquo;</strong
+            >
+            이다. 임계값이 7주차 실측(①)에서 출발해 현재 값(②④)으로 이어지고, 단위 대응(③)과
+            편차(⑤)로 뒷받침된다.
+          </p>
+
+          <h3 class="record-heading">설정</h3>
+          <pre><code>[
+  {
+    "name": "전체 클라이언트 JS 번들",
+    "path": ".next/static/chunks/**/*.js",
+    "gzip": true,
+    "limit": "287.4 kB"
+  }
+]</code></pre>
+          <p>
+            <code>webpack: false</code>는 넣지 않았다. 공식 문서의 Next.js 예시에는 있지만, 그
+            필드는 <code>@size-limit/webpack</code> 플러그인이 설치돼 있어야 인식된다. 실제로
+            넣었더니 <code>Config option webpack needs @size-limit/webpack plugin</code> 오류가
+            났다. <code>@size-limit/file</code>만 쓰면 애초에 번들링을 하지 않으므로 불필요하다.
+          </p>
+          <p>
+            <code>@size-limit/preset-app</code>도 쓰지 않았다. <code>file</code>에
+            <code>time</code>이 묶여 있는데, <code>time</code>은 headless Chrome을 띄워 실행 시간을
+            잰다. 크기만 필요하므로 불필요한 비용이다.
+          </p>
+
+          <h3 class="record-heading">자가 검증</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                2026-09-11 로컬 실행 · 양방향 확인
+              </caption>
+              <thead>
+                <tr>
+                  <th>조건</th>
+                  <th>출력</th>
+                  <th>종료 코드</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>한도 287.4 kB (정상)</td>
+                  <td><code>Size limit: 287.4 kB / Size: 273.74 kB gzipped</code></td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>한도 250 kB (임시로 낮춤)</td>
+                  <td>
+                    <code>Package size limit has exceeded by 23.74 kB</code>
+                  </td>
+                  <td><strong>1</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            초과량을 <code>23.74 kB</code>로 숫자로 말해준다. 과제가 요구한 &ldquo;무엇이 얼마나
+            초과했나&rdquo;를 도구가 이미 절반 채워준다. 확인 후 설정은 원래 값으로 되돌렸다.
+          </p>
+
+          <div class="callout pending">
+            <strong>이 예산의 한계 두 가지</strong>
+            <p>
+              <strong>1. 홈만의 값이 아니다.</strong> 한도는 23개 청크 전체에 걸린다.
+              <code>/checkout</code>이 커져도 걸리고 홈이 커져도 걸린다. 어디서 늘었는지는 한도가
+              알려주지 않으므로, 걸렸을 때 파일별 출력을 따로 봐야 한다.
+            </p>
+            <p>
+              <strong>2. 홈이 전체의 65.5%라는 비율은 오늘 시점 값이다.</strong> 다른 라우트가
+              커지면 이 비율이 변하고, &ldquo;전체 한도&rdquo;와 &ldquo;홈 근거&rdquo;의 연결이
+              느슨해진다. 비율이 크게 움직이면 근거를 다시 세워야 한다.
+            </p>
+          </div>
+
+          <h3 class="record-heading">로컬 Node 버전을 24.17.0으로 올린 이유</h3>
+          <p>
+            측정 도중 로컬이 Node 22.14.0으로 돌고 있다는 것을 확인했다. 두 가지 이유로
+            <code>.nvmrc</code>의 24.17.0에 맞췄다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                올려야 했던 이유
+              </caption>
+              <thead>
+                <tr>
+                  <th>이유</th>
+                  <th>내용</th>
+                  <th>확인한 것</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>운영·CI 빌드 환경과 일치</strong></td>
+                  <td>
+                    CI는 <code>actions/setup-node</code>가 <code>.nvmrc</code>를 읽어 24.17.0으로
+                    빌드한다. 로컬이 22.14.0이면
+                    <strong
+                      >임계값의 근거가 되는 빌드가 실제 게이트가 도는 환경과 다른 곳에서
+                      나온다.</strong
+                    >
+                  </td>
+                  <td>
+                    실제로 두 버전의 산출물이 47 B 달랐다. 크기는 작지만 &ldquo;같은 조건에서
+                    쟀다&rdquo;고 말할 수 없게 된다
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>새로 추가한 라이브러리 호환성</strong></td>
+                  <td>
+                    <code>size-limit@13.0.3</code>의 <code>engines</code>는
+                    <code>^22.18.0 || ^24.0.0 || &gt;=26.0.0</code>이다. 로컬 22.14.0은
+                    <strong>22.18.0 미만이라 지원 범위 밖</strong>이었다.
+                  </td>
+                  <td>
+                    <code>.npmrc</code>에 <code>engine-strict</code>가 없어 설치와 실행은 됐지만,
+                    지원하지 않는 버전에서 나온 측정값이었다
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>@size-limit/file</code>의 <code>engines</code>는
+            <code>^20.0.0 || ^22.0.0 || &gt;=24.0.0</code>으로 더 넓지만,
+            <code>peerDependencies</code>가 <code>"size-limit": "13.0.3"</code>으로
+            <strong>정확한 버전에 고정</strong>돼 있다. 두 패키지는 항상 같은 버전으로 함께 올려야
+            한다.
+          </p>
+          <div class="callout pending">
+            <strong>기준선을 CI 쪽 값으로 읽어야 한다</strong>
+            <p>
+              CI가 24.17.0으로 빌드하므로 실제로 게이트가 마주할 값은
+              <strong>273.79 kB</strong>다. 위 근거 사슬의 ④는 Node 22에서 잰 273.74 kB이므로, 이후
+              비교는 24.17.0 기준으로 한다.
+            </p>
+            <p>
+              한도 <code>287.4 kB</code>는 Node 22 값(273.74)에 5%를 얹어 정한 값이다. CI 기준선
+              273.79에 대해서는 <strong>여유폭이 4.97%</strong>가 된다. 287.5 kB로 올리면 정확히
+              5%가 되지만, 0.03%p 차이라 표기를 맞추려는 목적밖에 없어
+              <strong>올리지 않는다.</strong> 게이트 판정이 갈리는 구간이 아니다.
+            </p>
+          </div>
+
+          <div class="callout pending">
+            <strong>아직 하지 않은 것</strong>
+            <p>
+              CI 연결, <code>$GITHUB_STEP_SUMMARY</code> 노출, 환경 변수 게이트, 07절의 빨간불
+              실험은 시작하지 않았다. required 배치도 미결정이다. 위 자가 검증은
+              <strong>로컬 실행</strong>
+              결과이며 Actions에서는 확인하지 않았다.
+            </p>
+          </div>
+        </section>
+
+        <section id="open" class="step">
+          <h2>작성자가 정할 것</h2>
+          <p>
+            아래는 에이전트가 대신 확정하지 않는다. 근거를 모아 선택지를 정리하는 데까지가 이 문서의
+            범위다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                미결정 항목과 결정에 필요한 근거
+              </caption>
+              <thead>
+                <tr>
+                  <th>결정할 것</th>
+                  <th>먼저 있어야 하는 근거</th>
+                  <th>현재</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>측정 도구</td>
+                  <td>7주차 값과 단위를 맞출 수 있는지</td>
+                  <td>미결정</td>
+                </tr>
+                <tr>
+                  <td>예산 대상 진입점</td>
+                  <td>7주차 측정 대상과 겹치는 범위</td>
+                  <td>미결정</td>
+                </tr>
+                <tr>
+                  <td>임계값과 여유폭</td>
+                  <td>현재 값의 범위, 빌드 간 흔들림 폭</td>
+                  <td>미측정</td>
+                </tr>
+                <tr>
+                  <td>required로 둘 게이트</td>
+                  <td>각 게이트의 결정성·비용·리스크</td>
+                  <td>미결정</td>
+                </tr>
+                <tr>
+                  <td>Lighthouse CI 채택 여부</td>
+                  <td>선택 범위 · 7주차 LCP·CLS 값</td>
+                  <td>미결정</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout cold">
+            <strong>결정 이력 · 2026-09-11</strong>
+            <p>위 표는 착수 전 기록으로 그대로 두고, 현재 상태만 아래에 적는다.</p>
+            <ul>
+              <li>
+                <strong>측정 도구</strong> &mdash; 결정. <code>size-limit</code> +
+                <code>@size-limit/file</code>
+              </li>
+              <li><strong>예산 대상</strong> &mdash; 결정. 전체 클라이언트 JS 번들</li>
+              <li><strong>임계값과 여유폭</strong> &mdash; 결정. 273.74 kB 기준 +5% = 287.4 kB</li>
+              <li>
+                <strong>required로 둘 게이트</strong> &mdash; 미결정. 환경 변수 게이트를 만든 뒤
+                함께 판단한다
+              </li>
+              <li><strong>Lighthouse CI 채택 여부</strong> &mdash; 미결정</li>
+            </ul>
+          </div>
+          <div class="done">
+            <strong>다음으로 넘어갈 기준</strong> &mdash; 현재 번들 크기를 여러 번 재 범위를
+            확보하고, 7주차 값과 같은 단위로 비교할 수 있는 형태로 기록했다.
+          </div>
+          <div class="callout cold">
+            <strong>충족 · 2026-09-11</strong>
+            <p>
+              위 기준은 충족됐다. 같은 빌드 3회와 재빌드 3회 모두 편차 0이고, 폰트 바이트가 7주차와
+              일치해 같은 단위임이 확인됐다. 다음은 CI 연결과 환경 변수 게이트다.
+            </p>
+          </div>
+        </section>
+
+        <footer>
+          <p>
+            작성일 2026-09-11 · 3단계 착수 전 설계. 측정과 실험은 아직 수행하지 않았고 완료로 표시한
+            항목은 없다.
+          </p>
+          <p>
+            갱신 2026-09-11 · 측정과 도구·임계값 결정을 추가했다(08·09절). CI 연결, 환경 변수
+            게이트, 빨간불 실험, required 배치는 아직 하지 않았다. 자가 검증은 로컬 실행 결과이며
+            Actions에서는 확인하지 않았다.
+          </p>
+          <p>
+            관련 문서:
+            <a href="../rfc/week10-ci.md">RFC</a> ·
+            <a href="e2e-conditional-execution.html">조건부 실행</a> ·
+            <a href="checklist.md">체크리스트</a> ·
+            <a href="action-plan.html">Week 10 작업 계획</a>
+          </p>
+        </footer>
+      </main>
+    </div>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
+
+      mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' })
+    </script>
+  </body>
+</html>

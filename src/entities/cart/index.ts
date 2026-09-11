@@ -6,6 +6,5 @@ export {
   selectCartCount,
   selectCartTotalPrice,
   selectHasCartOwner,
-  selectIsInCart,
 } from '@/entities/cart/model/cart-store'
 export type { CartItem } from '@/entities/cart/model/cart'

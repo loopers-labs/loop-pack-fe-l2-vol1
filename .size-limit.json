@@ -1,0 +1,8 @@
+[
+  {
+    "name": "전체 클라이언트 JS 번들",
+    "path": ".next/static/chunks/**/*.js",
+    "gzip": true,
+    "limit": "287.4 kB"
+  }
+]

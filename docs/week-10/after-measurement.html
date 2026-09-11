@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 · 병목 개선과 After 측정</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --page: #f4f7f6;
+        --surface: #fbfdfc;
+        --text: #17211f;
+        --muted: #53635f;
+        --line: #cbd8d4;
+        --accent: #056354;
+        --soft: #d7eee8;
+        --warning: #f8ead5;
+        --warm-line: #b56a20;
+        --warm-fill: #fbeeda;
+        --warm-text: #6b3f0d;
+        --cold-line: #2f6f9e;
+        --cold-fill: #e3eff8;
+        --cold-text: #1f4a6b;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: #101715;
+          --surface: #151e1b;
+          --text: #e8efed;
+          --muted: #aab9b5;
+          --line: #31413c;
+          --accent: #88e3d0;
+          --soft: #173d34;
+          --warning: #3b2d1d;
+          --warm-line: #e0a05c;
+          --warm-fill: #33261a;
+          --warm-text: #f2c894;
+          --cold-line: #6fa9d2;
+          --cold-fill: #172835;
+          --cold-text: #a9cee8;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--text);
+        font-family:
+          Pretendard,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        line-height: 1.65;
+      }
+      a {
+        color: var(--accent);
+      }
+      code {
+        font-family: 'SFMono-Regular', Consolas, monospace;
+        font-size: 0.92em;
+      }
+      pre {
+        overflow-x: auto;
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        background: var(--code);
+        color: #ecf6f2;
+        line-height: 1.55;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 16rem minmax(0, 54rem);
+        justify-content: center;
+        gap: 2.5rem;
+        padding: 2rem;
+      }
+      nav {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        padding: 1.25rem;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface);
+      }
+      nav strong {
+        color: var(--accent);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+      }
+      nav ol {
+        margin: 1rem 0 0;
+        padding-left: 1.3rem;
+      }
+      nav li + li {
+        margin-top: 0.45rem;
+      }
+      main {
+        min-width: 0;
+      }
+      header,
+      section {
+        margin-bottom: 1.25rem;
+        padding: 2rem;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface);
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.25;
+      }
+      h1 {
+        margin: 0.4rem 0 1rem;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        letter-spacing: -0.05em;
+      }
+      h2 {
+        margin-top: 0;
+        font-size: 1.55rem;
+      }
+      h3 {
+        margin-bottom: 0.4rem;
+      }
+      .eyebrow,
+      .time {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .lead {
+        max-width: 42rem;
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+      .status-grid,
+      .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+        gap: 0.85rem;
+        margin: 1rem 0;
+      }
+      .card,
+      .callout,
+      .done {
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 0.8rem;
+      }
+      .card p,
+      .callout p {
+        margin-bottom: 0;
+      }
+      .recommended {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .pending {
+        border-color: var(--pending-line);
+        background: var(--pending);
+      }
+      .warning {
+        border-color: var(--warning-line);
+        background: var(--warning);
+      }
+      .done {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        font-weight: 650;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        margin: 1rem 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.94rem;
+      }
+      caption {
+        padding-bottom: 0.6rem;
+        text-align: left;
+        font-weight: 750;
+      }
+      th,
+      td {
+        padding: 0.75rem;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--accent-soft);
+      }
+      footer {
+        padding: 1.5rem 0;
+        color: var(--muted);
+      }
+      @media (max-width: 820px) {
+        .shell {
+          display: block;
+          padding: 1rem;
+        }
+        nav {
+          position: static;
+          margin-bottom: 1rem;
+        }
+        header,
+        section {
+          padding: 1.25rem;
+        }
+      }
+      @media print {
+        :root {
+          color-scheme: light;
+          --page: #fff;
+          --surface: #fff;
+          --text: #111;
+          --muted: #444;
+          --line: #bbb;
+          --accent: #185f4d;
+          --accent-soft: #e8f4f0;
+          --warning: #fff7e8;
+          --pending: #f2f5fb;
+        }
+        .shell {
+          display: block;
+          padding: 0;
+        }
+        nav {
+          display: none;
+        }
+        header,
+        section {
+          break-inside: avoid;
+        }
+      }
+
+      /* Before 측정 문서와 동일한 문서형 레이아웃을 유지합니다. */
+      body {
+        background: var(--page);
+        line-height: 1.8;
+        word-break: keep-all;
+      }
+      a {
+        text-underline-offset: 0.2em;
+      }
+      .shell {
+        grid-template-columns: 14rem minmax(0, 1fr);
+        gap: 4rem;
+        max-width: 76rem;
+        margin: auto;
+        padding: 2rem 1.5rem 5rem;
+      }
+      nav {
+        max-height: calc(100vh - 4rem);
+        overflow: auto;
+        border: 0;
+        border-left: 3px solid var(--accent);
+        border-radius: 0;
+        padding: 0 0 0 1rem;
+        background: transparent;
+      }
+      nav strong {
+        font-size: inherit;
+        letter-spacing: normal;
+      }
+      nav ol {
+        list-style: none;
+        padding: 0;
+        margin: 0.7rem 0;
+      }
+      nav li + li {
+        margin-top: 0.5rem;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      header,
+      section {
+        margin-bottom: 4rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        scroll-margin-top: 2rem;
+      }
+      header {
+        padding: 3rem 0;
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.3;
+        letter-spacing: -0.035em;
+      }
+      h1 {
+        margin: 0.8rem 0 1.2rem;
+        font-size: 3.5rem;
+      }
+      h2 {
+        margin: 0 0 1.2rem;
+        font-size: 2rem;
+      }
+      h3 {
+        margin: 0 0 0.6rem;
+        font-size: 1.2rem;
+      }
+      .eyebrow,
+      .time {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.9rem;
+        font-weight: 750;
+        letter-spacing: normal;
+        text-transform: none;
+      }
+      .lead {
+        max-width: 43rem;
+        color: var(--muted);
+        font-size: 1.15rem;
+      }
+      .callout {
+        margin: 1.3rem 0;
+        padding: 1.2rem 1.4rem;
+        border: 0;
+        border-left: 4px solid var(--accent);
+        border-radius: 0 12px 12px 0;
+        background: var(--soft, var(--accent-soft));
+      }
+      .callout p {
+        margin: 0.4rem 0;
+      }
+      .warning {
+        background: var(--warning);
+      }
+      .step {
+        border-top: 1px solid var(--line);
+        padding-top: 2rem;
+      }
+      li + li {
+        margin-top: 0.55rem;
+      }
+      code {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 0.1rem 0.3rem;
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+      pre {
+        margin: 1.2rem 0;
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 0.88rem;
+        line-height: 1.7;
+      }
+      pre code {
+        background: none;
+        border: 0;
+        padding: 0;
+        font-size: 1em;
+      }
+      pre .cm {
+        color: var(--muted);
+      }
+      .status-grid,
+      .choice-grid {
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 1.4rem;
+        margin: 1.5rem 0;
+      }
+      .card {
+        padding: 1.4rem;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+      .card.recommended {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .card.pending {
+        border-color: var(--cold-line, var(--pending-line));
+        background: var(--cold-fill, var(--pending));
+      }
+      .badge {
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        font-size: 0.9rem;
+      }
+      .table-wrap {
+        margin: 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.94rem;
+      }
+      caption {
+        padding: 0;
+        margin-bottom: 0.6rem;
+        color: var(--muted);
+        font-weight: 400;
+      }
+      th,
+      td {
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 0.8rem;
+      }
+      th {
+        background: var(--soft, var(--accent-soft));
+      }
+      .done {
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        font-weight: 400;
+      }
+      footer {
+        border-top: 1px solid var(--line);
+        padding-top: 1.5rem;
+        font-size: 0.9rem;
+      }
+      @media (max-width: 800px) {
+        .shell {
+          display: block;
+          padding: 0 1rem 3rem;
+        }
+        nav {
+          position: static;
+          max-height: none;
+          margin-bottom: 2rem;
+          padding: 1rem 0;
+          border-left: 0;
+          border-bottom: 3px solid var(--accent);
+        }
+        header {
+          padding: 1rem 0 2rem;
+        }
+        h1 {
+          font-size: 2.6rem;
+        }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <div class="shell">
+      <nav aria-label="병목 개선과 After 측정 목차">
+        <strong>WEEK 10 · AFTER</strong>
+        <ol>
+          <li><a href="#start">지금 할 일</a></li>
+          <li><a href="#evidence">Before 근거</a></li>
+          <li><a href="#strategy">01 전략 결정</a></li>
+          <li><a href="#implement">02 구현·검증</a></li>
+          <li><a href="#measure">03 After 6회</a></li>
+          <li><a href="#cache-proof">04 캐시 검증</a></li>
+          <li><a href="#compare">05 비교·판정</a></li>
+        </ol>
+      </nav>
+
+      <main>
+        <header>
+          <p class="eyebrow">LOOP PACK · WEEK 10 · BOTTLENECK</p>
+          <h1>병목에 맞는 변경만 하고<br />같은 조건으로 다시 재기</h1>
+          <p class="lead">
+            Before에서 확인한 가장 긴 구간을 바탕으로 개선 전략을 직접 선택합니다. 선택한 이유와
+            선택하지 않은 전략의 이유를 적은 뒤, 검증 항목을 유지한 상태에서 warm·cold를 각각 3회
+            측정하고 범위가 겹치는지까지 보고 개선 여부를 판단합니다.
+          </p>
+          <p>
+            과제 기준은 <a href="../assignments/week-10.md">10주차 과제 원문</a>, 원본 수치는
+            <a href="../rfc/week10-ci.md">CI 측정 기록</a>, 이전 실행 절차는
+            <a href="before-measurement.html">Before 측정 안내</a>에 있습니다.
+          </p>
+        </header>
+
+        <section id="start">
+          <p class="time">지금 할 일</p>
+          <h2>먼저 개선 전략 하나를 확정합니다</h2>
+          <ol>
+            <li>현재 변경 파일을 커밋해 Before 기록을 고정합니다.</li>
+            <li>아래 후보 중 Before 병목과 직접 연결되는 전략을 선택하고 근거를 RFC에 적습니다.</li>
+            <li>workflow를 수정하되 Chromium과 WebKit, build 등 기존 검증을 제거하지 않습니다.</li>
+            <li>한 번 실행해 검증 수와 브라우저 범위가 Before와 같은지 확인합니다.</li>
+            <li>변경이 확정된 동일 트리에서 After warm 3회와 cold 3회를 측정합니다.</li>
+          </ol>
+          <div class="done">
+            현재 단계의 완료 기준 — 로그로 병목을 지목하고 후보를 비교한 뒤 선택한 전략과 제외한
+            전략의 이유를 기록했다. 아직 특정 전략을 정답으로 전제하지 않는다.
+          </div>
+        </section>
+
+        <section id="evidence">
+          <p class="time">Before evidence</p>
+          <h2>현재 확인된 병목</h2>
+          <div class="status-grid">
+            <div class="card">
+              <span class="badge">가장 긴 구간</span>
+              <h3>Run E2E tests</h3>
+              <p>warm 중앙값 57초 · cold 중앙값 57초</p>
+            </div>
+            <div class="card">
+              <span class="badge">다음 구간</span>
+              <h3>Install Playwright browsers</h3>
+              <p>warm 중앙값 51초 · cold 중앙값 52초</p>
+            </div>
+            <div class="card">
+              <span class="badge">우선순위 낮음</span>
+              <h3>pnpm install</h3>
+              <p>cold에서도 5~6초로 전체 wall-clock을 지배하지 않았습니다.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                Before workflow 중앙값과 범위
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">조건</th>
+                  <th scope="col">Quality</th>
+                  <th scope="col">E2E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>warm</td>
+                  <td>55초 · 53~57초</td>
+                  <td>2분 33초 · 2분 10초~3분 4초</td>
+                </tr>
+                <tr>
+                  <td>cold</td>
+                  <td>57초 · 50초~1분 6초</td>
+                  <td>2분 38초 · 2분 6초~2분 49초</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warning">
+            <strong>해석 범위</strong>
+            <p>
+              pnpm cache hit/miss에 따른 workflow 범위가 크게 겹쳤습니다. 따라서 store 캐시를 더
+              추가하는 것은 이번 측정에서 확인한 1순위 병목과 직접 연결되지 않습니다.
+            </p>
+          </div>
+        </section>
+
+        <section id="strategy">
+          <p class="time">01 · 전략 결정</p>
+          <h2>후보와 판단 기준</h2>
+          <div class="choice-grid">
+            <div class="card recommended">
+              <span class="badge">후보 A</span>
+              <h3>브라우저별 E2E job 병렬화</h3>
+              <p>
+                Chromium과 WebKit 검증을 독립 job으로 나누면 두 브라우저의 실행을 겹칠 수 있습니다.
+                Before의 최장 구간과 연결될 수 있지만 install·build가 중복되는 비용을 함께 확인해야
+                합니다. 실제 채택 여부는 시험 실행 후 판단합니다.
+              </p>
+            </div>
+            <div class="card pending">
+              <span class="badge">후보 B</span>
+              <h3>concurrency 그룹</h3>
+              <p>
+                연속 push의 낭비는 줄이지만 한 번의 정상 실행 시간은 줄이지 않습니다. 실제로 중복
+                실행이 쌓였다는 근거가 있을 때 별도 채택합니다.
+              </p>
+            </div>
+            <div class="card pending">
+              <span class="badge">후보 C</span>
+              <h3>pnpm store 캐시 추가</h3>
+              <p>
+                이미 setup-node 캐시가 있고 cold install도 5~6초였습니다. 현재 병목 근거만으로는
+                추가하지 않습니다.
+              </p>
+            </div>
+          </div>
+          <p><strong>현재까지 내린 결정</strong></p>
+          <ul>
+            <li>
+              개선 목표는 GitHub Actions 사용 시간의 합이 아니라 PR 완료 wall-clock 단축입니다.
+            </li>
+            <li>
+              Safari와 같은 WebKit 계열 사용자의 위험도 main 병합 전에 확인해야 하므로 Chromium과
+              WebKit 검증을 모두 유지합니다.
+            </li>
+            <li>
+              두 브라우저 job을 각각 required check로 두어 하나라도 실패하면 병합을 막는 방향으로
+              설계합니다.
+            </li>
+            <li>
+              브라우저별 job 분리는 실패 브라우저를 명확히 보여주지만 browser 설치와 build가
+              중복됩니다. 실제 wall-clock 이득은 시험 실행으로 확인합니다.
+            </li>
+          </ul>
+          <div class="callout warning">
+            <strong>아직 확인할 가설</strong>
+            <p>
+              Playwright의 브라우저 프로세스와 context는 분리되지만 테스트 계정, 서버, DB 같은 외부
+              상태는 공유될 수 있습니다. 기존 테스트의 독립성이 병렬 job에서도 유지되는지는 실제
+              실행 결과로 확인합니다.
+            </p>
+          </div>
+          <div class="callout">
+            <strong>RFC에 남길 문장</strong>
+            <p>
+              “Before에서 ___가 중앙값 ___초로 가장 길었기 때문에 ___ 전략을 선택했다. 예상되는
+              비용은 ___이고, ___는 병목과 직접 연결되지 않아 적용하지 않았다.”처럼 수치와 선택을
+              연결합니다.
+            </p>
+          </div>
+        </section>
+
+        <section id="implement">
+          <p class="time">02 · 구현과 1회 검증</p>
+          <h2>측정 전에 동등성을 확인합니다</h2>
+          <ol>
+            <li><code>.github/workflows/e2e.yml</code>을 선택한 전략에 맞게 수정합니다.</li>
+            <li>Quality의 test·lint·typecheck·build는 그대로 유지합니다.</li>
+            <li>E2E는 Chromium 15개와 WebKit 15개, 총 30개가 모두 실행돼야 합니다.</li>
+            <li>production build도 Before와 동일하게 실행돼야 합니다.</li>
+            <li>시험 실행의 job 구성, 전체 시간, 중복 install·build 비용을 확인합니다.</li>
+            <li>전략을 채택하거나 되돌린 이유를 RFC에 기록한 뒤 최종 변경을 커밋합니다.</li>
+          </ol>
+          <pre><code><span class="cm"># 변경 파일과 커밋 대상 확인</span>
+git status --short
+git diff -- .github/workflows/e2e.yml .github/workflows/quality.yml
+
+<span class="cm"># 기본 검증</span>
+pnpm verify</code></pre>
+          <div class="callout warning">
+            <strong>검증을 줄여서 빨라지면 개선이 아닙니다</strong>
+            <p>
+              브라우저 하나를 빼거나 테스트를 생략하거나 build를 제거하지 않습니다. Before와 After의
+              검증 항목이 달라지면 시간 비교에서 제외합니다.
+            </p>
+          </div>
+        </section>
+
+        <section id="measure">
+          <p class="time">03 · After 측정</p>
+          <h2>확정된 같은 트리에서 warm 3회, cold 3회</h2>
+          <p>
+            workflow 변경 커밋을 After 기준으로 고정합니다. 이후 빈 커밋만 사용하고, 측정 도중에는
+            workflow나 lockfile을 바꾸지 않습니다.
+          </p>
+          <div class="callout">
+            <strong>현재 진행 상태</strong>
+            <p>
+              후보 A의 After warm 3회와 cold 3회 측정을 완료했습니다. Warm Quality 중앙값은 57초,
+              E2E workflow 중앙값은 1분 46초이며, 느린 브라우저 job의 중앙값은 1분 37초입니다. Cold
+              Quality 중앙값은 1분 9초, E2E workflow 중앙값은 2분 20초이며, 느린 브라우저 job의
+              중앙값은 1분 42초입니다. 원본 URL·step 시간은 RFC에 기록했고, 첫 cold 2회차 시도는
+              캐시 hit로 제외했습니다. 별도 캐시 실험에서 Quality·WebKit miss와 Chromium hit를
+              확인했고, Before/After 비교까지 완료했습니다.
+            </p>
+          </div>
+          <div class="done">
+            <strong>03 단계 완료</strong> — 동일한 검증 범위에서 After warm·cold 각 3회의 원본 값과
+            중앙값·범위를 확보했습니다. cold 2회차 첫 시도는 cache hit로 제외했고, 별도 실험에서
+            matrix job 간 캐시 공유로 부분 cold가 발생한 한계를 확인했습니다.
+          </div>
+          <h3>Warm 3회</h3>
+          <pre><code>git commit --allow-empty -m "chore(ci): After warm 1회차"
+git push</code></pre>
+          <p>각 회차의 setup-node 로그에서 <code>Cache restored from key</code>를 확인합니다.</p>
+          <h3>Cold 3회</h3>
+          <pre><code><span class="cm"># 회차마다 반복</span>
+gh cache delete --all --repo im-wen3y/loop-pack-fe-l2-vol1
+gh cache list --repo im-wen3y/loop-pack-fe-l2-vol1
+git commit --allow-empty -m "chore(ci): After cold 1회차"
+git push</code></pre>
+          <p>각 회차의 setup-node 로그에서 <code>pnpm cache is not found</code>를 확인합니다.</p>
+          <div class="callout warning">
+            <strong>순서</strong>
+            <p>
+              warm을 먼저 3회 끝내고 cold를 진행합니다. cold는 실행이 끝날 때 캐시를 다시 저장하므로
+              매 회차 직전에 삭제해야 합니다.
+            </p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                After 측정 결과 · 원본 URL과 step 시간은
+                <a href="../rfc/week10-ci.md#after">RFC After 기록</a
+                >에 보관
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">조건</th>
+                  <th scope="col">회차</th>
+                  <th scope="col">확인된 결과</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>warm</td>
+                  <td>1·2·3 완료</td>
+                  <td>
+                    Quality 중앙값 57초 · E2E workflow 중앙값 1분 46초 · 느린 job 중앙값 1분 37초<br />
+                    회차별 <code>Cache restored from key</code> 확인 · Quality install 2초
+                  </td>
+                </tr>
+                <tr>
+                  <td>cold</td>
+                  <td>1·2·3 완료</td>
+                  <td>
+                    Quality 중앙값 1분 9초 · E2E workflow 중앙값 2분 20초 · 느린 job 중앙값 1분
+                    42초<br />
+                    첫 2회차 시도는 cache hit로 제외 · 회차별
+                    <code>pnpm cache is not found</code> 확인 · Quality install 6~7초
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="cache-proof">
+          <p class="time">04 · 캐시 자가 검증</p>
+          <h2>After 측정과 분리해 hit/miss를 증명합니다</h2>
+          <ol>
+            <li>warm 로그의 복원 키와 install 시간을 캡처합니다.</li>
+            <li>별도 실험 커밋에서 유효한 lockfile 변경을 만들어 캐시 키를 바꿉니다.</li>
+            <li>miss 로그와 install 시간을 캡처합니다.</li>
+            <li>실험 변경을 되돌리고 package 파일과 lockfile이 원래 상태인지 확인합니다.</li>
+          </ol>
+          <div class="callout warning">
+            <strong>After 6회에 섞지 않습니다</strong>
+            <p>
+              lockfile 변경은 실행 조건을 바꾸므로 After 반복 측정이 끝난 뒤 별도 실험으로
+              진행합니다. 파일을 임의로 손상시키지 말고 package manager가 만든 유효한 변경만
+              사용합니다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #a3457a; background: #fbeaf3; color: #6b2049">
+            <strong>검증 실험 결과 · 2026-09-10</strong>
+            <p>
+              lockfile 변경으로 캐시 키를 바꾼 별도 실험을 실행했습니다. 커밋
+              <code>91cabde2</code>에서 Quality와 E2E workflow를 확인했고, 실험 변경은 커밋
+              <code>8fe73a0b</code>에서 복구해 실험 전 상태와 동일합니다.
+            </p>
+            <p>
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34466947559"
+                >Quality run</a
+              >
+              ·
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34466947550"
+                >E2E run</a
+              >
+              · 상세 기록은 <a href="../rfc/week10-ci.md#캐시">RFC 캐시 검증</a>에 남깁니다.
+            </p>
+            <p>
+              Quality와 WebKit은 <code>pnpm cache is not found</code>(install 7초·6초)를 확인했지만,
+              Chromium은 다른 job이 저장한 동일 key를 복원해 hit(install 2초)가 됐습니다. 따라서 이
+              실험은 모든 job이 cold인 결과가 아니라 부분 cold로 분류합니다.
+            </p>
+          </div>
+        </section>
+
+        <section id="compare">
+          <p class="time">05 · 비교와 판정</p>
+          <h2>중앙값만 보지 않고 범위를 함께 봅니다</h2>
+          <ol>
+            <li>warm과 cold 각각 원본 값 3개, 중앙값, 최소~최대 범위를 계산합니다.</li>
+            <li>Before와 After의 Quality/E2E workflow 시간을 같은 조건끼리 비교합니다.</li>
+            <li>최장 step이 실제로 줄었는지 확인합니다.</li>
+            <li>Before와 After 범위가 크게 겹치면 유의미한 개선으로 단정하지 않습니다.</li>
+            <li>병렬화로 늘어난 install·build 비용과 줄어든 wall-clock을 함께 적습니다.</li>
+          </ol>
+          <div class="callout">
+            <strong>이번 실험의 성공 기준</strong>
+            <p>
+              가장 늦게 끝난 브라우저 job을 기준으로 PR wall-clock 중앙값이 Before E2E 중앙값 2분
+              33초보다 30초 이상 줄어 약 2분 이하가 되고, After 범위가 Before 범위 2분 10초~3분
+              4초와 거의 겹치지 않아야 의미 있는 개선으로 판단합니다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #a3457a; background: #fbeaf3; color: #6b2049">
+            <strong>판정 결과 · 2026-09-10</strong>
+            <p>
+              E2E workflow 중앙값은 Before 2분 33초에서 After 2분 20초로 13초 줄어, 목표로 정한 30초
+              단축에는 미달했습니다. 따라서 PR 전체 wall-clock의 성능 개선은 유의미하다고 확정하지
+              않습니다.
+            </p>
+            <p>
+              대신 느린 브라우저 job 중앙값은 2분 24초에서 1분 42초로 42초 줄었고, Chromium과
+              WebKit을 독립 required check로 확인할 수 있게 됐습니다. 후보 A는 이 구조적·안전성 개선
+              때문에 유지하며, 후보 C pnpm store 캐시는 보류합니다.
+            </p>
+          </div>
+          <div class="done">
+            완료 기준 — Before/After cold·warm 원본 값과 중앙값·범위, 병목 근거, 전략 선택 이유,
+            cache hit/miss 및 install 시간, 실험 복구 기록이 모두 있다.
+          </div>
+        </section>
+
+        <footer>
+          <p>작성일 2026-09-10 · 병목 개선과 After 측정 안내</p>
+          <p>
+            <a href="action-plan.html">10주차 진행표</a> ·
+            <a href="before-measurement.html">Before 측정</a> ·
+            <a href="../rfc/week10-ci.md">CI 측정 기록</a> · <a href="#top">맨 위로</a>
+          </p>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

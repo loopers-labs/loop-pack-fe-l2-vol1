@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="10주차 CI Before 측정을 위해 캐시가 있을 때와 없을 때를 각각 3회씩 재는 순서와 확인 항목"
+    />
+    <title>Week 10 · Before 측정 6회 안내</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --page: #f4f7f6;
+        --surface: #fbfdfc;
+        --text: #17211f;
+        --muted: #53635f;
+        --line: #cbd8d4;
+        --accent: #056354;
+        --soft: #d7eee8;
+        --warning: #f8ead5;
+        --warm-line: #b56a20;
+        --warm-fill: #fbeeda;
+        --warm-text: #6b3f0d;
+        --cold-line: #2f6f9e;
+        --cold-fill: #e3eff8;
+        --cold-text: #1f4a6b;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: #101715;
+          --surface: #151e1b;
+          --text: #e8efed;
+          --muted: #aab9b5;
+          --line: #31413c;
+          --accent: #88e3d0;
+          --soft: #173d34;
+          --warning: #3b2d1d;
+          --warm-line: #e0a05c;
+          --warm-fill: #33261a;
+          --warm-text: #f2c894;
+          --cold-line: #6fa9d2;
+          --cold-fill: #172835;
+          --cold-text: #a9cee8;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--text);
+        font-family:
+          Pretendard,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        line-height: 1.8;
+        word-break: keep-all;
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 0.2em;
+      }
+      a:focus-visible,
+      summary:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 4px;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 14rem minmax(0, 1fr);
+        gap: 4rem;
+        max-width: 76rem;
+        margin: auto;
+        padding: 2rem 1.5rem 5rem;
+      }
+      nav {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100vh - 4rem);
+        overflow: auto;
+        border-left: 3px solid var(--accent);
+        padding-left: 1rem;
+      }
+      nav ol {
+        list-style: none;
+        padding: 0;
+        margin: 0.7rem 0;
+      }
+      nav li {
+        margin: 0.5rem 0;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      main {
+        min-width: 0;
+      }
+      header {
+        padding: 3rem 0;
+      }
+      .eyebrow,
+      .time {
+        color: var(--accent);
+        font-weight: 750;
+        font-size: 0.9rem;
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.3;
+        letter-spacing: -0.035em;
+      }
+      h1 {
+        font-size: 3.5rem;
+        margin: 0.8rem 0 1.2rem;
+      }
+      h2 {
+        font-size: 2rem;
+        margin: 0 0 1.2rem;
+      }
+      h3 {
+        font-size: 1.2rem;
+        margin: 0 0 0.6rem;
+      }
+      .lead {
+        color: var(--muted);
+        font-size: 1.15rem;
+        max-width: 43rem;
+      }
+      .source-link {
+        margin: -0.6rem 0 1.4rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      section {
+        margin-bottom: 4rem;
+        scroll-margin-top: 2rem;
+      }
+      .callout {
+        padding: 1.2rem 1.4rem;
+        background: var(--soft);
+        border-left: 4px solid var(--accent);
+        border-radius: 0 12px 12px 0;
+        margin: 1.3rem 0;
+      }
+      .warning {
+        background: var(--warning);
+      }
+      .callout p {
+        margin: 0.4rem 0;
+      }
+      .step {
+        border-top: 1px solid var(--line);
+        padding-top: 2rem;
+      }
+      li + li {
+        margin-top: 0.55rem;
+      }
+      code {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 0.1rem 0.3rem;
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+      pre {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        overflow-x: auto;
+        font-size: 0.88rem;
+        line-height: 1.7;
+        margin: 1.2rem 0;
+      }
+      pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 1em;
+      }
+      pre .cm {
+        color: var(--muted);
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.94rem;
+      }
+      caption {
+        text-align: left;
+        color: var(--muted);
+        margin-bottom: 0.6rem;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--line);
+        padding: 0.8rem;
+      }
+      th {
+        background: var(--soft);
+      }
+      .done {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        background: var(--surface);
+      }
+      .states {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 1.4rem;
+        margin: 1.5rem 0;
+      }
+      .state {
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        padding: 1.4rem;
+      }
+      .state h3 {
+        margin-top: 0;
+      }
+      .state p {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+      .state .shelf {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        height: 6.5rem;
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        background: var(--surface);
+        border: 2px solid var(--line);
+      }
+      .state .shelf span {
+        display: block;
+        height: 1.2rem;
+        border-radius: 3px;
+      }
+      .state.warm {
+        border-color: var(--warm-line);
+        background: var(--warm-fill);
+        color: var(--warm-text);
+      }
+      .state.warm .shelf {
+        border-color: var(--warm-line);
+      }
+      .state.warm .shelf span {
+        background: var(--warm-line);
+      }
+      .state.cold {
+        border-color: var(--cold-line);
+        background: var(--cold-fill);
+        color: var(--cold-text);
+      }
+      .state.cold .shelf {
+        border-color: var(--cold-line);
+        border-style: dashed;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        color: var(--cold-line);
+      }
+      .runs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.8rem;
+        margin: 1.4rem 0;
+      }
+      .run {
+        border: 2px solid var(--line);
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+      }
+      .run .n {
+        display: block;
+        font-size: 1.7rem;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+      .run .t {
+        display: block;
+        font-size: 0.85rem;
+      }
+      .run.w {
+        border-color: var(--warm-line);
+        background: var(--warm-fill);
+        color: var(--warm-text);
+      }
+      .run.c {
+        border-color: var(--cold-line);
+        background: var(--cold-fill);
+        color: var(--cold-text);
+      }
+      footer {
+        border-top: 1px solid var(--line);
+        padding-top: 1.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .skip {
+        position: absolute;
+        left: 1rem;
+        top: -5rem;
+        background: var(--surface);
+        padding: 0.5rem;
+      }
+      .skip:focus {
+        top: 0.5rem;
+      }
+      @media (max-width: 800px) {
+        .shell {
+          display: block;
+        }
+        nav {
+          position: static;
+          max-height: none;
+          margin-bottom: 2rem;
+        }
+        nav ol {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem 1rem;
+        }
+        nav li {
+          margin: 0;
+        }
+        h1 {
+          font-size: 2.5rem;
+        }
+        header {
+          padding: 1rem 0 2rem;
+        }
+      }
+      @media print {
+        :root {
+          color-scheme: light;
+          --page: white;
+          --surface: white;
+          --text: #17211f;
+          --muted: #53635f;
+          --line: #cbd8d4;
+          --accent: #056354;
+          --soft: #e8f4f1;
+          --warning: #fbf1e3;
+          --warm-line: #b56a20;
+          --warm-fill: #fbeeda;
+          --warm-text: #6b3f0d;
+          --cold-line: #2f6f9e;
+          --cold-fill: #e9f2f9;
+          --cold-text: #1f4a6b;
+        }
+        .shell {
+          display: block;
+          padding: 0;
+        }
+        nav,
+        .skip {
+          display: none;
+        }
+        body {
+          font-size: 10.5pt;
+        }
+        section {
+          margin-bottom: 2rem;
+        }
+        h2,
+        h3 {
+          break-after: avoid;
+        }
+        .callout,
+        .done,
+        .state,
+        pre,
+        tr {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <a class="skip" href="#main">본문으로 건너뛰기</a>
+    <div class="shell">
+      <nav aria-label="Before 측정 안내 목차">
+        <strong>WEEK 10 · BEFORE 측정</strong>
+        <ol>
+          <li><a href="#cache">캐시가 뭔가</a></li>
+          <li><a href="#why">왜 6번인가</a></li>
+          <li><a href="#prepare">00 준비</a></li>
+          <li><a href="#warm">01 warm 3회</a></li>
+          <li><a href="#cold">02 cold 3회</a></li>
+          <li><a href="#pitfalls">틀리기 쉬운 것</a></li>
+          <li><a href="#aggregate">03 집계</a></li>
+        </ol>
+      </nav>
+      <main id="main">
+        <header>
+          <p class="eyebrow">LOOP PACK · WEEK 10 · BEFORE</p>
+          <h1>캐시가 있을 때와<br />없을 때를 각각 3번씩</h1>
+          <p class="lead">
+            CI가 얼마나 걸리는지 재는 작업입니다. 같은 코드라도 캐시가 있으면 빠르고 없으면 느리기
+            때문에, 두 상황을 나눠서 각각 3회씩 측정합니다.
+          </p>
+          <p>
+            이 문서는 실행 순서 안내입니다. Warm 3회와 Cold 3회 측정을 모두 마쳤습니다. 측정 방식의
+            결정 근거와 기록은
+            <a href="action-plan.html#before">진행표 01 Before 측정</a>과
+            <a href="../rfc/week10-ci.md">CI 측정과 개선 기록</a>에 있습니다.
+          </p>
+        </header>
+
+        <section id="cache">
+          <h2>캐시가 뭔가</h2>
+          <p>
+            매번 <code>pnpm install</code>로 의존성을 내려받으면 오래 걸립니다. 그래서 GitHub이
+            받아둔 store를 보관했다가 다음 실행에서 복원합니다. 이 보관소가 캐시입니다. Quality와
+            E2E는 <code>actions/setup-node</code>의 <code>cache: pnpm</code> 하나를 공유합니다.
+          </p>
+          <div class="states">
+            <div class="state warm">
+              <div class="shelf"><span></span><span></span><span></span></div>
+              <h3>warm · 캐시가 복원됨</h3>
+              <p>
+                보관된 store를 꺼내 쓰므로 <code>Install dependencies</code>가 몇 초에 끝납니다.
+                평소 개발 중 대부분의 실행이 이 상태입니다.
+              </p>
+            </div>
+            <div class="state cold">
+              <div class="shelf"><span>Cache not found</span></div>
+              <h3>cold · 캐시가 없음</h3>
+              <p>
+                처음부터 내려받아야 합니다. 캐시가 만료되거나 축출됐을 때, 또는 lockfile이 바뀌어
+                키가 달라졌을 때 발생합니다.
+              </p>
+            </div>
+          </div>
+          <div class="callout warning">
+            <strong>첫 실행 여부가 기준이 아닙니다</strong>
+            <p>
+              cold와 warm은 대상 캐시가 실제로 복원됐는지로 구분합니다. 정확한 키가 miss여도
+              fallback 키가 복원되면 완전한 cold가 아닐 수 있으므로 실행 로그를 함께 확인합니다.
+            </p>
+          </div>
+        </section>
+
+        <section id="why">
+          <h2>왜 6번인가</h2>
+          <p>
+            한 번만 재면 그날 러너가 느렸던 것인지 실제 특성인지 구분할 수 없습니다. 조건별로 3회를
+            재 중앙값을 쓰고 최소~최대 범위를 함께 적습니다. 그래야 개선 후 줄어든 시간이 측정
+            흔들림보다 큰지 판단할 수 있습니다.
+          </p>
+          <div class="runs">
+            <div class="run w">
+              <span class="n">1</span><span class="t">warm · 그대로 push</span>
+            </div>
+            <div class="run w">
+              <span class="n">2</span><span class="t">warm · 그대로 push</span>
+            </div>
+            <div class="run w">
+              <span class="n">3</span><span class="t">warm · 그대로 push</span>
+            </div>
+            <div class="run c">
+              <span class="n">4</span><span class="t">cold · 삭제 후 push</span>
+            </div>
+            <div class="run c">
+              <span class="n">5</span><span class="t">cold · 삭제 후 push</span>
+            </div>
+            <div class="run c">
+              <span class="n">6</span><span class="t">cold · 삭제 후 push</span>
+            </div>
+          </div>
+          <p>
+            warm을 먼저 재는 이유는 현재 캐시가 살아 있기 때문입니다. 손대지 않고 3회를 먼저 마치면
+            캐시 삭제는 cold 회차에만 3번 하면 됩니다.
+          </p>
+          <div class="callout">
+            <strong>재현 방법으로 채택하지 않은 것</strong>
+            <p>
+              캐시가 저장된 직후 같은 run을 re-run해 warm을 만드는 방법은 실제 개발에서 재현되는
+              조건이 아니라고 보아 채택하지 않았습니다. 실제 warm은 이전 실행이 남긴 캐시를 이후
+              PR이 복원하는 상황입니다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #2e7d5b; background: #e2f3eb; color: #214f3d">
+            <strong>현재 상태 · 2026-09-10</strong>
+            <p>
+              Before warm 3회를 완료했습니다. Quality workflow는 57초·55초·53초로 중앙값 55초, E2E
+              workflow는 3분 4초·2분 33초·2분 10초로 중앙값 2분 33초였습니다. 세 회차 모두 pnpm
+              dependency cache hit/restored 로그를 확인했습니다.
+            </p>
+            <p>Cold 3회도 각 실행 전에 캐시를 비우고 cache miss 로그를 확인해 완료했습니다.</p>
+          </div>
+        </section>
+
+        <section class="step" id="prepare">
+          <h2>00. 한 번만 하는 준비</h2>
+          <ol>
+            <li>
+              <strong>PR을 엽니다.</strong> 두 workflow 모두 <code>pull_request</code>에서
+              실행되므로 PR이 열려 있어야 커밋마다 자동 실행됩니다. 이번 측정용 PR의 base는
+              <code>develop</code>입니다.
+              <pre><code><span class="cm"># feat/week-10 브랜치에서</span>
+git push -u origin feat/week-10
+gh pr create --base develop --title "Week 10 CI 측정" --body "Before 측정용"</code></pre>
+            </li>
+            <li>
+              <strong>현재 캐시를 확인합니다.</strong> 기본 표에는 ref 칸이 없으므로 어느 브랜치의
+              캐시인지 보려면 <code>--json</code>에 <code>ref</code>를 넣습니다.
+              <pre><code>gh cache list -R im-wen3y/loop-pack-fe-l2-vol1 --limit 100 \
+  --json id,key,ref,sizeInBytes,lastAccessedAt</code></pre>
+            </li>
+            <li>
+              <strong>측정 조건을 먼저 적습니다.</strong> 러너 <code>ubuntu-latest</code>, Node
+              <code>24.17.0</code>, pnpm <code>10.15.1</code>, 검증 명령, 캐시 대상과 키, 기준 커밋
+              <code>9859a7c6</code>을 <a href="../rfc/week10-ci.md">CI 측정 기록</a>에 남깁니다. 6회
+              내내 이 조건은 바뀌지 않습니다.
+            </li>
+          </ol>
+          <div class="callout" style="border-color: #7255a5; background: #eee7fa; color: #3e2d5e">
+            <strong>정정 이력 · 2026-09-10 · 최종 workflow 확인</strong>
+            <p>
+              E2E browser 설치 오류를 확인하는 과정에서 임시 커밋이 있었지만, 현재 최종
+              <code>quality.yml</code>과 <code>e2e.yml</code>의 파일 내용은 기준 커밋
+              <code>9859a7c6</code>과 동일합니다. 따라서 이 문서의 기준 커밋 표기는 그대로
+              사용합니다.
+            </p>
+            <p>
+              warm 1회차 실행은 커밋
+              <code>1c4d8e2ac4169022285e56f944ce492b42bc7625</code>에서 실행됐습니다. Quality
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34388626221"
+                >Quality</a
+              >와
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34388626456"
+                >E2E</a
+              >입니다. 이전 확인용 성공 실행은 참고 기록으로만 유지합니다.
+            </p>
+            <p>
+              세 회차는 workflow label <code>ubuntu-latest</code>가 해석한 Ubuntu 24.04.4,
+              <code>ubuntu-24.04</code> image <code>20260831.293.1</code>, Node
+              <code>24.17.0</code> 조건에서 실행했습니다. Azure Region은 실행마다 달랐습니다.
+            </p>
+          </div>
+        </section>
+
+        <section class="step" id="warm">
+          <p class="time">warm · 3회</p>
+          <h2>01. 캐시를 그대로 두고 3회</h2>
+          <p>아무것도 지우지 않고 평소처럼 커밋을 밀기만 합니다. 아래를 3회 반복합니다.</p>
+          <pre><code>git commit --allow-empty -m "chore(ci): Before warm 1회차"
+git push</code></pre>
+          <p>
+            <code>--allow-empty</code>는 파일을 바꾸지 않고 커밋만 만드는 옵션입니다. 트리가
+            동일해야 6회를 같은 조건으로 비교할 수 있어 사용합니다. 기준 커밋 표기는
+            <code>9859a7c6</code>으로 유지하고, 각 실행이 동일 트리의 빈 커밋임을 함께 적습니다.
+          </p>
+          <div class="callout warning">
+            <strong>첫 실행에서 캐시가 복원되지 않았다면</strong>
+            <p>
+              그 실행은 warm이 아닙니다. cold 회차로 옮겨 적고 1부를 다시 시작합니다. 캐시가 7일간
+              접근되지 않아 만료됐을 수 있습니다.
+            </p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                완료된 Before warm 측정
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">회차</th>
+                  <th scope="col">커밋 / 실행</th>
+                  <th scope="col">Quality workflow / job</th>
+                  <th scope="col">E2E workflow / job</th>
+                  <th scope="col">캐시·최장 step</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>
+                    <code>1c4d8e2a</code><br />
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34388626221"
+                      >Quality</a
+                    >
+                    ·
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34388626456"
+                      >E2E</a
+                    >
+                  </td>
+                  <td>57초 / 54초</td>
+                  <td>3분 4초 / 2분 24초</td>
+                  <td>
+                    Q: test 11초 · lint 10초 · type 3초 · build 11초<br />E2E: browser 51초 · build
+                    12초 · 실행 57초<br />pnpm cache hit/restored · 약 197MB
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>
+                    <code>c4192a45</code><br />
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34389832684"
+                      >Quality</a
+                    >
+                    ·
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34389832675"
+                      >E2E</a
+                    >
+                  </td>
+                  <td>55초 / 53초</td>
+                  <td>2분 33초 / 2분 30초</td>
+                  <td>
+                    Q: test 11초 · lint 10초 · type 3초 · build 11초<br />E2E: browser 57초 · build
+                    10초 · 실행 1분 5초<br />pnpm cache hit/restored · 약 197MB
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>
+                    <code>8a6c4a66</code><br />
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34390806195"
+                      >Quality</a
+                    >
+                    ·
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34390806199"
+                      >E2E</a
+                    >
+                  </td>
+                  <td>53초 / 50초</td>
+                  <td>2분 10초 / 2분 7초</td>
+                  <td>
+                    Q: test 9초 · lint 8초 · type 3초 · build 9초<br />E2E: browser 46초 · build 8초
+                    · 실행 53초<br />pnpm cache hit/restored · 약 197MB
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            중앙값·범위: Quality workflow 55초(53–57초), job 53초(50–54초); E2E workflow 2분
+            33초(2분 10초–3분 4초), job 2분 24초(2분 7초–2분 30초)입니다.
+          </p>
+        </section>
+
+        <section class="step" id="cold">
+          <p class="time">cold · 3회</p>
+          <h2>02. 매번 캐시를 비우고 3회</h2>
+          <p>아래 한 묶음을 3회 반복합니다. 회차마다 삭제가 필요합니다.</p>
+          <pre><code><span class="cm"># 1) 측정 문서 등 현재 변경을 임시 보관합니다</span>
+git stash push -m "cold 측정 문서 임시 보관"
+git status --short
+
+<span class="cm"># 2) 저장소를 명시해 Actions 캐시를 전부 지웁니다</span>
+gh cache delete --all --repo im-wen3y/loop-pack-fe-l2-vol1
+
+<span class="cm"># 3) 캐시 목록이 비었는지 확인합니다</span>
+gh cache list --repo im-wen3y/loop-pack-fe-l2-vol1
+
+<span class="cm"># 4) 빈 커밋을 만들고 push하여 실행합니다</span>
+git commit --allow-empty -m "chore(ci): Before cold 3회차"
+git push
+
+<span class="cm"># 5) 실행이 끝난 뒤 문서 변경을 복원합니다</span>
+git stash pop</code></pre>
+          <div class="callout">
+            <strong>기본 원격 저장소 오류가 나면</strong>
+            <p>
+              <code>No default remote repository has been set</code> 오류는
+              <code>--repo im-wen3y/loop-pack-fe-l2-vol1</code>로 저장소를 명시하면 해결됩니다.
+              기본값을 등록하려면 <code>gh repo set-default im-wen3y/loop-pack-fe-l2-vol1</code>을
+              한 번 실행합니다.
+            </p>
+          </div>
+          <p>
+            기록 항목은 warm과 같습니다. 다만 캐시 증거 칸에는 복원 문구 대신 캐시 미복원 문구를
+            확인해 남깁니다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                완료된 Before cold 측정
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">회차</th>
+                  <th scope="col">커밋 / 실행</th>
+                  <th scope="col">Quality workflow / job</th>
+                  <th scope="col">E2E workflow / job</th>
+                  <th scope="col">캐시·최장 step</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>
+                    <code>b9e92f8f</code><br />
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34442468386"
+                      >Quality</a
+                    >
+                    ·
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34442468432"
+                      >E2E</a
+                    >
+                  </td>
+                  <td>50초 / 47초</td>
+                  <td>2분 6초 / 2분 3초</td>
+                  <td>
+                    Q: install 5초 · test 9초 · lint 7초 · type 3초 · build 7초<br />E2E: install
+                    5초 · browser 44초 · build 8초 · 실행 48초<br />pnpm cache miss
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>
+                    <code>de540b8d</code><br />
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34443757239"
+                      >Quality</a
+                    >
+                    ·
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34443757278"
+                      >E2E</a
+                    >
+                  </td>
+                  <td>1분 6초 / 1분 3초</td>
+                  <td>2분 49초 / 2분 46초</td>
+                  <td>
+                    Q: install 6초 · test 12초 · lint 9초 · type 4초 · build 10초<br />E2E: install
+                    6초 · browser 1분 7초 · build 8초 · 실행 57초<br />pnpm·Next build cache miss
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>
+                    <code>6511cdc9</code><br />
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34444582676"
+                      >Quality</a
+                    >
+                    ·
+                    <a
+                      href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34444582659"
+                      >E2E</a
+                    >
+                  </td>
+                  <td>57초 / 53초</td>
+                  <td>2분 38초 / 2분 27초</td>
+                  <td>
+                    Q: install 6초 · test 8초 · lint 8초 · type 2초 · build 8초<br />E2E: install
+                    5초 · browser 52초 · build 8초 · 실행 1분 10초<br />pnpm·Next build cache miss
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            중앙값·범위: Quality workflow 57초(50초–1분 6초), job 53초(47초–1분 3초); E2E workflow
+            2분 38초(2분 6초–2분 49초), job 2분 27초(2분 3초–2분 46초)입니다.
+          </p>
+          <div class="callout warning">
+            <strong>현재 상태</strong>
+            <p>
+              Cold 3회를 완료했습니다. 반복 실행 명령은 After cold 측정에서도 같은 조건을 만들 때
+              사용합니다.
+            </p>
+          </div>
+        </section>
+
+        <section class="step" id="pitfalls">
+          <h2>틀리기 쉬운 것</h2>
+          <div class="callout warning">
+            <strong>cold 실행이 끝나면 캐시가 다시 저장됩니다</strong>
+            <p>
+              한 번 지우고 3회를 연속 실행하면 2·3회차는 warm이 됩니다. 다음 cold 직전에 매번 다시
+              지워야 합니다.
+            </p>
+          </div>
+          <div class="callout warning">
+            <strong>지울 범위는 세 곳입니다</strong>
+            <p>
+              PR 실행이 캐시를 복원할 수 있는 곳은 이 PR, base 브랜치 <code>develop</code>, 기본
+              브랜치 <code>main</code>입니다. 한 곳이라도 남으면 거기서 복원돼 cold가 성립하지
+              않습니다. <code>gh cache delete --all</code>은 ref 구분 없이 저장소의 캐시를 비웁니다.
+            </p>
+          </div>
+          <div class="callout warning">
+            <strong>삭제했다는 사실은 cold의 근거가 아닙니다</strong>
+            <p>
+              <a href="checklist.md">체크리스트</a>에 “캐시 설정의 존재만 보고 hit이라고 기록하지
+              않았는가” 항목이 있습니다. 같은 기준으로 cold도 실행 로그에 남은 문구로 판정합니다.
+            </p>
+          </div>
+          <div class="callout">
+            <strong>Playwright 브라우저 설치는 캐시 대상이 아닙니다</strong>
+            <p>
+              E2E의 <code>Install Playwright browsers</code>는 warm·cold와 무관하게 매번 실행됩니다.
+              Week 09 참고 실행에서는 47초였습니다. 이 시간은 cold와 warm의 차이에 나타나지
+              않으므로, E2E의 최장 구간을 지목할 때 구분해야 합니다.
+            </p>
+          </div>
+        </section>
+
+        <section class="step" id="aggregate">
+          <h2>03. 실행마다 남길 것과 집계</h2>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                Quality와 E2E 각각에 대해 회차마다 기록
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">항목</th>
+                  <th scope="col">내용</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>run URL</td>
+                  <td>Quality와 E2E를 각각 남깁니다.</td>
+                </tr>
+                <tr>
+                  <td>workflow 전체 / job</td>
+                  <td>두 값을 구분해 초 단위로 적습니다.</td>
+                </tr>
+                <tr>
+                  <td>step 시간</td>
+                  <td>
+                    <code>Set up Node.js</code>, <code>Install dependencies</code>, 브라우저 설치,
+                    각 검증 step
+                  </td>
+                </tr>
+                <tr>
+                  <td>캐시 증거</td>
+                  <td>warm은 복원 문구와 용량, cold는 미복원 문구를 로그 원문으로 남깁니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>6회 측정 결과를 다음과 같이 정리했습니다.</p>
+          <ul>
+            <li>Quality workflow 중앙값: warm 55초, cold 57초. 두 조건의 범위가 겹칩니다.</li>
+            <li>E2E workflow 중앙값: warm 2분 33초, cold 2분 38초. 두 조건의 범위가 겹칩니다.</li>
+            <li>
+              가장 긴 구간은 <code>Run E2E tests</code>로 warm·cold 중앙값이 모두 57초입니다. 다음은
+              <code>Install Playwright browsers</code>로 warm 51초, cold 52초입니다.
+            </li>
+            <li>
+              Quality와 E2E가 병렬로 실행되므로 “전체 완료 시간”의 정의를 먼저 적습니다. 두 시간의
+              합이 아니라 늦게 끝나는 쪽입니다.
+            </li>
+          </ul>
+          <div class="callout warning">
+            <strong>측정에 포함하지 않는 실행</strong>
+            <p>
+              검증 step에 도달하기 전에 실패한 실행은 6회에 넣지 않습니다. 대신 원인과 함께
+              <a href="../rfc/week10-ci.md">CI 측정 기록</a>의 제외 목록에 남깁니다.
+            </p>
+          </div>
+          <div class="done">
+            <strong>완료</strong> — warm 3회와 cold 3회의 원본 값, 중앙값, 범위, 캐시 로그를 모두
+            기록했고 가장 긴 구간을 로그 근거로 지목했습니다. 다음은 개선 전략을 정하고 같은
+            조건으로 After를 측정하는 단계입니다.
+          </div>
+        </section>
+
+        <footer>
+          <p>작성일 2026-09-10 · Before 측정 실행 순서 안내 · warm 3회와 cold 3회 완료</p>
+          <p>
+            <a href="action-plan.html">10주차 진행표</a> ·
+            <a href="checklist.md">10주차 체크리스트</a> ·
+            <a href="../rfc/week10-ci.md">CI 측정과 개선 기록</a> ·
+            <a href="#top">맨 위로</a>
+          </p>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

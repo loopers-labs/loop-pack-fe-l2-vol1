@@ -8,9 +8,10 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/validate-env.mjs && next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && pnpm check:public-api",
+    "check:public-api": "node scripts/check-public-api-consumers.mjs",
     "format": "prettier --write .",
     "test:e2e": "pnpm build && playwright test",
     "prepare": "husky",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@size-limit/file": "^13.0.3",
     "@stryker-mutator/core": "^10.0.0",
     "@stryker-mutator/vitest-runner": "^10.0.0",
     "@testing-library/jest-dom": "^7.0.1",
@@ -59,6 +61,7 @@
     "lint-staged": "^17.0.7",
     "msw": "^2.15.0",
     "prettier": "^3.0.0",
+    "size-limit": "^13.0.3",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

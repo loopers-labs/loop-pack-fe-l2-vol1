@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { flowIdOf, readStoredFlowId, waitForAnalyticsEvent } from './fixtures/analytics'
 import { accountMenu, submitLogin } from './fixtures/login-actions'
-import { accountForSlot, TEST_PASSWORD } from './fixtures/test-accounts'
+import { accountForProjectSlot, TEST_PASSWORD } from './fixtures/test-accounts'
 
 /*
  * 이 파일만 storageState를 쓰지 않는다. 로그인 화면 진입·성공·실패가 검증 대상이라
@@ -13,7 +13,7 @@ test.describe('인증 플로우', () => {
     page,
     browser,
   }, testInfo) => {
-    const account = accountForSlot(testInfo.parallelIndex)
+    const account = accountForProjectSlot(testInfo.project.name, testInfo.parallelIndex)
 
     await page.goto('/orders')
 
@@ -55,7 +55,7 @@ test.describe('인증 플로우', () => {
     page,
     context,
   }, testInfo) => {
-    const account = accountForSlot(testInfo.parallelIndex)
+    const account = accountForProjectSlot(testInfo.project.name, testInfo.parallelIndex)
 
     await page.goto('/login')
     await submitLogin(page, account)
@@ -69,7 +69,7 @@ test.describe('인증 플로우', () => {
       { name: 'scenario', value: 'expired', url: new URL(page.url()).origin },
     ])
 
-    await page.goto('/orders')
+    await page.goto('/orders', { waitUntil: 'commit' })
 
     await page.waitForURL('**/login?**')
     expect(new URL(page.url()).searchParams.get('returnUrl')).toBe('/orders')
@@ -81,7 +81,7 @@ test.describe('인증 플로우', () => {
   })
 
   test('잘못된 비밀번호는 오류를 보여주고 재시도하면 로그인된다', async ({ page }, testInfo) => {
-    const account = accountForSlot(testInfo.parallelIndex)
+    const account = accountForProjectSlot(testInfo.project.name, testInfo.parallelIndex)
 
     await page.goto('/login')
     await submitLogin(page, account, 'wrong-password')

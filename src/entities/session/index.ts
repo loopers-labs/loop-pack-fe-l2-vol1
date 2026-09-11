@@ -3,5 +3,5 @@
 // (docs/week-09/decisions.md 7번). 조회 계약과 타입만 공개한다.
 export type { SessionUser } from '@/entities/session/model/session'
 export { getSession } from '@/entities/session/api/api'
-export { sessionQueries, sessionQueryKeys } from '@/entities/session/api/queries'
-export { useSessionQuery, useCurrentUserId } from '@/entities/session/api/service'
+export { sessionQueries } from '@/entities/session/api/queries'
+export { useCurrentUserId } from '@/entities/session/api/service'

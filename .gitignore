@@ -55,3 +55,9 @@ next-env.d.ts
 # Stryker mutation testing
 /reports
 /.stryker-tmp
+
+# size-limit 측정 산출물 (.size-limit.json은 설정이므로 커밋한다)
+/size-limit-result.json
+
+# CI 리포트 섹션 (PR 코멘트 조립용)
+/ci-report/

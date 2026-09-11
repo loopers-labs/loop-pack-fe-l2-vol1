@@ -1,0 +1,1795 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 10 · E2E 조건부 실행 수정 방향</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --page: #f4f7f6;
+        --surface: #fbfdfc;
+        --text: #17211f;
+        --muted: #53635f;
+        --line: #cbd8d4;
+        --accent: #056354;
+        --accent-soft: #d7eee8;
+        --cold-line: #2f6f9e;
+        --cold-fill: #e3eff8;
+        --cold-text: #1f4a6b;
+        --pending-fill: #eee7fa;
+        --pending-line: #7255a5;
+        --pending-text: #3e2d5e;
+        --warning-fill: #fbeeda;
+        --warning-line: #b56a20;
+        --warning-text: #6b3f0d;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: #101715;
+          --surface: #151e1b;
+          --text: #e8efed;
+          --muted: #aab9b5;
+          --line: #31413c;
+          --accent: #88e3d0;
+          --accent-soft: #173d34;
+          --cold-line: #6fa9d2;
+          --cold-fill: #172835;
+          --cold-text: #a9cee8;
+          --pending-fill: #2b2238;
+          --pending-line: #b9a0e4;
+          --pending-text: #decff7;
+          --warning-fill: #33261a;
+          --warning-line: #e0a05c;
+          --warning-text: #f2c894;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--text);
+        font-family:
+          Pretendard,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        line-height: 1.8;
+        word-break: keep-all;
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 0.2em;
+      }
+      code {
+        padding: 0.1rem 0.3rem;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--surface);
+        font-family: 'SFMono-Regular', Consolas, monospace;
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 14rem minmax(0, 1fr);
+        gap: 4rem;
+        max-width: 76rem;
+        margin: auto;
+        padding: 2rem 1.5rem 5rem;
+      }
+      nav {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100vh - 4rem);
+        overflow: auto;
+        border-left: 3px solid var(--accent);
+        padding-left: 1rem;
+      }
+      nav strong {
+        color: var(--accent);
+      }
+      nav ol {
+        margin: 0.7rem 0;
+        padding: 0;
+        list-style: none;
+      }
+      nav li + li {
+        margin-top: 0.5rem;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      header,
+      section {
+        margin-bottom: 4rem;
+        scroll-margin-top: 2rem;
+      }
+      header {
+        padding: 3rem 0;
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.3;
+        letter-spacing: -0.035em;
+      }
+      h1 {
+        margin: 0.8rem 0 1.2rem;
+        font-size: 3.5rem;
+      }
+      h2 {
+        margin: 0 0 1.2rem;
+        font-size: 2rem;
+      }
+      h3 {
+        margin: 0 0 0.6rem;
+        font-size: 1.2rem;
+      }
+      .record-heading {
+        padding-top: 1.5rem;
+      }
+      .eyebrow,
+      .time {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.9rem;
+        font-weight: 750;
+      }
+      .lead {
+        max-width: 43rem;
+        color: var(--muted);
+        font-size: 1.15rem;
+      }
+      .callout,
+      .card,
+      .done {
+        margin: 1.3rem 0;
+        padding: 1.2rem 1.4rem;
+        border: 0;
+        border-left: 4px solid var(--accent);
+        border-radius: 0 12px 12px 0;
+        background: var(--accent-soft);
+      }
+      .callout p,
+      .card p {
+        margin: 0.4rem 0;
+      }
+      .pending {
+        border-left-color: var(--pending-line);
+        background: var(--pending-fill);
+        color: var(--pending-text);
+      }
+      .cold {
+        border-left-color: var(--cold-line);
+        background: var(--cold-fill);
+        color: var(--cold-text);
+      }
+      .warning {
+        border-left-color: var(--warning-line);
+        background: var(--warning-fill);
+        color: var(--warning-text);
+      }
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 1.4rem;
+        margin: 1.5rem 0;
+      }
+      .card {
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+      .card.recommended {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .step {
+        border-top: 1px solid var(--line);
+        padding-top: 2rem;
+      }
+      li + li {
+        margin-top: 0.55rem;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.94rem;
+      }
+      caption {
+        margin-bottom: 0.6rem;
+        color: var(--muted);
+        text-align: left;
+      }
+      th,
+      td {
+        padding: 0.75rem;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--accent-soft);
+      }
+      pre {
+        overflow-x: auto;
+        margin: 1.2rem 0;
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 0.88rem;
+        line-height: 1.7;
+      }
+      pre code {
+        padding: 0;
+        border: 0;
+        background: none;
+      }
+      .mermaid {
+        overflow-x: auto;
+        margin: 1.2rem 0;
+        padding: 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+      footer {
+        color: var(--muted);
+      }
+      @media (max-width: 820px) {
+        .shell {
+          display: block;
+          padding: 1rem;
+        }
+        nav {
+          position: static;
+          margin-bottom: 1rem;
+        }
+        h1 {
+          font-size: 2.5rem;
+        }
+      }
+      @media print {
+        :root {
+          color-scheme: light;
+          --page: #fff;
+          --surface: #fff;
+          --text: #111;
+          --muted: #444;
+          --line: #bbb;
+          --accent: #185f4d;
+          --accent-soft: #e8f4f0;
+        }
+        .shell {
+          display: block;
+          padding: 0;
+        }
+        nav {
+          display: none;
+        }
+        header,
+        section,
+        .callout,
+        .card,
+        tr {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <div class="shell">
+      <nav aria-label="문서 목차">
+        <strong>WEEK 10 · 조건부 실행</strong>
+        <ol>
+          <li><a href="#decision">결정 요약</a></li>
+          <li><a href="#signals">판별 신호</a></li>
+          <li><a href="#mapping">변경 범위 매핑</a></li>
+          <li><a href="#flow">실행 흐름</a></li>
+          <li><a href="#fallback-fix">fallback 수정 계획</a></li>
+          <li><a href="#fallback-impl">fallback 구현 결과</a></li>
+          <li><a href="#actions-verify">Actions 검증 결과</a></li>
+          <li><a href="#flaky-policy">flaky 대응 정책</a></li>
+          <li><a href="#branches">브랜치 흐름</a></li>
+          <li><a href="#required">required와 생략</a></li>
+          <li><a href="#steps">구현 순서</a></li>
+          <li><a href="#verify">검증 계획</a></li>
+        </ol>
+      </nav>
+      <main>
+        <header>
+          <p class="eyebrow">LOOP PACK · WEEK 10</p>
+          <h1>E2E 조건부 실행 수정 방향</h1>
+          <p class="lead">
+            PR에서 바뀐 경로를 먼저 분류하고, 실제로 영향을 받을 가능성이 있는 E2E만 선택한다. 다만
+            판단할 수 없는 변경이나 판별 실패는 생략하지 않고 전체 E2E로 보낸다.
+          </p>
+          <div class="callout" style="border-color: #7255a5; background: #eee7fa; color: #3e2d5e">
+            <strong>현재 상태 · 문서-only E2E 생략 검증 완료, 선택 실행 검증 대기</strong>
+            <p>
+              변경 감지 job과 조건부 테스트 선택을 workflow에 반영했고, 필수 결제·주문 조합과 인증
+              조합을 로컬 Chromium·WebKit에서 통과시켰다. 실제 PR의 경로 분류·step 생략·required
+              check 상태를 확인했으며, PR #13에서 문서-only 변경의 E2E 준비·실행 step 생략도
+              확인했다. 다음으로 로직 변경의 선택 spec 실행과 알 수 없는 변경의 전체 실행 fallback을
+              검증한다.
+            </p>
+          </div>
+        </header>
+
+        <section id="decision" class="step">
+          <p class="time">01 · 결정 요약</p>
+          <h2>Quality는 유지하고 E2E만 조건부로 조정한다</h2>
+          <div class="status-grid">
+            <div class="card recommended">
+              <h3>실행</h3>
+              <p>
+                JS/TS 로직 변경이면 Chromium과 WebKit에서 <code>order.spec.ts</code>를 항상
+                실행한다.
+              </p>
+            </div>
+            <div class="card recommended">
+              <h3>추가 실행</h3>
+              <p>변경된 기능의 spec을 결제·주문 테스트에 더한다.</p>
+            </div>
+            <div class="card">
+              <h3>생략</h3>
+              <p>문서-only와 CSS-only 변경에서는 E2E의 설치·build·테스트를 생략한다.</p>
+            </div>
+            <div class="card cold">
+              <h3>안전 기본값</h3>
+              <p>분류할 수 없거나 판별에 실패하면 전체 E2E를 실행한다.</p>
+            </div>
+          </div>
+          <p>
+            Quality의 문서·스타일 조건부 분리는 별도 판단으로 보류했다. 이 문서는 E2E의 실행 범위와
+            required check 표시 문제만 다룬다.
+          </p>
+        </section>
+
+        <section id="signals" class="step">
+          <p class="time">02 · 판별 신호</p>
+          <h2>변경 감지 job이 다음 값을 만든다</h2>
+          <p>
+            <code>paths-filter</code>로 PR의 변경 경로를 읽고, 뒤의 E2E matrix job이 사용할 boolean
+            신호를 만든다. 신호는 파일 내용을 해석하는 값이 아니라 경로 규칙의 결과다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                changes job의 출력값
+              </caption>
+              <thead>
+                <tr>
+                  <th>값</th>
+                  <th>true가 되는 경우</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>run_e2e</code></td>
+                  <td>문서·CSS-only가 아니거나, 분류 실패·미지의 경로가 있는 경우</td>
+                </tr>
+                <tr>
+                  <td><code>all</code></td>
+                  <td>공통 로직, fixture, 설정, lockfile, workflow, 미지의 변경 또는 판별 실패</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>auth</code> · <code>cart</code> · <code>wishlist</code> ·
+                    <code>product</code>
+                  </td>
+                  <td>각 기능의 소스 또는 대응 spec이 변경된 경우</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout">
+            <strong>오타는 경로만으로 판별하지 않는다</strong>
+            <p>
+              <code>.tsx</code> 안의 문구 오타와 동작 로직 변경을 CI가 안전하게 구분할 수 없다.
+              따라서 JS/TS 파일 변경은 로직 변경 가능성이 있는 것으로 보고 E2E를 실행한다.
+            </p>
+          </div>
+        </section>
+
+        <section id="mapping" class="step">
+          <p class="time">03 · 변경 범위 매핑</p>
+          <h2>필수 결제 테스트에 영향 범위를 더한다</h2>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                현재 정한 E2E 선택 규칙
+              </caption>
+              <thead>
+                <tr>
+                  <th>변경 경로</th>
+                  <th>실행할 spec</th>
+                  <th>판정 이유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>인증 로직 또는 <code>auth.spec.ts</code></td>
+                  <td>
+                    <code>order.spec.ts</code> + <code>auth.spec.ts</code> +
+                    <code>logout.spec.ts</code>
+                  </td>
+                  <td>결제 필수 흐름과 인증 회귀를 함께 확인</td>
+                </tr>
+                <tr>
+                  <td>장바구니 로직 또는 <code>add-to-cart.spec.ts</code></td>
+                  <td><code>order.spec.ts</code> + <code>add-to-cart.spec.ts</code></td>
+                  <td>장바구니에서 주문으로 이어지는 흐름 확인</td>
+                </tr>
+                <tr>
+                  <td>위시리스트 로직 또는 <code>add-to-wishlist.spec.ts</code></td>
+                  <td><code>order.spec.ts</code> + <code>add-to-wishlist.spec.ts</code></td>
+                  <td>변경된 위시리스트 동작과 결제 필수 흐름 확인</td>
+                </tr>
+                <tr>
+                  <td>상품 목록·검색·필터·정렬 로직</td>
+                  <td><code>order.spec.ts</code> + <code>state-restoration.spec.ts</code></td>
+                  <td>상품 상태와 URL·스토리지 복원 회귀 확인</td>
+                </tr>
+                <tr>
+                  <td>공통 로직, fixture, 설정, lockfile, workflow</td>
+                  <td>전체 E2E</td>
+                  <td>영향 범위를 특정하기 어려움</td>
+                </tr>
+                <tr>
+                  <td>문서-only 또는 CSS-only</td>
+                  <td>생략</td>
+                  <td>브라우저 동작 로직이 바뀌지 않음</td>
+                </tr>
+                <tr>
+                  <td>분류 불가 또는 판별 실패</td>
+                  <td>전체 E2E</td>
+                  <td>검증 누락보다 실행 비용을 선택하는 안전 기본값</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="flow" class="step">
+          <p class="time">04 · 실행 흐름</p>
+          <h2>matrix는 유지하고 테스트 선택만 바꾼다</h2>
+          <h3 id="branches">브랜치와 PR 대상</h3>
+          <p>
+            현재 작업은 fork의 <code>feat/week-10</code>에서 fork의 <code>develop</code>으로 PR을
+            올린다. fork의 <code>main</code>은 원본과 동기화할 때만 업데이트해 브랜치 충돌을 피하고,
+            과제 변경을 직접 머지하는 대상 브랜치로 사용하지 않는다.
+          </p>
+          <pre class="mermaid" aria-label="fork main 동기화와 develop PR 흐름">
+flowchart LR
+  upstream["원본 저장소<br/>main"] -->|"동기화"| forkMain
+
+  subgraph forkRepo["내 fork 저장소"]
+    direction TB
+    forkMain["main<br/>원본 동기화 전용"] -->|"작업 기준"| develop["develop<br/>PR 머지 대상"]
+    feature["feat/week-10<br/>작업 브랜치"] -->|"Pull Request"| develop
+  end
+
+  classDef source fill:#f1edff,stroke:#8664d7,color:#38286b
+  classDef sync fill:#e3eff8,stroke:#2f6f9e,color:#1f4a6b
+  classDef target fill:#d7eee8,stroke:#056354,color:#17483f
+  classDef feature fill:#fff,stroke:#8664d7,color:#38286b
+  class upstream source
+  class forkMain sync
+  class develop target
+  class feature feature
+  style forkRepo fill:#f7faf9,stroke:#9ab8ae,stroke-width:1px,color:#17483f
+</pre>
+          <pre><code>PR
+  └─ changes
+       ├─ 변경 경로 분류
+       ├─ run_e2e / all / 기능별 신호 출력
+       └─ 판별 실패 → all=true
+
+  └─ E2E matrix (chromium, webkit)
+       ├─ 문서·CSS-only → 설치·build·테스트 step 생략
+       ├─ 기능 변경 → order.spec.ts + 영향 기능 spec
+       └─ all=true → 전체 Playwright 테스트</code></pre>
+          <p>
+            브라우저별 독립 required check는 유지한다. 따라서 두 브라우저가 각각 같은 선택 규칙을
+            적용하고, 한 브라우저에서만 실패해도 어느 엔진에서 문제가 났는지 확인할 수 있다.
+          </p>
+        </section>
+
+        <section id="fallback-fix" class="step">
+          <p class="time">04-A · fallback 수정 계획</p>
+          <h2>감지 실패는 전체 실행으로 복구하고, 테스트 실패는 그대로 중단시킨다</h2>
+          <div class="callout pending">
+            <strong>현재 확인한 문제</strong>
+            <p>
+              <code>changes</code>가 실패한 fallback 경로에서는 각 E2E step의 조건이 계속 참이 될 수
+              있다. 이 상태에서는 checkout이나 설치가 실패해도 뒤의 build와 test가 이어져 최초 실패
+              원인이 흐려질 수 있다. 반면 <code>UNKNOWN=true</code>를 <code>all=true</code>로 바꾸는
+              선택 로직은 같은 입력으로 재현했을 때 정상 동작했다.
+            </p>
+          </div>
+          <pre class="mermaid" aria-label="E2E 변경 감지와 fallback 실패 전파 수정 흐름">
+flowchart TD
+  pr["PR 변경 경로"] --> detect["경로 필터 실행<br/>기능 신호 + unknown 신호"]
+  detect --> detectorResult{"두 감지 step이<br/>모두 성공했나?"}
+
+  detectorResult -->|"아니요"| fallback["scope finalizer<br/>run_e2e=true<br/>all=true · tests=all"]
+  detectorResult -->|"예"| classify{"변경 범위 분류"}
+
+  classify -->|"unknown · shared<br/>fixture · config"| full["전체 실행<br/>run_e2e=true · all=true"]
+  classify -->|"JS/TS 기능 로직"| selected["선택 실행<br/>order + 영향받은 spec"]
+  classify -->|"docs · style only"| skip["무거운 step 생략<br/>run_e2e=false"]
+
+  fallback --> scopeOutput["changes outputs 확정<br/>최종 scope를 로그에 출력"]
+  full --> scopeOutput
+  selected --> scopeOutput
+  skip --> scopeOutput
+
+  scopeOutput --> matrix["Chromium · WebKit job은 항상 표시"]
+  matrix --> shouldRun{"run_e2e=true?"}
+  shouldRun -->|"아니요"| skipped["Report만 남기고 Success<br/>설치 · build · test는 Skipped"]
+  shouldRun -->|"예"| checkout["Checkout"]
+  checkout --> setup["pnpm · Node 설정"]
+  setup --> install["의존성 · 브라우저 설치"]
+  install --> build["Production build"]
+  build --> test["선택된 Playwright 실행"]
+
+  checkout -. "실패" .-> stop["후속 step 중단<br/>해당 브라우저 job은 Failure"]
+  setup -. "실패" .-> stop
+  install -. "실패" .-> stop
+  build -. "실패" .-> stop
+  test -. "실패" .-> stop
+
+  classDef decision fill:#eee7fa,stroke:#7255a5,color:#3e2d5e
+  classDef safe fill:#d7eee8,stroke:#056354,color:#17483f
+  classDef pending fill:#e3eff8,stroke:#2f6f9e,color:#1f4a6b
+  classDef failure fill:#fff0ee,stroke:#b5473c,color:#762820
+  class detectorResult,classify,shouldRun decision
+  class fallback,full,selected,scopeOutput,matrix,test safe
+  class skip,skipped pending
+  class stop failure
+</pre>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                구현과 검증 순서
+              </caption>
+              <thead>
+                <tr>
+                  <th>순서</th>
+                  <th>수정 계획</th>
+                  <th>판정 가능한 완료 기준</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>
+                    두 경로 감지 step의 실패를 scope finalizer가 확인할 수 있게 하고, finalizer는
+                    <code>if: always()</code>로 실행한다.
+                  </td>
+                  <td>감지 step 하나를 실패시켜도 finalizer가 실행된다.</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>
+                    감지 실패나 비정상·누락 출력은 <code>run_e2e=true</code>, <code>all=true</code>,
+                    빈 <code>test_files</code>로 변환한다.
+                  </td>
+                  <td>감지 실패 로그에 fallback 사유와 <code>tests=all</code>이 함께 표시된다.</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>
+                    E2E의 무거운 step 조건에서는 감지 job 실패를 직접 우회하는 식을 제거하고, 확정된
+                    <code>run_e2e</code> 출력만 사용한다.
+                  </td>
+                  <td>checkout 또는 설치가 실패하면 뒤의 build와 test가 실행되지 않는다.</td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>
+                    <code>Select test scope</code>가 입력 신호와 최종
+                    <code>all</code>·<code>run_e2e</code>·<code>tests</code>를 일반 로그에도
+                    출력하게 한다.
+                  </td>
+                  <td>
+                    스크립트 원문을 최종 결과로 오해하지 않고 Detect job에서 판정값을 확인한다.
+                  </td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>정상 분류, unknown, 감지 실패, 중간 step 실패를 각각 검증한다.</td>
+                  <td>
+                    unknown·감지 실패는 전체 실행되고, docs/style은 생략되며, E2E 준비 실패는 해당
+                    browser job을 실패시킨다.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout cold">
+            <strong>현재 단계</strong>
+            <p>
+              이 절은 아직 구현·Actions 재검증 전인 수정 계획이다. workflow 변경 후 실제 PR 로그를
+              확인하기 전에는 완료로 표시하지 않는다.
+            </p>
+          </div>
+          <div class="callout cold">
+            <strong>이후 상태 · 2026-09-11</strong>
+            <p>
+              위 계획은 구현과 Actions 검증을 모두 마쳤다. 계획과 달라진 판단은
+              <a href="#fallback-impl">04-B 구현 결과</a>, 실행 로그 대조는
+              <a href="#actions-verify">04-C Actions 검증 결과</a>에 있다. 이 절은 당시 계획
+              기록으로 그대로 둔다.
+            </p>
+          </div>
+        </section>
+
+        <section id="fallback-impl" class="step">
+          <p class="time">04-B · fallback 구현 결과 · 2026-09-11</p>
+          <h2>계획을 구현하며 바꾼 것과 그 이유</h2>
+          <p>
+            앞 절 <a href="#fallback-fix">04-A fallback 수정 계획</a>은 그대로 둔다. 이 절은 실제
+            <code>.github/workflows/e2e.yml</code>에 반영하면서 계획과 달라진 부분만 덧붙인
+            기록이다.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>
+                계획과 구현의 차이
+              </caption>
+              <thead>
+                <tr>
+                  <th>계획(04-A)</th>
+                  <th>구현</th>
+                  <th>바꾼 이유</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    감지 실패를 <code>changes</code> job 안에서 흡수해
+                    <code>changes</code> outputs를 확정한다.
+                  </td>
+                  <td>
+                    <code>e2e</code> job의 첫 step <code>Finalize E2E scope</code>에서 흡수하고,
+                    이후 step은 <code>steps.scope.outputs.*</code>만 참조한다.
+                  </td>
+                  <td>
+                    <code>changes</code> job이 실패하면 그 job의 outputs 자체가 생성되지 않는다.
+                    같은 job 안에서는 fallback 값을 만들 수 없어 소비하는 쪽으로 옮겼다.
+                  </td>
+                </tr>
+                <tr>
+                  <td>finalizer를 <code>if: always()</code>로 실행한다.</td>
+                  <td>finalizer를 <code>if: ${{ !cancelled() }}</code>로 실행한다.</td>
+                  <td>
+                    흡수할 대상은 감지 실패이지 실행 취소가 아니다. <code>always()</code>는 취소된
+                    실행에서도 scope를 확정해 뒤 step의 조건 평가를 남긴다.
+                  </td>
+                </tr>
+                <tr>
+                  <td>무거운 step은 확정된 <code>run_e2e</code> 출력만 사용한다.</td>
+                  <td>
+                    조건을
+                    <code
+                      >!cancelled() &amp;&amp; !failure() &amp;&amp; steps.scope.outputs.run_e2e ==
+                      'true'</code
+                    >
+                    로 통일했다. <code>success()</code>를 쓰지 않았다.
+                  </td>
+                  <td>
+                    <code>e2e</code> job이 <code>if: always()</code>라 <code>success()</code>의 평가
+                    범위를 오해하기 쉽다. <code>!failure()</code>는 이 job의 이전 step 실패만 본다는
+                    점을 식에서 드러낸다.
+                  </td>
+                </tr>
+                <tr>
+                  <td>감지 실패를 fallback 조건으로 삼는다.</td>
+                  <td>
+                    감지 job이 <code>success</code>인데 <code>run_e2e</code> 출력이 비어 있는 경우도
+                    같은 fallback으로 처리하고, 사유 문구를 두 경우로 나눠 출력한다.
+                  </td>
+                  <td>
+                    step 조건 때문에 <code>Select test scope</code>가 건너뛰어도 job은
+                    <code>success</code>가 된다. 이때 출력이 비면 조용히 전체 스킵이 되므로 막았다.
+                  </td>
+                </tr>
+                <tr>
+                  <td>최종 scope를 일반 로그에 출력한다.</td>
+                  <td>
+                    <code>run_e2e=false</code>일 때 <code>tests=(skipped)</code>로 표기한다.
+                    실행하지 않는 <code>test_files</code> 초기값을 그대로 찍지 않는다.
+                  </td>
+                  <td>
+                    스킵된 실행에서 <code>tests=e2e/order.spec.ts</code>가 보이면 실행 목록으로
+                    오해할 수 있다. 이번 문제 자체가 로그 오독에서 시작했다.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>구현된 흐름</h3>
+          <pre class="mermaid" aria-label="구현된 E2E 조건부 실행과 fallback, 실패 전파 흐름">
+flowchart TD
+  pr["PR 변경 경로"]
+
+  subgraph detectJob["Detect E2E scope job"]
+    filters["Detect changed paths<br/>Detect unknown paths"]
+    select["Select test scope<br/>scope inputs · scope result 로그"]
+    classify{"변경 범위 분류"}
+    unknownAll["all=true · run_e2e=true<br/>tests=all"]
+    sharedAll["all=true · run_e2e=true<br/>tests=all"]
+    selectedRun["all=false · run_e2e=true<br/>order + 영향받은 spec"]
+    skipScope["run_e2e=false<br/>tests=skipped"]
+    jobFail["Detect job = failure<br/>outputs 생성 안 됨"]
+
+    filters --> select
+    select --> classify
+    classify -->|"unknown"| unknownAll
+    classify -->|"shared · fixtures · config"| sharedAll
+    classify -->|"JS/TS 로직"| selectedRun
+    classify -->|"docs · style only"| skipScope
+    filters -. "감지 step 실패" .-> jobFail
+  end
+
+  subgraph e2eJob["E2E chromium · E2E webkit — matrix job은 서로 독립"]
+    finalize["Finalize E2E scope<br/>if: not cancelled"]
+    trust{"result=success 이고<br/>run_e2e 출력이 있나?"}
+    fallback["fallback 승격<br/>all=true · run_e2e=true · tests=all<br/>사유를 로그에 출력"]
+    passthrough["감지 결과를 그대로 사용"]
+    gate{"run_e2e = true?"}
+    skipped["이후 step 전부 Skipped<br/>job은 Success"]
+    checkout["Checkout"]
+    setup["pnpm · Node 설정"]
+    install["의존성 · 브라우저 설치"]
+    build["Production build"]
+    test["선택된 Playwright 실행"]
+    halt["not failure 가 거짓이 됨<br/>후속 step Skipped · 해당 job Failure"]
+
+    finalize --> trust
+    trust -->|"아니요"| fallback
+    trust -->|"예"| passthrough
+    fallback --> gate
+    passthrough --> gate
+    gate -->|"아니요"| skipped
+    gate -->|"예"| checkout
+    checkout --> setup
+    setup --> install
+    install --> build
+    build --> test
+    checkout -. "실패" .-> halt
+    setup -. "실패" .-> halt
+    install -. "실패" .-> halt
+    build -. "실패" .-> halt
+    test -. "실패" .-> halt
+  end
+
+  pr --> filters
+  unknownAll --> finalize
+  sharedAll --> finalize
+  selectedRun --> finalize
+  skipScope --> finalize
+  jobFail --> finalize
+
+  classDef decision fill:#eee7fa,stroke:#7255a5,color:#3e2d5e
+  classDef safe fill:#d7eee8,stroke:#056354,color:#17483f
+  classDef pending fill:#e3eff8,stroke:#2f6f9e,color:#1f4a6b
+  classDef failure fill:#fff0ee,stroke:#b5473c,color:#762820
+  class classify,trust,gate decision
+  class unknownAll,sharedAll,selectedRun,fallback,passthrough,checkout,setup,install,build,test safe
+  class skipScope,skipped pending
+  class jobFail,halt failure
+</pre>
+
+          <h3>로컬에서 재현한 판정</h3>
+          <p>
+            workflow YAML에서 두 step의 <code>run:</code> 본문을 그대로 추출해 같은 환경 변수로
+            실행한 결과다. 스크립트를 옮겨 적지 않고 파일에서 뽑아 돌렸다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                2026-09-11 로컬 재현 · 모두 기대값과 일치
+              </caption>
+              <thead>
+                <tr>
+                  <th>대상 step</th>
+                  <th>입력</th>
+                  <th>기대 결과</th>
+                  <th>실제 출력</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Select test scope</td>
+                  <td><code>UNKNOWN=true</code></td>
+                  <td>all=true · run_e2e=true · tests=all</td>
+                  <td><code>scope result: all=true, run_e2e=true, tests=all</code></td>
+                </tr>
+                <tr>
+                  <td>Select test scope</td>
+                  <td><code>UNKNOWN=false LOGIC=false</code> (docs만)</td>
+                  <td>run_e2e=false</td>
+                  <td><code>scope result: all=false, run_e2e=false, tests=(skipped)</code></td>
+                </tr>
+                <tr>
+                  <td>Select test scope</td>
+                  <td><code>LOGIC=true AUTH=true</code></td>
+                  <td>run_e2e=true · order + auth 계열</td>
+                  <td>
+                    <code>tests=e2e/order.spec.ts e2e/auth.spec.ts e2e/logout.spec.ts</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Finalize E2E scope</td>
+                  <td><code>CHANGES_RESULT=failure</code></td>
+                  <td>fallback 사유 + all=true · run_e2e=true · tests=all</td>
+                  <td>
+                    <code
+                      >E2E fallback: Detect E2E scope job 결과가 'failure'. … / scope result:
+                      all=true, run_e2e=true, tests=all</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>Finalize E2E scope</td>
+                  <td><code>CHANGES_RESULT=success RUN_E2E=</code></td>
+                  <td>출력 누락 사유로 fallback</td>
+                  <td>
+                    <code
+                      >E2E fallback: Detect E2E scope job은 성공했지만 run_e2e 출력이 비어 있음.
+                      …</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>Finalize E2E scope</td>
+                  <td><code>CHANGES_RESULT=success RUN_E2E=false</code></td>
+                  <td>스킵 유지</td>
+                  <td><code>scope result: all=false, run_e2e=false, tests=(skipped)</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout pending">
+            <strong>아직 Actions에서 확인하지 않은 것</strong>
+            <p>
+              아래는 로컬 재현으로 대신할 수 없는 항목이다. 실제 PR 실행 로그를 보기 전까지 완료로
+              표시하지 않는다.
+            </p>
+            <ul>
+              <li>
+                <code>!failure()</code>가 <code>if: always()</code> job 안에서 이 job의 이전 step
+                실패만 보는지. 판정 기준은 <strong>Checkout을 의도적으로 실패시켰을 때</strong>
+                <code>Set up pnpm</code> 이후가 모두 Skipped이고 해당 browser job이 Failure인지다.
+              </li>
+              <li>
+                감지 실패 fallback에서 <code>Finalize E2E scope</code>가 실행되고 이후 step이 모두
+                도는지. 판정 기준은 <code>E2E fallback:</code> 줄과
+                <code>scope result: all=true, run_e2e=true, tests=all</code>이 함께 남는지다.
+              </li>
+              <li>
+                두 matrix job이 독립적으로 결과를 내는지. 판정 기준은 한쪽 browser만 실패했을 때
+                다른 쪽이 Success로 끝나는지다.
+              </li>
+              <li>
+                <code>Detect E2E scope</code>, <code>E2E (chromium)</code>,
+                <code>E2E (webkit)</code> 세 check가 스킵 PR에서도 모두 결과를 내 머지 가능 상태가
+                되는지.
+              </li>
+            </ul>
+          </div>
+          <div class="callout cold">
+            <strong>이후 상태</strong>
+            <p>
+              위 네 항목은 2026-09-11 Actions 실행으로 모두 확인했다. 결과는 아래
+              <a href="#actions-verify">04-C Actions 검증 결과</a>에 있다. 위 목록은 당시 판단
+              기록으로 그대로 둔다.
+            </p>
+          </div>
+        </section>
+
+        <section id="actions-verify" class="step">
+          <p class="time">04-C · Actions 검증 결과 · 2026-09-11</p>
+          <h2>PR 6개로 정상 분류 네 가지와 실패 경로 두 가지를 확인했다</h2>
+          <p>
+            base 브랜치 <code>feat/week-10</code>에 수정을 반영한 뒤 각 PR 브랜치에 병합해
+            재실행했다. <code>pull_request</code>는 PR 브랜치 쪽 workflow 파일로 실행되므로, base만
+            갱신해서는 옛 workflow가 그대로 돈다.
+          </p>
+
+          <h3>정상 분류 네 가지</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                PR #13–#16 · 로컬 예측값과 실제 로그가 모두 일치
+              </caption>
+              <thead>
+                <tr>
+                  <th>PR</th>
+                  <th>변경 파일</th>
+                  <th>scope result</th>
+                  <th>실행 테스트</th>
+                  <th>E2E job</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#13 docs-only</td>
+                  <td><code>docs/week-10/e2e-conditional-execution.html</code></td>
+                  <td><code>all=false, run_e2e=false, tests=(skipped)</code></td>
+                  <td>0개</td>
+                  <td>Checkout 이후 7개 step Skipped · Success</td>
+                </tr>
+                <tr>
+                  <td>#14 order</td>
+                  <td><code>e2e/order.spec.ts</code></td>
+                  <td><code>all=false, run_e2e=true, tests=e2e/order.spec.ts</code></td>
+                  <td>1개</td>
+                  <td>전 step 실행 · Success</td>
+                </tr>
+                <tr>
+                  <td>#15 auth</td>
+                  <td><code>e2e/auth.spec.ts</code></td>
+                  <td><code>tests=order + auth + logout</code></td>
+                  <td>5개</td>
+                  <td>전 step 실행 · Success</td>
+                </tr>
+                <tr>
+                  <td>#16 unknown</td>
+                  <td><code>public/toggle.svg</code></td>
+                  <td><code>all=true, run_e2e=true, tests=all</code></td>
+                  <td>15개</td>
+                  <td>전 step 실행 · Success</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            브라우저당 실행 테스트가 0 → 1 → 5 → 15로 벌어졌다. 조건부 실행이 실제로 범위를 줄이고
+            있다는 증거다. #13에서도 <code>Detect E2E scope</code>, <code>E2E (chromium)</code>,
+            <code>E2E (webkit)</code> 세 check가 모두 결과를 내 머지 가능 상태가 됐다.
+          </p>
+
+          <h3>실패 경로 두 가지</h3>
+          <p>
+            정상 경로만으로는 이번 수정이 효과가 있는지 증명되지 않아, 버리는 브랜치에서 각 지점을
+            의도적으로 깨뜨렸다. 두 PR은 머지하지 않는다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                PR #17–#18 · 실험 브랜치
+              </caption>
+              <thead>
+                <tr>
+                  <th>PR</th>
+                  <th>깨뜨린 지점</th>
+                  <th>관찰된 결과</th>
+                  <th>판정</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#17 감지 실패</td>
+                  <td>
+                    <code>Detect changed paths</code>의 <code>filters</code> YAML을 닫히지 않은 flow
+                    sequence로 변경
+                  </td>
+                  <td>
+                    <code>Detect E2E scope</code> = failure, 이후 두 step Skipped.<br />
+                    <code
+                      >E2E fallback: … 결과가 'failure'. 분류를 신뢰할 수 없어 전체 E2E로
+                      승격한다</code
+                    ><br />
+                    <code>scope result: all=true, run_e2e=true, tests=all</code> · 15개 실행
+                  </td>
+                  <td>기대값과 일치</td>
+                </tr>
+                <tr>
+                  <td>#18 step 실패</td>
+                  <td><code>Checkout</code>에 존재하지 않는 <code>ref</code> 지정</td>
+                  <td>
+                    <code>Checkout</code> = failure, <code>Set up pnpm</code>부터
+                    <code>Run selected E2E tests</code>까지 6개 step Skipped.<br />
+                    <code>E2E (chromium)</code>과 <code>E2E (webkit)</code>이 각각 독립적으로
+                    Failure
+                  </td>
+                  <td>기대값과 일치</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout">
+            <strong>#18이 이번 수정의 직접 증거다</strong>
+            <p>
+              수정 전 조건에서는 감지 실패 경로에서 식이 <code>!cancelled()</code>로 축소돼
+              <code>success()</code>가 평가되지 않았다. 같은 자리에서 이제 <code>!failure()</code>가
+              후속 step을 막는다는 것이 실행 로그로 확인됐다.
+            </p>
+            <p>
+              <code>uses:</code>의 action SHA를 깨는 방법은 쓰지 않았다. GitHub이
+              <code>Set up job</code> 단계에서 action을 미리 내려받다 실패해 job 전체가 step 실행
+              전에 끝나므로, step 단위 가드가 동작했는지 판별할 수 없다.
+            </p>
+          </div>
+
+          <div class="callout pending">
+            <strong>같이 드러난 flaky 사례 · 정책 미결정</strong>
+            <p>
+              #17의 fallback 실행에서 Chromium job이 Failure로 끝났다. fallback 결함이 아니라 테스트
+              하나가 실패한 것이다.
+            </p>
+            <pre><code>✘ [chromium] e2e/state-restoration.spec.ts:110
+  debounce가 끝난 검색어는 뒤로·앞으로 이동에서 검색 결과와 함께 복원된다 (12.5s)
+  Error: expect(locator).toBeVisible() failed
+  &gt; 118 | await expect(page.getByText('총 4개', { exact: true })).toBeVisible()
+  Timeout: 10000ms · element(s) not found</code></pre>
+            <p>
+              같은 실행의 WebKit은 15개 모두 통과했고, 같은 spec이 #16에서는 두 브라우저 모두
+              통과했다. 같은 코드가 실행마다 다른 결과를 냈으므로 flaky 신호로 분류한다. retry를
+              켤지, 어떤 조건에서 최초 실패를 남길지는 작성자가 정한다. 이 문서에서는 판정하지
+              않는다.
+            </p>
+          </div>
+          <div class="callout cold">
+            <strong>이후 결정</strong>
+            <p>
+              위 「정책 미결정」은 당시 기록으로 그대로 둔다. 2026-09-11에 작성자가 정책을 정하고
+              검증했다. 아래
+              <a href="#flaky-policy">04-D flaky 대응 정책</a>에 있다.
+            </p>
+          </div>
+        </section>
+
+        <section id="flaky-policy" class="step">
+          <p class="time">04-D · flaky 대응 정책 · 2026-09-11</p>
+          <h2>재료를 남기고, 메시지가 말하게 한 다음, 재시도를 켰다</h2>
+          <p>
+            조사 시점에 문제가 두 겹이었다. 실패가 흔들림인지 진짜인지 구분할 수 없었고, 구분에
+            필요한 재료조차 남지 않았다. <code>trace</code>는 <code>retain-on-failure</code>로
+            만들어지지만 job이 끝나면 사라졌고 <code>retries</code>도 설정되어 있지 않았다.
+          </p>
+          <div class="callout warning">
+            <strong>순서를 뒤집으면 감추는 쪽이 된다</strong>
+            <p>
+              재료가 없는 상태에서 재시도부터 켜면 초록불은 빨리 돌아오지만 원인은 계속 모른다.
+              과제가 말하는 &ldquo;retry로 실패를 감추는 게 목적이 아니라 흔들림과 진짜 실패를
+              구분&rdquo;하는 것과 반대가 된다. 그래서 증거 → 메시지 → 재시도 순으로 넣었다.
+            </p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                적용한 세 가지
+              </caption>
+              <thead>
+                <tr>
+                  <th>순서</th>
+                  <th>내용</th>
+                  <th>위치</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1 · 증거 보존</td>
+                  <td>
+                    테스트가 실행된 job은 <code>test-results/</code>를 아티팩트로 올린다(7일). 전부
+                    통과하면 trace가 지워져 디렉터리가 비므로
+                    <code>if-no-files-found: ignore</code>로 아티팩트를 만들지 않는다.
+                  </td>
+                  <td><code>.github/workflows/e2e.yml</code></td>
+                </tr>
+                <tr>
+                  <td>2 · 실패 메시지</td>
+                  <td>
+                    상품 목록은 갱신 실패 시 이전 결과를 유지하고 배너만 띄워, 개수 단언이
+                    &ldquo;로딩 중&rdquo;과 &ldquo;갱신 실패&rdquo;를 구분하지 못했다. 배너 상태를
+                    실패 메시지에 담는다.
+                  </td>
+                  <td><code>e2e/fixtures/product-list-assertions.ts</code></td>
+                </tr>
+                <tr>
+                  <td>3 · 재시도</td>
+                  <td>
+                    <code>retries: process.env.CI ? 2 : 0</code>. 로컬은 0으로 두어 흔들림을 즉시
+                    보고, CI에서만 2회 재시도한다. 재시도로 통과하면 <code>flaky</code>로 보고되고
+                    최초 실패 메시지도 리포트에 남는다.
+                  </td>
+                  <td><code>playwright.config.ts</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            반복 실패는 재시도로 덮지 않는다. 같은 spec이 계속 flaky로 남으면 trace를 근거로 원인을
+            고치거나 격리 여부를 판단한다.
+          </p>
+
+          <h3>자가 검증 — PR #19</h3>
+          <p>
+            <code>testInfo.retry === 0</code>일 때만 실패하는 테스트로 flaky를 결정적으로 재현했다.
+            무작위가 아니라 매번 같은 결과가 나오므로 관찰이 확실하다. 두 브라우저 모두 같은
+            결과였다.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                확인 항목과 결과
+              </caption>
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>결과</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>재시도 동작</td>
+                  <td>
+                    첫 시도 실패 &rarr; <code>retry #1</code> 통과 &rarr; <code>1 flaky</code> 표기,
+                    job은 Success
+                  </td>
+                </tr>
+                <tr>
+                  <td>아티팩트 업로드</td>
+                  <td>
+                    <code>playwright-chromium-attempt1</code> 2.42MB ·
+                    <code>playwright-webkit-attempt1</code> 2.25MB
+                  </td>
+                </tr>
+                <tr>
+                  <td>첫 실패 trace 보존</td>
+                  <td>
+                    아티팩트에 <code>trace.zip</code>(64 files)과 <code>error-context.md</code>가
+                    있고 최초 실패 사유가 들어 있다
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warning">
+            <strong>이 검증에서 잡은 결함</strong>
+            <p>
+              첫 시도에서는 업로드 조건이
+              <code>steps.e2e.conclusion == 'failure'</code>였고 아티팩트가 0개였다. 재시도로 통과한
+              flaky는 step이 <code>success</code>라 조건에 걸리지 않아, 정작 필요한 첫 실패 trace가
+              버려졌다. 조건을 <code>!= 'skipped'</code>로 고친 뒤 위 결과를 얻었다.
+            </p>
+            <p>
+              정상 실패는 잡고 flaky만 놓치는 형태였다. 결정적 flaky를 만들어 돌리지 않았다면 실제
+              flaky가 날 때까지 드러나지 않았을 결함이다.
+            </p>
+          </div>
+          <div class="callout">
+            <strong>함께 해소된 미확인 항목</strong>
+            <p>
+              <code>retain-on-failure</code>가 재시도로 통과한 경우 첫 실패 시도의 trace를 지우는지
+              확인하지 못한 상태였다. 지우지 않는 것으로 확인됐다.
+              <code>trace: 'on-first-retry'</code>로 바꿀 필요는 없다.
+            </p>
+          </div>
+        </section>
+
+        <section id="required" class="step">
+          <p class="time">05 · required와 생략</p>
+          <h2>workflow는 시작하고, matrix job은 화면에 남긴다</h2>
+          <div class="callout">
+            <strong>workflow-level 경로 제외는 사용하지 않는다</strong>
+            <p>
+              <code>paths-ignore</code>로 workflow 자체를 생략하면 required check가 생성되지 않아
+              PR이 대기할 수 있다. 변경 감지 job은 항상 실행하고, E2E matrix 안에서 실행 step을
+              조건부로 생략한다.
+            </p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                문서·CSS-only PR에서 기대하는 화면
+              </caption>
+              <thead>
+                <tr>
+                  <th>check</th>
+                  <th>표시</th>
+                  <th>의미</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>changes</td>
+                  <td>Success</td>
+                  <td>변경 범위를 판별함</td>
+                </tr>
+                <tr>
+                  <td>E2E (chromium)</td>
+                  <td>Success</td>
+                  <td>job은 생성됐지만 무거운 step은 Skipped</td>
+                </tr>
+                <tr>
+                  <td>E2E (webkit)</td>
+                  <td>Success</td>
+                  <td>job은 생성됐지만 무거운 step은 Skipped</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            `develop`의 `merge-required-ci` ruleset과 네 required check는 PR #12에서 확인했다.
+            문서-only PR에서도 job 자체는 생성되고 무거운 step만 생략되는 것을 PR #13에서 확인했다.
+            판별 실패를 성공으로 처리하는 우회 경로는 만들지 않는다.
+          </p>
+        </section>
+
+        <section id="steps" class="step">
+          <p class="time">06 · 구현 순서</p>
+          <h2>작은 변경부터 차례로 적용한다</h2>
+          <ol>
+            <li>
+              <code>changes</code> job을 추가하고 <code>paths-filter</code>를 커밋 SHA로 고정한다.
+            </li>
+            <li>기능·spec·fixture·설정 경로를 필터로 선언하고 outputs를 만든다.</li>
+            <li>E2E matrix job에 <code>needs: changes</code>를 연결한다.</li>
+            <li><code>all</code>이면 전체 테스트, 아니면 필수 order와 영향 spec을 선택한다.</li>
+            <li>문서·CSS-only에서는 install, browser install, build, test step을 생략한다.</li>
+            <li>알 수 없는 변경과 판별 실패의 fallback을 전체 E2E로 연결한다.</li>
+            <li>구현 결과와 실제 PR 로그를 RFC에 기록한다.</li>
+          </ol>
+          <div class="callout" style="border-color: #7255a5; background: #eee7fa; color: #3e2d5e">
+            <strong>다음 검증 항목</strong>
+            <p>
+              <a href="../../.github/workflows/e2e.yml">e2e.yml</a>에 <code>changes</code> job과
+              조건부 테스트 선택을 추가했다. 로직·fixture·설정 변경이 포함된 PR의 전체 실행과
+              <code>develop</code> required ruleset, 문서-only PR의 E2E 생략을 확인했다. 다음
+              PR에서는 기능 로직 변경 시 필수 order와 영향받은 spec만 선택되는지 확인하고, 알 수
+              없는 경로는 전체 E2E로 fallback되는지 확인한다.
+            </p>
+          </div>
+          <div class="callout cold">
+            <strong>확인 이력 · 2026-09-11 · 위 항목 모두 완료</strong>
+            <p>
+              위 「다음 검증 항목」과 아래 「업데이트 계획」은 실행을 마쳤다. 당시 계획 기록으로
+              그대로 두고 결과만 여기 적는다.
+            </p>
+            <ul>
+              <li>
+                문서-only 생략 — PR #13에서
+                <code>run_e2e=false</code>, Checkout 이후 7개 step Skipped, 두 job 모두 Success
+              </li>
+              <li>기능별 선택 실행 — PR #14는 order 1개, PR #15는 order·auth·logout 5개</li>
+              <li>알 수 없는 경로 fallback — PR #16에서 <code>all=true</code>, 15개 전체 실행</li>
+              <li>
+                감지 실패 fallback — PR #17에서 <code>E2E fallback:</code> 로그와
+                <code>tests=all</code>, 15개 전체 실행
+              </li>
+            </ul>
+            <p>상세 대조는 <a href="#actions-verify">04-C Actions 검증 결과</a>에 있다.</p>
+          </div>
+          <div class="callout" style="border-color: #7255a5; background: #eee7fa; color: #3e2d5e">
+            <strong>업데이트 계획 · 문서-only 검증 브랜치</strong>
+            <p>
+              <code>develop</code> 머지가 어려운 경우, 현재 workflow가 반영된
+              <code>feat/week-10</code>에서 <code>feat/week-10-docs-only</code>를 새로 만든다. 새
+              브랜치에서는 <code>docs/week-10/</code> 아래 문서만 작게 수정하고, PR의 base를
+              <code>feat/week-10</code>으로 지정해 diff를 문서-only로 만든다.
+            </p>
+            <ul>
+              <li><code>Detect E2E scope</code>: <code>run_e2e=false</code></li>
+              <li>Chromium·WebKit job은 생성되고 install·browser install·build·test는 Skipped</li>
+              <li>Quality는 기존대로 실행</li>
+            </ul>
+            <p>
+              이 PR의 base가 <code>develop</code>이 아니므로 네 check가 Required로 표시되지 않을 수
+              있다. 생략 동작은 이 PR에서 검증하고, required 표시는 <code>develop</code> 대상 PR #12
+              증거를 사용한다.
+            </p>
+          </div>
+        </section>
+
+        <section id="verify" class="step">
+          <p class="time">07 · 검증 계획</p>
+          <h2>로컬 조합은 통과했고, PR에서 생략과 실행을 증명한다</h2>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                구현 후 확인할 PR
+              </caption>
+              <thead>
+                <tr>
+                  <th>검증 PR</th>
+                  <th>확인할 내용</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>문서-only 또는 CSS-only</td>
+                  <td>changes 성공, 두 E2E job 생성, 무거운 step 생략, required 통과</td>
+                </tr>
+                <tr>
+                  <td>인증 또는 주문 로직</td>
+                  <td>두 브라우저에서 order 필수 실행과 영향 spec 추가 실행</td>
+                </tr>
+                <tr>
+                  <td>fixture·설정 변경</td>
+                  <td>두 브라우저에서 전체 E2E 실행</td>
+                </tr>
+                <tr>
+                  <td>분류 불가 경로 또는 감지 실패 재현</td>
+                  <td>생략하지 않고 전체 E2E로 fallback</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>로컬 런타임 검증 완료</strong>
+            <p>
+              <code>order.spec.ts</code>를 Chromium·WebKit에서 실행해 2개 테스트가 9.3초에 통과했다.
+              인증 변경 시 선택하는 <code>order.spec.ts</code> + <code>auth.spec.ts</code> +
+              <code>logout.spec.ts</code> 조합은 두 브라우저에서 10개 테스트가 17.3초에 통과했다.
+            </p>
+            <p>
+              이 결과는 선택된 spec 경로와 애플리케이션 런타임을 확인한 것이다.
+              <code>paths-filter</code>의 실제 PR 분류와 GitHub Actions의
+              <code>Skipped</code>·required 상태는 push 후 별도로 확인한다. 이 확인은 2026-09-11에
+              PR #13~#17로 마쳤다(<a href="#actions-verify">04-C</a>).
+            </p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 01 로컬 검증 완료</strong>
+            <p>2026-09-10 · 커밋 전 작업 트리에서 아래 검증을 완료했다.</p>
+            <ul>
+              <li>
+                정적 검사: <code>pnpm exec prettier --check ...</code>와
+                <code>git diff --check</code> 통과
+              </li>
+              <li>
+                필수 주문 흐름: <code>order.spec.ts</code> · Chromium/WebKit · 2 passed · 9.3초
+              </li>
+              <li>
+                인증 영향 조합: <code>order.spec.ts</code> + <code>auth.spec.ts</code> +
+                <code>logout.spec.ts</code> · Chromium/WebKit · 10 passed · 17.3초
+              </li>
+            </ul>
+            <p>
+              판정: 선택된 spec 조합은 통과했다. 변경 경로 분류와 실제 step 생략·required 상태는
+              커밋·push 후 다음 단계에서 확인한다.
+            </p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                단계별 검증 상태
+              </caption>
+              <thead>
+                <tr>
+                  <th>단계</th>
+                  <th>상태</th>
+                  <th>완료 조건</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>01 · 로컬 정적·E2E 검증</td>
+                  <td>완료</td>
+                  <td>정적 검사와 선택 spec 조합이 통과함</td>
+                </tr>
+                <tr>
+                  <td>02 · 변경 파일 확인</td>
+                  <td>완료</td>
+                  <td>workflow 1개와 Week 10 문서 3개만 변경됨</td>
+                </tr>
+                <tr>
+                  <td>03 · 커밋·push</td>
+                  <td>완료</td>
+                  <td>커밋·push 완료. SHA와 PR workflow URL을 기록함</td>
+                </tr>
+                <tr>
+                  <td>04 · PR workflow 기본 실행</td>
+                  <td>완료</td>
+                  <td>changes 성공과 두 browser의 전체 실행·통과를 확인함</td>
+                </tr>
+                <tr>
+                  <td>05 · required ruleset·PR 표시</td>
+                  <td>완료</td>
+                  <td>develop ruleset과 PR Merge box에서 4개 required check를 확인함</td>
+                </tr>
+                <tr>
+                  <td>06 · 문서-only E2E 생략</td>
+                  <td>완료</td>
+                  <td>PR #13 2차 실행에서 두 browser job의 무거운 step이 모두 Skipped됨</td>
+                </tr>
+                <tr>
+                  <td>07 · order 선택 실행</td>
+                  <td>완료</td>
+                  <td>all=false와 order.spec.ts 선택, Chromium·WebKit 실행·통과를 확인함</td>
+                </tr>
+                <tr>
+                  <td>08 · auth 선택 실행</td>
+                  <td>완료</td>
+                  <td>all=false와 order·auth·logout spec 선택, 두 브라우저 통과를 확인함</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 02 변경 파일 확인 완료</strong>
+            <p>2026-09-10 · stage 전 작업 트리를 확인했고, 의도한 파일만 남아 있다.</p>
+            <ul>
+              <li><code>.github/workflows/e2e.yml</code> · 변경</li>
+              <li><code>docs/rfc/week10-ci.md</code> · 변경</li>
+              <li><code>docs/week-10/action-plan.html</code> · 변경</li>
+              <li><code>docs/week-10/e2e-conditional-execution.html</code> · 새 파일</li>
+            </ul>
+            <p>판정: 위 4개 파일 외의 변경은 확인되지 않았다.</p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 03 커밋·push 완료</strong>
+            <p>2026-09-10 · 사용자가 커밋과 원격 브랜치 push를 완료했다.</p>
+            <p>커밋 SHA와 PR workflow URL을 문서에 기록했고 04단계에서 Actions 결과를 확인했다.</p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 04 PR workflow 기본 실행 완료</strong>
+            <p>PR #12 · 커밋 <code>2be0c27b5a96bc70bb5a6c931088ab6a64a16f27</code> · 2026-09-10</p>
+            <ul>
+              <li>
+                E2E workflow:
+                <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34485921731"
+                  >34485921731</a
+                >
+                · 전체 2분 25초
+              </li>
+              <li>
+                Quality workflow:
+                <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34485921733"
+                  >34485921733</a
+                >
+                · 전체 1분 8초 · quality job 1분 4초
+              </li>
+              <li>scope: <code>run_e2e=true</code> · <code>all=true</code> · tests=all</li>
+              <li>Chromium: 15 passed · 24.0초 · job 1분 26초</li>
+              <li>WebKit: 15 passed · 39.0초 · job 2분 12초</li>
+              <li>
+                changes 결과: docs/auth/fixtures/config/logic/unknown이 감지됐고, 현재 PR에는
+                설정·fixture 변경이 포함되어 전체 실행으로 판정됨
+              </li>
+            </ul>
+            <p>
+              판정: 이 PR에서 전체 실행과 두 browser의 성공을 확인했다. 문서-only 변경에서 무거운
+              step을 생략하는 동작만 별도 PR에서 확인한다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 05 develop required ruleset 설정 완료</strong>
+            <p>2026-09-10 · ruleset <code>merge-required-ci</code>를 저장했다.</p>
+            <ul>
+              <li>대상 브랜치: <code>develop</code></li>
+              <li>Require a pull request before merging: 활성화</li>
+              <li>Require status checks to pass: 활성화</li>
+              <li>
+                Required checks: <code>quality</code>, <code>Detect E2E scope</code>,
+                <code>E2E (chromium)</code>, <code>E2E (webkit)</code>
+              </li>
+              <li>Require branches to be up to date: 해제</li>
+            </ul>
+            <p>
+              판정: develop에 required ruleset이 적용됐고, PR #12 Merge box에서 네 check가 실제로
+              required로 표시되는 것을 확인했다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 05 PR required 표시 확인 완료</strong>
+            <p>2026-09-10 · PR #12 Merge box에서 4개 check가 모두 Required로 표시됐다.</p>
+            <ul>
+              <li>E2E / Detect E2E scope · Required · 5초</li>
+              <li>E2E / E2E (chromium) · Required · 1분</li>
+              <li>E2E / E2E (webkit) · Required · 2분</li>
+              <li>Quality / quality · Required · 1분</li>
+            </ul>
+            <p>
+              Merge box에는 `All checks have passed`와 `No conflicts with base branch`가 표시됐다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #7255a5; background: #eee7fa; color: #3e2d5e">
+            <strong>검증 로그 · 06 문서-only 1차 판별 실패</strong>
+            <p>
+              2026-09-11 · 문서-only
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/pull/13">PR #13</a>은
+              <code>feat/week-10</code>을 base로 두고
+              <code>docs/week-10/e2e-conditional-execution.html</code> 한 파일만 변경했다.
+            </p>
+            <ul>
+              <li>
+                Quality:
+                <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34492824338"
+                  >34492824338</a
+                >
+                · 전체 Quality 실행
+              </li>
+              <li>
+                E2E:
+                <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34492824616"
+                  >34492824616</a
+                >
+                · Chromium·WebKit 전체 E2E 실행
+              </li>
+              <li>변경 감지: <code>docs=true</code>와 <code>unknown=true</code>가 동시에 출력됨</li>
+            </ul>
+            <p>
+              원인은 <code>unknown</code> 필터의 <code>**</code>와 제외 패턴을 기본
+              <code>some</code> 판정에서 함께 사용한 것이다. 문서 파일도 <code>**</code>에 먼저
+              매칭되어 전체 실행 fallback으로 들어갔다. 기존 기능 필터는 유지하고
+              <code>unknown</code>만 별도 <code>predicate-quantifier: every</code> 판정으로 분리한
+              뒤 PR #13에서 다시 확인한다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 06 문서-only 2차 검증 완료</strong>
+            <p>
+              2026-09-11 · 문서-only
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/pull/13">PR #13</a> · 커밋
+              <code>317c362b6b09660328661074a4d2d54e0505852c</code>
+            </p>
+            <ul>
+              <li>
+                E2E:
+                <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34494456434"
+                  >34494456434</a
+                >
+                · workflow 약 18초 · Detect E2E scope 약 7초
+              </li>
+              <li>Chromium job 약 5초 · WebKit job 약 3초</li>
+              <li>
+                두 browser job에서 Checkout, pnpm·Node 준비, 의존성·브라우저 설치, build, E2E test
+                step이 모두 Skipped됨
+              </li>
+              <li>
+                Quality:
+                <a
+                  href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34494456435/job/102929215835?pr=13"
+                  >34494456435</a
+                >
+                · 기존 정책대로 전체 검사 실행 · workflow 약 56초
+              </li>
+            </ul>
+            <p>
+              판정: 두 browser의 조건부 step이 모두 생략돼 <code>run_e2e=false</code> 조건이 실제
+              Actions에서 충족된 것을 확인했다. <code>unknown</code> 판정을 별도
+              <code>predicate-quantifier: every</code> step으로 분리한 수정으로 문서 경로의 오탐이
+              해소됐다. Quality는 이번 E2E 생략 정책의 대상이 아니므로 그대로 실행됐다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 07 order 선택 실행 완료</strong>
+            <p>
+              2026-09-11 ·
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/pull/14"
+                >order-only PR #14</a
+              >
+              · 커밋 <code>4adb2c65</code> ·
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34496737026"
+                >E2E workflow 34496737026</a
+              >
+            </p>
+            <ul>
+              <li><code>Detect E2E scope</code>: <code>all=false</code> · 약 6초</li>
+              <li>
+                Chromium·WebKit의 <code>Report selected scope</code>:
+                <code>all=false, tests=e2e/order.spec.ts</code>
+              </li>
+              <li>Chromium job 성공 · 1분 17초</li>
+              <li>WebKit job 성공 · 1분 50초</li>
+            </ul>
+            <p>
+              판정: 주문 관련 변경에서 <code>run_e2e=true</code>로 전환되고
+              <code>e2e/order.spec.ts</code>만 선택되어 두 브라우저에서 실행됐다. 전체 E2E가 아닌
+              기능 범위 선택이 실제 Actions 로그와 일치한다.
+            </p>
+          </div>
+          <div class="callout" style="border-color: #056354; background: #d7eee8; color: #17483f">
+            <strong>검증 로그 · 08 auth 선택 실행 완료</strong>
+            <p>
+              2026-09-11 ·
+              <a href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/pull/15">auth PR #15</a>
+              · 커밋 <code>53934a73</code> ·
+              <a
+                href="https://github.com/im-wen3y/loop-pack-fe-l2-vol1/actions/runs/34498101409?pr=15"
+                >E2E workflow 34498101409</a
+              >
+            </p>
+            <ul>
+              <li><code>Detect E2E scope</code>: <code>all=false</code> · 약 6초</li>
+              <li>
+                Chromium·WebKit의 <code>Report selected scope</code>:
+                <code>all=false, tests=e2e/order.spec.ts e2e/auth.spec.ts e2e/logout.spec.ts</code>
+              </li>
+              <li>Chromium: 5 passed · job 1분 20초</li>
+              <li>WebKit: 5 passed · job 1분 48초</li>
+            </ul>
+            <p>
+              판정: 인증 관련 변경에서 <code>run_e2e=true</code>로 전환되고 주문·인증·로그아웃
+              spec만 선택되어 두 브라우저에서 모두 통과했다. 기능별 선택 규칙이 실제 Actions 로그와
+              일치한다.
+            </p>
+          </div>
+          <h3>직접 따라 하는 실행 순서</h3>
+          <ol>
+            <li>
+              먼저 변경 파일과 workflow diff를 확인한다. 아직 문서와 코드가 섞여 있다면 이 단계에서
+              분리한다.
+            </li>
+          </ol>
+          <pre><code>git status --short
+git diff -- .github/workflows/e2e.yml docs/week-10/e2e-conditional-execution.html
+pnpm exec prettier --check .github/workflows/e2e.yml docs/week-10/e2e-conditional-execution.html
+git diff --check</code></pre>
+          <ol start="2">
+            <li>
+              workflow 변경이 E2E 명령을 깨뜨리지 않았는지 먼저 로컬에서 확인한다. 이 단계는
+              GitHub의
+              <code>paths-filter</code> 결과를 검증하는 것이 아니라, 실제로 선택할 spec 조합이
+              통과하는지 확인하는 단계다.
+            </li>
+          </ol>
+          <pre><code>pnpm exec playwright test e2e/order.spec.ts --project=chromium --project=webkit
+pnpm exec playwright test e2e/order.spec.ts e2e/auth.spec.ts e2e/logout.spec.ts \
+  --project=chromium --project=webkit</code></pre>
+          <ol start="3">
+            <li>
+              로컬 검증이 통과한 뒤 조건부 workflow와 관련 문서를 stage하고, stage된 파일 목록을
+              다시 확인한다.
+            </li>
+          </ol>
+          <pre><code>git add .github/workflows/e2e.yml docs/week-10/e2e-conditional-execution.html \
+  docs/rfc/week10-ci.md docs/week-10/action-plan.html
+git diff --cached --name-only
+git commit -m "feat(ci): 변경 범위별 E2E 실행"
+git push</code></pre>
+          <ol start="4">
+            <li>
+              GitHub Actions의 <code>Detect E2E scope</code> job을 먼저 연다. 현재 구현 PR에는
+              <code>.github/workflows/e2e.yml</code> 변경이 포함되어 있으므로
+              <code>all=true</code>와 전체 E2E 실행이 정상이다.
+            </li>
+            <li>
+              이어서 <code>E2E (chromium)</code>과 <code>E2E (webkit)</code>을 각각 연다. 첫 번째
+              <code>Report selected scope</code> step에서 선택 범위를 확인하고,
+              <code>Run selected E2E tests</code> step의 실제 명령과 테스트 파일을 기록한다.
+            </li>
+            <li>
+              현재 PR의 결과를 기록한 뒤, workflow가 반영된 기준 브랜치에서 문서-only PR을 별도로
+              만든다. 그래야 workflow 파일 변경이 경로 판별에 섞이지 않는다.
+            </li>
+          </ol>
+          <div class="callout warning">
+            <strong>정정 · 2026-09-11 · step 이름이 바뀌었다</strong>
+            <p>
+              위 절차와 아래 표의 <code>Report selected scope</code>는 현재 workflow에 없다.
+              fallback 수정 과정에서 <code>Finalize E2E scope</code>로 바뀌었고, 출력 형식도
+              <code>scope inputs:</code>와 <code>scope result: all=…, run_e2e=…, tests=…</code> 두
+              줄이 됐다. Actions 로그를 확인할 때는 새 이름으로 찾는다.
+            </p>
+            <p>
+              이 절 위쪽의 검증 기록에 남은 <code>Report selected scope</code>는 그 시점 로그를
+              그대로 인용한 것이므로 고치지 않는다.
+            </p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption>
+                PR 화면에서 확인할 로그
+              </caption>
+              <thead>
+                <tr>
+                  <th>PR 유형</th>
+                  <th>Report selected scope</th>
+                  <th>기대 결과</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>문서-only 또는 CSS-only</td>
+                  <td><code>E2E skipped: docs/style-only...</code></td>
+                  <td>두 browser job은 생성되고 checkout 이후 무거운 step은 Skipped</td>
+                </tr>
+                <tr>
+                  <td>인증 로직 또는 auth spec</td>
+                  <td><code>all=false</code>와 order·auth·logout 목록</td>
+                  <td>두 브라우저에서 세 spec 조합 실행</td>
+                </tr>
+                <tr>
+                  <td>fixture·설정·공통 로직</td>
+                  <td><code>all=true, tests=all</code></td>
+                  <td>두 브라우저에서 전체 E2E 실행</td>
+                </tr>
+                <tr>
+                  <td>분류할 수 없는 경로 또는 감지 실패</td>
+                  <td><code>E2E fallback</code> 또는 <code>all=true</code></td>
+                  <td>생략하지 않고 전체 E2E 실행</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3 class="record-heading">회차마다 남길 값</h3>
+          <ul>
+            <li>PR URL과 기준 커밋 SHA</li>
+            <li>
+              <code>Detect E2E scope</code>의 filter 결과와 <code>run_e2e</code>·<code>all</code> 값
+            </li>
+            <li>Chromium/WebKit job URL과 전체 job 시간</li>
+            <li>각 job의 실제 실행 또는 Skipped step, 선택된 spec 목록</li>
+            <li>required check가 성공·실패·대기로 표시됐는지</li>
+          </ul>
+          <div class="callout">
+            <strong>문서-only·기능별 선택 실행 검증 완료 · fallback 검증 대기</strong>
+            <p>
+              로컬 Playwright 통과, PR #12의 전체 실행·required 표시, PR #13의 문서-only E2E 생략을
+              확인했고, PR #14·#15에서 order·auth 기능별 선택 spec 실행도 확인했다. 알 수 없는
+              경로의 전체 실행 fallback을 실제 PR에서 확인하기 전까지 전체 구현 상태는
+              <code>fallback 검증 대기</code>로 유지한다.
+            </p>
+          </div>
+          <div class="callout cold">
+            <strong>최종 상태 · 2026-09-11 · fallback 검증 완료</strong>
+            <p>
+              위 「fallback 검증 대기」 판정은 당시 기록으로 그대로 둔다. 남아 있던 두 가지를 모두
+              확인해 대기 상태를 해제한다.
+            </p>
+            <ul>
+              <li>
+                <strong>알 수 없는 경로</strong> — PR #16(<code>public/toggle.svg</code>)에서
+                <code>all=true, run_e2e=true, tests=all</code>, 15개 전체 실행
+              </li>
+              <li>
+                <strong>감지 실패</strong> — PR #17에서 <code>Detect E2E scope</code>가 failure일 때
+                <code>E2E fallback:</code> 로그와 <code>tests=all</code>, 15개 전체 실행
+              </li>
+              <li>
+                <strong>중간 step 실패</strong> — PR #18에서 Checkout 실패 후 6개 step Skipped, 두
+                browser job이 각각 독립 Failure
+              </li>
+            </ul>
+            <p>
+              flaky 대응 정책과 그 자가 검증은 <a href="#flaky-policy">04-D</a>에 있다. 실험 PR
+              #17·#18·#19는 머지하지 않는다.
+            </p>
+          </div>
+          <div class="done">
+            <strong>완료 기준</strong> — 변경 분류 규칙, 필수 order 정책, fallback, 두 브라우저의
+            required 표시와 실제 실행·생략 로그를 RFC에 기록한다.
+          </div>
+        </section>
+
+        <footer>
+          관련 문서:
+          <a href="../../rfc/week10-ci.md">RFC</a> ·
+          <a href="after-measurement.html">After 측정</a> ·
+          <a href="action-plan.html">Week 10 작업 계획</a>
+        </footer>
+      </main>
+    </div>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
+
+      mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' })
+    </script>
+  </body>
+</html>
