@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, delay, http } from "msw";
 import { describe, expect, it } from "vitest";
@@ -241,8 +241,18 @@ describe("7번 — 에러에서 재시도로 복구", () => {
     expect(await screen.findByText(/총 \d+개/)).toBeInTheDocument();
 
     // 성공과 실패가 동시에 보이면 안 된다.
-    await waitFor(() => {
-      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    });
+    //
+    // ⚠️ 예전엔 `waitFor(() => expect(queryByRole("alert")).not.toBeInTheDocument())`였다.
+    // 부정 단언을 **폴링**하면 알림이 처음부터 없었을 때도 즉시 통과한다 —
+    // "사라졌다"가 아니라 "지금 없다"만 본다. 10주차 5단계에서 승격한 룰이 잡았다.
+    //
+    // 그럼 waitForElementToBeRemoved로 바꾸면 되느냐 — **여기선 못 쓴다.**
+    // 실측으로 "이미 제거됨" 오류를 받았다. user.click을 await하는 동안 React가
+    // 리렌더하면서 refetch가 시작되고 isError가 즉시 꺼져, 클릭이 끝나기 전에
+    // 알림이 언마운트된다. 제거를 관찰할 창이 없다.
+    //
+    // 그래서 목록이 그려진 **정착된 순간에 개수를 값으로 센다.** 폴링이 아니라
+    // 단발이고, 실패하면 몇 개가 있었는지 메시지가 말한다(0을 기대했는데 1).
+    expect(screen.queryAllByRole("alert")).toHaveLength(0);
   });
 });

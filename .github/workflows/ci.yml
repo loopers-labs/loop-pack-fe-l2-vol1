@@ -1,22 +1,211 @@
 name: CI
 
+# ── 왜 워크플로가 하나인가 ──────────────────────────────────────────────────
+# 10주차 전에는 두 벌(`ci.yml` · `quality.yml`)이 같은 트리거로 돌면서
+# lint·typecheck·build를 중복 실행하고, 반쪽씩 갈려 있었다 —
+# `format:check`는 한쪽만, `test`는 다른 쪽만. Node도 22 하드코딩 vs .nvmrc였다.
+# 두 벌이 있으면 "어떤 코드가 어떤 검증을 통과했는가"를 아무도 말할 수 없다.
+# 근거와 측정값: docs/rfc/week10-ci.md
+
 on:
+  # ⚠️ `pull_request:` 만 쓰면 기본 types가 [opened, synchronize, reopened]다.
+  # `labeled`·`ready_for_review`가 **없다.** 그래서 스킵 요약이 "`run-e2e` 라벨을
+  # 붙이세요"라고 안내하는데 **라벨을 붙여도 워크플로가 다시 돌지 않았다.**
+  # 안내가 거짓이었고, Codex 교차 검증이 잡았다.
+  #
+  # `unlabeled`도 넣는다 — 라벨을 떼면 다시 판정해서 스킵으로 돌아가야 한다.
+  # 안 넣으면 라벨을 뗀 상태가 마지막 실행(=E2E 돌린 결과)으로 남는다.
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
   push:
-    branches: [main]
+    branches: [main, Jaeho96]
+  # main에 들어가기 직전에 한 번 더 전체를 돌린다. 2단계 조건부 실행에서
+  # E2E를 스킵한 PR이 있어도 여기서 막힌다(merge queue를 켜면 동작한다).
+  merge_group:
+
+# 최소 권한. 코드를 읽는 것 외에 필요한 것이 없다 —
+# PR 코멘트를 다는 job이 생기면 그 job에만 pull-requests: write를 준다.
+permissions:
+  contents: read
+
+concurrency:
+  # ⚠️ ref를 키에 넣는다. 넣지 않으면 같은 그룹이 되어 main push까지 취소된다.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # 취소는 PR에서만 한다. main·merge_group의 실행은 기록이어야 하므로 취소하지 않는다.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # ── 결정적·저비용 — 모든 PR에서 무조건 돈다(조건을 붙이지 않는다) ──────────
   verify:
+    name: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          node-version: 22
+          persist-credentials: false
+
+      # ⚠️ 여기가 1단계에서 지목한 병목이다.
+      # 이전 quality.yml은 action-setup v6.0.9 + `version: 10.15.1`이었고
+      # 이 step이 중앙값 367s(범위 8~426s)였다. 같은 커밋·같은 시각에 돈
+      # ci.yml의 v4는 1~2s였다 — 런너 변동이 아니라 액션 설정 차이다.
+      # 버전은 package.json#packageManager(pnpm@10.15.1)가 이미 들고 있으므로
+      # `version:`을 주지 않는다. SHA 핀은 유지한다(third-party action).
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
           cache: pnpm
+
+      # 이 step은 이미 1~2s다(pnpm store 캐시가 hit한다). 손대지 않는다.
       - run: pnpm install --frozen-lockfile
+
+      # ── job을 쪼개지 않은 근거 ──────────────────────────────────────────
+      # 아래 다섯을 직렬로 돌면 약 30s다(lint 5 · typecheck 5 · test 8 ·
+      # format 2 · build 10, 실측). 두 job으로 나누면 checkout+pnpm+node+install
+      # 약 12s를 한 번 더 내므로 벽시계가 되레 늘어난다.
+      # 병목은 직렬 실행이 아니라 위의 pnpm setup이었다 — 그것만 고친다.
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm build
+      - run: pnpm test
+      # `pnpm check`에는 format:check가 없다. 따로 부른다.
       - run: pnpm format:check
+
+      # 3단계 — 설정 게이트를 build **앞에** 둔다. 배포 사고는 코드보다 설정에서
+      # 나고, 빠진 변수를 build 전에 알면 파이프라인이 더 일찍·더 싸게 멈춘다.
+      # 여기서는 기본 모드다(경고만) — 코스가 제공한 파이프라인이 env를 주지 않아
+      # `--production`으로 막으면 build 자체가 못 돈다. 배포 job이 생기면 그쪽에
+      # `--production`을 붙인다.
+      - run: pnpm validate-env
+
+      - run: pnpm build
+        env:
+          # self-HTTP용. requireAppOrigin()이 없으면 던진다.
+          APP_ORIGIN: http://localhost:3000
+
+      # 3단계 — 번들 예산. build 뒤라야 매니페스트를 읽을 수 있다.
+      # 임계값은 7주차 LCP 측정값에서 유도했다(scripts/check-bundle-size.mts 주석).
+      # 결과는 $GITHUB_STEP_SUMMARY로 PR 화면에 나온다 — 로그를 열어봐야 알면 안 본다.
+      - run: pnpm size
+
+  # ── 무엇이 바뀌었나 ────────────────────────────────────────────────────────
+  # third-party action(dorny/paths-filter)을 쓰지 않고 git으로 본다 —
+  # 이 레포는 작아서 full fetch가 2s 안이고, 의존성이 하나 줄어든다.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ]; then
+            # PR이 아니면(push·merge_group) 판정하지 않는다 — 전부 돌린다.
+            echo "app=true" >> "$GITHUB_OUTPUT"
+            echo "PR이 아니므로 전체 실행"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "── 변경된 파일 ──"
+          echo "$changed"
+          # 앱 동작에 닿는 것만 고른다. 문서는 E2E를 흔들지 않는다.
+          #
+          # ⚠️ `echo "$changed" | grep -q ...` 로 쓰면 안 된다. `grep -q` 는 첫 매치에서
+          # 즉시 끝나고, 그러면 `echo` 가 SIGPIPE(141)로 죽는다. `set -o pipefail` 이
+          # 그 141을 파이프라인 상태로 올려서 **매치했는데도 if 가 거짓**이 된다.
+          # 즉 `src/` 를 고쳤는데 E2E 가 스킵된다 — 파일 목록이 길 때만 나타난다.
+          # 실측: 변경 5,001줄로 재현했다(Codex 교차 검증에서 나온 자리다).
+          # herestring 을 쓰면 파이프가 없어 SIGPIPE 가 생기지 않는다.
+          if grep -qE '^(src/|e2e/|public/|package\.json|pnpm-lock\.yaml|next\.config\.|playwright\.config\.|vitest\.config\.|eslint\.config\.|tsconfig|\.nvmrc|\.github/workflows/)' <<< "$changed"; then
+            echo "app=true" >> "$GITHUB_OUTPUT"
+            echo "→ 앱 코드가 바뀌었다: E2E 실행"
+          else
+            echo "app=false" >> "$GITHUB_OUTPUT"
+            echo "→ 앱 코드 변경 없음: E2E 스킵"
+          fi
+
+  # ── 비싼 검증 — 조건부로 "실행"하되 job 자체는 항상 돈다 ──────────────────
+  # ⚠️ required status check와 조건부 스킵의 충돌을 피하는 형태다.
+  # job에 `if:`를 걸어 아예 실행되지 않게 하면, 이 검증을 required로 둔 PR이
+  # "체크 대기"로 영영 머지되지 않는다. 그래서 job은 항상 돌고 안에서 가른다.
+  e2e:
+    name: e2e
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 실행 여부 판정
+        id: decide
+        env:
+          APP_CHANGED: ${{ needs.changes.outputs.app }}
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'run-e2e') }}
+          EVENT: ${{ github.event_name }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          set -euo pipefail
+          # draft PR에서는 아끼고, label로 언제든 불러올 수 있게 둔다.
+          if [ "$IS_DRAFT" = "true" ] && [ "$HAS_LABEL" != "true" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"; echo "draft PR — 스킵(run-e2e 라벨로 부를 수 있다)"; exit 0
+          fi
+          if [ "$EVENT" = "merge_group" ] || [ "$EVENT" = "push" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; echo "main 직전/직후 — 전체 실행"; exit 0
+          fi
+          if [ "$HAS_LABEL" = "true" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; echo "run-e2e 라벨 — 실행"; exit 0
+          fi
+          echo "run=$APP_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "앱 코드 변경 = $APP_CHANGED"
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        if: steps.decide.outputs.run == 'true'
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        if: steps.decide.outputs.run == 'true'
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        if: steps.decide.outputs.run == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.decide.outputs.run == 'true'
+
+      # 예전 quality.yml은 `playwright --version`이 잡히면 Chromium을 무조건
+      # 설치했는데(22~39s) E2E는 CI에서 돌지 않았다 — 브라우저를 받아 놓고
+      # 아무것도 안 돌렸다. 이제 돌릴 때만 받는다.
+      - run: pnpm exec playwright install --with-deps chromium
+        if: steps.decide.outputs.run == 'true'
+
+      # playwright.config.ts의 webServer가 `pnpm build && pnpm start`를 하므로
+      # 여기서 build를 따로 부르지 않는다(verify job의 build와 중복이지만,
+      # E2E는 production build 위에서 돌아야 하고 job이 달라 공유할 수 없다).
+      - run: pnpm test:e2e
+        if: steps.decide.outputs.run == 'true'
+
+      - name: 스킵 기록
+        if: steps.decide.outputs.run != 'true'
+        run: |
+          echo "### E2E 스킵" >> "$GITHUB_STEP_SUMMARY"
+          echo "앱 코드(\`src/\` · \`e2e/\` · 설정)가 바뀌지 않아 실행하지 않았습니다." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "필요하면 \`run-e2e\` 라벨을 붙이세요. main 직전(\`merge_group\`)에는 무조건 돕니다." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 실패 시 trace 업로드
+        if: failure() && steps.decide.outputs.run == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

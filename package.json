@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "validate-env": "node scripts/validate-env.mts",
+    "size": "node scripts/check-bundle-size.mts",
     "start": "next start",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",

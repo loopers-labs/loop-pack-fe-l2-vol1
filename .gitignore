@@ -14,6 +14,8 @@
 /coverage
 /test-results
 /playwright-report
+# Playwright MCP 브라우저 세션이 남기는 스냅샷·콘솔 로그. 산출물이 아니다.
+/.playwright-mcp
 /blob-report
 /.playwright
 

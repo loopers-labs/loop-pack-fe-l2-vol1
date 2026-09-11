@@ -173,9 +173,21 @@ describe("10번 — 페이지 이동 → 목록 변경", () => {
     await waitFor(() => {
       expect(log.last().get("page")).toBe("2");
     });
+
+    // ⚠️ 예전엔 `expect(renderedNames()).not.toEqual(firstPage)`를 waitFor에 넣었다.
+    // 그건 "첫 페이지와 다르다"를 **폴링**하는 것이고, 목록이 영영 안 바뀌어도
+    // 타임아웃 메시지가 대신 무엇이 그려졌는지 말하지 않는다. 폴링은 "아직 안
+    // 바뀜"과 "바뀌지 않는 게 맞음"도 구분하지 못한다(8주차에 정리한 것).
+    // 이 자리를 10주차 5단계에서 승격한 룰이 잡았다.
+    //
+    // paged 핸들러가 `products.slice(start, start + PAGE_SIZE)`를 주므로 2페이지
+    // 목록은 결정적이다. 값으로 대조한다.
+    const secondPage = products.slice(PAGE_SIZE, PAGE_SIZE * 2).map((product) => product.name);
     await waitFor(() => {
-      expect(renderedNames()).not.toEqual(firstPage);
+      expect(renderedNames()).toEqual(secondPage);
     });
+    // 대조군이 실제로 다른지 고정한다 — 같으면 위 단언이 아무것도 검증하지 않는다.
+    expect(secondPage).not.toEqual(firstPage);
   });
 
   it("첫 페이지에서는 이전으로 나갈 수 없다", async () => {
