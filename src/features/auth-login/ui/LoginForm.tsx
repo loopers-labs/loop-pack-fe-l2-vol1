@@ -23,7 +23,7 @@ export function LoginForm({ redirect, expired }: Props) {
   // 로그인 화면 진입 시점 1회만 기록한다.
   useEffect(() => {
     track('login_start', { from: redirect ?? 'direct' });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 화면 진입 시점 1회만 기록
   }, []);
 
   return (

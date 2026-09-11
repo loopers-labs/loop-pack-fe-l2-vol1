@@ -248,3 +248,30 @@ const SENSITIVE_NAME_PATTERN = /(SECRET|TOKEN|PASSWORD|PRIVATE_KEY|API_KEY)/i;
 이렇게 지적한다면 틀린 지적이다. 값 이름 자체가 `ci-placeholder-secret-not-for-production`으로, **진짜 시크릿이 아니라는 걸 명시한 더미 값**이다(코드 주석에도 "실제 서비스 시크릿이 아니며"라고 적어뒀다). `SECRET`이라는 단어가 워크플로 파일에 보인다는 패턴만으로 판단하고, 그 값이 실제로 가짜라는 문맥을 확인하지 않은 전형적인 AI 오탐 사례다.
 
 **프롬프트 개선 방향**: 지금 `ai-review.yml`의 `prompt`에 이미 "확신이 낮은 지적은 '추정'이라고 표시해줘 — 임의로 단정하지 마"를 넣어뒀는데, 위 헛소리 사례를 막으려면 한 줄을 더 추가하는 게 맞다고 판단했다 — **"SECRET/TOKEN 같은 이름만 보고 판단하지 말고, 그 값이 실제로 민감한 값인지(플레이스홀더·주석 문맥 포함) 확인한 뒤 지적해줘."**
+
+## I. 5단계 — 반복 지적을 결정적 룰로 승격
+
+### 고른 규칙: "이유 없는 eslint-disable 금지"
+
+CLAUDE.md 코드 리뷰 기준에 이미 "설명 없는 커밋"과 나란히 **"무의미한 eslint-disable"**이 명시돼 있다 — 즉 사람 리뷰에서도, 4단계 AI 리뷰 기준에서도 반복적으로 나올 수 있는 지적이다. 실제로 코드베이스를 grep해보니 지금도 이유 없는 eslint-disable이 **2곳** 있었다(`LoginForm.tsx`, `CheckoutPage.tsx`의 `react-hooks/exhaustive-deps` 무시) — 맥락상 의도는 있었지만(둘 다 "화면 진입 시점 1회만 기록") 코드에 그 이유가 안 남아 있었다.
+
+**"이유가 진짜 타당한가"는 기계가 못 가리지만, "이유를 아예 안 썼는가"는 결정적으로 가를 수 있다** — 그래서 이걸 골랐다.
+
+### 승격 수단
+
+과제 문서의 "특정 안티패턴 → ESLint custom rule 또는 no-restricted-syntax" 대신 **grep 스크립트**(`scripts/check-eslint-disable-reason.mjs`)를 택했다. 이유:
+- `no-restricted-syntax`로 주석 텍스트 패턴까지 검사하려면 커스텀 프로세서가 필요해 설정이 복잡해진다.
+- 오늘 이미 외부 액션 설정(`paths-filter`, `claude-code-action`)에서 여러 번 예상 밖의 동작을 겪었다(week10-ci.md F·H절) — 새 의존성 없이 순수 Node 스크립트로 처리하는 쪽이 안정적이라고 판단.
+
+동작: `src/`, `e2e/`, `scripts/` 아래 `.ts`/`.tsx` 파일에서 `eslint-disable`(-next-line/-line)을 찾아, 같은 줄에 `-- <이유>` 형식이 없으면 실패시킨다. `pnpm check`(`lint:disable-reason`)에 연결해 CI(`Run quality checks`)에서 자동으로 돈다 — workflow 파일을 따로 안 고쳐도 됨.
+
+### 자가 검증
+
+- **정상 케이스**: 지금 코드베이스(모든 eslint-disable에 이유 있음) → 통과 확인.
+- **위반 케이스**: `-- 이유` 없는 eslint-disable을 담은 임시 파일을 만들어 실행 → `파일:줄` 정확히 지목하며 실패(exit 1) 확인, 임시 파일 삭제.
+- **부수 발견**: 검증 과정에서 `scripts/validate-env.mjs`에 **아예 불필요한** eslint-disable(`no-new` 룰이 애초에 그 코드에 안 걸림)이 있는 것도 ESLint 경고로 잡혀서 같이 정리했다.
+
+### 판단 — 무엇을 기계에, 무엇을 AI·사람에 남기는가
+
+- **기계(이번 룰)**: "이유를 썼는가/안 썼는가"라는 형식적 사실. 참/거짓이 명확하다.
+- **AI·사람에 남는 것**: "그 이유가 실제로 타당한가"(예: `react-hooks/exhaustive-deps`를 끄는 게 정말 안전한 설계인지)는 맥락 판단이 필요해 기계로 못 내린다 — 4단계 AI 리뷰나 사람 리뷰의 몫으로 남긴다.

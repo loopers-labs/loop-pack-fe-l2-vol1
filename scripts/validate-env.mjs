@@ -29,7 +29,6 @@ for (const [name, value] of Object.entries(process.env)) {
   }
   if (name.endsWith('_URL') && value) {
     try {
-      // eslint-disable-next-line no-new
       new URL(value);
     } catch {
       errors.push(`\`${name}\` 값이 올바른 URL 형식이 아닙니다: "${value}"`);

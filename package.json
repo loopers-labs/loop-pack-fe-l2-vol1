@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build"
+    "lint:disable-reason": "node scripts/check-eslint-disable-reason.mjs",
+    "check": "pnpm test && pnpm lint && pnpm lint:disable-reason && pnpm typecheck && pnpm build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
