@@ -8,6 +8,31 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import react from "eslint-plugin-react";
 
+// Downward imports only. Same-layer slice isolation remains a separate review rule.
+const fsdLayers = ['app', '_pages', 'widgets', 'features', 'entities', 'shared'];
+const fsdZones = fsdLayers.flatMap((layer, index) =>
+  fsdLayers.slice(0, index).map((upper) => ({
+    target: `./src/${layer}`,
+    from: `./src/${upper}`,
+    message: `${layer} must not import the upper ${upper} layer`,
+  })),
+);
+
+const fsdAliasConfigs = fsdLayers.slice(1).map((layer, index) => ({
+  files: [`src/${layer}/**/*.{ts,tsx}`],
+  rules: {
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: fsdLayers.slice(0, index + 1).map((upper) => ({
+          regex: `^@/${upper}(?:/|$)`,
+          message: `${layer} must not import the upper ${upper} layer`,
+        })),
+      },
+    ],
+  },
+}));
+
 const eslintConfig = defineConfig([
   // Next 전용 룰 — core-web-vitals + @next/eslint-plugin-next (import 플러그인 포함)
   ...nextVitals,
@@ -59,6 +84,9 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // Alias imports are checked without filesystem resolution so CI and local runs agree.
+  ...fsdAliasConfigs,
+
   // 타입 정보가 필요한 룰 — src만 대상
   {
     files: ["src/**/*.{ts,tsx}"],
@@ -71,6 +99,7 @@ const eslintConfig = defineConfig([
     rules: {
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
+      "import/no-restricted-paths": ["error", { basePath: import.meta.dirname, zones: fsdZones }],
     },
   },
 ]);
