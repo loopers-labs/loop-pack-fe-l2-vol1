@@ -57,7 +57,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     { info() {}, error() {} },
     true,
   );
-  const errors = validateEnvironment(combinedEnv, process.argv[2]);
+  const errors = validateEnvironment(combinedEnv, process.argv[2] ?? combinedEnv.VERCEL_ENV);
   for (const error of errors) console.error(error);
   if (!errors.length) console.log('Environment validation passed (values omitted)');
   process.exitCode = errors.length ? 1 : 0;
