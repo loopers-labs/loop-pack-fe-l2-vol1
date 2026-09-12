@@ -9,6 +9,7 @@ import { Header } from '@/widgets/header';
 import { authQueries } from '@/entities/auth';
 import { getQueryClient } from '@/shared/api/getQueryClient';
 import { commonOpenGraph, OG_FALLBACK_IMAGE, SITE_DESCRIPTION, SITE_NAME } from '@/shared/config/siteMetadata';
+import { getAppOrigin } from '@/shared/config/appOrigin';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -21,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_ORIGIN ?? 'http://localhost:3000'),
+  metadataBase: new URL(getAppOrigin()),
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   openGraph: {

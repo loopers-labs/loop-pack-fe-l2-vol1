@@ -4,17 +4,20 @@
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "engines": {
-    "node": ">=22.12.0"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "pnpm validate-env",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "validate-env": "node scripts/validate-env.ts",
     "test": "vitest run",
     "test:watch": "vitest --project unit",
     "test:e2e": "playwright test",
+    "test:smoke": "playwright test --config playwright.smoke.config.ts",
     "test:mutation": "stryker run",
     "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e",
     "format": "prettier --write .",

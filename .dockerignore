@@ -1,0 +1,21 @@
+# 이미지 안에서 새로 설치·빌드한다 (호스트는 macOS 바이너리)
+node_modules
+.next
+
+# 비밀값이 이미지 레이어에 들어가지 않게 한다
+.env*
+.mcp.json
+.vercel
+
+# 빌드와 무관한 로컬 산출물·도구 설정
+.git
+docs
+reports
+test-results
+playwright-report
+coverage
+.stryker-tmp
+.claude
+.serena
+.idea
+*.tsbuildinfo
