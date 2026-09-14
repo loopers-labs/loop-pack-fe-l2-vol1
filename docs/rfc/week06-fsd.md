@@ -347,6 +347,8 @@ import { productListQueryOptions } from '@/entities/product/api/productQueries';
 | React.lazy 코드 스플리팅 | 번들 크기가 문제되는 시점에 검토. 현재는 과도 |
 | next/image 이미지 최적화 | 기능 추가에 해당. 구조 변경과 섞지 않음 |
 
+> 2026-09-04 후속: 6주차 구조 변경과 분리된 작업에서 일반 상품 이미지 6곳을 `next/image`로 전환했다. 7주차에 별도 최적화와 측정을 마친 Hero `<picture>`는 유지하고, 각 상품 이미지에는 실제 반응형·고정 슬롯에 맞는 `sizes`를 지정했다.
+
 ---
 
 ## 에러 처리 경계
@@ -600,6 +602,8 @@ AR-01~03 해소 후 재점검. 역방향 import 0건, cross-slice 의존 0건, �
 `ProductCard`를 `entities/product`에 두고 wishlist를 직접 참조하면 같은 레이어 간 의존(cross-slice import)이 생겨 슬라이스 독립성이 깨집니다.
 
 2026-09-02에 홈·상품 목록·장바구니 피드의 카드 마크업과 행위를 통일하면서 `ProductCard`를 `widgets/product-card`에 배치했습니다. widget은 product·cart·wishlist 엔티티를 조합하고, 각 `_pages`는 공용 카드를 가져와 페이지 문맥에 맞는 heading 단계만 주입합니다. 이 구조는 `_pages → widgets → entities` 의존 방향을 유지합니다.
+
+2026-09-04에는 장바구니 담기와 분석 이벤트가 상품 카드와 상세 화면에 각각 반복되던 것을 `features/cart/model/useAddToCart`로 모았습니다. `entities/cart`의 `addItem`은 계속 자기 상태만 변경하고 analytics를 알지 않습니다. feature는 사용자의 담기 행위와 그 성공 계측을 조합하며, widget과 `_pages`는 이 행위를 호출하기만 합니다. 이로써 새 담기 UI가 생겨도 계측 호출을 함께 복사하거나 빠뜨리지 않게 했습니다.
 
 ### 2. 한 페이지에서만 쓰는 검색 로직도 반드시 feature여야 하는가?
 `useProductSearchParams`는 URL 파라미터를 다루는 페이지 전용 로직이라 feature보다는 `_pages/product-list/lib`에 두었습니다. 아직 여러 도메인을 엮는 독립적인 기능으로 보기 어렵고, 현재 사용처도 하나뿐이라 사용처 가까이에 두는 편이 응집도 측면에서 적절하다고 판단했습니다. 

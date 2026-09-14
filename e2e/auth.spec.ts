@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { seedCartState, TEST_CART_PRODUCT } from './fixtures/cartState';
+import { fillLoginForm } from './fixtures/loginForm';
+import { setExpiredSessionCookie } from './fixtures/session';
 
 test.describe('인증', () => {
   test('비로그인 보호 경로에서 로그인한 뒤 원래 주문서로 돌아간다', async ({
@@ -10,6 +13,7 @@ test.describe('인증', () => {
     );
     await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
 
+    await fillLoginForm(page);
     await page.getByRole('button', { name: '로그인' }).click();
 
     await expect(page).toHaveURL('/orders/new');
@@ -23,7 +27,10 @@ test.describe('인증', () => {
     page,
   }) => {
     await page.goto('/login?returnTo=%2Forders');
-    await page.getByLabel('비밀번호').fill('wrong-password');
+    await fillLoginForm(page, {
+      email: 'looper1@loopers.dev',
+      password: 'wrong-password',
+    });
     await page.getByRole('button', { name: '로그인' }).click();
 
     await expect(page).toHaveURL(/\/login/);
@@ -32,25 +39,52 @@ test.describe('인증', () => {
     ).toBeVisible();
   });
 
-  test('만료된 세션은 주문 내역의 재시도 화면 대신 로그인으로 이동한다', async ({
+  test('실제로 만료된 세션 토큰으로 보호 문서에 접근하면 로그인으로 이동한다', async ({
     page,
     context,
+    baseURL,
   }) => {
-    await page.goto('/login');
-    await page.getByRole('button', { name: '로그인' }).click();
-    await expect(page).toHaveURL('/');
-
-    await context.addCookies([
-      {
-        name: 'scenario',
-        value: 'expired',
-        domain: '127.0.0.1',
-        path: '/',
-      },
-    ]);
+    await setExpiredSessionCookie(context, baseURL);
     await page.goto('/orders');
 
     await expect(page).toHaveURL(/\/login\?returnTo=%2Forders/);
+    await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
+  });
+
+  test('열린 주문서의 주문 API가 401이면 현재 경로를 보존해 로그인으로 이동한다', async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    await page.goto('/login');
+    await fillLoginForm(page);
+    await page.getByRole('button', { name: '로그인' }).click();
+    await expect(page).toHaveURL('/');
+
+    await seedCartState(page, 'user:u1', [
+      { id: TEST_CART_PRODUCT.id, quantity: 1 },
+    ]);
+    await page.goto('/orders/new');
+
+    const submitButton = page.getByRole('button', { name: /원 주문하기/ });
+    await expect(submitButton).toBeEnabled();
+
+    // 문서는 유효한 세션으로 렌더링한 뒤 API 호출 직전에 토큰만 만료시킨다.
+    await setExpiredSessionCookie(context, baseURL);
+
+    const createOrderResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/orders') &&
+        response.request().method() === 'POST',
+    );
+
+    await submitButton.click();
+
+    const response = await createOrderResponse;
+    expect(response.status()).toBe(401);
+    await expect(page).toHaveURL(
+      '/login?returnTo=%2Forders%2Fnew&loginSource=orders',
+    );
     await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
   });
 
@@ -63,6 +97,7 @@ test.describe('인증', () => {
     }
 
     await page.goto('/login?returnTo=%2F%2Fevil.example');
+    await fillLoginForm(page);
     await page.getByRole('button', { name: '로그인' }).click();
 
     await expect(page).toHaveURL('/');

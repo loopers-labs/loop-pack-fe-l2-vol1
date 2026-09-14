@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import { OrderCheckoutContent } from '@/_pages/order-checkout/ui/OrderCheckoutContent';
 import { requireCurrentUser } from '@/app/_lib/session';
-import { getLoginFrom } from '@/shared/lib/loginFrom';
+import {
+  LOGIN_SOURCE_SEARCH_PARAM,
+  type LoginSourceSearchParams,
+} from '@/features/auth/lib/authNavigation';
+import { getLoginEntrySource } from '@/shared/lib/loginEntrySource';
 
 export const metadata: Metadata = {
   title: '주문서',
@@ -9,14 +13,17 @@ export const metadata: Metadata = {
 };
 
 interface OrderCheckoutPageProps {
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<LoginSourceSearchParams>;
 }
 
 export default async function OrderCheckoutPage({
   searchParams,
 }: OrderCheckoutPageProps) {
-  const { from } = await searchParams;
-  await requireCurrentUser('/orders/new', getLoginFrom(from));
+  const params = await searchParams;
+  const loginSource = getLoginEntrySource(
+    params[LOGIN_SOURCE_SEARCH_PARAM],
+  );
+  await requireCurrentUser('/orders/new', loginSource);
 
   return <OrderCheckoutContent />;
 }

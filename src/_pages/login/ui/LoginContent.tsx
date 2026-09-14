@@ -13,27 +13,27 @@ import {
   trackLoginSuccess,
 } from '@/analytics/events';
 import { useAnalyticsPageView } from '@/analytics/useAnalyticsPageView';
-import type { LoginFrom } from '@/shared/lib/loginFrom';
+import type { LoginEntrySource } from '@/shared/lib/loginEntrySource';
 
 interface LoginContentProps {
   returnTo: string;
-  loginFrom: LoginFrom;
+  loginSource: LoginEntrySource;
 }
 
-export function LoginContent({ returnTo, loginFrom }: LoginContentProps) {
+export function LoginContent({ returnTo, loginSource }: LoginContentProps) {
   const errorRef = useRef<HTMLParagraphElement>(null);
-  useAnalyticsPageView(() => trackLoginStart(loginFrom));
+  useAnalyticsPageView(() => trackLoginStart(loginSource));
 
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: ({ user }) => {
       identifyAnalyticsUser(user.id);
-      trackLoginSuccess(loginFrom);
+      trackLoginSuccess(loginSource);
       replaceDocumentLocation(returnTo);
     },
     onError: (error) => {
       const status = error instanceof AuthApiError ? error.status : undefined;
-      trackLoginFail(loginFrom, getLoginFailureReason(status));
+      trackLoginFail(loginSource, getLoginFailureReason(status));
     },
   });
 
@@ -81,7 +81,6 @@ export function LoginContent({ returnTo, loginFrom }: LoginContentProps) {
               autoComplete="email"
               required
               autoFocus
-              defaultValue="looper1@loopers.dev"
               disabled={loginMutation.isPending}
               className="mt-2 min-h-12 w-full rounded-lg border border-border bg-bg px-4 text-base text-text outline-none transition-colors focus:border-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text disabled:cursor-wait disabled:opacity-60"
             />
@@ -94,7 +93,6 @@ export function LoginContent({ returnTo, loginFrom }: LoginContentProps) {
               name="password"
               autoComplete="current-password"
               required
-              defaultValue="looper1234"
               disabled={loginMutation.isPending}
               className="mt-2 min-h-12 w-full rounded-lg border border-border bg-bg px-4 text-base text-text outline-none transition-colors focus:border-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text disabled:cursor-wait disabled:opacity-60"
             />
