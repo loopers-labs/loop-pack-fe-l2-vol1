@@ -1,0 +1,96 @@
+name: Deployment Smoke
+
+'on':
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      deployment_url:
+        description: Preview 또는 Production 절대 URL
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deployment-smoke-${{ github.event.deployment.id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DEPLOYMENT_URL: ${{ inputs.deployment_url || github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      # 배포 SHA를 checkout하면 fork PR의 preview 배포에서 온 코드를 이 job이 실행한다.
+      # deployment_status는 base 저장소 권한과 secrets를 들고 도는 트리거라,
+      # `pull_request_target`과 같은 부류로 다뤄야 한다. 아래 env의 bypass secret이
+      # 그 코드의 손에 들어가는 경로가 된다.
+      #
+      # 그래서 실행할 코드는 항상 기본 브랜치 것을 쓴다. 배포 SHA는 기록에만 남긴다.
+      # 배포 커밋의 스펙으로 재는 편이 정확하지만, 그 정확도는 신뢰 경계와 맞바꿀 값이 아니다.
+      # smoke 3개는 어느 브랜치의 배포든 성립해야 하는 최소 계약이라 기본 브랜치 것으로 충분하다.
+      - name: Checkout smoke suite from default branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 10.15.1
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # URL은 이벤트 payload나 수동 입력에서 온다. bypass secret을 헤더로 붙여 보내므로
+      # 보낼 상대를 먼저 좁힌다. 값이 비었는지만 보면 secret이 임의의 호스트로 나갈 수 있다.
+      - name: Reject unexpected deployment URL
+        run: |
+          if [[ -z "$DEPLOYMENT_URL" ]]; then
+            echo "DEPLOYMENT_URL이 없습니다." >&2
+            exit 1
+          fi
+
+          host=$(printf '%s' "$DEPLOYMENT_URL" | sed -E 's#^https://([^/]+).*#\1#')
+          if [[ "$host" == "$DEPLOYMENT_URL" ]]; then
+            echo "DEPLOYMENT_URL은 https URL이어야 합니다: $DEPLOYMENT_URL" >&2
+            exit 1
+          fi
+
+          if [[ "$host" != *.vercel.app ]]; then
+            echo "이 workflow는 Vercel 배포 URL만 검증합니다: $host" >&2
+            exit 1
+          fi
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run deployment smoke tests
+        run: pnpm test:smoke
+      - name: Record deployment evidence
+        if: always()
+        env:
+          DEPLOYED_SHA: ${{ github.event.deployment.sha || github.sha }}
+          DEPLOYMENT_ENVIRONMENT: ${{ github.event.deployment.environment || 'manual' }}
+        run: |
+          {
+            echo '## 배포 Smoke 결과'
+            echo
+            echo "- 환경: $DEPLOYMENT_ENVIRONMENT"
+            echo "- commit: \`$DEPLOYED_SHA\`"
+            echo "- URL: $DEPLOYMENT_URL"
+            echo "- run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: deployment-smoke-${{ github.run_id }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

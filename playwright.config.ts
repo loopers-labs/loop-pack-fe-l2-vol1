@@ -16,6 +16,8 @@ if (process.env.APP_ORIGIN && process.env.APP_ORIGIN !== BASE_URL) {
 
 export default defineConfig({
   testDir: 'e2e',
+  // 배포 URL 전용 최소 검증은 별도 config에서 실행한다.
+  testIgnore: 'smoke/**',
   fullyParallel: true,
   // .only가 남으면 나머지 spec을 실행하지 않고 전체 결과가 통과로 표시된다.
   forbidOnly: Boolean(process.env.CI),

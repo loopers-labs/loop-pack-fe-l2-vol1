@@ -1,2 +1,3 @@
 pnpm architecture:check:staged
+python3 scripts/style/check_korean_style.py --staged
 pnpm exec lint-staged

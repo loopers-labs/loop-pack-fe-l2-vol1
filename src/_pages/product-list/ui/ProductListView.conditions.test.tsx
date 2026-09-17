@@ -1,5 +1,5 @@
 import { HttpResponse, http } from 'msw'
-import { describe, expect, it, onTestFinished } from 'vitest'
+import { afterEach, describe, expect, it, onTestFinished } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -32,6 +32,21 @@ const renderList = (searchParams = '') => {
   )
   return userEvent.setup()
 }
+
+// nuqs는 주소 갱신을 throttle로 모아 setTimeout으로 흘린다. 테스트가 그 타이머보다
+// 먼저 끝나면 남은 콜백이 환경 해제 뒤에 실행되고 `location is not defined`로 터진다.
+// 이 파일만 실제 history 어댑터를 쓰기 때문에 여기서만 나타난다.
+//
+// 단일 파일 실행에서는 재현되지 않고 48개 파일 병렬 실행에서 나온다. 워커 경합으로
+// 타이머 발화가 밀리면서 teardown을 넘기는 것이다. 375개 테스트는 전부 통과하는데
+// 처리되지 않은 예외 하나로 `pnpm test`가 실패한다.
+//
+// 여기서 한 번 양보하면 남은 갱신이 환경 안에서 흘러나간다. 이 대기 타이머는 nuqs의
+// 타이머보다 뒤에 예약되므로 경합 상황에서도 순서가 보장된다. 재시도로 덮지 않고
+// 원인을 없애는 쪽을 골랐다.
+afterEach(async () => {
+  await new Promise((resolve) => setTimeout(resolve, 60))
+})
 
 const productCards = () => screen.getAllByRole('article')
 
