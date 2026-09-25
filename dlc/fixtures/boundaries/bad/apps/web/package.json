@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/web",
+  "private": true,
+  "dependencies": {
+    "@fixture/auth": "file:../../packages/auth"
+  }
+}

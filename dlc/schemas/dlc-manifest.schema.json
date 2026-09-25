@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loopers.example/schemas/dlc-manifest.schema.json",
+  "title": "Loopers DLC manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "apps", "accounts", "testContracts", "commands"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "apps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["web", "admin"],
+      "properties": {
+        "web": { "$ref": "#/$defs/app" },
+        "admin": { "$ref": "#/$defs/app" }
+      }
+    },
+    "accounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["customerA", "customerB", "adminA", "adminB"],
+      "properties": {
+        "customerA": { "type": "string", "minLength": 1 },
+        "customerB": { "type": "string", "minLength": 1 },
+        "adminA": { "type": "string", "minLength": 1 },
+        "adminB": { "type": "string", "minLength": 1 }
+      }
+    },
+    "testContracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "analyticsSinkUrlEnv",
+        "instanceHeader",
+        "requestHeader",
+        "graderEnabledEnv",
+        "graderTokenEnv",
+        "graderTokenHeader",
+        "sessionFixturePath",
+        "barrierHeader"
+      ],
+      "properties": {
+        "analyticsSinkUrlEnv": { "$ref": "#/$defs/envName" },
+        "instanceHeader": { "$ref": "#/$defs/headerName" },
+        "requestHeader": { "$ref": "#/$defs/headerName" },
+        "graderEnabledEnv": { "$ref": "#/$defs/envName" },
+        "graderTokenEnv": { "$ref": "#/$defs/envName" },
+        "graderTokenHeader": { "$ref": "#/$defs/headerName" },
+        "sessionFixturePath": { "$ref": "#/$defs/httpPath" },
+        "barrierHeader": { "$ref": "#/$defs/headerName" }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundaries", "plan", "verify", "runtime"],
+      "properties": {
+        "boundaries": { "$ref": "#/$defs/command" },
+        "plan": { "$ref": "#/$defs/command" },
+        "verify": { "$ref": "#/$defs/command" },
+        "runtime": { "$ref": "#/$defs/command" }
+      }
+    }
+  },
+  "$defs": {
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace",
+        "dockerfile",
+        "dockerTarget",
+        "baseUrlEnv",
+        "internalBaseUrlEnv",
+        "healthPath",
+        "readinessPath",
+        "viewerPath"
+      ],
+      "properties": {
+        "workspace": { "type": "string", "minLength": 1 },
+        "dockerfile": { "$ref": "#/$defs/repoPath" },
+        "dockerTarget": { "type": ["string", "null"] },
+        "baseUrlEnv": { "$ref": "#/$defs/envName" },
+        "internalBaseUrlEnv": { "$ref": "#/$defs/envName" },
+        "healthPath": { "$ref": "#/$defs/httpPath" },
+        "readinessPath": { "$ref": "#/$defs/httpPath" },
+        "viewerPath": { "$ref": "#/$defs/httpPath" }
+      }
+    },
+    "repoPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "httpPath": {
+      "type": "string",
+      "pattern": "^/(?!/).*$"
+    },
+    "envName": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "headerName": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "command": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\r\\n\\u0000]+$"
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loopers.example/schemas/deployment-plan.schema.json",
+  "title": "Loopers DLC deployment plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "baseSha",
+    "headSha",
+    "fallback",
+    "affectedPackages",
+    "tasks",
+    "apps"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "baseSha": { "$ref": "#/$defs/sha" },
+    "headSha": { "$ref": "#/$defs/sha" },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applied", "reason"],
+      "properties": {
+        "applied": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "affectedPackages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "reasons"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "reasons": { "$ref": "#/$defs/reasons" }
+        }
+      }
+    },
+    "tasks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lint", "typecheck", "unit", "build", "e2e"],
+      "properties": {
+        "lint": { "$ref": "#/$defs/names" },
+        "typecheck": { "$ref": "#/$defs/names" },
+        "unit": { "$ref": "#/$defs/names" },
+        "build": { "$ref": "#/$defs/names" },
+        "e2e": { "$ref": "#/$defs/names" }
+      }
+    },
+    "apps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["web", "admin"],
+      "properties": {
+        "web": { "$ref": "#/$defs/appPlan" },
+        "admin": { "$ref": "#/$defs/appPlan" }
+      }
+    }
+  },
+  "$defs": {
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "names": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "reasons": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "appPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validate",
+        "buildImage",
+        "pushImage",
+        "deploy",
+        "reasons"
+      ],
+      "properties": {
+        "validate": { "type": "boolean" },
+        "buildImage": { "type": "boolean" },
+        "pushImage": { "type": "boolean" },
+        "deploy": { "type": "boolean" },
+        "reasons": { "$ref": "#/$defs/reasons" }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "baseSha": "1111111111111111111111111111111111111111",
+  "headSha": "2222222222222222222222222222222222222222",
+  "fallback": {
+    "applied": false,
+    "reason": null
+  },
+  "affectedPackages": [
+    {
+      "name": "@student/web",
+      "reasons": ["web-source"]
+    }
+  ],
+  "tasks": {
+    "lint": ["@student/web"],
+    "typecheck": ["@student/web"],
+    "unit": ["@student/web"],
+    "build": ["@student/web"],
+    "e2e": ["web"]
+  },
+  "apps": {
+    "web": {
+      "validate": true,
+      "buildImage": true,
+      "pushImage": false,
+      "deploy": false,
+      "reasons": ["web-source"]
+    },
+    "admin": {
+      "validate": false,
+      "buildImage": false,
+      "pushImage": false,
+      "deploy": false,
+      "reasons": []
+    }
+  }
+}

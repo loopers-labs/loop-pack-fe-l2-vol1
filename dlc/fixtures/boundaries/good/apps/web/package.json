@@ -1,0 +1,8 @@
+{
+  "name": "@fixture/web",
+  "private": true,
+  "dependencies": {
+    "@fixture/format": "workspace:*",
+    "@scope/external-package": "1.0.0"
+  }
+}

@@ -61,6 +61,7 @@ repository root의 `dlc.manifest.json`은 grader가 자유로운 구조에서 �
       "dockerfile": "<repo-relative path>",
       "dockerTarget": "<target or null>",
       "baseUrlEnv": "WEB_BASE_URL",
+      "internalBaseUrlEnv": "WEB_INTERNAL_BASE_URL",
       "healthPath": "/api/health",
       "readinessPath": "/api/ready",
       "viewerPath": "/api/me"
@@ -70,6 +71,7 @@ repository root의 `dlc.manifest.json`은 grader가 자유로운 구조에서 �
       "dockerfile": "<repo-relative path>",
       "dockerTarget": "<target or null>",
       "baseUrlEnv": "ADMIN_BASE_URL",
+      "internalBaseUrlEnv": "ADMIN_INTERNAL_BASE_URL",
       "healthPath": "/api/health",
       "readinessPath": "/api/ready",
       "viewerPath": "/api/me"
@@ -84,7 +86,18 @@ repository root의 `dlc.manifest.json`은 grader가 자유로운 구조에서 �
   "testContracts": {
     "analyticsSinkUrlEnv": "ANALYTICS_TEST_SINK_URL",
     "instanceHeader": "x-dlc-instance-id",
-    "requestHeader": "x-dlc-request-id"
+    "requestHeader": "x-dlc-request-id",
+    "graderEnabledEnv": "DLC_GRADER_ENABLED",
+    "graderTokenEnv": "DLC_GRADER_TOKEN",
+    "graderTokenHeader": "x-dlc-grader-token",
+    "sessionFixturePath": "/api/__dlc/session",
+    "barrierHeader": "x-dlc-barrier-id"
+  },
+  "commands": {
+    "boundaries": "pnpm dlc:boundaries",
+    "plan": "pnpm dlc:plan",
+    "verify": "pnpm dlc:verify",
+    "runtime": "pnpm dlc:runtime"
   }
 }
 ```
@@ -95,7 +108,11 @@ repository root의 `dlc.manifest.json`은 grader가 자유로운 구조에서 �
 - Dockerfile 경로는 repository 안에 있어야 한다.
 - health/readiness/viewer route는 app별로 실제 응답해야 한다.
 - `baseUrlEnv`에는 URL 값이 아니라 CI/배포 환경에서 주입할 환경변수 이름을 쓴다.
+- `internalBaseUrlEnv`는 reverse proxy를 우회해 특정 container를 호출하는 내부 grader URL의 환경변수 이름이다.
 - account 값은 starter가 제공한 alias만 허용하며 실제 secret은 저장하지 않는다.
+- `commands`는 grader가 자유로운 학생 구조를 찾기 위한 실행 표면이며, 명령 문자열 안에 secret을 넣지 않는다.
+- session fixture는 grader token이 있는 내부 요청에서만 alias와 시험용 role/audience 조합을 normal session cookie로 발급한다.
+- viewer route는 `barrierHeader`가 있을 때 identity를 읽은 직후 mentor barrier와 동기화하되, grader mode가 아니면 해당 header를 무시하거나 거부한다.
 - manifest에 package tree나 auth 구현 위치를 요구하지 않는다.
 
 ## 5. 단일 영향·배포 계획 artifact
@@ -292,7 +309,9 @@ fixture는 web 전용 public env 변경이 admin cache를 깨지 않는지, glob
 | admin + 잘못된 `aud=web` | 거부 | 거부 |
 | 없음 | 공개 경로만 | 로그인 외 거부 |
 
-한 ingress에서 발급받은 cookie를 다른 ingress에 직접 재전송해도 거부되어야 한다. 또한 web에는 role이 customer로 맞지만 `aud=admin`인 session을, admin에는 role이 admin으로 맞지만 `aud=web`인 session을 보내 role과 audience 검증을 독립적으로 시험한다.
+한 ingress에서 발급받은 cookie를 다른 ingress에 직접 재전송해도 거부되어야 한다. 또한 web에는 role이 customer로 맞지만 `aud=admin`인 session을, admin에는 role이 admin으로 맞지만 `aud=web`인 session을 보내 role과 audience 검증을 독립적으로 시험한다. 마지막으로 role과 audience는 맞지만 반대 앱의 signing key로 서명한 cookie를 app별 cookie 이름으로 바꿔 보내, signing secret 분리만 독립적으로 시험한다.
+
+내부 session fixture의 request body는 `{ "account": "customer-a", "signingApp": "web", "audience": "admin" }` shape을 사용한다. `account`가 role을 결정하며 `signingApp`과 `audience`를 분리해 잘못된 audience만 독립적으로 만들 수 있어야 한다. viewer 응답은 최소한 `{ "viewer": { "alias": "customer-a", "role": "customer" } }`를 포함한다.
 
 ### 결정적 race harness
 
@@ -301,7 +320,9 @@ fixture는 web 전용 public env 변경이 admin cache를 깨지 않는지, glob
 - 각 요청에는 correlation ID를 붙인다.
 - customer A/B, admin A/B는 서로 다른 viewer sentinel을 가진다.
 - barrier/latch가 요청 A의 identity read 이후 응답 전 지점에서 멈춘다.
+- mentor service가 barrier prepare·arrival·inspect 상태를 소유한다. 학생 app에는 arrival 전용 token만 주고, grader는 별도 관리 token으로 서로 다른 두 request ID가 실제 도착했는지 확인한다.
 - 요청 B가 같은 지점을 지난 뒤 A/B를 해제해 module-level mutable identity가 있으면 결정적으로 실패하게 한다.
+- 같은 barrier header를 보낸 두 응답은 실제로 통과한 barrier ID를 같은 response header에 echo한다.
 - unsafe mutation은 반드시 실패하고 수정본은 반드시 통과해야 한다.
 
 viewer 누출은 `/me` DTO와 권한 결과로만 판정한다. 운영자가 합법적으로 보는 주문의 customer ID를 다른 viewer 누출로 세지 않는다.
@@ -316,9 +337,12 @@ viewer 누출은 `/me` DTO와 권한 결과로만 판정한다. 운영자가 합
 ### test hook 보안
 
 - barrier, reset, analytics inspection endpoint는 내부 Docker network와 grader credential에서만 동작한다.
+- 학생 app hook credential과 mentor service reset·inspection credential은 서로 다른 secret이다. mentor service 관리 token을 학생 container에 주입하지 않는다.
 - production mode에서는 기본 비활성이다.
 - public ingress의 해당 path는 404 또는 명시적 거부를 반환한다.
 - public URL smoke test가 이 조건을 반드시 확인한다.
+
+app-to-app runtime HTTP 금지는 source scanner만으로 끝내지 않는다. production Compose에서 web/admin은 서로 겹치지 않는 `internal: true` network에 두고, mentor-owned commerce/analytics service만 각 app network에 연결한다. app의 host network와 `host-gateway` 우회를 금지하며 `docker compose config --format json` 결과를 network-policy grader로 검사한다.
 
 ## 12. 공통 Linux VM 계약
 

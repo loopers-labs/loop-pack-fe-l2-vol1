@@ -33,7 +33,7 @@
 
 ## 제공되는 것과 준비 상태
 
-이 문서는 **학생용 과제 계약을 먼저 고정한 문서**예요. 공식 DLC starter, grader, `commerce-api` image, 테스트 계정과 fixture, 실제 실행 명령은 별도의 준비·검증을 거쳐 같은 starter tag로 배포될 예정입니다. **현재 저장소에 이미 구현되어 있다고 가정하지 마세요.** starter가 공개되면 tag와 README에 적힌 명령을 이 문서의 예시보다 우선합니다.
+이 저장소에는 starter의 local RC, grader, `commerce-api`, analytics sink, 테스트 계정과 fixture가 들어 있어요. 먼저 root의 `pnpm check`와 [`dlc/mentor-kit/README.md`](../../dlc/mentor-kit/README.md)의 Compose smoke를 통과시켜 기준 상태를 확인하세요. 다만 공식 배포 기준은 멘토가 별도로 공지하는 starter tag와 pinned image digest예요. 작업 브랜치의 최신 상태나 `local` image tag에서 임의로 시작하지 마세요.
 
 과제 공개 시 멘토가 제공할 범위는 다음과 같아요.
 

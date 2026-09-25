@@ -12,9 +12,12 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
 
 # next.js
 /.next/
+**/.next/
 /out/
 
 # production
@@ -39,3 +42,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# monorepo / DLC generated artifacts
+.turbo/
+**/.turbo/
+/dlc/artifacts/
+/dlc/mentor-kit/state/

@@ -13,7 +13,7 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 테스트, lint, 타입 검사, 프로덕션 빌드를 순서대로 실행하며 네 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
+`pnpm test`는 전체 Vitest 테스트가 통과해야 완료됩니다. `pnpm check`는 Vitest, DLC 실습키트 계약, lint, 타입 검사, 프로덕션 빌드, 실제 production runtime 계약, Playwright starter smoke를 순서대로 실행하며 일곱 단계가 모두 통과해야 완료됩니다. GitHub Actions도 pull request와 `main` push에서 같은 `pnpm check`를 실행합니다.
 
 > Next.js(App Router) + React 19 + TypeScript. (1~3주차 React+Vite 산출물은 각자 개인 브랜치 히스토리에 있습니다.)
 
@@ -43,6 +43,9 @@ docs/assignments/          # 주차별 과제 명세
 ### 10주 이후 DLC
 
 - [2주 캡스톤 — 단일 서비스를 확장 가능한 모노레포로 전환하기](docs/assignments/dlc-monorepo-capstone.md)
+- [DLC starter·grader·mentor service 실행 안내](dlc/mentor-kit/README.md)
+
+starter 후보에서는 먼저 `pnpm check`로 web baseline과 실습키트 계약을 확인합니다. mentor-owned 주문 API와 analytics sink는 별도 Docker 환경으로 실행하며, 최종 package 이름·Public API·Turborepo·app별 image는 과제에서 직접 설계합니다. 공식 공개 tag는 GitHub Actions, registry, Linux VM 배포 게이트까지 통과한 뒤 별도로 확정합니다.
 
 ## 제출
 

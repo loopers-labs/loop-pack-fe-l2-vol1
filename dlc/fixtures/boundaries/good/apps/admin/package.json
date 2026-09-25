@@ -1,0 +1,5 @@
+{
+  "name": "@fixture/admin",
+  "private": true,
+  "dependencies": { "@fixture/format": "workspace:*" }
+}

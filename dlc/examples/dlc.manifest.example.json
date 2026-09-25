@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "apps": {
+    "web": {
+      "workspace": "@student/web",
+      "dockerfile": "apps/web/Dockerfile",
+      "dockerTarget": null,
+      "baseUrlEnv": "WEB_BASE_URL",
+      "internalBaseUrlEnv": "WEB_INTERNAL_BASE_URL",
+      "healthPath": "/api/health",
+      "readinessPath": "/api/ready",
+      "viewerPath": "/api/me"
+    },
+    "admin": {
+      "workspace": "@student/admin",
+      "dockerfile": "apps/admin/Dockerfile",
+      "dockerTarget": null,
+      "baseUrlEnv": "ADMIN_BASE_URL",
+      "internalBaseUrlEnv": "ADMIN_INTERNAL_BASE_URL",
+      "healthPath": "/api/health",
+      "readinessPath": "/api/ready",
+      "viewerPath": "/api/me"
+    }
+  },
+  "accounts": {
+    "customerA": "customer-a",
+    "customerB": "customer-b",
+    "adminA": "admin-a",
+    "adminB": "admin-b"
+  },
+  "testContracts": {
+    "analyticsSinkUrlEnv": "ANALYTICS_TEST_SINK_URL",
+    "instanceHeader": "x-dlc-instance-id",
+    "requestHeader": "x-dlc-request-id",
+    "graderEnabledEnv": "DLC_GRADER_ENABLED",
+    "graderTokenEnv": "DLC_GRADER_TOKEN",
+    "graderTokenHeader": "x-dlc-grader-token",
+    "sessionFixturePath": "/api/__dlc/session",
+    "barrierHeader": "x-dlc-barrier-id"
+  },
+  "commands": {
+    "boundaries": "pnpm dlc:boundaries",
+    "plan": "pnpm dlc:plan",
+    "verify": "pnpm dlc:verify",
+    "runtime": "pnpm dlc:runtime"
+  }
+}

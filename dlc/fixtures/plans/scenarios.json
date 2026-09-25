@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "baseSha": "1111111111111111111111111111111111111111",
+  "headSha": "2222222222222222222222222222222222222222",
+  "scenarios": [
+    {
+      "name": "web-source-only",
+      "affectedPackages": ["@student/web"],
+      "tasks": { "lint": ["@student/web"], "typecheck": ["@student/web"], "unit": ["@student/web"], "build": ["@student/web"], "e2e": ["web"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": false, "buildImage": false, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "admin-source-only",
+      "affectedPackages": ["@student/admin"],
+      "tasks": { "lint": ["@student/admin"], "typecheck": ["@student/admin"], "unit": ["@student/admin"], "build": ["@student/admin"], "e2e": ["admin"] },
+      "apps": { "web": { "validate": false, "buildImage": false, "pushImage": false, "deploy": false }, "admin": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "web-package-only",
+      "affectedPackages": ["@student/web-domain", "@student/web"],
+      "tasks": { "lint": ["@student/web-domain", "@student/web"], "typecheck": ["@student/web-domain", "@student/web"], "unit": ["@student/web-domain", "@student/web"], "build": ["@student/web-domain", "@student/web"], "e2e": ["web"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": false, "buildImage": false, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "admin-package-only",
+      "affectedPackages": ["@student/admin-domain", "@student/admin"],
+      "tasks": { "lint": ["@student/admin-domain", "@student/admin"], "typecheck": ["@student/admin-domain", "@student/admin"], "unit": ["@student/admin-domain", "@student/admin"], "build": ["@student/admin-domain", "@student/admin"], "e2e": ["admin"] },
+      "apps": { "web": { "validate": false, "buildImage": false, "pushImage": false, "deploy": false }, "admin": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "shared-package",
+      "affectedPackages": ["@student/shared", "@student/web", "@student/admin"],
+      "tasks": { "lint": ["@student/shared", "@student/web", "@student/admin"], "typecheck": ["@student/shared", "@student/web", "@student/admin"], "unit": ["@student/shared", "@student/web", "@student/admin"], "build": ["@student/shared", "@student/web", "@student/admin"], "e2e": ["web", "admin"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "root-toolchain",
+      "affectedPackages": ["@student/shared", "@student/web", "@student/admin"],
+      "tasks": { "lint": ["@student/shared", "@student/web", "@student/admin"], "typecheck": ["@student/shared", "@student/web", "@student/admin"], "unit": ["@student/shared", "@student/web", "@student/admin"], "build": ["@student/shared", "@student/web", "@student/admin"], "e2e": ["web", "admin"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "lockfile-web-runtime",
+      "affectedPackages": ["@student/web"],
+      "tasks": { "lint": ["@student/web"], "typecheck": ["@student/web"], "unit": ["@student/web"], "build": ["@student/web"], "e2e": ["web"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": false, "buildImage": false, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "documentation-only",
+      "affectedPackages": [],
+      "tasks": { "lint": [], "typecheck": [], "unit": [], "build": [], "e2e": [] },
+      "apps": { "web": { "validate": false, "buildImage": false, "pushImage": false, "deploy": false }, "admin": { "validate": false, "buildImage": false, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": false, "reason": null }
+    },
+    {
+      "name": "missing-base-fallback",
+      "affectedPackages": ["@student/shared", "@student/web", "@student/admin"],
+      "tasks": { "lint": ["@student/shared", "@student/web", "@student/admin"], "typecheck": ["@student/shared", "@student/web", "@student/admin"], "unit": ["@student/shared", "@student/web", "@student/admin"], "build": ["@student/shared", "@student/web", "@student/admin"], "e2e": ["web", "admin"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": true, "reason": "missing-base" }
+    },
+    {
+      "name": "shallow-checkout-fallback",
+      "affectedPackages": ["@student/shared", "@student/web", "@student/admin"],
+      "tasks": { "lint": ["@student/shared", "@student/web", "@student/admin"], "typecheck": ["@student/shared", "@student/web", "@student/admin"], "unit": ["@student/shared", "@student/web", "@student/admin"], "build": ["@student/shared", "@student/web", "@student/admin"], "e2e": ["web", "admin"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": true, "reason": "shallow-checkout" }
+    },
+    {
+      "name": "query-error-fallback",
+      "affectedPackages": ["@student/shared", "@student/web", "@student/admin"],
+      "tasks": { "lint": ["@student/shared", "@student/web", "@student/admin"], "typecheck": ["@student/shared", "@student/web", "@student/admin"], "unit": ["@student/shared", "@student/web", "@student/admin"], "build": ["@student/shared", "@student/web", "@student/admin"], "e2e": ["web", "admin"] },
+      "apps": { "web": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false }, "admin": { "validate": true, "buildImage": true, "pushImage": false, "deploy": false } },
+      "fallback": { "applied": true, "reason": "query-error" }
+    }
+  ]
+}

@@ -40,7 +40,7 @@ base/head 변경
 
 ## 시작하기 전에
 
-- 이 문서는 **학생용 과제 계약을 먼저 고정한 문서**예요. 공식 starter·grader, registry·Linux VM과 실제 실행 명령은 별도의 준비와 실제 VM end-to-end 검증을 통과한 뒤 공개될 예정입니다. **현재 저장소나 서버에 이미 준비되어 있다고 가정하지 마세요.** 공개 후에는 starter tag와 운영 안내에 적힌 값을 이 문서의 예시보다 우선해요.
+- repository의 starter local RC와 grader·mentor service는 `pnpm check`와 [`dlc/mentor-kit/README.md`](../../dlc/mentor-kit/README.md)의 명령으로 검증할 수 있어요. 실제 registry namespace·Linux VM·ingress 값과 pinned image digest는 멘토가 외부 go/no-go를 마친 뒤 공식 starter tag와 함께 공지합니다. `local` tag나 예시 URL을 production 값으로 사용하지 마세요.
 - [DLC 1주차 과제](./dlc-monorepo-week-01.md)의 web/admin 동작과 boundary gate가 모두 통과한 상태에서 시작해요.
 - 모든 작업은 과제 공개 시 멘토가 지정할 동일한 공식 DLC starter tag와 Node.js·pnpm 버전을 기준으로 해요.
 - starter가 제공되면 `dlc.manifest.json`에 grader가 찾을 web/admin workspace, image build target, health/readiness route, ingress, test account와 시험 route가 선언되어 있는지 확인해요. 구조를 바꾸면 manifest도 같이 갱신하세요.
@@ -162,6 +162,7 @@ affected 계산, 검증, image build/push, deploy가 모두 같은 `deployment-p
 - 최종 stage는 non-root user로 production server만 실행해요. 개발 서버와 bind mount는 production 검증으로 인정하지 않아요.
 - 각 앱에 health endpoint와 container health check를 두고, process가 떠 있다는 사실과 요청을 받을 준비가 됐다는 상태를 구분해요.
 - web과 admin은 서로 다른 OCI image와 immutable digest를 가져야 해요.
+- production Compose에서 web과 admin은 같은 Docker network를 공유하지 않아요. app별 `internal: true` data/analytics network를 두고 mentor-owned service만 양쪽 network에 연결해, 별칭·gateway·계산된 URL로 정적 검사를 우회해도 앱끼리 직접 연결되지 않게 해요. app container의 host network와 `host-gateway` 우회도 금지해요.
 - app 이름과 commit revision을 OCI label로 기록해요.
 
 #### 2. 최종 Linux image 안에서 확인해요
@@ -238,6 +239,8 @@ deployment-plan.json
 
 실제 Linux VM에서 web/admin URL이 열리고, 변경 영향에 따라 선택된 app만 새 immutable digest로 배포되어야 해요. health 실패는 성공으로 기록되지 않으며 이전 digest로 복구할 수 있어야 해요.
 
+배포 전 `docker compose config --format json` 결과를 mentor network-policy grader에 넣어 web/admin network가 겹치지 않고, 두 앱이 `commerce-api`·analytics sink에만 각자의 internal network로 접근하는지 확인해요. 정적 source 검색과 이 runtime network 증거를 함께 통과해야 app-to-app HTTP 금지를 증명할 수 있어요.
+
 ---
 
 ### 🔐 4단계 — 같은 Next.js instance를 두 사용자가 동시에 공격해요
@@ -258,6 +261,7 @@ web과 admin을 다른 container로 나눈 것은 **앱의 배포 경계**를 �
 #### 2. 우연한 race를 기다리지 말고 결정적으로 겹쳐요
 
 - mentor-provided barrier/latch로 요청 A를 identity를 읽은 지점에 멈추고, 요청 B가 같은 지점을 통과하도록 겹쳐요.
+- grader는 학생 app에 주지 않은 관리 token으로 barrier를 prepare·inspect하고, app은 도착 전용 token으로 request ID만 기록해요. 응답 header를 그대로 echo하는 것만으로는 통과할 수 없어야 해요.
 - 단순히 요청을 수십 회 반복해 race가 우연히 발생하기를 기다리는 방식은 인정하지 않아요.
 - unsafe fixture에서는 barrier 사이에 module-level `currentUser`를 덮어써 contract test가 반드시 실패해야 해요.
 - 수정본은 cookie/header에서 session을 매 요청 다시 읽고 검증하며 같은 시험을 통과해야 해요.
@@ -278,6 +282,7 @@ web과 admin을 다른 container로 나눈 것은 **앱의 배포 경계**를 �
 - customer session으로 admin 주문 read와 상태 변경을 직접 호출해 server entry point에서 거부되는지 확인해요. UI를 숨긴 것은 권한 검증이 아니에요.
 - web audience session을 admin에, admin audience session을 web에 다시 보내 거부되는지 확인해요.
 - web에서는 role이 customer로 맞지만 `aud=admin`인 session을, admin에서는 role이 admin으로 맞지만 `aud=web`인 session을 보내 거부되는지 확인해요. role과 audience를 동시에 틀리게 만든 시험만으로 audience 검증을 증명하지 않아요.
+- role과 audience는 맞지만 반대 앱의 signing key로 서명한 session을 app별 cookie 이름으로 바꿔 보내 거부되는지 확인해요. role·audience 거부만으로 signing secret 분리를 증명하지 않아요.
 - host-only 또는 app별 이름의 cookie를 사용해요. 한 ingress에서 받은 cookie를 다른 ingress에 **직접 재전송하는 공격**도 거부되어야 해요.
 - `A → B → A`, `B → A → B` 순서와 barrier 동시 실행 모두에서 ID, 이메일, role, viewer DTO가 교차 노출되지 않아야 해요.
 - user-specific 결과를 모든 사용자에게 공유되는 cache에 저장하지 않고, DAL·Route Handler·Server Action에서 viewer 권한과 DTO 필드를 다시 검증해요.

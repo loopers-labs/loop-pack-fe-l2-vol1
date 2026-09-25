@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "apps": {
+    "web": { "workspace": "@fixture/web", "baseUrlEnv": "WEB_BASE_URL", "internalBaseUrlEnv": "WEB_INTERNAL_BASE_URL" },
+    "admin": { "workspace": "@fixture/admin", "baseUrlEnv": "ADMIN_BASE_URL", "internalBaseUrlEnv": "ADMIN_INTERNAL_BASE_URL" }
+  }
+}

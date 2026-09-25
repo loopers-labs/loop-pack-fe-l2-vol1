@@ -1,0 +1,8 @@
+{
+  "name": "@fixture/format",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts"
+  }
+}

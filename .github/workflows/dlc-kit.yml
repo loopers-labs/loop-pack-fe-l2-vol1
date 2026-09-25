@@ -1,0 +1,97 @@
+name: DLC Mentor Kit
+
+"on":
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dlc-kit-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 10.15.1
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run mentor-kit contracts
+        run: pnpm test:dlc-kit
+      - name: Validate published examples
+        run: |
+          node dlc/mentor-kit/grader/cli.mjs validate-manifest --file dlc/examples/dlc.manifest.example.json
+          node dlc/mentor-kit/grader/cli.mjs validate-plan --file dlc/examples/deployment-plan.example.json
+
+  linux-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMMERCE_API_TOKEN: ci-commerce-token
+      ANALYTICS_WRITE_TOKEN: ci-analytics-token
+      MENTOR_SERVICE_ADMIN_TOKEN: ci-mentor-admin-token
+      DLC_BARRIER_ARRIVAL_TOKEN: ci-barrier-arrival-token
+      SOURCE_REVISION: ${{ github.sha }}
+      SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}
+      MENTOR_KIT_VERSION: ${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+      - name: Build and start mentor services
+        run: docker compose -f dlc/mentor-kit/compose.yml up -d --build
+      - name: Wait for healthy containers
+        run: |
+          for attempt in $(seq 1 30); do
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' loopers-dlc-mentor-kit-commerce-api-1)" = healthy ] && \
+               [ "$(docker inspect --format '{{.State.Health.Status}}' loopers-dlc-mentor-kit-analytics-sink-1)" = healthy ]; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker compose -f dlc/mentor-kit/compose.yml ps
+          exit 1
+      - name: Verify runtime contracts
+        run: node dlc/mentor-kit/smoke.mjs
+      - name: Verify container hardening
+        run: |
+          test "$(docker inspect --format '{{.Config.User}}' loopers-dlc-mentor-kit-commerce-api-1)" = node
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' loopers-dlc-mentor-kit-commerce-api-1)" = true
+          test "$(docker inspect --format '{{json .HostConfig.CapDrop}}' loopers-dlc-mentor-kit-commerce-api-1)" = '["ALL"]'
+          docker inspect --format '{{json .HostConfig.SecurityOpt}}' loopers-dlc-mentor-kit-commerce-api-1 | grep -q 'no-new-privileges:true'
+          test "$(docker inspect --format '{{(index (index .HostConfig.PortBindings "4000/tcp") 0).HostIp}}' loopers-dlc-mentor-kit-commerce-api-1)" = 127.0.0.1
+          test "$(docker inspect --format '{{.Config.User}}' loopers-dlc-mentor-kit-analytics-sink-1)" = node
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' loopers-dlc-mentor-kit-analytics-sink-1)" = true
+          test "$(docker inspect --format '{{json .HostConfig.CapDrop}}' loopers-dlc-mentor-kit-analytics-sink-1)" = '["ALL"]'
+          docker inspect --format '{{json .HostConfig.SecurityOpt}}' loopers-dlc-mentor-kit-analytics-sink-1 | grep -q 'no-new-privileges:true'
+          test "$(docker inspect --format '{{(index (index .HostConfig.PortBindings "4001/tcp") 0).HostIp}}' loopers-dlc-mentor-kit-analytics-sink-1)" = 127.0.0.1
+          docker inspect --format '{{json .NetworkSettings.Networks}}' loopers-dlc-mentor-kit-commerce-api-1 | grep -q 'loopers-dlc-mentor-internal'
+          docker inspect --format '{{json .NetworkSettings.Networks}}' loopers-dlc-mentor-kit-commerce-api-1 | grep -q 'loopers-dlc-mentor-host'
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose -f dlc/mentor-kit/compose.yml logs
+      - name: Stop mentor services
+        if: always()
+        run: docker compose -f dlc/mentor-kit/compose.yml down --volumes

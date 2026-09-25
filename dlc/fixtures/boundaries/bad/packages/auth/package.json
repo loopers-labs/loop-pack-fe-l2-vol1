@@ -1,0 +1,6 @@
+{
+  "name": "@fixture/auth",
+  "private": true,
+  "dependencies": { "@fixture/cycle-a": "workspace:*" },
+  "exports": { ".": "./src/index.ts" }
+}

@@ -13,8 +13,12 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:dlc-kit": "node dlc/mentor-kit/run-tests.mjs",
+    "test:dlc-runtime": "node dlc/mentor-kit/grader/run-starter-runtime-smoke.mjs",
+    "test:e2e:starter": "pnpm build && pnpm test:e2e:starter:run",
+    "test:e2e:starter:run": "playwright test --config playwright.dlc.config.ts",
     "test:watch": "vitest",
-    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build"
+    "check": "pnpm test && pnpm test:dlc-kit && pnpm lint && pnpm typecheck && pnpm build && pnpm test:dlc-runtime && pnpm test:e2e:starter:run"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
@@ -25,6 +29,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",

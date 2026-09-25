@@ -1,0 +1,81 @@
+name: loopers-dlc-mentor-kit
+
+services:
+  commerce-api:
+    build:
+      context: ./services/commerce-api
+      args:
+        SOURCE_REVISION: ${SOURCE_REVISION:-unknown}
+        SOURCE_URL: ${SOURCE_URL:-local}
+    image: loopers-dlc/commerce-api:${MENTOR_KIT_VERSION:-local}
+    environment:
+      COMMERCE_API_TOKEN: ${COMMERCE_API_TOKEN:?set COMMERCE_API_TOKEN}
+      MENTOR_SERVICE_ADMIN_TOKEN: ${MENTOR_SERVICE_ADMIN_TOKEN:?set MENTOR_SERVICE_ADMIN_TOKEN}
+      DLC_BARRIER_ARRIVAL_TOKEN: ${DLC_BARRIER_ARRIVAL_TOKEN:?set DLC_BARRIER_ARRIVAL_TOKEN}
+      SERVICE_VERSION: ${MENTOR_KIT_VERSION:-local}
+    ports:
+      - "127.0.0.1:${COMMERCE_API_PORT:-4100}:4000"
+    networks:
+      - mentor-internal
+      - mentor-host
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:4000/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+  analytics-sink:
+    build:
+      context: ./services/analytics-sink
+      args:
+        SOURCE_REVISION: ${SOURCE_REVISION:-unknown}
+        SOURCE_URL: ${SOURCE_URL:-local}
+    image: loopers-dlc/analytics-sink:${MENTOR_KIT_VERSION:-local}
+    environment:
+      ANALYTICS_WRITE_TOKEN: ${ANALYTICS_WRITE_TOKEN:?set ANALYTICS_WRITE_TOKEN}
+      ANALYTICS_ALLOWED_ORIGINS: ${ANALYTICS_ALLOWED_ORIGINS:-}
+      MENTOR_SERVICE_ADMIN_TOKEN: ${MENTOR_SERVICE_ADMIN_TOKEN:?set MENTOR_SERVICE_ADMIN_TOKEN}
+      SERVICE_VERSION: ${MENTOR_KIT_VERSION:-local}
+    ports:
+      - "127.0.0.1:${ANALYTICS_SINK_PORT:-4101}:4001"
+    networks:
+      - mentor-internal
+      - mentor-host
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:4001/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+networks:
+  mentor-internal:
+    name: loopers-dlc-mentor-internal
+    internal: true
+  mentor-host:
+    name: loopers-dlc-mentor-host
