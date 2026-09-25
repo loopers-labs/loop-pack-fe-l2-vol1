@@ -112,7 +112,7 @@ Basic에서는 앱별 cookie 이름과 signing secret을 분리하고 session의
 - 앱·화면별 event schema
 - 현재 요청/세션의 user context 조립
 
-analytics package도 현재 사용자의 identity를 module scope에 저장하지 않는다.
+server에서 실행되는 analytics adapter는 요청 identity를 process-wide module scope에 저장하지 않는다. client SDK는 browser context 안의 identity를 유지할 수 있지만 `identify`/`reset` lifecycle을 명시하고 로그인·로그아웃·계정 전환과 독립 browser-context 시험으로 격리를 증명한다.
 
 ### 4.4 구조 그래프와 작업 그래프를 연결한다
 
@@ -297,7 +297,7 @@ starter에는 다음 상황을 제공한다.
 | admin 전용 package 변경 | package + admin | admin |
 | 양쪽이 소비하는 package 변경 | package + web + admin | web + admin |
 | root toolchain/global policy 변경 | 전체 | 전체 |
-| lockfile 변경 | 전체 install 검증 + app별 pruned lockfile 영향 확인 | pruned runtime graph가 바뀐 앱. 계산 불가 시 전체 |
+| lockfile 변경 | 전체 install 검증 + app별 pruned lockfile 영향 확인 | graph가 신뢰되면 runtime graph가 바뀐 앱. 계산 불가 시 image build까지만 전체, 자동 배포 중단 |
 | 문서만 변경 | 문서 게이트 | 없음 |
 
 #### 1단계 — affected CI와 cache 검증
@@ -381,6 +381,8 @@ grader는 내부 Docker network에서 reverse proxy를 우회해 특정 web/admi
 | --- | --- | --- |
 | customer + `aud=web` | 허용 | 거부 |
 | admin + `aud=admin` | 거부 | 허용 |
+| customer + 잘못된 `aud=admin` | 거부 | 거부 |
+| admin + 잘못된 `aud=web` | 거부 | 거부 |
 | session 없음 | 공개 경로만 허용 | 로그인 외 거부 |
 
 두 개 이상의 독립 cookie jar와 browser context를 사용한다.
@@ -434,7 +436,7 @@ starter의 synthetic graph fixture는 실제 제품 앱 코드를 복제하지 �
 | 영역 | 점수 | 핵심 증거 |
 | --- | ---: | --- |
 | 패키지 경계와 Public API | 20 | RFC, dependency graph, 위반/정상 fixture |
-| auth·analytics 공통 관심사 | 10 | 공통 정책과 앱별 조립, mutable identity 부재 |
+| auth·analytics 공통 관심사 | 10 | 공통 정책과 앱별 조립, server identity 무상태, client identify/reset 격리 |
 | 멀티 앱 동작 보존 | 10 | web 회귀 + admin 최소 흐름 |
 | affected CI와 cache | 20 | 변경 시나리오 matrix, dry-run, hit/miss, Before/After |
 | Docker runtime 경계 | 15 | app별 image, image 내부 검증, 최소 runtime |

@@ -40,6 +40,10 @@ docs/assignments/          # 주차별 과제 명세
   - GitHub: 포크 레포의 **Sync fork** 버튼
   - CLI: `git fetch upstream && git switch main && git merge upstream/main`
 
+### 10주 이후 DLC
+
+- [2주 캡스톤 — 단일 서비스를 확장 가능한 모노레포로 전환하기](docs/assignments/dlc-monorepo-capstone.md)
+
 ## 제출
 
 1. 이 레포를 **포크**한다.
