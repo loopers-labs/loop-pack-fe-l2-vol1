@@ -9,9 +9,18 @@ name: Quality
 permissions:
   contents: read
 
+# 그룹 키에 ref를 넣어 브랜치별로 가른다. 키가 브랜치를 구분하지 않으면 PR 실행이
+# main push 실행을 취소할 수 있다. 취소는 pull_request에서만 켜서, main push 실행은
+# 뒤 실행이 들어와도 끝까지 돌게 둔다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   quality:
     runs-on: ubuntu-latest
+    # 관측된 실행보다 충분히 긴 상한을 두어, 멈춘 작업이 러너를 계속 점유하지 않게 한다.
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -28,10 +37,32 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
-        run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
-          fi
-      - name: Run quality checks
-        run: pnpm check
+      # 추적되는 RFC가 무시된 로컬 문서 디렉터리를 링크하면 받는 사람이 열 수 없다.
+      # 정적 검사라 실행 시간이 짧고 다른 검증에 기대지 않으므로 앞에 둔다.
+      - name: Validate RFC links
+        run: pnpm validate:docs
+      # 설정 오류는 코드 검증을 통과한 뒤에 드러나므로 build 전에 막는다.
+      # CI에는 실제 비밀값이 없다. 로그에 남아도 문제가 없는 검증용 값을 주입하고,
+      # 실제 값 주입과 fallback 여부는 CD에서 확인한다.
+      - name: Validate env (ci)
+        env:
+          APP_ORIGIN: http://127.0.0.1:3000
+          AUTH_SESSION_SECRET: ci-validation-placeholder
+        run: pnpm validate:env -- --context=ci
+      # 검증 순서와 검증 범위는 pnpm check와 같다. 분리한 이유는 Before/After에서
+      # 어느 검증이 시간을 쓰는지 Actions step 시간으로 확인하기 위해서다.
+      - name: Test
+        run: pnpm test
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Build
+        run: pnpm build
+      # 예산 판정은 build 산출물을 그대로 쓴다. 여기서 build를 다시 돌리지 않는다.
+      # 초과 내역은 Actions 실행 요약에 표로 남는다.
+      - name: Bundle budget
+        env:
+          APP_ORIGIN: http://127.0.0.1:3210
+          AUTH_SESSION_SECRET: ci-validation-placeholder
+        run: pnpm measure:transfer

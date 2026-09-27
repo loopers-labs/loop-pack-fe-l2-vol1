@@ -1,0 +1,178 @@
+name: E2E
+
+'on':
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - name: 변경 파일로 E2E 실행 여부 판정
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          CHANGED: ${{ github.event.pull_request.changed_files }}
+        run: |
+          set -euo pipefail
+          # --slurp로 페이지 배열을 하나의 JSON 배열로 묶는다.
+          gh api "repos/$REPO/pulls/$PR/files" --paginate --slurp > files.json
+          node <<'NODE'
+          const fs = require('fs');
+
+          const pages = JSON.parse(fs.readFileSync('files.json', 'utf8'));
+          const files = pages.flat();
+          const declared = Number(process.env.CHANGED);
+
+          // GitHub PR 파일 API는 최대 3000개까지만 반환한다. 목록이 불완전하면 실행한다.
+          if (!Number.isFinite(declared) || files.length !== declared) {
+            console.log(`목록 불완전: 받은 ${files.length} / 선언 ${declared}`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'run=true\n');
+            process.exit(0);
+          }
+
+          // 실행에 영향을 주지 않는 것으로 확인한 문서 경로만 스킵 대상으로 둔다.
+          const skippable = (path) =>
+            path.startsWith('docs/rfc/') ||
+            path.startsWith('docs/assignments/') ||
+            path.startsWith('docs/images/') ||
+            /^docs\/[^/]+\.md$/.test(path) ||
+            path === 'README.md';
+
+          // 이름 변경은 이전 경로도 검사해 앱 파일을 문서 경로로 옮긴 변경을 스킵하지 않는다.
+          const paths = files.flatMap((file) =>
+            file.previous_filename
+              ? [file.filename, file.previous_filename]
+              : [file.filename],
+          );
+          const run = paths.some((path) => !skippable(path));
+
+          paths.forEach((path) =>
+            console.log(`  ${skippable(path) ? 'skip' : 'RUN '} ${path}`),
+          );
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `run=${run}\n`);
+          NODE
+
+  e2e:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 10.15.1
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run E2E
+        run: pnpm test:e2e
+      - name: 재시도로 통과한 테스트 기록
+        if: always()
+        run: |
+          report=playwright-report/results.json
+          if [ ! -f "$report" ]; then
+            echo '### E2E JSON 리포트 없음' >> "$GITHUB_STEP_SUMMARY"
+            echo '테스트 실행 전 단계에서 종료됐을 수 있다.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node - "$report" <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const flaky = [];
+
+          const visit = (suite, prefix = '') => {
+            for (const spec of suite.specs ?? []) {
+              for (const test of spec.tests ?? []) {
+                const retriedPass = (test.results ?? []).some(
+                  (result) => result.retry > 0 && result.status === 'passed',
+                );
+                if (test.status === 'flaky' || retriedPass) {
+                  flaky.push(`${prefix}${spec.title}`);
+                }
+              }
+            }
+            for (const child of suite.suites ?? []) {
+              visit(child, `${prefix}${suite.title ? `${suite.title} › ` : ''}`);
+            }
+          };
+
+          for (const suite of report.suites ?? []) visit(suite);
+          console.log('### 재시도 후 통과한 테스트');
+          console.log(flaky.length ? flaky.map((title) => `- ${title}`).join('\n') : '- 없음');
+          NODE
+      - name: Playwright 리포트 보관
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  e2e-required:
+    needs: [changes, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: E2E 결과 판정
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          TARGET: ${{ needs.changes.outputs.run }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+        run: |
+          set -euo pipefail
+          echo "changes=$CHANGES_RESULT target=$TARGET e2e=$E2E_RESULT"
+
+          [ "$CHANGES_RESULT" = "success" ] || {
+            echo '경로 판정이 정상 종료하지 않았다.'
+            exit 1
+          }
+
+          case "$TARGET" in
+            false)
+              [ "$E2E_RESULT" = "skipped" ] || {
+                echo "스킵 대상인데 e2e=$E2E_RESULT"
+                exit 1
+              }
+              echo '문서 변경만 있어 E2E를 의도적으로 스킵했다.'
+              ;;
+            true)
+              [ "$E2E_RESULT" = "success" ] || {
+                echo "E2E 결과가 통과가 아니다: $E2E_RESULT"
+                exit 1
+              }
+              echo 'E2E가 통과했다.'
+              ;;
+            *)
+              echo "판정 출력이 비었거나 예상 밖이다: '$TARGET'"
+              exit 1
+              ;;
+          esac

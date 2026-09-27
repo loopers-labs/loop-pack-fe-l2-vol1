@@ -1,0 +1,14 @@
+{
+  "basis": "진입점 HTML이 참조하는 JS·CSS를 Accept-Encoding: gzip으로 받아 합산한 전송 byte. 서버가 압축하지 않고 내려주는 작은 파일도 받은 그대로 더한다.",
+  "entries": ["/", "/products"],
+  "budgetBytes": 254976,
+  "budgetLabel": "249KB",
+  "baseline": {
+    "measuredAt": "2026-09-11",
+    "maxEntry": "/products",
+    "maxEntryBytes": 231693,
+    "rounds": 3,
+    "rangeBytes": 0
+  },
+  "note": "임계값 = 측정 시점 최대 진입점(231,693 B) + 10%. 10%는 측정 변동폭이 아니라 소규모 의존성 증가를 매번 막지 않기 위한 정책 여유폭이다. 근거는 docs/rfc/week10-step03.md 참고."
+}
