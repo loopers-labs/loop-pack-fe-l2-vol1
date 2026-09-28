@@ -21,14 +21,31 @@ pnpm dev
 
 ```
 src/
-  app/                     # Next App Router
-    api/products/route.ts  # mock 백엔드 (route handler)
-    layout.tsx  page.tsx
+  app/                              # Next App Router
+    api/
+      _data/commerce.ts             # 공통 mock 데이터
+      home/route.ts                 # 홈 API
+      products/route.ts             # 상품 목록 API
+    layout.tsx
+    page.tsx
+
   components/
     ui/
-      select/              # Select (Headless) — 4주차 1단계
-      dialog/              # Dialog (Compound) — 4주차 2단계
-docs/assignments/          # 주차별 과제 명세
+      select/                       # 4주차 Select
+      dialog/                       # 4주차 Dialog
+
+  examples/
+    week-05-layout/                 # 선택 가능한 홈·상품 목록 레이아웃 예시
+
+  types/
+    commerce.ts                     # 커머스 API 공통 타입
+
+docs/
+  assignments/                      # 주차별 과제 명세
+  assets/                           # 과제용 로컬 자산 명세
+
+public/
+  images/products/                  # 로컬 상품 이미지
 ```
 
 > 폴더 구성은 최소한만 잡아뒀습니다. 구조 개선은 **각자 근거를 대고** 진행하세요.
